@@ -51,6 +51,7 @@ const CSS = `
 #touchUI .btn i{font-style:normal;font-size:28px;margin-bottom:2px}
 #touchUI .btn b{font-weight:900}
 #touchUI .btn.down{transform:scale(.9)}
+#touchUI.cine .btn{opacity:0;pointer-events:none;transition:opacity .2s}
 #touchUI .dash{right:calc(28px + env(safe-area-inset-right));bottom:calc(34px + env(safe-area-inset-bottom));width:108px;height:108px;
   background:radial-gradient(circle at 35% 30%,#8fe9ff,#2f8bff 60%,#1b4fd8);border:4px solid rgba(255,255,255,.8);
   box-shadow:0 6px 22px rgba(30,90,255,.55)}
@@ -70,7 +71,7 @@ export class Input {
     this._keys = new Set();      // physical key codes held
     this._down = new Set();      // actions held from keyboard
     this._padDown = new Set();   // actions held from gamepad
-    this._touchDown = new Set(); // actions held from touch buttons
+    this._touchPtrs = new Map(); // action → Set<pointerId> held on touch buttons (per finger, so a resting thumb never eats taps)
     this._pressed = new Set();   // edges collected since last update()
     this._frame = new Set();     // edges visible during this frame
     this._kbAxis = { up: 0, down: 0, left: 0, right: 0 };
@@ -174,11 +175,16 @@ export class Input {
       btn.addEventListener('pointerdown', (e) => {
         e.preventDefault(); this._setDevice('touch');
         btn.classList.add('down');
-        if (!this._touchDown.has(a)) this._pressed.add(a);
-        this._touchDown.add(a);
+        this._pressed.add(a);                       // every new finger is a press edge
+        if (!this._touchPtrs.has(a)) this._touchPtrs.set(a, new Set());
+        this._touchPtrs.get(a).add(e.pointerId);
         btn.setPointerCapture?.(e.pointerId);
       });
-      const up = () => { btn.classList.remove('down'); this._touchDown.delete(a); };
+      const up = (e) => {
+        const set = this._touchPtrs.get(a);
+        set?.delete(e.pointerId);
+        if (!set || set.size === 0) btn.classList.remove('down');
+      };
       btn.addEventListener('pointerup', up);
       btn.addEventListener('pointercancel', up);
     }
@@ -187,6 +193,7 @@ export class Input {
   }
 
   setTouchControls(visible) {
+    if (!visible) this._touchPtrs.clear();      // no stuck "held" fingers across screens
     this.touchRoot.classList.toggle('on', !!visible && this.device === 'touch');
     this._touchWanted = !!visible;
   }
@@ -254,12 +261,12 @@ export class Input {
     if (this._touchWanted !== undefined) this.touchRoot.classList.toggle('on', this._touchWanted && this.device === 'touch');
   }
 
-  held(a) { return this.enabled && (this._down.has(a) || this._padDown.has(a) || this._touchDown.has(a)); }
+  held(a) { return this.enabled && (this._down.has(a) || this._padDown.has(a) || (this._touchPtrs.get(a)?.size ?? 0) > 0); }
   pressed(a) { return this._frame.has(a) && (this.enabled || !['dash', 'nova'].includes(a)); }
   /** swallow an edge so two systems don't both react to it */
   consume(a) { this._frame.delete(a); }
   releaseAll() {
-    this._keys.clear(); this._down.clear(); this._touchDown.clear();
+    this._keys.clear(); this._down.clear(); this._touchPtrs.clear();
     for (const k in this._kbAxis) this._kbAxis[k] = 0;
     this._touchAxis.x = this._touchAxis.y = 0;
   }

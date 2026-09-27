@@ -87,7 +87,8 @@ G.hud = new HUD(G);
 // The hero idles centre stage between runs, surrounded by the happy cubes the
 // player has rescued: one villager per 25 cubes freed (min 3, max 120). They
 // wander, hop, look at the hero and cheer — progress you can SEE (relatedness).
-const VILLAGE = { perVillager: 25, min: 3, max: 120, inner: 3.2, colors: [0xffffff, 0xb8f2e6, 0xfff3b0, 0xd9c8ff, 0xffd3b6, 0xffe0ec] };
+// happy WHITE villagers (§7.22) — at most 60 on screen so the hero always stays the star of the lobby
+const VILLAGE = { perVillager: 25, min: 3, max: 60, inner: 3.2, colors: [0xffffff, 0xf3f9ff, 0xfffaf0, 0xf6f4ff] };
 const hub = {
   hero: null, heroId: null, skinId: null, key: '',
   crowd: new CubeCrowd(VILLAGE.max), shadows: new BlobShadows(VILLAGE.max + 4),
@@ -112,13 +113,15 @@ function makeVillager(i) {
   };
 }
 // the hub camera sits in front of the hero (+Z); keep that lane clear so nobody walks into the lens
-const inCameraLane = (x, z) => Math.abs(x) < 2.6 && z > 2.8;
+// wedge between the hub camera (on +Z) and the hero: nobody stands or walks there
+const inCameraLane = (x, z) => z > 0.6 && Math.abs(x) < 1.2 + 0.45 * z;
 function pickTarget(v) {
   const R = (G.world?.arenaRadius ?? 11) - 1.2;
   for (let tries = 0; tries < 8; tries++) {
     const a = rand() * Math.PI * 2, r = VILLAGE.inner + rand() * (R - VILLAGE.inner);
     v.tx = Math.cos(a) * r; v.tz = Math.sin(a) * r;
-    if (!inCameraLane(v.tx, v.tz)) return;
+    // reject targets whose straight path would cut through the camera wedge
+    if (!inCameraLane(v.tx, v.tz) && !inCameraLane((v.x + v.tx) / 2, (v.z + v.tz) / 2)) return;
   }
   v.tx = Math.sign(v.tx || 1) * 4; v.tz = -3;
 }
@@ -149,6 +152,16 @@ function hubSetHero(heroId, skinId) {
   hub.jumpT = 0.001;   // happy hop when switching
   hub.cheerT = 0.01;   // and the village cheers
 }
+// ---------- night lobby (21:30–06:30): darker sky, sleepy Blu yawns now and then (§4.4) ----------
+function applyNight() {
+  const night = !!G.meta?.isNight;
+  G.world.setNight?.(night);
+  hub.night = night; hub.yawnT = night ? 1.5 : 0;
+}
+function heroYawn() {
+  const h = hub.hero; if (!h) return;
+  if (h.emote) h.emote('yawn'); else h.yawn?.();
+}
 /** tap / click the hero in the lobby → squash bounce (called by ui.js via G.app.pokeHero) */
 function hubPoke() {
   if (!hub.hero) return;
@@ -176,6 +189,7 @@ function hubUpdate(dt) {
       celebrate: hub.jumpT > 0,
     });
   }
+  if (hub.night && hub.yawnT > 0 && (hub.yawnT -= dt) <= 0) { heroYawn(); hub.yawnT = 18 + rand() * 8; }
   // village cheers every so often (and whenever the hero changes)
   if (hub.cheerT > 0) {
     hub.cheerT = 0;
@@ -209,7 +223,7 @@ function hubUpdate(dt) {
       }
     }
     // never block the camera: slide out of the lane in front of the lens
-    if (inCameraLane(v.x, v.z)) { v.x += Math.sign(v.x || 1) * 3 * dt; }
+    if (inCameraLane(v.x, v.z)) { v.x += Math.sign(v.x || 1) * 4.5 * dt; if (!v.wait) pickTarget(v); }
     // keep villagers out of the hero's personal space
     const hr = Math.hypot(v.x, v.z);
     if (hr < VILLAGE.inner * 0.8) { v.x *= (VILLAGE.inner * 0.8) / Math.max(hr, 0.01); v.z *= (VILLAGE.inner * 0.8) / Math.max(hr, 0.01); }
@@ -217,14 +231,15 @@ function hubUpdate(dt) {
     let blink = 0;
     if (v.blinkT < 0) { blink = 1; if (v.blinkT < -0.12) v.blinkT = 2 + rand() * 4; }
     const land = walking || v.cheer > 0 ? 1 - Math.max(0, 0.12 - hopY) * 1.2 : 1 + Math.sin(t * 2 + v.ph) * 0.03;
+    const vs = v.z > 4 ? v.s * 0.7 : v.s;
     hub.crowd.set(i, {
-      x: v.x, y: v.s * 0.5 * land + hopY, z: v.z,
-      sx: v.s * (2 - land), sy: v.s * land, sz: v.s * (2 - land),
+      x: v.x, y: vs * 0.5 * land + hopY, z: v.z,
+      sx: vs * (2 - land), sy: vs * land, sz: vs * (2 - land),
       rotY: v.rotY, color: v.color,
       expr: v.cheer > 0 ? EXPR.JOY : EXPR.HAPPY, blink,
       lookX: Math.sin(t * 0.9 + v.ph) * 0.5, lookY: 0,
     });
-    hub.shadows.add(v.x, v.z, v.s, hopY);
+    hub.shadows.add(v.x, v.z, vs, hopY);
   }
   hub.crowd.commit();
   hub.shadows.end();
@@ -247,9 +262,11 @@ const app = {
       ...cfg,
     };
     app.lastRunCfg = full;
+    app._pauseWanted = false;
     app._disposeRun();
     hubShow(false);
     const world = DATA.worlds[full.worldId] || DATA.worlds[0];
+    G.world.setNight?.(false);   // night is a lobby mood only — gameplay stays bright & readable
     G.world.load(world.id);
     G.cam.setHub(false);
     G.run = new Run(G, full);
@@ -260,6 +277,7 @@ const app = {
   },
   restartRun() { if (app.lastRunCfg) app.startRun(app.lastRunCfg); },
   quitRun() {
+    app._pauseWanted = false;
     app._disposeRun();
     app.toHub();
   },
@@ -268,6 +286,7 @@ const app = {
     G.hud.show(false);
     input.setTouchControls(false);
     G.world.load(G.meta.hubWorld?.() ?? DATA.worlds[0].id);
+    applyNight();
     hubSetHero(G.meta.selectedHero, G.meta.selectedSkin?.(G.meta.selectedHero) ?? null);
     hubShow(true);
     G.cam.follow(null);
@@ -283,6 +302,8 @@ const app = {
     // the game is already frozen behind these overlays (cards, second-chance bubble, results)
     const noPause = ['ended', 'paused', 'levelup', 'secondChance', 'victory', 'dying'];
     if (!G.run || noPause.includes(G.run.state)) return;
+    // intros can't pause mid-shot: remember the request and pause the moment control starts
+    if (G.run.state === 'intro' || G.run.state === 'bossIntro') { app._pauseWanted = true; return; }
     G.run.pause();
     if (G.run.state === 'paused') G.ui.showPause();
   },
@@ -301,6 +322,11 @@ const app = {
     hubSyncVillage();
   },
   pokeHero() { hubPoke(); },
+  /** wardrobe try-on for a hero other than the selected one (ui.js); refreshHub() restores the selection */
+  previewHub(heroId) {
+    if (app.state === 'run' || !heroId) return;
+    hubSetHero(heroId, G.meta.selectedSkin?.(heroId) ?? null);
+  },
 };
 G.app = app;
 G.ui = new UI(G);
@@ -319,6 +345,9 @@ bus.on('settings:change', ({ key, value }) => {
   if (key === 'music' || key === 'sfx') G.audio.setVolumes({ music: save.profile.settings.music, sfx: save.profile.settings.sfx });
 });
 onLangChange(() => G.ui.refresh?.());
+// letterboxed cinematics hide the on-screen buttons (the right-half dash zone still skips the shot)
+bus.on('cine:start', (p) => { if (!p?.overlay) input.touchRoot.classList.add('cine'); });
+bus.on('cine:end', (p) => { if (!p?.overlay) input.touchRoot.classList.remove('cine'); });
 
 // audio needs a user gesture
 const unlock = () => { G.audio.unlock(); };
@@ -328,6 +357,7 @@ window.addEventListener('keydown', unlock, { once: false });
 // auto-pause when the tab is hidden / window loses focus (kids get called for dinner)
 document.addEventListener('visibilitychange', () => { if (document.hidden) app.pause(); });
 window.addEventListener('blur', () => app.pause());
+window.addEventListener('focus', () => { if (G.run && G.run.state !== 'intro' && G.run.state !== 'bossIntro') app._pauseWanted = false; });
 
 window.addEventListener('resize', () => {
   const w = window.innerWidth, h = window.innerHeight;
@@ -351,7 +381,12 @@ function frame(nowMs) {
     if (input.pressed('pause')) {
       if (st === 'paused') app.resume(); else app.pause();
     }
-    if (input.pressed('restart') && (st === 'ended' || st === 'paused' || st === 'dying')) { G.ui.hidePause(); app.restartRun(); }
+    // R: from pause = abandon & restart; on results = the Retry button (keeps ceremonies + attempt bookkeeping);
+    // never during 'dying' — the run must end properly first so coins, bests and fail counts are recorded
+    if (input.pressed('restart')) {
+      if (st === 'paused') { G.ui.hidePause(); app.restartRun(); }
+      else if (st === 'ended') { if (G.ui.retryFromResults) G.ui.retryFromResults(); else app.restartRun(); }
+    }
   }
   if (input.pressed('mute')) G.audio.toggleMute();
 
@@ -367,8 +402,10 @@ function frame(nowMs) {
   G.time.rdt = rdt; G.time.dt = dt; G.time.scale = scale;
   G.time.now += dt; G.time.real += rdt;
 
-  if (G.run) G.run.update(dt, rdt);
-  else hubUpdate(rdt);
+  if (G.run) {
+    G.run.update(dt, rdt);
+    if (app._pauseWanted && ['playing', 'countdown'].includes(G.run.state)) { app._pauseWanted = false; app.pause(); }
+  } else hubUpdate(rdt);
   G.world.update(dt, rdt);
   G.fx.update(dt, rdt);
   G.cam.update(rdt);
@@ -385,6 +422,7 @@ let coveredFrame = 0;
 
 // ---------- boot ----------
 G.world.load(DATA.worlds[0].id);
+applyNight();
 hubSetHero(G.meta.selectedHero, G.meta.selectedSkin?.(G.meta.selectedHero) ?? null);
 hubShow(true);
 // title framing: the hero sits in the band between the logo and the "press any key" pill
