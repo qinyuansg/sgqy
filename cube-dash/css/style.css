@@ -472,7 +472,7 @@ noscript { position: fixed; inset: 0; display: grid; place-items: center; font: 
 #ui .pc-name { font: 900 19px/1.2 var(--font); color: var(--navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #ui .pc-title { font: 800 13px/1.3 var(--font); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #ui .pc-rank { flex: none; margin-left: 4px; }
-#ui .home-col { position: absolute; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+#ui .home-col { position: absolute; z-index: 1; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }   /* icons always win over the invisible hero-poke area */
 #ui .home-left { left: calc(14px + var(--safe-l)); top: calc(112px + var(--safe-t)); }
 #ui .home-right { right: calc(14px + var(--safe-r)); top: calc(78px + var(--safe-t)); }
 #ui .ibtn { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; width: 82px; padding: 0; background: none; border: 0; pointer-events: auto; transition: transform .15s var(--spring); }
@@ -1483,10 +1483,10 @@ noscript { position: fixed; inset: 0; display: grid; place-items: center; font: 
   #ui .hero-card { width: 92px; max-width: none; padding: 10px 4px 6px; gap: 4px; font-size: 14px; }
   #ui .hero-card .cube { --s: 44px !important; }
   #ui .hero-card.sel { transform: scale(1.03); }
-  #ui .hero-detail { left: auto; right: calc(12px + var(--safe-r)); top: calc(70px + var(--safe-t)); bottom: calc(8px + var(--safe-b)); width: min(420px, 40vw); padding: 12px 14px; }
+  #ui .hero-detail { left: auto; right: calc(12px + var(--safe-r)); top: calc(70px + var(--safe-t)); bottom: calc(8px + var(--safe-b)); width: min(420px, max(40vw, 280px)); padding: 12px 14px; }
   #ui .hd-name { font-size: 24px; }
   /* wardrobe: side panel again */
-  #ui .shop-panel { left: auto; right: calc(12px + var(--safe-r)); top: calc(70px + var(--safe-t)); bottom: calc(8px + var(--safe-b)); width: min(500px, 42vw); padding: 10px; }
+  #ui .shop-panel { left: auto; right: calc(12px + var(--safe-r)); top: calc(70px + var(--safe-t)); bottom: calc(8px + var(--safe-b)); width: min(500px, max(42vw, 300px)); padding: 10px; }
   #ui .hero-chips { margin: 0 0 6px; }
   #ui .hchip { width: 46px; height: 46px; }
   /* capsule: machine (scaled) with the big pull button beside it, odds panel on the right */
@@ -1544,6 +1544,16 @@ noscript { position: fixed; inset: 0; display: grid; place-items: center; font: 
   #ui .rs-role { grid-area: role; }
   #ui .rs-blurb { grid-area: blurb; display: block; margin: 0; font-size: 15px; }
   #ui .rescue-stage .row { grid-area: row; margin-top: 4px; }
+  /* stage card: name + new-enemy spotlight on the left, crown goals + GO on the right (GO always above the fold) */
+  #ui .stage-card { width: min(700px, 94vw); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); grid-template-areas: "id reqs" "name reqs" "world reqs" "new go"; align-items: center; justify-items: center; column-gap: 18px; row-gap: 6px; padding: 16px 58px 16px 20px; }
+  #ui .sc-id { grid-area: id; }
+  #ui .sc-name { grid-area: name; font-size: 24px; }
+  #ui .sc-world { grid-area: world; margin-top: 0; }
+  #ui .sc-new { grid-area: new; padding: 6px 14px 6px 8px; gap: 10px; }
+  #ui .sc-new .spot { width: 58px; height: 58px; }
+  #ui .sc-new .spot .cube { --s: 42px !important; }
+  #ui .sc-reqs { grid-area: reqs; align-self: stretch; align-items: stretch; }
+  #ui .stage-card > .btn-play { grid-area: go; }
   /* share poster: poster on the left, code + buttons on the right (the code pill never covers the poster) */
   #ui .share-pop { width: min(640px, 94vw); display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "poster rib" "poster code" "poster row"; align-content: center; align-items: center; justify-items: center; column-gap: 20px; row-gap: 12px; padding: 16px 20px; }
   #ui .share-pop > .ribbon { grid-area: rib; }
@@ -1593,8 +1603,39 @@ noscript { position: fixed; inset: 0; display: grid; place-items: center; font: 
   #ui .rules { grid-template-columns: repeat(4, 1fr); gap: 6px; }
   #ui .rule { min-height: 0; padding: 12px 4px 6px; gap: 4px; }
   #ui .pp-btns { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 2px; }
-  #ui .pp-btns .btn.big { min-height: 52px; padding: 8px 28px; font-size: 19px; }
+  #ui .pp-btns .btn { padding-left: 14px; padding-right: 14px; font-size: 16px; }
+  #ui .pp-btns .btn.big { min-height: 52px; padding: 8px 22px; font-size: 18px; }
   #ui .res-wrap { padding-bottom: calc(8px + var(--safe-b)); }
+}
+@media (max-height: 360px) and (min-aspect-ratio: 1/1) {
+  /* the smallest landscape phones (≈ 568 × 320) */
+  #ui .map-planets { height: 106px; padding-top: 18px; }
+  #ui .planet { width: 44px; height: 44px; }
+  #ui .pl-ring, #ui .pl-shine { display: none; }
+  #ui .pl-lock { font-size: 22px; }
+  #ui .pl-here .cube { --s: 20px !important; }
+  #ui .planet-btn.done .planet::after { width: 20px; height: 20px; font-size: 11px; line-height: 14px; right: -6px; bottom: -4px; }
+  #ui .pl-path { margin-bottom: 30px; }
+  #ui .world-panel { top: calc(170px + var(--safe-t)); padding: 6px 12px 8px; }
+  #ui .wp-head { flex-wrap: nowrap; }
+  #ui .wp-title b { font-size: 15px; }
+  #ui .pads { padding-top: 2px; gap: 6px; }
+  #ui .pad { height: 72px; }
+  #ui .pad.boss { height: 76px; }
+  #ui .pad-hero { top: -22px; } #ui .pad-hero .cube { --s: 22px !important; }
+  #ui .lv-level { display: none; }
+  #ui .lv-title { font-size: 30px; }
+  #ui .res-btns { gap: 6px; }
+  #ui .res-btns .btn { padding: 8px 14px; }
+  #ui .res-btns .btn-play.small { min-width: 140px; min-height: 58px; padding: 6px 18px 8px; }
+  #ui .res-btns .btn-play.small .bp-main { font-size: 22px; }
+  #ui .claim-box { gap: 4px; }
+  #ui .claim-title { font-size: 30px; }
+  #ui .claim-items { margin: 2px 0 4px; gap: 8px; }
+  #ui .ci { width: 112px; min-height: 0; padding: 12px 6px 8px; gap: 2px; }
+  #ui .ci-vis { height: 44px; }
+  #ui .ci .ci-vis .emo.big { font-size: 36px; }
+  #ui .btn-claim { min-width: 180px; min-height: 56px; font-size: 26px; }
 }
 @media (max-height: 560px) and (min-aspect-ratio: 1/1) and (min-width: 761px) {
   /* wide enough for the results head to share the top row with the wallet */

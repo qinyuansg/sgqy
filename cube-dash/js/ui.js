@@ -879,7 +879,10 @@ export class UI {
   _walletVisibility() {
     const sc = this.screen?.name;
     const hub = sc && HUB_SCREENS.includes(sc) && this.G.app?.state !== 'run';
-    const ovl = this.overlays.some((o) => ['claim', 'results', 'capsuleReveal', 'shop'].includes(o.id));
+    // raised above overlays only while the TOP popup is one the counter belongs to (claim fly-ins, results):
+    // a share / rescue / confirm popup opened over results must not have its ✕ covered by the coin pill
+    const top = [...this.overlays].reverse().find((o) => !o.passive);
+    const ovl = !!top && ['claim', 'results', 'capsuleReveal', 'shop'].includes(top.id);
     const show = !!(hub || ovl) && sc !== 'parent';
     this.walletEl.classList.toggle('hidden', !show);
     this.walletEl.classList.toggle('home', sc === 'home' && !this.overlays.length);
