@@ -161,7 +161,7 @@ const ARPS = {
 };
 
 // ============ songs ============
-// prog: 4 chords (1 per bar) per section letter; lead: 4 two-bar motifs per 8-bar section
+// prog: 4 (or 8) chords, 1 per bar, per section letter; lead: 4 two-bar motifs per 8-bar section
 // motif tokens = pentatonic degrees at 8th-note resolution (0 = key root, 5 = octave up)
 // transforms on motif refs: 'm0^' octave up · 'm0>' shift one 8th · 'm0~' thinned
 const SONGS = {
@@ -298,7 +298,8 @@ const SONGS = {
   },
   lullaby: { // break reminder — music box at 80 BPM
     bpm: 80, key: 'F', scale: 'majorPent', swing: 0.1, lead: 'musicbox', arp: 'up', arpTone: 'bell', bass: 'soft', drums: 'none',
-    prog: { A: ['I', 'vi', 'IV', 'V'], B: ['I', 'vi', 'IV', 'V'] },
+    // 8-chord progressions: the section closes IV → I under the tonic (was a sus4 over V)
+    prog: { A: ['I', 'vi', 'IV', 'V', 'I', 'vi', 'IV', 'I'], B: ['I', 'vi', 'IV', 'V', 'I', 'vi', 'IV', 'I'] },
     motifs: [
       '2 - 1 0 . . 1 2 | 3 - - - . . . .',
       '4 - 3 2 . . 3 1 | 2 - - - . . . .',
@@ -371,6 +372,7 @@ class Song {
     this.rng = makeRng(hashStr(name));
     this.motifRaw = def.motifs.map((m) => m.split(/\s+/).filter((x) => x && x !== '|'));
     this.bassPat = parseBass(BASS[def.bass] || BASS.bounce);
+    this.bassBreak = parseBass(BASS.soft);   // breakdown sections: long notes → real contrast before the drop back
     this.drumPat = DRUMS[def.drums] || DRUMS.four;
     this.arpPat = ARPS[def.arp] || ARPS.up;
     this.motif = null; this.leadPrev = null;
@@ -460,7 +462,7 @@ class Song {
     if (play('heart') && (st === 0 || st === 8)) sys._heartbeat(t, this.stem.heart);
     // bass on 8ths
     if (st % 2 === 0 && play('bass')) {
-      const tok = this.bassPat[st >> 1];
+      const tok = (this.sec?.breakdown ? this.bassBreak : this.bassPat)[st >> 1];
       if (tok) {
         const c = this.chord, iv = QUAL[c.q] || QUAL.M;
         let semi = 0;
@@ -476,7 +478,7 @@ class Song {
       const tones = this.voicing;
       const i = this.arpPat[(this.step >> (this.def.gentle ? 1 : 0)) % this.arpPat.length];
       const m = (i === 3 ? tones[0] + 12 : tones[i]) + 12;
-      sys._note(this.def.arpTone || 'tri', m, ts, sd * 0.9, this.arpIn, 0.5, false);
+      sys._note(this.def.arpTone || 'tri', m, ts, sd * 0.9, this.arpIn, TUNE.music.arpVel, false);
     }
     if (st % 4 === 0) sys._markBeat(t, sd * 4);
     this.step++;
@@ -499,7 +501,7 @@ class Song {
       this.occ = occ + this.loop * per;
     }
     const prog = this.def.prog[this.sec.prog] || this.def.prog.A;
-    this.chord = parseChord(prog[this.bar & 3]);
+    this.chord = parseChord(prog[(this.bar & 7) % prog.length]);
     this._voice(t);
     // lead motif for this 2-bar slot
     if ((this.bar & 1) === 0 || !this.motif) this.motif = this._resolveMotif(this.sec.lead[(this.bar & 7) >> 1]);
@@ -529,7 +531,7 @@ class Song {
     // put each tone in the octave nearest the previous voicing's centre (≈ 64)
     const out = tones.map((m) => { let x = m; while (x < 57) x += 12; while (x > 70) x -= 12; return x; }).sort((a, b) => a - b);
     this.voicing = out;
-    for (const p of this.padOsc) p.o.frequency.setTargetAtTime(mtof(out[p.v]), t, 0.05);
+    for (const p of this.padOsc) p.o.frequency.setTargetAtTime(mtof(out[p.v]), t, TUNE.music.padGlide);
     const a = this.padAmp.gain;
     a.setTargetAtTime(0.72, t, 0.012);
     a.setTargetAtTime(1, t + 0.04, 0.35);
@@ -1502,6 +1504,7 @@ export class AudioSys {
 
   _leadNote(tone, midi, t, dur, dest, vel, song) {
     const f = mtof(midi);
+    vel *= TUNE.music.leadGain;
     if (tone === 'bell' || tone === 'musicbox') { this._note(tone, midi, t, dur, dest, vel * 1.1); return; }
     const o = this._osc(tone, f, t, t + dur + 0.25);
     // 30 ms glide from the previous note when legato
@@ -1891,16 +1894,18 @@ const SFX = {
     return dur + 0.3;
   },
   smash(A, t, o, out) {
-    const L = A._ladder;
-    const chain = clamp((num(o.combo, 0) | 0) - 1, 0, 99);
-    const next = t - L.t < TUNE.ladder.reset ? L.idx + 1 : 0;
-    L.idx = Math.min(TUNE.ladder.max, Math.max(chain, next)); L.t = t;
+    // Pentatonic ladder: ONE step per smash chained within `ladder.reset` s, 2 octaves, then it sparkles
+    // around the top. (payload.combo is the STYLE counter — 20+ mid-run — so it must not pick the step,
+    // or every smash rings the top note.)
+    const L = A._ladder, M = TUNE.ladder.max;
+    L.n = t - L.t < TUNE.ladder.reset ? L.n + 1 : 0; L.t = t;
+    L.idx = L.n <= M ? L.n : M - [1, 0, 2, 0][(L.n - M) % 4];
     const k = o.byNova ? 0.7 : 1;
     A._tone('sine', 600, 120, t, 0.08, 0.28 * k, out, 0.001);
-    A._nz(t, 0.15, 0.12 * k, out, 'highpass', 3000, null, 0.7, 0.001);
+    A._nz(t, 0.15, 0.12 * k, out, 'bandpass', 4200, null, 0.9, 0.001);          // glass (band-limited: no >8 kHz fizz)
     A._nz(t, 0.06, 0.22 * k, out, 'bandpass', 1200, 500, 1, 0.001);
     A._tone('triangle', A._deg(L.idx, 0), null, t + 0.01, 0.3, 0.15, out, 0.002);
-    A._bell(A._deg(L.idx, 1), t + 0.01, 0.35, 0.045, out);
+    A._bell(A._deg(L.idx, L.idx < 5 ? 1 : 0), t + 0.01, 0.35, 0.045, out);       // sparkle octave only in the low half
     if (num(o.size, 1) >= 1.3) A._tone('sine', 90, 40, t, 0.15, 0.3, out, 0.002);
     return 0.45;
   },

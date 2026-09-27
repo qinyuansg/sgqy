@@ -280,7 +280,9 @@ const app = {
     timeCtl.stop = 0; timeCtl.slow = 1; timeCtl.slowHold = 0;
   },
   pause() {
-    if (!G.run || G.run.state === 'ended' || G.run.state === 'paused') return;
+    // the game is already frozen behind these overlays (cards, second-chance bubble, results)
+    const noPause = ['ended', 'paused', 'levelup', 'secondChance', 'victory', 'dying'];
+    if (!G.run || noPause.includes(G.run.state)) return;
     G.run.pause();
     if (G.run.state === 'paused') G.ui.showPause();
   },
@@ -375,8 +377,11 @@ function frame(nowMs) {
   G.audio.update(rdt);
   G.meta.tick?.(rdt);
   tickArt(G.time.real);
+  // behind an opaque full-panel menu the 3D scene is hidden: render at a trickle to save battery
+  if (!G.run && G.ui.coversScene) { if ((coveredFrame = (coveredFrame + 1) % 6) !== 0) return; }
   G.post.render(rdt);
 }
+let coveredFrame = 0;
 
 // ---------- boot ----------
 G.world.load(DATA.worlds[0].id);
