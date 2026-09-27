@@ -373,7 +373,8 @@ export class EnemyManager {
     this.tokenBonus = 0;            // waves.js raises this in endless
     this.minionCount = 0;
     this._blastBudget = TUNE.blastChainBudget;
-    this._deferred = [];            // spawns queued during iteration
+    this._deferred = [];            // spawns queued during iteration (double-buffered: no per-frame arrays)
+    this._deferredB = [];
     this._sorted = [];
     this._push = { x: 0, z: 0 };
     this._o = { x: 0, y: 0, z: 0, sx: 1, sy: 1, sz: 1, rotX: 0, rotY: 0, rotZ: 0, color: 0, expr: 0, blink: 0, lookX: 0, lookY: 0, flash: 0, glow: 0, opacity: 1 };
@@ -933,6 +934,16 @@ export class EnemyManager {
       if (e.type === 'popper' && e.armed && e.fuseLit !== undefined && e.fuse > 0 && !e.dead) {
         if (len2(e.x - px, e.z - pz) < e.def.blastRadius + radius) best = Math.min(best, e.fuse);
       }
+      if (e.type === 'beamer' && e.phase === 'sweep' && e.dizzyT <= 0) {   // the sweeping beam reaching the hero ("!" cue + Perfect)
+        const dx = px - e.x, dz = pz - e.z, dist = len2(dx, dz);
+        if (dist <= e.beamLen + radius && dist > 0.3) {
+          let da = angDiff(e.beamA, Math.atan2(dx, dz)) * e.beamSign;       // radians still to sweep before the beam reaches us
+          const w = (e.def.beamWidth * 0.5 + radius) / dist;
+          const end = e.beamA0 + e.beamSign * e.def.sweepDeg * DEG;
+          const left = angDiff(e.beamA, end) * e.beamSign;
+          if (da > -w && da - w <= left) best = Math.min(best, Math.max(0, (da - w) / (e.def.sweepDeg * DEG / e.def.sweepTime)));
+        }
+      }
       if (!e.harmful) continue;
       const rx = e.x - px, rz = e.z - pz, R = radius + e.radius;
       const c = rx * rx + rz * rz - R * R;
@@ -1008,14 +1019,17 @@ export class EnemyManager {
   // ─────────────── update ───────────────
   update(dt) {
     this._frame++;
+    // split minis appear on the very next frame, even while a smash hit-stop freezes time
+    if (this._deferred.length) {
+      const q = this._deferred;
+      this._deferred = this._deferredB; this._deferredB = q;
+      for (let i = 0; i < q.length; i++) { const a = q[i]; this.spawn(a[0], a[1], a[2], a[3]); }
+      q.length = 0;
+    }
     if (!(dt > 0)) { this._render(0); return; }
     this.time += dt;
     this._blastBudget = TUNE.blastChainBudget;
     this._shakeBudget = Math.max(0, this._shakeBudget - dt * 2);
-    if (this._deferred.length) {
-      const q = this._deferred.splice(0);
-      for (const a of q) this.spawn(a[0], a[1], a[2], a[3]);
-    }
     this._tokenT -= dt;
     if (this._tokenT <= 0) { this._tokenT = TUNE.tokenRecheck; this._assignTokens(); }
     const list = this.list;
