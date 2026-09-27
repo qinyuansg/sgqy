@@ -1398,6 +1398,7 @@ noscript { position: fixed; inset: 0; display: grid; place-items: center; font: 
   #ui .scr-head { gap: 8px; }
   #ui .pill-stat { font-size: 13px; padding: 5px 10px; }
   #ui .lc-key { display: none; }
+  #ui .pb-name { font-size: 19px; word-break: normal; overflow-wrap: anywhere; }
 }
 @media (max-height: 760px) {
   #ui .res-hero .cube { --s: 46px !important; }

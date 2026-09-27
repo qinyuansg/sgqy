@@ -1898,7 +1898,7 @@ export class UI {
   // ═════════ CUBE-DEX 图鉴 ═════════
   _dexData() {
     const d = this._m('dex') || {};
-    const src = d.entries || d.list || (Array.isArray(d) ? d : d.counts || d);
+    const src = Array.isArray(d) ? d : (Array.isArray(d.entries) ? d.entries : Array.isArray(d.list) ? d.list : d.counts || d);
     const map = {};
     if (Array.isArray(src)) for (const e of src) map[e.id || e.type] = e;
     else if (src && typeof src === 'object') Object.assign(map, src);
@@ -2753,7 +2753,8 @@ export class UI {
     o?.el.classList.add('done');
     this._layerChanged();
     const { rewards, results } = this.res || {};
-    const rescued = rewards?.rescued || results?.rescued;
+    // meta decides: rescued is null when the hero was already owned (the dup turns into 3 tickets instead)
+    const rescued = rewards ? rewards.rescued : results?.rescued;
     if (rescued) this.showRescue(rescued, 'rescue');
     const tb = rewards?.rankBefore?.tier, ta = rewards?.rankAfter?.tier;
     if (ta != null && tb != null && ta > tb && !this.queue.some((x) => x.type === 'rankup') && this.lastRankTier !== ta) { this.lastRankTier = ta; this.showRankUp(rewards.rankAfter, rewards.rankBefore); }

@@ -1362,8 +1362,9 @@ export class Meta {
     const bossDefeated = !!results.bossDefeated || (stage?.boss && win);
     if (bossDefeated && !freedBy.king) freedBy.king = 1;
     const freedRun = sumVals(results.freed) || L.freed || sumVals(L.freedBy) || (results.smashes | 0);
-    // wave REACHED as the HUD shows it: run.wave is the 0-based index of the current wave
-    const wave = Number.isFinite(+results.wave) ? (results.wave | 0) + 1 : (results.wavesCleared | 0);
+    // wave REACHED as the HUD shows it: run.js already reports results.wave 1-based
+    // (stage: index + 1, endless: waves.endlessN which counts from 1) — don't add 1 again
+    const wave = Number.isFinite(+results.wave) ? Math.max(0, results.wave | 0) : (results.wavesCleared | 0);
     const hitsTaken = results.hitsTaken ?? 0;
 
     // ---- crowns 👑 (independent & permanent)
