@@ -66,12 +66,13 @@ const TUNE = {
   // high-pass, _dev/review-audio): core verbs sit ≈ 6–10 dB over the in-run music, telegraphs ≈ 4–8 dB,
   // frequent small feedback (dizzy, land, freed) at or just under it, nothing repeated louder than a smash.
   level: {
-    zap: 0.8, bolt: 0.8, babble: 0.45, stomp: 1.2, miniNova: 0.7, dash: 1.0,
+    zap: 1.2, bolt: 1.1, babble: 0.35, stomp: 1.2, miniNova: 0.7, dash: 1.3, hurt: 1.4,
     crystal: 1.4, nearMiss: 1.4, coin: 1.5, freed: 2.5, dizzy: 1.5, whoosh: 3.5, open: 3.5, coinTick: 2,
     cue: 1.6, windup: 1.5, checkpoint: 2, coinBurst: 1.3, motif: 2.2, novaReady: 2.2, land: 0.6, wave: 1.8,
-    claim: 1.8, buy: 1.8, milestone: 1.8, knock: 1.6, puff: 1.8, notYet: 2, womp: 1.4, error: 1.6,
-    explode: 1.1, slam: 1.1,
+    claim: 1.8, buy: 1.8, milestone: 1.8, knock: 2.4, puff: 1.8, notYet: 2, womp: 1.4, error: 1.6,
+    explode: 1.1, slam: 1.1, escape: 0.4, tired: 0.8, bossJump: 2, bossCharge: 1.6,
   },
+  spawnDrop: 0.6,                           // portal cube fall time √(2·7/38) s (enemies.js dropHeight / gravity)
   ladder: { reset: 1.2, max: 10 },          // smash chime: 2 octaves of pentatonic, one step per chained smash
   crystalLadder: { reset: 0.5, max: 5 },    // crystal pings climb ≤ 1 octave (spec: +12 semitones max)
 };
@@ -336,6 +337,7 @@ const VOICES = {
   king: { f: 180, syl: 0.11, wave: 'sawtooth', vib: 0, gap: 0.035, crush: true },
   pixel: { f: 820, syl: 0.055, wave: 'square', vib: 0, gap: 0.02 },
   villager: { f: 640, syl: 0.06, wave: 'triangle', vib: 0, gap: 0.025 },
+  coin: { f: 900, syl: 0.045, wave: 'square', vib: 0, gap: 0.03 },
 };
 const VOWELS = [[800, 1200], [400, 2000], [300, 2300], [500, 900], [350, 700]];
 // mood → pitch contour (semitones per syllable position 0..1) + syllable count range
@@ -444,8 +446,12 @@ class Song {
     g.setValueAtTime(g.value, t);
     g.linearRampToValueAtTime(0, t + fade);
     for (const p of this.padOsc) { try { p.o.stop(t + fade + 0.1); } catch { /* already stopped */ } }
-    const out = this.out;
-    if (!this.sys.offline) setTimeout(() => { try { out.disconnect(); } catch { /* gone */ } }, (fade + 0.4) * 1000 + Math.max(0, t - this.sys._now()) * 1000);
+    // drop the whole graph afterwards — incl. the arp delay↔feedback loop, which never goes quiet on its own
+    const nodes = [this.out, this.pump, this.arpIn, this.delay, this.fb, this.wet, this.padLp, this.padAmp, ...Object.values(this.stem)];
+    if (!this.sys.offline) {
+      setTimeout(() => { for (const n of nodes) { try { n.disconnect(); } catch { /* gone */ } } },
+        (fade + 0.4) * 1000 + Math.max(0, t - this.sys._now()) * 1000);
+    }
   }
 
   // ---------- one 16th step ----------
@@ -613,6 +619,7 @@ const ACTIVE_STATES = new Set(['playing', 'levelup', 'paused', 'secondChance', '
 const INTRO_STATES = new Set(['intro', 'countdown']);
 const UI_SOUNDS = new Set(['click', 'back', 'claim', 'buy', 'error', 'whoosh', 'capsule', 'rankup', 'unlock', 'star', 'tick', 'pop', 'hover', 'coinTick', 'cardReveal', 'babble', 'open']);
 const QUANTISED = new Set(['levelup', 'novaReady', 'milestone', 'wave', 'waveClear', 'checkpoint']);
+const PRIORITY = new Set(TUNE.voices.priority);
 
 export class AudioSys {
   /** names for dev harnesses / UI previews */
@@ -635,6 +642,10 @@ export class AudioSys {
     this._slowT = 0; this._hurtAt = -99; this._perfectAt = -99; this._novaDuckUntil = -99;
     this._bossPhase = 1; this._endlessT = 0; this._stingerFor = null; this._prevRunState = null;
     this._lastGo = -99; this._lastCheer = -99;
+    this._afterStinger = null;            // track that follows the victory/defeat stinger (default 'hub')
+    this._timers = [];                    // [{at (ctx time), fn, tag}] — run from update(), pause with the context
+    this._portals = new Float64Array(24); this._portalN = 0;   // recent portal x, z, ctx time (spawn → landing sync)
+    this._lastHero = null;
     this._mix = { duck: 1, lp: 20000 };
     // beat clock (ring buffers, no allocations per frame)
     this._beatT = new Float64Array(16); this._beatD = new Float64Array(16); this._beatN = 0;
@@ -695,6 +706,7 @@ export class AudioSys {
     if (track && !SONGS[track] && track !== 'victory' && track !== 'defeat') { console.warn('[audio] unknown track', track); return; }
     const now = this.ctx ? this._now() : 0;
     const same = track === this.track && (track === null || this.song?.name === track || (this._stinger && this._stinger.track === track && this._stinger.end > now));
+    if (track !== 'victory' && track !== 'defeat') this._afterStinger = null;   // an explicit choice wins over the queued lullaby
     this.track = track;
     if (!this.ctx || same) return;
     this._startTrack(track);
@@ -868,6 +880,13 @@ export class AudioSys {
     on('objective:done', S('star'));
     on('tutorial:step', S('pop'));
     on('gate:open', S('gate'));
+    on('gate:enter', S('warp'));
+    on('gate:close', (p) => { if (!p.entered) this.sfx('gateClose', p); });
+    on('coin:appear', S('coinAppear'));                      // "ding-ding!" — the treasure cube arrived
+    on('storm:shrink', S('shrink'));
+    on('rush:next', (p) => this.sfx('wave', { ...p, isBoss: true }));
+    on('world:bumper', S('bumper'));
+    on('world:tile', (p) => { if (p.state === 'gone') this.sfx('tileGone', p); });
     // ---- player ----
     on('player:dash', (p) => this.sfx(p.blink || p.kind === 'blink' ? 'blink' : 'dash', p));
     on('player:dashDenied', S('puff'));
@@ -877,7 +896,10 @@ export class AudioSys {
       const now = this.G?.time?.real ?? 0;
       if (now - this._lastCheer > 4 && Math.random() < 0.4) { this._lastCheer = now; this.sfx('babble', { hero: this._heroId(), mood: 'cheer', at: this._now() + 0.35 }); }
     });
-    on('player:nearMiss', S('nearMiss'));
+    on('player:nearMiss', (p) => {                            // whoosh panned to the side the cube passed on
+      const dx = num(p.ex, NaN) - num(p.x, NaN);
+      this.sfx('nearMiss', Number.isFinite(dx) ? { ...p, pan: clamp(dx / 2.5, -0.7, 0.7) } : p);
+    });
     on('player:hurt', (p) => { this._hurtAt = this._now?.() ?? 0; this.sfx('hurt', p); });
     on('player:heal', S('heal'));
     on('player:shieldBlock', S('shield'));
@@ -890,6 +912,7 @@ export class AudioSys {
     on('player:revive', (p) => { this.sfx('revive', p); this.sfx('babble', { hero: this._heroId(), mood: 'cheer', at: this.ctx ? this._now() + 0.4 : 0 }); });
     on('player:levelup', (p) => { this.sfx('levelup', p); this.sfx('cardReveal', { at: this.ctx ? this._now() + 0.45 : 0 }); });
     on('card:chosen', S('card'));
+    on('card:reroll', S('reroll'));
     on('card:setBonus', S('setBonus'));
     on('card:mininova', S('miniNova'));
     on('card:reaction', (p) => this.sfx('pop', { ...p, pitch: 1 + Math.min(12, p.count || 0) * 0.06 }));
@@ -916,20 +939,35 @@ export class AudioSys {
     on('pickup:coin', S('coin'));
     on('pickup:magnet', S('magnet'));
     // ---- enemies / boss ----
-    on('enemy:spawnWarn', S('portal'));
-    on('enemy:spawn', (p) => { if (!p.silent) this.sfx('land', p); });
+    on('enemy:spawnWarn', (p) => { this._notePortal(p); this.sfx('portal', p); });
+    on('enemy:spawn', (p) => {
+      if (p.silent) return;
+      // a portal spawn is emitted when the cube starts to FALL: the thud belongs to the landing ≈ 0.6 s later
+      const drop = !p.rain && this._wasPortal(p) ? TUNE.spawnDrop : 0;
+      this.sfx('land', drop && this.ctx ? { ...p, at: this._now() + drop } : p);
+    });
     on('enemy:bonk', S('bonk'));
-    on('enemy:knock', S('knock'));
+    on('enemy:knock', (p) => { if (p.type === 'zippy') this._stopNear('windup', p.x, p.z, 3, 'zippy'); this.sfx('knock', p); });
     on('enemy:clang', S('clang'));
-    on('enemy:dizzy', S('dizzy'));
+    on('enemy:dizzy', (p) => { if (p.type === 'zippy') this._stopNear('windup', p.x, p.z, 3, 'zippy'); this.sfx('dizzy', p); });
     on('enemy:wake', S('wake'));
-    on('enemy:windup', S('windup'));
+    on('enemy:windup', (p) => {
+      if (p.type === 'boss') { this.sfx('bossWindup', p); return; }
+      if (p.type === 'popper') this._stopNear('windup', p.x, p.z, 3, 'popper');   // knocked → the short fuse replaces the old beeps
+      this.sfx('windup', p);
+    });
+    on('enemy:charge', S('charge'));                          // Zippy lets go: zoom
+    on('enemy:tired', S('tired'));                            // Zippy ran out of steam → smash me
+    on('enemy:beam', S('beam'));                              // Beamer sweep: zap + hum
+    on('enemy:overheat', S('overheat'));                      // Beamer overheated → smash me
     on('enemy:smash', S('smash'));
     on('enemy:freed', (p) => this.sfx(p.treasure ? 'coinBurst' : 'freed', p));
     on('enemy:coinBurst', S('coinBurst'));
-    on('enemy:explode', S('explode'));
+    on('enemy:explode', (p) => { this._stopNear('windup', p.x, p.z, 10, 'popper'); this.sfx('explode', p); });
     on('enemy:split', S('split'));
     on('enemy:shieldPop', S('shieldPop'));
+    on('enemy:fall', S('fall'));                              // W6: dropped through a glitch hole
+    on('enemy:escape', S('escape'));                          // the coin cube giggles away through a portal
     on('boss:intro', (p) => {
       this.flags.drone = false;
       this._runTrack = 'boss';
@@ -941,17 +979,26 @@ export class AudioSys {
       this.sfx('babble', { hero: 'king', mood: 'laugh', at: this.ctx ? this._now() + 1.2 : 0 });
     });
     on('boss:phase', (p) => this._onBossPhase(p));
+    on('boss:roar', (p) => { this.sfx('roar', p); this.sfx('babble', { hero: 'king', mood: 'angry', at: this.ctx ? this._now() + 0.35 : 0 }); });
+    on('boss:jump', S('bossJump'));
+    on('boss:charge', S('bossCharge'));
+    on('boss:laser', S('bossLaser'));
+    on('boss:stagger', S('stagger'));
+    on('boss:shell', S('shell'));
     on('boss:slam', S('slam'));
     on('boss:vulnerable', S('vulnerable'));
     on('boss:hit', S('bossHit'));
-    on('boss:defeat', S('bossDefeat'));
+    on('boss:defeat', (p) => { this.sfx('bossDefeat', p); this._onBossDefeat(); });
     // ---- ui / meta ----
     for (const n of ['click', 'back', 'claim', 'buy', 'error']) on('ui:' + n, S(n));
     on('ui:open', S('whoosh'));
     on('meta:rankup', S('rankup'));
     on('meta:unlock', S('unlock'));
-    on('meta:break', () => { this.music('lullaby'); this.sfx('babble', { hero: 'blu', mood: 'sleepy', at: this.ctx ? this._now() + 0.6 : 0 }); });
-    on('meta:goodnight', () => { this.music('lullaby'); this.sfx('babble', { hero: 'blu', mood: 'sleepy' }); });
+    // break reminder / daily limit: meta.js emits meta:guardian after the run (ui shows the card later);
+    // the lullaby takes over from the results stinger instead of the hub tune. meta:break/goodnight kept too.
+    on('meta:guardian', (p) => { if (p.kind === 'break' || p.kind === 'limit') this._lullaby(); });
+    on('meta:break', () => this._lullaby());
+    on('meta:goodnight', () => this._lullaby());
     on('settings:change', ({ key, value }) => {
       if (key === 'music') this.setVolumes({ music: value });
       else if (key === 'sfx') this.setVolumes({ sfx: value });
@@ -975,7 +1022,8 @@ export class AudioSys {
     const run = this.G?.run;
     const stageDef = run?.stageDef || DATA.worlds[wi]?.stages?.[p.stageId];
     const isBoss = !!(run?.isBossStage || stageDef?.boss || stageDef?.kind === 'boss');
-    this._stingerFor = null; this._prevRunState = null; this._bossPhase = 1;
+    this._stingerFor = null; this._prevRunState = null; this._bossPhase = 1; this._afterStinger = null;
+    this._cancelTimers('endlessBack');
     this._ladder.idx = -1; this._ladder.n = -1; this._ladder.t = -99; this._crys.idx = -1; this._near.idx = 0;
     this.flags.novaReady = false; this.flags.fever = false;
     this._endlessT = 0;
@@ -1143,15 +1191,68 @@ export class AudioSys {
       end = tt + 0.8;
     }
     this._stinger = { out, end, track: kind };
-    // afterwards: the friendly hub tune comes back (UI may pick another track sooner)
+    // afterwards: the friendly hub tune comes back — or the lullaby when a break is due (UI may pick another track sooner)
     const after = kind === 'victory' ? 0.4 : 0.6;
-    const back = () => {
+    this._later(end + after, () => {
       if (this._stinger?.out !== out) return;
       this._stinger = null;
-      if (this.track === kind) { this.track = 'hub'; this._startTrack('hub'); }
-    };
-    if (this.offline) this._pendingBack = { at: end + after, fn: back };
-    else setTimeout(back, Math.max(0, end + after - this._now()) * 1000);
+      if (this.track !== kind) return;
+      const next = this._afterStinger || 'hub';
+      this._afterStinger = null;
+      this.track = next; this._startTrack(next);
+      if (next === 'lullaby') this.sfx('babble', { hero: this._heroId(), mood: 'sleepy', at: this._now() + 0.8 });
+    }, 'stinger');
+  }
+
+  /** break reminder / goodnight: gentle music box (after the results stinger if one is playing) */
+  _lullaby() {
+    const now = this.ctx ? this._now() : 0;
+    if (this._stinger && this._stinger.end + 1 > now) { this._afterStinger = 'lullaby'; return; }
+    const r = this.G?.run;
+    if (r && r.state !== 'ended') return;                     // never mid-run
+    if (this.track === 'lullaby') return;
+    this.music('lullaby');
+    this.sfx('babble', { hero: this._heroId(), mood: 'sleepy', at: this.ctx ? now + 0.6 : 0 });
+  }
+
+  /** endless: the boss theme hands back to the (still climbing) endless theme after a boss falls */
+  _onBossDefeat() {
+    const r = this.G?.run;
+    if (!r || r.mode !== 'endless' || this._runTrack !== 'boss') return;
+    this._runTrack = 'endless';
+    this._bossPhase = 1;
+    if (!this.ctx) { this.track = 'endless'; return; }
+    this._cancelTimers('endlessBack');
+    this._later(this._now() + TUNE.music.endlessBossBack, () => {
+      if (this.G?.run !== r || this._runTrack !== 'endless' || this._stinger) return;
+      this.music('endless');
+    }, 'endlessBack');
+  }
+
+  // ---- portal → landing sync (enemy:spawn fires when the cube starts to fall) ----
+  _notePortal(p) {
+    if (!Number.isFinite(p.x) || !Number.isFinite(p.z)) return;
+    const i = (this._portalN++ % 8) * 3, P = this._portals;
+    P[i] = p.x; P[i + 1] = p.z; P[i + 2] = this.ctx ? this._now() : 0;
+  }
+  _wasPortal(p) {
+    if (!Number.isFinite(p.x) || !Number.isFinite(p.z)) return false;
+    const P = this._portals, now = this.ctx ? this._now() : 0;
+    for (let i = 0; i < 24; i += 3) if (now - P[i + 2] < 5 && Math.abs(P[i] - p.x) < 0.05 && Math.abs(P[i + 1] - p.z) < 0.05) return true;
+    return false;
+  }
+
+  /** fade out the nearest still-sounding voice `name` (optionally of enemy type `kind`) within maxD of x, z */
+  _stopNear(name, x, z, maxD = 4, kind = null) {
+    if (!this.ctx) return;
+    const now = this._now();
+    let best = null, bd = maxD * maxD;
+    for (const v of this._voices) {
+      if (v.dead || v.name !== name || v.end <= now + 0.05 || (kind && v.kind !== kind)) continue;
+      const d = Number.isFinite(x) && Number.isFinite(v.x) ? (v.x - x) ** 2 + (v.z - z) ** 2 : bd - 1e-6;
+      if (d <= bd) { bd = d; best = v; }
+    }
+    if (best) this._steal(best, now);
   }
 
   _pumpMusic(now) {
@@ -1197,8 +1298,20 @@ export class AudioSys {
     this._mixFrame(now);
     this._beatFrame(rdt, now);
     this._reapVoices(now);
-    if (this._pendingBack && now >= this._pendingBack.at) { const b = this._pendingBack; this._pendingBack = null; b.fn(); }
+    this._runTimers(now);
   }
+
+  /** run fn at context time `at` (from update(); frozen while the context is suspended / tab hidden) */
+  _later(at, fn, tag = '') { this._timers.push({ at, fn, tag }); }
+  _runTimers(now) {
+    const T = this._timers;
+    for (let i = T.length - 1; i >= 0; i--) {
+      if (T[i].at > now) continue;
+      const tm = T[i]; T.splice(i, 1);
+      try { tm.fn(); } catch (err) { this._warnOnce('timer', err); }
+    }
+  }
+  _cancelTimers(tag) { this._timers = this._timers.filter((x) => x.tag !== tag); }
 
   _readRun(rdt, now) {
     const G = this.G, run = G?.run, f = this.flags;
@@ -1207,6 +1320,12 @@ export class AudioSys {
       f.inRun = !!run; f.state = run?.state ?? null; f.active = false; f.paused = false; f.danger = false;
       this._slowT = 0;
       this._i += (0 - this._i) * Math.min(1, rdt);
+      // Blu-speak on hero select: the newly picked hero says hi in its own voice (lobby only)
+      if (!run && G?.app?.state === 'hub') {
+        const h = G.meta?.selectedHero;
+        if (h && this._lastHero && h !== this._lastHero) this.sfx('babble', { hero: h, mood: 'happy' });
+        if (h) this._lastHero = h;
+      }
       return;
     }
     const st = run.state;
@@ -1342,7 +1461,7 @@ export class AudioSys {
     if (r.frame !== this._frameNo) { r.frame = this._frameNo; r.n = 0; }
     if (r.n >= (V.perFrame[name] ?? V.defaultPerFrame)) return false;
     if (this._fcFrame !== this._frameNo) { this._fcFrame = this._frameNo; this._fc = 0; }
-    if (this._fc >= V.perFrameTotal) return false;
+    if (this._fc >= V.perFrameTotal && !PRIORITY.has(name)) return false;
     this._fc++;
     r.n++; r.last = now;
     return true;
@@ -1388,7 +1507,7 @@ export class AudioSys {
       out.connect(pn); tail = pn;
     }
     tail.connect(bus);
-    const v = { name, t0: t, end: t + 2, out, tail, src: [], dead: false };
+    const v = { name, t0: t, end: t + 2, out, tail, src: [], dead: false, x: o.x, z: o.z, kind: o.type };
     list.push(v);
     return v;
   }
@@ -1752,9 +1871,9 @@ const SFX = {
   },
   stomp(A, t, o, out) {
     A._tone('sine', 90, 40, t, 0.25, 0.4, out, 0.003);
-    A._tone('triangle', 210, 80, t, 0.12, 0.2, out, 0.002, 0.1);           // mid "thud" that phone speakers can play
+    A._tone('triangle', 210, 80, t, 0.12, 0.35, out, 0.002, 0.1);          // mid "thud" that phone speakers can play
     A._nz(t, 0.2, 0.18, out, 'lowpass', 600, null, 0.7);
-    A._nz(t, 0.05, 0.1, out, 'bandpass', 1100, null, 1, 0.001);
+    A._nz(t, 0.05, 0.2, out, 'bandpass', 1100, null, 1, 0.001);
     return 0.35;
   },
   implode(A, t, o, out) {
@@ -1897,9 +2016,8 @@ const SFX = {
       const lp = A._filter('lowpass', 2500, 2); s.connect(lp);
       const g = A.ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.045, t + dur); g.gain.setTargetAtTime(0, t + dur, 0.02);
       lp.connect(g); g.connect(out);
-      A._nz(t, dur, 0.02, out, 'highpass', 6000, null, 0.5, dur * 0.8);
-      A._tone('square', 1800, 900, t + dur, 0.12, 0.05, out, 0.002);    // zap
-      return dur + 0.2;
+      A._nz(t, dur, 0.02, out, 'bandpass', 5000, null, 0.8, dur * 0.8);
+      return dur + 0.1;                                                     // the zap + hum play on enemy:beam
     }
     const dur = clamp(num(o.time, (type === 'zippy' ? E.zippy?.windup : 0.6) ?? 0.8), 0.2, 3);
     const s = A._osc('square', 300, t, t + dur + 0.05);
@@ -1907,8 +2025,69 @@ const SFX = {
     const lp = A._filter('lowpass', 2000, 1); s.connect(lp);
     const g = A.ctx.createGain(); g.gain.setValueAtTime(0.004, t); g.gain.linearRampToValueAtTime(0.055, t + dur); g.gain.setTargetAtTime(0, t + dur, 0.015);
     lp.connect(g); g.connect(out);
-    A._nz(t + dur, 0.25, 0.18, out, 'bandpass', 800, 3000, 1.5, 0.01);    // zoom
-    return dur + 0.3;
+    return dur + 0.1;                                                       // the zoom plays on enemy:charge (not if it got knocked)
+  },
+  /** King Glitch telegraphs, lasting exactly the fill: slam = rising rumble, charge = engine rev, laser = charging whine */
+  bossWindup(A, t, o, out) {
+    const dur = clamp(num(o.time, 1.2), 0.3, 3);
+    const g = A.ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.07, t + dur * 0.95); g.gain.setTargetAtTime(0, t + dur, 0.03);
+    g.connect(out);
+    if (o.move === 'laser') {
+      const s = A._osc('sawtooth', 300, t, t + dur + 0.2); s.frequency.exponentialRampToValueAtTime(1200 * A._pm, t + dur);
+      const bp = A._filter('bandpass', 900, 2); bp.frequency.setValueAtTime(600, t); bp.frequency.exponentialRampToValueAtTime(2400, t + dur);
+      A._vibrato(s, 600, t, t + dur);
+      s.connect(bp); bp.connect(g);
+      return dur + 0.2;
+    }
+    const lo = o.move === 'charge' ? 70 : 55;
+    for (const [m, type] of [[1, 'sawtooth'], [2.01, 'square']]) {
+      const s = A._osc(type, lo * m, t, t + dur + 0.2);
+      s.frequency.exponentialRampToValueAtTime(lo * m * (o.move === 'charge' ? 2.2 : 1.8) * A._pm, t + dur);
+      s.connect(g);
+    }
+    const lp = A._filter('lowpass', 250, 4); lp.frequency.setValueAtTime(250, t); lp.frequency.exponentialRampToValueAtTime(1500, t + dur);
+    const n = A._noise(t, t + dur + 0.2, 0.5); n.connect(lp); lp.connect(g);
+    if (o.move === 'charge') A._tone('square', 900, 700, t + dur * 0.75, 0.04, 0.05, out, 0.001);   // aim-lock tick
+    return dur + 0.2;
+  },
+  charge(A, t, o, out) {                                                    // Zippy lets go: zoom
+    A._nz(t, 0.25, 0.28, out, 'bandpass', 800, 3000, 1.5, 0.01);
+    A._tone('square', 900, 1300, t, 0.08, 0.04, out, 0.002);
+    return 0.3;
+  },
+  tired(A, t, o, out) {                                                     // deflating "wheee-oo" + stars: smashable now
+    const s = A._osc('triangle', 900, t, t + 0.45); s.frequency.exponentialRampToValueAtTime(260 * A._pm, t + 0.38);
+    A._vibrato(s, 500, t, t + 0.4);
+    s.connect(A._env(t, 0.01, 0.12, 0.2, 0.15, out));
+    SFX.dizzy(A, t + 0.3, o, out);
+    return 0.6;
+  },
+  beam(A, t, o, out) {                                                      // Beamer fires: zap, then a thin hum for the sweep
+    const dur = clamp(num(o.time, DATA.enemies?.beamer?.sweepTime ?? 2), 0.3, 4);
+    A._tone('square', 1800, 900, t, 0.12, 0.05, out, 0.002);
+    const s = A._osc('sawtooth', 880, t, t + dur + 0.2);
+    A._vibrato(s, 880, t, t + dur);
+    const bp = A._filter('bandpass', 1500, 2); s.connect(bp);
+    bp.connect(A._env(t, 0.05, 0.03, dur - 0.15, 0.15, out));
+    return dur + 0.2;
+  },
+  overheat(A, t, o, out) {                                                  // steam hiss + cooling "pew" + smash-me ping
+    A._nz(t, 0.8, 0.07, out, 'bandpass', 3500, 1500, 0.7, 0.02);
+    A._tone('triangle', 1200, 500, t, 0.3, 0.1, out, 0.005);
+    SFX.dizzy(A, t + 0.25, o, out);
+    return 0.9;
+  },
+  fall(A, t, o, out) { A._tone('sine', 900, 180, t, 0.7, 0.07, out, 0.01, 0.65); return 0.8; },   // cartoon falling whistle
+  escape(A, t, o, out) {                                                    // the coin cube giggles off through a portal
+    SFX.babble(A, t, { hero: 'coin', mood: 'laugh', n: 5 }, out);
+    A._tone('sine', 400, 1600, t + 0.45, 0.25, 0.08, out, 0.01, 0.2);
+    return 1.0;
+  },
+  coinAppear(A, t, o, out) {                                                // "ding-ding!"
+    A._bell(A._deg(7, 0), t, 0.5, 0.11, out);
+    A._bell(A._deg(9, 0), t + 0.15, 0.8, 0.11, out);
+    A._nz(t + 0.15, 0.4, 0.02, out, 'bandpass', 6000, null, 1, 0.05);
+    return 1.0;
   },
   smash(A, t, o, out) {
     // Pentatonic ladder: ONE step per smash chained within `ladder.reset` s, 2 octaves, then it sparkles
@@ -1937,10 +2116,10 @@ const SFX = {
   },
   explode(A, t, o, out) {
     A._nz(t, 0.4, 0.42, out, 'lowpass', 400, null, 0.7, 0.002);
-    A._nz(t, 0.3, 0.2, out, 'bandpass', 1500, 280, 0.9, 0.002);             // mid crunch: the BOOM survives phone speakers
+    A._nz(t, 0.3, 0.35, out, 'bandpass', 1500, 280, 0.9, 0.002);            // mid crunch: the BOOM survives phone speakers
     A._tone('sine', 60, 40, t, 0.5, 0.42, out, 0.002);
     A._tone('sine', 300, 80, t, 0.1, 0.18, out, 0.001);
-    A._tone('triangle', 240, 70, t, 0.2, 0.2, out, 0.001, 0.16);
+    A._tone('triangle', 240, 70, t, 0.2, 0.3, out, 0.001, 0.16);
     for (let i = 0; i < 4; i++) A._nz(t + 0.05 + i * 0.05 + Math.random() * 0.03, 0.03, 0.06, out, 'highpass', 2500, null, 0.7, 0.001);
     return 0.6;
   },
@@ -1968,10 +2147,40 @@ const SFX = {
   slam(A, t, o, out) {
     A._tone('sine', 40, 32, t, 0.6, 0.6, out, 0.003);
     A._nz(t, 0.5, 0.3, out, 'lowpass', 800, 150, 0.7, 0.002);
-    A._nz(t, 0.3, 0.16, out, 'bandpass', 1000, 220, 0.9, 0.002);           // audible on small speakers
+    A._nz(t, 0.3, 0.3, out, 'bandpass', 1000, 220, 0.9, 0.002);            // audible on small speakers
     A._tone('sine', 120, 50, t, 0.15, 0.35, out, 0.001);
-    A._tone('triangle', 200, 65, t, 0.22, 0.22, out, 0.001, 0.18);
+    A._tone('triangle', 200, 65, t, 0.22, 0.32, out, 0.001, 0.18);
     return 0.8;
+  },
+  bossJump(A, t, o, out) { A._nz(t, 0.35, 0.16, out, 'bandpass', 300, 1600, 1.2, 0.03); A._tone('triangle', 150, 420, t, 0.3, 0.1, out, 0.02, 0.3); return 0.4; },
+  bossCharge(A, t, o, out) {
+    A._nz(t, 0.45, 0.24, out, 'bandpass', 500, 2500, 1.3, 0.01);
+    A._tone('sawtooth', 110, 55, t, 0.3, 0.1, out, 0.005);
+    A._tone('triangle', 220, 110, t, 0.2, 0.14, out, 0.003);
+    return 0.5;
+  },
+  bossLaser(A, t, o, out) {                                                 // beams on for the whole spin (moves.laser.time)
+    const dur = clamp(num(o.time, DATA.boss?.moves?.laser?.time ?? 4), 0.5, 6);
+    A._tone('square', 2000, 800, t, 0.15, 0.06, out, 0.002);
+    const bp = A._filter('bandpass', 1100, 3);
+    bp.connect(A._env(t, 0.1, 0.035, dur - 0.3, 0.2, out));
+    for (const f of [440, 443, 660]) { const s = A._osc('sawtooth', f, t, t + dur + 0.2); A._vibrato(s, f, t, t + dur); s.connect(bp); }
+    return dur + 0.2;
+  },
+  stagger(A, t, o, out) {                                                   // stagger bar full → a big comic BONK + dizzy swirl
+    SFX.bonk(A, t, { strength: 2 }, out);
+    const s = A._osc('triangle', 900, t + 0.1, t + 0.8); s.frequency.exponentialRampToValueAtTime(400 * A._pm, t + 0.7);
+    A._vibrato(s, 700, t + 0.1, t + 0.75);
+    s.connect(A._env(t + 0.1, 0.02, 0.1, 0.4, 0.2, out));
+    SFX.dizzy(A, t + 0.35, o, out);
+    return 1.0;
+  },
+  shell(A, t, o, out) {                                                     // W6: the king's shell bursts
+    boom(A, t, out, 45, 0.9, 0.5);
+    crack(A, t, out, 0.3); crack(A, t + 0.07, out, 0.24); crack(A, t + 0.16, out, 0.2);
+    A._nz(t, 0.6, 0.12, out, 'bandpass', 2500, 600, 0.8, 0.002);
+    A._chime([7, 9, 10], t + 0.2, 0.05, 0.9, 0.05, out, 0, 'bell');
+    return 1.4;
   },
   phase(A, t, o, out) {
     SFX.roar(A, t, o, out);
@@ -2037,6 +2246,35 @@ const SFX = {
     c.connect(A._env(t, 0.2, 0.08, 0.6, 0.3, out));
     A._chime([0, 2, 3, 5, 7], t + 0.1, 0.1, 1.0, 0.06, out, 0, 'bell');
     return 1.5;
+  },
+  warp(A, t, o, out) {                                                      // endless warp gate entered: bank it!
+    riser(A, t, 0.4, out, 0, 0.05);
+    A._nz(t, 0.5, 0.12, out, 'bandpass', 400, 3000, 1.2, 0.05);
+    A._chime([5, 7, 8, 10, 12], t + 0.35, 0.05, 0.8, 0.06, out, 0, 'bell');
+    return 1.4;
+  },
+  gateClose(A, t, o, out) { A._tone('sine', 700, 300, t, 0.3, 0.06, out, 0.02, 0.28); A._nz(t, 0.3, 0.04, out, 'bandpass', 1500, 500, 1, 0.03); return 0.4; },
+  bumper(A, t, o, out) {                                                    // W2 pinball bumper
+    A._tone('sine', 700, null, t, 0.18, 0.14, out, 0.001);
+    A._tone('sine', 1050, null, t, 0.12, 0.08, out, 0.001);
+    A._tone('triangle', 280, 520, t, 0.12, 0.12, out, 0.002, 0.08);
+    return 0.25;
+  },
+  tileGone(A, t, o, out) {                                                  // W6 glitch tile blinks out
+    const s = A._osc('square', 700, t, t + 0.25);
+    for (let i = 1; i < 6; i++) s.frequency.setValueAtTime((700 - i * 100 + Math.random() * 60) * A._pm, t + i * 0.04);
+    const lp = A._filter('lowpass', 1800, 1); s.connect(lp); lp.connect(A._env(t, 0.003, 0.03, 0.15, 0.06, out));
+    return 0.3;
+  },
+  shrink(A, t, o, out) {                                                    // Shrink Storm: friendly two-tone "woo-woo"
+    for (let i = 0; i < 4; i++) A._tone('triangle', i % 2 ? A._deg(5, 0) : A._deg(3, 0), null, t + i * 0.16, 0.13, 0.11, out, 0.01);
+    A._nz(t + 0.5, 0.4, 0.08, out, 'bandpass', 2000, 400, 1, 0.03);
+    return 1.0;
+  },
+  reroll(A, t, o, out) {                                                    // card shuffle
+    for (let i = 0; i < 6; i++) A._nz(t + i * 0.045, 0.025, 0.1, out, 'bandpass', 2600 + i * 200, null, 1.5, 0.001);
+    A._tone('sine', 500, 900, t + 0.3, 0.05, 0.1, out, 0.002);
+    return 0.45;
   },
   // ---------- UI ----------
   click(A, t, o, out) { A._tone('sine', A._deg(7, 0), null, t, 0.05, 0.12, out, 0.001); A._tone('triangle', A._deg(7, 1), null, t, 0.02, 0.04, out, 0.001); return 0.08; },

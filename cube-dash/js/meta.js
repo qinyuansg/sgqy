@@ -1149,6 +1149,10 @@ export class Meta {
     list.found = list.filter((e) => e.found).length;
     list.claimable = list.reduce((n, e) => n + e.milestones.filter((m) => m.claimable).length, 0);
     list.cards = this.cardInfo();
+    // callers that probe `d.entries || d.list` would otherwise hit Array.prototype.entries (a function)
+    // and see an empty dex — expose the entries under both names as well
+    Object.defineProperty(list, 'entries', { value: list, enumerable: false });
+    Object.defineProperty(list, 'list', { value: list, enumerable: false });
     return list;
   }
   /** claimDex(id) claims every reached milestone of an entry; claimDex(id, n) only the one with threshold n (1/25/100/300) */
@@ -1350,6 +1354,7 @@ export class Meta {
     const today = this.today;
 
     const rankBefore = this.rank, trophiesBefore = P.trophies, freedBefore = this.freed, coinsBefore = P.coins;
+    const rankShown = this.isUnlocked('modes');          // before placement the rank is a secret (no rank-up ceremonies)
     const featBefore = P.features.length, rankStepBefore = P.rankStep, roadNextBefore = this.roadNext();
     const dexBefore = new Set(DEX.entries.filter((e) => (P.dex.count[e] || 0) > 0));
 
@@ -1521,7 +1526,9 @@ export class Meta {
     const breakdown = {
       mode, win, worldId: w, stageId: s, stageKey: stage?.id || null, heroId, assist,
       coins, coinsBreakdown: lines, coinsBefore, coinsAfter: P.coins, tickets: 0,
-      trophies, trophiesBefore, trophiesAfter: P.trophies, rankBefore, rankAfter, rankUp, tierUp, placement,
+      trophies, trophiesBefore, trophiesAfter: P.trophies,
+      rankBefore: rankShown ? rankBefore : null, rankAfter: rankShown || placement ? rankAfter : null,
+      rankUp, tierUp, placement,                          // rankStep only moves once ranks are visible
       rankVisible: this.isUnlocked('modes'), par,
       freedRun, freedBefore, freedAfter: this.freed, roadNextBefore, roadNext: this.roadNext(), roadClaimable: this.road().claimable,
       missionsProgress, newDex, unlocks, rescued, rescuedDup, rescuedId,

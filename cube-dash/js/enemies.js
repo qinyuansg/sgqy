@@ -57,6 +57,9 @@ const TUNE = {
   miniPop: 6.5,
   eliteSpeedy: 1.4,
   lonelyRadius: 7,            // hero knock on a cube with nobody to bonk into → dizzy directly (no stalls)
+  landGrace: 0.35,            // a portal cube that lands ON the hero can't hurt for this long (no unfair instant hits)
+  hardCap: 92, miniCap: 150,  // ARCHITECTURE §9 (~90 active); split minis may exceed it (they were counted in the objective)
+  beatBob: 0.05,              // squash on the music beat (G.audio.beat)
   fallTime: 0.7,
   contactDamage: true,        // fallback only: skipped when run.playerCtl.resolve() owns hero contact
   heroPassives: true,         // Stella Starlight drift handled here (enemy physics)
@@ -529,7 +532,7 @@ export class EnemyManager {
       // internals
       ai: opts.sleep ? 'sleep' : 'chase', t: 0, heading: a0, spd: 0,
       maxSpeed: speed * sMult, baseSpeedMult: sMult, turn, accel: def.accel ?? 6,
-      dizzyT: 0, tiredT: 0, stunT: 0, immuneT: 0, freezeT: 0, slowT: 0, slowMult: 1, hazCd: 0, bowlCd: 0,
+      dizzyT: 0, tiredT: 0, stunT: 0, immuneT: 0, freezeT: 0, slowT: 0, slowMult: 1, hazCd: 0, bowlCd: 0, graceT: 0,
       proj: false, hops: 0, byPlayer: false, pullT: 0, pullX: 0, pullZ: 0, pullS: 0, pullOrbit: 0,
       portalT: 0, portalMax: 0, dropping: false, vy: 0, grounded: false, rain: null,
       sq: 1, sqV: 0, flash: 0, hopPh: rand() * TAU, wobPh: rand() * TAU, look: 0,
@@ -615,7 +618,7 @@ export class EnemyManager {
   }
 
   _add(e) {
-    if (this.list.length >= 92) { // hard cap (ARCHITECTURE §9)
+    if (this.list.length >= (e.mini ? TUNE.miniCap : TUNE.hardCap)) { // hard cap (ARCHITECTURE §9)
       if (e.hz) this._removeHazard(e.hz);
       if (e.hz2) this._removeHazard(e.hz2);
       if (e.rain?.hz) this._removeHazard(e.rain.hz);
