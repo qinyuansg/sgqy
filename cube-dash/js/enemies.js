@@ -52,6 +52,8 @@ const TUNE = {
   smashTint: 0.4, smashTintColor: 0xffe8f2,
   hazardDizzy: 2.0, hazardDizzyCd: 0.8,
   tutorialBonkSpeed: 0.8,     // 1-1 steerTogether pair bonks at any real closing speed
+  pairRampAfter: 2.5, pairRamp: 0.15, pairSteerMax: 0.9,   // 1-1 pair: no bonk yet → steer harder into each other
+  pairGlueBonk: 1.0,          // 1-1 pair walking glued together (no closing speed) → bonk again after this long
   pulledBonkSpeed: 3,
   nudgeSpeed: 3.2,
   miniPop: 6.5,
@@ -562,13 +564,23 @@ export class EnemyManager {
     if (!p) return out;
     let dx = x - p.x, dz = z - p.z, d = len2(dx, dz);
     if (d >= minD) return out;
+    const m = minD + 0.02;                               // (never a hair under minD after rounding)
     if (d < 0.01) { dx = -p.x || 1; dz = -p.z || 0; d = len2(dx, dz) || 1; }
-    out.x = p.x + dx / d * minD; out.z = p.z + dz / d * minD;
-    const R = this.R - 1, dd = len2(out.x, out.z);
-    if (dd > R) { // pushed outside: mirror to the other side of the hero
-      out.x = p.x - dx / d * minD; out.z = p.z - dz / d * minD;
-      const d2 = len2(out.x, out.z); if (d2 > R) { out.x *= R / d2; out.z *= R / d2; }
-    }
+    const ux = dx / d, uz = dz / d, R = this.R - 1;
+    out.x = p.x + ux * m; out.z = p.z + uz * m;
+    if (len2(out.x, out.z) <= R) return out;
+    out.x = p.x - ux * m; out.z = p.z - uz * m;         // pushed outside: mirror to the other side of the hero
+    if (len2(out.x, out.z) <= R) return out;
+    // both outside (small / shrunk arena): clamping back in would land right next to the hero (kid rule 20) —
+    // take the rim point ≥ minD from the hero nearest the original spot, or straight across when the rim is closer
+    const h = len2(p.x, p.z);
+    if (h < 0.01) { out.x = ux * R; out.z = uz * R; return out; }
+    const hx = p.x / h, hz = p.z / h;
+    const a = (h * h + R * R - m * m) / (2 * h);        // rim ∩ (circle of radius m round the hero), along the hero axis
+    if (a <= -R) { out.x = -hx * R; out.z = -hz * R; return out; }
+    if (a >= R) { const l = len2(x, z) || 1; out.x = x / l * R; out.z = z / l * R; return out; }
+    const b = Math.sqrt(R * R - a * a), side = hx * z - hz * x >= 0 ? 1 : -1;
+    out.x = hx * a - hz * b * side; out.z = hz * a + hx * b * side;
     return out;
   }
 
@@ -1287,7 +1299,9 @@ export class EnemyManager {
         if (m) {
           const ax = p.x - e.x, az = p.z - e.z, al = len2(ax, az) || 1;
           const bx = m.x - e.x, bz = m.z - e.z, bl = len2(bx, bz) || 1;
-          const k = clamp(e.steer, 0, 1);
+          // the longer the pair goes without a bonk, the harder it steers into its mate (a passive kid still sees the crash)
+          e.pairT = (e.pairT || 0) + dt;
+          const k = clamp(Math.max(e.steer, Math.min(TUNE.pairSteerMax, e.steer + Math.max(0, e.pairT - TUNE.pairRampAfter) * TUNE.pairRamp)), 0, 1);
           tx = e.x + (ax / al * (1 - k) + bx / bl * k) * 4;
           tz = e.z + (az / al * (1 - k) + bz / bl * k) * 4;
         }
@@ -1512,7 +1526,16 @@ export class EnemyManager {
         const pair = a.pairId && a.pairId === b.pairId;
         const pulled = a.pullT > 0 || b.pullT > 0;
         const need = pair ? TUNE.tutorialBonkSpeed : pulled ? TUNE.pulledBonkSpeed : D.bonk.headOnSpeed;
-        if (closing >= need && this._canBonk(a) && this._canBonk(b)) this._bonk(a, b, closing, { headOn: true, tutorial: !!pair });
+        let glued = false;
+        if (pair) {                                  // 1-1 pair pressed together (separation eats the closing speed)
+          if (!(this.time - (a.glueSeen ?? -9) < 0.1) || !this._canBonk(a) || !this._canBonk(b)) a.glue0 = this.time;
+          a.glueSeen = this.time;
+          glued = this.time - a.glue0 >= TUNE.pairGlueBonk;
+        }
+        if ((closing >= need || glued) && this._canBonk(a) && this._canBonk(b)) {
+          if (pair) { a.pairT = b.pairT = 0; a.glue0 = this.time; }
+          this._bonk(a, b, Math.max(closing, need), { headOn: true, tutorial: !!pair });
+        }
       }
     }
     // soft separation (mass-weighted; stationary pylons are immovable)

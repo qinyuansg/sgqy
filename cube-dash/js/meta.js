@@ -259,6 +259,9 @@ export class Meta {
   _afterLoad(isReset) {
     const P = this.P;
     if (isReset) { this.claimQueue.length = 0; this.featureQueue.length = 0; this._showing = null; this.live = this._freshLive(); }
+    // Parent Corner choices belong to this device: they survive 🗑️ reset progress and a save-code import
+    if (isReset) this._keepParent();
+    this._syncParent();
     if (!P.name) P.name = { a: (Math.random() * NAME_A.length) | 0, b: (Math.random() * NAME_B.length) | 0 };
     for (const k of Object.keys(DEFAULT_OWNED)) for (const id of DEFAULT_OWNED[k]) if (!P.owned[k].includes(id)) P.owned[k].push(id);
     if (!P.heroes.includes('blu')) P.heroes.unshift('blu');
@@ -277,7 +280,44 @@ export class Meta {
     // rested bonus after ≥ 15 min away (only once the child has actually played)
     if (!isReset) this._checkAway(now);
     this._refreshDay();
+    this._snapParent();
     this._commit();
+  }
+
+  // ---- parent-corner persistence ----
+  // ui.js writes each parent choice twice: profile.settings (dailyLimit / capsuleOn / breakMinutes +
+  // breakReminder — kept by save.reset) and meta.parent (what is enforced — rebuilt from DEFAULTS by a reset).
+  /** remember the device's parent block (before a reset / import replaces the profile) */
+  _snapParent() {
+    const p = this.P.parent, s = this.G.save.profile.settings || {};
+    this._parentDev = {
+      limit: +p.limit || 0, capsule: p.capsule !== false, breakMinutes: p.breakMinutes ?? null, extraDay: p.extraDay || '', extra: +p.extra || 0,
+      sBreak: s.breakMinutes, sReminder: s.breakReminder,
+    };
+  }
+  /** after reset / import: re-apply the device's parent block when a parent ever set one (a device that
+   *  never did takes the imported save's own choices) */
+  _keepParent() {
+    const d = this._parentDev;
+    if (!d || !(d.limit > 0 || !d.capsule || d.breakMinutes != null || d.extra > 0 || d.sBreak != null || d.sReminder === false)) return;
+    const P = this.P, p = P.parent;
+    const s = this.G.save.profile.settings || (this.G.save.profile.settings = {});
+    Object.assign(p, { limit: d.limit, capsule: d.capsule, breakMinutes: d.breakMinutes, extraDay: d.extraDay, extra: d.extra });
+    s.dailyLimit = d.limit; s.capsuleOn = d.capsule;
+    if (d.sBreak !== undefined) s.breakMinutes = d.sBreak; else delete s.breakMinutes;
+    if (d.sReminder !== undefined) s.breakReminder = d.sReminder;
+    if (d.breakMinutes && (P.guard.session || 0) / 60 < d.breakMinutes) P.guard.nextBreak = d.breakMinutes;
+  }
+  /** the enforced block follows the settings copy when they disagree (repairs profiles reset before this fix) */
+  _syncParent() {
+    const P = this.P, p = P.parent, s = this.G.save.profile.settings || {};
+    if (s.dailyLimit != null) p.limit = HEALTH.parentLimits.includes(+s.dailyLimit) ? +s.dailyLimit : 0;
+    if (s.capsuleOn != null) p.capsule = s.capsuleOn !== false;
+    const bm = s.breakReminder === false ? 0 : s.breakMinutes != null ? Math.max(0, +s.breakMinutes || 0) : null;
+    if (bm != null && p.breakMinutes !== bm) {
+      p.breakMinutes = bm;
+      if (bm && (P.guard.session || 0) / 60 < bm) P.guard.nextBreak = bm;     // the chosen interval applies from the start
+    }
   }
 
   // ═══════════════ clock (04:00 refresh + rollback guard) ═══════════════
@@ -1674,6 +1714,7 @@ export class Meta {
       const g = this.P.guard;
       if (p.breakMinutes) g.nextBreak = p.breakMinutes;                             // the new interval applies from now
     } else return false;
+    this._snapParent();
     this._commit(); this._changed();
     return true;
   }
@@ -1681,7 +1722,7 @@ export class Meta {
   parentExtend(minutes = 15) {
     const p = this.P.parent;
     if (p.extraDay !== this.today) { p.extraDay = this.today; p.extra = 0; }
-    p.extra += minutes; this._commit(); this._changed();
+    p.extra += minutes; this._snapParent(); this._commit(); this._changed();
     return true;
   }
   /** last N days of active play (parent zone chart): [{day, minutes}] oldest → newest */

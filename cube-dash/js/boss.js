@@ -146,6 +146,16 @@ export class Boss {
     return rot;
   }
 
+  /** rotation index a new phase opens with: this world's signature move (a king never falls without showing it),
+   *  else the first move that isn't a Hop Slam (a slam opener = a free 4 s dizzy → W1 was only ever slams) */
+  _phaseOpener(ph) {
+    const rot = this.rotations[ph] || this.rotations[1];
+    const sig = Object.keys(MV).find((m) => MV[m].world === this.worldIndex);
+    let i = sig ? rot.indexOf(sig) : -1;
+    if (i < 0) i = rot.findIndex((m) => m !== 'slam' && m !== 'double');
+    return Math.max(0, i);
+  }
+
   get solid() { return !this.removeMe && !this.dead && this.y < 1.0; }
   get R() { return this.em.R; }
   /** telegraph time: assist ×1.3, failed attempts / weary → longer (never shorter than data) */
@@ -721,7 +731,7 @@ export class Boss {
   _phaseShift(np) {
     this.phase = np;
     this.mode = 'phase'; this.modeT = 0; this.act = null; this.charging = false; this.coreOpen = false;
-    this.invulnT = BD.phaseShift.time; this.rotIdx = 0; this.stagger = 0;
+    this.invulnT = BD.phaseShift.time; this.rotIdx = this._phaseOpener(np); this.stagger = 0;
     this._lasersOff();
     this.em.freeMinions();
     const p = this.run?.player;

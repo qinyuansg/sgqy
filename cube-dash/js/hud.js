@@ -146,11 +146,18 @@ export class HUD {
     this._last = { bonk: -9, near: -9, smashT: -9, smashN: 0 };
     this._chainPop = null;
     this._device = null;
+    /** CSS px from the viewport top down to the bottom of the lowest visible top-HUD panel over the play
+     *  field (objective / boss bar · XP strip · mutator chip · a side panel when it reaches the centre).
+     *  camera.js keeps the far rim below it. 0 while the HUD is hidden. */
+    this.safeTopPx = 0;
+    this._topDirty = true; this._topT = 0;
+    this._tutResume = null;        // a prompt the dizzy "dash!" bubble interrupted — comes back once the cube is freed
+    this._bubDx = { hint: 0, dizzy: 0 };
     this._build();
     this._wire();
     this._localise();
     onLangChange(() => this._localise());
-    window.addEventListener('resize', () => this._placeNova());
+    window.addEventListener('resize', () => { this._placeNova(); this._topDirty = true; });
   }
 
   // ═══════════════ DOM ═══════════════
@@ -267,7 +274,9 @@ export class HUD {
     try { this.G.input?.setTouchLabels?.(t('hud.dash'), t('hud.nova')); } catch { /* input not ready */ }
     this.v = {};                  // force a full re-render
     this._device = null;
+    this._topDirty = true;
     if (this._tutId) this._showTutorial(this._tutId);
+    if (this._dizzyTarget) this._renderDizzy();
   }
 
   // ═══════════════ public API ═══════════════
@@ -275,7 +284,9 @@ export class HUD {
     on = !!on;
     this.visible = on;
     this.root.classList.toggle('hidden', !on);
+    this._topDirty = true;
     if (!on) {
+      this.safeTopPx = 0;
       this._reset();
       try { this.G.input?.setNovaReady?.(false); } catch { /* */ }
     }
@@ -320,7 +331,7 @@ export class HUD {
     on('run:end', () => this._onRunEnd());
     on('wave:start', (p) => this._onWave(p));
     on('tutorial:step', (p) => this._showTutorial(p.id, p));
-    on('tutorial:done', () => this._hideTutorial());
+    on('tutorial:done', (p) => this._onTutDone(p));
     on('objective:progress', (p) => this._onObjective(p));
     on('fever', () => this.banner('hud.fever', 'fever', 2.2, 'hud.feverSub'));
     on('checkpoint', () => this.banner('🚩 ' + t('hud.checkpoint'), 'checkpoint', 1.8, 'hud.checkpointSub'));
@@ -351,6 +362,7 @@ export class HUD {
     on('enemy:spawnWarn', (p) => { if (this._portals.length < 12) this._portals.push({ x: p.x, z: p.z, type: p.type || 'grumpy', until: this._t + (p.delay ?? 1.2) + 0.4 }); });
     on('enemy:spawn', (p) => { const i = this._portals.findIndex((q) => Math.abs(q.x - p.x) < 0.8 && Math.abs(q.z - p.z) < 0.8); if (i >= 0) this._portals.splice(i, 1); });
     on('enemy:bonk', (p) => this._onBonk(p));
+    on('enemy:knock', (p) => { if (p.byPlayer) this._tutEvent('knock'); });
     on('enemy:dizzy', (p) => this._onDizzy(p));
     on('enemy:smash', (p) => this._onSmash(p));
     on('enemy:explode', (p) => this.pop(p.x, 1.4, p.z, t('hud.p.boom'), 'boom'));
@@ -375,10 +387,10 @@ export class HUD {
     this._queue.length = 0; this._bn = null; this._stampUntil = 0; this.el.banner.classList.remove('on');
     this.el.count.classList.remove('on');
     this.el.ne.classList.remove('on');
-    this._hideTutorial();
-    this.el.hint.classList.remove('on'); this.el.dizzy.classList.remove('on');
+    this._hideTutorial(); this._tutResume = null;
+    this.el.hint.classList.remove('on'); this.el.dizzy.classList.remove('on'); this._dizzyTarget = null;
     this.el.second.classList.remove('on'); this.el.cue.classList.remove('on'); this.el.combo.classList.remove('on');
-    this.root.classList.remove('cine', 'ended', 'danger');
+    this.root.classList.remove('cine', 'ended', 'danger', 'bn-on');
     this.v = {};
     this._agg.crystal = 0; this._agg.coin = 0;
     this._chainPop = null; this._comboN = 0; this._shown = null;
@@ -412,7 +424,8 @@ export class HUD {
     this._queue.length = 0;
     clearTimeout(this._neTimer); this.el.ne.classList.remove('on');
     this.el.second.classList.remove('on'); this.el.cue.classList.remove('on'); this.el.combo.classList.remove('on');
-    this._hideTutorial(); this.el.hint.classList.remove('on'); this.el.dizzy.classList.remove('on');
+    this._hideTutorial(); this._tutResume = null;
+    this.el.hint.classList.remove('on'); this.el.dizzy.classList.remove('on'); this._dizzyTarget = null;
     this._hideArrows();
     try { this.G.input?.setNovaReady?.(false); } catch { /* */ }
     this.v.novaReady = false;
@@ -456,6 +469,7 @@ export class HUD {
     this.banner(name ? tl(name) + '!' : t('hud.nova') + '!', 'nova', 1.1);
     this._last.smashT = this._t; this._last.smashN = 0;
     if (this._tutId === 'nova') this._hideTutorial();
+    if (this._tutResume?.id === 'nova') this._tutResume = null;
     if (this._hints) this._hints.novaFullT = 0;
   }
   _onMilestone(p) {
@@ -466,7 +480,7 @@ export class HUD {
   }
   _onBonk(p) {
     if (this._hints) this._hints.lastBonk = this._runTime();
-    if (this._tutId === 'bonk' || this._tutId === 'knock') this._tutSatisfied();
+    this._tutEvent('bonk');
     if (this._t - this._last.bonk < TUNE.bonkGap) return;
     this._last.bonk = this._t;
     this.pop(p.x, 1.6, p.z, t('hud.p.bonk') + '💫', 'bonk');
@@ -477,19 +491,30 @@ export class HUD {
     const run = this.G.run;
     if (run?.stageDef?.tutorial && !this._firstDizzyShown && !(this.G.save?.profile?.tutorialDone)) this._showDizzyPrompt(p.x, p.z);
   }
-  /** "⚡ dash to free it!" bubble bobbing over the (nearest) dizzy cube */
+  /** "⚡ dash to free it!" bubble bobbing over the (nearest) dizzy cube. It stays until the child frees a
+   *  cube (enemy:smash / tutorial:done 'dash') — while no cube is dizzy it waits, hidden, for the next one */
   _showDizzyPrompt(x, z) {
     const h = this._hero();
     this._firstDizzyShown = true;
-    this._dizzyTarget = { x: x ?? h.x, z: z ?? h.z, until: this._t + 6, seek: x == null };
+    this._dizzyTarget = { x: x ?? h.x, z: z ?? h.z, seek: x == null };
+    this._renderDizzy();
+    this._updDizzyPrompt(this.G.run || {});
+  }
+  _renderDizzy() {
     this.el.dizzyBub.innerHTML = this._dashKeys() + `<span class="hd-t">${esc(t('hud.t.dizzy'))}</span>`;
-    this.el.dizzy.classList.add('on');
+    this._measureBubble(this.el.dizzyBub, 'dizzy', true);
+  }
+  _hideDizzyPrompt() {
+    if (!this._dizzyTarget) return;
+    this._dizzyTarget = null;
+    this.el.dizzy.classList.remove('on');
+    this._tutResumeAt = this._t + 0.7;          // the interrupted prompt returns after the 解救! moment
   }
   _onSmash(p) {
     const h = this._hints;
     if (h && h.pend.length) h.pend.shift();
-    if (this._dizzyTarget) { this._dizzyTarget = null; this.el.dizzy.classList.remove('on'); }
-    if (this._tutId === 'blob' && (p.combo || 0) >= 2) this._tutSatisfied();
+    if (this._dizzyTarget) this._hideDizzyPrompt();
+    if ((p.combo || 0) >= 2) this._tutEvent('blob');
     // limit pop spam during nova clears
     if (this._t - this._last.smashT > 0.35) { this._last.smashT = this._t; this._last.smashN = 0; }
     // chain callout: one node, re-used while the chain grows (×3 连击!) — replaces the per-cube 解救! pops
@@ -520,6 +545,7 @@ export class HUD {
       this._updBanner(rdt);
       const run = this.G.run;
       if (run) this._updRun(run, rdt);
+      if (this._topDirty || (this._topT -= rdt) <= 0) this._measureTop();
       this._updPops(rdt);
     } catch (e) {
       if (!this._warned) { this._warned = true; console.error('[hud] update', e); }
@@ -534,6 +560,7 @@ export class HUD {
     const maxHp = clamp(Math.round(p.maxHp ?? 5), 1, 12), hp = clamp(Math.ceil(p.hp ?? maxHp), 0, maxHp);
     if (v.hp !== hp || v.maxHp !== maxHp) {
       const lost = v.hp != null && v.hp > hp && v.maxHp === maxHp;
+      if (v.maxHp !== maxHp) { e.hearts.classList.toggle('many', maxHp > 6); this._topDirty = true; }   // 7+ hearts: smaller, one row where it fits
       for (let i = 0; i < 12; i++) {
         const H = this.heartEls[i];
         H.el.style.display = i < maxHp ? '' : 'none';
@@ -595,6 +622,7 @@ export class HUD {
       if (boss) e.bossName.parentNode.appendChild(e.crown);            // 👑 chip follows the active panel
       else e.time.parentNode.insertBefore(e.crown, e.time);
       v.bossOn = !!boss;
+      this._topDirty = true;
     }
     if (boss) this._updBoss(boss, run);
     else this._updObjective(run, mode);
@@ -610,11 +638,11 @@ export class HUD {
     // ---- mutator chip (daily / endless)
     const mut = run.mutator;
     const mk = mut ? mut.id || tl(mut.name) : '';
-    if (v.mut !== mk) { e.mut.innerHTML = mut ? `<span>${esc(mut.icon || '✦')}</span><em>${esc(tl(mut.name))}</em>` : ''; e.mut.classList.toggle('on', !!mut); v.mut = mk; }
+    if (v.mut !== mk) { e.mut.innerHTML = mut ? `<span>${esc(mut.icon || '✦')}</span><em>${esc(tl(mut.name))}</em>` : ''; e.mut.classList.toggle('on', !!mut); v.mut = mk; this._topDirty = true; }
 
     // ---- endless panel
     const endless = mode === 'endless';
-    if (v.endless !== endless) { e.end.classList.toggle('on', endless); v.endless = endless; }
+    if (v.endless !== endless) { e.end.classList.toggle('on', endless); v.endless = endless; this._topDirty = true; }
     if (endless) this._updEndless(run, rdt);
 
     // ---- world-anchored bits
@@ -623,7 +651,11 @@ export class HUD {
     this._updAggregate(p);
     this._updDizzyPrompt(run);
     this._updHints(run, rdt, ready);
-    if (e.hint.classList.contains('on')) { const s = this._w2s((p.x ?? 0) + 0.6, (p.y ?? 0) + 2.9, p.z ?? 0); e.hint.style.transform = `translate3d(${s.x.toFixed(1)}px,${s.y.toFixed(1)}px,0)`; }
+    if (e.hint.classList.contains('on')) {
+      const s = this._w2s((p.x ?? 0) + 0.6, (p.y ?? 0) + 2.9, p.z ?? 0);
+      e.hint.style.transform = `translate3d(${s.x.toFixed(1)}px,${s.y.toFixed(1)}px,0)`;
+      this._clampBubble(e.hintBub, 'hint', s.x);
+    }
     if (this._device === 'touch' && (this._novaPlaceT = (this._novaPlaceT || 0) - rdt) <= 0) { this._novaPlaceT = 1; this._placeNova(); }
     if (run.state === 'ended' || run.state === 'victory' || run.state === 'dying') this._hideArrows();
     else this._updArrows(run, p, rdt);
@@ -638,9 +670,15 @@ export class HUD {
     // keys: run.js accepts dash/confirm itself after its own guard; this is only a fallback for runs without it
     if (sc && typeof run.acceptSecondChance !== 'function' && performance.now() - this._secondShownAt > 450 && (inp?.pressed?.('confirm') || inp?.pressed?.('dash'))) this._revive();
 
-    // tutorial 'move' satisfied when the hero has walked 1.5 u
-    if (this._tutId === 'move' && this._tutOrigin) {
-      if (Math.hypot((p.x ?? 0) - this._tutOrigin.x, (p.z ?? 0) - this._tutOrigin.z) > 1.5) this._tutSatisfied();
+    // tutorial 'move' satisfied when the hero has walked 1.5 u (also while the dizzy bubble has it parked)
+    const walked = (o) => !!o && Math.hypot((p.x ?? 0) - o.x, (p.z ?? 0) - o.z) > 1.5;
+    if (this._tutId === 'move' && walked(this._tutOrigin)) this._tutSatisfied();
+    const r = this._tutResume;
+    if (r?.id === 'move' && walked(r.origin)) this._tutResume = null;
+    // the prompt the dizzy bubble interrupted comes back once that bubble is done (never over another prompt)
+    if (this._tutResume && !this._dizzyTarget && this._t >= (this._tutResumeAt || 0) && run.state === 'playing') {
+      const q = this._tutResume; this._tutResume = null;
+      if (!this._tutId) { this._showTutorial(q.id, q.payload || { id: q.id }); if (q.id === 'move' && q.origin) this._tutOrigin = q.origin; }
     }
   }
 
@@ -670,7 +708,7 @@ export class HUD {
     const wk = wn + '/' + wt;
     if (v.waves !== wk) {
       const show = wt > 1 && wt <= 10 && mode !== 'endless';
-      e.waves.style.display = show ? '' : 'none';
+      if ((e.waves.style.display !== 'none') !== show) { e.waves.style.display = show ? '' : 'none'; this._topDirty = true; }
       if (show) this.waveEls.forEach((d, i) => { d.style.display = i < wt ? '' : 'none'; d.className = i < wn - 1 ? 'done' : i === wn - 1 ? 'cur' : ''; });
       v.waves = wk;
     }
@@ -783,19 +821,70 @@ export class HUD {
     if (a.crystal) { this.pop(x - 1.1, 1.0, z, `+${a.crystal}◆`, 'crystal'); a.crystal = 0; }
     if (a.coin) { this.pop(x + 1.1, 1.0, z, `+${a.coin}🪙`, 'coin'); a.coin = 0; }
   }
-  // ---- tutorial: dash prompt bobbing over the first dizzy cube
+  // ---- tutorial: dash prompt bobbing over a dizzy cube (follows it; hops to the nearest other dizzy cube;
+  //      hidden while none is dizzy, back as soon as one is)
   _updDizzyPrompt(run) {
     const d = this._dizzyTarget;
     if (!d) return;
-    if (this._t > d.until) { this._dizzyTarget = null; this.el.dizzy.classList.remove('on'); return; }
     const list = run.enemies?.list;
+    let on = true;
     if (Array.isArray(list)) {
-      let best = null, bd = d.seek ? 99 : 3.5;
-      for (const e of list) { if (!e?.smashable) continue; const dd = Math.hypot(e.x - d.x, e.z - d.z); if (dd < bd) { bd = dd; best = e; } }
-      if (best) { d.x = best.x; d.z = best.z; }
+      const near = (x, z, max) => { let best = null, bd = max; for (const e of list) { if (!e?.smashable || e.dead) continue; const dd = Math.hypot(e.x - x, e.z - z); if (dd < bd) { bd = dd; best = e; } } return best; };
+      const h = this._hero();
+      const best = near(d.x, d.z, d.seek ? 1e9 : 3.5) || near(h.x, h.z, 1e9);
+      if (best) { d.x = best.x; d.z = best.z; d.seek = false; }
+      on = !!best;
     }
+    if (this.el.dizzy.classList.contains('on') !== on) this.el.dizzy.classList.toggle('on', on);
+    if (!on) return;
     const s = this._w2s(d.x, 2.4, d.z);
     this.el.dizzy.style.transform = `translate3d(${s.x.toFixed(1)}px,${s.y.toFixed(1)}px,0)`;
+    this._clampBubble(this.el.dizzyBub, 'dizzy', s.x);
+  }
+
+  // ---- world-anchored bubbles stay on screen: slide sideways, the tail keeps pointing at the anchor
+  /** cache a bubble's width and its left edge relative to the anchor (after its content changes) */
+  _measureBubble(bub, key, centred) {
+    bub.style.marginLeft = '';                       // measure un-shifted; _clampBubble re-applies the shift + tail
+    this._bubDx[key] = NaN;
+    const w = bub.offsetWidth;
+    (this._bubBox ||= {})[key] = { w, off: centred ? -w / 2 : bub.offsetLeft, centred };
+  }
+  _clampBubble(bub, key, ax) {
+    const b = this._bubBox?.[key];
+    if (!b || !b.w) return;
+    const W = window.innerWidth, M = 8;
+    const l = ax + b.off, r = l + b.w;
+    let dx = r > W - M ? W - M - r : 0;
+    if (l + dx < M) dx = M - l;                    // wider than the screen: the left edge wins
+    dx = Math.round(dx);
+    if (dx === this._bubDx[key]) return;
+    this._bubDx[key] = dx;
+    bub.style.marginLeft = dx ? dx + 'px' : '';
+    // tail position inside the bubble (px from its left edge), kept on the bubble's body
+    const base = b.centred ? b.w / 2 - 10 : 18;    // (padding-box px: 3 px border, 14 px tail)
+    bub.style.setProperty('--tail', clamp(base - dx, 12, b.w - 26).toFixed(0) + 'px');
+  }
+
+  // ---- top-HUD geometry (T5/T8): re-measured when panels show/hide/resize and every 0.5 s
+  _measureTop() {
+    this._topDirty = false; this._topT = 0.5;
+    if (!this.visible) { this.safeTopPx = 0; return; }
+    const e = this.el, W = window.innerWidth;
+    // portrait phones: the objective panel sits under the hearts panel — push it down when the hearts wrap
+    const vb = Math.ceil(e.vit.getBoundingClientRect().bottom);
+    if (vb > 0 && vb !== this._vitB) { this._vitB = vb; this.root.style.setProperty('--vit-b', vb + 'px'); }
+    // .hud-top's own box ends at its lowest visible child (objective / boss bar, XP strip, mutator chip);
+    // child transforms (intro slides, pulses) don't move it
+    let bot = 0;
+    const tr = e.top.getBoundingClientRect();
+    if (tr.height > 0) bot = tr.bottom;
+    // side panels only count where they reach over the arena's central column (portrait phones)
+    for (const el of [e.vit, e.end]) {
+      const r = el.getBoundingClientRect();
+      if (r.height > 0 && r.left < W * 0.7 && r.right > W * 0.3) bot = Math.max(bot, r.bottom);
+    }
+    this.safeTopPx = Math.ceil(bot);
   }
 
   // ---- off-screen edge arrows (boss · portals · warp gate · nearest threats)
@@ -922,6 +1011,7 @@ export class HUD {
       if (this._bn.t >= this._bn.seconds) {
         const b = this._bn; this._bn = null;
         e.banner.classList.remove('on');
+        this.root.classList.remove('bn-on');
         e.banner.animate?.([{ opacity: 1, transform: 'translate(-50%,0) scale(1)' }, { opacity: 0, transform: 'translate(-50%,-14px) scale(.92)' }], { duration: 220, fill: 'forwards' });
         b.done = true;
       }
@@ -932,6 +1022,7 @@ export class HUD {
     const next = this._queue.shift();
     this._bn = { ...next, t: 0 };
     e.banner.className = 'hud-banner on b-' + next.style;
+    this.root.classList.add('bn-on');           // portrait: the tutorial card shares the banner's spot — it waits
     e.bnMain.textContent = next.text;
     e.bnSub.textContent = next.sub || '';
     e.bnSub.style.display = next.sub ? '' : 'none';
@@ -997,9 +1088,18 @@ export class HUD {
   }
   _showTutorial(id, payload = null) {
     const e = this.el;
-    if (payload) this._tutPayload = payload;
-    else if (id === this._tutId) payload = this._tutPayload || null;
-    if (id === 'dash') { this._hideTutorial(); this._showDizzyPrompt(); return; }
+    if (id === 'dash') {
+      // the dizzy-cube bubble takes over; an unsatisfied prompt it interrupts comes back once the cube is freed
+      if (this._tutId && this._tutId !== 'dash' && this._tutSat !== this._tutId) this._tutResume = { id: this._tutId, payload: this._tutPayload, origin: this._tutOrigin };
+      this._hideTutorial();
+      this._showDizzyPrompt(payload?.x, payload?.z);
+      return;
+    }
+    if (payload) {                                // a new step: supersedes a parked one and any pending "satisfied" fade
+      this._tutPayload = payload; this._tutResume = null;
+      this._tutSeq = (this._tutSeq || 0) + 1; this._tutSat = null;
+      e.tut.getAnimations?.().forEach((a) => a.cancel());
+    } else if (id === this._tutId) payload = this._tutPayload || null;
     const known = ['move', 'bonk', 'knock', 'blob', 'nova'];
     if (!known.includes(id)) {
       if (payload?.textKey && t(payload.textKey) !== payload.textKey) { this._tutId = id; e.tutKeys.innerHTML = payload.icon ? `<span class="ti emo">${esc(payload.icon)}</span>` : ''; e.tutText.textContent = t(payload.textKey); e.tut.classList.add('on'); }
@@ -1021,12 +1121,25 @@ export class HUD {
     e.tut.className = 'hud-tut on t-' + id;
   }
   _tutSatisfied() {
-    const e = this.el.tut;
-    if (!e.classList.contains('on')) return;
+    const e = this.el.tut, id = this._tutId, seq = this._tutSeq;
+    if (!e.classList.contains('on') || this._tutSat === id) return;
+    this._tutSat = id;
     e.animate?.([{ transform: 'translate(-50%,0) scale(1)' }, { transform: 'translate(-50%,0) scale(1.12)' }, { transform: 'translate(-50%,0) scale(.8)', opacity: 0 }], { duration: 380 });
-    setTimeout(() => this._hideTutorial(), 360);
+    setTimeout(() => { if (this._tutId === id && this._tutSeq === seq) this._hideTutorial(); }, 360);     // never hide a newer prompt
   }
-  _hideTutorial() { this._tutId = null; this._tutOrigin = null; this._tutPayload = null; this.el.tut.classList.remove('on'); }
+  /** a tutorial action happened: satisfy the matching prompt — on screen, or parked under the dizzy bubble.
+   *  Same rules as run.js: bonk = any crash, knock = the hero's dash knocking a cube, blob = a 2+ chain. */
+  _tutEvent(kind) {
+    if (this._tutId === kind) this._tutSatisfied();
+    if (this._tutResume?.id === kind) this._tutResume = null;
+  }
+  _onTutDone(p) {
+    const id = p.id;
+    if (!id || id === 'dash') this._hideDizzyPrompt();
+    if (!id || id === this._tutId) { if (this.el.tut.classList.contains('on')) this._tutSatisfied(); else this._hideTutorial(); }
+    if (this._tutResume && (!id || id === this._tutResume.id)) this._tutResume = null;
+  }
+  _hideTutorial() { this._tutId = null; this._tutOrigin = null; this._tutPayload = null; this._tutSat = null; this.el.tut.classList.remove('on'); }
 
   // ═══════════════ hint whispers (W1–2 or Helper mode) ═══════════════
   _updHints(run, rdt, novaReady) {
@@ -1066,6 +1179,7 @@ export class HUD {
     else if (kind === 'nova') html = `<span class="ti nova-ti">${SVG_NOVA}</span>${this._dev() === 'touch' ? '' : this._novaKeys()}`;
     else if (kind === 'enemy') { const d = ENEMIES[type]; html = `${cubeIcon(type, 'mini')}<span class="hint-tip">${esc(tl(d?.tip))}</span>`; }
     e.hintBub.innerHTML = html;
+    this._measureBubble(e.hintBub, 'hint', false);
     e.hint.classList.add('on');
     clearTimeout(this._hintTimer);
     this._hintTimer = setTimeout(() => e.hint.classList.remove('on'), kind === 'enemy' ? 4500 : 3200);
@@ -1102,6 +1216,8 @@ export class HUD {
     e.pauseKey.innerHTML = d === 'pad' ? '<span class="kc">≡</span>' : d === 'kb' ? keycap('Esc') : '';
     if (this.v.second) e.secKey.innerHTML = this._confirmKeys();
     if (this._tutId) this._showTutorial(this._tutId);
+    if (this._dizzyTarget) this._renderDizzy();
+    this._topDirty = true;
     this._placeNova();
   }
   /** on phones the ring wraps input.js's touch 大招 button */

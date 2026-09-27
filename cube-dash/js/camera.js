@@ -39,6 +39,8 @@ const TUNE = {
   touchBias: 0.06,            // touch: hero sits below the centre by this fraction of the vertical span
   hudTop: 0.06,               // fraction of the screen height kept clear at the top (HUD bar) when fitting the arena
   hudSafePx: 64,              // follow mode: the far rim never scrolls higher than this many CSS px from the top (hearts / objective panels)
+  hudSafePad: 8,              // … or this far below the lowest live top-HUD panel (G.hud.safeTopPx: boss bar · XP strip · mutator chip)
+  heroTop: 1.3,               // world height of the hero's head (+ antenna / hat) kept below that line
   hudSafeBottomPx: 36,        // … and the near rim stays this far above the bottom edge (thumbs / NOVA button)
   posRate: 6, posRateDash: 3,
   shake: { max: 0.35, amp: 0.5, pow: 1.6, roll: 1.2, decay: 1.8, freq: 17 },
@@ -98,6 +100,11 @@ export class CameraDirector {
     this._tap = false;
     this._hubT = 0;
     this._inited = false;
+    this._hudTop = 0;                          // last live G.hud.safeTopPx (CSS px) while a run is on
+    // viewport size cache: read on resize (+ a slow safety re-read), never per call — worldToScreen runs
+    // dozens of times a frame between HUD style writes and each DOM size read forced a style recalc (T28)
+    this._vw = 0; this._vh = 0; this._vwT = 0;
+    this._onResize = () => { this._vwT = 0; };
     this._shakeOff = new THREE.Vector3();
     this._shakeRoll = 0;
 
@@ -110,6 +117,7 @@ export class CameraDirector {
     ];
     this._onTap = () => { this._tap = true; };
     window.addEventListener('pointerdown', this._onTap, { passive: true });
+    window.addEventListener('resize', this._onResize, { passive: true });
   }
 
   // ============================================================
@@ -180,8 +188,7 @@ export class CameraDirector {
 
   worldToScreen(x, y, z, out) {
     const o = out || { x: 0, y: 0, visible: false };
-    const el = this.G.renderer.domElement;
-    const w = el.clientWidth || window.innerWidth, h = el.clientHeight || window.innerHeight;
+    const w = this._vw || window.innerWidth, h = this._vh || window.innerHeight;   // cached by _syncAspect (no layout reads)
     _proj.set(x, y, z).project(this.cam);
     o.x = (_proj.x * 0.5 + 0.5) * w;
     o.y = (-_proj.y * 0.5 + 0.5) * h;
@@ -197,7 +204,7 @@ export class CameraDirector {
   // ============================================================
   update(rdt) {
     const G = this.G;
-    this._syncAspect();
+    this._syncAspect(rdt);
     this._solveRig();
     const settings = G.save?.profile?.settings || {};
     const reduce = !!settings.reduceFlash;
@@ -291,21 +298,31 @@ export class CameraDirector {
   // ============================================================
   // framing solve (on resize / arena radius change)
   // ============================================================
-  _syncAspect() {
-    const el = this.G.renderer.domElement;
-    const w = el.clientWidth || window.innerWidth, h = el.clientHeight || window.innerHeight;
-    const a = w / Math.max(1, h);
+  _syncAspect(rdt = 0) {
+    // the canvas is always the full window (main.js sizes the renderer to innerWidth × innerHeight on
+    // 'resize'): re-read the size on resize and once a second as a safety net — not every frame
+    if ((this._vwT -= rdt) <= 0 || !this._vw) {
+      this._vwT = 1;
+      const el = this.G.renderer.domElement;
+      this._vw = window.innerWidth || el.clientWidth || 1;
+      this._vh = window.innerHeight || el.clientHeight || 1;
+    }
+    const a = this._vw / Math.max(1, this._vh);
     if (Math.abs(this.cam.aspect - a) > 1e-4) { this.cam.aspect = a; this.cam.updateProjectionMatrix(); }
-    this._vw = w; this._vh = h;
   }
 
   _solveRig() {
     const W = this._vw, H = this._vh;
     const R = this.G.world?.arenaRadius ?? 11;
     const touch = this.G.input?.device === 'touch';
-    const K = this._rigK || (this._rigK = { w: -1, h: -1, r: -1, touch: null });
-    if (K.w === W && K.h === H && Math.abs(K.r - R) < 1e-3 && K.touch === touch) return;   // (no per-frame string keys)
-    K.w = W; K.h = H; K.r = R; K.touch = touch;
+    // HUD-safe line: the lowest live top panel (hud.js G.hud.safeTopPx — boss bar, XP strip, mutator chip…)
+    // or the fixed minimum. A 0 mid-run (HUD briefly hidden under a card / pause overlay) keeps the last value.
+    const hudTop = +this.G.hud?.safeTopPx || 0;
+    if (hudTop > 0) this._hudTop = hudTop; else if (!this.G.run) this._hudTop = 0;
+    const safePx = Math.round(Math.max(TUNE.hudSafePx, this._hudTop > 0 ? this._hudTop + TUNE.hudSafePad : 0));
+    const K = this._rigK || (this._rigK = { w: -1, h: -1, r: -1, touch: null, s: -1 });
+    if (K.w === W && K.h === H && Math.abs(K.r - R) < 1e-3 && K.touch === touch && K.s === safePx) return;   // (no per-frame string keys)
+    K.w = W; K.h = H; K.r = R; K.touch = touch; K.s = safePx;
     const aspect = W / Math.max(1, H);
     const p = TUNE.pitch * D2R;
     const fov = aspect >= 1 ? TUNE.fovWide : lerp(TUNE.fovTall, TUNE.fovWide, clamp((aspect - 0.5) / 0.5, 0, 1));
@@ -339,15 +356,21 @@ export class CameraDirector {
     const Rf = R + TUNE.rimOut + TUNE.fitMargin;
     // ground distance from the focus up to the HUD-safe line (NDC y = ys): the follow clamp stops the far
     // rim there instead of at the very top edge, so a hero hugging the far rim is never under the HUD
-    const ys = 1 - 2 * Math.max(TUNE.hudTop, TUNE.hudSafePx / Math.max(1, H));
+    const ys = 1 - 2 * Math.max(TUNE.hudTop, safePx / Math.max(1, H));
     const kSafe = sp - ys * cp * tf > 0.05 ? (ys * tf) / (sp - ys * cp * tf) : kFar;
+    // how far (ground units) the hero may stand up-screen of the focus before its head (TUNE.heroTop)
+    // crosses that line: ndcY(w, y) = (y·cosp − w·sinp) / ((d − y·sinp − w·cosp)·tanf) = ys, solved for −w.
+    // The fitted framing (desktop / tall phones) shows the whole arena but its far rim can sit under a
+    // tall HUD band (boss bar + XP strip): the focus then scrolls just enough to keep the hero visible.
+    const hT = TUNE.heroTop;
+    const heroSafe = sp - ys * cp * tf > 0.05 ? (ys * tf * (dist - hT * sp) - hT * cp) / (sp - ys * cp * tf) : Infinity;
     const yb = 1 - 2 * (TUNE.hudSafeBottomPx / Math.max(1, H));
     const kNearSafe = (yb * tf) / (sp + yb * cp * tf);
     this._rig = {
       dist, fov, fit, aspect, pitch: p,
       near: kNear * dist, far: kFar * dist, farSafe: Math.min(kFar, kSafe) * dist, nearSafe: Math.min(kNear, kNearSafe) * dist, halfX: kX * dist,
       centreZ: fzBand(dist, Rf, fit ? top : Math.min(top, ys)),   // follow mode (phones): keep the whole depth below the HUD panels
-      Rf, R, touch, pxPerU: pxAt(dist),
+      Rf, R, touch, pxPerU: pxAt(dist), safePx, heroSafe,
     };
     if (!this._inited) { this._inited = true; this._snapFocus(); }
   }
@@ -388,11 +411,13 @@ export class CameraDirector {
       const centre = rig.centreZ;                         // arena centred on screen
       const room = Math.min(TUNE.slack, (span - 2 * Rf) / 2 + TUNE.slack * (rig.fit ? 1 : 0));
       fz = centre + clamp(az * TUNE.followK - bias, -room, room);
+      if (tgt) fz = Math.min(fz, hz + rig.heroSafe);    // hero by the far rim: never under the top HUD panels
     } else {
       const up = TUNE.deadZone * rig.farSafe, down = TUNE.deadZone * rig.near;
       fz = F.z;
       const want = az - bias;
       if (want > fz + down) fz = want - down; else if (want < fz - up) fz = want + up;
+      if (tgt) fz = Math.min(fz, hz + rig.heroSafe);
       const lo = -Rf + rig.farSafe, hi = Rf - rig.nearSafe;
       fz = lo <= hi ? clamp(fz, lo, hi) : (lo + hi) / 2;
     }
@@ -618,6 +643,7 @@ export class CameraDirector {
   dispose() {
     this._offs?.forEach((f) => f());
     window.removeEventListener('pointerdown', this._onTap);
+    window.removeEventListener('resize', this._onResize);
   }
 }
 

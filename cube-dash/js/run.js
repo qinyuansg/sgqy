@@ -38,7 +38,7 @@ const TUNE_R = {
   magnetDrop: { chance: 0.012, minCrystals: 12 },
   intensityEvery: 0.25,
   bombWindow: 0.25, novaTail: 0.35, novaGrace: 0.3,
-  tutorial: { moveDist: 1.5, blobBonks: 3, firstSmashStop: 200, dizzySlow: [0.6, 1.0] },
+  tutorial: { moveDist: 1.5, blobBonks: 3, firstSmashStop: 200, dizzySlow: [0.6, 1.0], holdMax: 22, resumeDelay: 0.8 },
   shakeFalloff: 14,
   fullHeartScore: 100,
   maxedLevelScore: 500,
@@ -56,6 +56,8 @@ const TUT = {
   blob: { icon: '🌀', textKey: 'tut.blob', action: 'move' },
   nova: { icon: '✦', textKey: 'tut.nova', action: 'nova' },
 };
+// 1-1 lessons the next wave waits for (each prompt shows until satisfied — DESIGN_BRIEF §1.11)
+const TUT_LESSONS = new Set(['move', 'bonk', 'knock']);
 
 addStrings({
   zh: {
@@ -186,7 +188,8 @@ export class Run {
       if (od.kind === 'noNova') this.objective.target = 0;
     }
     this._wavesCleared = new Set();
-    this._tut = { active: null, flags: {}, moved0: 0, bonks0: 0 };
+    this._tut = { active: null, flags: {}, moved0: 0, bonks0: 0, resume: null, resumeAt: Infinity };
+    this._tutPace = { wave: -1, t: 0 };
     this._hsBudget = TUNE.hitstop.capPerSec;
     this._lastPerfectSlow = -9;
     this._levelGapT = 0;
@@ -446,6 +449,7 @@ export class Run {
   _updatePlaying(dt, rdt) {
     this.time += dt;
     this._tickRules(dt, rdt);
+    if (this.tutorial) this._tutorialPace(dt);
     this._call(this.waves, 'update', dt);
     if (this.state === 'playing') this._call(this.playerCtl, 'update', dt, rdt);
     this._call(this.upgrades, 'preEnemies', dt);
@@ -1201,9 +1205,16 @@ export class Run {
       prof.tutorialSeen[id] = (prof.tutorialSeen[id] || 0) + 1;
       this.G.save.commit?.();
     }
+    // the first-dizzy dash prompt interrupts an unfinished lesson → that lesson comes back after the first smash
+    const prev = this._tut.active;
+    this._tut.resume = id === 'dash' ? (prev && prev !== 'dash' ? prev : this._tut.resume) : null;
+    this._tut.resumeAt = Infinity;
+    this._tutActivate(id, extra, id === 'dash');
+  }
+  /** keepBase: the lesson's move / bonk counters keep running (the dash prompt only parks the lesson) */
+  _tutActivate(id, extra = {}, keepBase = false) {
     this._tut.active = id;
-    this._tut.moved0 = this.playerCtl.moved;
-    this._tut.bonks0 = this.stats.bonks;
+    if (!keepBase) { this._tut.moved0 = this.playerCtl.moved; this._tut.bonks0 = this.stats.bonks; }
     this.G.bus?.emit('tutorial:step', { id, ...TUT[id], ...extra });
   }
   _tutDone(id) {
@@ -1212,11 +1223,50 @@ export class Run {
     if (this._tut.active === id) {
       this._tut.active = null;
       this.G.bus?.emit('tutorial:done', { id });
+      if (id === 'dash' && this._tut.resume) this._tut.resumeAt = this.time + TUNE_R.tutorial.resumeDelay;   // after the 解救! moment
+      else this._tut.resume = null;
     }
+  }
+  /** bring back the lesson the dash prompt parked (unless it got done meanwhile) */
+  _tutResumeTick() {
+    const back = this._tut.resume;
+    if (!back || this.time < this._tut.resumeAt) return;
+    this._tut.resume = null;
+    if (this._tut.flags['done_' + back]) return;
+    if (back === 'move' && this.playerCtl.moved - this._tut.moved0 >= TUNE_R.tutorial.moveDist) { this._tutDone('move'); return; }
+    this._tutActivate(back, { resume: true }, true);
+  }
+  /** 1-1 pacing: the next wave waits while the current lesson (move / bonk / knock, or the first-dizzy
+   *  dash prompt) is unsatisfied, or while cubes from an earlier lesson wave are still around — prompts
+   *  are never replaced mid-lesson and unfreed cubes don't pile up. Only between waves (a wave's own
+   *  spawns are never blocked); a stuck kid still gets the next wave after `tutorial.holdMax` s. */
+  _tutorialPace(dt) {
+    const wv = this.waves, em = this.enemies, tp = this._tutPace;
+    if (!wv || !em || wv.done) return;
+    const waves = this.stageDef.waves || [];
+    const cw = wv.wave | 0;
+    if (tp.wave !== cw) { tp.wave = cw; tp.t = 0; }
+    if (tp.last == null) tp.last = this._tutLastLesson(waves);
+    let hold = false;
+    if (wv.started && cw < waves.length - 1 && tp.t < TUNE_R.tutorial.holdMax && !(wv._pendingIn?.(cw) > 0)) {
+      const f = this._tut.flags, lesson = waves[cw]?.tutorial, alive = em.aliveCount > 0;
+      if (alive && this._tut.active === 'dash') hold = true;
+      else if (alive && TUT_LESSONS.has(lesson) && !f['done_' + lesson]) hold = true;
+      else if (cw >= tp.last) {                          // lessons over: the lesson cubes are freed before the real waves
+        for (let i = 0; i < cw; i++) if (TUT_LESSONS.has(waves[i]?.tutorial) && em.countWave(i) > 0) { hold = true; break; }
+      }
+    }
+    if (hold) tp.t += dt;
+    wv.hold = hold;
+  }
+  _tutLastLesson(waves) {
+    let n = -1;
+    for (let i = 0; i < waves.length; i++) if (TUT_LESSONS.has(waves[i]?.tutorial)) n = i;
+    return n;
   }
   _tutorialTick() {
     const a = this._tut.active;
-    if (!a) return;
+    if (!a) { this._tutResumeTick(); return; }
     if (a === 'move' && this.playerCtl.moved - this._tut.moved0 >= TUNE_R.tutorial.moveDist) this._tutDone('move');
     else if (a === 'blob' && this.stats.bonks - this._tut.bonks0 >= TUNE_R.tutorial.blobBonks) this._tutDone('blob');
   }

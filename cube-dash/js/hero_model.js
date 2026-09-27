@@ -13,6 +13,8 @@
 //   spring, dash stretch, landing squash, tired (sweat + panting + greyed),
 //   hurt face + flash, celebrate (JOY + waving), nova-ready golden aura,
 //   i-frame 6 Hz pulse + cyan bubble, pupils follow lookX/lookY.
+//   Emotes: model.emote('yawn') / model.yawn() — ~1.3 s sleepy yawn (eyes squeeze shut, big
+//   round mouth, arms stretch overhead, body stretches tall) for the night lobby (§4.4).
 //
 //   Hierarchy (origin at the FEET centre, face = local +Z):
 //     group ─ ring (cyan ground ring, stays on the floor)
@@ -41,6 +43,7 @@ const TUNE = {
   outline: 0x2b1d3f,
   gold: 0xffd23f,
   sweat: 0xbff3ff,
+  yawn: { dur: 1.3, open: 0.3, hold: 0.72, close: 0.9 },   // phases as fractions of dur
 };
 
 // per-hero body silhouettes (Mochi is rounder, softer & jigglier)
@@ -333,6 +336,32 @@ const ANCHOR_MAIN = 'void main() {';
 const ANCHOR_BASE = 'vec3 base = vColor;';
 const ANCHOR_LIT = 'lit += base * smoothstep(0.7, 1.0, N.y) * 0.08;';
 let warnedPatch = false;
+
+// yawn mouth (emote 'yawn'): uYawn 0..1 grows a tall round "O" (+ tongue) out of the current mouth
+const ANCHOR_FACE = 'vec4 face(vec2 uv, float expr, float blink, vec2 look) {';
+const ANCHOR_MOUTH = 'col.rgb = mix(col.rgb, vec3(0.35, 0.05, 0.08), mouth);';
+const YAWN_MOUTH = /* glsl */`
+  if (uYawn > 0.001) {
+    vec2 yq = m - vec2(0.0, -0.035);
+    vec2 yr = vec2(0.04 + 0.032 * uYawn, 0.03 + 0.09 * uYawn);
+    float yo = fill(sdEllipse(yq, yr), aa);
+    float yt = fill(sdEllipse(yq - vec2(0.0, -yr.y * 0.58), vec2(yr.x * 0.66, yr.y * 0.36)), aa) * yo;
+    float yk = smoothstep(0.0, 0.3, uYawn);
+    mouth = mix(mouth, yo, yk);
+    tongue = mix(tongue, yt, yk);
+  }
+  `;
+let warnedYawn = false;
+function patchYawn(mat) {
+  const src = mat.fragmentShader;
+  if (!src.includes(ANCHOR_FACE) || !src.includes(ANCHOR_MOUTH)) {
+    if (!warnedYawn) { console.warn('[hero_model] art.js face shader changed: yawn mouth falls back to SLEEP'); warnedYawn = true; }
+    return false;
+  }
+  mat.fragmentShader = src.replace(ANCHOR_FACE, 'uniform float uYawn;\n' + ANCHOR_FACE).replace(ANCHOR_MOUTH, YAWN_MOUTH + ANCHOR_MOUTH);
+  mat.uniforms.uYawn = { value: 0 };
+  return true;
+}
 
 function patchBodyMaterial(mat, pattern, patA, patB, plate) {
   const src = mat.fragmentShader;
@@ -938,6 +967,7 @@ class HeroModel {
     this.bw = bw; this.bh = bh; this.bd = bd;
     const bodyGeo = roundedBoxGeometry(shape.r, shape.seg);
     const bodyMat = createCubeMaterial({ color: bodyHex });
+    this._yawnMouth = patchYawn(bodyMat);
     if (pattern) {
       const pinkish = (() => { _c1.setHex(bodyHex); return _c1.r > _c1.b; })();
       const patA = pinkish ? 0x7a4cff : 0xff6fd8;
@@ -1070,6 +1100,8 @@ class HeroModel {
     this._state = { wob: this.wob, speed: 0, dashing: false, lean: 0 };
     this._col = new THREE.Color();
     this._grey = new THREE.Color();
+    this._emote = null;           // {name, t, dur, settled}
+    this._yawn = { mouth: 0, eyes: 0, stretch: 0 };
 
     this.update(0, EMPTY);
   }
@@ -1138,6 +1170,20 @@ class HeroModel {
   setBlink(on) { this.blinkOn = !!on; }
   /** permanent cyan ground ring (hide it in the hub) */
   setRing(on) { this.ringOn = !!on; this.ring.visible = this.ringOn; }
+  /**
+   * One-shot emote. 'yawn' (night lobby, §4.4): ~1.3 s — eyes squeeze shut, a big round yawn mouth,
+   * arms stretch overhead and the body stretches tall, then a sleepy half-lidded blink back.
+   * @returns {boolean} true if the emote started (unknown names are ignored)
+   */
+  emote(name) {
+    if (name !== 'yawn') return false;
+    this._emote = { name, t: 0, dur: TUNE.yawn.dur, settled: false };
+    return true;
+  }
+  /** shorthand for emote('yawn') */
+  yawn() { return this.emote('yawn'); }
+  /** name of the emote playing now, or null */
+  get emoting() { return this._emote ? this._emote.name : null; }
 
   update(dt, anim) {
     const a = anim || EMPTY;
@@ -1161,6 +1207,27 @@ class HeroModel {
     this.glowAmt = damp(this.glowAmt, glow, 5, dt);
     this.celebAmt = damp(this.celebAmt, celebrate ? 1 : 0, 10, dt);
     this.bubbleAmt = damp(this.bubbleAmt, this.blinkOn ? 1 : 0, 14, dt);
+
+    // ---- emote: yawn (mouth 0..1 · eyes shut 0..1 · stretch 0..1)
+    const Y = this._yawn;
+    Y.mouth = 0; Y.eyes = 0; Y.stretch = 0;
+    const em = this._emote;
+    if (em) {
+      em.t += dt;
+      const u = em.t / em.dur, P = TUNE.yawn;
+      if (u >= 1) this._emote = null;
+      else if (em.name === 'yawn') {
+        const eo = (x) => 1 - (1 - x) * (1 - x);
+        if (u < P.open) Y.mouth = eo(u / P.open);
+        else if (u < P.hold) Y.mouth = 1 - 0.08 * Math.sin((u - P.open) / (P.hold - P.open) * Math.PI);   // tiny "mmm-ahh" wobble
+        else if (u < P.close) Y.mouth = 1 - eo((u - P.hold) / (P.close - P.hold));
+        Y.stretch = u < P.close ? Math.min(1, u / (P.open * 0.8)) * (u < P.hold ? 1 : 1 - (u - P.hold) / (P.close - P.hold)) : 0;
+        // eyes squeeze shut with the mouth, then reopen slowly, sleepy (half-lidded) to the end
+        Y.eyes = u < P.close ? clamp(Y.mouth * 1.6, 0, 1) : 0.45 * (1 - (u - P.close) / (1 - P.close));
+        if (u >= P.hold && !em.settled) { em.settled = true; this.squash(1.08, 0.9, 1.08); }
+        if (hurt || dashing) this._emote = null;
+      }
+    }
 
     // ---- walk cycle
     const walking = moving && !dashing && !air;
@@ -1193,6 +1260,7 @@ class HeroModel {
     ty -= contact; tx += contact * 0.5; tz += contact * 0.5;
     if (dashing) { tx = TUNE.dashStretch[0]; ty = TUNE.dashStretch[1]; tz = TUNE.dashStretch[2]; }
     if (air && !dashing) { ty += 0.08; tx -= 0.04; tz -= 0.04; }
+    if (Y.stretch > 0) { ty += 0.13 * Y.stretch; tx -= 0.06 * Y.stretch; tz -= 0.06 * Y.stretch; tx += Math.sin(t * 31) * 0.008 * Y.stretch; }
     const k = shape.k, cd = shape.c;
     const steps = dt > 0.02 ? 2 : 1;
     const h = dt / steps;
@@ -1212,6 +1280,7 @@ class HeroModel {
     if (dashing) leanT = 0.3;
     if (tired) leanT += 0.1;
     if (hurt) leanT = -0.28;
+    leanT -= 0.13 * Y.stretch;                       // yawn: head tips back a little
     this.lean = damp(this.lean, leanT, 10, dt);
     const yaw = this.group.rotation.y;
     let yawRate = 0;
@@ -1250,6 +1319,10 @@ class HeroModel {
         const cx = sd * (bw / 2 + 0.12), cy = bh + 0.1 + wave * 0.06, cz = 0.06 + wave * 0.08;
         ht.x += (cx - ht.x) * this.celebAmt; ht.y += (cy - ht.y) * this.celebAmt; ht.z += (cz - ht.z) * this.celebAmt;
       }
+      if (Y.stretch > 0.001) {                     // yawn: both arms stretch up overhead
+        const k2 = Y.stretch, cx = sd * (bw / 2 - 0.04), cy = bh + 0.3, cz = -0.04;
+        ht.x += (cx - ht.x) * k2; ht.y += (cy - ht.y) * k2; ht.z += (cz - ht.z) * k2;
+      }
       const hh = this.hand[i];
       hh.x = damp(hh.x, ht.x, 18, dt); hh.y = damp(hh.y, ht.y, 18, dt); hh.z = damp(hh.z, ht.z, 18, dt);
       const swing = (i ? s : -s) * 0.16 * w * (sprinting ? 1.4 : 1);
@@ -1287,6 +1360,12 @@ class HeroModel {
     if (celebrate) expr = EXPR.JOY;
     if (hurt) expr = EXPR.HURT;
     if (a.expr !== undefined && a.expr !== null) expr = a.expr;
+    if (Y.eyes > 0 && !hurt) {
+      // lids need the round-eye expressions; without the mouth patch the SLEEP face stands in
+      expr = !this._yawnMouth && Y.mouth > 0.3 ? EXPR.SLEEP : EXPR.HAPPY;
+      blinkBase = Math.max(blinkBase, Y.eyes);
+    }
+    if (this._yawnMouth) this.bodyMat.uniforms.uYawn.value = Y.mouth;
     // blink timer
     this.blinkNext -= dt;
     if (this.blinkNext <= 0 && this.blinkT <= 0) {

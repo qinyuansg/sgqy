@@ -6,6 +6,9 @@
 //   G.world.pulseRim(color)      flash the neon rim (wave start, boss)
 //   G.world.setFever(on)         rainbow rim + grid (also listens to 'fever')
 //   G.world.setPlayRadius(r)     storm wall at r (r ≥ arenaRadius → none)
+//   G.world.setNight(on)         lobby night mood (§4.4 21:30–06:30): starry navy sky + crescent
+//                                moon, cool dim moonlight, darker fog / clouds / floor. Lobby only —
+//                                main.js switches it off before every run. Kept across load() until off.
 //   gameplay queries: frictionAt · pushAt · bumperHit (+ bumpFx) · solidAt
 //
 // Design rules (DESIGN_BRIEF §0 colour law, §3.1, §7):
@@ -135,6 +138,21 @@ const LOOK = {
   },
 };
 
+// Lobby night overlay (§4.4). Colours are blended FROM each world's own day palette (k), so every hub
+// world keeps its identity; lights are moonlight. Only ever shown in the lobby — never in a run.
+const NIGHT = {
+  skyTop: 0x0a1238, skyBottom: 0x363a86, skyMid: 0x18256a, below: 0x121946, skyK: 0.9, gain: 0.95,
+  stars: 1.35, nebula: 0.3, nebA: 0x6b5bd6, nebB: 0x2f6fd0,
+  moonDir: [-0.36, 0.16, -0.92], moon: 0xeef2ff,
+  fog: 0x1a2154, fogK: 0.85,
+  hemi: [0x96a6ec, 0x47457c, 1.2], sun: [0xbccaff, 1.25],
+  char: { sky: 0xb2c0ff, ground: 0x8c88c4, rim: 0xa9c4ff },
+  floor: 0xa2acdc,                  // multiplies the floor colours (moonlit sand — still light & calm)
+  cloudLit: 0x8f9bd8, cloudShade: 0x2e3470, cloudRim: 0x9fb4ff, cloudK: 0.85, cloudEmit: 0.03,
+  planet: 0.7,                      // planet / ring brightness
+  grade: { saturation: 0.97, contrast: 1.06, tint: 0xe2e8ff, bloom: 1.2 },
+};
+
 // ============================================================
 // GLSL chunks
 // ============================================================
@@ -182,7 +200,7 @@ void main(){
 }`;
 const SKY_FS = /* glsl */`
 uniform vec3 uTop, uBottom, uBelow, uMid, uSkySun, uSkySunCol, uNebA, uNebB, uRbDir;
-uniform float uStars, uNebula, uRainbow, uTime, uGain, uMidK;
+uniform float uStars, uNebula, uRainbow, uTime, uGain, uMidK, uMoon;
 varying vec3 vDir;
 ${GLSL_COMMON}
 float fbm(vec3 p){ float a = 0.5, s = 0.0; for (int i = 0; i < OCT; i++){ s += a * vnoise3(p); p = p * 2.03 + 1.7; a *= 0.5; } return s; }
@@ -197,7 +215,17 @@ void main(){
   col = mix(col, uBelow, smoothstep(0.03, -0.4, h));           // below the island: cloud-sea base / void
   col *= uGain;                                                 // unlit dome: pre-compensate the ACES shoulder
   float s = max(dot(d, uSkySun), 0.0);
-  col += uSkySunCol * (smoothstep(0.99985, 0.9999, s) * 1.6 + pow(s, 260.0) * 0.5 + pow(s, 12.0) * 0.1);
+  col += uSkySunCol * (smoothstep(0.99985, 0.9999, s) * 1.6 * (1.0 - uMoon) + pow(s, 260.0) * 0.5 + pow(s, 12.0) * 0.1);
+  if (uMoon > 0.001 && s > 0.95) {
+    // night lobby: a soft crescent moon (~2.3°) + halo in the uSkySun direction
+    vec3 mu = normalize(cross(uSkySun, vec3(0.0, 1.0, 0.0)));
+    vec3 mv = cross(mu, uSkySun);
+    vec2 q = vec2(dot(d, mu), dot(d, mv)) / 0.04;
+    float disc = 1.0 - smoothstep(0.9, 1.0, length(q));
+    float bite = 1.0 - smoothstep(0.88, 1.0, length(q - vec2(0.45, 0.24)));
+    col = mix(col, uSkySunCol * 1.3, disc * (1.0 - bite * 0.94) * uMoon);
+    col += uSkySunCol * exp(-length(q) * 1.4) * 0.16 * uMoon;
+  }
 #if OCT > 0
   if (uNebula > 0.001) {
     vec3 q = d * 2.3;
@@ -851,6 +879,7 @@ const _e = new THREE.Euler();
 const _s = new THREE.Vector3();
 const _m = new THREE.Matrix4();
 const _c = new THREE.Color();
+const _cn = new THREE.Color();
 const UP = new THREE.Vector3(0, 1, 0);
 
 const col = (hex) => new THREE.Color(hex);
@@ -933,6 +962,7 @@ export class World {
     this.features = undefined;
     this.look = LOOK.cloud;
     this.fever = false;
+    this.night = false;         // lobby night mood (setNight)
     this.heroRing = false;      // §7.20 ring is drawn by hero_model.js / player.js; true = also draw it in the floor shader
     this.hubPedestal = true;    // soft cyan pedestal ring under the menu hero (floor shader, 0 draw calls)
     this._feverK = 0;
@@ -1016,7 +1046,7 @@ export class World {
       uSkySun: { value: new THREE.Vector3(-0.4, 0.3, -0.85).normalize() }, uSkySunCol: { value: col(0xfff3c4) },
       uNebA: { value: col(0xff7ad9) }, uNebB: { value: col(0x7c6cff) },
       uRbDir: { value: new THREE.Vector3(0.05, -0.08, -1).normalize() },
-      uStars: { value: 0 }, uNebula: { value: 0 }, uRainbow: { value: 0 }, uTime: this.U.uTime, uGain: { value: 0.62 },
+      uStars: { value: 0 }, uNebula: { value: 0 }, uRainbow: { value: 0 }, uTime: this.U.uTime, uGain: { value: 0.62 }, uMoon: { value: 0 },
     };
     const mat = new THREE.ShaderMaterial({
       uniforms: this.skyU, vertexShader: SKY_VS, fragmentShader: SKY_FS,
@@ -1405,8 +1435,64 @@ export class World {
       this.setFever(false);
       this._pulse = 0;
     }
-    this.G.post?.setGrade?.(this.look.grade);
+    this.G.post?.setGrade?.(this.night ? this._nightGrade() : this.look.grade);
     return this;
+  }
+
+  /**
+   * Lobby night mood (DESIGN_BRIEF §4.4, 21:30–06:30): navy starry sky with a crescent moon, cool dim
+   * moonlight on the island / rim / set pieces, darker fog, clouds & floor, cooler grade. Purely visual
+   * and meant for the hub only (main.js turns it off before a run). Persists across load() until off.
+   */
+  setNight(on) {
+    on = !!on;
+    if (on === this.night) return this;
+    this.night = on;
+    if (this.theme) {
+      this._applyPalette();                    // day palette (+ the night overlay when on)
+      this.G.post?.setGrade?.(on ? this._nightGrade() : this.look.grade);
+    }
+    return this;
+  }
+
+  _nightGrade() {
+    const g = this.look.grade || {}, N = NIGHT.grade;
+    return { saturation: (g.saturation ?? 1.08) * N.saturation, contrast: N.contrast, tint: N.tint, bloom: (g.bloom ?? 1) * N.bloom };
+  }
+
+  _applyNight() {
+    const N = NIGHT, S = this.skyU;
+    const mix = (c, hex, k) => c.lerp(_cn.set(hex), k);
+    // sky: navy dome, stars, a crescent moon where the lobby camera can see it; no rainbow
+    mix(S.uTop.value, N.skyTop, N.skyK); mix(S.uBottom.value, N.skyBottom, N.skyK);
+    mix(S.uMid.value, N.skyMid, N.skyK); mix(S.uBelow.value, N.below, N.skyK);
+    S.uGain.value = N.gain;
+    S.uStars.value = Math.max(S.uStars.value, N.stars);
+    S.uNebula.value = Math.max(S.uNebula.value * 0.6, N.nebula);
+    S.uNebA.value.set(N.nebA); S.uNebB.value.set(N.nebB);
+    S.uRainbow.value = 0;
+    // the moon sits opposite the world's planet (they share the upper sky of the lobby shot)
+    const px = this.look.planet?.dir?.[0] ?? 1;
+    S.uSkySun.value.set(Math.abs(N.moonDir[0]) * (px > 0 ? -1 : 1), N.moonDir[1], N.moonDir[2]).normalize(); S.uSkySunCol.value.set(N.moon);
+    S.uMoon.value = 1;
+    // fog
+    mix(this.scene.fog.color, N.fog, N.fogK);
+    // moonlight (world meshes read the same numbers through the shared uniforms)
+    this.hemi.color.set(N.hemi[0]); this.hemi.groundColor.set(N.hemi[1]); this.hemi.intensity = N.hemi[2];
+    this.sun.color.set(N.sun[0]); this.sun.intensity = N.sun[1];
+    this.U.uHemiSky.value.set(N.hemi[0]); this.U.uHemiGround.value.set(N.hemi[1]);
+    this.U.uSunCol.value.set(N.sun[0]);
+    setCharacterLighting({ sky: N.char.sky, ground: N.char.ground, rim: N.char.rim });
+    // floor: moonlit sand (the grid, edge glow and hub pedestal ring keep their colours and read brighter)
+    _cn.set(N.floor);
+    this.floorU.uFloor.value.multiply(_cn); this.floorU.uFloorAlt.value.multiply(_cn);
+    // clouds
+    const C = this.cloudU;
+    mix(C.uLit.value, N.cloudLit, N.cloudK); mix(C.uShade.value, N.cloudShade, N.cloudK); mix(C.uCRim.value, N.cloudRim, N.cloudK);
+    C.uEmit.value = Math.min(C.uEmit.value, N.cloudEmit);
+    // planet & ring: dimmer, so the moon leads
+    this.planetU.uP1.value.multiplyScalar(N.planet); this.planetU.uP2.value.multiplyScalar(N.planet);
+    this.planetU.uAtmo.value.multiplyScalar(N.planet); this.ringU.uRingA.value *= N.planet;
   }
 
   /** Change the gameplay radius (Endless / Storm arenas). Rebuilds rim + base, keeps everything else. */
@@ -1453,6 +1539,7 @@ export class World {
     S.uGain.value = L.skyGain ?? 0.62;
     S.uMidK.value = L.skyMid !== undefined ? 1 : 0; if (L.skyMid !== undefined) S.uMid.value.set(L.skyMid);
     S.uStars.value = L.stars; S.uNebula.value = this.low ? L.nebula * 0.8 : L.nebula; S.uRainbow.value = L.rainbow;
+    S.uMoon.value = 0;
     // fog
     if (!this.scene.fog || !this.scene.fog.isFog) this.scene.fog = new THREE.Fog(L.fog, L.fogNear, L.fogFar);
     this.scene.fog.color.set(L.fog); this.scene.fog.near = L.fogNear; this.scene.fog.far = L.fogFar;
@@ -1489,6 +1576,7 @@ export class World {
     this.planetGroup.rotation.set(pl.tilt[0], 0, pl.tilt[1]);
     // storm
     this.stormU.uWarnA.value.set(L.warnA); this.stormU.uWarnB.value.set(L.warnB);
+    if (this.night) this._applyNight();
   }
 
   _applyDetail(tier) {
@@ -1748,7 +1836,7 @@ export class World {
 
     // W1 rainbow grows brighter as cubes are freed (restoring the sky); full in menus
     if (this.look.rainbow) {
-      const want = this.look.rainbow * (G.run ? 0.45 + 0.55 * (this._progress || 0) : 1);
+      const want = this.night ? 0 : this.look.rainbow * (G.run ? 0.45 + 0.55 * (this._progress || 0) : 1);
       this.skyU.uRainbow.value = damp(this.skyU.uRainbow.value, want, 1.5, rdt);
     }
     // keep the dome centred on the camera ("infinitely far")

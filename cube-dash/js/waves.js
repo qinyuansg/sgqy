@@ -7,7 +7,7 @@
 //   run.waves = new WaveDirector(G, run, stageDef, mode)
 //   waves.update(dt) · waves.wave · waves.waveTotal · waves.done
 //   waves.tutorialStep (current wave's tutorial id | null)
-//   waves.hold = true  → pause spawning / wave advance (tutorial pacing hook)
+//   waves.hold = true  → pause spawning / wave advance (1-1 pacing: run._tutorialPace sets it between waves)
 //   waves.gate {x, z, open, t, radius}   (endless warp gate)
 //   waves.timeLeft · waves.medal         (Shrink Storm)
 //   export dailyMutator(date) · daySeed(date)
@@ -41,7 +41,8 @@ const TUNE = {
     bossHpGrowth: 0.15,
   },
   daily: { waveScale: 1.25 },   // 8 waves ≈ 170 cubes (a 3–4 min daily, not a marathon)
-  storm: { spawnStart: 1.6, spawnEnd: 0.65, maxAliveStart: 26, maxAliveEnd: 12, shrinkTime: 3.0, grace: 0.5 },
+  storm: { spawnStart: 1.6, spawnEnd: 0.65, maxAliveStart: 26, maxAliveEnd: 12, shrinkTime: 3.0, grace: 0.5,
+    edgeSpread: 1.2, portal: 0.9, smallR: 6, smallPortal: 1.4 },   // small arena → a portal may be close: longer warning
   rush: { breather: 3.0, min: 2 },
   themeCycle: true,
 };
@@ -186,7 +187,7 @@ export class WaveDirector {
     const cw = this.wave, ws = this.ws[cw], w = this.waves[cw];
     if (!ws || !w || w.boss) return;                    // boss wave ends on boss:defeat
     if (cw < this.waveTotal - 1) {
-      if (this.hold) return;
+      if (this.hold) { ws.lowT = 0; return; }        // tutorial pacing: momentum restarts once the lesson is done
       const pend = this._pendingIn(cw), alive = this.em?.countWave(cw) ?? 0;
       if (ws.cleared) { if (this.t - ws.clearT >= TUNE.breather) this._startWave(cw + 1); }
       else if (pend === 0 && alive <= TUNE.momentumLeft) { ws.lowT += dt; if (ws.lowT >= TUNE.momentumTime) this._startWave(cw + 1); }
@@ -325,7 +326,12 @@ export class WaveDirector {
         break;
       }
       case 'line': { x = lerp(-0.6, 0.6, count > 1 ? k / (count - 1) : 0.5) * R; z = (hz > 0 ? -1 : 1) * R * 0.5; break; }
-      case 'edge': { const a = rng() * TAU; x = Math.sin(a) * R * 0.85; z = Math.cos(a) * R * 0.85; break; }
+      case 'edge': {                                   // storm edge; the far side from the hero when a random rim spot could be close (kid rule 20)
+        const h = len2(hx, hz), far = h > 0.5 && R * 0.85 - h < minD + 1;
+        const a = far ? Math.atan2(-hx, -hz) + (rng() * 2 - 1) * TUNE.storm.edgeSpread : rng() * TAU;
+        x = Math.sin(a) * R * 0.85; z = Math.cos(a) * R * 0.85;
+        break;
+      }
       default: {                                          // 'portal': random point ≥ 3.5 u from the hero
         for (let tries = 0; tries < 12; tries++) {
           const a = rng() * TAU, r = R * (0.35 + 0.5 * rng());
@@ -588,7 +594,7 @@ export class WaveDirector {
         const pos = this._patternPos('edge', 0, 1, 0);
         const size = this.mutator?.forceSize || this.rng.pick(['S', 'S', 'M']);
         const type = this._stormType();
-        em.spawnWithPortal(type, pos.x, pos.z, { size, wave: this.stormIdx, delay: 0.9 });
+        em.spawnWithPortal(type, pos.x, pos.z, { size, wave: this.stormIdx, delay: this.R <= TUNE.storm.smallR ? TUNE.storm.smallPortal : TUNE.storm.portal });
         this.totalCubes += 1 + splitExtra(type, 1);
         this._setRun('totalCubes', this.totalCubes);
       }

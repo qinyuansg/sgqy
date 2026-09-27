@@ -48,6 +48,7 @@
 #hud .hv-row { display: flex; align-items: center; gap: 6px; }
 #hud .hv-hearts { display: flex; gap: 2px; flex-wrap: wrap; max-width: 250px; }
 #hud .hv-h { display: inline-block; width: 30px; height: 28px; }
+#hud .hv-hearts.many .hv-h { width: 25px; height: 23px; }       /* 7+ hearts (Mochi, Helper, +♥ cards) */
 #hud .hv-h svg { width: 100%; height: 100%; overflow: visible; }
 #hud .hh-bg { fill: #c9285e; stroke: #fff; stroke-width: 2.6; stroke-linejoin: round; }
 #hud .hh-l path, #hud .hh-r path { fill: url(#hudHeartG); stroke: url(#hudHeartG); stroke-width: .7; stroke-linejoin: round; }
@@ -310,12 +311,14 @@
 #hud .hud-hint.on .hh-bub { animation: hudBob 1.3s ease-in-out infinite; }
 #hud .hud-dizzy.on .hd-bub { animation: hudBobC 1s ease-in-out infinite; }
 #hud .hh-bub::after, #hud .hd-bub::after { content: ''; position: absolute; bottom: -12px; border: 7px solid transparent; border-top-color: #fff; }
-#hud .hh-bub::after { left: 18px; }
-#hud .hd-bub::after { left: 50%; margin-left: -7px; }
+/* hud.js slides a bubble back on screen near the edges (margin-left) and moves the tail (--tail) so it
+   still points at the hero / the dizzy cube */
+#hud .hh-bub::after { left: var(--tail, 18px); }
+#hud .hd-bub::after { left: var(--tail, calc(50% - 7px)); }
 #hud .hh-bub b, #hud .ht-keys b { font-size: 20px; color: var(--blue); }
 #hud .boom { font-size: 22px; }
 #hud .hd-t { font-size: 16px; color: #d97a00; }
-#hud .hint-tip { white-space: normal; width: 200px; font-size: 14px; line-height: 1.3; color: var(--ink); }
+#hud .hint-tip { white-space: normal; width: 200px; max-width: calc(100vw - 110px); font-size: 14px; line-height: 1.3; color: var(--ink); }
 #hud .mini-pips { display: inline-flex; gap: 3px; }
 #hud .mini-pips i { width: 16px; height: 9px; border-radius: 5px; background: #d7dfec; }
 #hud .mini-pips i.f { background: #ffd23f; }
@@ -383,11 +386,11 @@
 #hud .ne-tip { margin-top: 12px; padding: 8px 12px; border-radius: 14px; background: #eef5ff; font-weight: 800; font-size: 15px; line-height: 1.4; color: #34457a; }
 
 /* ---------- tutorial prompt ---------- */
-#hud .hud-tut { display: none; position: absolute; left: 50%; bottom: calc(15% + env(safe-area-inset-bottom)); transform: translateX(-50%); }
+#hud .hud-tut { display: none; position: absolute; left: 50%; bottom: calc(15% + env(safe-area-inset-bottom)); transform: translateX(-50%); transition: opacity .25s ease; }
 #hud .hud-tut.on { display: block; }
 #hud .ht-card { display: flex; align-items: center; gap: 14px; padding: 12px 22px; animation: hudTut 1.6s ease-in-out infinite; }
 #hud .ht-keys { display: flex; align-items: center; gap: 7px; }
-#hud .ht-keys small { font-weight: 800; font-size: 13px; color: #7d8bb0; }
+#hud .ht-keys small { font-weight: 800; font-size: 13px; color: #7d8bb0; white-space: nowrap; }
 #hud .ht-text { font-weight: 900; font-size: 24px; color: var(--deep); letter-spacing: 1px; white-space: nowrap; }
 #hud .wasd { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; }
 #hud .wasd > span { display: flex; gap: 4px; }
@@ -449,9 +452,13 @@
   #hud .hud-vitals { padding: 7px 9px 7px 8px; min-width: 0; border-radius: 18px; }
   #hud .hv-h { width: 23px; height: 21px; }
   #hud .hv-hearts { max-width: 150px; }
+  #hud .hv-hearts.many .hv-h { width: 19px; height: 18px; }
   #hud .pip { width: 22px; height: 11px; }
   #hud .ic-bolt { width: 18px; height: 18px; }
-  #hud .hud-top { top: calc(84px + env(safe-area-inset-top)); width: calc(100vw - 20px); }
+  /* tucked under the hearts panel (over its bottom padding, as with 5 hearts); hud.js measures that panel
+     (--vit-b = its bottom, safe-area included) so wrapped hearts (8+) push the objective down instead of
+     hiding the ⚡ pips */
+  #hud .hud-top { top: max(calc(84px + env(safe-area-inset-top)), calc(var(--vit-b, 0px) - 5px)); width: calc(100vw - 20px); }
   #hud .hud-obj, #hud .hud-boss { min-width: 0; width: min(100%, 360px); padding: 7px 10px 6px; }
   #hud .ho-main { gap: 6px; }
   #hud .ho-bar { min-width: 60px; height: 20px; }
@@ -481,6 +488,7 @@
   #hud .ht-text { font-size: 19px; }
   #hud .ht-card { padding: 10px 16px; gap: 10px; }
   #hud .hud-tut { bottom: auto; top: 30%; }
+  #hud.bn-on .hud-tut { opacity: 0; }           /* same spot as the wave banner: the card waits until it has gone */
   #hud .hs-btn b { font-size: 34px; }
 }
 /* short landscape phones */
