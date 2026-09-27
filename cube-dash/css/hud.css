@@ -493,6 +493,7 @@
 }
 /* short landscape phones */
 @media (max-height: 460px) {
+  #hud .hud-tut { zoom: .85; }   /* short landscape: keep the tutorial card clear of the 大招 ring */
   #hud .hud-vitals, #hud .hud-top, #hud .hud-pause, #hud .hud-endless { zoom: .8; }
   /* zoom scales the offset too: keep the score clear of input.js's touch pause button (right 14 + 48 px) */
   #hud[data-device="touch"] .hud-endless { right: calc(96px + env(safe-area-inset-right)); }

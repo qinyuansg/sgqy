@@ -889,7 +889,8 @@ export class HUD {
 
   // ---- off-screen edge arrows (boss · portals · warp gate · nearest threats)
   _updArrows(run, p, rdt) {
-    const W = window.innerWidth, H = window.innerHeight, M = TUNE.arrowMargin;
+    // cached viewport (camera keeps it up to date on resize) — no forced layout every frame
+    const W = this.G.cam?._vw || window.innerWidth, H = this.G.cam?._vh || window.innerHeight, M = TUNE.arrowMargin;
     for (let i = this._portals.length - 1; i >= 0; i--) if (this._portals[i].until <= this._t) this._portals.splice(i, 1);
     this._scanT -= rdt;
     if (this._scanT <= 0) {
