@@ -36,6 +36,7 @@ const TUNE_H = {
   cueEvery: 0.45,          // min seconds between "!" cue events
   gapClosing: 0.6,         // gap-rule Perfect needs the cube to close in at ≥ this speed (u/s)
   nudge: 0.6,              // walking into a dizzy cube pushes it by this share of the overlap
+  contactRecoil: 2.5,      // a cube that just hurt the hero bounces off at this speed
   bubbleY: 0.9,
   nova: { rise: 0.45, riseH: 0.9, iframes: 1.1 },
   mega: { touchCd: 0.8, stompEvery: 0.5, stompR: 3, stompDizzy: 1, speedMult: 1.1, grow: 0.3, shrink: 0.4, knock: 12, heavyDizzy: 2 },
@@ -369,11 +370,17 @@ export class Player {
         if (harmfulOf(e)) {
           if (d < s.radius + rr * 0.92) {
             if (this._bellyBump(e, dx, dz, d)) continue;
-            run.hurtPlayer(e.hearts ?? e.contactHearts ?? 1, e.x, e.z, bossy(e) ? 'boss' : e.type || 'contact');
+            const hit = run.hurtPlayer(e.hearts ?? e.contactHearts ?? 1, e.x, e.z, bossy(e) ? 'boss' : e.type || 'contact');
+            // the cube that bumped us bounces off too (so it doesn't sit on the hero through the i-frames)
+            if (hit && !bossy(e) && !e.stationary && d > 1e-4) {
+              e.flash = Math.max(e.flash || 0, 0.6);
+              if (typeof e.spd === 'number') e.spd *= 0.2;
+              e.vx = (dx / d) * TUNE_H.contactRecoil; e.vz = (dz / d) * TUNE_H.contactRecoil;
+            }
           }
         } else if (!s.dashing && d > 1e-4 && d < TUNE_H.bodyR + rr) {
           const ov = TUNE_H.bodyR + rr - d;
-          if (smashableOf(e) && !bossy(e)) {
+          if (smashableOf(e) && !bossy(e) && !e.stationary) {
             // walking into a dizzy cube nudges it gently
             e.x += (dx / d) * ov * TUNE_H.nudge; e.z += (dz / d) * ov * TUNE_H.nudge;
           } else {

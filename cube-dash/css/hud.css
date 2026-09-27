@@ -36,6 +36,9 @@
 }
 #hud .hud-core { position: absolute; inset: 0; transition: opacity .45s ease; }
 #hud.ended .hud-core, #hud.cine .hud-core, #hud.cine .hud-arrows, #hud.cine .hud-tut, #hud.cine .hud-hint { opacity: 0; }
+#hud .hud-pops, #hud .hud-banner, #hud .hud-newenemy { transition: opacity .35s ease; }
+#hud.ended .hud-pops, #hud.ended .hud-arrows { opacity: 0; transition: opacity .35s ease; }
+#hud.ended .hud-banner.on, #hud.ended .hud-newenemy { opacity: 0 !important; }
 
 /* ---------- ① vitals: hearts + hp colour bar + ⚡ pips ---------- */
 #hud .hud-vitals {
@@ -114,6 +117,9 @@
 #hud .ic-crown path, #hud .ic-crown circle, #hud .ic-crown rect { fill: #ffc21a; stroke: #d48a00; stroke-width: 1.3; stroke-linejoin: round; }
 #hud .ho-oico { font-size: 15px; line-height: 1; }
 #hud .ho-crown.done { background: linear-gradient(180deg, #ffe680, #ffc21a); border-color: #fff; color: #fff; box-shadow: 0 0 12px rgba(255, 200, 40, .8); text-shadow: 0 1px 0 #b77400; }
+#hud .ho-crown.missed { background: #eef2f8; border-color: #d6deea; color: #8e9ab3; }
+#hud .ho-crown.missed .ic-crown path, #hud .ho-crown.missed .ic-crown circle, #hud .ho-crown.missed .ic-crown rect { fill: #cfd7e4; stroke: #a9b5c9; }
+#hud .ho-crown.missed .ho-oico { filter: grayscale(1); opacity: .6; }
 #hud .ho-time { display: inline-flex; align-items: center; gap: 3px; color: #5b6b8f; font-weight: 800; font-size: 14px; font-variant-numeric: tabular-nums; }
 #hud .ho-time em { font-style: normal; }
 #hud .ic-clock { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
@@ -414,6 +420,8 @@
   background: radial-gradient(ellipse at 50% 50%, transparent 58%, rgba(255, 140, 190, .30) 100%); }
 #hud.danger .hud-vig { opacity: 1; animation: hudVig 1s ease-in-out infinite; }
 #hud.calm .hud-vig { animation: none; }
+#hud.calm .hud-boss.open::after { animation: none; opacity: .8; }
+#hud.calm .k-portal .ar-chip, #hud.calm .ho-time.warn, #hud.calm .he-warp.open, #hud.calm.danger .hv-hearts { animation: none; }
 #hud.calm .hv-stam.tired .hv-sweat { animation: none; }
 
 /* ---------- keyframes ---------- */

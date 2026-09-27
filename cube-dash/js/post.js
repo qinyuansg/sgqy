@@ -288,7 +288,7 @@ export class Post {
     const r = this.renderer;
     const pr = r.getPixelRatio();
     const w = this._w, h = this._h;
-    // HDR buffer when the GPU can render to half floats; otherwise an 8-bit fallback (bloom threshold lowered)
+    // HDR buffer when the GPU can render to half floats; otherwise an 8-bit buffer without bloom
     const ext = r.extensions;
     const hdr = r.capabilities.isWebGL2 && (ext.has('EXT_color_buffer_float') || ext.has('EXT_color_buffer_half_float'));
     this._hdr = hdr;
@@ -300,10 +300,13 @@ export class Post {
     composer.setSize(w, h);
     composer.addPass(new RenderPass(this.scene, this.camera));
     this._bloomRes = L.bloomRes;
-    const bloom = new UnrealBloomPass(new THREE.Vector2(Math.max(1, w * L.bloomRes), Math.max(1, h * L.bloomRes)), TUNE.bloom.strength, TUNE.bloom.radius, hdr ? TUNE.bloom.threshold : 0.93);
-    const baseSetSize = bloom.setSize.bind(bloom);
-    bloom.setSize = (x, y) => baseSetSize(Math.max(1, Math.round(x * this._bloomRes)), Math.max(1, Math.round(y * this._bloomRes)));
-    composer.addPass(bloom);
+    let bloom = null;
+    if (hdr) {   // UnrealBloomPass uses half-float targets internally: only when the GPU can render to them
+      bloom = new UnrealBloomPass(new THREE.Vector2(Math.max(1, w * L.bloomRes), Math.max(1, h * L.bloomRes)), TUNE.bloom.strength, TUNE.bloom.radius, TUNE.bloom.threshold);
+      const baseSetSize = bloom.setSize.bind(bloom);
+      bloom.setSize = (x, y) => baseSetSize(Math.max(1, Math.round(x * this._bloomRes)), Math.max(1, Math.round(y * this._bloomRes)));
+      composer.addPass(bloom);
+    }
     const grade = new ShaderPass(GradeShader);
     composer.addPass(grade);
     composer.addPass(new OutputPass());

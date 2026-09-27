@@ -827,7 +827,9 @@ export class HUD {
       const inside = s.visible !== false && s.x > M * 0.5 && s.x < W - M * 0.5 && s.y > M * 0.5 && s.y < H - M * 0.5;
       if (inside) continue;
       let dx = s.x - cx, dy = s.y - cy;
-      if (s.visible === false) { dx = -dx; dy = -dy; }
+      // camera.js reports visible:false for anything outside the frustum — only a point BEHIND the
+      // camera projects mirrored (never in the 3/4 top-down view, but cinematics can swing around)
+      if (this._behind(tg.x, tg.y, tg.z)) { dx = -dx; dy = -dy; }
       if (Math.abs(dx) < 1e-3 && Math.abs(dy) < 1e-3) dy = 1;
       const k = Math.min((W / 2 - M) / Math.max(1e-3, Math.abs(dx)), (H / 2 - M) / Math.max(1e-3, Math.abs(dy)));
       const ax = cx + dx * k, ay = cy + dy * k;
@@ -865,10 +867,17 @@ export class HUD {
     const rise = p.rise * (1 - (1 - k) * (1 - k));
     p.el.style.transform = `translate3d(${(s.x + p.jx).toFixed(1)}px,${(s.y - rise).toFixed(1)}px,0)`;
   }
-  /** world → CSS px via the camera director (fallback: project with G.camera) */
+  /** true when a world point is behind the camera (its projection is mirrored) */
+  _behind(x, y, z) {
+    const m = this.G.camera?.matrixWorldInverse?.elements;
+    if (!m) return false;
+    return m[2] * x + m[6] * y + m[10] * z + m[14] > 0;      // view space looks down −Z
+  }
+  /** world → CSS px via the camera director (fallback: project with G.camera). Returns a shared
+   *  scratch object: read it right away, never keep it. */
   _w2s(x, y, z) {
     const cam = this.G.cam;
-    if (cam?.worldToScreen) { const s = cam.worldToScreen(x, y, z); if (s) return s; }
+    if (cam?.worldToScreen) { const s = cam.worldToScreen(x, y, z, this._s2 ||= { x: 0, y: 0, visible: true }); if (s) return s; }
     const c = this.G.camera, THREE = this.G.THREE;
     if (c && THREE) {
       const v = (this._v3 ||= new THREE.Vector3());

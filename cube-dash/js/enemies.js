@@ -56,6 +56,7 @@ const TUNE = {
   nudgeSpeed: 3.2,
   miniPop: 6.5,
   eliteSpeedy: 1.4,
+  lonelyRadius: 7,            // hero knock on a cube with nobody to bonk into → dizzy directly (no stalls)
   fallTime: 0.7,
   contactDamage: true,        // fallback only: skipped when run.playerCtl.resolve() owns hero contact
   heroPassives: true,         // Stella Starlight drift handled here (enemy physics)
@@ -508,8 +509,7 @@ export class EnemyManager {
       if (opts.mini) { sizeKey = 'S'; speed = def.sizes.S.speed; turn = def.sizes.S.turn; }
     } else {
       size = def.size; speed = def.speed || 0; turn = def.turn || 90; hearts = def.hearts; xp = def.xp;
-      sizeKey = size >= 1.4 ? 'L' : size >= 0.95 ? 'M' : 'S';
-      if (type === 'bruiser') sizeKey = 'L';
+      sizeKey = size <= 0.75 ? 'S' : size <= 1.15 ? 'M' : 'L';
     }
     if (opts.elite) xp = 'XL';
     // kid rule 2: every hit = 1 heart; 'hearts' only scales knockback in run.hurtPlayer (1 + 0.45 per extra)
@@ -700,6 +700,7 @@ export class EnemyManager {
     if (e.ai === 'windup' && e.type === 'zippy') { e.ai = 'chase'; e.cd = 1.2; }
     const m = Math.sqrt(Math.max(0.5, e.mass));
     e.vx = dirX * sp / m; e.vz = dirZ * sp / m;
+    if (byPlayer && !e.treasure && e.dizzyT <= 0 && this._lonely(e)) this.dizzy(e, D.bonk.dizzy, 'bump');
     e.proj = true; e.byPlayer = byPlayer;
     const cm = this.cardMods;
     let hops = opts.hops ?? (D.knock.maxHops + (cm.extraHops || 0));
@@ -709,6 +710,16 @@ export class EnemyManager {
     e.sq = 1.25; e.sqV = 0;
     this._publish(e);
     this._emit('enemy:knock', { x: e.x, z: e.z, type: e.type, byPlayer, speed: sp, dirX, dirZ });
+    return true;
+  }
+
+  /** no other red cube near enough to bonk into (last cubes of a wave never stall the stage) */
+  _lonely(e) {
+    const r = TUNE.lonelyRadius;
+    for (const o of this.list) {
+      if (o === e || o.dead || o.portal || o.treasure || o.isBoss) continue;
+      if (Math.abs(o.x - e.x) < r && Math.abs(o.z - e.z) < r && len2(o.x - e.x, o.z - e.z) < r) return false;
+    }
     return true;
   }
 

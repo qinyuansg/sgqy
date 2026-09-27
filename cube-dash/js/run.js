@@ -1089,6 +1089,7 @@ export class Run {
     const b = this.enemies?.boss || this._bossSet;
     if (!b || b.dead || !(b.maxHp > 0)) return;
     this._bossPhaseDone = true;
+    if ((b.phase | 0) >= ph) return;                  // boss.js already started at the checkpoint phase
     if (typeof b.startAtPhase === 'function') { this._call(b, 'startAtPhase', ph); return; }
     const pa = BOSS.phaseAt;
     const hp = Math.max(1, Math.floor(b.maxHp * pa[ph - 2] + 1e-6));
