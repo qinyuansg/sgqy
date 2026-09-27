@@ -66,11 +66,11 @@ const TUNE = {
   // high-pass, _dev/review-audio): core verbs sit ≈ 6–10 dB over the in-run music, telegraphs ≈ 4–8 dB,
   // frequent small feedback (dizzy, land, freed) at or just under it, nothing repeated louder than a smash.
   level: {
-    zap: 1.2, bolt: 1.1, babble: 0.35, stomp: 1.2, miniNova: 0.7, dash: 1.3, hurt: 1.4,
-    crystal: 1.4, nearMiss: 1.4, coin: 1.5, freed: 2.5, dizzy: 1.5, whoosh: 3.5, open: 3.5, coinTick: 2,
-    cue: 1.6, windup: 1.5, checkpoint: 2, coinBurst: 1.3, motif: 2.2, novaReady: 2.2, land: 0.6, wave: 1.8,
-    claim: 1.8, buy: 1.8, milestone: 1.8, knock: 2.4, puff: 1.8, notYet: 2, womp: 1.4, error: 1.6,
-    explode: 1.1, slam: 1.1, escape: 0.4, tired: 0.8, bossJump: 2, bossCharge: 1.6,
+    zap: 1.2, bolt: 1.1, babble: 0.22, stomp: 2.2, miniNova: 0.7, dash: 1.3, hurt: 1.4, perfect: 0.7,
+    crystal: 1.1, nearMiss: 1.4, coin: 1.0, freed: 2.5, dizzy: 1.5, whoosh: 3.5, open: 3.5, coinTick: 2,
+    cue: 1.6, windup: 1.2, checkpoint: 2, coinBurst: 1.3, motif: 2.2, novaReady: 2.2, land: 0.6, wave: 1.8,
+    claim: 1.8, buy: 1.8, milestone: 1.3, knock: 2.4, puff: 1.8, notYet: 2, womp: 1.4, error: 2.4, click: 2,
+    explode: 1.1, slam: 1.1, escape: 0.4, tired: 0.8, bossJump: 3.5, bossCharge: 1.6, charge: 2,
   },
   spawnDrop: 0.6,                           // portal cube fall time √(2·7/38) s (enemies.js dropHeight / gravity)
   ladder: { reset: 1.2, max: 10 },          // smash chime: 2 octaves of pentatonic, one step per chained smash
@@ -337,7 +337,7 @@ const VOICES = {
   king: { f: 180, syl: 0.11, wave: 'sawtooth', vib: 0, gap: 0.035, crush: true },
   pixel: { f: 820, syl: 0.055, wave: 'square', vib: 0, gap: 0.02 },
   villager: { f: 640, syl: 0.06, wave: 'triangle', vib: 0, gap: 0.025 },
-  coin: { f: 900, syl: 0.045, wave: 'square', vib: 0, gap: 0.03 },
+  coin: { f: 900, syl: 0.045, wave: 'triangle', vib: 0, gap: 0.03 },
 };
 const VOWELS = [[800, 1200], [400, 2000], [300, 2300], [500, 900], [350, 700]];
 // mood → pitch contour (semitones per syllable position 0..1) + syllable count range

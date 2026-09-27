@@ -358,7 +358,7 @@ const BODY = {        // per-type body proportions (× size)
 };
 const LIGHT_TYPES = { grumpy: 1, zippy: 1, splitter: 1, popper: 1 };
 const TOKEN_TYPES = { grumpy: 1, splitter: 1, popper: 1, bruiser: 1 };
-const BRUISER_PIP_SOURCES = { rim: 1, bumper: 1, laser: 1, beam: 1, charge: 1, knock: 1, shock: 1, bonk: 1, slam: 1, ring: 1, mine: 1 };
+const BRUISER_PIP_SOURCES = { rim: 1, bumper: 1, laser: 1, beam: 1, charge: 1, knock: 1, shock: 1, bonk: 1, slam: 1, ring: 1, mine: 1, mininova: 1 };
 const BRUISER_DIZZY_SOURCES = { nova: 1, armor: 1, timestop: 1, blast: 1, victory: 1 };   // popper blasts dizzy Bruisers too (kid rule 10)
 
 export class EnemyManager {
@@ -700,7 +700,10 @@ export class EnemyManager {
       e.fuseLit = true; e.armed = true; e.fuse = e.fuseMax = e.def.knockedFuse;
       this._emit('enemy:windup', { x: e.x, z: e.z, type: 'popper', dirX, dirZ, fuse: e.fuse });
     }
-    if (e.ai === 'windup' && e.type === 'zippy') { e.ai = 'chase'; e.cd = 1.2; }
+    if (e.type === 'zippy' && (e.ai === 'windup' || e.ai === 'charge')) {   // a knock cancels the wind-up / charge
+      e.ai = 'chase'; e.cd = 1.2; e.chargeLeft = 0;
+      if (e.hz) e.hz.active = false;
+    }
     const m = Math.sqrt(Math.max(0.5, e.mass));
     e.vx = dirX * sp / m; e.vz = dirZ * sp / m;
     if (byPlayer && !e.treasure && e.dizzyT <= 0 && this._lonely(e)) this.dizzy(e, D.bonk.dizzy, 'bump');
