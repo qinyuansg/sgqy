@@ -1252,6 +1252,8 @@ export class Run {
     this.hitStop(TUNE.hitstop.lastCube, true);
     this._call(this.G, 'slowMo', 0.2, 1.0);
     this.playerCtl.grantIframes(99);
+    this._call(this.playerCtl, 'settle');           // no frozen mid-dash / giant pose in the celebration
+    this._flushWindows();
     this.pickups?.collectAll();
     this._call(this.G.input, 'setNovaReady', false);
     // clear bonuses
@@ -1280,9 +1282,18 @@ export class Run {
     }
   }
 
+  /** close the ★3 measuring windows (nova / popper blast) when the run stops ticking rules */
+  _flushWindows() {
+    const nw = this._novaWin;
+    if (nw) { this.bestNova = Math.max(this.bestNova, nw.count); this._obj('novaMulti', nw.count, 'max'); this._novaWin = null; }
+    for (const w of this._bombWins) this._obj('bombMulti', w.count, 'max');
+    this._bombWins.length = 0;
+  }
+
   _die() {
     if (this.state !== 'playing') return;
     if (!this.secondChanceUsed && (this.mode === 'stage' || this.mode === 'daily')) { this._enterSecondChance(); return; }
+    this._flushWindows();
     this.state = 'dying';
     this._dyT = 0;
     this.won = false;

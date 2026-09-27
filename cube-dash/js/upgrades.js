@@ -451,7 +451,8 @@ export class Upgrades {
       if (this.freezeNative) { try { em.freezeAll(TUNE_U.time.stop); } catch { this.freezeNative = false; } }
       const snap = this._snapshot();
       if (!this.freezeNative) for (const e of snap) if (!isGone(e) && !e.isBoss && !smashableOf(e)) em?.dizzy?.(e, TUNE_U.time.stop, 'timestop');
-      this.G.post?.pulse?.({ flash: 0.18, flashColor: 0x9fe8ff, chroma: 0.3, duration: 0.35 });
+      // comfort caps (Kid-UX §7.25): chromatic aberration only on heart loss & 大招 — a soft flash here
+      this.G.post?.pulse?.({ flash: 0.15, flashColor: 0x9fe8ff, chroma: 0, duration: 0.25 });
       this.G.hud?.pop?.(x, 2.2, z, t('card.timestop'), 'crit');
     }
   }

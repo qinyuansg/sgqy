@@ -33,12 +33,14 @@ const TUNE = {
   },
   voices: {
     max: 24, maxLow: 16,
-    caps: { smash: 6, crystal: 4, nearMiss: 2, freed: 3, spawnWarn: 3, bonk: 4, dizzy: 2, knock: 3, tick: 2, coin: 3, babble: 2, windup: 4 },
+    caps: { smash: 6, crystal: 4, nearMiss: 2, freed: 3, spawnWarn: 3, bonk: 4, dizzy: 2, knock: 3, tick: 2, coin: 3, babble: 2, windup: 4, bumper: 3, tired: 2, fall: 3, bolt: 4 },
     defaultCap: 4,
-    perFrame: { smash: 3, freed: 2, crystal: 2, spawnWarn: 2, bonk: 2, dizzy: 1, knock: 2, coin: 2 },
+    perFrame: { smash: 3, freed: 2, crystal: 2, spawnWarn: 2, bonk: 2, dizzy: 1, knock: 2, coin: 2, fall: 1 },
     defaultPerFrame: 2,
-    perFrameTotal: 12,           // new sfx voices per frame across all names (protects the audio thread)
-    minGap: { click: 0.04, back: 0.04, claim: 0.05, buy: 0.05, error: 0.08, whoosh: 0.06, hover: 0.03, tick: 0.035, pop: 0.03, star: 0.05, cue: 0.3, puff: 0.15, notYet: 0.25, dizzy: 0.12, babble: 0.25, heartbeat: 0.2 },
+    perFrameTotal: 12,           // new sfx voices per frame across all names (protects the audio thread) …
+    // … except these: a frame full of smashes must never swallow the hurt / perfect / nova / level-up sound
+    priority: ['hurt', 'perfect', 'nova', 'death', 'freeze', 'revive', 'levelup', 'countdown', 'countIn', 'bossDefeat', 'phase', 'roar', 'shield', 'fever'],
+    minGap: { click: 0.04, back: 0.04, claim: 0.05, buy: 0.05, error: 0.08, whoosh: 0.06, hover: 0.03, tick: 0.035, pop: 0.03, star: 0.05, cue: 0.3, puff: 0.15, notYet: 0.25, dizzy: 0.12, babble: 0.25, heartbeat: 0.2, coinAppear: 1, tileGone: 0.3, reroll: 0.15 },
   },
   music: {
     lookahead: 0.12, timerMs: 25,
@@ -52,20 +54,26 @@ const TUNE = {
     padLp: [800, 2000],                     // pad lowpass opens with stage progress
     dangerLp: 1200, slowLp: 450, hurtLp: 600, pauseLp: 1300, droneLp: 700,
     duck: { pause: 0.35, slow: 0.5, nova: 0.5, second: 0.3 },
+    leadGain: 1.7,                          // the hook must sit ≈ 3 dB over arp / hype / bass (was the quietest stem)
+    arpVel: 0.4,
+    padGlide: 0.015,                        // pad chord-change glide (τ, s): a quick smear, not a pitch bend
     freeBpm: 110,                           // beat phase keeps ticking with no music
     endless: { bpmStep: 2, every: 60, maxBpm: 144, keyEvery: 180, keyStep: 2, maxKey: 4 },
     bossPhase: { semis: 1, bpm: 4 },
+    endlessBossBack: 2.6,                   // endless: s after boss:defeat before the endless theme returns
   },
-  // per-sound mix trims (measured with _dev/audio offline renders: core verbs ≈ 0.35–0.45 peak,
-  // telegraphs ≈ 0.2, ambient/UI ticks ≈ 0.05–0.15)
+  // per-sound mix trims. Balanced by A-weighted loudness AND a phone-speaker proxy (A-weight + 350 Hz
+  // high-pass, _dev/review-audio): core verbs sit ≈ 6–10 dB over the in-run music, telegraphs ≈ 4–8 dB,
+  // frequent small feedback (dizzy, land, freed) at or just under it, nothing repeated louder than a smash.
   level: {
-    zap: 0.5, bolt: 0.8, babble: 0.6, stomp: 0.8, miniNova: 0.7, dash: 0.8,
-    crystal: 1.6, nearMiss: 1.4, coin: 3, freed: 2.5, dizzy: 1.5, whoosh: 3.5, open: 3.5, coinTick: 2,
-    cue: 1.6, windup: 2, checkpoint: 2, coinBurst: 2, motif: 2.2, novaReady: 2.2, land: 0.6, wave: 1.8,
-    claim: 1.8, buy: 1.8, milestone: 1.8,
+    zap: 0.8, bolt: 0.8, babble: 0.45, stomp: 1.2, miniNova: 0.7, dash: 1.0,
+    crystal: 1.4, nearMiss: 1.4, coin: 1.5, freed: 2.5, dizzy: 1.5, whoosh: 3.5, open: 3.5, coinTick: 2,
+    cue: 1.6, windup: 1.5, checkpoint: 2, coinBurst: 1.3, motif: 2.2, novaReady: 2.2, land: 0.6, wave: 1.8,
+    claim: 1.8, buy: 1.8, milestone: 1.8, knock: 1.6, puff: 1.8, notYet: 2, womp: 1.4, error: 1.6,
+    explode: 1.1, slam: 1.1,
   },
-  ladder: { reset: 1.2, max: 10 },          // smash chime: 2 octaves of pentatonic
-  crystalLadder: { reset: 0.5, max: 7 },
+  ladder: { reset: 1.2, max: 10 },          // smash chime: 2 octaves of pentatonic, one step per chained smash
+  crystalLadder: { reset: 0.5, max: 5 },    // crystal pings climb ≤ 1 octave (spec: +12 semitones max)
 };
 
 // ============ music theory ============

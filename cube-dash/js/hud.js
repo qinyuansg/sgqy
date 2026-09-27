@@ -75,7 +75,7 @@ addStrings({
     'hud.wave': '第 {n} 波', 'hud.waveSub': 'WAVE {n}', 'hud.finalWave': '最后一波!', 'hud.finalSub': 'FINAL WAVE',
     'hud.fever': '超载时刻!', 'hud.feverSub': 'FEVER', 'hud.phase': '第{n}阶段!', 'hud.phaseSub': 'PHASE {n}',
     'hud.checkpoint': '检查点!', 'hud.checkpointSub': '失败也能从这里继续',
-    'hud.go': '开始!', 'hud.newEnemy': '新敌人!', 'hud.again': '再来一次!', 'hud.againSub': '满血复活',
+    'hud.go': '开始!', 'hud.newEnemy': '新敌人!', 'hud.again': '再来一次!', 'hud.againSub': '带着3颗心回来',
     'hud.ready': '满啦!', 'hud.warp': '传送门', 'hud.warpOpen': '传送门开启!', 'hud.warpSub': '走进去 = 安全结算 ×1.25',
     'hud.shrink': '缩圈啦!', 'hud.shrinkSub': '快往中间跑!', 'hud.boss': '首领', 'hud.coreOpen': '核心打开! 冲!',
     'hud.p.bonk': '咚!', 'hud.p.smash': '解救!', 'hud.p.perfect': '完美!', 'hud.p.chain': '×{n} 连击!', 'hud.p.boom': '砰!',
@@ -89,7 +89,7 @@ addStrings({
     'hud.wave': 'WAVE {n}', 'hud.waveSub': '第 {n} 波', 'hud.finalWave': 'FINAL WAVE!', 'hud.finalSub': '最后一波',
     'hud.fever': 'FEVER TIME!', 'hud.feverSub': 'crystals ×2', 'hud.phase': 'PHASE {n}!', 'hud.phaseSub': 'watch out!',
     'hud.checkpoint': 'CHECKPOINT!', 'hud.checkpointSub': 'retry from here if you fall',
-    'hud.go': 'GO!', 'hud.newEnemy': 'NEW ENEMY!', 'hud.again': 'TRY AGAIN!', 'hud.againSub': 'full hearts',
+    'hud.go': 'GO!', 'hud.newEnemy': 'NEW ENEMY!', 'hud.again': 'TRY AGAIN!', 'hud.againSub': 'back with 3 hearts',
     'hud.ready': 'READY!', 'hud.warp': 'Warp', 'hud.warpOpen': 'WARP GATE OPEN!', 'hud.warpSub': 'step in = bank score ×1.25',
     'hud.shrink': 'SHRINK!', 'hud.shrinkSub': 'run to the middle!', 'hud.boss': 'Boss', 'hud.coreOpen': 'CORE OPEN — DASH!',
     'hud.p.bonk': 'BONK!', 'hud.p.smash': 'POP!', 'hud.p.perfect': 'PERFECT!', 'hud.p.chain': '×{n} CHAIN!', 'hud.p.boom': 'BOOM!',
@@ -293,7 +293,7 @@ export class HUD {
     p.inner.textContent = text;
     p.el.style.display = 'block';
     p.anim?.cancel?.();
-    p.anim = p.inner.animate?.(KF[cfg.k] || KF.pop, { duration: cfg.life * 1000, easing: 'linear', fill: 'forwards' }) || null;
+    p.anim = this._popAnim(p.inner, KF[cfg.k] || KF.pop, cfg.life);
     this._placePop(p);
     return p;
   }
@@ -332,6 +332,7 @@ export class HUD {
       const y = bn && (BANNER_PRI[bn.style] || 1) > 1 ? 1.9 : 3.3;
       this.pop(p.x ?? h.x, y, p.z ?? h.z, t('hud.p.perfect'), 'perfect');
       this._cueMute = this._t + 0.7;
+      this._stampUntil = this._t + 0.85;            // a wave/info banner waits for the stamp to land and fade
     });
     on('player:nearMiss', (p) => { if (this._t - this._last.near > 0.7) { this._last.near = this._t; this.pop(p.x, 1.5, p.z, t('hud.p.near'), 'near'); } });
     on('player:shieldBlock', (p) => this.pop(p.x, 1.8, p.z, '🫧 ' + t('hud.p.block'), 'shield'));
@@ -370,7 +371,7 @@ export class HUD {
     for (const p of this.popPool) { p.on = false; p.anim?.cancel?.(); p.el.style.display = 'none'; }
     for (const a of this.arrowPool) { a.on = false; a.el.style.display = 'none'; }
     this._portals.length = 0; this._targets.length = 0;
-    this._queue.length = 0; this._bn = null; this.el.banner.classList.remove('on');
+    this._queue.length = 0; this._bn = null; this._stampUntil = 0; this.el.banner.classList.remove('on');
     this.el.count.classList.remove('on');
     this.el.ne.classList.remove('on');
     this._hideTutorial();
@@ -497,7 +498,7 @@ export class HUD {
       const cp = this._chainPop;
       if (cp && cp.on && cp.style === 'chain' && this._t - cp.born < 0.8) {
         cp.inner.textContent = txt; cp.x = p.x; cp.z = p.z; cp.t = 0; cp.born = this._t;
-        cp.anim?.cancel?.(); cp.anim = cp.inner.animate?.(KF.pop, { duration: POP.chain.life * 1000, fill: 'forwards' }) || null;
+        cp.anim?.cancel?.(); cp.anim = this._popAnim(cp.inner, KF.pop, POP.chain.life);
       } else {
         // the chain callout takes over from the last single 解救! pop of this dash
         for (const q of this.popPool) if (q.on && q.style === 'smash' && this._t - q.born < 0.8) { q.on = false; q.el.style.display = 'none'; }
@@ -818,20 +819,30 @@ export class HUD {
         for (let i = 0; i < cand.length && i < TUNE.enemyArrows && T.length < TUNE.arrows; i++) T.push(cand[i]);
       }
     }
+    // arrows live in the play-field rect below the top HUD panels (re-measured ~1×/s, layout is stable)
+    if ((this._insetT = (this._insetT || 0) - rdt) <= 0) {
+      this._insetT = 1;
+      let top = 0;
+      for (const el of [this.el.top, this.el.vit, this.el.end]) { const r = el.offsetParent ? el.getBoundingClientRect() : null; if (r && r.width && r.left < W * 0.8 && r.right > W * 0.2) top = Math.max(top, r.bottom); }
+      this._topInset = Math.max(M, Math.min(H * 0.4, top + 30));
+    }
+    const x0 = M, x1 = W - M, y0 = this._topInset || M, y1 = H - M;
     const cx = W / 2, cy = H / 2;
     let used = 0;
     for (const tg of this._targets) {
       if (used >= this.arrowPool.length) break;
       if (tg.ref && (tg.kind === 'enemy' || tg.kind === 'coin')) { tg.x = tg.ref.x; tg.z = tg.ref.z; }
       const s = this._w2s(tg.x, tg.y, tg.z);
-      const inside = s.visible !== false && s.x > M * 0.5 && s.x < W - M * 0.5 && s.y > M * 0.5 && s.y < H - M * 0.5;
+      const inside = s.visible !== false && s.x > M * 0.5 && s.x < W - M * 0.5 && s.y > y0 - M * 0.5 && s.y < H - M * 0.5;
       if (inside) continue;
       let dx = s.x - cx, dy = s.y - cy;
       // camera.js reports visible:false for anything outside the frustum — only a point BEHIND the
       // camera projects mirrored (never in the 3/4 top-down view, but cinematics can swing around)
       if (this._behind(tg.x, tg.y, tg.z)) { dx = -dx; dy = -dy; }
       if (Math.abs(dx) < 1e-3 && Math.abs(dy) < 1e-3) dy = 1;
-      const k = Math.min((W / 2 - M) / Math.max(1e-3, Math.abs(dx)), (H / 2 - M) / Math.max(1e-3, Math.abs(dy)));
+      const kx = dx > 0 ? (x1 - cx) / dx : dx < 0 ? (x0 - cx) / dx : Infinity;
+      const ky = dy > 0 ? (y1 - cy) / dy : dy < 0 ? (y0 - cy) / dy : Infinity;
+      const k = Math.max(0, Math.min(kx, ky));
       const ax = cx + dx * k, ay = cy + dy * k;
       const ang = Math.atan2(dy, dx);
       const dist = Math.hypot(tg.x - (p.x ?? 0), tg.z - (p.z ?? 0));
@@ -861,7 +872,16 @@ export class HUD {
       this._placePop(p);
     }
   }
+  /** pop keyframes are scrubbed by HUD time (not the wall clock), so the scale/fade stays in step
+   *  with the world-anchored rise even when frames drop (rdt is clamped) */
+  _popAnim(el, kf, life) {
+    const a = el.animate?.(kf, { duration: life * 1000, easing: 'linear', fill: 'forwards' });
+    if (!a) return null;
+    try { a.pause(); a.currentTime = 0; } catch { /* old WAAPI */ }
+    return a;
+  }
   _placePop(p) {
+    if (p.anim) { try { p.anim.currentTime = Math.min(p.t, p.life) * 1000; } catch { /* */ } }
     const s = this._w2s(p.x, p.y, p.z);
     const k = p.t / p.life;
     const rise = p.rise * (1 - (1 - k) * (1 - k));
@@ -902,8 +922,9 @@ export class HUD {
       }
       return;
     }
+    if (!this._queue.length) return;
+    if (this._t < (this._stampUntil || 0) && (BANNER_PRI[this._queue[0].style] || 1) <= 1) return;
     const next = this._queue.shift();
-    if (!next) return;
     this._bn = { ...next, t: 0 };
     e.banner.className = 'hud-banner on b-' + next.style;
     e.bnMain.textContent = next.text;

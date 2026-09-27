@@ -27,7 +27,7 @@
 //   Popups must never appear mid-run: ui checks `!G.run || G.run.state==='ended'`.
 //
 // Other events emitted: meta:reward {coins, gems:0, tickets, items, source} ·
-//   meta:rankup {rank, before, tierUp (also true for the placement ceremony), placement} ·
+//   meta:rankup {rank, before, tierUp, placement (first rank reveal → full ceremony)} ·
 //   meta:unlock {kind, id} (world: id = world index) ·
 //   meta:feature {id} (once, when a hidden system unlocks — also in featureQueue) ·
 //   meta:claim {count} · meta:change {} (anything the lobby shows changed).
@@ -39,7 +39,7 @@
 //   balances   coins · tickets · trophies · freed · rank · bestWave · displayCoins · displayTickets
 //   run        applyRun(results) → breakdown · lastBreakdown · stat(name, scope, heroId)
 //   rewards    grant(rewards, source, opts) · claimQueue · nextClaim() · ackClaim() · claim(uid) · onClaim(fn) · describe(item)
-//   stages     isStageUnlocked(w,s) · isStageCleared · stageStars (crown flags array, coerces to the count) · stageCrowns
+//   stages     isStageUnlocked(w,s) · isStageCleared · stageStars (count) · stageCrowns ([clear, fewHits, challenge])
 //              stageInfo · stageFails · nextStage() · worldInfo(w) · worldCrowns(w) · totalCrowns() · worldChests(w)
 //              claimWorldChest(w,i) · hubWorld() (world index) · modeUnlocked(m) · dailyMutator() · dailyDone
 //   heroes     heroUnlocked(id) · heroes() · selectedHero · selectHero(id)
@@ -608,8 +608,7 @@ export class Meta {
     const after = this.rank;
     if (after.step <= P.rankStep && !placement) return null;
     const beforeStep = P.rankStep;
-    // placement always gets the full ceremony (ui.js shows the big one only for tierUp)
-    if (after.step <= beforeStep) { if (placement) this._emit('meta:rankup', { rank: after, before: after, tierUp: true, placement: true }); return null; }
+    if (after.step <= beforeStep) { if (placement) this._emit('meta:rankup', { rank: after, before: after, tierUp: false, placement: true }); return null; }
     let coins = 0, tickets = 0, tierUp = false;
     for (let s = beforeStep + 1; s <= after.step; s++) {
       coins += RANK_REWARD.starUp.coins || 0;
@@ -621,7 +620,7 @@ export class Meta {
     }
     const before = this._rankAtStep(beforeStep);
     P.rankStep = after.step;
-    this._emit('meta:rankup', { rank: after, before, tierUp: tierUp || placement, placement });
+    this._emit('meta:rankup', { rank: after, before, tierUp, placement });
     this.grant([{ coins, tickets }], placement ? 'placement' : 'rank');
     return { before, after, tierUp, placement };
   }
@@ -652,21 +651,9 @@ export class Meta {
   }
   isStageCleared(worldId, stageId) { return this._cleared(worldIndex(worldId), stageIndex(stageId)); }
   _crownCount(w, s) { const r = this._srec(w, s); return r ? r.c.reduce((a, b) => a + (b ? 1 : 0), 0) : 0; }
-  /**
-   * crowns earned on a stage — shown as 👑 in every UI. Crowns are independent (the challenge crown
-   * can come before the clear crown), so this returns the per-crown flags [clear, fewHits, challenge]
-   * as an array that also coerces to the count: `stageStars(w,s) >= 3`, `n + stageStars(w,s)` and
-   * `.count` all work, and ui.js (which checks Array.isArray first) shows the right crowns.
-   */
-  stageStars(worldId, stageId) {
-    const w = worldIndex(worldId), s = stageIndex(stageId);
-    const flags = this.stageCrowns(w, s);
-    const n = this._crownCount(w, s);
-    Object.defineProperties(flags, {
-      count: { value: n }, valueOf: { value: () => n }, toString: { value: () => String(n) }, toJSON: { value: () => n },
-    });
-    return flags;
-  }
+  /** crowns earned on a stage (0..3) — shown as 👑 in every UI. Crowns are independent (the challenge
+   *  crown can come before the clear crown): use stageCrowns() for WHICH ones. */
+  stageStars(worldId, stageId) { return this._crownCount(worldIndex(worldId), stageIndex(stageId)); }
   stageCrowns(worldId, stageId) { const r = this._srec(worldIndex(worldId), stageIndex(stageId)); return r ? r.c.map(Boolean) : [false, false, false]; }
   stageInfo(worldId, stageId) {
     const w = worldIndex(worldId), s = stageIndex(stageId);

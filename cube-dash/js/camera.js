@@ -9,6 +9,13 @@
 //   cam.cinematic(name, opts) → Promise   'intro' | 'boss' | 'victory' | 'defeat' | 'nova' | 'phase'
 //   cam.skipCinematic()   cam.inCinematic
 //   cam.worldToScreen(x, y, z, out?) → {x, y, visible}   CSS px
+//   cam.framing                        solved rig {dist, fov, fit, halfX, near, far, pxPerU…} (HUD edge arrows)
+//
+// Bus: listens 'player:dash' (FOV kick), 'nova' → cinematic('nova'), 'boss:intro' → cinematic('boss'),
+// 'boss:phase' → cinematic('phase'); emits 'cine:start' / 'cine:end' {name, overlay, skipped?}
+// (overlay = short in-play shot — nova / phase — the HUD may stay visible).
+// Every shot is skippable after 0.5 s (confirm / dash / any tap); victory & defeat end in a slow
+// 'hold' orbit until follow() / setHub() is called.
 //
 // Gameplay framing: fixed 3/4 top-down (pitch 55°, camera on +Z looking −Z),
 // NEVER rotated while the player has control. Distance is solved from the
@@ -30,11 +37,12 @@ const TUNE = {
   lookAhead: 0.22, lookAheadMax: 1.5,
   deadZone: 0.14,             // fraction of the visible half-span
   touchBias: 0.06,            // touch: hero sits below the centre by this fraction of the vertical span
+  hudTop: 0.06,               // fraction of the screen height kept clear at the top (HUD bar) when fitting the arena
   posRate: 6, posRateDash: 3,
   shake: { max: 0.35, amp: 0.5, pow: 1.6, roll: 1.2, decay: 1.8, freq: 17 },
   kick: { k: 180, c: 18, max: 0.05 },
   dashFov: { add: 3, up: 0.07, down: 0.32 },
-  hub: { dist: 7.6, height: 1.2, lookY: 0.5, fov: 38, tallDist: 9.5, tallLookY: 0.1, yaw: 0.07, hz: 0.045 },   // height / lookY = offsets above the hub target
+  hub: { dist: 7.6, height: 1.2, lookY: 0.36, fov: 38, tallDist: 9.5, tallLookY: 0.1, yaw: 0.07, hz: 0.045 },   // height / lookY = offsets above the hub target
   skipAfter: 0.5,
   dur: { intro: 2.5, introShort: 1.4, boss: 3.0, bossShort: 1.5, victory: 3.8, defeat: 2.2, nova: 1.2, phase: 1.2 },
 };
@@ -292,16 +300,22 @@ export class CameraDirector {
     const kFar = p - f > 0.05 ? sp / Math.tan(p - f) - cp : 50;
     const kX = tf * aspect;
     const RfFit = R + TUNE.rimOut + TUNE.fitMargin + TUNE.slack;
-    // focus offset that centres the ground span [−Rf, Rf] symmetrically ON SCREEN (perspective-aware):
-    // ndcY(w) = −w·sinp / ((d − w·cosp)·tanf) with w = z − fz  ⇒  cosp·fz² + d·fz − cosp·Rf² = 0
-    const fzSym = (d, rf) => (-d + Math.sqrt(d * d + 4 * cp * cp * rf * rf)) / (2 * cp);
-    let dFit = (2 * RfFit) / (kNear + kFar);
-    for (let i = 0; i < 12; i++) {
-      const fz = fzSym(dFit, RfFit);
-      const dz = (RfFit - fz) * (sp / tf + cp);                 // near rim touches the bottom edge
-      const dx = RfFit / kX - fz * cp;                          // widest row (arena centre) fits the width
-      dFit = Math.max(dz, dx);
-    }
+    // Perspective-aware vertical fit. A ground point at w = z − fz projects to
+    //   ndcY(w) = −w·sinp / ((d − w·cosp)·tanf)
+    // The arena must fit the band [bot, top] (top leaves room for the HUD bar).
+    const top = 1 - 2 * TUNE.hudTop, bot = -1;
+    const nd = (w, d) => (-w * sp) / ((d - w * cp) * tf);
+    const fzBand = (d, rf) => {          // focus z that centres [−rf, rf] inside the band (bisection; monotonic)
+      let lo = -rf * 2, hi = rf * 2;
+      for (let i = 0; i < 40; i++) {
+        const m = (lo + hi) / 2;
+        if (nd(-rf - m, d) + nd(rf - m, d) - (top + bot) > 0) hi = m; else lo = m;
+      }
+      return (lo + hi) / 2;
+    };
+    // closed form: far rim exactly at `top`, near rim exactly at `bot`
+    let dFit = (2 * RfFit) / (tf * (bot / (bot * cp * tf - sp) - top / (top * cp * tf - sp)));
+    for (let i = 0; i < 6; i++) dFit = Math.max(dFit, RfFit / kX - fzBand(dFit, RfFit) * cp);   // widest row fits the width
     const pxAt = (d) => H / (2 * d * tf);
     let dist = dFit, fit = true;
     if (pxAt(dFit) < TUNE.minPxPerU) { dist = H / (2 * tf * TUNE.minPxPerU); fit = false; }
@@ -309,7 +323,7 @@ export class CameraDirector {
     this._rig = {
       dist, fov, fit, aspect, pitch: p,
       near: kNear * dist, far: kFar * dist, halfX: kX * dist,
-      centreZ: fzSym(dist, Rf),
+      centreZ: fzBand(dist, Rf),
       Rf, R, touch, pxPerU: pxAt(dist),
     };
     if (!this._inited) { this._inited = true; this._snapFocus(); }
@@ -345,7 +359,7 @@ export class CameraDirector {
     }
     // --- Z axis (asymmetric: 'far' up the screen, 'near' down)
     const span = rig.near + rig.far;
-    const bias = rig.touch ? TUNE.touchBias * span : 0;
+    const bias = (rig.touch ? TUNE.touchBias * span : 0) + (rig.fit ? 0 : TUNE.hudTop * span * 0.5);
     let fz;
     if (span >= 2 * Rf) {
       const centre = rig.centreZ;                         // arena centred on screen

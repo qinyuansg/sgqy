@@ -6,17 +6,26 @@
 //                                |'dex'|'achievements'|'modes'|'settings'|'parent'
 //   ui.showLevelUp(choices)      level-up cards (run is frozen; calls G.run.chooseCard(id))
 //   ui.showPause() / hidePause()
-//   ui.showResults(results, rewards)   结算 cascade
+//   ui.showResults(results, rewards)   结算 cascade (rewards = meta.applyRun breakdown)
 //   ui.toast(text, icon)
 //   ui.refresh()                 re-render after a language change
-//   extras other modules may call: ui.queueClaim(rewards, source), ui.showFeature(feature),
-//   ui.showRankUp(rank), ui.showRescue(heroId), ui.showBreak(kind), ui.showGoodnight(),
+//   ui.coversScene               true while a full-panel screen hides the 3D hub (main may throttle it)
+//   extras other modules may call: ui.queueClaim(rewards, source), ui.showFeature(id),
+//   ui.showRankUp(rank, before), ui.showRescue(heroId), ui.showBreak(kind), ui.showGoodnight(),
 //   ui.showShare(opts)
 //
-// Visual language = the poster: chunky white / sky-blue panels, thick white
-// lettering with a deep-blue outline, blue pill banners, keycap hints.
-// All styles live in css/style.css. Menus work with mouse, touch, keyboard
-// and gamepad (G.input.pressed('up'|'down'|'left'|'right'|'confirm'|'back')).
+// Popups never appear mid-run: claims (meta.claimQueue → nextClaim/ackClaim, ≤ 3 chained, the
+// rest wait in the 待领取 tray), rescue / rank ceremonies, feature intros (lobby only, guide
+// cube Pixel + arrow), break card / goodnight (meta.healthCheck) are drained between runs.
+//
+// Emits ui:click|back|claim|buy|error|open (audio blips; played directly only if nobody listens),
+// settings:change {key, value}. Listens: run:start, meta:rankup, meta:unlock, meta:feature,
+// meta:change, meta:reward (push-style metas only), meta:break, meta:goodnight, meta:welcome.
+//
+// Visual language = the poster: chunky white / sky-blue panels, thick white lettering with a
+// deep-blue outline, blue pill banners, keycap hints. All styles live in css/style.css (scoped
+// under #ui). Menus work with mouse, touch, keyboard and gamepad via
+// G.input.pressed('up'|'down'|'left'|'right'|'confirm'|'back') with visible focus rings.
 // ─────────────────────────────────────────────────────────────
 import { clamp, lerp, easeOutCubic, dayKey, fmtInt, makeRng } from './core.js';
 import { addStrings, t, tl, getLang } from './i18n.js';
@@ -1196,6 +1205,7 @@ export class UI {
     this.G.app?.startRun?.({ mode: 'stage', worldId: w, stageId: s, attempt });
   }
   _toHome() {
+    if (this._isOpen('results') && this.casc && !this.casc.done) this._cascSkip();
     this.hidePause();
     for (const o of [...this.overlays]) if (['results', 'levelup', 'pause', 'settingsOvl'].includes(o.id)) this._close(o.id, true);
     this.casc = null; this.lvl = null;
@@ -2653,9 +2663,14 @@ export class UI {
     if (ta != null && tb != null && ta > tb && !this.queue.some((x) => x.type === 'rankup') && this.lastRankTier !== ta) { this.lastRankTier = ta; this.showRankUp(rewards.rankAfter, rewards.rankBefore); }
     this._healthAfterRun();
   }
+  /** finish the cascade (health check, rescue, rank) before leaving results; true = a ceremony must show first */
+  _resHold() {
+    if (this.casc && !this.casc.done) this._cascSkip();
+    return this.queue.some((q) => ['break', 'goodnight', 'rescue', 'rankup'].includes(q.type)) || this.overlays.some((o) => o.blocking);
+  }
   _resNext() {
     const r = this.res;
-    if (!r) return;
+    if (!r || this._resHold()) return;
     const nx = this._nextAfter(r.w, r.s);
     if (!nx) { this._toHome(); return; }
     if (!this._stageUnlocked(nx.w, nx.s)) { this._toHome(); this.go('map', { w: nx.w }); return; }
@@ -2663,6 +2678,7 @@ export class UI {
   }
   _resRetry(how) {
     const r = this.res, G = this.G;
+    if (this._resHold()) return;
     const last = G.app?.lastRunCfg || {};
     const cfg = { mode: r?.mode || last.mode || 'stage', worldId: r?.w ?? last.worldId ?? 0, stageId: r?.s ?? last.stageId ?? 0 };
     if (last.mutatorId) cfg.mutatorId = last.mutatorId;

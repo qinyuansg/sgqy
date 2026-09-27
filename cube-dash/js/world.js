@@ -12,8 +12,8 @@
 //   • the play floor is ALWAYS light & matte (never blooms); only emissive
 //     strips / set-piece lights feed the bloom
 //   • danger = yellow-white / orange stripes + "!", never plain red
-//   • a permanent cyan ground ring under the hero (§7.20) is drawn in the
-//     floor shader (0 extra draw calls)
+//   • the floor shader can draw the §7.20 cyan hero ring (world.heroRing, off:
+//     hero_model.js owns it) and draws a soft pedestal ring under the menu hero
 //
 // Architecture: shared, re-themable systems (sky dome, floor, rim, island
 // base, cloud sea, floating islands, sparkles, planet) are re-coloured by
@@ -929,7 +929,8 @@ export class World {
     this.features = undefined;
     this.look = LOOK.cloud;
     this.fever = false;
-    this.heroRing = true;       // set false if another module draws the §7.20 ring
+    this.heroRing = false;      // §7.20 ring is drawn by hero_model.js / player.js; true = also draw it in the floor shader
+    this.hubPedestal = true;    // soft cyan pedestal ring under the menu hero (floor shader, 0 draw calls)
     this._feverK = 0;
     this._pulse = 0;
     this._t = 0;
@@ -1767,7 +1768,7 @@ export class World {
     const pl = G.run?.player;
     if (this.heroRing && pl && G.run.state !== 'ended') {
       F.uHero.value.set(pl.x, pl.z, damp(F.uHero.value.z, pl.hp === 0 ? 0 : 1, 10, rdt), TUNE.heroRing.r * (pl.size || 1));
-    } else if (this.heroRing && !G.run && (G.app?.state === 'hub' || G.app?.state === 'title')) {
+    } else if (this.hubPedestal && !G.run && (G.app?.state === 'hub' || G.app?.state === 'title')) {
       F.uHero.value.set(0, 0, damp(F.uHero.value.z, 0.85, 4, rdt), 1.05);
     } else {
       F.uHero.value.z = damp(F.uHero.value.z, 0, 8, rdt);

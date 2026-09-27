@@ -641,9 +641,11 @@ export class Player {
     kx /= kl; kz /= kl;
     const bash = this.hero.dashKind === 'bash';
     const speed = TUNE.knock.speed * (mods.knockMult || 1) * (bash ? 1.4 : 1);
-    // kid rule: S / mini cubes are dizzied directly by the bump (Mochi's bash: up to M)
+    // kid rule 7: S / mini cubes are dizzied directly by the bump (Mochi's bash: up to M) so a dash
+    // always pays off — in the 1-1 tutorial (whose first cube is an M) that holds for M cubes too
     const sz = e.size ?? 1;
-    const small = !e.treasure && !isHeavy(e) && (e.sizeKey === 'S' || e.mini || sz <= 0.75 || (bash && sz <= 1.05));
+    const upToM = bash || this.run.tutorial;
+    const small = !e.treasure && !isHeavy(e) && (e.sizeKey === 'S' || e.mini || sz <= 0.75 || (upToM && sz <= 1.05));
     em.knock?.(e, kx, kz, speed, { byPlayer: true, bash, heroId: this.hero.id, dizzy: small ? TUNE.bonk.dizzy : 0 });
     if (small) em.dizzy?.(e, TUNE.bonk.dizzy, bash ? 'bash' : 'bump');
     run.onPlayerKnock?.(e, { bash });
@@ -1088,6 +1090,15 @@ export class Player {
     s.vx = (dx / d) * TUNE_H.shieldKnock; s.vz = (dz / d) * TUNE_H.shieldKnock;
     this._nmGen++;
   }
+  /** cutscene (victory): finish any dash / sprint / nova so the hero celebrates in its normal pose */
+  settle() {
+    const s = this.state;
+    if (s.dashing) this.endDash(false);
+    s.dashing = false; s.sprinting = false; this.blinking = false;
+    if (s.nova) this._endNova();
+    this.hurtStunT = 0;
+  }
+
   /** hearts hit 0 the first time: float in a bubble, frozen, waiting for the button */
   onSecondChance() {
     const s = this.state;
@@ -1114,7 +1125,7 @@ export class Player {
     s.iframes = iframes; this.hurtBlinkT = iframes;
     this.model.setBlink?.(true);
     s.lockout = false; s.tired = false; s.stamina = s.maxStamina;
-    this.spin = 0; this.riseT = 0.5;
+    this.spin = 0; this.riseT = TUNE_H.nova.rise;       // happy hop (riseT > rise would dip below the floor)
     this.model.squash?.(0.8, 1.3, 0.8);
   }
 
