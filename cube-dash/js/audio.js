@@ -66,11 +66,11 @@ const TUNE = {
   // high-pass, _dev/review-audio): core verbs sit ≈ 6–10 dB over the in-run music, telegraphs ≈ 4–8 dB,
   // frequent small feedback (dizzy, land, freed) at or just under it, nothing repeated louder than a smash.
   level: {
-    zap: 1.2, bolt: 1.1, babble: 0.22, stomp: 2.2, miniNova: 0.7, dash: 1.3, hurt: 1.4, perfect: 0.7,
-    crystal: 1.1, nearMiss: 1.4, coin: 1.0, freed: 2.5, dizzy: 1.5, whoosh: 3.5, open: 3.5, coinTick: 2,
-    cue: 1.6, windup: 1.2, checkpoint: 2, coinBurst: 1.3, motif: 2.2, novaReady: 2.2, land: 0.6, wave: 1.8,
+    zap: 1.2, bolt: 1.1, babble: 0.19, stomp: 2.2, dash: 1.3, hurt: 1.4, perfect: 0.7,
+    crystal: 1.1, nearMiss: 1.4, coin: 1.3, freed: 2.5, dizzy: 1.5, whoosh: 3.5, open: 3.5, coinTick: 2,
+    cue: 1.6, windup: 1.2, checkpoint: 2, coinBurst: 1.3, motif: 2.2, novaReady: 2.2, land: 1.2, wave: 1.8,
     claim: 1.8, buy: 1.8, milestone: 1.3, knock: 2.4, puff: 1.8, notYet: 2, womp: 1.4, error: 2.4, click: 2,
-    explode: 1.1, slam: 1.1, escape: 0.4, tired: 0.8, bossJump: 3.5, bossCharge: 1.6, charge: 2,
+    explode: 1.1, slam: 1.1, bossWindup: 1.4, escape: 0.25, tired: 0.8, countdown: 1.5, bump: 1.5, miniNova: 1.0, bossJump: 3.5, bossCharge: 1.6, charge: 2,
   },
   spawnDrop: 0.6,                           // portal cube fall time √(2·7/38) s (enemies.js dropHeight / gravity)
   ladder: { reset: 1.2, max: 10 },          // smash chime: 2 octaves of pentatonic, one step per chained smash
@@ -328,16 +328,17 @@ const HERO_MOTIF = {
   zap: { degs: [4, 7, 9], tone: 'square', oct: 0, step: 0.07 },
   stella: { degs: [2, 4, 7], tone: 'bell', oct: 0, step: 0.12 },
 };
-// Cube-ese voices: base pitch (Hz), syllable length (s), timbre
+// Cube-ese voices: base pitch (Hz), syllable length (s), timbre, g = loudness trim (voices measured
+// within ±2 dB of each other — low voices lose most energy to the formant filters / A-weighting)
 const VOICES = {
-  blu: { f: 520, syl: 0.075, wave: 'square', vib: 0, gap: 0.03 },
-  mochi: { f: 380, syl: 0.1, wave: 'triangle', vib: 0, gap: 0.04 },
-  zap: { f: 700, syl: 0.05, wave: 'square', vib: 0, gap: 0.015 },
-  stella: { f: 600, syl: 0.085, wave: 'triangle', vib: 40, gap: 0.03 },
-  king: { f: 180, syl: 0.11, wave: 'sawtooth', vib: 0, gap: 0.035, crush: true },
-  pixel: { f: 820, syl: 0.055, wave: 'square', vib: 0, gap: 0.02 },
-  villager: { f: 640, syl: 0.06, wave: 'triangle', vib: 0, gap: 0.025 },
-  coin: { f: 900, syl: 0.045, wave: 'triangle', vib: 0, gap: 0.03 },
+  blu: { f: 520, syl: 0.075, wave: 'square', vib: 0, gap: 0.03, g: 1.2 },
+  mochi: { f: 380, syl: 0.1, wave: 'triangle', vib: 0, gap: 0.04, g: 0.9 },
+  zap: { f: 700, syl: 0.05, wave: 'square', vib: 0, gap: 0.015, g: 1 },
+  stella: { f: 600, syl: 0.085, wave: 'triangle', vib: 40, gap: 0.03, g: 0.9 },
+  king: { f: 180, syl: 0.11, wave: 'sawtooth', vib: 0, gap: 0.035, crush: true, g: 2.8 },
+  pixel: { f: 820, syl: 0.055, wave: 'square', vib: 0, gap: 0.02, g: 0.9 },
+  villager: { f: 640, syl: 0.06, wave: 'triangle', vib: 0, gap: 0.025, g: 0.8 },
+  coin: { f: 900, syl: 0.045, wave: 'triangle', vib: 0, gap: 0.03, g: 0.7 },
 };
 const VOWELS = [[800, 1200], [400, 2000], [300, 2300], [500, 900], [350, 700]];
 // mood → pitch contour (semitones per syllable position 0..1) + syllable count range
@@ -971,9 +972,11 @@ export class AudioSys {
     on('boss:intro', (p) => {
       this.flags.drone = false;
       this._runTrack = 'boss';
-      this._bossPhase = 1;                         // boss rush: every king starts at phase 1
-      if (this.song) this.song.forceHype = false;
+      // a fresh king starts at phase 1 (boss rush / endless); a "retry from 🚩 phase N" starts at N without a boss:phase event
+      const r = this.G?.run;
+      this._bossPhase = clamp(Math.round(num(r?.enemies?.boss?.phase, 0) || num(r?.bossPhase, 1)), 1, 4);
       this.music('boss');
+      if (this.song) this.song.forceHype = this._bossPhase >= 3;
       this._retempo();
       this.sfx('roar', p);
       this.sfx('babble', { hero: 'king', mood: 'laugh', at: this.ctx ? this._now() + 1.2 : 0 });
@@ -1607,7 +1610,8 @@ export class AudioSys {
       this._tone('sine', f * 4, null, t, 0.25, 0.045 * vel, dest, 0.001);
       return;
     }
-    const peak = (tone === 'tri' || tone === 'sine' ? 0.22 : tone === 'pulse' ? 0.12 : 0.1) * vel;
+    // (the normalised 25 % pulse PeriodicWave has RMS 0.31 vs a triangle's 0.58 — hence its larger peak)
+    const peak = (tone === 'tri' || tone === 'sine' ? 0.22 : tone === 'pulse' ? 0.3 : 0.1) * vel;
     const o = this._osc(tone, f, t, t + dur + 0.25);
     o.connect(this._env(t, 0.005, peak, Math.max(0, dur - 0.03), 0.08, dest));
     if (vib && dur > 0.25) this._vibrato(o, f, t + 0.15, t + dur + 0.2);
@@ -1636,7 +1640,7 @@ export class AudioSys {
       const lp = this._filter('lowpass', tone === 'saw' ? 2600 : 3400, 1.2);
       o.connect(lp); src = lp;
     }
-    const peak = (tone === 'tri' ? 0.24 : tone === 'pulse' ? 0.13 : 0.105) * vel;
+    const peak = (tone === 'tri' ? 0.24 : tone === 'pulse' ? 0.2 : tone === 'square' ? 0.06 : 0.105) * vel;   // equal-loudness per timbre
     src.connect(this._env(t, 0.006, peak, Math.max(0, dur - 0.03), 0.09, dest));
     if (dur > 0.25) this._vibrato(o, f, t + 0.15, t + dur + 0.2);
     if (song) { song.leadPrevEnd = t + dur; song.leadPrevF = f; }
@@ -1671,8 +1675,8 @@ export class AudioSys {
     b.connect(this._env(t, 0.001, 0.13 * vel, 0, 0.035, dest));
   }
   _snare(t, dest, vel = 1) {
-    this._nz(t, 0.14, 0.32 * vel, dest, 'bandpass', 1800, null, 0.8, 0.001);
-    this._tone('triangle', 190, 160, t, 0.08, 0.22 * vel, dest, 0.001);
+    this._nz(t, 0.14, 0.42 * vel, dest, 'bandpass', 1800, null, 0.8, 0.001);
+    this._tone('triangle', 190, 160, t, 0.08, 0.26 * vel, dest, 0.001);
   }
   _hat(t, dest, vel = 0.5, open = false) {
     this._nz(t, open ? 0.15 : 0.035, 0.16 * vel, dest, 'highpass', 7000, null, 0.7, 0.001);
@@ -1952,13 +1956,14 @@ const SFX = {
     A._bell(A._deg(7, 1), t + 0.12, 0.4, 0.04, out);
     return 0.5;
   },
-  coin(A, t, o, out) {
-    A._tone('square', A._deg(3, 1), null, t, 0.06, 0.05, out, 0.001);
-    const o2 = A._osc('square', A._deg(5, 1), t + 0.06, t + 0.4);
-    o2.connect(A._env(t + 0.06, 0.001, 0.05, 0.05, 0.25, out));
+  coin(A, t, o, out) {                                                     // classic two-note coin (5th → octave), band-limited
+    const lp = A._filter('lowpass', 5500, 0.7); lp.connect(out);
+    A._tone('square', A._deg(3, 0), null, t, 0.06, 0.05, lp, 0.001);
+    const o2 = A._osc('square', A._deg(5, 0), t + 0.06, t + 0.4);
+    o2.connect(A._env(t + 0.06, 0.001, 0.05, 0.05, 0.25, lp));
     return 0.45;
   },
-  coinTick(A, t, o, out) { A._tone('square', A._deg(5, 1), null, t, 0.05, 0.03, out, 0.001); return 0.1; },
+  coinTick(A, t, o, out) { A._tone('square', A._deg(5, 0), null, t, 0.05, 0.03, out, 0.001); return 0.1; },
   magnet(A, t, o, out) { A._nz(t, 0.4, 0.12, out, 'bandpass', 500, 4000, 1.5, 0.05); A._chime([5, 6, 7, 8, 9], t + 0.15, 0.04, 0.3, 0.05, out, 0, 'bell'); return 0.7; },
   // ---------- enemies ----------
   portal(A, t, o, out) {
@@ -1975,7 +1980,12 @@ const SFX = {
     A._tone('sine', 300, 700, t + dur, 0.06, 0.08, out, 0.002);
     return dur + 0.15;
   },
-  land(A, t, o, out) { const s = clamp(num(o.size, 1), 0.5, 2); A._tone('sine', 180 / s, 90 / s, t, 0.08, 0.1 * s, out, 0.002); return 0.12; },
+  land(A, t, o, out) {
+    const s = clamp(num(o.size, 1), 0.5, 2);
+    A._tone('sine', 180 / s, 90 / s, t, 0.08, 0.1 * s, out, 0.002);
+    A._tone('triangle', 380 / s, 170 / s, t, 0.05, 0.05 * s, out, 0.002);   // the "tup" small speakers can play
+    return 0.12;
+  },
   bonk(A, t, o, out) {
     const s = num(o.strength, -1);
     const k = s < 0 ? 1 : s <= 1 ? 0.6 + 0.4 * s : clamp(0.6 + s / 20, 0.6, 1.2);
@@ -2030,7 +2040,7 @@ const SFX = {
   /** King Glitch telegraphs, lasting exactly the fill: slam = rising rumble, charge = engine rev, laser = charging whine */
   bossWindup(A, t, o, out) {
     const dur = clamp(num(o.time, 1.2), 0.3, 3);
-    const g = A.ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.07, t + dur * 0.95); g.gain.setTargetAtTime(0, t + dur, 0.03);
+    const g = A.ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(o.move === 'laser' ? 0.17 : 0.07, t + dur * 0.95); g.gain.setTargetAtTime(0, t + dur, 0.03);
     g.connect(out);
     if (o.move === 'laser') {
       const s = A._osc('sawtooth', 300, t, t + dur + 0.2); s.frequency.exponentialRampToValueAtTime(1200 * A._pm, t + dur);
@@ -2040,13 +2050,14 @@ const SFX = {
       return dur + 0.2;
     }
     const lo = o.move === 'charge' ? 70 : 55;
+    const lp = A._filter('lowpass', 250, 4); lp.frequency.setValueAtTime(250, t); lp.frequency.exponentialRampToValueAtTime(1500, t + dur);
+    lp.connect(g);                                                          // the growl opens up as the telegraph fills
     for (const [m, type] of [[1, 'sawtooth'], [2.01, 'square']]) {
       const s = A._osc(type, lo * m, t, t + dur + 0.2);
       s.frequency.exponentialRampToValueAtTime(lo * m * (o.move === 'charge' ? 2.2 : 1.8) * A._pm, t + dur);
-      s.connect(g);
+      s.connect(lp);
     }
-    const lp = A._filter('lowpass', 250, 4); lp.frequency.setValueAtTime(250, t); lp.frequency.exponentialRampToValueAtTime(1500, t + dur);
-    const n = A._noise(t, t + dur + 0.2, 0.5); n.connect(lp); lp.connect(g);
+    const n = A._noise(t, t + dur + 0.2, 0.5); n.connect(lp);
     if (o.move === 'charge') A._tone('square', 900, 700, t + dur * 0.75, 0.04, 0.05, out, 0.001);   // aim-lock tick
     return dur + 0.2;
   },
@@ -2338,7 +2349,7 @@ const SFX = {
       crush.curve = c;
     }
     const f1 = A._filter('bandpass', 800, 2.2), f2 = A._filter('bandpass', 1200, 3), dry = A._filter('lowpass', 2500, 0.7);
-    const mix = A.ctx.createGain(); mix.gain.value = 1;
+    const mix = A.ctx.createGain(); mix.gain.value = V.g ?? 1;
     f1.connect(mix); f2.connect(mix); dry.connect(mix);
     const wetGain = A.ctx.createGain(); wetGain.gain.value = 0.9;
     const dryGain = A.ctx.createGain(); dryGain.gain.value = 0.35;

@@ -105,6 +105,9 @@ export class Post {
     const q = G.save?.profile?.settings?.quality;
     this.autoScale = !q || q === 'auto';
     this.tier = G.quality === 'low' ? 1 : 3;
+    // phones on 'auto' start on 'med' (DPR 1.5, no MSAA): the scaler only ever steps down, and
+    // starting a touch device on DPR 2 + 4× MSAA would cost a visible tier-switch hitch in the first run
+    if (this.autoScale && this.tier > 2 && globalThis.matchMedia?.('(pointer: coarse)')?.matches) this.tier = 2;
     if (q === 'high') this.tier = 3;
     if (q === 'low') this.tier = 1;
     this.composer = null;
@@ -125,6 +128,7 @@ export class Post {
 
     // auto-scaler
     this._ft = new Float32Array(TUNE.auto.window);
+    this._ftSort = new Float32Array(TUNE.auto.window);
     this._fi = 0; this._strikes = 0; this._warm = TUNE.auto.warmup;
 
     this._applyTier(true);
@@ -317,8 +321,7 @@ export class Post {
   _disposeComposer() {
     if (!this.composer) return;
     for (const p of this.composer.passes) p.dispose?.();
-    this.composer.renderTarget1.dispose();
-    this.composer.renderTarget2.dispose();
+    this.composer.dispose();          // both render targets + the composer's internal copy pass
     this.composer = null; this.bloom = null; this.grade = null;
   }
 
@@ -328,7 +331,8 @@ export class Post {
     this._ft[this._fi++] = rdt * 1000;
     if (this._fi < this._ft.length) return;
     this._fi = 0;
-    const med = Float32Array.from(this._ft).sort()[this._ft.length >> 1];
+    this._ftSort.set(this._ft);                 // scratch copy: no allocation in the frame loop
+    const med = this._ftSort.sort()[this._ft.length >> 1];
     this.lastMedianMs = med;
     if (med > TUNE.auto.slowMs) {
       if (++this._strikes >= TUNE.auto.strikes) {

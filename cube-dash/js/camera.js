@@ -76,7 +76,7 @@ export class CameraDirector {
     this.focus = new THREE.Vector3();         // smoothed gameplay focus on the ground
     this._la = new THREE.Vector2();           // smoothed look-ahead
     this._rig = null;
-    this._rigKey = '';
+    this._rigK = null;
 
     this.pose = makePose();                   // base pose this frame (before shake / kicks)
     this._game = makePose();
@@ -87,7 +87,8 @@ export class CameraDirector {
 
     this._cine = null;
     this.trauma = 0;
-    this._sustain = 0;
+    this._sustainLvl = 0;
+    this._sustainRate = 0;
     this._shakeT = 0;
     this._kick = { x: 0, v: 0 };
     this._dashT = 99;
@@ -129,8 +130,11 @@ export class CameraDirector {
   }
 
   shake(intensity = 0.3, seconds = 0) {
-    this.trauma = clamp(this.trauma + Math.max(0, intensity), 0, 1);
-    if (seconds > 0) { this._sustain = Math.max(this._sustain, seconds); this._sustainLvl = Math.max(this._sustainLvl || 0, intensity * 0.6); }
+    const k = Number.isFinite(intensity) ? clamp(intensity, 0, 1) : 0;
+    this.trauma = clamp(this.trauma + k, 0, 1);
+    // sustained floor: a held trauma level that fades to 0 over `seconds`. A weaker shake never
+    // extends a stronger one's hold (a smash chain after a nova must not lock the big shake on).
+    if (seconds > 0 && k * 0.6 >= this._sustainLvl) { this._sustainLvl = k * 0.6; this._sustainRate = this._sustainLvl / seconds; }
   }
 
   kick(amount = 0.03) {
@@ -141,6 +145,9 @@ export class CameraDirector {
   cinematic(name, opts = {}) {
     // de-dupe: e.g. boss.js awaits cinematic('boss') while the bus listener also fires it
     if (this._cine && this._cine.name === name && this._cine.t < 0.35) return this._cine.promise;
+    opts = opts || {};
+    // an in-play overlay (nova / phase) never interrupts a letterboxed shot (intro, boss, victory…)
+    if ((name === 'nova' || name === 'phase') && this._cine && !this._cine.overlay) return Promise.resolve();
     if (this._cine) this._endCine(false);
     const G = this.G;
     const short = !!opts.short;
@@ -193,9 +200,10 @@ export class CameraDirector {
     const settings = G.save?.profile?.settings || {};
     const reduce = !!settings.reduceFlash;
 
-    // --- skip input
+    // --- skip input (overlay shots — nova / phase — play under live gameplay: joystick touches
+    // and dash presses are gameplay input there, never a "skip")
     const c = this._cine;
-    if (c && c.t >= c.skipAt) {
+    if (c && !c.overlay && c.t >= c.skipAt) {
       const inp = G.input;
       if (this._tap || inp?.pressed?.('confirm') || inp?.pressed?.('dash')) this.skipCinematic();
     }
@@ -245,10 +253,13 @@ export class CameraDirector {
     fov = clamp(fov, P.fov * 0.95, P.fov * 1.05 + 0.001);
 
     // trauma
-    if (this._sustain > 0) { this._sustain -= rdt; this.trauma = Math.max(this.trauma, this._sustainLvl || 0); }
-    else this._sustainLvl = 0;
+    if (this._sustainLvl > 0) {
+      this._sustainLvl = Math.max(0, this._sustainLvl - this._sustainRate * rdt);
+      this.trauma = Math.max(this.trauma, this._sustainLvl);
+    }
     this.trauma = Math.max(0, this.trauma - TUNE.shake.decay * rdt);
-    const mult = (settings.shake ?? 1) * (reduce ? 0.3 : 1);
+    const sm = Number(settings.shake ?? 1);
+    const mult = (Number.isFinite(sm) ? clamp(sm, 0, 1) : 1) * (reduce ? 0.3 : 1);
     this._shakeT += rdt;
     const S = TUNE.shake;
     const amt = Math.min(S.max, S.amp * Math.pow(this.trauma, S.pow)) * mult;
@@ -260,13 +271,16 @@ export class CameraDirector {
     cam.lookAt(P.look);
     if (amt > 1e-4) {
       const t = this._shakeT * S.freq;
-      const nx = Math.sin(t * 1.0 + 1.3) * 0.55 + Math.sin(t * 2.31 + 0.2) * 0.3 + Math.sin(t * 4.13 + 2.9) * 0.15;
-      const ny = Math.sin(t * 1.17 + 4.1) * 0.55 + Math.sin(t * 2.07 + 1.7) * 0.3 + Math.sin(t * 3.91 + 0.6) * 0.15;
+      let nx = Math.sin(t * 1.0 + 1.3) * 0.55 + Math.sin(t * 2.31 + 0.2) * 0.3 + Math.sin(t * 4.13 + 2.9) * 0.15;
+      let ny = Math.sin(t * 1.17 + 4.1) * 0.55 + Math.sin(t * 2.07 + 1.7) * 0.3 + Math.sin(t * 3.91 + 0.6) * 0.15;
+      const nl = Math.hypot(nx, ny);
+      if (nl > 1) { nx /= nl; ny /= nl; }            // |offset| ≤ amt ≤ 0.35 u (§7.25), not amt·√2
       _right.set(1, 0, 0).applyQuaternion(cam.quaternion);
       _up.set(0, 1, 0).applyQuaternion(cam.quaternion);
       cam.position.addScaledVector(_right, nx * amt).addScaledVector(_up, ny * amt);
     }
-    const roll = P.roll + (reduce ? 0 : Math.sin(this._shakeT * S.freq * 0.9 + 0.7) * S.roll * D2R * Math.pow(this.trauma, 2) * mult);
+    // reduceFlash ("reduce flashing & shake"): no shake roll and no cinematic roll either
+    const roll = (reduce ? 0 : P.roll) + (reduce ? 0 : Math.sin(this._shakeT * S.freq * 0.9 + 0.7) * S.roll * D2R * Math.pow(this.trauma, 2) * mult);
     if (roll) cam.rotateZ(roll);
     if (Math.abs(cam.fov - fov) > 1e-4) { cam.fov = fov; cam.updateProjectionMatrix(); }
     cam.updateMatrixWorld();
@@ -287,9 +301,9 @@ export class CameraDirector {
     const W = this._vw, H = this._vh;
     const R = this.G.world?.arenaRadius ?? 11;
     const touch = this.G.input?.device === 'touch';
-    const key = `${W}x${H}|${R.toFixed(2)}|${touch}`;
-    if (key === this._rigKey) return;
-    this._rigKey = key;
+    const K = this._rigK || (this._rigK = { w: -1, h: -1, r: -1, touch: null });
+    if (K.w === W && K.h === H && Math.abs(K.r - R) < 1e-3 && K.touch === touch) return;   // (no per-frame string keys)
+    K.w = W; K.h = H; K.r = R; K.touch = touch;
     const aspect = W / Math.max(1, H);
     const p = TUNE.pitch * D2R;
     const fov = aspect >= 1 ? TUNE.fovWide : lerp(TUNE.fovTall, TUNE.fovWide, clamp((aspect - 0.5) / 0.5, 0, 1));

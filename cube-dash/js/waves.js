@@ -40,9 +40,9 @@ const TUNE = {
     speedGrowth: 0.012, speedCap: 1.3,
     bossHpGrowth: 0.15,
   },
-  daily: { waveScale: 1.6 },
+  daily: { waveScale: 1.25 },   // 8 waves ≈ 170 cubes (a 3–4 min daily, not a marathon)
   storm: { spawnStart: 1.6, spawnEnd: 0.65, maxAliveStart: 26, maxAliveEnd: 12, shrinkTime: 3.0, grace: 0.5 },
-  rush: { breather: 3.0 },
+  rush: { breather: 3.0, min: 2 },
   themeCycle: true,
 };
 
@@ -117,10 +117,14 @@ export class WaveDirector {
         this.waveTotal = MODES.storm.radii.length;
         this.timeLeft = MODES.storm.time;
         break;
-      case 'rush':
-        this.waves = DATA.worlds.map((w, i) => ({ groups: [], boss: true, bossWorld: i }));
+      case 'rush': {
+        // only kings the kid has already reached (their boss stage is unlocked) — never an unseen W6 laser on day 2
+        const n = this._rushCount();
+        this.waves = [];
+        for (let i = 0; i < n; i++) this.waves.push({ groups: [], boss: true, bossWorld: i });
         this.waveTotal = this.waves.length;
         break;
+      }
       default: {
         const sd = this.stageDef;
         this.waves = (sd?.waves || []).map((w) => this._applyMut(w));
@@ -232,6 +236,10 @@ export class WaveDirector {
       }
     }
     this._setRun('wave', i);
+    // the Coin Cube visits every normal stage once: a fast clear still meets it in the last wave
+    if (this.mode === 'stage' && i === this.waveTotal - 1 && this.coinAt >= 0 && !this.coinSpawned) {
+      this.coinAt = Math.min(this.coinAt, (this.run?.time ?? this.t) + this.rng.range(3, 6));
+    }
     this.bus.emit('wave:start', {
       index: i, total: this.waveTotal, isBoss: !!w.boss, tutorial: w.tutorial || null, novaFill: !!w.novaFill,
       mode: this.mode, number: this.mode === 'endless' ? this.endlessN : i + 1, cubes: ws.total,
@@ -329,7 +337,12 @@ export class WaveDirector {
     const d = len2(x, z), lim = R - 1.0;
     if (d > lim) { x *= lim / d; z *= lim / d; }
     const w = this.G.world;
-    try { const h = w?.bumperHit?.(x, z, 0.9); if (h) { x += (h.nx || 0) * 1.8; z += (h.nz || 0) * 1.8; } } catch { /* */ }
+    // keep portals off bumper pillars (plain geometry: world.bumperHit() would also play the bumper's bounce animation)
+    const bumpers = w?.features?.bumpers ?? DATA.worlds[this.worldIndex]?.features?.bumpers;
+    if (bumpers) for (const b of bumpers) {
+      const dx = x - b.x, dz = z - b.z, d = len2(dx, dz), need = (b.r ?? 0.9) + 0.9;
+      if (d < need) { const k = d > 1e-3 ? 1 / d : 0; x = b.x + (k ? dx * k : 1) * (need + 0.9); z = b.z + (k ? dz * k : 0) * (need + 0.9); }
+    }
     try { if (w?.solidAt && w.solidAt(x, z) === false) { x *= 0.55; z *= 0.55; } } catch { /* */ }
     out.x = x; out.z = z;
     return out;
@@ -380,6 +393,15 @@ export class WaveDirector {
     }
   }
 
+  /** Boss Rush length: worlds whose boss stage is unlocked (min TUNE.rush.min, all 6 without a meta system) */
+  _rushCount() {
+    const W = DATA.worlds.length, meta = this.G.meta;
+    if (typeof meta?.isStageUnlocked !== 'function') return W;
+    let n = 0;
+    try { for (let i = 0; i < W; i++) if (meta.isStageUnlocked(i, 4)) n = i + 1; } catch { return W; }
+    return clamp(n, Math.min(W, TUNE.rush.min), W);
+  }
+
   _heal(n) {
     const r = this.run;
     if (!r) return;
@@ -407,6 +429,9 @@ export class WaveDirector {
     this._checkClears();
     this._updateGate(dt);
     if (this.done) return;
+    // boss minions (summons / rain) are extra cubes: keep freed ≤ total for the objective counters
+    const need = (this.run?.freedCount | 0) + (this.em?.aliveCount ?? 0);
+    if (need > this.totalCubes) { this.totalCubes = need; this._setRun('totalCubes', need); }
     if (this.coinAt < 0 && this.stageDef?.coinCube !== false) this.coinAt = this.t + this.rng.range(40, 110);
     this._updateCoin(true);
     if (this.coinSpawned && this.coinAt >= 0 && this.t > this.coinAt + 20) { this.coinSpawned = false; this.coinAt = this.t + this.rng.range(70, 130); }
@@ -569,7 +594,8 @@ export class WaveDirector {
       }
     }
     const freed = this.run?.freedCount ?? this.freed;
-    this.medal = S.medals.filter((m) => freed >= m).length;
+    let medal = 0; for (let i = 0; i < S.medals.length; i++) if (freed >= S.medals[i]) medal++;   // (per frame: no array)
+    this.medal = medal;
     if (this.t >= S.time) {
       this._setRun('stormMedal', this.medal);
       this.bus.emit('wave:clear', { index: this.stormIdx, storm: true });

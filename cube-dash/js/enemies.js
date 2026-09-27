@@ -329,12 +329,13 @@ class DecalLayer {
     this._c.set(color).multiplyScalar(intensity);
     this.beamMesh.setColorAt(i, this._c);
   }
+  _endLayer(L) {
+    L.mesh.count = L.n; L.mesh.visible = L.n > 0;
+    L.mesh.instanceMatrix.needsUpdate = true; L.aA.needsUpdate = true; L.aB.needsUpdate = true;
+  }
   end() {
-    for (const L of [this.d, this.r]) {
-      L.mesh.count = L.n;
-      L.mesh.instanceMatrix.needsUpdate = true; L.aA.needsUpdate = true; L.aB.needsUpdate = true;
-    }
-    this.beamMesh.count = this.nb;
+    this._endLayer(this.d); this._endLayer(this.r);
+    this.beamMesh.count = this.nb; this.beamMesh.visible = this.nb > 0;
     this.beamMesh.instanceMatrix.needsUpdate = true;
     if (this.beamMesh.instanceColor) this.beamMesh.instanceColor.needsUpdate = true;
   }
@@ -1013,7 +1014,16 @@ export class EnemyManager {
   }
   /** end of stage cleanup: free everything left (victory rain) */
   freeAll() {
-    for (const e of this.list) if (!e.dead && !e.isBoss && !e.treasure) this.smash(e, { force: true, noSplit: true });   // minis credited, not spawned
+    for (const e of this.list) {
+      if (e.dead || e.isBoss) continue;
+      if (e.treasure) {                                   // the Coin Cube waves goodbye through its portal (clean victory stage)
+        this._emit('enemy:escape', { x: e.x, z: e.z, type: e.type });
+        this._fx('sparks', e.x, 0.6, e.z, { color: COL.crown, count: 16 });
+        this._kill(e);
+        continue;
+      }
+      this.smash(e, { force: true, noSplit: true });      // minis credited, not spawned
+    }
   }
 
   // ─────────────── update ───────────────
@@ -1081,7 +1091,7 @@ export class EnemyManager {
     else if (e.type === 'beamer') st = e.phase === 'tele' ? 'windup' : e.phase === 'sweep' ? 'charge' : 'chase';
     else st = e.ai === 'sleep' ? 'sleep' : e.ai === 'windup' ? 'windup' : e.ai === 'charge' ? 'charge' : e.ai === 'circle' ? 'circle' : 'chase';
     e.state = st;
-    e.harmful = !sm && !e.dead && !e.portal && !e.treasure && e.fall <= 0 && !e.proj && e.stunT <= 0 && e.ai !== 'sleep' && e.grounded !== false;
+    e.harmful = !sm && !e.dead && !e.portal && !e.treasure && e.fall <= 0 && !e.proj && e.stunT <= 0 && e.graceT <= 0 && e.ai !== 'sleep' && e.grounded !== false;
   }
 
   _updateEnemy(e, dt) {
@@ -1090,6 +1100,7 @@ export class EnemyManager {
     if (e.immuneT > 0) e.immuneT -= dt;
     if (e.hazCd > 0) e.hazCd -= dt;
     if (e.bowlCd > 0) e.bowlCd -= dt;
+    if (e.graceT > 0) e.graceT -= dt;
     if (e.slowT > 0) { e.slowT -= dt; if (e.slowT <= 0) e.slowMult = 1; }
     // squash & stretch spring (k≈320, damping≈16)
     e.sqV += ((1 - e.sq) * 320 - e.sqV * 16) * dt;
@@ -1179,7 +1190,10 @@ export class EnemyManager {
         this._emit('enemy:land', { x: e.x, z: e.z, radius: e.rain.radius });
         this.dizzy(e, e.rain.dizzy, 'rain');
         this._shake(0.08, 0.12);
-      } else if (e.ai === 'sleep') e.sq = 0.75;
+      } else {
+        e.graceT = TUNE.landGrace;          // landing squash: harmless for a moment (a kid standing on the portal gets a beat to step off)
+        if (e.ai === 'sleep') e.sq = 0.75;
+      }
       this._publish(e);
     }
   }
@@ -1483,7 +1497,9 @@ export class EnemyManager {
     const aP = a.proj && sa > 0.5, bP = b.proj && sb > 0.5;   // kid rule 5: a knocked cube always bonks
     const zA = a.type === 'zippy' && a.ai === 'charge', zB = b.type === 'zippy' && b.ai === 'charge';
     if (aP || bP) {
-      if (aP && (!bP || sa >= sb)) this._impact(a, b, nx, nz, sa); else this._impact(b, a, -nx, -nz, sb);
+      // only a cube still moving INTO the other one impacts (no repeat hits / armour pips while two cubes overlap)
+      const closing = (a.vx - b.vx) * nx + (a.vz - b.vz) * nz;
+      if (closing > 0.25) { if (aP && (!bP || sa >= sb)) this._impact(a, b, nx, nz, sa); else this._impact(b, a, -nx, -nz, sb); }
     } else if (zA || zB) {
       if (zA) this._zippyHit(a, b, nx, nz); else this._zippyHit(b, a, -nx, -nz);
     } else {
@@ -1630,6 +1646,7 @@ export class EnemyManager {
     const R = this.R, w = this.G.world, cm = this.cardMods, push = this._push;
     for (const e of this.list) {
       if (e.dead || e.isBoss || e.portal || e.fall > 0) continue;
+      if (e.x !== e.x || e.z !== e.z || e.vx !== e.vx || e.vz !== e.vz) { e.x = 0; e.z = 0; e.vx = 0; e.vz = 0; }   // NaN guard: never an unfreeable ghost
       if (w) {
         if (!e.stationary && e.grounded && w.pushAt) {
           push.x = 0; push.z = 0;
@@ -1761,6 +1778,9 @@ export class EnemyManager {
     const crowd = this.crowd, sh = this.shadows, dec = this.decals, A = this.acc, o = this._o;
     const t = this.time, tr = this.G.time?.real ?? t;
     const p = this.player;
+    const au = this.G.audio, beat = au?.beat, kick = au?.kick;   // enemies bob on the music beat (optional)
+    const pulse = typeof kick === 'number' ? clamp(kick, 0, 1)
+      : typeof beat === 'number' && beat >= 0 && beat <= 1 ? (1 - Math.min(1, beat * 2.5)) ** 2 : 0;
     dec.begin(tr);
     sh.begin();
     for (const k in A) A[k].n = 0;
@@ -1797,6 +1817,7 @@ export class EnemyManager {
       const baseY = e.y + bob;
       let hY = s * B[1] * sq;
       if (e.ai === 'sleep') hY *= 1 + Math.sin(t * 1.7 + e.wobPh) * 0.035;
+      else if (pulse > 0 && !smash && !e.proj && e.grounded && !e.stationary) hY *= 1 - TUNE.beatBob * pulse;
       o.x = e.x; o.z = e.z; o.y = baseY + hY * 0.5;
       o.sx = s * B[0] * sxz; o.sy = hY; o.sz = s * B[2] * sxz;
       o.rotY = e.rotY; o.rotX = 0; o.rotZ = 0;
@@ -1835,15 +1856,15 @@ export class EnemyManager {
       this._accessories(e, baseY, hY, s, o, tr);
       this._telegraphs(e, tr);
     }
-    crowd.count = ci;
+    crowd.count = ci; crowd.mesh.visible = ci > 0;
     crowd.commit();
     const g = this.run?.waves?.gate;
     if (g && g.open) dec.disc(g.x, g.z, g.radius ?? 1.3, 1, 0, 1, 2, 0, 0.5, 1);
-    sh.end();
+    sh.end(); sh.mesh.visible = sh.n > 0;
     dec.end();
     for (const k in A) {
       const a = A[k];
-      a.mesh.count = a.n;
+      a.mesh.count = a.n; a.mesh.visible = a.n > 0;     // empty accessory layers cost no draw call
       a.mesh.instanceMatrix.needsUpdate = true;
       if (a.mesh.instanceColor) a.mesh.instanceColor.needsUpdate = true;
     }
@@ -1958,7 +1979,7 @@ export class EnemyManager {
     for (const h of this._lingering) this._removeHazard(h);
     this._lingering.length = 0;
     this.list.length = 0;
-    this._deferred.length = 0;
+    this._deferred.length = 0; this._deferredB.length = 0;
     this.boss = null;
     this.minionCount = 0;
     this._render(0);
@@ -1969,7 +1990,7 @@ export class EnemyManager {
     for (const u of this._unsub) u();
     this._unsub.length = 0;
     const S = this.scene;
-    for (const m of [this.crowd.mesh, this.shadows.mesh]) { S.remove(m); m.geometry.dispose(); m.material.map?.dispose?.(); m.material.dispose(); }
+    for (const m of [this.crowd.mesh, this.shadows.mesh]) { S.remove(m); m.geometry.dispose(); m.material.map?.dispose?.(); m.material.dispose(); m.dispose?.(); }
     for (const k in this.acc) { const m = this.acc[k].mesh; S.remove(m); m.geometry.dispose(); m.material.dispose(); m.dispose?.(); }
     this.decals.dispose(S);
   }

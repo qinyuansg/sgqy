@@ -47,6 +47,8 @@ const TUNE = {
   rings: 6,
   slamPushSpeed: 9,
   laserStartR: 0.85,         // beams start at the body surface (× radius)
+  slamTrack: 0.25,           // the landing circle follows the hero only this long, then LOCKS (walkable escape ≥ 0.9 s)
+  phaseEps: 0.01,            // 2/3 cracks left counts as "66%" (a 3-crack king still gets all three phases)
 };
 const COL = {
   crown: 0xffc630, core: BD.coreColor, crack: 0xff3df2, metal: 0x3a3450, shutter: 0x6b6f8f,
@@ -55,8 +57,8 @@ const COL = {
 };
 
 addStrings({
-  zh: { 'boss.core': '故障核心', 'boss.phase': '第{n}阶段', 'boss.weary': '大王累啦!', 'boss.stagger': '晕啦!' },
-  en: { 'boss.core': 'GLITCH CORE', 'boss.phase': 'PHASE {n}', 'boss.weary': 'KING IS TIRED!', 'boss.stagger': 'STAGGERED!' },
+  zh: { 'boss.core': '故障核心', 'boss.coreSub': '追上去撞它!', 'boss.phase': '第{n}阶段', 'boss.weary': '大王累啦!', 'boss.stagger': '晕啦!' },
+  en: { 'boss.core': 'GLITCH CORE', 'boss.coreSub': 'Catch it — DASH!', 'boss.phase': 'PHASE {n}', 'boss.weary': 'KING IS TIRED!', 'boss.stagger': 'STAGGERED!' },
 });
 
 export class Boss {
@@ -81,7 +83,7 @@ export class Boss {
     const sp = clamp(Math.round(opts.startPhase ?? run?.bossPhase ?? 1), 1, 3);
     if (sp > 1 && !opts.noCheckpoint) {                     // 🚩 retry from phase N
       this.phase = sp;
-      this.hp = Math.max(1, Math.min(this.maxHp - 1, Math.floor(this.maxHp * BD.phaseAt[sp - 2] + 1e-6)));
+      this.hp = Math.max(1, Math.min(this.maxHp - 1, Math.floor(this.maxHp * (BD.phaseAt[sp - 2] + TUNE.phaseEps) + 1e-6)));
     }
     this.state = 'portal'; this.coreOpen = false; this.smashable = false; this.harmful = false;
     this.dead = false; this.removeMe = false;
@@ -97,7 +99,7 @@ export class Boss {
     this.slamHzT = 0; this.slamX = 0; this.slamZ = 0;
     this.introT = opts.introTime ?? TUNE.introTime;
     this.chaseHits = 0; this.kvx = 0; this.kvz = 0; this.zigT = 0; this.zigSign = 1; this.mineT = 0; this.sinceHit = 0;
-    this.deathT = 0; this._ovF = 0; this._steamT = 0; this._glitchSeed = rand() * 100;
+    this.deathT = 0; this._ovF = 0; this._steamT = 0; this._glitchSeed = rand() * 100; this._bucket = 0;
     this.rotations = { 1: this._rotation(1), 2: this._rotation(2), 3: this._rotation(3) };
     // ----- hazards (run.hazards) -----
     const self = this;
@@ -411,8 +413,8 @@ export class Boss {
     const a = this.act = { name, t: 0, stage: 'start', active: false };
     const px = p ? p.x : 0, pz = p ? p.z : 0;
     switch (name) {
-      case 'double': a.slams = 2; this._slamInit(a, MV.slam.fill, px, pz); break;
-      case 'slam': a.slams = 1; this._slamInit(a, MV.slam.fill, px, pz); break;
+      case 'double': a.slams = 2; this._slamInit(a, MV.slam.fill, px, pz, TUNE.slamTrack); break;
+      case 'slam': a.slams = 1; this._slamInit(a, MV.slam.fill, px, pz, TUNE.slamTrack); break;
       case 'charge': {
         a.fill = this.tele(MV.charge.fill); a.lock = a.fill * (MV.charge.lockAt / MV.charge.fill); a.stage = 'aim';
         const dx = px - this.x, dz = pz - this.z, d = len2(dx, dz) || 1;
@@ -444,8 +446,9 @@ export class Boss {
     }
   }
 
-  _slamInit(a, fill, px, pz) {
+  _slamInit(a, fill, px, pz, track = 0) {
     a.fill = this.tele(fill);
+    a.track = Math.min(track, a.fill * 0.3);
     a.air = Math.min(MV.slam.air, a.fill * 0.8);
     a.crouch = a.fill - a.air;
     a.t = 0; a.stage = 'crouch';
@@ -471,7 +474,7 @@ export class Boss {
 
   _tickSlam(a, dt, p) {
     if (a.stage === 'crouch') {
-      if (p) {                                                // circle tracks the hero until take-off
+      if (p && a.t < a.track) {                               // circle follows the hero briefly, then locks (walk out = safe)
         const lim = this.R - this.radius, d = len2(p.x, p.z);
         a.tx = d > lim ? p.x / d * lim : p.x; a.tz = d > lim ? p.z / d * lim : p.z;
       }
@@ -709,8 +712,8 @@ export class Boss {
   }
 
   _checkPhase() {
-    const f = this.hp / this.maxHp;
-    const np = f <= BD.phaseAt[1] ? 3 : f <= BD.phaseAt[0] ? 2 : 1;
+    const f = this.hp / this.maxHp, e = TUNE.phaseEps;
+    const np = f <= BD.phaseAt[1] + e ? 3 : f <= BD.phaseAt[0] + e ? 2 : 1;
     if (np > this.phase) this._phaseShift(np);
   }
 
@@ -753,8 +756,12 @@ export class Boss {
     const r = R0 * TUNE.chaseRadiusK;
     try { this.run.arenaRadius = r; } catch { /* */ }
     try { this.G.world?.setPlayRadius?.(r); } catch { /* */ }
-    this.bus.emit('boss:shell', { x: this.x, z: this.z });
-    this.bus.emit('boss:phase', { phase: 4, finale: true, x: this.x, z: this.z, textKey: 'boss.core', text: this.name });
+    this.bus.emit('boss:shell', { x: this.x, z: this.z, textKey: 'boss.core', text: this.name });
+    // the finale is not a "PHASE 4": drive the phase-shift presentation directly with the core's own name card
+    try { this.G.hud?.banner?.(this.name, 'boss', 2.2, 'boss.coreSub'); } catch { /* hud optional */ }
+    try { this.G.cam?.cinematic?.('phase', { x: this.x, z: this.z }); } catch { /* cam optional */ }
+    try { this.G.world?.pulseRim?.(COL.crack); } catch { /* world optional */ }
+    try { this.G.audio?.sfx?.('phase', { phase: 4 }); } catch { /* audio optional */ }
     this.bus.emit('boss:hit', { x: this.x, z: this.z, hp: this.hp, maxHp: this.maxHp });
   }
 
@@ -903,6 +910,9 @@ export class Boss {
   }
 
   // ─────────────── rendering (called from em._render) ───────────────
+  /** stable per-bucket pseudo-random 0..1 (glitch flicker) — a method, not a per-frame closure */
+  _hash(k) { const v = Math.sin(this._bucket * 12.9898 + k * 78.233 + this._glitchSeed) * 43758.5453; return v - Math.floor(v); }
+
   render(dt, dec, sh, em) {
     if (this.removeMe) return;
     const tr = this.G.time?.real ?? this.fightT;
@@ -910,10 +920,9 @@ export class Boss {
     const S = BD.size;
     // glitch intensity: phase, hits, enrage
     const gi = (this.phase >= 3 ? 0.32 : this.phase === 2 ? 0.2 : 0.1) + (this.flashT > 0.5 ? 0.4 : 0) + (this.weary ? 0.08 : 0) + (this.mode === 'phase' ? 0.5 : 0);
-    const bucket = Math.floor(tr * 14);
-    const hash = (k) => { const v = Math.sin(bucket * 12.9898 + k * 78.233 + this._glitchSeed) * 43758.5453; return v - Math.floor(v); };
-    const glitch = hash(0) < gi * 0.6;
-    const jit = glitch && !this.dead ? (hash(1) - 0.5) * 0.3 : 0;
+    this._bucket = Math.floor(tr * 14);
+    const glitch = this._hash(0) < gi * 0.6;
+    const jit = glitch && !this.dead ? (this._hash(1) - 0.5) * 0.3 : 0;
     const g = this.group;
     g.position.set(this.x + jit, this.y, this.z);
     g.rotation.y = this.rotY + (this.mode === 'dizzy' ? Math.sin(tr * 6 * TAU) * 0.07 : 0);
@@ -960,12 +969,12 @@ export class Boss {
     // glitch scanline slabs
     for (let i = 0; i < this.slabs.length; i++) {
       const m = this.slabs[i];
-      m.visible = !chase && !this.dead && hash(i + 2) < gi * 0.8;
+      m.visible = !chase && !this.dead && this._hash(i + 2) < gi * 0.8;
       if (!m.visible) continue;
       // thin scanline bands on the front / side faces (never a flat plate seen from the top camera)
-      const side = hash(i + 60) < 0.6 ? 0 : (hash(i + 61) < 0.5 ? -1 : 1);
-      const w = S * (0.35 + hash(i + 40) * 0.6), h = 0.05 + hash(i + 50) * 0.14, off = (hash(i + 9) - 0.5) * S * 0.5;
-      const y = S * (0.12 + hash(i + 20) * 0.8);
+      const side = this._hash(i + 60) < 0.6 ? 0 : (this._hash(i + 61) < 0.5 ? -1 : 1);
+      const w = S * (0.35 + this._hash(i + 40) * 0.6), h = 0.05 + this._hash(i + 50) * 0.14, off = (this._hash(i + 9) - 0.5) * S * 0.5;
+      const y = S * (0.12 + this._hash(i + 20) * 0.8);
       if (side === 0) { m.position.set(off, y, S * 0.5 + 0.03); m.scale.set(w, h, 0.05); }
       else { m.position.set(side * (S * 0.5 + 0.03), y, off); m.scale.set(0.05, h, w); }
     }

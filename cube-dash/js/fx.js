@@ -60,7 +60,9 @@ const TUNE = {
   knocked: { every: 0.04, minSpeed: 3 },
   ambientDust: { every: 0.25, minSpeed: 2.5, max: 40 },
   bolt: { life: 0.3, top: 15 },
+  pillarMaxH: 14,                           // light pillars stay below the gameplay camera (~20 u up)
   storm: { bolts: 12, time: 2.5, firstDelay: 0.2 },
+  bhCoreY: 2.7,                             // black-hole core height (above the hero's head)
 };
 
 // reserved colours (colour law: RED = enemies only, never used here)
@@ -320,6 +322,7 @@ class Sprites {
     this.mesh = new THREE.Mesh(this.geo, this.mat);
     this.mesh.frustumCulled = false;
     this.mesh.renderOrder = 6;
+    this.mesh.visible = false;
     return this.mesh;
   }
   get free() { return this.cap - this.n; }
@@ -347,7 +350,7 @@ class Sprites {
     const last = --this.n;
     if (i !== last) d.copyWithin(i * PS, last * PS, last * PS + PS);
   }
-  clear() { this.n = 0; this.dust = 0; this.geo.instanceCount = 0; }
+  clear() { this.n = 0; this.dust = 0; this.geo.instanceCount = 0; if (this.mesh) this.mesh.visible = false; }
   update(dt) {
     const d = this.d;
     let i = 0;
@@ -434,8 +437,11 @@ class Sprites {
       D[j + 3] = d[o + P_SELF];
     }
     this.geo.instanceCount = n;
+    // idle systems cost no draw call / program switch at all
+    if (this.mesh) this.mesh.visible = n > 0;
+    if (n === 0) return;
     for (const at of this._attrs) {
-      at.clearUpdateRanges(); at.addUpdateRange(0, Math.max(4, n * 4)); at.needsUpdate = true;
+      at.clearUpdateRanges(); at.addUpdateRange(0, n * 4); at.needsUpdate = true;
     }
   }
 }
@@ -607,12 +613,17 @@ class Rings {
     g.instanceCount = 0;
     this._attrs = [this.iA, this.iB, this.iC, this.iD];
     this.geo = g;
+    // immediates are staged separately and appended AFTER the animated rings in end():
+    // writing them straight into the instance buffer let an animated ring spawned
+    // (or expired) later in the same frame overwrite / hide them (portal flicker).
+    this.stage = new Float32Array(cap * 16);
   }
   make(uniforms) {
     this.mat = fxMaterial(RING_VERT, RING_FRAG, uniforms);
     this.mesh = new THREE.Mesh(this.geo, this.mat);
     this.mesh.frustumCulled = false;
     this.mesh.renderOrder = 2;
+    this.mesh.visible = false;
     return this.mesh;
   }
   /** fire-and-forget animated ring */
@@ -626,13 +637,16 @@ class Rings {
     d[o + 18] = self + add * 2; d[o + 19] = ease;
     this.n++;
   }
-  clear() { this.n = 0; this.m = 0; this.geo.instanceCount = 0; }
+  clear() { this.n = 0; this.m = 0; this.geo.instanceCount = 0; if (this.mesh) this.mesh.visible = false; }
   begin() { this.m = 0; }
-  /** immediate instance for this frame (after update) */
+  /** immediate instance for this frame only (staged; appended after the animated rings in end()) */
   now(x, z, R, thick, c, alpha, style, fill = 1, seed = 0, arc0 = 0, arcLen = 0, white = 0, self = 0, add = 0, y = 0.035) {
-    const i = this.n + this.m;
-    if (i >= this.cap) return;
-    this._write(i, x, y, z, R, c.r, c.g, c.b, alpha, style, thick, fill, seed, arc0, arcLen, white, self + add * 2);
+    if (this.n + this.m >= this.cap || !(R > 0)) return;
+    const S = this.stage, o = this.m * 16;
+    S[o] = x; S[o + 1] = y; S[o + 2] = z; S[o + 3] = R;
+    S[o + 4] = c.r; S[o + 5] = c.g; S[o + 6] = c.b; S[o + 7] = alpha;
+    S[o + 8] = style; S[o + 9] = thick; S[o + 10] = fill; S[o + 11] = seed;
+    S[o + 12] = arc0; S[o + 13] = arcLen; S[o + 14] = white; S[o + 15] = self + add * 2;
     this.m++;
   }
   _write(i, x, y, z, R, r, g, b, a, style, thick, fill, seed, arc0, arcLen, white, flags) {
@@ -674,10 +688,22 @@ class Rings {
     }
   }
   end() {
-    const n = this.n + this.m;
+    const base = this.n;
+    const m = Math.min(this.m, this.cap - base);
+    const S = this.stage, A = this.iA.array, B = this.iB.array, Cc = this.iC.array, D = this.iD.array;
+    for (let k = 0; k < m; k++) {
+      const o = k * 16, j = (base + k) * 4;
+      A[j] = S[o]; A[j + 1] = S[o + 1]; A[j + 2] = S[o + 2]; A[j + 3] = S[o + 3];
+      B[j] = S[o + 4]; B[j + 1] = S[o + 5]; B[j + 2] = S[o + 6]; B[j + 3] = S[o + 7];
+      Cc[j] = S[o + 8]; Cc[j + 1] = S[o + 9]; Cc[j + 2] = S[o + 10]; Cc[j + 3] = S[o + 11];
+      D[j] = S[o + 12]; D[j + 1] = S[o + 13]; D[j + 2] = S[o + 14]; D[j + 3] = S[o + 15];
+    }
+    const n = base + m;
     this.geo.instanceCount = n;
+    if (this.mesh) this.mesh.visible = n > 0;
+    if (n === 0) return;
     for (const at of this._attrs) {
-      at.clearUpdateRanges(); at.addUpdateRange(0, Math.max(4, n * 4)); at.needsUpdate = true;
+      at.clearUpdateRanges(); at.addUpdateRange(0, n * 4); at.needsUpdate = true;
     }
   }
 }
@@ -744,6 +770,7 @@ class Beams {
     this.mesh = new THREE.Mesh(this.geo, this.mat);
     this.mesh.frustumCulled = false;
     this.mesh.renderOrder = 7;
+    this.mesh.visible = false;
     return this.mesh;
   }
   begin() { this.m = 0; }
@@ -758,7 +785,9 @@ class Beams {
   }
   end() {
     this.geo.instanceCount = this.m;
-    for (const at of this._attrs) { at.clearUpdateRanges(); at.addUpdateRange(0, Math.max(4, this.m * 4)); at.needsUpdate = true; }
+    if (this.mesh) this.mesh.visible = this.m > 0;
+    if (this.m === 0) return;
+    for (const at of this._attrs) { at.clearUpdateRanges(); at.addUpdateRange(0, this.m * 4); at.needsUpdate = true; }
   }
 }
 
@@ -839,6 +868,7 @@ class Shells {
     this.mesh = new THREE.Mesh(this.geo, this.mat);
     this.mesh.frustumCulled = false;
     this.mesh.renderOrder = 8;
+    this.mesh.visible = false;
     return this.mesh;
   }
   begin() { this.m = 0; }
@@ -853,7 +883,9 @@ class Shells {
   }
   end() {
     this.geo.instanceCount = this.m;
-    for (const at of this._attrs) { at.clearUpdateRanges(); at.addUpdateRange(0, Math.max(4, this.m * 4)); at.needsUpdate = true; }
+    if (this.mesh) this.mesh.visible = this.m > 0;
+    if (this.m === 0) return;
+    for (const at of this._attrs) { at.clearUpdateRanges(); at.addUpdateRange(0, this.m * 4); at.needsUpdate = true; }
   }
 }
 
@@ -866,11 +898,12 @@ class Shards {
     this.cap = cap; this.n = 0;
     this.d = new Float32Array(cap * SA);
     this.mat = createClayMaterial(0xffffff, { spec: 0.45, shininess: 50 });
-    this.mesh = new THREE.InstancedMesh(roundedBoxGeometry(0.3, 2), this.mat, cap);
+    this.mesh = new THREE.InstancedMesh(roundedBoxGeometry(0.3, 2).clone(), this.mat, cap);   // own copy: dispose() must not free art.js's shared cache
     this.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     this.mesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(cap * 3), 3).setUsage(THREE.DynamicDrawUsage);
     this.mesh.frustumCulled = false;
     this.mesh.count = 0;
+    this.mesh.visible = false;
     this._m = new THREE.Matrix4(); this._q = new THREE.Quaternion(); this._e = new THREE.Euler();
     this._p = new THREE.Vector3(); this._s = new THREE.Vector3();
   }
@@ -884,7 +917,7 @@ class Shards {
     d[o + 15] = c.r * mul; d[o + 16] = c.g * mul; d[o + 17] = c.b * mul; d[o + 18] = 0;
     this.n++;
   }
-  clear() { this.n = 0; this.mesh.count = 0; }
+  clear() { this.n = 0; this.mesh.count = 0; this.mesh.visible = false; }
   update(dt) {
     const d = this.d;
     let i = 0;
@@ -921,6 +954,8 @@ class Shards {
       C[k * 3] = d[o + 15]; C[k * 3 + 1] = d[o + 16]; C[k * 3 + 2] = d[o + 17];
     }
     this.mesh.count = this.n;
+    this.mesh.visible = this.n > 0;
+    if (!this.n) return;
     this.mesh.instanceMatrix.needsUpdate = true;
     this.mesh.instanceColor.needsUpdate = true;
   }
@@ -972,6 +1007,7 @@ class Ghosts {
     this.mesh.frustumCulled = false;
     this.mesh.count = 0;
     this.mesh.renderOrder = 5;
+    this.mesh.visible = false;
     return this.mesh;
   }
   add(x, y, z, rotY, size, c, alpha = 0.55, life = 0.2) {
@@ -983,7 +1019,7 @@ class Ghosts {
     d[o + 5] = 0; d[o + 6] = life; d[o + 7] = c.r; d[o + 8] = c.g; d[o + 9] = c.b; d[o + 10] = alpha;
     this.n++;
   }
-  clear() { this.n = 0; if (this.mesh) this.mesh.count = 0; }
+  clear() { this.n = 0; if (this.mesh) { this.mesh.count = 0; this.mesh.visible = false; } }
   update(dt) {
     const d = this.d;
     let i = 0;
@@ -1006,6 +1042,8 @@ class Ghosts {
       G[k * 4] = d[o + 7]; G[k * 4 + 1] = d[o + 8]; G[k * 4 + 2] = d[o + 9]; G[k * 4 + 3] = d[o + 10] * (1 - t);
     }
     this.mesh.count = this.n;
+    this.mesh.visible = this.n > 0;
+    if (!this.n) return;
     this.mesh.instanceMatrix.needsUpdate = true;
     this.iGhost.needsUpdate = true;
   }
@@ -1071,9 +1109,10 @@ class Bolts {
     this.mesh = new THREE.Mesh(this.geo, this.mat);
     this.mesh.frustumCulled = false;
     this.mesh.renderOrder = 9;
+    this.mesh.visible = false;
     return this.mesh;
   }
-  clear() { this.alive.fill(0); this.geo.setDrawRange(0, 0); }
+  clear() { this.alive.fill(0); this.geo.setDrawRange(0, 0); if (this.mesh) this.mesh.visible = false; }
   _path(pts, n, ax, ay, az, bx, by, bz, amp) {
     for (let i = 0; i < n; i++) {
       const t = i / (n - 1);
@@ -1153,6 +1192,7 @@ class Bolts {
       }
     }
     this.geo.setDrawRange(0, (v / 4) * 6);
+    if (this.mesh) this.mesh.visible = v > 0;
     if (v > 0) {
       this.aPos.clearUpdateRanges(); this.aPos.addUpdateRange(0, v * 3); this.aPos.needsUpdate = true;
       this.aUv.clearUpdateRanges(); this.aUv.addUpdateRange(0, v * 2); this.aUv.needsUpdate = true;
@@ -1210,9 +1250,10 @@ class Ribbon {
     this.mesh = new THREE.Mesh(this.geo, this.mat);
     this.mesh.frustumCulled = false;
     this.mesh.renderOrder = 4;
+    this.mesh.visible = false;
     return this.mesh;
   }
-  clear() { this.count = 0; this.geo.setDrawRange(0, 0); }
+  clear() { this.count = 0; this.geo.setDrawRange(0, 0); if (this.mesh) this.mesh.visible = false; }
   push(x, y, z) {
     if (this.count > 0) {
       const h = this.head;
@@ -1230,6 +1271,7 @@ class Ribbon {
       if (this.clock - this.pt[tail] > life) this.count--; else break;
     }
     const n = this.count;
+    if (this.mesh) this.mesh.visible = n >= 2;
     if (n < 2) { this.geo.setDrawRange(0, 0); return; }
     const P = this.pos, U = this.uv, Cc = this.cols;
     const nc = this.colors.length;
@@ -1277,7 +1319,7 @@ class Freed {
     this.hands.count = 0;
     // plum outline hull (sticker read on light floors) + contact shadows (height read)
     this.outlineMat = new THREE.MeshBasicMaterial({ color: HEX.plum, side: THREE.BackSide, fog: false });
-    this.outline = new THREE.InstancedMesh(roundedBoxGeometry(0.22, 3), this.outlineMat, cap);
+    this.outline = new THREE.InstancedMesh(roundedBoxGeometry(0.22, 3).clone(), this.outlineMat, cap);
     this.outline.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     this.outline.frustumCulled = false;
     this.outline.count = 0;
@@ -1287,7 +1329,9 @@ class Freed {
     this.o = { x: 0, y: 0, z: 0, sx: 1, sy: 1, sz: 1, rotX: 0, rotY: 0, rotZ: 0, color: this.colors[0], expr: EXPR.JOY, blink: 0, lookX: 0, lookY: 0, flash: 0, glow: 0 };
     this._m = new THREE.Matrix4(); this._q = new THREE.Quaternion(); this._e = new THREE.Euler(); this._p = new THREE.Vector3(); this._s = new THREE.Vector3();
     this._hc = new THREE.Color();
+    this._show(false);
   }
+  _show(on) { this.crowd.mesh.visible = on; this.hands.visible = on; this.outline.visible = on; this.shadows.mesh.visible = on; }
   add(x, y, z, size, golden) {
     if (this.n >= this.cap) return -1;
     const o = this.n * FA, d = this.d;
@@ -1296,7 +1340,7 @@ class Freed {
     d[o + 6] = rnd() * TAU; d[o + 7] = rr(0.8, 1.2); d[o + 8] = rr(-0.25, 0.25); d[o + 9] = 0; d[o + 10] = rr(0.9, 1.15);
     return this.n++;
   }
-  clear() { this.n = 0; this.crowd.count = 0; this.hands.count = 0; this.outline.count = 0; this.shadows.begin(); this.shadows.end(); }
+  clear() { this.n = 0; this.crowd.count = 0; this.hands.count = 0; this.outline.count = 0; this.shadows.begin(); this.shadows.end(); this._show(false); }
   /** returns via callback each live cube's rocket phase for sparkle trails */
   update(dt, emit) {
     const d = this.d, T = TUNE.freed;
@@ -1309,6 +1353,9 @@ class Freed {
     }
     const fo = this.o;
     const HC = this.hands.instanceColor.array;
+    const vis = this.n > 0;
+    if (vis !== this.crowd.mesh.visible) this._show(vis);
+    if (!vis) { this.crowd.count = 0; this.hands.count = 0; this.outline.count = 0; return; }
     this.shadows.begin();
     for (let k = 0; k < this.n; k++) {
       const o = k * FA;
@@ -1352,7 +1399,7 @@ class Freed {
       fo.sx = s * sx; fo.sy = s * sy; fo.sz = s * sx;
       fo.rotY = rotY + d[o + 8]; fo.rotZ = rotZ; fo.rotX = 0;
       fo.color = c;
-      fo.glow = golden ? 0.35 + 0.15 * Math.sin(t * 20) : 0.06;
+      fo.glow = golden ? 0.2 + 0.08 * Math.sin(t * 12) : 0.06;   // gold shimmer, face stays readable (no bloom blob)
       fo.expr = EXPR.JOY;
       this.crowd.set(k, fo);
       this._e.set(0, fo.rotY, rotZ, 'YXZ');
@@ -1526,6 +1573,8 @@ export class FX {
   update(dt, rdt) {
     dt = Math.max(0, dt || 0); rdt = Math.max(0, rdt || 0);
     const G = this.G;
+    const set = G.save?.profile?.settings;
+    if (set) this.reduceFlash = !!set.reduceFlash;               // live (settings screen, import, reset)
     const st = G.run?.state;
     const frozen = st === 'paused' || st === 'levelup';
     const scale = G.time?.scale ?? (rdt > 0 ? dt / rdt : 1);
@@ -1595,7 +1644,12 @@ export class FX {
     for (const off of this._offs) off?.();
     this._offs.length = 0;
     this.root.parent?.remove(this.root);
-    this.root.traverse((o) => { o.geometry?.dispose?.(); o.material?.dispose?.(); });
+    this.root.traverse((o) => {
+      o.geometry?.dispose?.();
+      o.material?.map?.dispose?.();          // BlobShadows' canvas texture
+      o.material?.dispose?.();
+      if (o.isInstancedMesh) o.dispose();    // frees instanceMatrix / instanceColor GL buffers
+    });
   }
 
   // =========================================================
@@ -1670,18 +1724,22 @@ export class FX {
 
   onFreed(p) {
     const x = p.x ?? 0, z = p.z ?? 0, size = clamp(sizeOf(p.size) * 0.78, 0.5, 1.05);
-    const golden = p.golden ?? (rnd() < TUNE.freed.goldChance);
+    // colour law: GOLD = treasure → treasure (coin) cubes always pop out golden; others 1 % lucky
+    const lucky = !p.treasure && p.golden == null && rnd() < TUNE.freed.goldChance;
+    const golden = !!(p.golden ?? (p.treasure || lucky));
     if (this.freed.add(x, size * 0.5, z, size, golden) < 0) return;
     this._sparkles(x, 0.9, z, Math.round(6 * this.deco), IP4, 0.7, false);
     if (golden) {
       this.rings.anim(x, z, 0.3, 2.2, 0.45, HEX.gold, 1, { t0: 0.4, t1: 0.1 });
-      this._sparkles(x, 1.2, z, 16, IP5, 1.1, false);
-      this.G.bus?.emit('fx:goldenFreed', { x, z });
+      this._sparkles(x, 1.2, z, Math.round(16 * this.emit), IP5, 1.1, false);
+      if (!p.treasure) this.G.bus?.emit('fx:goldenFreed', { x, z });
     }
   }
 
   onBonk(p) {
-    const x = p.x ?? 0, z = p.z ?? 0, s = clamp(p.strength ?? 1, 0.5, 2);
+    // enemies.js / boss.js send the closing SPEED (≈3–14 u/s) as strength; tolerate a 0..2 factor too
+    const raw = Number.isFinite(p.strength) ? p.strength : 1;
+    const x = p.x ?? 0, z = p.z ?? 0, s = clamp(raw > 2.5 ? raw / 6 : raw, 0.5, 2);
     const R = TUNE.bonk;
     this._stars(x, 1.1, z, Math.round(R.stars * (0.75 + s * 0.25)) + 1, 0.46 + 0.08 * s);
     this._sparks(x, 0.7, z, Math.round(R.sparks * this.emit * s), IP6, 8, 0.3, false);
@@ -2086,14 +2144,15 @@ export class FX {
       case K.PORTAL: this._tickPortal(e, t, edt); break;
       case K.PILLAR: {
         const u = t / e.dur;
-        this.beams.now(e.x, e.z, 0, e.r * (1 - u * 0.6), e.a || 20, e.color, (1 - u) * (e.b || 0.75), (1 - u) * 0.35, 0, 1);
+        // floor-projected depth: the hero / cubes standing in the light stay on top of it (§7.20)
+        this.beams.now(e.x, e.z, 0, e.r * (1 - u * 0.6), Math.min(e.a || 14, TUNE.pillarMaxH), e.color, (1 - u) * (e.b || 0.75), (1 - u) * 0.3, 0, 0);
         this.rings.now(e.x, e.z, e.r * 1.6, 0.2, e.color, (1 - u) * 0.6, RS.DISC, 1, 0, 0, 0, 0, 1);
         break;
       }
       case K.SHELL: {
         const u = t / e.dur;
         const R = e.r * easeOutCubic(u);
-        this.shells.now(e.x, e.y, e.z, R, e.color, (1 - u * u) * (e.a || 1), e.b | 0, e.c || 1, 1);
+        this.shells.now(e.x, e.y, e.z, R, e.color, (1 - u * u) * (e.a || 1), e.b | 0, e.c || 1, 0);
         break;
       }
       case K.VORTEX: {
@@ -2202,7 +2261,7 @@ export class FX {
     const CH = 0.35;
     if (t < CH) { // charge: particles gather, glow core grows, ring contracts
       const u = t / CH;
-      this.shells.now(x, 1.1, z, 0.3 + u * 1.1, c, 0.5 + u * 0.5, 0, 1, 1);
+      this.shells.now(x, 1.1, z, 0.3 + u * 1.1, c, 0.5 + u * 0.5, 0, 1, 0);
       this.rings.now(x, z, 4 * (1 - u) + 0.6, 0.18, c, 0.8, RS.SHOCK, 1, 0, 0, 0, 0, 1, 0);
       e.acc -= fdt;
       while (e.acc <= 0) { e.acc += 0.012; this._spiralIn(x, z, rr(2.5, 4), IP21, 1.1, true); }
@@ -2210,12 +2269,12 @@ export class FX {
     }
     if (!e.f1) {
       e.f1 = 1;
-      this._spawnShell(x, 1, z, e.r * 1.05, c, 0.6, 0, 0.8 * this._flashK());
-      this._spawnShell(x, 1, z, e.r * 0.6, col(HEX.cyanSoft), 0.45, 0, 0.45 * this._flashK());
+      this._spawnShell(x, 1, z, e.r * 1.05, c, 0.6, 0, 0.7 * this._flashK());
+      this._spawnShell(x, 1, z, e.r * 0.6, col(HEX.cyanSoft), 0.45, 0, 0.32 * this._flashK());
       for (let i = 0; i < 3; i++) this.rings.anim(x, z, 0.5, e.r * (1.05 - i * 0.12), 0.55, i === 1 ? HEX.white : HEX.cyan, 1, { t0: 0.8, t1: 0.12, delay: i * 0.08, self: 1 });
       this.rings.anim(x, z, e.r * 0.8, e.r * 0.8, 0.5, HEX.cyan, 0.3, { style: RS.DISC, self: 1 });
       const pe = this._ev(K.PILLAR);
-      if (pe) { pe.x = x; pe.z = z; pe.r = 1.1; pe.dur = 0.7; pe.color.copy(col(HEX.cyan)); pe.a = 30; pe.b = 0.7 * this._flashK(); }
+      if (pe) { pe.x = x; pe.z = z; pe.r = 1.1; pe.dur = 0.7; pe.color.copy(col(HEX.cyan)); pe.a = 14; pe.b = 0.6 * this._flashK(); }
       const n = Math.round(40 * this.emit);
       for (let i = 0; i < n; i++) { // cube-shaped shards blasting outward
         const a = (i / n) * TAU + rnd() * 0.15, sp = rr(9, 16);
@@ -2281,10 +2340,12 @@ export class FX {
       const late = t > pull ? 1 - (t - pull) / 0.35 : 1;
       this.rings.now(x, z, 1.7 * open * late, 0.14, col(0xff7ad9), 0.85, RS.DASHED, 0, 1, 0, 0, 0, 1, 0);
       this.rings.now(x, z, 1.2 * open * late, 0.1, c, 0.5, RS.DISC, 1, 0, 0, 0, 0, 1, 0);
-      this.shells.now(x, 1.2, z, (0.75 * open + Math.sin(t * 20) * 0.03) * late + 0.05, c, 1, 2, 1, 1);
-      this.shells.now(x, 1.2, z, 1.25 * open * late + 0.05, c, 0.5, 0, 1, 1);
+      // the dark core floats overhead (BH_Y) so the hero standing in the vortex never disappears under it
+      const cy = TUNE.bhCoreY + Math.sin(t * 2.2) * 0.12;
+      this.shells.now(x, cy, z, (0.62 * open + Math.sin(t * 20) * 0.03) * late + 0.05, c, 1, 2, 1, 1);
+      this.shells.now(x, cy, z, 1.1 * open * late + 0.05, c, 0.5, 0, 1, 1);
       e.acc -= fdt;
-      while (e.acc <= 0) { e.acc += 0.018 / Math.max(0.35, this.deco); this._spiralIn(x, z, rr(4, e.r), IP25, 1.2, true, true); }
+      while (e.acc <= 0) { e.acc += 0.018 / Math.max(0.35, this.deco); this._spiralIn(x, z, rr(4, e.r), IP25, cy, true, true); }
       return;
     }
     if (!e.f1) {

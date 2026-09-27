@@ -362,8 +362,9 @@ export class HUD {
     on('coin:appear', (p) => { this.pop(p.x, 1.8, p.z, '🪙 ' + (p.text || tl(ENEMIES.coin.name)), 'coin'); });
     on('storm:shrink', (p) => this.banner('⚠️ ' + (p.text || t('hud.shrink')), 'shrink', 2.0, 'hud.shrinkSub'));
     on('rush:next', (p) => this.banner(p.text || tl(BOSS.name), 'boss', 2.0));
-    on('cine:start', () => this.root.classList.add('cine'));
-    on('cine:end', () => this.root.classList.remove('cine'));
+    // camera.js flags short in-play shots (大招 / boss phase) as overlay: the HUD stays, no letterbox
+    on('cine:start', (p) => { if (!p.overlay) this.root.classList.add('cine'); });
+    on('cine:end', (p) => { if (!p.overlay) this.root.classList.remove('cine'); });
     on('settings:change', (p) => { if (p.key === 'reduceFlash') this.root.classList.toggle('calm', !!p.value); });
   }
 
@@ -402,7 +403,9 @@ export class HUD {
   _onGo() {
     const run = this.G.run;
     const ne = run?.stageDef?.newEnemy;
-    if (ne && ENEMIES[ne] && !this._neShown) { this._neShown = true; this._showNewEnemy(ne); }
+    // once per session per enemy: a retry gets the child back into the action without the 2.6 s card
+    const seen = (this._neSeen ||= new Set());
+    if (ne && ENEMIES[ne] && !this._neShown && !seen.has(ne)) { this._neShown = true; seen.add(ne); this._showNewEnemy(ne); }
   }
   _onRunEnd() {
     this.root.classList.add('ended');
@@ -416,7 +419,7 @@ export class HUD {
   }
   _onWave(p) {
     this._wave = { n: (p.index ?? 0) + 1, total: p.total || this._wave.total };
-    if (p.isBoss) return;
+    if (p.isBoss || p.mode === 'storm' || this._mode === 'storm') return;     // storm steps get their own ⚠️ 缩圈啦! banner
     const n = this._wave.n, tot = this._wave.total;
     if (this._mode === 'endless') { this.banner(t('hud.wave', { n }), 'wave', 1.4, t('hud.waveSub', { n })); return; }
     if (n <= 1) return;
@@ -648,10 +651,12 @@ export class HUD {
     if (storm) { const medals = MODES.storm.medals; total = medals.find((m) => m > cur) ?? medals[medals.length - 1]; }
     const key = cur + '/' + total;
     if (v.obj !== key) {
+      if ((total > 0) !== v.objBar) { e.obj.classList.toggle('count', !(total > 0)); v.objBar = total > 0; }   // Endless: no target → a plain counter
       const r = total > 0 ? clamp(cur / total, 0, 1) : 0;
       e.objBar.style.transform = `scaleX(${r.toFixed(3)})`;
       e.objNum.textContent = total > 0 ? `${cur}/${total}` : `${cur}`;
-      if (v.obj != null && cur > (v.objCur ?? 0)) e.objNum.animate?.([{ transform: 'translateY(-50%) scale(1.3)' }, { transform: 'translateY(-50%) scale(1)' }], { duration: 220 });
+      const ty = total > 0 ? 'translateY(-50%) ' : '';
+      if (v.obj != null && cur > (v.objCur ?? 0)) e.objNum.animate?.([{ transform: ty + 'scale(1.3)' }, { transform: ty + 'scale(1)' }], { duration: 220 });
       v.obj = key; v.objCur = cur;
     }
     const fever = !!run.fever;

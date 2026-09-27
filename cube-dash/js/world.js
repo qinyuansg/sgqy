@@ -30,11 +30,12 @@ const TUNE = {
   floorPad: 1.25,             // floor disc extends this far past arenaRadius (under the rim)
   heroRing: { r: 0.78, w: 0.06, color: 0x40f0ff },
   iceFriction: 0.25,
-  clouds: { high: 290, low: 150 },
-  islands: { high: 64, low: 34 },
+  clouds: { high: 360, low: 170 },   // (the old 290 cap overflowed in W1/W3: the horizon cumulus + intro wisps were silently dropped)
+  islands: { high: 80, low: 48 },
   sparkles: { high: 180, low: 70 },
   tileBack: 0.4,              // glitch tile re-assembly time
   bumperCooldown: 0.12,
+  bumperFresh: 0.3,           // s without overlap before a contact counts as a new hit (no resting-contact spam)
   cacheSets: 3,               // per-world set pieces kept alive (LRU)
   domeRadius: 1500,
   planetDist: 720,
@@ -43,7 +44,7 @@ const TUNE = {
 // Per-world art direction that isn't gameplay data (palette itself lives in DATA.worlds).
 const LOOK = {
   cloud: {
-    below: 0x86bfff, fog: 0xcfe4ff, fogNear: 110, fogFar: 700,
+    below: 0x86bfff, fog: 0xcfe4ff, fogNear: 110, fogFar: 700, skyMid: 0x8cc8ff, skyGain: 0.7,
     sunSky: [-0.42, 0.34, -0.84], sunSkyCol: 0xfff3c4,
     stars: 0, nebula: 0, nebA: 0xffc6e8, nebB: 0xbfe0ff, rainbow: 1,
     planet: { dir: [0.4, 0.2, -0.9], size: 62, c1: 0xffb7d5, c2: 0xfff0f6, atmo: 0xffffff, ring: 0xfff0c2, ringA: 0.85, tilt: [0.42, 0.25], mode: 0 },
@@ -180,15 +181,18 @@ void main(){
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 }`;
 const SKY_FS = /* glsl */`
-uniform vec3 uTop, uBottom, uBelow, uSkySun, uSkySunCol, uNebA, uNebB, uRbDir;
-uniform float uStars, uNebula, uRainbow, uTime, uGain;
+uniform vec3 uTop, uBottom, uBelow, uMid, uSkySun, uSkySunCol, uNebA, uNebB, uRbDir;
+uniform float uStars, uNebula, uRainbow, uTime, uGain, uMidK;
 varying vec3 vDir;
 ${GLSL_COMMON}
 float fbm(vec3 p){ float a = 0.5, s = 0.0; for (int i = 0; i < OCT; i++){ s += a * vnoise3(p); p = p * 2.03 + 1.7; a *= 0.5; } return s; }
 void main(){
   vec3 d = normalize(vDir);
   float h = d.y;
-  vec3 col = mix(uBottom, uTop, smoothstep(0.0, 1.0, pow(clamp(h, 0.0, 1.0), 0.42)));
+  float th = pow(clamp(h, 0.0, 1.0), 0.42);
+  vec3 col = mix(uBottom, uTop, smoothstep(0.0, 1.0, th));
+  // optional 3-stop sky (poster W1): pale band only near the horizon, clear candy blue above
+  if (uMidK > 0.0) col = mix(col, th < 0.35 ? mix(uBottom, uMid, smoothstep(0.0, 0.35, th)) : mix(uMid, uTop, smoothstep(0.35, 1.0, th)), uMidK);
   col += uBottom * 0.10 * exp(-abs(h) * 16.0);                 // horizon haze
   col = mix(col, uBelow, smoothstep(0.03, -0.4, h));           // below the island: cloud-sea base / void
   col *= uGain;                                                 // unlit dome: pre-compensate the ACES shoulder
@@ -968,8 +972,8 @@ export class World {
     const bus = G.bus;
     this._offs = [
       bus.on('fever', () => this.setFever(true)),
-      bus.on('run:end', () => { this.setFever(false); this._resetGimmicks(); }),
-      bus.on('run:start', () => { this.setFever(false); this._resetGimmicks(); }),
+      bus.on('run:end', () => { this.setFever(false); this._resetGimmicks(); this._progress = 0; }),
+      bus.on('run:start', () => { this.setFever(false); this._resetGimmicks(); this._progress = 0; }),
       bus.on('wave:start', (p) => this.pulseRim(p?.isBoss ? 0xff8af2 : 0xffffff, p?.isBoss ? 1 : 0.6)),
       bus.on('boss:intro', () => this.pulseRim(0xff8af2, 1)),
       bus.on('boss:phase', () => { this.pulseRim(0xff8af2, 1); this.rimJump(0.35); }),
@@ -977,8 +981,13 @@ export class World {
       bus.on('boss:defeat', () => { this.pulseRim(0xffe07a, 1); this.rimJump(0.4); }),
       bus.on('enemy:bonk', (p) => {
         if (!p) return;
+        if (p.bumper) {                                   // knocked cube into a pillar → always a big boing
+          const b = this._bumpers.includes(p.bumperRef) ? p.bumperRef : this._nearestBumper(p.x || 0, p.z || 0);
+          if (b) { if (b.cool <= 0) this.bumpFx(b, 1.15); b.touchT = this._t; }   // (bumperHit may have fired it this frame)
+          return;
+        }
         const r = Math.hypot(p.x || 0, p.z || 0);
-        if (r > this.arenaRadius - 1.8) this.rimRipple(Math.atan2(p.z, p.x), 0.22);
+        if (r > this.arenaRadius - 1.8) this.rimRipple(Math.atan2(p.z || 0, p.x || 0), 0.22);
       }),
       bus.on('post:quality', (p) => this._applyDetail(p?.tier ?? 2)),
       bus.on('progress', (p) => { if (p && p.total > 0) this._progress = clamp(p.freed / p.total, 0, 1); }),
@@ -999,7 +1008,7 @@ export class World {
   _buildSky() {
     const geo = new THREE.SphereGeometry(TUNE.domeRadius, 48, 24);
     this.skyU = {
-      uTop: { value: col(0x6fb6ff) }, uBottom: { value: col(0xfbe7ff) }, uBelow: { value: col(0xdcebff) },
+      uTop: { value: col(0x6fb6ff) }, uBottom: { value: col(0xfbe7ff) }, uBelow: { value: col(0xdcebff) }, uMid: { value: col(0xa6d6ff) }, uMidK: { value: 0 },
       uSkySun: { value: new THREE.Vector3(-0.4, 0.3, -0.85).normalize() }, uSkySunCol: { value: col(0xfff3c4) },
       uNebA: { value: col(0xff7ad9) }, uNebB: { value: col(0x7c6cff) },
       uRbDir: { value: new THREE.Vector3(0.05, -0.08, -1).normalize() },
@@ -1141,7 +1150,7 @@ export class World {
 
   _buildClouds() {
     const cap = this.low ? TUNE.clouds.low : TUNE.clouds.high;
-    const geo = this.low ? new THREE.IcosahedronGeometry(1, 2) : new THREE.SphereGeometry(1, 20, 14);
+    const geo = this.low ? new THREE.IcosahedronGeometry(1, 2) : new THREE.SphereGeometry(1, 16, 12);
     this.cloudDrift = new THREE.InstancedBufferAttribute(new Float32Array(cap), 1);
     geo.setAttribute('aDrift', this.cloudDrift);
     this.cloudU = {
@@ -1187,26 +1196,26 @@ export class World {
       const r = R + 3.2 + rng() * 4.5;
       cluster(Math.cos(a) * r, -3.6 - rng() * 3.5, Math.sin(a) * r, (1.8 + rng() * 1.6) * SZ, 4, 0);
     }
-    // 2) the drifting cloud sea below
+    // 2) towering cumulus on the horizon (hub / intro backdrop)
+    const towers = Math.round((this.low ? 8 : 14) * Math.max(0.5, K));
+    for (let k = 0; k < towers; k++) {
+      const a = -Math.PI / 2 + (rng() - 0.5) * Math.PI * 1.6;
+      const r = 240 + rng() * 120;
+      const size = 26 + rng() * 22;
+      cluster(Math.cos(a) * r, -16 + rng() * 14, Math.sin(a) * r, size, 3, 0);   // tops rise just above the rim line in the hub view
+    }
+    // 3) the drifting cloud sea below
     const sea = Math.round((this.low ? 26 : 52) * K);
     for (let k = 0; k < sea; k++) {
       const a = rng() * TAU, r = R + 10 + Math.pow(rng(), 0.8) * 220;
       const size = (3.5 + r * 0.045 + rng() * 4) * SZ;
       cluster(Math.cos(a) * r, -16 - rng() * 12 - r * 0.02, Math.sin(a) * r, size, 4 + ((rng() * 2) | 0), 0.5 + rng() * 0.6);
     }
-    // 3) high wisps above the arena: never seen by the gameplay / hub cameras, the intro dives through them
+    // 4) high wisps above the arena: never seen by the gameplay / hub cameras, the intro dives through them
     const wisps = Math.round((this.low ? 8 : 14) * Math.max(0.5, K));
     for (let k = 0; k < wisps; k++) {
       const a = rng() * TAU, r = 8 + rng() * 42;
       cluster(Math.cos(a) * r, 44 + rng() * 16, Math.sin(a) * r + 30, (2.4 + rng() * 2.5) * SZ, 4, 0.3);
-    }
-    // 4) towering cumulus on the horizon (hub / intro backdrop)
-    const towers = Math.round((this.low ? 8 : 14) * Math.max(0.5, K));
-    for (let k = 0; k < towers; k++) {
-      const a = -Math.PI / 2 + (rng() - 0.5) * Math.PI * 1.6;
-      const r = 240 + rng() * 120;
-      const size = 26 + rng() * 22;
-      cluster(Math.cos(a) * r, -30 + rng() * 22, Math.sin(a) * r, size, 3, 0);
     }
     this.clouds.count = i;
     this.clouds.instanceMatrix.needsUpdate = true;
@@ -1236,14 +1245,15 @@ export class World {
     let i = 0;
     this.islandTops.length = 0;
     const put = (x, y, z, sx, sy, sz, ry, tint = 1) => {
-      if (i >= cap) return;
+      if (i >= cap) return false;
       setMat(this.islands, i, x, y, z, sx, sy, sz, 0, ry, 0);
       this.islands.instanceColor.setXYZ(i, tint, tint, tint);
       i++;
+      return true;
     };
     const island = (x, y, z, s, high) => {
       const ry = rng() * TAU;
-      put(x, y, z, s, s * 0.55, s * (0.8 + rng() * 0.3), ry, 0.94 + rng() * 0.08);
+      if (!put(x, y, z, s, s * 0.55, s * (0.8 + rng() * 0.3), ry, 0.94 + rng() * 0.08)) return;   // (never a house on a missing island)
       if (rng() < 0.7) put(x + (rng() - 0.5) * s * 0.6, y - s * 0.45, z + (rng() - 0.5) * s * 0.5, s * 0.55, s * 0.45, s * 0.5, ry + 0.4, 0.9);
       if (rng() < 0.5) put(x + (rng() - 0.5) * s * 0.4, y + s * 0.4, z + (rng() - 0.5) * s * 0.3, s * 0.38, s * 0.3, s * 0.38, ry + 0.8, 1.0);
       this.islandTops.push({ x, y: y + s * 0.275, z, s, high });
@@ -1382,8 +1392,16 @@ export class World {
     if (changed || this._set?.R !== R) this._activateSet(W);
     this._setupGimmicks();
     this._resetGimmicks();
-    this.setFever(false);
-    this._pulse = 0;
+    const live = this.G.run && this.G.run.state !== 'ended';
+    if (live && changed) {
+      // Endless theme cycling swaps the world mid-run: keep FEVER, and sell the jump with a
+      // rim wave + soft edge flash instead of a hard pop
+      this.pulseRim(0xffffff, 1); this.rimJump(0.35);
+      this.G.post?.pulse?.({ edge: 0.35, edgeColor: this.theme.palette.rimGlow, duration: 0.6 });
+    } else {
+      this.setFever(false);
+      this._pulse = 0;
+    }
     this.G.post?.setGrade?.(this.look.grade);
     return this;
   }
@@ -1430,6 +1448,7 @@ export class World {
     S.uSkySun.value.set(...L.sunSky).normalize(); S.uSkySunCol.value.set(L.sunSkyCol);
     S.uNebA.value.set(L.nebA); S.uNebB.value.set(L.nebB);
     S.uGain.value = L.skyGain ?? 0.62;
+    S.uMidK.value = L.skyMid !== undefined ? 1 : 0; if (L.skyMid !== undefined) S.uMid.value.set(L.skyMid);
     S.uStars.value = L.stars; S.uNebula.value = this.low ? L.nebula * 0.8 : L.nebula; S.uRainbow.value = L.rainbow;
     // fog
     if (!this.scene.fog || !this.scene.fog.isFog) this.scene.fog = new THREE.Fog(L.fog, L.fogNear, L.fogFar);
@@ -1546,13 +1565,12 @@ export class World {
   }
 
   _resetGimmicks() {
-    this._progress = 0;
     for (const t of this._tiles) { t.state = 'idle'; t.t = 0; }
     this._tileTimer = (this._tileCfg?.every ?? 7) * 0.6;
     this._lastTile = -1;
     this._writeTiles();
     this.setPlayRadius(this.arenaRadius, true);
-    for (const b of this._bumpers) { b.sy = 1; b.v = 0; b.flash = 0; b.cool = 0; }
+    for (const b of this._bumpers) { b.sy = 1; b.v = 0; b.flash = 0; b.cool = 0; b.touchT = -9; }
   }
 
   _writeTiles() {
@@ -1647,11 +1665,22 @@ export class World {
       if (d2 < rr * rr) {
         const d = Math.sqrt(d2) || 1;
         b.hit.nx = d2 > 1e-8 ? dx / d : 1; b.hit.nz = d2 > 1e-8 ? dz / d : 0;
-        if (b.cool <= 0) this.bumpFx(b);
+        // auto bounce only on a FRESH contact: a cube leaning on the pillar (re-overlapping every
+        // frame while it steers into it) must not re-fire the boing + 'world:bumper' sfx at 8 Hz.
+        // Real knock-bonks also animate via the 'enemy:bonk' {bumper} listener.
+        const fresh = this._t - b.touchT > TUNE.bumperFresh;
+        b.touchT = this._t;
+        if (fresh && b.cool <= 0) this.bumpFx(b);
         return b.hit;
       }
     }
     return null;
+  }
+
+  _nearestBumper(x, z) {
+    let best = null, bd = 4;       // within 2 u of a pillar edge
+    for (const b of this._bumpers) { const d = Math.hypot(x - b.x, z - b.z) - b.r; if (d < bd) { bd = d; best = b; } }
+    return best;
   }
 
   /** bounce + flash animation for a bumper (auto-called by bumperHit, with a short cooldown) */
@@ -1749,10 +1778,14 @@ export class World {
       this._rimActive = any;
     }
 
-    // storm wall
-    if (Math.abs(this.playRadius - this._playTarget) > 1e-3) {
-      this.playRadius = damp(this.playRadius, this._playTarget, 2.2, dt > 0 ? dt : rdt * 0.5);
-      if (Math.abs(this.playRadius - this._playTarget) < 0.01) this.playRadius = this._playTarget;
+    // storm wall — while the gameplay boundary is itself animating (waves.js smoothsteps
+    // run.arenaRadius over 3 s) the wall tracks it exactly, so what a kid sees = what hurts
+    let want = this._playTarget, rate = 2.2;
+    const runR = G.run?.arenaRadius;
+    if (want < this.arenaRadius - 0.01 && Number.isFinite(runR) && runR > want + 0.01) { want = Math.min(runR, this.arenaRadius); rate = 14; }
+    if (Math.abs(this.playRadius - want) > 1e-3) {
+      this.playRadius = damp(this.playRadius, want, rate, dt > 0 ? dt : rdt * 0.5);
+      if (Math.abs(this.playRadius - want) < 0.01) this.playRadius = want;
     }
     this.floorU.uPlayR.value = this.playRadius;
     const stormOn = this.playRadius < this.arenaRadius - 0.02;
@@ -1871,7 +1904,7 @@ const SET_BUILDERS = {
     const beamU = { uGlowCol: { value: col(0xfff3b0) }, uTime: w.U.uTime, uGlowA: { value: 0.28 } };
     const beam = new THREE.Mesh(beamGeo, new THREE.ShaderMaterial({
       uniforms: beamU, vertexShader: UV_VS,
-      fragmentShader: `uniform vec3 uGlowCol; uniform float uGlowA; varying vec2 vUv; void main(){ float a = (1.0 - vUv.y) * uGlowA * (0.6 + 0.4 * sin(vUv.x * 6.2831)); gl_FragColor = vec4(uGlowCol * a, a); }`,
+      fragmentShader: `uniform vec3 uGlowCol; uniform float uGlowA; varying vec2 vUv; void main(){ float a = pow(vUv.y, 2.2) * uGlowA * (0.75 + 0.25 * sin(vUv.x * 6.2831)); gl_FragColor = vec4(uGlowCol * a, a); }`,
       transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
     }));
     beam.position.set(0, 8.3, 0);
@@ -2237,7 +2270,7 @@ function buildBumpers(w, group, defs, accent, rimCol) {
   const rmat = new THREE.MeshBasicMaterial({ color: accent.clone().multiplyScalar(1.6), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
   const rings = defs.map(() => { const m = new THREE.Mesh(rgeo, rmat.clone()); m.position.y = 0.03; m.visible = false; group.add(m); return m; });
   const list = defs.map((d) => {
-    const b = { x: d.x, z: d.z, r: d.r, sy: 1, v: 0, flash: 0, cool: 0, ring: 1.5 };
+    const b = { x: d.x, z: d.z, r: d.r, sy: 1, v: 0, flash: 0, cool: 0, ring: 1.5, touchT: -9 };
     b.hit = { nx: 0, nz: 0, bumper: b };
     return b;
   });

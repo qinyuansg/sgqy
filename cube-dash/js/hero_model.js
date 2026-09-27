@@ -35,7 +35,8 @@ const TUNE = {
   land: [1.28, 0.7, 1.28],
   dashKick: [0.72, 0.8, 1.5],
   dashEnd: [1.14, 0.86, 0.9],
-  ring: { radius: 1.12, width: 0.11, color: 0x40f0ff, alpha: 0.5, gold: 0xffd23f },
+  // §7.20 "this is you" ring: cyan band + deep-blue cel edge (cyan alone vanished on the light sand floor)
+  ring: { radius: 1.15, width: 0.15, color: 0x40f0ff, edge: 0x1e6fe0, alpha: 0.85, gold: 0xffd23f },
   iframeHz: 6, bubbleHz: 8,
   outline: 0x2b1d3f,
   gold: 0xffd23f,
@@ -236,6 +237,7 @@ void main() {
 }`;
 const RING_FRAG = /* glsl */`
 uniform vec3 uColor;
+uniform vec3 uEdge;
 uniform vec3 uGold;
 uniform float uAlpha;
 uniform float uGlow;
@@ -245,19 +247,29 @@ uniform float uW;
 varying vec2 vP;
 void main() {
   float d = length(vP);
-  float band = smoothstep(uR - uW, uR - uW * 0.35, d) * (1.0 - smoothstep(uR - 0.015, uR + 0.02, d));
+  float aa = fwidth(d) * 1.2 + 0.004;
+  float inB = uR - uW;
+  // cyan band + deep-blue outer cel edge: reads on light sand AND on the pale holo grid
+  float band = smoothstep(inB - aa, inB + aa, d) * (1.0 - smoothstep(uR - uW * 0.32 - aa, uR - uW * 0.32 + aa, d));
+  float edge = smoothstep(uR - uW * 0.32 - aa, uR - uW * 0.32 + aa, d) * (1.0 - smoothstep(uR - aa, uR + aa, d));
   float ang = atan(vP.y, vP.x);
   // four brighter arc "ticks" that slowly orbit (sci-fi HUD feel)
   float tick = smoothstep(0.62, 0.72, abs(fract(ang / 6.2831853 * 4.0 + uTime * 0.06) - 0.5) * 2.0);
-  float inner = (1.0 - smoothstep(0.0, uR - uW, d)) * 0.06 + smoothstep(uR - uW * 3.0, uR - uW, d) * (1.0 - step(uR - uW, d)) * 0.12;
-  float a = band * (0.55 + 0.45 * tick) + inner;
+  float inner = (1.0 - smoothstep(0.0, inB, d)) * 0.07 + smoothstep(inB - uW * 2.0, inB, d) * (1.0 - step(inB, d)) * 0.14;
   // nova ready: golden pulse rolling outward
   float ph = fract(uTime * 1.1);
   float pr = uR + 0.08 + ph * 0.55;
   float gp = exp(-pow((d - pr) * 12.0, 2.0)) * (1.0 - ph) * uGlow * 1.4;
-  vec3 col = mix(uColor, uGold, uGlow * 0.75);
-  float A = a * uAlpha * (1.0 + uGlow * 0.4) + gp * 0.8;
-  gl_FragColor = vec4(col * (1.0 + band * 0.25), clamp(A, 0.0, 1.0));
+  vec3 bandCol = mix(uColor, uGold, uGlow * 0.75) * (1.05 + 0.3 * tick);
+  vec3 edgeCol = mix(uEdge, uGold * 0.55, uGlow * 0.6);
+  float aBand = band * (0.72 + 0.28 * tick);
+  float aEdge = edge * 0.9;
+  float aIn = inner;
+  float A = (aBand + aEdge + aIn) * uAlpha;
+  vec3 col = (bandCol * aBand + edgeCol * aEdge + bandCol * aIn) / max(aBand + aEdge + aIn, 1e-4);
+  A = A * (1.0 + uGlow * 0.25) + gp * 0.8;
+  col = mix(col, mix(uColor, uGold, 0.85), clamp(gp, 0.0, 1.0));
+  gl_FragColor = vec4(col, clamp(A, 0.0, 1.0));
   #include <colorspace_fragment>
 }`;
 
@@ -897,6 +909,7 @@ class HeroModel {
     this._own.push(this.limbMat);
     this.limbs = new THREE.InstancedMesh(G_SPHERE(), this.limbMat, 4);
     this.limbs.frustumCulled = false;
+    this._own.push(this.limbs);            // InstancedMesh.dispose() frees its instanceMatrix GL buffer
     this.pivot.add(this.limbs);
     this.hand = [new THREE.Vector3(), new THREE.Vector3()];
     this.handT = [new THREE.Vector3(), new THREE.Vector3()];
@@ -910,6 +923,7 @@ class HeroModel {
     this._own.push(this.sweatMat);
     this.sweat = new THREE.InstancedMesh(geo('drop', dropGeometry), this.sweatMat, 3);
     this.sweat.frustumCulled = false;
+    this._own.push(this.sweat);
     this.sweat.visible = false;
     this.pivot.add(this.sweat);
 
@@ -929,10 +943,12 @@ class HeroModel {
     this.ringMat = new THREE.ShaderMaterial({
       uniforms: {
         uColor: { value: new THREE.Color(TUNE.ring.color) }, uGold: { value: new THREE.Color(TUNE.ring.gold) },
+        uEdge: { value: new THREE.Color(TUNE.ring.edge) },
         uAlpha: { value: TUNE.ring.alpha }, uGlow: { value: 0 }, uTime: CLAY_TIME,
         uR: { value: TUNE.ring.radius }, uW: { value: TUNE.ring.width },
       },
       vertexShader: RING_VERT, fragmentShader: RING_FRAG,
+      extensions: { derivatives: true },
       transparent: true, depthWrite: false,
       polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
     });
@@ -1218,7 +1234,8 @@ class HeroModel {
     // ---- flash / i-frame pulse / glow
     if (this.flashT > 0) this.flashT = Math.max(0, this.flashT - dt);
     let fl = this.flashT > 0 ? Math.pow(this.flashT / this.flashDur, 0.6) : 0;
-    if (this.blinkOn) fl = Math.max(fl, (0.5 + 0.5 * Math.sin(t * TAU * TUNE.iframeHz)) * 0.32);
+    // soft 6 Hz pulse (never a grey swap); capped so the face + blue body stay readable under bloom
+    if (this.blinkOn) fl = Math.max(fl, (0.5 + 0.5 * Math.sin(t * TAU * TUNE.iframeHz)) * 0.24);
     const fx = this.fxU.value;
     fx.x = fl;
     fx.y = this.glowAmt * 0.12 * (0.7 + 0.3 * Math.sin(t * TAU * 2));
@@ -1280,7 +1297,7 @@ class HeroModel {
 
     // ---- bubble shield
     this.bubble.visible = this.bubbleAmt > 0.02;
-    this.bubbleMat.uniforms.uAlpha.value = this.bubbleAmt * (0.3 + 0.12 * Math.sin(t * TAU * TUNE.bubbleHz));
+    this.bubbleMat.uniforms.uAlpha.value = this.bubbleAmt * (0.27 + 0.08 * Math.sin(t * TAU * TUNE.bubbleHz));
     this.bubble.scale.setScalar(1 + Math.sin(t * TAU * 1.5) * 0.02);
 
     // ---- ground ring stays on the floor even when the group is lifted

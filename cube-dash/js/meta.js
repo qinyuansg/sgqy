@@ -28,7 +28,7 @@
 //
 // Other events emitted: meta:reward {coins, gems:0, tickets, items, source} ·
 //   meta:rankup {rank, before, tierUp, placement (first rank reveal → full ceremony)} ·
-//   meta:unlock {kind, id} (world: id = world index) ·
+//   meta:unlock {kind: hero|skin|hat|trail|card|world|mode, id, source?} (world: id = world index) ·
 //   meta:feature {id} (once, when a hidden system unlocks — also in featureQueue) ·
 //   meta:claim {count} · meta:change {} (anything the lobby shows changed).
 //
@@ -1302,8 +1302,7 @@ export class Meta {
       newly.push(id);
       if (!silent && !QUIET_FEATURES.has(id)) {
         this.featureQueue.push(id);
-        this._emit('meta:feature', { id });
-        this._emit('meta:unlock', { kind: 'feature', id });
+        this._emit('meta:feature', { id });      // (no meta:unlock too: audio plays an unlock sting per event)
       }
       if (id === 'missions' && !silent) this._ensureMissions();
       if (id === 'modes') {

@@ -107,6 +107,10 @@
   background: repeating-linear-gradient(-45deg, rgba(255, 255, 255, .8) 0 7px, transparent 7px 15px); }
 #hud .ho-bar b::before { content: ''; position: absolute; left: 6px; right: 6px; top: 3px; height: 5px; border-radius: 3px; background: rgba(255, 255, 255, .65); }
 #hud .ho-num { position: absolute; right: 9px; top: 50%; transform: translateY(-50%); --w: 2px; --x: transparent; color: #fff; font-family: var(--num-font); font-weight: 900; font-size: 15px; letter-spacing: .5px; }
+#hud .hud-obj.count { min-width: 0; width: auto; }
+#hud .hud-obj.count .ho-bar { flex: 0 0 auto; min-width: 44px; background: none; box-shadow: none; overflow: visible; }
+#hud .hud-obj.count .ho-bar b { display: none; }
+#hud .hud-obj.count .ho-num { position: static; display: block; transform: none; text-align: left; font-size: 20px; color: var(--ink); --o: transparent; --x: transparent; text-shadow: none; }
 #hud .hud-obj.fever .ho-bar b { background: linear-gradient(90deg, #ff6b9a, #ffb13b, #fff05a, #5affa0, #5ac8ff, #b05aff); }
 #hud .hud-obj.fever { box-shadow: 0 4px 0 rgba(255, 110, 180, .35), 0 0 22px rgba(255, 170, 60, .55); }
 #hud .ho-crown {
@@ -175,6 +179,7 @@
   background: linear-gradient(180deg, #fff, #e3eeff); border: 3px solid #fff;
   box-shadow: 0 4px 0 rgba(58, 110, 220, .32), 0 8px 18px rgba(26, 60, 140, .25); transition: transform .12s var(--spring);
 }
+#hud.ended .hud-pause, #hud.cine .hud-pause { pointer-events: none; }      /* faded out → not clickable either */
 #hud .hud-pause:hover { transform: scale(1.07); }
 #hud .hud-pause:active { transform: scale(.92); }
 #hud .ic-pause { width: 24px; height: 24px; fill: var(--blue); display: block; margin: auto; }
@@ -481,6 +486,8 @@
 /* short landscape phones */
 @media (max-height: 460px) {
   #hud .hud-vitals, #hud .hud-top, #hud .hud-pause, #hud .hud-endless { zoom: .8; }
+  /* zoom scales the offset too: keep the score clear of input.js's touch pause button (right 14 + 48 px) */
+  #hud[data-device="touch"] .hud-endless { right: calc(96px + env(safe-area-inset-right)); }
   #hud .bn-main { font-size: 40px; }
   #hud .hud-count { font-size: 100px; }
 }
