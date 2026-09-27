@@ -1,3 +1,5 @@
+> 🎮 **New: 方块大逃跑 CUBE DASH** — a cinematic sci-fi cube arena game for kids. **Play: https://qinyuansg.github.io/sgqy/cube-dash/** · source & docs in [`cube-dash/`](cube-dash/README.md)
+
 # 🏠 HomeHero — Daily Tasks for House Helpers
 
 A simple, warm, mobile-first web app that helps a house helper know **what to do today**, tick tasks as done, and explain (in one tap) when something cannot be done — while giving the household full transparency on progress.

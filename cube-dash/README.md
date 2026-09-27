@@ -8,6 +8,10 @@ A cinematic, candy-coloured sci-fi arena game for kids (designed for ~10-year-ol
 
 ## Play
 
+**▶ Play online (no install): https://qinyuansg.github.io/sgqy/cube-dash/** — works on desktop (keyboard or gamepad) and phones/tablets (touch). Share the link with friends.
+
+Run it locally:
+
 ```bash
 cd cube-dash
 python3 -m http.server 8080        # or: npx serve .
