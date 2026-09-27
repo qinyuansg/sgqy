@@ -644,7 +644,7 @@ export class AudioSys {
     this._voices = [];
     this._rl = new Map();                // name → {frame, n, last}
     this._frameNo = 0;
-    this._ladder = { idx: -1, t: -99 };
+    this._ladder = { idx: -1, n: -1, t: -99 };
     this._crys = { idx: -1, t: -99 };
     this._near = { idx: 0, t: -99 };
     this._pm = 1;                          // pitch multiplier of the recipe being built
@@ -976,7 +976,7 @@ export class AudioSys {
     const stageDef = run?.stageDef || DATA.worlds[wi]?.stages?.[p.stageId];
     const isBoss = !!(run?.isBossStage || stageDef?.boss || stageDef?.kind === 'boss');
     this._stingerFor = null; this._prevRunState = null; this._bossPhase = 1;
-    this._ladder.idx = -1; this._crys.idx = -1; this._near.idx = 0;
+    this._ladder.idx = -1; this._ladder.n = -1; this._ladder.t = -99; this._crys.idx = -1; this._near.idx = 0;
     this.flags.novaReady = false; this.flags.fever = false;
     this._endlessT = 0;
     let track = 'w' + (wi + 1);
@@ -1104,7 +1104,7 @@ export class AudioSys {
       const t1 = t + 0.32;
       this._snareRoll(t1 - 0.3, 0.28, out, 0.5);
       const seq = [[3, 0, 0.11], [3, 1, 0.11], [3, 2, 0.11], [5, 3, 0.55], [4, 7, 0.11], [5, 8, 0.11], [7, 9, 1.3]];
-      for (const [d, s, len] of seq) this._leadNote('square', deg(d), t1 + s * e, len, out, 1, null);
+      for (const [d, s, len] of seq) this._leadNote('square', deg(d), t1 + s * e, len, out, 0.75, null);
       for (const [d, s, len] of seq) this._note('tri', deg(d) - 12, t1 + s * e, len, out, 0.5, false);
       const chordAt = (s, rootSemi, len) => {
         const b = 48 + ((pc + rootSemi) % 12);
@@ -1547,6 +1547,9 @@ export class AudioSys {
     o.connect(this._env(t, 0.002, 0.85 * vel, 0, 0.35, dest));
     const c = this._osc('square', 1800, t, t + 0.012);
     c.connect(this._env(t, 0.0005, 0.08 * vel, 0, 0.005, dest));
+    const b = this._osc('triangle', 330, t, t + 0.07);                     // beater "tok": the kick's pulse on phone speakers
+    b.frequency.exponentialRampToValueAtTime(110, t + 0.04);
+    b.connect(this._env(t, 0.001, 0.13 * vel, 0, 0.035, dest));
   }
   _snare(t, dest, vel = 1) {
     this._nz(t, 0.14, 0.32 * vel, dest, 'bandpass', 1800, null, 0.8, 0.001);
@@ -1630,7 +1633,7 @@ function boom(A, t, out, f = 50, dur = 0.8, peak = 0.6) {
   A._nz(t, dur * 0.6, peak * 0.55, out, 'lowpass', 1400, 200, 0.7, 0.003);
 }
 function crack(A, t, out, peak = 0.3) {
-  A._nz(t, 0.07, peak, out, 'highpass', 1500, null, 0.7, 0.001);
+  A._nz(t, 0.07, peak, out, 'bandpass', 3200, null, 0.8, 0.001);          // band-limited: repeated bolts don't fizz
   const z = A._osc('square', 2200, t, t + 0.1); z.frequency.exponentialRampToValueAtTime(300, t + 0.08);
   z.connect(A._env(t, 0.001, peak * 0.25, 0, 0.07, out));
 }
@@ -1690,7 +1693,7 @@ const SFX = {
     A._nz(t, 0.6, 0.09, out, 'highpass', 3000, 1500, 0.7, 0.05);
     return 0.75;
   },
-  puff(A, t, o, out) { A._nz(t, 0.18, 0.2, out, 'bandpass', 900, 400, 1, 0.01); A._tone('sine', 220, 150, t, 0.1, 0.09, out); return 0.25; },
+  puff(A, t, o, out) { A._nz(t, 0.18, 0.2, out, 'bandpass', 1100, 450, 1, 0.01); A._tone('triangle', 330, 200, t, 0.1, 0.08, out); return 0.25; },
   ready(A, t, o, out) { A._bell(A._deg(5, 1), t, 0.35, 0.08, out); return 0.4; },
   cue(A, t, o, out) { A._bell(A._deg(9, 1), t, 0.25, 0.045, out); return 0.3; },
   death(A, t, o, out) {
@@ -1738,7 +1741,7 @@ const SFX = {
     return 1.3;
   },
   zap(A, t, o, out) {
-    for (let i = 0; i < 4; i++) A._nz(t + i * 0.045, 0.03, 0.18, out, 'highpass', 3000, null, 0.8, 0.001);
+    for (let i = 0; i < 4; i++) A._nz(t + i * 0.045, 0.03, 0.18, out, 'bandpass', 4500, null, 1.1, 0.001);
     A._tone('square', 2000, 400, t, 0.2, 0.05, out, 0.002);
     return 0.3;
   },
@@ -1747,7 +1750,13 @@ const SFX = {
     A._nz(t + 0.02, 0.4, 0.12, out, 'lowpass', 500, 120, 0.7, 0.01);
     return 0.5;
   },
-  stomp(A, t, o, out) { A._tone('sine', 90, 40, t, 0.25, 0.4, out, 0.003); A._nz(t, 0.2, 0.18, out, 'lowpass', 600, null, 0.7); return 0.35; },
+  stomp(A, t, o, out) {
+    A._tone('sine', 90, 40, t, 0.25, 0.4, out, 0.003);
+    A._tone('triangle', 210, 80, t, 0.12, 0.2, out, 0.002, 0.1);           // mid "thud" that phone speakers can play
+    A._nz(t, 0.2, 0.18, out, 'lowpass', 600, null, 0.7);
+    A._nz(t, 0.05, 0.1, out, 'bandpass', 1100, null, 1, 0.001);
+    return 0.35;
+  },
   implode(A, t, o, out) {
     const f = A._nz(t, 0.35, 0.001, out, 'bandpass', 400, 3000, 2, 0.001);
     const g = A.ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.25, t + 0.32); g.gain.setTargetAtTime(0, t + 0.33, 0.01);
@@ -1804,7 +1813,13 @@ const SFX = {
     A._crash(t + n * 0.055, out, 0.4); A._clap(t + n * 0.055, out, 0.4);
     return n * 0.055 + 0.9;
   },
-  womp(A, t, o, out) { A._tone('triangle', 220, 140, t, 0.25, 0.09, out, 0.01); return 0.3; },
+  womp(A, t, o, out) {                                                     // soft "wah-womp" (a friendly combo-break)
+    const s = A._osc('sawtooth', 330, t, t + 0.4); s.frequency.exponentialRampToValueAtTime(170 * A._pm, t + 0.3);
+    const lp = A._filter('lowpass', 1400, 3); lp.frequency.setValueAtTime(1400, t); lp.frequency.exponentialRampToValueAtTime(350, t + 0.3);
+    s.connect(lp); lp.connect(A._env(t, 0.015, 0.07, 0.1, 0.15, out));
+    A._tone('triangle', 220, 140, t, 0.25, 0.08, out, 0.01);
+    return 0.4;
+  },
   crystal(A, t, o, out) {
     const C = A._crys;
     C.idx = t - C.t < TUNE.crystalLadder.reset ? Math.min(C.idx + 1, TUNE.crystalLadder.max) : 0; C.t = t;
@@ -1855,10 +1870,12 @@ const SFX = {
     const lp = A._filter('lowpass', 1400, 1); bo.connect(lp); lp.connect(A._env(t + 0.01, 0.002, 0.08 * k, 0, 0.12, out));
     return 0.25;
   },
-  knock(A, t, o, out) {
+  knock(A, t, o, out) {                                                    // billiard "boing" (square 300→150)
     const bo = A._osc('square', 300, t, t + 0.18);
     bo.frequency.exponentialRampToValueAtTime(150 * A._pm, t + 0.12);
-    const lp = A._filter('lowpass', 1500, 1); bo.connect(lp); lp.connect(A._env(t, 0.002, 0.09, 0, 0.12, out));
+    const lp = A._filter('lowpass', 1800, 2); bo.connect(lp); lp.connect(A._env(t, 0.002, 0.1, 0, 0.12, out));
+    A._tone('triangle', 600, 290, t, 0.1, 0.1, out, 0.002, 0.08);          // the spring you hear on a phone
+    A._nz(t, 0.025, 0.1, out, 'bandpass', 1500, null, 1.2, 0.001);        // cue-ball contact tick
     A._tone('sine', 110, 60, t, 0.08, 0.25, out, 0.002);
     return 0.2;
   },
@@ -1920,8 +1937,10 @@ const SFX = {
   },
   explode(A, t, o, out) {
     A._nz(t, 0.4, 0.42, out, 'lowpass', 400, null, 0.7, 0.002);
+    A._nz(t, 0.3, 0.2, out, 'bandpass', 1500, 280, 0.9, 0.002);             // mid crunch: the BOOM survives phone speakers
     A._tone('sine', 60, 40, t, 0.5, 0.42, out, 0.002);
     A._tone('sine', 300, 80, t, 0.1, 0.18, out, 0.001);
+    A._tone('triangle', 240, 70, t, 0.2, 0.2, out, 0.001, 0.16);
     for (let i = 0; i < 4; i++) A._nz(t + 0.05 + i * 0.05 + Math.random() * 0.03, 0.03, 0.06, out, 'highpass', 2500, null, 0.7, 0.001);
     return 0.6;
   },
@@ -1949,7 +1968,9 @@ const SFX = {
   slam(A, t, o, out) {
     A._tone('sine', 40, 32, t, 0.6, 0.6, out, 0.003);
     A._nz(t, 0.5, 0.3, out, 'lowpass', 800, 150, 0.7, 0.002);
+    A._nz(t, 0.3, 0.16, out, 'bandpass', 1000, 220, 0.9, 0.002);           // audible on small speakers
     A._tone('sine', 120, 50, t, 0.15, 0.35, out, 0.001);
+    A._tone('triangle', 200, 65, t, 0.22, 0.22, out, 0.001, 0.18);
     return 0.8;
   },
   phase(A, t, o, out) {
@@ -2028,7 +2049,11 @@ const SFX = {
     return 0.8;
   },
   buy(A, t, o, out) { SFX.coin(A, t, o, out); A._nz(t, 0.03, 0.12, out, 'bandpass', 3000, null, 2, 0.001); A._bell(A._deg(8, 0), t + 0.12, 0.4, 0.05, out); return 0.5; },
-  error(A, t, o, out) { A._tone('triangle', 220, null, t, 0.08, 0.13, out, 0.003); A._tone('triangle', 196, null, t + 0.1, 0.1, 0.13, out, 0.003); return 0.25; },
+  error(A, t, o, out) {                                                    // gentle "bonk-bonk" — audible, never harsh
+    A._tone('triangle', 440, 415, t, 0.08, 0.12, out, 0.003); A._tone('triangle', 392, 370, t + 0.1, 0.1, 0.12, out, 0.003);
+    A._tone('square', 220, null, t, 0.06, 0.02, out, 0.003); A._tone('square', 196, null, t + 0.1, 0.08, 0.02, out, 0.003);
+    return 0.25;
+  },
   whoosh(A, t, o, out) { A._nz(t, 0.25, 0.12, out, 'bandpass', 400, 2400, 1.2, 0.04); return 0.3; },
   open(A, t, o, out) { return SFX.whoosh(A, t, o, out); },
   capsule(A, t, o, out) {
@@ -2056,7 +2081,11 @@ const SFX = {
   star(A, t, o, out) { A._tone('sine', 120, 60, t, 0.1, 0.3, out, 0.001); A._bell(A._deg(5, 0), t, 0.5, 0.1, out); A._bell(A._deg(7, 0), t + 0.05, 0.5, 0.07, out); return 0.6; },
   tick(A, t, o, out) { A._tone('sine', 2000, null, t, 0.012, 0.06, out, 0.0005); return 0.03; },
   pop(A, t, o, out) { A._tone('sine', 400, 1200, t, 0.04, 0.15, out, 0.001, 0.035); return 0.06; },
-  notYet(A, t, o, out) { A._tone('triangle', 330, 320, t, 0.07, 0.1, out, 0.003); A._tone('triangle', 294, 280, t + 0.09, 0.09, 0.1, out, 0.003); return 0.2; },
+  notYet(A, t, o, out) {                                                   // soft "uh-uh" a step down, in key
+    A._tone('triangle', A._deg(2, 0), A._deg(2, 0) * 0.98, t, 0.07, 0.1, out, 0.003);
+    A._tone('triangle', A._deg(1, 0), A._deg(1, 0) * 0.97, t + 0.1, 0.1, 0.1, out, 0.003);
+    return 0.25;
+  },
   // ---------- Cube-ese babble ----------
   babble(A, t, o, out) {
     const V = VOICES[o.hero] || VOICES.blu;
