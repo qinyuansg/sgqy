@@ -283,7 +283,7 @@ export class Run {
   /** waves.js mirrors its index here (run.wave = i); the director stays the source of truth */
   set wave(v) { this._waveSet = v; }
   get waveTotal() { return this.waves?.waveTotal ?? (this.stageDef.waves?.length || 0); }
-  get boss() { return this.enemies?.boss || this._bossSet || null; }
+  get boss() { return this.enemies ? this.enemies.boss || null : this._bossSet || null; }
   /** boss.js registers itself (run.boss = this) and clears it on removal */
   set boss(v) { this._bossSet = v || null; }
   get progress() {

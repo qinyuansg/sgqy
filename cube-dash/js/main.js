@@ -102,7 +102,8 @@ function villageTarget() {
 }
 function makeVillager(i) {
   const R = (G.world?.arenaRadius ?? 11) - 1.2;
-  const a = rand() * Math.PI * 2, r = VILLAGE.inner + rand() * (R - VILLAGE.inner);
+  let a = 0, r = 0;
+  do { a = rand() * Math.PI * 2; r = VILLAGE.inner + rand() * (R - VILLAGE.inner); } while (inCameraLane(Math.cos(a) * r, Math.sin(a) * r));
   return {
     x: Math.cos(a) * r, z: Math.sin(a) * r, tx: 0, tz: 0, rotY: rand() * 6,
     s: 0.45 + rand() * 0.3, color: VILLAGE.colors[i % VILLAGE.colors.length],
@@ -110,10 +111,16 @@ function makeVillager(i) {
     blinkT: rand() * 4, cheer: 0, ph: rand() * 6,
   };
 }
+// the hub camera sits in front of the hero (+Z); keep that lane clear so nobody walks into the lens
+const inCameraLane = (x, z) => Math.abs(x) < 2.6 && z > 2.8;
 function pickTarget(v) {
   const R = (G.world?.arenaRadius ?? 11) - 1.2;
-  const a = rand() * Math.PI * 2, r = VILLAGE.inner + rand() * (R - VILLAGE.inner);
-  v.tx = Math.cos(a) * r; v.tz = Math.sin(a) * r;
+  for (let tries = 0; tries < 8; tries++) {
+    const a = rand() * Math.PI * 2, r = VILLAGE.inner + rand() * (R - VILLAGE.inner);
+    v.tx = Math.cos(a) * r; v.tz = Math.sin(a) * r;
+    if (!inCameraLane(v.tx, v.tz)) return;
+  }
+  v.tx = Math.sign(v.tx || 1) * 4; v.tz = -3;
 }
 function hubSyncVillage() {
   const n = villageTarget();
@@ -201,6 +208,8 @@ function hubUpdate(dt) {
         hopY = Math.abs(Math.sin(v.hopT * Math.PI)) * 0.22;
       }
     }
+    // never block the camera: slide out of the lane in front of the lens
+    if (inCameraLane(v.x, v.z)) { v.x += Math.sign(v.x || 1) * 3 * dt; }
     // keep villagers out of the hero's personal space
     const hr = Math.hypot(v.x, v.z);
     if (hr < VILLAGE.inner * 0.8) { v.x *= (VILLAGE.inner * 0.8) / Math.max(hr, 0.01); v.z *= (VILLAGE.inner * 0.8) / Math.max(hr, 0.01); }
