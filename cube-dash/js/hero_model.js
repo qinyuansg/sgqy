@@ -254,7 +254,7 @@ void main() {
   // nova ready: golden pulse rolling outward
   float ph = fract(uTime * 1.1);
   float pr = uR + 0.08 + ph * 0.55;
-  float gp = exp(-pow((d - pr) * 16.0, 2.0)) * (1.0 - ph) * uGlow;
+  float gp = exp(-pow((d - pr) * 12.0, 2.0)) * (1.0 - ph) * uGlow * 1.4;
   vec3 col = mix(uColor, uGold, uGlow * 0.75);
   float A = a * uAlpha * (1.0 + uGlow * 0.4) + gp * 0.8;
   gl_FragColor = vec4(col * (1.0 + band * 0.25), clamp(A, 0.0, 1.0));
@@ -1019,7 +1019,7 @@ class HeroModel {
       vertexShader: `attribute float aSeed; varying float vA; uniform float uTime;
         void main(){ vec4 mv = modelViewMatrix * vec4(position,1.0);
           vA = 0.55 + 0.45 * sin(uTime * 9.0 + aSeed * 40.0);
-          gl_PointSize = (26.0 + aSeed * 14.0) * (10.0 / max(1.0, -mv.z));
+          gl_PointSize = (40.0 + aSeed * 20.0) * (10.0 / max(1.0, -mv.z));
           gl_Position = projectionMatrix * mv; }`,
       fragmentShader: `uniform float uAlpha; uniform vec3 uColor; varying float vA;
         void main(){ vec2 p = gl_PointCoord * 2.0 - 1.0; float r = length(p);
@@ -1260,7 +1260,7 @@ class HeroModel {
     // ---- aura & motes (nova ready)
     const ga = this.glowAmt;
     this.aura.visible = ga > 0.02;
-    this.auraMat.uniforms.uAlpha.value = ga * (0.55 + 0.25 * Math.sin(t * TAU * 2));
+    this.auraMat.uniforms.uAlpha.value = ga * (0.75 + 0.25 * Math.sin(t * TAU * 2));
     this.motes.visible = ga > 0.02;
     if (this.motes.visible) {
       this.moteMat.uniforms.uAlpha.value = ga;

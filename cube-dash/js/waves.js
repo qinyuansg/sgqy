@@ -93,6 +93,9 @@ export class WaveDirector {
     ];
     this._build();
     this._setRun('totalCubes', this.totalCubes);
+    // 🚩 checkpoint retry: run.startWave > 0 → earlier waves count as cleared (run restores freedCount)
+    this.startWave = this.mode === 'stage' ? clamp(run?.startWave | 0, 0, Math.max(0, this.waveTotal - 1)) : 0;
+    for (let i = 0; i < this.startWave; i++) this.ws[i] = { started: true, t0: 0, cleared: true, clearT: -9, lowT: 0, total: 0 };
   }
 
   get em() { return this.run?.enemies || null; }
@@ -170,7 +173,7 @@ export class WaveDirector {
 
   _updateStage(dt) {
     if (!this.started) {
-      if (this.t >= TUNE.firstWaveDelay || this.stageDef?.boss) { this.started = true; this._startWave(0); }
+      if (this.t >= TUNE.firstWaveDelay || this.stageDef?.boss) { this.started = true; this._startWave(this.startWave || 0); }
       return;
     }
     this._processPending();
@@ -192,6 +195,13 @@ export class WaveDirector {
   _finish() {
     if (this.done) return;
     this.done = true;
+    this._call('onStageCleared');
+  }
+  /** end the run from outside: run.finish(win, {scoreMult}) (storm time-up, warp gate, boss rush) */
+  _endRun(win = true, scoreMult = 1) {
+    this.done = true;
+    if (this._call('finish', win, { scoreMult })) return;
+    if (scoreMult !== 1) this._setRun('warpBank', scoreMult);
     this._call('onStageCleared');
   }
 
@@ -240,7 +250,8 @@ export class WaveDirector {
   _spawnBoss(worldIndex, { final = true, finale = false, hpMult = 1 } = {}) {
     const em = this.em;
     if (!em?.spawnBoss) return null;
-    this.boss = em.spawnBoss({ worldIndex, x: 0, z: this.R * TUNE.bossSpawnZ, final, finale, hpMult });
+    const fresh = this.mode !== 'stage';                 // checkpoints & failed-attempt slowdown only for stage bosses
+    this.boss = em.spawnBoss({ worldIndex, x: 0, z: this.R * TUNE.bossSpawnZ, final, finale, hpMult, ...(fresh ? { attempt: 0, noCheckpoint: true } : {}) });
     return this.boss;
   }
 
@@ -336,9 +347,9 @@ export class WaveDirector {
     }
   }
 
-  _updateCoin() {
+  _updateCoin(ownClock = false) {
     if (this.coinAt < 0 || this.coinSpawned || this.done) return;
-    const rt = this.run?.time ?? this.t;
+    const rt = ownClock ? this.t : (this.run?.time ?? this.t);
     if (rt < this.coinAt) return;
     this.coinSpawned = true;
     const pos = this._patternPos('portal', 0, 1, 0);
@@ -355,7 +366,7 @@ export class WaveDirector {
       this._call('onWaveCleared', i);
     }
     if (this.mode === 'rush') {
-      if (i >= this.waveTotal - 1) { this.done = true; this._call('onBossDefeated'); }
+      if (i >= this.waveTotal - 1) this._endRun(true);
       else {
         this.rushNext = this.t + TUNE.rush.breather;
         this._heal(MODES.rush.heartsRefill ?? 1);
@@ -372,8 +383,8 @@ export class WaveDirector {
   _heal(n) {
     const r = this.run;
     if (!r) return;
+    if (this._call('healPlayer', n)) return;
     if (this._call('heal', n)) return;
-    if (r.playerCtl?.heal) { try { r.playerCtl.heal(n); return; } catch { /* */ } }
     const p = r.player;
     if (p && typeof p.hp === 'number') {
       p.hp = Math.min(p.maxHp ?? p.hp + n, p.hp + n);
@@ -396,6 +407,9 @@ export class WaveDirector {
     this._checkClears();
     this._updateGate(dt);
     if (this.done) return;
+    if (this.coinAt < 0 && this.stageDef?.coinCube !== false) this.coinAt = this.t + this.rng.range(40, 110);
+    this._updateCoin(true);
+    if (this.coinSpawned && this.coinAt >= 0 && this.t > this.coinAt + 20) { this.coinSpawned = false; this.coinAt = this.t + this.rng.range(70, 130); }
     const cw = this.wave, ws = this.ws[cw], w = this.waves[cw];
     if (!ws || !w) return;
     if (w.boss) { if (ws.cleared && this.t - ws.clearT >= TUNE.breather + 1) this._nextEndless(); return; }
@@ -495,8 +509,8 @@ export class WaveDirector {
       g.open = false; g.next = WG.every;
       this.bus.emit('gate:close', { x: g.x, z: g.z, entered: true });
       this.bus.emit('gate:enter', { x: g.x, z: g.z, bank: WG.bank });
-      this.done = true;
-      if (!this._call('onWarpGate', WG.bank)) { this._setRun('warpBank', WG.bank); this._call('onStageCleared'); }
+      this._setRun('warpBank', WG.bank);
+      this._endRun(true, WG.bank);
       return;
     }
     if (g.t <= 0) {
@@ -556,10 +570,9 @@ export class WaveDirector {
     const freed = this.run?.freedCount ?? this.freed;
     this.medal = S.medals.filter((m) => freed >= m).length;
     if (this.t >= S.time) {
-      this.done = true;
       this._setRun('stormMedal', this.medal);
       this.bus.emit('wave:clear', { index: this.stormIdx, storm: true });
-      this._call('onStageCleared');
+      this._endRun(true);
     }
   }
 

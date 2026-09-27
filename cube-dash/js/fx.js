@@ -55,7 +55,7 @@ const TUNE = {
   nearMiss: { radius: 1.3, arc: 1.9, sparkles: 6 },
   freed: { life: 1.2, pop: 0.25, wave: 0.3, goldChance: 0.01 },
   portal: { fill: 0.6, white: 0.2, beamH: 16, collapse: 0.16 },
-  dash: { ghosts: 4, ghostEvery: 0.035, ghostLife: 0.2, ribbonLife: 0.26, ribbonWidth: 0.9 },
+  dash: { ghosts: 4, ghostEvery: 0.035, ghostLife: 0.22, ribbonLife: 0.3, ribbonWidth: 1.0 },
   confetti: { rain: 300, rainTime: 1.5, burst: 60 },
   knocked: { every: 0.04, minSpeed: 3 },
   ambientDust: { every: 0.25, minSpeed: 2.5, max: 40 },
@@ -1176,10 +1176,13 @@ varying vec2 vUv;
 varying vec4 vCol;
 void main() {
   float across = abs(vUv.y);
-  float a = vCol.a * (1.0 - across * across) * (0.5 + 0.5 * (1.0 - vUv.x));
-  vec3 c = mix(vCol.rgb * 1.1, vec3(1.15), (1.0 - smoothstep(0.0, 0.3, across)) * 0.3);
+  float body = 1.0 - smoothstep(0.7, 1.0, across);
+  float a = vCol.a * body * (0.55 + 0.45 * (1.0 - vUv.x));
+  vec3 c = vCol.rgb;
+  c = mix(c, c * 0.45, smoothstep(0.55, 0.85, across) * 0.8);            // cel edge
+  c = mix(c, vec3(1.25), (1.0 - smoothstep(0.0, 0.18, across)) * 0.5);   // bright core line
   if (a < 0.003) discard;
-  gl_FragColor = vec4(c * a, a * 0.9);
+  gl_FragColor = vec4(c * a, a * 0.95);
   #include <colorspace_fragment>
 }`;
 const RIB_N = 32;
@@ -1240,7 +1243,7 @@ class Ribbon {
       const sl = this._s.length() || 1;
       const age = clamp((this.clock - this.pt[idx]) / life, 0, 1);
       const u = i / (n - 1);
-      const w = width * (1 - u) * (1 - age * 0.6) * 0.5;
+      const w = width * (1 - u * u) * (1 - age * 0.5) * 0.5;
       this._s.multiplyScalar(w / sl);
       const j = i * 6;
       P[j] = this.px[idx] - this._s.x; P[j + 1] = this.py[idx] - this._s.y; P[j + 2] = this.pz[idx] - this._s.z;
@@ -1249,7 +1252,7 @@ class Ribbon {
       const cf = u * (nc - 1);
       const c0 = this.colors[Math.floor(cf)], c1 = this.colors[Math.min(nc - 1, Math.floor(cf) + 1)];
       this._c.copy(c0).lerp(c1, cf - Math.floor(cf));
-      const a = 0.85 * (1 - age);
+      const a = 0.95 * (1 - age * age);
       for (let z = 0; z < 2; z++) { const q = i * 8 + z * 4; Cc[q] = this._c.r; Cc[q + 1] = this._c.g; Cc[q + 2] = this._c.b; Cc[q + 3] = a; }
     }
     this.geo.setDrawRange(0, (n - 1) * 6);
@@ -2308,6 +2311,7 @@ export class FX {
     }
     const size = D.size || 1;
     if (D.heroId !== 'zap') this.ribbon.push(x, 0.45 * size, z);
+    if (gdt > 0 && rnd() < 0.7) this._trailParticle(x, z, D);
     // afterimages
     D.emitAcc -= gdt;
     if (D.n < TUNE.dash.ghosts && D.emitAcc <= 0 && D.heroId !== 'zap') {

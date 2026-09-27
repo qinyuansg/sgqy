@@ -869,7 +869,11 @@ export class Boss {
     for (const ring of this.rings) {
       if (!ring.on) continue;
       const gap = len2(px - ring.x, pz - ring.z) - r - (ring.r + MV.slam.ringWidth * 0.5);
-      if (gap >= -MV.slam.ringWidth) best = Math.min(best, Math.max(0, gap / MV.slam.ringSpeed));
+      if (gap >= -MV.slam.ringWidth) best = Math.min(best, Math.max(0, gap / (MV.slam.ringSpeed * this.speedK)));
+    }
+    for (const q of this.ringQ) {
+      const gap = len2(px - q.x, pz - q.z) - r - MV.slam.radius;
+      if (gap >= 0) best = Math.min(best, q.t + gap / (MV.slam.ringSpeed * this.speedK));
     }
     if (a && a.name === 'laser' && a.stage === 'fire') {
       const pa = Math.atan2(px - this.x, pz - this.z), dist = len2(px - this.x, pz - this.z);
