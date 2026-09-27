@@ -601,6 +601,14 @@ export const MODES = {
   },
 };
 
+/** THE canonical "today's mutator" pick (FNV-1a of the day key). meta.dailyMutator() wraps it with the
+ *  04:00 day boundary; ui.js and run.js both go through meta so the Modes screen and the run always agree. */
+export function dailyMutatorFor(dayKeyStr) {
+  let h = 2166136261;
+  for (let i = 0; i < dayKeyStr.length; i++) { h ^= dayKeyStr.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return MUTATORS[(h >>> 0) % MUTATORS.length];
+}
+
 // Daily mutators (date-seeded) — used by endless and daily challenge
 export const MUTATORS = [
   { id: 'bouncy', icon: '🏀', name: { zh: '弹弹地板', en: 'Bouncy Floor' }, desc: { zh: '所有方块都会弹跳', en: 'Everything bounces' }, knockMult: 1.4 },

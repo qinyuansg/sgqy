@@ -40,7 +40,7 @@ const TUNE = {
     perFrameTotal: 12,           // new sfx voices per frame across all names (protects the audio thread) …
     // … except these: a frame full of smashes must never swallow the hurt / perfect / nova / level-up sound
     priority: ['hurt', 'perfect', 'nova', 'death', 'freeze', 'revive', 'levelup', 'countdown', 'countIn', 'bossDefeat', 'phase', 'roar', 'shield', 'fever'],
-    minGap: { click: 0.04, back: 0.04, claim: 0.05, buy: 0.05, error: 0.08, whoosh: 0.06, hover: 0.03, tick: 0.035, pop: 0.03, star: 0.05, cue: 0.3, puff: 0.15, notYet: 0.25, dizzy: 0.12, babble: 0.25, heartbeat: 0.2, coinAppear: 1, tileGone: 0.3, reroll: 0.15 },
+    minGap: { unlock: 0.6, rankup: 1.5, capsule: 0.4, click: 0.04, back: 0.04, claim: 0.05, buy: 0.05, error: 0.08, whoosh: 0.06, hover: 0.03, tick: 0.035, pop: 0.03, star: 0.05, cue: 0.3, puff: 0.15, notYet: 0.25, dizzy: 0.12, babble: 0.25, heartbeat: 0.2, coinAppear: 1, tileGone: 0.3, reroll: 0.15 },
   },
   music: {
     lookahead: 0.12, timerMs: 25,

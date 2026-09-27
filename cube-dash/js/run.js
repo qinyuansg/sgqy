@@ -16,7 +16,7 @@
 //     run.enemies (enemies.js) · run.waves (waves.js) · run.pickups ·
 //     run.upgrades · run.playerCtl (run.player === run.playerCtl.state)
 // ─────────────────────────────────────────────────────────────
-import { TUNE, WORLDS, MODES, MUTATORS, ENEMIES, BOSS, heroById } from './data.js';
+import { TUNE, WORLDS, MODES, MUTATORS, ENEMIES, BOSS, heroById , dailyMutatorFor } from './data.js';
 import { clamp, makeRng, dayKey } from './core.js';
 import { t, tl, addStrings } from './i18n.js';
 import { EnemyManager } from './enemies.js';
@@ -227,7 +227,7 @@ export class Run {
       if (typeof want === 'object') return want;
       return MUTATORS.find((m) => m.id === want) || null;
     }
-    if (this.mode === 'endless' || this.mode === 'daily') return MUTATORS[hashStr(dayKey()) % MUTATORS.length];
+    if (this.mode === 'endless' || this.mode === 'daily') return this.G.meta?.dailyMutator?.() ?? dailyMutatorFor(dayKey());
     return null;
   }
 

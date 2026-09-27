@@ -64,9 +64,8 @@ import { t, tl, addStrings, getLang } from './i18n.js';
 import {
   HEROES, ENEMIES, WORLDS, CARDS, EVOLUTIONS, ECONOMY, ROAD, ROAD_OVERFLOW, MISSIONS, SIGNIN,
   RANKS, RANK_PAR, RANK_REWARD, ACHIEVEMENTS, ACH_REWARD, DEX, TITLES, SKINS, HATS, TRAILS,
-  CAPSULE, HEALTH, RARITY, MODES, heroById, stageOf,
+  CAPSULE, HEALTH, RARITY, MODES, heroById, stageOf, dailyMutatorFor,
 } from './data.js';
-import { dailyMutator as wavesDailyMutator } from './waves.js';
 
 // ---------- module tuning (not design data) ----------
 const TUNE = {
@@ -695,8 +694,9 @@ export class Meta {
     for (let w = 0; w < WORLDS.length; w++) if (this.isStageUnlocked(w, 0)) top = w;
     return top;
   }
-  /** today's Daily Challenge / Galaxy Survival mutator — the same pick as waves.js, so the Modes card and the run agree */
-  dailyMutator() { try { return wavesDailyMutator(); } catch { return null; } }
+  /** today's Daily Challenge / Galaxy Survival mutator — the single source for ui.js (Modes card) and run.js,
+   *  so what the card shows is what the run plays (04:00 day boundary) */
+  dailyMutator() { return dailyMutatorFor(this.today); }
   get dailyDone() { return this.P.modes.dailyDay === this.today; }
   modeUnlocked(mode) {
     if (!mode || mode === 'stage') return true;
