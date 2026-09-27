@@ -379,7 +379,7 @@ export class Upgrades {
     m.perfectTtcBonus = v('justright');
     m.perfectRadiusBonus = L('justright');
     // 💥
-    m.knockMult = (1 + v('punch')) * (run.mutator?.knockMult ?? 1);
+    m.knockMult = 1 + v('punch');                    // the Bouncy-Floor mutator is applied inside em.knock()
     m.extraHops = v('chain');
     m.pinball = this.evos.has('pinball');
     m.maxHops = m.pinball ? 6 : TUNE.knock.maxHops + m.extraHops;
@@ -603,6 +603,7 @@ export class Upgrades {
 
   update(dt) {
     const run = this.run, p = run.player, em = run.enemies, m = run.cardMods;
+    const live = dt > 0;          // frozen frames (hit-stop, Second Chance bubble) only redraw
     this._time += dt;
     const time = this._time;
     this._reactBudget = Math.min(TUNE_U.reaction.capPerSec, this._reactBudget + TUNE_U.reaction.capPerSec * dt);
@@ -625,13 +626,13 @@ export class Upgrades {
       const base = m.satSmash ? TUNE_U.sat.guardRadius : TUNE_U.sat.radius;
       const bk = this.satBlastT > 0 ? Math.sin(Math.PI * (1 - this.satBlastT / TUNE_U.sat.blastTime)) : 0;
       const r = base + (TUNE_U.sat.blastR - base) * bk;
-      const snap = this._snapshot();
+      const snap = live ? this._snapshot() : null;
       for (let i = 0; i < nSat; i++) {
         this.satCd[i] = Math.max(0, this.satCd[i] - dt);
         const a = this.satAngle + (i / nSat) * TAU;
         const sx = p.x + Math.sin(a) * r, sz = p.z + Math.cos(a) * r;
         const sy = 0.62 + Math.sin(time * 6 + i) * 0.1;
-        for (const e of snap) {
+        if (snap) for (const e of snap) {
           if (isGone(e) || e.isBoss || e.treasure) continue;
           const d = Math.hypot(e.x - sx, e.z - sz);
           if (d > TUNE_U.sat.hitR + (e.radius ?? 0.5)) continue;
@@ -659,7 +660,7 @@ export class Upgrades {
     const cometDizzy = m.comet;
     let ti = 0;
     const fire = m.meteor;
-    const snapT = cometDizzy > 0 ? this._snapshot() : null;
+    const snapT = cometDizzy > 0 && live ? this._snapshot() : null;
     for (const s of this.trail) {
       if (!s.alive) continue;
       s.t += dt;
@@ -739,7 +740,7 @@ export class Upgrades {
     if (this.field.t > 0) {
       this.field.t -= dt;
       const F = this.field, R = TUNE_U.field.radius;
-      if (em?.list) {
+      if (em?.list && live) {
         for (const e of em.list) {
           if (isGone(e) || e.isBoss || smashableOf(e) || !harmfulOf(e)) continue;
           if (Math.hypot(e.x - F.x, e.z - F.z) > R) continue;
@@ -808,6 +809,7 @@ export class Upgrades {
   dispose() {
     this.clear();
     this.G.scene?.remove(this.group);
+    this.shadows.mesh.material.map?.dispose();       // BlobShadows makes its own canvas texture
     this.group.traverse((o) => {
       if (o.isMesh) {
         if (o.geometry && !o.geometry.userData?.shared) o.geometry.dispose();

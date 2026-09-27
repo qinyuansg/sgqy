@@ -360,7 +360,7 @@ void main(){
   if (uPlayR < uR - 0.01) {
     float d = r - uPlayR;
     float stripe = step(0.5, fract((p.x - p.y) * 0.32 + uTime * 0.7));
-    col = mix(col, mix(uWarnA, uWarnB, stripe) * 0.92, smoothstep(-0.04, 0.06, d) * 0.5);
+    col = mix(col, mix(uWarnA, uWarnB, stripe) * 0.95, smoothstep(-0.04, 0.06, d) * 0.62);
     col = mix(col, vec3(1.0, 0.96, 0.84), (1.0 - smoothstep(0.03, 0.12, abs(d))) * 0.9);
   }
   // --- cyan hero ground ring (§7.20)
@@ -401,7 +401,7 @@ void main(){
   vec3 N = normalize(vN); vec3 V = normalize(cameraPosition - vW);
   vec3 base = uRimCol * (0.9 + 0.14 * vRim.y);
   base = mix(base * 0.92, base * 1.08 + 0.02, smoothstep(0.3, 0.48, vL.y));
-  base = mix(base, candyHue(vRim.x + uTime * 0.5) * 0.85, uFever * 0.35);
+  base = mix(base, candyHue(vRim.x + uTime * 0.5) * 0.8, uFever * 0.62);
   vec3 c = softLit(base, N, V) - uHemiSky * pow(1.0 - max(dot(N, V), 0.0), 3.0) * 0.12;
   // neon strip: a band on the inner face + a thin line along the top (visible from above)
   float inner = smoothstep(-0.3, -0.44, vL.z);
@@ -720,11 +720,14 @@ uniform vec3 uWarnA, uWarnB;
 uniform float uTime, uAlpha;
 varying vec2 vUv;
 void main(){
-  float stripe = step(0.5, fract(vUv.x * 90.0 + vUv.y * 2.2 - uTime * 0.8));
-  vec3 c = mix(uWarnA, uWarnB, stripe);
-  float chev = 1.0 - smoothstep(0.0, 0.1, abs(fract(vUv.y * 2.0 - uTime * 0.9 + abs(fract(vUv.x * 60.0) - 0.5) * 0.8) - 0.5));
-  float a = (1.0 - smoothstep(0.1, 1.0, vUv.y)) * 0.5 + chev * 0.18 * (1.0 - vUv.y);
-  gl_FragColor = vec4(c * (1.2 + chev), a * uAlpha);
+  // energy curtain: bold orange / cream diagonal stripes, bright base line, rising sparks — never red
+  float stripe = step(0.5, fract(vUv.x * 110.0 + vUv.y * 1.6 - uTime * 0.9));
+  vec3 c = mix(uWarnA * 1.25, uWarnB * 1.1, stripe);
+  float base = 1.0 - smoothstep(0.0, 0.08, vUv.y);
+  float rise = step(0.985, fract(vUv.x * 37.0 + floor(vUv.y * 6.0 - uTime * 2.0) * 0.37)) * (1.0 - vUv.y);
+  float a = (1.0 - smoothstep(0.05, 0.95, vUv.y)) * 0.62 + base * 0.35 + rise * 0.6;
+  c = mix(c, vec3(1.0, 0.97, 0.88) * 2.2, base * 0.8 + rise);
+  gl_FragColor = vec4(c, a * uAlpha);
 }`;
 const WELL_FS = /* glsl */`
 uniform vec3 uGlitch, uVoid;
@@ -2189,7 +2192,7 @@ function buildBumpers(w, group, defs, accent, rimCol) {
   const prof = [[0, 0], [1.0, 0], [1.06, 0.08], [1.06, 0.3], [0.94, 0.4], [0.94, 0.86], [1.06, 0.96], [1.06, 1.14], [0.92, 1.28], [0.55, 1.4], [0, 1.43]];
   const geo = new THREE.LatheGeometry(prof.map(([r, y]) => new THREE.Vector2(r, y)), 40);
   const bmat = new THREE.ShaderMaterial({
-    uniforms: { ...fogUniforms(), ...w.U, uA: { value: accent }, uB: { value: rimCol }, uBody: { value: col(0xf4f0ff) } },
+    uniforms: { ...fogUniforms(), ...w.U, uA: { value: accent }, uB: { value: rimCol }, uBody: { value: col(0xcfc4f4) } },
     defines: { EMIT_ATTR: '' },
     vertexShader: DECOR_VS,
     fragmentShader: /* glsl */`
@@ -2204,9 +2207,8 @@ function buildBumpers(w, group, defs, accent, rimCol) {
         float b1 = smoothstep(0.3, 0.33, y) * (1.0 - smoothstep(0.4, 0.43, y));
         float b2 = smoothstep(0.86, 0.89, y) * (1.0 - smoothstep(0.96, 0.99, y));
         float cap = smoothstep(1.25, 1.3, y);
-        c = mix(c, uA * (1.5 + vEmit * 2.5), b1 + b2);
-        c = mix(c, uB * (1.15 + vEmit * 2.5 + uBeat * 0.3), cap);
-        c += vec3(1.0) * vEmit * 0.4;
+        c = mix(c, uA * (1.4 + vEmit * 1.4), b1 + b2);
+        c = mix(c, uB * (1.0 + vEmit * 0.8 + uBeat * 0.3), cap);
         gl_FragColor = vec4(c, 1.0);
         ${OUT_FRAG}
       }`,

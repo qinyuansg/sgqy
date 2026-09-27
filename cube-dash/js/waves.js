@@ -562,8 +562,9 @@ export class WaveDirector {
       if (em.aliveCount < cap) {
         const pos = this._patternPos('edge', 0, 1, 0);
         const size = this.mutator?.forceSize || this.rng.pick(['S', 'S', 'M']);
-        em.spawnWithPortal(this._stormType(), pos.x, pos.z, { size, wave: this.stormIdx, delay: 0.9 });
-        this.totalCubes++;
+        const type = this._stormType();
+        em.spawnWithPortal(type, pos.x, pos.z, { size, wave: this.stormIdx, delay: 0.9 });
+        this.totalCubes += 1 + splitExtra(type, 1);
         this._setRun('totalCubes', this.totalCubes);
       }
     }

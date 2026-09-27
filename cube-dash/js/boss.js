@@ -957,8 +957,12 @@ export class Boss {
       const m = this.slabs[i];
       m.visible = !chase && !this.dead && hash(i + 2) < gi * 0.8;
       if (!m.visible) continue;
-      m.position.set((hash(i + 9) - 0.5) * 0.9, hash(i + 20) * S, (hash(i + 30) - 0.5) * 0.3);
-      m.scale.set(S * (0.7 + hash(i + 40) * 0.5), 0.05 + hash(i + 50) * 0.16, S * 1.04);
+      // thin scanline bands on the front / side faces (never a flat plate seen from the top camera)
+      const side = hash(i + 60) < 0.6 ? 0 : (hash(i + 61) < 0.5 ? -1 : 1);
+      const w = S * (0.35 + hash(i + 40) * 0.6), h = 0.05 + hash(i + 50) * 0.14, off = (hash(i + 9) - 0.5) * S * 0.5;
+      const y = S * (0.12 + hash(i + 20) * 0.8);
+      if (side === 0) { m.position.set(off, y, S * 0.5 + 0.03); m.scale.set(w, h, 0.05); }
+      else { m.position.set(side * (S * 0.5 + 0.03), y, off); m.scale.set(0.05, h, w); }
     }
     for (const f of this.modFlames) f.scale.setScalar(this.charging ? 1.4 + Math.sin(tr * 50) * 0.2 : (this.worldIndex === 4 ? 1 : 0.35 + Math.sin(tr * 30) * 0.05));
     if (this.halo) this.halo.rotation.z = tr * 1.5;

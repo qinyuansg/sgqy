@@ -415,7 +415,7 @@ class Song {
 
   /** jump back to bar 0 at time t (the "drop" on GO) */
   resync(t) {
-    this.nextTime = t; this.step = 0; this.bar = -1; this.snap = true; this.motif = null;
+    this.nextTime = t; this.step = 0; this.bar = -1; this.snap = true; this.motif = null; this.occ = null;
   }
 
   /** schedule every 16th that starts before `until` */
@@ -470,7 +470,7 @@ class Song {
       const m = (i === 3 ? tones[0] + 12 : tones[i]) + 12;
       sys._note(this.def.arpTone || 'tri', m, ts, sd * 0.9, this.arpIn, 0.5, false);
     }
-    if (st % 4 === 0) sys._markBeat(t, sd * 4, st >> 2, this.bar);
+    if (st % 4 === 0) sys._markBeat(t, sd * 4);
     this.step++;
   }
 
@@ -484,6 +484,12 @@ class Song {
     this.loop = Math.floor(secN / form.length);
     this.secKey = form[secN % form.length];
     this.sec = SECTIONS[this.secKey] || SECTIONS.A;
+    if ((this.bar & 7) === 0 || this.occ == null) {          // how many times this section letter already played
+      const pos = secN % form.length;
+      let occ = 0, per = 0;
+      for (let i = 0; i < form.length; i++) if (form[i] === this.secKey) { per++; if (i < pos) occ++; }
+      this.occ = occ + this.loop * per;
+    }
     const prog = this.def.prog[this.sec.prog] || this.def.prog.A;
     this.chord = parseChord(prog[this.bar & 3]);
     this._voice(t);
@@ -528,8 +534,8 @@ class Song {
     let tf = ref.replace(/^m\d+/, '');
     const slot = (this.bar & 7) >> 1;
     // seeded per-loop variations keep a 3-minute stage from feeling like a 4-bar loop
-    if (this.loop > 0 && !tf && slot === 2) tf = VARIATIONS[(this.loop + (hashStr(this.name) & 3)) % VARIATIONS.length];
-    if (this.loop > 1 && !tf && slot === 0 && this.rng() < 0.35) tf = '>';
+    if (this.occ > 0 && !tf && slot === 2) tf = VARIATIONS[(this.occ + (hashStr(this.name) & 3)) % VARIATIONS.length];
+    if (this.occ > 1 && !tf && slot === 0 && this.rng() < 0.35) tf = '>';
     let tok = this.motifRaw[idx % this.motifRaw.length].slice();
     if (tf.includes('>')) tok = [tok[tok.length - 1] === '-' ? '.' : tok[tok.length - 1], ...tok.slice(0, -1)].map((x, i) => (i === 0 && x === '-' ? '.' : x));
     if (tf.includes('~')) tok = tok.map((x, i) => (i % 2 === 1 && x !== '.' && x !== '-' ? '-' : x));
@@ -617,7 +623,7 @@ export class AudioSys {
     this._i = 0; this._iExt = 0; this._iExtAt = -99; this._iNearT = 0; this._iNear = 0;
     this.flags = { inRun: false, state: null, active: false, style: 0, novaReady: false, fever: false, danger: false, boss: false, progress: 0, paused: false, drone: false };
     this._slowT = 0; this._hurtAt = -99; this._perfectAt = -99; this._novaDuckUntil = -99;
-    this._bossPhase = 1; this._runT0 = 0; this._endlessT = 0; this._stingerFor = null; this._prevRunState = null;
+    this._bossPhase = 1; this._endlessT = 0; this._stingerFor = null; this._prevRunState = null;
     this._lastGo = -99; this._lastCheer = -99;
     this._mix = { duck: 1, lp: 20000 };
     // beat clock (ring buffers, no allocations per frame)
@@ -689,9 +695,10 @@ export class AudioSys {
     this._iExtAt = this.G?.time?.real ?? 0;
   }
 
-  setVolumes({ music, sfx } = {}) {
-    if (music != null) this._vol.music = clamp(+music, 0, 1);
-    if (sfx != null) this._vol.sfx = clamp(+sfx, 0, 1);
+  setVolumes(v) {
+    const { music, sfx } = v || {};
+    if (Number.isFinite(+music) && music !== null) this._vol.music = clamp(+music, 0, 1);
+    if (Number.isFinite(+sfx) && sfx !== null) this._vol.sfx = clamp(+sfx, 0, 1);
     this._applyVolumes();
   }
 
@@ -709,7 +716,7 @@ export class AudioSys {
 
   /** one-shot sound. opts: {x, z} (pan/distance) · pan · volume|gain · pitch (×) · at (ctx time) · + recipe fields */
   sfx(name, opts = {}) {
-    if (!this.ctx || this.muted && !this.offline) return null;
+    if (!this.ctx || (!this.offline && (this.muted || this.ctx.state !== 'running'))) return null;
     const recipe = SFX[name];
     if (!recipe) { if (this.debug) console.warn('[audio] unknown sfx', name); return null; }
     if (!this._allow(name)) return null;
@@ -718,7 +725,8 @@ export class AudioSys {
     if (QUANTISED.has(name) && opts.at == null) t = this._nextEighth(t);
     const bus = UI_SOUNDS.has(name) && !this.G?.run ? this._uiIn : this._sfxIn;
     const v = this._voiceBegin(name, bus, t, opts);
-    this._pm = num(opts.pitch, 1) > 0 ? clamp(opts.pitch, 0.25, 4) : 1;
+    const pm = num(opts.pitch, 1);
+    this._pm = pm > 0 ? clamp(pm, 0.25, 4) : 1;
     this._cur = v;
     let dur = 0.5;
     try { dur = recipe(this, t, opts, v.out) || 0.5; } catch (err) { console.warn('[audio] sfx failed', name, err); }
@@ -915,7 +923,10 @@ export class AudioSys {
     on('boss:intro', (p) => {
       this.flags.drone = false;
       this._runTrack = 'boss';
+      this._bossPhase = 1;                         // boss rush: every king starts at phase 1
+      if (this.song) this.song.forceHype = false;
       this.music('boss');
+      this._retempo();
       this.sfx('roar', p);
       this.sfx('babble', { hero: 'king', mood: 'laugh', at: this.ctx ? this._now() + 1.2 : 0 });
     });
@@ -957,7 +968,7 @@ export class AudioSys {
     this._stingerFor = null; this._prevRunState = null; this._bossPhase = 1;
     this._ladder.idx = -1; this._crys.idx = -1; this._near.idx = 0;
     this.flags.novaReady = false; this.flags.fever = false;
-    this._runT0 = this.G?.time?.real ?? 0; this._endlessT = 0;
+    this._endlessT = 0;
     let track = 'w' + (wi + 1);
     if (mode === 'endless') track = 'endless';
     else if (mode === 'rush') track = 'boss';
@@ -970,6 +981,8 @@ export class AudioSys {
   }
 
   _onCountdown({ n }) {
+    n = num(n, -1);
+    if (n < 0) return;
     this.sfx('countdown', { n });
     if (n === 1) this.sfx('countIn', {});
     if (n === 0) this._lastGo = this.G?.time?.real ?? 0;
@@ -1092,6 +1105,7 @@ export class AudioSys {
       };
       chordAt(3, 0, 0.55); chordAt(7, 5, 0.25); chordAt(9, 0, 1.4);
       for (let i = 0; i < 8; i++) this._note('bell', deg(5 + i), t1 + 9 * e + 0.08 + i * 0.06, 0.4, out, 0.35, false);
+      this.sfx('babble', { hero: this._heroId(), mood: 'cheer', at: t1 + 9 * e + 0.35 });
       end = t1 + 9 * e + 1.6;
     } else {
 
@@ -1258,10 +1272,9 @@ export class AudioSys {
     if (Math.abs(lp - m.lp) / m.lp > 0.03) { m.lp = lp; this._musicLp.frequency.setTargetAtTime(lp, now, fast ? 0.012 : 0.07); }
   }
 
-  _markBeat(t, dur, beatInBar, bar) {
+  _markBeat(t, dur) {
     const i = this._beatN++ & 15;
     this._beatT[i] = t; this._beatD[i] = dur;
-    if (beatInBar === 0) this._barAt = { t, bar };
   }
   _markKick(t) { this._kickT[this._kickN++ & 7] = t; }
 

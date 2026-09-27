@@ -16,7 +16,7 @@
 //     run.enemies (enemies.js) · run.waves (waves.js) · run.pickups ·
 //     run.upgrades · run.playerCtl (run.player === run.playerCtl.state)
 // ─────────────────────────────────────────────────────────────
-import { TUNE, WORLDS, MODES, MUTATORS, ENEMIES, heroById } from './data.js';
+import { TUNE, WORLDS, MODES, MUTATORS, ENEMIES, BOSS, heroById } from './data.js';
 import { clamp, makeRng, dayKey } from './core.js';
 import { t, tl, addStrings } from './i18n.js';
 import { EnemyManager } from './enemies.js';
@@ -45,6 +45,7 @@ const TUNE_R = {
   shieldStop: 60,
   secondChance: { hearts: 3, iframes: 2, radius: 6, knock: 14, dizzy: 1.5, guard: 0.6 },
   knockbackPerHeart: 0.45,        // contact 'hearts' now scale knockback, not damage
+  bossKnockback: 3.0,             // King Glitch shoves like a Bruiser (data has no boss knockback)
 };
 
 const TUT = {
@@ -145,10 +146,10 @@ export class Run {
     this.scoreMult = this.mutator?.scoreMult ?? 1;
 
     // ---------- arena ----------
-    const worldR = G.world?.arenaRadius || this.worldDef.arenaRadius;
-    let R = worldR;
-    if (this.mode === 'endless' && this.modeDef.arenaRadius) R = Math.min(this.modeDef.arenaRadius, Math.max(worldR, this.worldDef.arenaRadius));
-    if (this.mode === 'storm' && this.modeDef.radii) R = Math.min(this.modeDef.radii[0], Math.max(worldR, this.worldDef.arenaRadius));
+    // endless / storm play on the bigger mode arena (world.js grows its floor to the same radius)
+    let R = this.worldDef.arenaRadius || G.world?.arenaRadius || 11;
+    if (this.mode === 'endless' && this.modeDef.arenaRadius) R = this.modeDef.arenaRadius;
+    if (this.mode === 'storm' && this.modeDef.radii) R = this.modeDef.radii[0];
     this.arenaRadius = R;
     this.baseArenaRadius = R;
 
@@ -165,7 +166,7 @@ export class Run {
     this.freedCount = 0; this.totalCubes = 0;
     this.fever = false;
     this.hitsTaken = 0; this.damageTaken = 0;
-    this.coinsEarned = 0; this.crystals = 0; this.crystalXp = 0;
+    this.coinsEarned = 0; this.crystals = 0; this.crystalXp = 0; this.bestNova = 0;
     this.bossDefeated = false; this.bossesDefeated = 0;
     this.won = false; this.revived = false; this.results = null;
     this.secondChanceUsed = false;
@@ -278,9 +279,13 @@ export class Run {
   get comboT() { return this.combo > 0 ? clamp(this.comboTimer / TUNE.style.decay, 0, 1) : 0; }
   get styleMult() { return this.styleTier >= 0 ? TUNE.style.tiers[this.styleTier].mult : 1; }
   get tired() { return !!this.player?.lockout; }
-  get wave() { return this.waves?.wave ?? 0; }
+  get wave() { return this.waves?.wave ?? this._waveSet ?? 0; }
+  /** waves.js mirrors its index here (run.wave = i); the director stays the source of truth */
+  set wave(v) { this._waveSet = v; }
   get waveTotal() { return this.waves?.waveTotal ?? (this.stageDef.waves?.length || 0); }
-  get boss() { return this.enemies?.boss || null; }
+  get boss() { return this.enemies?.boss || this._bossSet || null; }
+  /** boss.js registers itself (run.boss = this) and clears it on removal */
+  set boss(v) { this._bossSet = v || null; }
   get progress() {
     const b = this.enemies?.boss;
     if (this.isBossStage && b && b.maxHp) return clamp(1 - b.hp / b.maxHp, 0, 1);
@@ -308,7 +313,12 @@ export class Run {
       this.rumble(0.9, 0.7, 200);
     });
     on('boss:slam', () => { if (this.state === 'playing') { this.shake(TUNE.shake.bossSlam, 0.5); this.rumble(0.8, 0.5, 220); } });
-    on('boss:defeat', () => this.onBossDefeated());
+    on('boss:defeat', () => {
+      this._countBoss();
+      // stage / daily: the boss IS the stage (waves.js also calls onBossDefeated; either path ends it once)
+      if (this.mode === 'stage' || this.mode === 'daily') this.onStageCleared();
+    });
+    on('endless:theme', (p) => this._onTheme(p || {}));
     on('pickup:crystal', (p) => this._onCrystal(p || {}));
     on('pickup:heart', (p) => this._onHeart(p || {}));
     on('pickup:coin', (p) => { if (!this._isOver()) this.coinsEarned += p?.amount ?? 1; });
@@ -367,6 +377,7 @@ export class Run {
     this.state = 'playing';
     this.time = 0;
     this.G.bus?.emit('run:go', {});
+    this._applyStartWave();
     if (this.objective) this.G.bus?.emit('objective:progress', { cur: this.objective.cur, target: this.objective.target, kind: this.objective.kind, done: false });
     this.G.bus?.emit('progress', { freed: this.freedCount, total: this.totalCubes });
   }
@@ -543,7 +554,11 @@ export class Run {
       nw.t += dt;
       if (nw.closing !== undefined) {
         nw.closing -= dt;
-        if (nw.closing <= 0) { this._obj('novaMulti', nw.count, 'max'); this._novaWin = null; }
+        if (nw.closing <= 0) {
+          this.bestNova = Math.max(this.bestNova, nw.count);
+          this._obj('novaMulti', nw.count, 'max');
+          this._novaWin = null;
+        }
       }
     }
     // popper blast windows (bombMulti)
@@ -717,6 +732,11 @@ export class Run {
     if (this.state !== 'playing' || !p || p.dead || !(hearts > 0)) return false;
     if (p.iframes > 0 || p.mega || p.dashing) return false;
     srcX = srcX ?? p.x; srcZ = srcZ ?? p.z;
+    // zone damage (storm wall / glitch hole) always knocks the hero back INTO the arena
+    if (kind === 'storm' || kind === 'fall') {
+      const d = Math.hypot(p.x, p.z) || 1;
+      srcX = p.x + (p.x / d) * 2; srcZ = p.z + (p.z / d) * 2;
+    }
     const bus = this.G.bus;
     if ((p.shield | 0) > 0) {
       p.shield--;
@@ -731,7 +751,8 @@ export class Run {
     // kid rule: every hit costs exactly 1 heart — bigger sources hit harder via knockback
     let dmg = Math.min(1, p.hp);
     if (this.unloseable) dmg = Math.min(dmg, Math.max(0, p.hp - 1));
-    const kbMult = 1 + TUNE_R.knockbackPerHeart * Math.max(0, (hearts || 1) - 1);
+    const kbMult = (this._knockbackDist(kind, srcX, srcZ) / TUNE.player.knockback) *
+      (1 + TUNE_R.knockbackPerHeart * Math.max(0, (hearts || 1) - 1));
     p.hp -= dmg;
     this.hitsTaken += dmg;
     this.damageTaken += dmg;
@@ -748,6 +769,26 @@ export class Run {
     this._updateDanger();
     if (p.hp <= 0) this._die();
     return true;
+  }
+
+  /** knockback distance for a hit (data: TUNE.player.knockback, L grumpy 2.4, Bruiser 3.0; the king is the biggest) */
+  _knockbackDist(kind, srcX, srcZ) {
+    const base = TUNE.player.knockback;
+    if (kind === 'boss' || kind === 'king') return TUNE_R.bossKnockback;
+    const def = ENEMIES[kind];
+    if (!def) return base;
+    // find the cube that hit us (enemies.js / player.js pass its type + position)
+    let hit = null, bd = 2.5;
+    const list = this.enemies?.list;
+    if (list && def.sizes) {
+      for (const e of list) {
+        if (!e || e.dead || e.type !== kind) continue;
+        const d = Math.hypot(e.x - srcX, e.z - srcZ);
+        if (d < bd) { bd = d; hit = e; }
+      }
+    }
+    const sz = hit ? def.sizes?.[hit.sizeKey] : null;
+    return sz?.knockback ?? def.knockback ?? base;
   }
 
   healPlayer(n = 1, x, z) {
@@ -911,6 +952,7 @@ export class Run {
     if (this.disposed || this.state === 'ended') return;
     if (p.treasure || p.type === 'coin') {
       this.stats.coinCubes++;
+      this.freed.coin = (this.freed.coin || 0) + 1;          // Cube-dex: 金币方
       this._obj('coinCube', 1);
       return;
     }
@@ -941,10 +983,7 @@ export class Run {
     const isRim = !!(p.rim || p.wall || RIM_SOURCES.has(kind)) || (!flagged && Math.hypot(x, z) >= this.arenaRadius - 1.3);
     let isBumper = !!(p.bumper || kind === 'bumper');
     if (!isBumper && !flagged && w?.bumperHit) { try { isBumper = !!w.bumperHit(x, z, 1.2); } catch { /* optional */ } }
-    if (isRim && !isBumper) {
-      this._obj('rimBonk', 1);
-      if (this.cardMods.pinball) this._call(w, 'pulseRim', 0xff7ad9);
-    }
+    if (isRim && !isBumper) this._obj('rimBonk', 1);          // (Pinball rim flash is enemies.js')
     if (isBumper) this._obj('bumperBonk', 1);
     let onIce = !!p.ice;
     if (!onIce && !('ice' in p) && w?.frictionAt) { try { onIce = w.frictionAt(x, z) < 1; } catch { /* optional */ } }
@@ -1005,21 +1044,77 @@ export class Run {
   onStageCleared() {
     if (this.state === 'playing' || this.state === 'bossIntro') this._victory();
   }
+  /**
+   * WaveDirector → Run: the boss wave that ENDS the run is done (stage / daily boss, the last
+   * Boss-Rush king). Endless keeps going, so waves.js never calls this there.
+   * The `boss:defeat` bus event only counts bosses (Rush beats several).
+   */
   onBossDefeated() {
-    // boss.js may both call this and emit boss:defeat in the same frame → count once
+    this._countBoss();
+    if (this.mode !== 'endless') this.onStageCleared();
+  }
+  /** boss.js may emit boss:defeat and waves.js call onBossDefeated in the same frame → count once */
+  _countBoss() {
     const now = this.G.time?.real ?? performance.now() / 1000;
     if (now - (this._bossDoneT ?? -9) < 0.1) return;
     this._bossDoneT = now;
     this.bossDefeated = true;
     this.bossesDefeated++;
-    if (this.mode === 'stage' || this.mode === 'daily') this.onStageCleared();
+  }
+  /** waves.js (Boss Rush breather) → +hearts */
+  heal(n = 1) { return this.healPlayer(n); }
+  /** waves.js: the hero stepped into the endless warp gate → bank the score ×bank */
+  onWarpGate(bank = 1) {
+    this.warpBank = bank;
+    this.finish(true, { scoreMult: bank });
   }
 
   _onBossIntro(p) {
+    this._applyBossPhase();
     if (this.state !== 'playing') return;
     this.state = 'bossIntro';
     if (this.G.cam?.inCinematic) this._cine = { name: 'boss', done: false, t: 0, max: TUNE_R.bossIntroMax, poll: true };
     else this._cine = this._startCine('boss', p, TUNE_R.bossIntroMax);
+  }
+
+  /**
+   * 🚩 phase checkpoint (Kid-UX §7.13): "Retry from phase N" starts the king with the cracks
+   * he had at that phase. Uses boss.startAtPhase() when boss.js provides it.
+   */
+  _applyBossPhase() {
+    const ph = Math.min(3, this.bossPhase | 0);
+    if (this._bossPhaseDone || !(ph > 1) || this.mode !== 'stage') return;
+    const b = this.enemies?.boss || this._bossSet;
+    if (!b || b.dead || !(b.maxHp > 0)) return;
+    this._bossPhaseDone = true;
+    if (typeof b.startAtPhase === 'function') { this._call(b, 'startAtPhase', ph); return; }
+    const pa = BOSS.phaseAt;
+    const hp = Math.max(1, Math.floor(b.maxHp * pa[ph - 2] + 1e-6));
+    if (!(hp < b.hp)) return;
+    const f = hp / b.maxHp;
+    b.hp = hp;
+    b.phase = Math.max(b.phase | 0, f <= pa[1] ? 3 : f <= pa[0] ? 2 : 1);
+  }
+
+  /** Endless world cycling reloads the environment: keep the gameplay radius in sync */
+  _onTheme() {
+    if (this.mode !== 'endless') return;
+    const r = this.modeDef.arenaRadius || this.G.world?.arenaRadius;
+    if (r > 3) { this.arenaRadius = r; this.baseArenaRadius = r; }
+  }
+
+  /**
+   * 🚩 checkpoint retry: waves.js has no native `startWave` support yet — start the director at
+   * the flag wave ourselves (earlier waves are pre-counted as freed in _restoreCheckpoint).
+   */
+  _applyStartWave() {
+    const wv = this.waves;
+    if (this._startWaveDone || !(this.startWave > 0) || !wv) return;
+    this._startWaveDone = true;
+    if (wv.startWave !== undefined || wv.started || typeof wv._startWave !== 'function') return;
+    const i = Math.min(this.startWave, Math.max(0, (wv.waveTotal | 0) - 1));
+    wv.started = true;
+    try { wv._startWave(i); } catch (err) { console.error('[run] checkpoint start wave failed', err); }
   }
 
   _onCrystal(p) {
@@ -1283,8 +1378,16 @@ export class Run {
       objective: o ? { ...o } : null,
       knocks: this.stats.knocks, dashes: this.stats.dashes, evolutions: this.stats.evolutions, coinCubes: this.stats.coinCubes,
       hitBy: this.lastHitBy ?? null,
+      bestNova: Math.max(this.bestNova, this._novaWin?.count ?? 0),
+      bossKills: this.bossesDefeated,
+      bossPhase: this.isBossStage ? Math.max(this.bossPhase | 0 || 1, this.boss?.phase | 0 || 1) : 1,
+      warpBank: this.warpBank ?? null,
+      // Shrink Storm medals by cubes freed (results UI: medal = index 0 🥉 · 1 🥈 · 2 🥇, −1 none)
+      ...(this.mode === 'storm' ? (() => { const n = (MODES.storm.medals || []).filter((m) => this.freedCount >= m).length; return { stormMedal: n, medal: n - 1 }; })() : {}),
       revived: this.revived, secondChanceUsed: this.secondChanceUsed, checkpoint: this.checkpoint, attempt: this.attempt,
-      assist: this.assist, mutator: this.mutator?.id ?? null, wave: this.wave,
+      assist: this.assist, mutator: this.mutator?.id ?? null,
+      // 1-based wave reached (Galaxy Survival counts its own endless waves)
+      wave: this.mode === 'endless' ? (this.waves?.endlessN ?? this.wave + 1) : this.wave + 1,
     };
   }
 

@@ -67,7 +67,8 @@ const TUNE = {
 
 const COL = {
   tele: 0xff8a1c, tele2: 0xffd65a, white: 0xffffff, cyan: 0x62f4ff,
-  beamGlow: 0xffa23a, beamCore: 0xfffbe8,   // danger = yellow-white / orange, never plain red (kid rule 12) star: 0xffe14a, crown: 0xffc630,
+  // danger = yellow-white / orange, never plain red (kid rule 12)
+  beamGlow: 0xffa23a, beamCore: 0xfffbe8, star: 0xffe14a, crown: 0xffc630,
   steel: 0x9aa6c4, horn: 0xfff1d6, seam: 0xffd2f0, lens: 0xffe36b, pylon: 0xc9c6ec, aim: 0xfff4c2,
   hat: 0x2b2d4f, hatBand: 0xffcf3a, shield: 0x7fe8ff, flame: 0xffa531, spark: 0xfff3a0,
   fuse: 0x5a3a2e, nozzle: 0x3b3f5c, fin: 0xffd06b, pipOff: 0x3a3f55, pipOn: 0xffb13b,
@@ -762,6 +763,9 @@ export class EnemyManager {
     });
     this._emit('enemy:freed', { x: e.x, z: e.z, size: e.size, type: e.type, crystal, minion: e.minion });
     if (e.type === 'splitter' && !opts.noSplit) this._split(e, dx, dz, opts.splitSpeed);
+    else if (e.type === 'splitter') {                  // fell into a hole: its minis count as freed too (objective total)
+      for (let i = 0; i < (e.def.splitInto ?? 2); i++) this._emit('enemy:freed', { x: e.x, z: e.z, size: EN.splitter.miniSize, type: 'grumpy', crystal: null, mini: true, minion: e.minion });
+    }
     if (e.type === 'popper' && !opts.fromOwnBlast) this._explode(e, { harmless: !e.fuseLit || !!opts.byNova, smashed: true });
     return crystal;
   }

@@ -2112,7 +2112,7 @@ export class UI {
   // ═════════ PARENT CORNER 家长中心 (hold gear 3 s + multiplication gate) ═════════
   _holdStart(el) {
     if (this.hold) return;
-    this.hold = { el, t: 0 };
+    this.hold = { el, t: 0, t0: performance.now() };
     el.classList.add('holding');
   }
   _holdEnd(fromKey = false) {
@@ -2124,9 +2124,9 @@ export class UI {
     // a short key press on a hold button still does its normal action
     if (fromKey && h.t < TUNE.holdTapMax && !this._holdFired) h.el.click();
   }
-  _holdUpdate(rdt) {
+  _holdUpdate() {
     const h = this.hold;
-    h.t += rdt;
+    h.t = (performance.now() - h.t0) / 1000;
     h.el.style.setProperty('--hold', clamp(h.t / TUNE.holdGear, 0, 1));
     if (h.t >= TUNE.holdGear) {
       this._holdFired = true;
@@ -2138,7 +2138,7 @@ export class UI {
     }
   }
   _openGate(onPass) {
-    const a = 12 + Math.floor(Math.random() * 38), b = 3 + Math.floor(Math.random() * 6);
+    const a = 23 + Math.floor(Math.random() * 67), b = 4 + Math.floor(Math.random() * 6);   // e.g. 37 × 4 (grown-ups only)
     this.gate = { ans: String(a * b), typed: '', onPass };
     const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'del', '0', 'ok'];
     this._open('gate', `<div class="panel dialog gate pop"><button class="x-btn" data-act="close" data-id="gate" data-nav>✕</button>
@@ -2264,7 +2264,7 @@ export class UI {
         <div class="lv-cards n${n}">${cards}</div>
         ${rr > 0 ? `<button class="btn btn-white sm lv-reroll" data-act="reroll" data-nav>🔄 ${esc(t('ui.rerollCards'))} ×${rr}</button>` : ''}
       </div>`, { back: false, cls: 'guard' });
-    this.lvl = { list, t: 0, picked: false };
+    this.lvl = { list, t: 0, t0: performance.now(), picked: false };
     const evoI = list.findIndex((c) => c.evo);
     if (evoI >= 0) {
       this._sfx('star');
@@ -2277,10 +2277,10 @@ export class UI {
       place(); setTimeout(place, 700);
     }
   }
-  _levelUpdate(rdt) {
+  _levelUpdate() {
     const l = this.lvl;
     const before = l.t;
-    l.t += rdt;
+    l.t = (performance.now() - l.t0) / 1000;
     if (before < TUNE.levelGuard && l.t >= TUNE.levelGuard) this._ovl('levelup')?.el.classList.remove('guard');
   }
   _lvlMove(dir) {
@@ -2716,12 +2716,12 @@ export class UI {
         <div class="rk-text"><small class="rk-sub">${esc(t('ui.rankUp'))}</small><b class="rk-name" data-text="${esc(rankName(rank || nr))}">${esc(rankName(rank || nr))}</b><span class="rk-stars">${'★'.repeat(Math.max(1, n0(rank?.stars) || 1))}</span></div>
       </div>
       <button class="btn btn-gold big rk-btn" data-act="rankSkip" data-nav data-default>${esc(t('ui.great'))}</button>`, { back: () => this._rankEnd() });
-    this.rankT = { t: 0 };
+    this.rankT = { t: 0, t0: performance.now() };
     setTimeout(() => { if (this._isOpen('rank')) this._confetti(this._ovl('rank').el, 50); }, REDUCED ? 0 : 3000);
   }
   _rankUpdate(rdt) {
     const r = this.rankT;
-    r.t += rdt;
+    r.t = (performance.now() - r.t0) / 1000;
     if (!r.a && r.t > 0.6) { r.a = 1; this._sfx('whoosh'); this.G.input?.rumble?.(0.3, 0.2, 120); }
     if (!r.b && r.t > 1.4) { r.b = 1; this._sfx('rankup'); this.G.input?.rumble?.(0.7, 0.5, 220); }
     if (!r.c && r.t > 3.0) { r.c = 1; this.G.app?.pokeHero?.(); }
@@ -2765,13 +2765,13 @@ export class UI {
         <small class="note">${esc(t('ui.restBonus'))}</small>
         <div class="row"><button class="btn btn-gold big" data-act="breakRest" data-nav data-default>🌙 ${esc(t('ui.takeBreak'))}</button><button class="btn btn-white" data-act="breakMore" data-nav>${esc(t('ui.keepPlaying'))}</button></div>
       </div>`, { back: false });
-    this.eye = { t: 0 };
+    this.eye = { t: 0, t0: performance.now() };
     this._sfx('star');
   }
   _eyeUpdate(rdt) {
     const o = this._ovl('break');
     if (!o) { this.eye = null; return; }
-    this.eye.t += rdt;
+    this.eye.t = (performance.now() - this.eye.t0) / 1000;
     const left = Math.max(0, TUNE.eyeRest - this.eye.t);
     const n = o.el.querySelector('.er-n');
     const s = String(Math.ceil(left));

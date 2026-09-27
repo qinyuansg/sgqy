@@ -1445,6 +1445,8 @@ const DIRECTOR = {
   'pickup:crystal': 'onCrystal', 'pickup:heart': 'onHeartPickup', 'pickup:coin': 'onCoin', 'pickup:magnet': 'onMagnet',
   'boss:slam': 'onBossSlam', 'boss:hit': 'onBossHit', 'boss:defeat': 'onBossDefeat', 'boss:phase': 'onBossPhase',
   'run:end': 'onRunEnd', 'gate:open': 'onGateOpen', 'gate:close': 'onGateClose', 'settings:change': 'onSettings',
+  // hero-kit sync events (player.js draws its own wells / black-hole disc / bolts; fx adds the flourish)
+  'player:bolt': 'onPlayerBolt', 'player:stomp': 'onPlayerStomp', 'player:implode': 'onPlayerImplode', 'player:bump': 'onPlayerBump',
 };
 
 export class FX {
@@ -1606,7 +1608,12 @@ export class FX {
       case 'shards': this._shards(x, y || 0.5, z, n ?? 10, o.color ?? 0xef4b3c, o.dirX ?? 0, o.dirZ ?? 0, o.size ?? 0.18, o.speed ?? 1); break;
       case 'sparks': this._sparks(x, y || 0.5, z, n ?? 12, o.colors || (o.color != null ? [o.color] : PAL.sparkWarm), o.speed ?? 10, o.life ?? 0.35, !!o.self); break;
       case 'sparkle': this._sparkles(x, y || 0.6, z, n ?? 8, o.colors || (o.color != null ? [o.color] : IP0), o.radius ?? 0.8, !!o.self); break;
-      case 'dust': this._dust(x, z, n ?? 8, o.radius ?? 0.5, o.speed ?? 3, o.size ?? 0.45); break;
+      case 'dust': {
+        const sc = clamp(o.size ?? 1, 0.3, 3);
+        if (y > 0.45) this._steam(x, y, z, n ?? 3, 0.18 + 0.14 * sc, o.color ?? 0xf4f6fb);
+        else this._dust(x, z, n ?? 8, o.radius ?? 0.3 * sc + 0.15, o.speed ?? 3, 0.28 + 0.16 * sc);
+        break;
+      }
       case 'confetti': this._confettiBurst(x, y || 1, z, n ?? TUNE.confetti.burst, !!o.self); break;
       case 'ring': this.rings.anim(x, z, o.r0 ?? 0.2, o.radius ?? 2.5, o.life ?? 0.35, o.color ?? HEX.white, o.alpha ?? 0.9, { t0: o.thick ?? 0.35, t1: 0.08, self: o.self ? 1 : 0 }); break;
       case 'stars': this._stars(x, y || 0.9, z, n ?? 4, o.size ?? 0.42); break;
@@ -1746,8 +1753,9 @@ export class FX {
     const dl = Math.hypot(p.dirX ?? 0, p.dirZ ?? 0) || 1;
     D.dirX = (p.dirX ?? 0) / dl; D.dirZ = (p.dirZ ?? 1) / dl;
     D.size = this.G.run?.player?.size ?? 1;
-    D.trail = p.trail || this.G.meta?.selectedTrail?.() || 'default';
-    D.colors = this._trailColors(p.trailColors || null, D.trail, p.color ?? HEROES.find((h) => h.id === D.heroId)?.color ?? 0x2f6bff);
+    const given = Array.isArray(p.trailColors) ? p.trailColors : Array.isArray(p.trail) ? p.trail : null;
+    D.trail = (typeof p.trail === 'string' && p.trail) || this.G.meta?.selectedTrail?.() || 'default';
+    D.colors = this._trailColors(given, D.trail, p.color ?? HEROES.find((h) => h.id === D.heroId)?.color ?? 0x2f6bff);
     this.ribbon.colors = D.colors;
     const hero = HEROES.find((h) => h.id === D.heroId);
     D.time = hero?.dashTime ?? GT.dash.time;
@@ -1755,16 +1763,16 @@ export class FX {
     // dash-start puff
     this._dust(x - D.dirX * 0.4, z - D.dirZ * 0.4, Math.round((D.heroId === 'mochi' ? 7 : 4) * this.deco + 1), 0.3, 2.2, 0.4);
     this.rings.anim(x, z, 0.3, 1.1, 0.2, HEX.white, 0.55, { t0: 0.18, t1: 0.04 });
-    if (D.heroId === 'zap') {
-      this._blinkFrom.x = x; this._blinkFrom.z = z; this._blinkFrom.has = true;
-      this.rings.anim(x, z, 0.3, hero?.passive?.sparkRadius ?? 1.6, 0.25, HEX.storm, 0.9, { style: RS.DASHED, t0: 0.25, t1: 0.1 });
-      this._sparks(x, 0.5, z, Math.round(10 * this.emit), IP2, 7, 0.28, true);
+    if (D.heroId === 'zap' || p.blink || p.kind === 'blink') {
+      const sr = hero?.passive?.sparkRadius ?? 1.6;
+      this.rings.anim(x, z, 0.3, sr, 0.25, HEX.storm, 0.9, { style: RS.DASHED, t0: 0.25, t1: 0.1 });
+      if (p.toX != null && p.toZ != null) { // blink destination known now: zap line + arrival field
+        this.bolt(p.toX, p.toZ, { fromX: x, fromY: 0.55, fromZ: z, y: 0.55, width: 0.22, amp: 0.6, branches: 1, impact: false, auto: true });
+        this.rings.anim(p.toX, p.toZ, 0.3, sr, 0.25, HEX.storm, 0.9, { style: RS.DASHED, t0: 0.25, t1: 0.1 });
+        this._blinkFrom.has = false;
+      } else { this._blinkFrom.x = x; this._blinkFrom.z = z; this._blinkFrom.has = true; }
     }
-    if (D.heroId === 'stella') {
-      const w = hero?.well;
-      const e = this._ev(K.VORTEX);
-      if (e) { e.game = true; e.x = x; e.z = z; e.r = w?.radius ?? 3.5; e.dur = w?.time ?? 1.8; e.color.copy(col(HEX.violet)); e.c = 0; }
-    }
+    // (Stella's gravity well is drawn by player.js on 'player:well')
   }
 
   onDashEnd(p) {
@@ -1773,11 +1781,10 @@ export class FX {
     D.on = false;
     this._dust(x, z, Math.round(3 * this.deco + 1), 0.3, 1.8, 0.35);
     if (D.heroId === 'mochi') this.rings.anim(x, z, 0.3, 1.6, 0.25, HEX.white, 0.7, { t0: 0.3, t1: 0.05 });
-    if (D.heroId === 'zap' && this._blinkFrom.has) {
+    if (this._blinkFrom.has) {
       const f = this._blinkFrom;
       this.bolt(x, z, { fromX: f.x, fromY: 0.55, fromZ: f.z, y: 0.55, width: 0.22, amp: 0.6, branches: 1, impact: false, auto: true, color: HEX.storm });
       this.rings.anim(x, z, 0.3, 1.6, 0.25, HEX.storm, 0.9, { style: RS.DASHED, t0: 0.25, t1: 0.1 });
-      this._sparks(x, 0.5, z, Math.round(10 * this.emit), IP2, 7, 0.28, true);
       f.has = false;
     }
   }
@@ -2025,6 +2032,32 @@ export class FX {
 
   onSettings({ key, value }) { if (key === 'reduceFlash') this.reduceFlash = !!value; }
 
+  /** player.js drew a storm / static bolt: add the impact, and stop fx's own auto-bolts */
+  onPlayerBolt(p) {
+    this.extBoltT = this.clock;
+    const x = p.x ?? 0, z = p.z ?? 0;
+    this.rings.anim(x, z, 0.2, 1.9, 0.3, HEX.storm, 0.95, { t0: 0.4, t1: 0.08 });
+    this.rings.anim(x, z, 0.1, 1.0, 0.22, HEX.white, 0.9, { t0: 0.25, t1: 0.05 });
+    this._flash(x, 0.4, z, 1.6, HEX.storm, 0.12);
+    this._dust(x, z, Math.round(4 * this.deco), 0.4, 3, 0.35);
+  }
+
+  onPlayerStomp(p) {
+    const x = p.x ?? 0, z = p.z ?? 0, R = p.radius ?? 3;
+    this.rings.anim(x, z, 0.8, R * 1.15, 0.35, HEX.mega, 0.85, { t0: 0.4, t1: 0.06, delay: 0.03, self: 1 });
+    this._sparkles(x, 0.6, z, Math.round(6 * this.deco), IP23, R * 0.6, true);
+  }
+
+  onPlayerImplode(p) {
+    for (const e of this.evs) if (e.on && e.kind === K.BLACKHOLE) { e.f3 = 1; if (p.x != null) { e.x = p.x; e.z = p.z; } }
+  }
+
+  onPlayerBump(p) {
+    const x = p.x ?? 0, z = p.z ?? 0;
+    this.rings.anim(x, z, 0.3, 1.3, 0.22, HEX.white, 0.7, { t0: 0.22, t1: 0.05 });
+    this._dust(x, z, Math.round(3 * this.deco + 1), 0.35, 2, 0.35);
+  }
+
   onNova(p) {
     const heroId = p.heroId || this.G.run?.player?.heroId || 'blu';
     const hero = HEROES.find((h) => h.id === heroId) || HEROES[0];
@@ -2039,7 +2072,7 @@ export class FX {
     if (kind === 'bigbang') e.dur = 1.3;
     if (kind === 'mega') { e.dur = (hero.nova?.duration ?? 6) + 0.3; e.game = true; }
     if (kind === 'storm') { e.dur = (hero.nova?.duration ?? TUNE.storm.time) + 0.5; e.n = hero.nova?.bolts ?? TUNE.storm.bolts; e.a = this.clock; e.game = true; }
-    if (kind === 'blackhole') { e.dur = (hero.nova?.duration ?? 3) + 1.0; e.b = hero.nova?.duration ?? 3; e.c = hero.nova?.implode ?? 4; e.r = hero.nova?.radius ?? 11; }
+    if (kind === 'blackhole') { e.dur = (hero.nova?.duration ?? 3) + 1.4; e.b = hero.nova?.duration ?? 3; e.c = hero.nova?.implode ?? 4; e.r = hero.nova?.radius ?? 11; }
   }
 
   // =========================================================
@@ -2201,16 +2234,8 @@ export class FX {
       for (let i = 0; i < 3; i++) this.rings.anim(x, z, 0.8, 5 + i * 1.5, 0.5, i === 1 ? 0xffc1dc : HEX.mega, 1, { t0: 0.6, t1: 0.1, delay: i * 0.1, self: 1 });
       this._dust(x, z, Math.round(12 * this.deco + 2), 1.4, 6, 0.6);
       this._sparkles(x, 1.5, z, 16, IP22, 1.8, true);
-      e.acc = 0.5;
     }
-    // ground-pound stomps every 0.5 s while giant
-    e.acc -= fdt;
-    if (e.acc <= 0 && t < e.dur - 0.4) {
-      e.acc += 0.5;
-      this.rings.anim(x, z, 1, 3.4, 0.35, HEX.mega, 0.9, { t0: 0.5, t1: 0.08, self: 1 });
-      this.rings.anim(x, z, 0.8, 2.6, 0.3, HEX.white, 0.6, { t0: 0.25, t1: 0.05, delay: 0.04, self: 1 });
-      this._dust(x, z, Math.round(8 * this.deco + 2), 1.1, 4.5, 0.6);
-    }
+    // (ground-pound stomps come from player.js → 'player:stomp')
     e.b -= fdt;
     if (e.b <= 0) { e.b = 0.08; this._sparkles(x, rr(0.5, 2.5), z, 1, IP23, 1.4, true); }
   }
@@ -2249,27 +2274,21 @@ export class FX {
 
   _tickBlackHole(e, t, fdt) {
     const x = e.x, z = e.z, c = e.color;
-    const pull = e.b;          // pull seconds
-    if (t < pull) {
+    const pull = e.b;                       // pull seconds (hero data)
+    if (!e.f3 && t < pull + 0.35) {        // pull until player.js implodes (or fallback)
       const open = easeOutBack(Math.min(1, t / 0.3));
-      this.rings.now(x, z, 3.6 * open, 0.1, c, 1, RS.VORTEX, 1, 1, 0, 0, 0, 1, 0);
-      this.rings.now(x, z, 2.2 * open, 0.14, col(0xff7ad9), 0.85, RS.DASHED, 0, 1, 0, 0, 0, 1, 0);
-      this.rings.now(x, z, 4.6 * open, 0.1, col(0xd9c8ff), 0.5, RS.DASHED, 0, 0, 0, 0, 0, 1, 0);
-      this.shells.now(x, 1.2, z, 0.75 * open + Math.sin(t * 20) * 0.03, c, 1, 2, 1, 1);
-      this.shells.now(x, 1.2, z, 1.25 * open, c, 0.5, 0, 1, 1);
+      const late = t > pull ? 1 - (t - pull) / 0.35 : 1;
+      this.rings.now(x, z, 1.7 * open * late, 0.14, col(0xff7ad9), 0.85, RS.DASHED, 0, 1, 0, 0, 0, 1, 0);
+      this.rings.now(x, z, 1.2 * open * late, 0.1, c, 0.5, RS.DISC, 1, 0, 0, 0, 0, 1, 0);
+      this.shells.now(x, 1.2, z, (0.75 * open + Math.sin(t * 20) * 0.03) * late + 0.05, c, 1, 2, 1, 1);
+      this.shells.now(x, 1.2, z, 1.25 * open * late + 0.05, c, 0.5, 0, 1, 1);
       e.acc -= fdt;
       while (e.acc <= 0) { e.acc += 0.018 / Math.max(0.35, this.deco); this._spiralIn(x, z, rr(4, e.r), IP25, 1.2, true, true); }
       return;
     }
-    const u = (t - pull);
-    if (u < 0.2) { // implode
-      const k = 1 - u / 0.2;
-      this.rings.now(x, z, 3.4 * k, 0.1, c, 0.9, RS.VORTEX, 1, 1, 0, 0, 0, 1, 0);
-      this.shells.now(x, 1.2, z, 0.75 * k + 0.05, c, 1, 2, 1, 1);
-      return;
-    }
     if (!e.f1) {
       e.f1 = 1;
+      e.dur = e.t + 0.8;
       const R = e.c;
       this._spawnShell(x, 1.2, z, R * 1.1, c, 0.7, 0, 0.9 * this._flashK());
       this._spawnShell(x, 1.2, z, R * 0.6, col(0xff9ed8), 0.5, 0, 0.6 * this._flashK());
@@ -2536,14 +2555,14 @@ export class FX {
     }
   }
 
-  _steam(x, y, z, n) {
+  _steam(x, y, z, n, size = 0.27, hex = 0xeef2fb) {
     for (let i = 0; i < n; i++) {
       const s = this.sp.s();
       s.x = x + rr(-0.3, 0.3); s.y = y; s.z = z + rr(-0.3, 0.3);
       s.vy = rr(1, 2); s.vx = rr(-0.5, 0.5); s.vz = rr(-0.5, 0.5); s.drag = 1.5;
-      s.life = rr(0.5, 0.8); s.size = rr(0.22, 0.32); s.size1 = s.size * 2; s.shape = SH.PUFF; s.add = 0; s.fade = 1.5; s.alpha = 0.8;
+      s.life = rr(0.5, 0.8); s.size = size * rr(0.8, 1.2); s.size1 = s.size * 2; s.shape = SH.PUFF; s.add = 0; s.fade = 1.5; s.alpha = 0.8;
       s.delay = i * 0.05; s.self = 1;
-      s.color(0xeef2fb);
+      s.color(hex);
       this.sp.add(s);
     }
   }

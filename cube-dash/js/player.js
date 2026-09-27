@@ -34,13 +34,14 @@ const TUNE_H = {
   pip: { inner: 0.8, outer: 0.99, gap: 0.16, fadeIn: 10, fadeOut: 4, shake: 0.28 },
   groundRing: { inner: 0.6, outer: 0.68, color: 0x5ff2ff, opacity: 0.6 },   // permanent readability ring
   cueEvery: 0.45,          // min seconds between "!" cue events
+  gapClosing: 0.6,         // gap-rule Perfect needs the cube to close in at ≥ this speed (u/s)
   nudge: 0.6,              // walking into a dizzy cube pushes it by this share of the overlap
   bubbleY: 0.9,
   nova: { rise: 0.45, riseH: 0.9, iframes: 1.1 },
   mega: { touchCd: 0.8, stompEvery: 0.5, stompR: 3, stompDizzy: 1, speedMult: 1.1, grow: 0.3, shrink: 0.4, knock: 12, heavyDizzy: 2 },
   storm: { range: 12, heavyDizzy: 4 },
   hole: { hurt: 1, push: 9 },
-  stormZone: { tick: 1.5, push: 3.5 },
+  stormZone: { tick: 1.5, push: 3.5, grace: 0.5 },
   lookRange: 7,
   starlightRange: 3, starlightStop: 1.2,
   bolts: 12, boltSegs: 5, boltLife: 0.26,
@@ -700,17 +701,21 @@ export class Player {
     this._cueOn = cue;
   }
 
-  /** gap rule: a harmful cube within TUNE.perfect.gap (surface to surface) that isn't moving away */
+  /**
+   * gap rule: a harmful cube within TUNE.perfect.gap (surface to surface) that is CLOSING in.
+   * (A cube merely standing next to you — a Beamer pylon, a jostling crowd — is not "about to hit",
+   * otherwise Perfects could be farmed for free.)
+   */
   _gapPerfect() {
     const s = this.state, list = this.em?.list;
     if (!list) return false;
     const gap = TUNE.perfect.gap ?? 0.5;
     for (const e of list) {
-      if (isGone(e) || !harmfulOf(e)) continue;
+      if (isGone(e) || !harmfulOf(e) || bossy(e)) continue;
       const dx = e.x - s.x, dz = e.z - s.z, d = Math.hypot(dx, dz);
-      if (d - radiusOf(e) - s.radius > gap) continue;
+      if (d < 1e-4 || d - radiusOf(e) - s.radius > gap) continue;
       const rvx = (e.vx || 0) - s.vx, rvz = (e.vz || 0) - s.vz;
-      if (dx * rvx + dz * rvz <= 0.05 * d) return true;
+      if (dx * rvx + dz * rvz <= -TUNE_H.gapClosing * d) return true;
     }
     return false;
   }
@@ -720,7 +725,8 @@ export class Player {
     if (!hz || !hz.length) return false;
     for (let i = 0; i < hz.length; i++) {
       const h = hz[i];
-      if (!h?.active) continue;
+      // dashing THROUGH an attack (laser, ring, charge, blast) — not merely into the king's body
+      if (!h?.active || h.kind === 'boss' || h.kind === 'body') continue;
       let hit = false;
       try { hit = !!h.test?.(s.x, s.z, s.radius + 0.15); } catch { hit = false; }
       if (hit) {
@@ -1174,15 +1180,18 @@ export class Player {
         this.hurtStunT = 0.3; this.riseT = 0.4;
       }
     } catch { /* world gimmicks are optional */ }
-    // Shrink Storm: outside the play radius hurts every 1.5 s and pushes in
+    // Shrink Storm: outside the play radius pushes the hero back in; the 1♥ / 1.5 s tick is
+    // waves.js' (it owns the storm) — only if the director doesn't tick do we hurt here
     if (run.mode === 'storm') {
       const d = Math.hypot(s.x, s.z);
       const R = run.arenaRadius - TUNE_H.bodyR;
       if (d > R && d > 0.01) {
         s.x -= (s.x / d) * TUNE_H.stormZone.push * dt; s.z -= (s.z / d) * TUNE_H.stormZone.push * dt;
-        this._stormTick -= dt;
-        if (this._stormTick <= 0) { this._stormTick = DATA.modes?.storm?.stormTick ?? TUNE_H.stormZone.tick; run.hurtPlayer(1, s.x * 1.2, s.z * 1.2, 'storm'); }
-      } else this._stormTick = 0;
+        if (!(run.waves && 'stormTick' in run.waves)) {
+          this._stormTick -= dt;
+          if (this._stormTick <= 0) { this._stormTick = DATA.modes?.storm?.stormTick ?? TUNE_H.stormZone.tick; run.hurtPlayer(1, s.x * 1.2, s.z * 1.2, 'storm'); }
+        }
+      } else this._stormTick = TUNE_H.stormZone.grace;
     }
   }
 
@@ -1274,7 +1283,7 @@ export class Player {
     this.shadows.begin();
     this.shadows.add(s.x, s.z, 1.05 * s.size, y);
     this.shadows.end();
-    this.groundRing.visible = !s.dead && mode !== 'victory';
+    this.groundRing.visible = !this.model.ring && !s.dead && mode !== 'victory';
     this.groundRing.position.set(s.x, 0.03, s.z);
     this.groundRing.scale.setScalar(s.size);
     this.groundMat.opacity = TUNE_H.groundRing.opacity * (s.bubbled ? 0.4 : 1) * (0.85 + 0.15 * Math.sin(time * 3));

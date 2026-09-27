@@ -953,9 +953,9 @@ kbd.wide { min-width: 70px; font-size: 15px; }
 .dialog h3 { margin: 0; font: 900 22px var(--font); }
 .dlg-ico { font-family: var(--emoji); font-size: 48px; }
 .dlg-txt { margin: 0; font: 800 18px/1.45 var(--font); }
-.rays { position: absolute; left: 50%; top: 50%; width: 180vmax; height: 180vmax; margin: -90vmax 0 0 -90vmax; pointer-events: none;
+.rays { position: absolute; left: 50%; top: 50%; width: 160vmin; height: 160vmin; margin: -80vmin 0 0 -80vmin; pointer-events: none;
   background: repeating-conic-gradient(from 0deg, rgba(255, 255, 255, .20) 0 9deg, rgba(255, 255, 255, 0) 9deg 22.5deg);
-  -webkit-mask: radial-gradient(circle closest-side, #000 0 12%, transparent 42%); mask: radial-gradient(circle closest-side, #000 0 12%, transparent 42%); animation: rays 14s linear infinite; }
+  -webkit-mask: radial-gradient(circle closest-side, #000 0 22%, transparent 96%); mask: radial-gradient(circle closest-side, #000 0 22%, transparent 96%); animation: rays 14s linear infinite; }
 .rays.gold { background: repeating-conic-gradient(from 0deg, rgba(255, 220, 110, .24) 0 9deg, rgba(255, 220, 110, 0) 9deg 22.5deg); }
 .rays.soft { opacity: .6; }
 @keyframes rays { to { transform: rotate(360deg); } }

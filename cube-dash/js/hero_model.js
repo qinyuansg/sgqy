@@ -883,7 +883,7 @@ class HeroModel {
     this.sq.add(this.outline);
 
     // golden nova-ready aura (fresnel shell)
-    this.auraMat = fresnelMaterial(TUNE.gold, { alpha: 0, pow: 1.6, base: 0.05, bands: 1 });
+    this.auraMat = fresnelMaterial(TUNE.gold, { alpha: 0, pow: 1.8, base: 0.02, bands: 1, additive: false });
     this._own.push(this.auraMat);
     this.aura = new THREE.Mesh(bodyGeo, this.auraMat);
     this.aura.scale.set(bw * 1.16, bh * 1.16, bd * 1.16);
