@@ -1345,7 +1345,8 @@ class Freed {
     const o = this.n * FA, d = this.d;
     d[o] = x; d[o + 1] = y; d[o + 2] = z; d[o + 3] = size; d[o + 4] = 0;
     d[o + 5] = golden ? -1 : (rnd() * this.colors.length) | 0;
-    d[o + 6] = rnd() * TAU; d[o + 7] = rr(0.8, 1.2); d[o + 8] = rr(-0.25, 0.25); d[o + 9] = 0; d[o + 10] = rr(0.9, 1.15);
+    // life ×0.85–1.0 → gone upward within 1.02–1.2 s (§7.20: ~0.8–1.2 s)
+    d[o + 6] = rnd() * TAU; d[o + 7] = rr(0.8, 1.2); d[o + 8] = rr(-0.25, 0.25); d[o + 9] = 0; d[o + 10] = rr(0.85, 1.0);
     return this.n++;
   }
   clear() { this.n = 0; this.crowd.count = 0; this.hands.count = 0; this.outline.count = 0; this.shadows.begin(); this.shadows.end(); this._show(false); }
@@ -2268,7 +2269,7 @@ export class FX {
     const k = open * close;
     this.rings.now(e.x, e.z, e.r * k, 0.1, e.color, 0.9 * close, RS.VORTEX, 0, 1, 0, 0, 0, 0, 0);
     this.rings.now(e.x, e.z, e.r * 1.35 * k, 0.16, col(HEX.white), 0.8 * close, RS.DASHED, 0, 0, 0, 0, 0, 0, 0);
-    this.beams.now(e.x, e.z, 0, e.r * 0.6 * k, 18, e.color, 0.42 * close, 0, 1, 0);
+    this.beams.now(e.x, e.z, 0, e.r * 0.6 * k, TUNE.pillarMaxH, e.color, 0.42 * close, 0, 1, 0);
     e.acc -= fdt;
     if (e.acc <= 0) {
       e.acc = 0.05;
@@ -2366,7 +2367,7 @@ export class FX {
       const late = t > pull ? 1 - (t - pull) / 0.35 : 1;
       this.rings.now(x, z, 1.7 * open * late, 0.14, col(0xff7ad9), 0.85, RS.DASHED, 0, 1, 0, 0, 0, 1, 0);
       this.rings.now(x, z, 1.2 * open * late, 0.1, c, 0.5, RS.DISC, 1, 0, 0, 0, 0, 1, 0);
-      // the dark core floats overhead (BH_Y) so the hero standing in the vortex never disappears under it
+      // the dark core floats overhead (TUNE.bhCoreY) so the hero standing in the vortex never disappears under it
       const cy = TUNE.bhCoreY + Math.sin(t * 2.2) * 0.12;
       this.shells.now(x, cy, z, (0.62 * open + Math.sin(t * 20) * 0.03) * late + 0.05, c, 1, 2, 1, 1);
       this.shells.now(x, cy, z, 1.1 * open * late + 0.05, c, 0.5, 0, 1, 1);
@@ -2615,7 +2616,7 @@ export class FX {
     const s = this.sp.s();
     const rf = this.reduceFlash;
     s.x = x; s.y = y; s.z = z; s.life = life; s.size = size * (rf ? 0.6 : 0.55); s.size1 = size * (rf ? 0.8 : 1.15);
-    // default: floor-projected (bodies stay on top); 'top' = true depth, pops OVER the bodies it hits
+    // default: floor-projected (bodies stay on top); 'top' = overlay depth, pops OVER the bodies it hits
     s.shape = shape; s.rot = rnd() * TAU; s.add = 0.35; s.alpha = rf ? 0.3 : 0.85; s.fade = 1.5; s.self = self === 'top' ? 2 : 0;
     s.color(hex, 1.1);
     this.sp.add(s);

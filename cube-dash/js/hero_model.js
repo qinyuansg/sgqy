@@ -923,7 +923,8 @@ class HeroModel {
     // ---- nodes
     this.group = new THREE.Group();
     this.group.name = 'hero:' + hero.id;
-    this.group.userData.heroModel = this;
+    // non-enumerable: Object3D.clone() JSON-copies userData and would choke on the cycle
+    Object.defineProperty(this.group.userData, 'heroModel', { value: this, enumerable: false, configurable: true });
     this.pivot = new THREE.Group();
     this.lift = new THREE.Group();
     this.sq = new THREE.Group();
@@ -996,7 +997,8 @@ class HeroModel {
     this.pivot.add(this.sweat);
 
     // ---- i-frame bubble shield
-    this.bubbleMat = fresnelMaterial(0x40f0ff, { alpha: 0, pow: 2.4, base: 0.08, hi: 0.4 });
+    // soap-bubble shield: NORMAL blend (additive cyan over a yellow/green hero read as a white blob)
+    this.bubbleMat = fresnelMaterial(0x40f0ff, { alpha: 0, pow: 2.2, base: 0.06, hi: 0.5, additive: false });
     this._own.push(this.bubbleMat);
     this.bubble = new THREE.Mesh(geo('bubble', () => new THREE.SphereGeometry(0.88, 32, 18)), this.bubbleMat);
     this.bubble.visible = false;
@@ -1368,7 +1370,7 @@ class HeroModel {
 
     // ---- bubble shield
     this.bubble.visible = this.bubbleAmt > 0.02;
-    this.bubbleMat.uniforms.uAlpha.value = this.bubbleAmt * (0.27 + 0.08 * Math.sin(t * TAU * TUNE.bubbleHz));
+    this.bubbleMat.uniforms.uAlpha.value = this.bubbleAmt * (0.42 + 0.1 * Math.sin(t * TAU * TUNE.bubbleHz));
     this.bubble.scale.setScalar(1 + Math.sin(t * TAU * 1.5) * 0.02);
 
     // ---- ground ring stays on the floor even when the group is lifted

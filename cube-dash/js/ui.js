@@ -746,7 +746,7 @@ export class UI {
   _ovl(id) { return this.overlays.find((o) => o.id === id); }
 
   // ═════════ screens ═════════
-  go(name, params = {}) {
+  go(name, params = {}, { silent = false } = {}) {
     const render = this['_s_' + name];
     if (!render) { console.warn('[ui] unknown screen', name); return; }
     const G = this.G;
@@ -755,18 +755,18 @@ export class UI {
     for (const o of [...this.overlays]) if (LOCAL_OVLS.includes(o.id)) this._close(o.id, true);
     const old = this.screen?.el;
     const el = document.createElement('div');
-    el.className = `scr scr-${name}`;
+    el.className = `scr scr-${name}${silent ? ' static' : ''}`;
     this.screen = { name, params, el };
     try { el.innerHTML = render.call(this, params); }
     catch (err) { console.error('[ui] render', name, err); el.innerHTML = `<div class="scr-head">${this._backBtn()}</div>`; }
     if (old) {
-      if (REDUCED) old.remove();
+      if (REDUCED || silent) old.remove();
       else { old.classList.add('leave'); old.style.pointerEvents = 'none'; setTimeout(() => old.remove(), 240); }
     }
     this.screenHost.appendChild(el);
     try { this['_p_' + name]?.(el, params); } catch (err) { console.error('[ui] post', name, err); }
     this._layerChanged();
-    this._emit('open', { screen: name });
+    if (!silent) this._emit('open', { screen: name });   // (a data refresh of the same screen is not a page turn: no whoosh)
     if (name === 'home') this._afterHome();
   }
   _clearScreen() {
@@ -784,7 +784,17 @@ export class UI {
     if (this.screen) { const f = this.focusEl?.dataset?.act; this.go(this.screen.name, this.screen.params); if (f && this.kb) { const e = this.screen.el.querySelector(`[data-act="${f}"]`); if (e) this._focus(e); } }
     if (this._isOpen('pause')) this.showPause();
   }
-  _rerender() { if (this.screen) { const sc = this.screen.el.querySelector('.scroll'); const y = sc?.scrollTop ?? 0, x = sc?.scrollLeft ?? 0; this.go(this.screen.name, this.screen.params); const sc2 = this.screen.el.querySelector('.scroll'); if (sc2) { sc2.scrollTop = y; sc2.scrollLeft = x; } } }
+  /** redraw the current screen in place (after a claim / equip / data change): no pop-in animation, no whoosh,
+   *  scroll positions and the keyboard focus survive */
+  _rerender() {
+    if (!this.screen) return;
+    const keep = [...this.screen.el.querySelectorAll('.scroll, .scroll-x')].map((e) => [e.scrollTop, e.scrollLeft]);
+    const fa = this.focusEl && this.screen.el.contains(this.focusEl) ? this.focusEl : null;
+    const fsel = fa ? ['act', 'to', 'i', 'id', 'kind', 'tab', 'w', 's', 'key', 'v', 'mode', 'hero', 'n'].filter((k) => fa.dataset[k] != null).map((k) => `[data-${k}="${CSS.escape(fa.dataset[k])}"]`).join('') : '';
+    this.go(this.screen.name, this.screen.params, { silent: true });
+    [...this.screen.el.querySelectorAll('.scroll, .scroll-x')].forEach((e, i) => { if (keep[i]) { e.scrollTop = keep[i][0]; e.scrollLeft = keep[i][1]; } });
+    if (fsel && this.kb) { const e = this.screen.el.querySelector(fsel); if (e) this._focus(e); }
+  }
   _backBtn(to) { return `<button class="btn-back" data-act="back" ${to ? `data-to="${to}"` : ''} data-nav aria-label="${esc(t('ui.back'))}"><span>‹</span></button>`; }
   _head(title, icon = '', extra = '') {
     return `<header class="scr-head">${this._backBtn()}<h2 class="ribbon">${icon ? `<span class="rib-ico">${icon}</span>` : ''}<span>${esc(title)}</span></h2><div class="head-extra">${extra}</div></header>`;

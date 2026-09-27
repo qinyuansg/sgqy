@@ -1399,9 +1399,8 @@ export class World {
     const live = this.G.run && this.G.run.state !== 'ended';
     if (live && changed) {
       // Endless theme cycling swaps the world mid-run: keep FEVER, and sell the jump with a
-      // rim wave + soft edge flash instead of a hard pop
+      // white rim wave instead of a hard pop
       this.pulseRim(0xffffff, 1); this.rimJump(0.35);
-      this.G.post?.pulse?.({ edge: 0.35, edgeColor: this.theme.palette.rimGlow, duration: 0.6 });
     } else {
       this.setFever(false);
       this._pulse = 0;
@@ -1640,7 +1639,7 @@ export class World {
   /** Shrink Storm / W6 finale: animated storm wall at radius r (r ≥ arenaRadius → none) */
   setPlayRadius(r, instant = false) {
     const R = this.arenaRadius;
-    this._playTarget = clamp(r ?? R, 2, R);
+    this._playTarget = clamp(Number.isFinite(r) ? r : R, 2, R);
     if (instant) { this.playRadius = this._playTarget; this.floorU.uPlayR.value = this.playRadius; }
   }
 
@@ -1708,8 +1707,8 @@ export class World {
   // rim feedback
   // ============================================================
   pulseRim(color = 0xffffff, strength = 1) {
-    this.rimU.uPulseCol.value.set(color);
-    this._pulse = Math.max(this._pulse, clamp(strength, 0, 1));
+    this.rimU.uPulseCol.value.set(typeof color === 'number' || typeof color === 'string' ? color : 0xffffff);
+    this._pulse = Math.max(this._pulse, Number.isFinite(strength) ? clamp(strength, 0, 1) : 1);
     this._chase = 1.2;
   }
 
