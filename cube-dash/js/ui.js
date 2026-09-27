@@ -568,6 +568,7 @@ export class UI {
     if (this.eye) this._eyeUpdate(rdt);
     if (this.rankT) this._rankUpdate(rdt);
     this._healthTick(rdt);
+    if (this.screen?.name === 'home' && (this._heroT = (this._heroT || 0) - rdt) <= 0) { this._heroT = 0.4; this._placeHeroHit(); }
     if (this._canPopup()) this._pump();
     if (this._dirty && !this.overlays.length && this.screen?.name === 'home' && this.G.app?.state !== 'run') { this._dirty = false; this._rerender(); }
     this._navUpdate();
@@ -1299,6 +1300,13 @@ export class UI {
           ${rested > 0 ? `<i class="bp-moon" title="${esc(t('ui.rested'))}">🌙<b>${rested}</b></i>` : ''}
         </button>
       </div>`;
+  }
+  /** keep the tap-the-hero hit area on the 3D hub hero (camera may still be settling) */
+  _placeHeroHit() {
+    const el = this.screen?.el.querySelector('.home-hero');
+    const p = this.G.cam?.worldToScreen?.(0, 0.9, 0);
+    if (!el || !p || p.visible === false || !Number.isFinite(p.x)) return;
+    el.style.left = p.x + 'px'; el.style.top = p.y + 'px';
   }
   _afterHome() {
     // daily sign-in popup once per session when claimable (max 2 popups on open)
