@@ -151,7 +151,7 @@ export class CameraDirector {
     this._cine = c;
     this.inCinematic = true;
     if (!c.overlay) { this.hub = false; this._blend.t = 1; }   // the shot defines its own start
-    G.bus.emit('cine:start', { name });
+    G.bus.emit('cine:start', { name, overlay: c.overlay });   // overlay: short in-play shot (nova / phase) — HUD may stay
     return c.promise;
   }
 
@@ -218,6 +218,7 @@ export class CameraDirector {
       lerpPose(P, this._blend.from, P, easeInOutCubic(this._blend.t));
     }
     copyPose(this._last, P);
+    this._everUpdated = true;
 
     // --- juice: dash FOV kick, zoom punch, trauma shake (comfort caps)
     this._dashT += rdt;
@@ -415,11 +416,12 @@ export class CameraDirector {
 
   _current() {
     // the pose the camera shows right now (for blends / cinematic starts)
-    if (!this._everUpdated) { this._everUpdated = true; this._gamePose(this._last); }
+    if (!this._everUpdated) this._gamePose(this._last);
     return this._last;
   }
 
   _startBlend(dur) {
+    if (!this._everUpdated) return;           // first frame after boot: snap, nothing to blend from
     copyPose(this._blend.from, this._current());
     this._blend.t = 0; this._blend.dur = dur;
   }
@@ -434,7 +436,7 @@ export class CameraDirector {
       if (skipped && c.name === 'victory') this._hold.angle = c.a0 + c.sweep;   // jump to the end of the orbit
     } else this.mode = this.hub ? 'hub' : 'game';
     if (skipped) this._startBlend(0.35);
-    this.G.bus.emit('cine:end', { name: c.name, skipped: !!skipped });
+    this.G.bus.emit('cine:end', { name: c.name, skipped: !!skipped, overlay: c.overlay });
     c.resolve?.();
   }
 

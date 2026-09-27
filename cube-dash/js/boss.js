@@ -39,6 +39,7 @@ const TUNE = {
   crackMax: 12,
   chaseRadiusK: 0.8,
   chaseZig: 0.6, chaseZigDeg: 50, chaseHitSpeed: 18, coreSize: 1.0,
+  chaseHeadStart: 1.2, chaseEaseAfter: 4, chaseEaseRate: 0.35, chaseMinSpeed: 4.2,   // the core tires if you can't catch it (never unwinnable)
   deathTime: 1.6,
   autoCoreHit: true,         // fallback when no player.js controller resolves the dash
   driveShake: false,         // run.js shakes / hit-stops on boss:hit, boss:slam, enemy:bonk
@@ -95,7 +96,7 @@ export class Boss {
     this.pushT = 0; this.pushNx = 0; this.pushNz = 0; this.recX = 0; this.recZ = 0;
     this.slamHzT = 0; this.slamX = 0; this.slamZ = 0;
     this.introT = opts.introTime ?? TUNE.introTime;
-    this.chaseHits = 0; this.kvx = 0; this.kvz = 0; this.zigT = 0; this.zigSign = 1; this.mineT = 0;
+    this.chaseHits = 0; this.kvx = 0; this.kvz = 0; this.zigT = 0; this.zigSign = 1; this.mineT = 0; this.sinceHit = 0;
     this.deathT = 0; this._ovF = 0; this._steamT = 0; this._glitchSeed = rand() * 100;
     this.rotations = { 1: this._rotation(1), 2: this._rotation(2), 3: this._rotation(3) };
     // ----- hazards (run.hazards) -----
@@ -736,7 +737,9 @@ export class Boss {
     this.chaseHits = 0; this.maxHp = BD.coreChase.hits; this.hp = this.maxHp;
     this.name = t('boss.core');
     this.size = TUNE.coreSize; this.radius = 0.55; this.y = 0;
-    this.zigT = TUNE.chaseZig; this.mineT = BD.coreChase.mineEvery;
+    this.zigT = TUNE.chaseZig; this.mineT = BD.coreChase.mineEvery; this.sinceHit = 0;
+    this.hitCd = TUNE.chaseHeadStart;                          // bursts out of the shell and flees before it can be hit
+    { const p = this.run?.player; const dx = p ? this.x - p.x : 0, dz = p ? this.z - p.z : 1, d = len2(dx, dz) || 1; this.vx = dx / d * 10; this.vz = dz / d * 10; }
     this.body.visible = false; this.crown.visible = false; this.mod.visible = false;
     for (const s of this.slabs) s.visible = false;
     this.bigCore.visible = true;
@@ -783,7 +786,9 @@ export class Boss {
       fx += (tx * s * 1.5 - this.x / r * 1.3) * k; fz += (tz * s * 1.5 - this.z / r * 1.3) * k;
     }
     const fl = len2(fx, fz) || 1;
-    const sp = C.speed * this.speedK;
+    this.sinceHit += dt;
+    const ease = Math.max(0, this.sinceHit - TUNE.chaseEaseAfter) * TUNE.chaseEaseRate;
+    const sp = Math.max(TUNE.chaseMinSpeed, C.speed * this.speedK - ease);
     this.vx += (fx / fl * sp - this.vx) * Math.min(1, 6 * dt);
     this.vz += (fz / fl * sp - this.vz) * Math.min(1, 6 * dt);
     this.x += this.vx * dt; this.z += this.vz * dt;
@@ -794,7 +799,7 @@ export class Boss {
 
   _chaseHit(byNova = false) {
     if (this.dead || this.hitCd > 0 || this.kvx || this.kvz) return false;
-    this.chaseHits++;
+    this.chaseHits++; this.sinceHit = 0;
     this.hp = Math.max(0, this.maxHp - this.chaseHits);
     this.hitCd = 0.6; this.flashT = 1;
     const p = this.run?.player;

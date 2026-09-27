@@ -119,6 +119,7 @@ export class Post {
     this._dangerExt = 0; this._dangerAuto = 0; this._danger = 0; this._hb = 0;
     this.ca = new Pulse(); this.flash = new Pulse(); this.edge = new Pulse();
     this.vig = new Pulse(); this.desat = new Pulse(); this.bloomP = new Pulse();
+    this._pulses = [this.ca, this.flash, this.edge, this.vig, this.desat, this.bloomP];
     this._flashTimes = [-9, -9, -9];
     this._now = 0;
 
@@ -137,9 +138,9 @@ export class Post {
         if (p && p.hp !== undefined) this._dangerAuto = p.hp <= 1 && p.hp > 0 ? 1 : 0;
       }),
       bus.on('player:perfect', () => {
-        this.pulse({ flash: 0.14, flashColor: 0xfff4d6, duration: 0.18 });
-        this.desat.fire(0.45, 0.55);
-        this.edge.fire(0.22, 0.4, 0x7ff6ff);
+        this.pulse({ flash: 0.09, flashColor: 0xfff4d6, duration: 0.16 });
+        this.desat.fire(0.3, 0.5);                                // brief "witch-time" beat
+        this.edge.fire(0.24, 0.45, 0x7ff6ff);
       }),
       bus.on('nova', (p) => {
         this.pulse({ chroma: TUNE.caMax, duration: 0.25 });
@@ -195,7 +196,8 @@ export class Post {
   pulse(o = {}) {
     const reduce = !!this.G.save?.profile?.settings?.reduceFlash;
     const dur = o.duration ?? 0.3;
-    if (o.chroma && !reduce) this.ca.fire(Math.min(o.chroma, TUNE.caMax), Math.min(dur, TUNE.caTime));
+    // chroma: UV offset (≤ caMax) — values > 0.01 are read as a 0..1 intensity. Always capped (§7.25).
+    if (o.chroma && !reduce) this.ca.fire(o.chroma > 0.01 ? Math.min(1, o.chroma) * TUNE.caMax : Math.min(o.chroma, TUNE.caMax), Math.min(dur, TUNE.caTime));
     if (o.flash) {
       const a = Math.min(o.flash, TUNE.flashMax);
       const now = this._now;
@@ -232,7 +234,7 @@ export class Post {
   // internals
   // ============================================================
   _tick(rdt) {
-    for (const p of [this.ca, this.flash, this.edge, this.vig, this.desat, this.bloomP]) p.tick(rdt);
+    for (let i = 0; i < this._pulses.length; i++) this._pulses[i].tick(rdt);
     const reduce = !!this.G.save?.profile?.settings?.reduceFlash;
     if (!this.G.run) this._dangerAuto = 0;
     const want = Math.max(this._dangerExt, this._dangerAuto);
@@ -349,14 +351,18 @@ export class Post {
 
   _overlayUpdate() {
     if (!this._overlay) return;
+    const c = this._ovCache;
     const set = (key, el, v, color) => {
-      const c = this._ovCache;
-      const s = v.toFixed(2);
-      if (c[key] !== s) { el.style.opacity = s; c[key] = s; }
-      if (color && c[key + 'c'] !== color) { el.style.background = key === 'flash' ? color : `radial-gradient(ellipse at center, rgba(255,255,255,0) 45%, ${color} 100%)`; c[key + 'c'] = color; }
+      const q = Math.round(v * 100);
+      if (c[key] !== q) { el.style.opacity = String(q / 100); c[key] = q; }
+      if (color !== undefined && c[key + 'c'] !== color) {
+        const css = '#' + color.toString(16).padStart(6, '0');
+        el.style.background = key === 'flash' ? css : `radial-gradient(ellipse at center, rgba(255,255,255,0) 45%, ${css} 100%)`;
+        c[key + 'c'] = color;
+      }
     };
     set('danger', this._ovDanger, this._dangerOut || 0);
-    set('edge', this._ovEdge, this.edge.value, '#' + this.edge.color.getHexString());
-    set('flash', this._ovFlash, this.flash.value, '#' + this.flash.color.getHexString());
+    set('edge', this._ovEdge, this.edge.value, this.edge.color.getHex());
+    set('flash', this._ovFlash, this.flash.value, this.flash.color.getHex());
   }
 }

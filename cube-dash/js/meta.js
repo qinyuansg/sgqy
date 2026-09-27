@@ -19,6 +19,7 @@
 //   meta.onClaim(fn) → unsub   fn(claim) whenever a claim is queued
 //   meta.nextClaim()           shift the head (→ "showing"); null when empty
 //   meta.ackClaim()            the popup's 领取 finished (counter fly-in done)
+//   meta.claim(uid)            same, by uid — ui.js builds popups from meta:reward {id} and calls this
 //   meta.displayCoins / displayTickets   balances minus anything still queued /
 //                              showing — animate the top-bar counter from these
 //   items: {kind:'coins'|'tickets'|'hero'|'skin'|'hat'|'trail'|'card'|'title',
@@ -26,7 +27,8 @@
 //   Popups must never appear mid-run: ui checks `!G.run || G.run.state==='ended'`.
 //
 // Other events emitted: meta:reward {coins, gems:0, tickets, items, source} ·
-//   meta:rankup {rank, before, tierUp, placement} · meta:unlock {kind, id} ·
+//   meta:rankup {rank, before, tierUp (also true for the placement ceremony), placement} ·
+//   meta:unlock {kind, id} (world: id = world index) ·
 //   meta:feature {id} (once, when a hidden system unlocks — also in featureQueue) ·
 //   meta:claim {count} · meta:change {} (anything the lobby shows changed).
 //
@@ -36,24 +38,26 @@
 // Public API (ARCHITECTURE §6 + extras). Claim-style calls return the claim record, or false.
 //   balances   coins · tickets · trophies · freed · rank · bestWave · displayCoins · displayTickets
 //   run        applyRun(results) → breakdown · lastBreakdown · stat(name, scope, heroId)
-//   rewards    grant(rewards, source, opts) · claimQueue · nextClaim() · ackClaim() · onClaim(fn) · describe(item)
-//   stages     isStageUnlocked(w,s) · isStageCleared · stageStars · stageCrowns · stageInfo · stageFails · nextStage()
-//              worldInfo(w) · worldCrowns(w) · totalCrowns() · worldChests(w) · claimWorldChest(w,i) · hubWorld() · modeUnlocked(m)
+//   rewards    grant(rewards, source, opts) · claimQueue · nextClaim() · ackClaim() · claim(uid) · onClaim(fn) · describe(item)
+//   stages     isStageUnlocked(w,s) · isStageCleared · stageStars (crown flags array, coerces to the count) · stageCrowns
+//              stageInfo · stageFails · nextStage() · worldInfo(w) · worldCrowns(w) · totalCrowns() · worldChests(w)
+//              claimWorldChest(w,i) · hubWorld() (world index) · modeUnlocked(m) · dailyMutator() · dailyDone
 //   heroes     heroUnlocked(id) · heroes() · selectedHero · selectHero(id)
 //   cosmetics  owns(kind,id) · ownedSkins(hero) · ownedHats() · ownedTrails() · selectedSkin/Hat(hero) · selectedTrail()
 //              equip(kind,id,hero) · buy(kind,id) · price(kind,id) · wardrobe(hero)
 //   cards      unlockedCards() · cardInfo()
 //   road       road() · roadNext() · claimRoad(i|'overflow') · claimAllRoad()
-//   missions   missions() · claimMission(i) · claimAllMissions() · rerollMission(i) · claimDailyChest()
+//   missions   missions() · claimMission(i) · claimAllMissions() · rerollMission(i) · rerollsLeft · claimDailyChest()
 //   sign-in    signin() · claimSignin()
 //   capsule    capsuleInfo() · capsule('ticket')        (coins → {ok:false, error:'ticketsOnly'})
 //   dex        dex() · claimDex(id, n?) · claimAllDex()
 //   achieve    achievements() · claimAchievement(id) · claimAllAchievements() · titleName(id) · titles() · setTitle(id)
-//   profile    profile() · nameChoices(n) · setName(choice|text) · setPins(ids) · setProfile({name,title,pins})
+//   profile    profile() · nameChoices(n) · setName(choice|text) · setPins(ids) · setProfile({name,title,pins}) · playDays
 //   features   isUnlocked(f) · featureQueue · nextFeature() · redDots() · isNew(kind,id) · markSeen(kind,id)
 //   guardian   tick(rdt) · pendingBreak · pendingToast · limitReached · isNight · restedRuns · firstWinAvailable
 //              guardianPrompt() · resolveGuardian(kind, choice) · healthCheck() · takeBreak() · snoozeBreak()
-//              parent · setParent(key,v) · parentExtend(min) / extendLimit(min) · playHistory(days) · todayMinutes()
+//              parent · setParent('limit'|'dailyLimit'|'capsule'|'capsuleOn'|'breakMinutes', v) · parentExtend(min) / extendLimit(min)
+//              playHistory(days) · todayMinutes()
 // ─────────────────────────────────────────────────────────────
 import { makeRng, dayKey, daysBetween, clamp } from './core.js';
 import { t, tl, addStrings, getLang } from './i18n.js';
@@ -62,6 +66,7 @@ import {
   RANKS, RANK_PAR, RANK_REWARD, ACHIEVEMENTS, ACH_REWARD, DEX, TITLES, SKINS, HATS, TRAILS,
   CAPSULE, HEALTH, RARITY, MODES, heroById, stageOf,
 } from './data.js';
+import { dailyMutator as wavesDailyMutator } from './waves.js';
 
 // ---------- module tuning (not design data) ----------
 const TUNE = {
@@ -84,6 +89,10 @@ const TUNE = {
 const SLOTS = ['easy', 'skill', 'variety'];
 const MAX_STATS = new Set(['bestComboRun', 'bestNovaRun', 'endlessWave', 'bestCombo', 'bestNova', 'endlessBest']);
 const FEATURE_ORDER = ['map', 'signin', 'missions', 'road', 'heroes', 'dex', 'wardrobe', 'capsule', 'modes', 'achievements'];
+// unlocked silently (no 新功能开启! card): sign-in simply appears with its own daily popup
+const QUIET_FEATURES = new Set(['signin']);
+// mission copy that §7 overrides (crowns not stars · 大招 not 新星)
+const MISSION_VIEW = { star3: { key: 'meta.mis.star3', icon: '👑' }, novaMulti: { key: 'meta.mis.novaMulti', icon: '✦' } };
 const DEFAULT_OWNED = {
   skin: SKINS.filter((s) => s.default).map((s) => s.id),
   hat: HATS.filter((h) => h.default).map((h) => h.id),
@@ -122,7 +131,7 @@ const DEFAULTS = {
     firstWinDay: '',
     rested: 0,                              // runs left with the rested bonus
     guard: { session: 0, nextBreak: HEALTH.breakCardMinutes, toast: 0, nightDay: '', lastSeen: 0, lastActive: 0, hist: {}, breakPending: 0 },
-    parent: { limit: 0, capsule: true, extraDay: '', extra: 0 },
+    parent: { limit: 0, capsule: true, extraDay: '', extra: 0, breakMinutes: null },
     clock: { max: 0 },
     lastDay: '',
     uid: 0,
@@ -137,7 +146,8 @@ addStrings({
     'meta.src.boss': '打败第{n}世界大王', 'meta.src.start': '初始英雄',
     'meta.cb.clear': '通关奖励', 'meta.cb.firstClear': '首次通关', 'meta.cb.crowns': '新皇冠 ×{n}', 'meta.cb.boss': '打败大王',
     'meta.cb.fail': '努力奖', 'meta.cb.endless': '生存 {n} 波', 'meta.cb.medal': '新奖牌', 'meta.cb.daily': '每日挑战',
-    'meta.cb.rush': '首领连战', 'meta.cb.pickups': '捡到金币', 'meta.cb.firstWin': '今日首胜 ×2', 'meta.cb.rested': '休息奖励 ×1.5',
+    'meta.cb.rush': '首领连战', 'meta.cb.pickups': '捡到金币', 'meta.cb.firstWin': '今日首胜', 'meta.cb.rested': '休息奖励',
+    'meta.mis.star3': '把一关集齐3顶皇冠', 'meta.mis.novaMulti': '一次大招解救 {n} 个',
     'meta.claim.title': '恭喜获得', 'meta.claim.welcome': '欢迎回来!', 'meta.claim.rank': '段位提升!', 'meta.claim.placement': '段位定级!',
     'meta.claim.signin': '签到奖励', 'meta.claim.missions': '任务奖励', 'meta.claim.chest': '每日宝箱', 'meta.claim.road': '银河之路',
     'meta.claim.dex': '图鉴奖励', 'meta.claim.ach': '成就达成!', 'meta.claim.worldChest': '皇冠宝箱',
@@ -162,7 +172,8 @@ addStrings({
     'meta.src.boss': 'Beat the World {n} boss', 'meta.src.start': 'Starter hero',
     'meta.cb.clear': 'Stage clear', 'meta.cb.firstClear': 'First clear', 'meta.cb.crowns': 'New crowns ×{n}', 'meta.cb.boss': 'Boss beaten',
     'meta.cb.fail': 'Nice try', 'meta.cb.endless': 'Survived {n} waves', 'meta.cb.medal': 'New medal', 'meta.cb.daily': 'Daily challenge',
-    'meta.cb.rush': 'Boss Rush', 'meta.cb.pickups': 'Coins found', 'meta.cb.firstWin': 'First win ×2', 'meta.cb.rested': 'Rested ×1.5',
+    'meta.cb.rush': 'Boss Rush', 'meta.cb.pickups': 'Coins found', 'meta.cb.firstWin': 'First win', 'meta.cb.rested': 'Rested',
+    'meta.mis.star3': 'Get all 3 crowns on a stage', 'meta.mis.novaMulti': 'Free {n} with one NOVA',
     'meta.claim.title': 'You got!', 'meta.claim.welcome': 'Welcome back!', 'meta.claim.rank': 'Rank up!', 'meta.claim.placement': 'Your rank!',
     'meta.claim.signin': 'Sign-in gift', 'meta.claim.missions': 'Mission rewards', 'meta.claim.chest': 'Daily chest', 'meta.claim.road': 'Galaxy Road',
     'meta.claim.dex': 'Dex reward', 'meta.claim.ach': 'Achievement!', 'meta.claim.worldChest': 'Crown chest',
@@ -257,9 +268,12 @@ export class Meta {
     const today = this._dayKey(now);
     // features already unlocked by an older/imported save are known — mark them silently
     this._checkFeatures(true);
-    // welcome-back gift (≥ 7 days away) — never mentions missed rewards
+    // welcome-back gift (≥ 7 days away) — never mentions missed rewards. Granted on the next tick:
+    // meta is constructed before ui.js, so an event fired now would reach no listener and the
+    // 欢迎回来! popup would silently never show.
     if (!isReset && P.lastDay && daysBetween(P.lastDay, today) >= ECONOMY.welcomeBack.days) {
-      this.grant([{ coins: ECONOMY.welcomeBack.coins, tickets: ECONOMY.welcomeBack.tickets }], 'welcome');
+      P.lastDay = today;            // once per return, even if the tab closes before the timer fires
+      setTimeout(() => this.grant([{ coins: ECONOMY.welcomeBack.coins, tickets: ECONOMY.welcomeBack.tickets }], 'welcome'), 0);
     }
     // rested bonus after ≥ 15 min away (only once the child has actually played)
     if (!isReset) this._checkAway(now);
@@ -329,6 +343,13 @@ export class Meta {
       const P = this.P;
       if (!P.cardsSeen.includes(p.id)) P.cardsSeen.push(p.id);
       if (EVOLUTIONS.some((e) => e.id === p.id)) L().evolutions++;
+    });
+    // red dots for NEW items clear when their screen is opened (ui.js emits ui:open {screen})
+    bus.on('ui:open', (p) => {
+      const s = p?.screen;
+      if (s === 'shop' || s === 'wardrobe') this.markSeen('wardrobe');
+      else if (s === 'heroes') this.markSeen('heroes');
+      else if (s === 'dex') this.markSeen('dex');
     });
     document.addEventListener?.('visibilitychange', () => {
       if (document.hidden) { this._stamp(); this.G.save.flush?.(); }
@@ -453,6 +474,16 @@ export class Meta {
   onClaim(fn) { this._claimFns.add(fn); return () => this._claimFns.delete(fn); }
   nextClaim() { this._showing = this.claimQueue.shift() || null; if (this._showing) this._changed(); return this._showing; }
   ackClaim() { if (this._showing) { this._showing = null; this._changed(); } }
+  /** the 领取 popup for claim `uid` was confirmed (ui.js builds popups from meta:reward and calls this) */
+  claim(uid) {
+    if (this._showing?.uid === uid) { this._showing = null; this._changed(); return true; }
+    const i = this.claimQueue.findIndex((c) => c.uid === uid);
+    if (i < 0) return false;
+    this.claimQueue.splice(i, 1);
+    this._emit('meta:claim', { count: this.claimQueue.length });
+    this._changed();
+    return true;
+  }
   peekClaim() { return this.claimQueue[0] || null; }
   _claimTitle(source) {
     const map = { welcome: 'meta.claim.welcome', rank: 'meta.claim.rank', placement: 'meta.claim.placement', signin: 'meta.claim.signin',
@@ -577,7 +608,8 @@ export class Meta {
     const after = this.rank;
     if (after.step <= P.rankStep && !placement) return null;
     const beforeStep = P.rankStep;
-    if (after.step <= beforeStep) { if (placement) this._emit('meta:rankup', { rank: after, before: after, tierUp: false, placement: true }); return null; }
+    // placement always gets the full ceremony (ui.js shows the big one only for tierUp)
+    if (after.step <= beforeStep) { if (placement) this._emit('meta:rankup', { rank: after, before: after, tierUp: true, placement: true }); return null; }
     let coins = 0, tickets = 0, tierUp = false;
     for (let s = beforeStep + 1; s <= after.step; s++) {
       coins += RANK_REWARD.starUp.coins || 0;
@@ -589,7 +621,7 @@ export class Meta {
     }
     const before = this._rankAtStep(beforeStep);
     P.rankStep = after.step;
-    this._emit('meta:rankup', { rank: after, before, tierUp, placement });
+    this._emit('meta:rankup', { rank: after, before, tierUp: tierUp || placement, placement });
     this.grant([{ coins, tickets }], placement ? 'placement' : 'rank');
     return { before, after, tierUp, placement };
   }
@@ -619,8 +651,22 @@ export class Meta {
     return this._cleared(w - 1, WORLDS[w - 1].stages.length - 1);
   }
   isStageCleared(worldId, stageId) { return this._cleared(worldIndex(worldId), stageIndex(stageId)); }
-  /** crowns earned on a stage (0..3) — shown as 👑 in every UI */
-  stageStars(worldId, stageId) { const r = this._srec(worldIndex(worldId), stageIndex(stageId)); return r ? r.c.reduce((a, b) => a + (b ? 1 : 0), 0) : 0; }
+  _crownCount(w, s) { const r = this._srec(w, s); return r ? r.c.reduce((a, b) => a + (b ? 1 : 0), 0) : 0; }
+  /**
+   * crowns earned on a stage — shown as 👑 in every UI. Crowns are independent (the challenge crown
+   * can come before the clear crown), so this returns the per-crown flags [clear, fewHits, challenge]
+   * as an array that also coerces to the count: `stageStars(w,s) >= 3`, `n + stageStars(w,s)` and
+   * `.count` all work, and ui.js (which checks Array.isArray first) shows the right crowns.
+   */
+  stageStars(worldId, stageId) {
+    const w = worldIndex(worldId), s = stageIndex(stageId);
+    const flags = this.stageCrowns(w, s);
+    const n = this._crownCount(w, s);
+    Object.defineProperties(flags, {
+      count: { value: n }, valueOf: { value: () => n }, toString: { value: () => String(n) }, toJSON: { value: () => n },
+    });
+    return flags;
+  }
   stageCrowns(worldId, stageId) { const r = this._srec(worldIndex(worldId), stageIndex(stageId)); return r ? r.c.map(Boolean) : [false, false, false]; }
   stageInfo(worldId, stageId) {
     const w = worldIndex(worldId), s = stageIndex(stageId);
@@ -628,13 +674,13 @@ export class Meta {
     const r = this._srec(w, s);
     return {
       worldId: w, stageId: s, id: def?.id, def, unlocked: this.isStageUnlocked(w, s), cleared: !!r?.cl,
-      crowns: r ? r.c.map(Boolean) : [false, false, false], stars: this.stageStars(w, s), best: r?.best || 0,
+      crowns: r ? r.c.map(Boolean) : [false, false, false], stars: this._crownCount(w, s), best: r?.best || 0,
       plays: r?.plays || 0, fails: r?.fails || 0, objective: def?.objective, newEnemy: def?.newEnemy || null, boss: !!def?.boss,
     };
   }
   /** consecutive failed attempts on a stage (boss attempt slow-down, Helper offer) */
   stageFails(worldId, stageId) { return this._srec(worldIndex(worldId), stageIndex(stageId))?.fails || 0; }
-  worldCrowns(worldId) { const w = worldIndex(worldId); return (WORLDS[w]?.stages || []).reduce((n, _, s) => n + this.stageStars(w, s), 0); }
+  worldCrowns(worldId) { const w = worldIndex(worldId); return (WORLDS[w]?.stages || []).reduce((n, _, s) => n + this._crownCount(w, s), 0); }
   totalCrowns() { let n = 0; for (const k in this.P.stages) n += this.P.stages[k].c.reduce((a, b) => a + (b ? 1 : 0), 0); return n; }
   worldInfo(worldId) {
     const w = worldIndex(worldId), W = WORLDS[w];
@@ -655,11 +701,16 @@ export class Meta {
     }
     return last;
   }
+  /** world shown behind the menus (highest unlocked) → world INDEX: run cfg.worldId is numeric,
+   *  world.load() accepts an index, and ui.js reads it as a number (Shrink Storm arena) */
   hubWorld() {
     let top = 0;
     for (let w = 0; w < WORLDS.length; w++) if (this.isStageUnlocked(w, 0)) top = w;
-    return WORLDS[top].id;
+    return top;
   }
+  /** today's Daily Challenge / Galaxy Survival mutator — the same pick as waves.js, so the Modes card and the run agree */
+  dailyMutator() { try { return wavesDailyMutator(); } catch { return null; } }
+  get dailyDone() { return this.P.modes.dailyDay === this.today; }
   modeUnlocked(mode) {
     if (!mode || mode === 'stage') return true;
     const M = MODES[mode];
@@ -844,6 +895,13 @@ export class Meta {
     P.road.claimed.push(index);
     return this.grant([n.reward], 'road', { titleId: n.reward.title });
   }
+  /** overflow chests have no node on the road screen, so they arrive as a 领取 popup after the run */
+  _grantOverflow() {
+    const P = this.P, rewards = [];
+    let o = this.road().overflow.claimable;
+    while (o-- > 0) { rewards.push(ROAD_OVERFLOW.rewards[P.road.overflow % ROAD_OVERFLOW.rewards.length]); P.road.overflow++; }
+    return rewards.length ? this.grant(rewards, 'road') : null;
+  }
   claimAllRoad() {
     const P = this.P, rewards = [];
     ROAD.forEach((n, i) => { if (this.freed >= n.at && !P.road.claimed.includes(i)) { P.road.claimed.push(i); rewards.push(n.reward); } });
@@ -859,7 +917,7 @@ export class Meta {
     if (tpl.id === 'boss' && !this.isStageUnlocked(0, WORLDS[0].stages.length - 1)) return false;
     if (tpl.id === 'star3') {
       let any = false;
-      for (let w = 0; w < WORLDS.length && !any; w++) for (let s = 0; s < WORLDS[w].stages.length; s++) if (this.isStageUnlocked(w, s) && this.stageStars(w, s) < 3) { any = true; break; }
+      for (let w = 0; w < WORLDS.length && !any; w++) for (let s = 0; s < WORLDS[w].stages.length; s++) if (this.isStageUnlocked(w, s) && this._crownCount(w, s) < 3) { any = true; break; }
       if (!any) return false;
     }
     return !list.some((m) => m.id === tpl.id && !m.done);
@@ -908,9 +966,12 @@ export class Meta {
   _missionView(m, i) {
     const tpl = MISSIONS.find((x) => x.id === m.id) || MISSIONS[0];
     const heroName = m.hero ? tl(heroById(m.hero).name) : '';
+    // Kid-UX §7.16/§7.17: ratings are 👑 crowns (⭐ means dizzy) and Nova is 大招 in Chinese
+    const over = MISSION_VIEW[m.id];
+    const text = over ? t(over.key) : tl(tpl.text);
     return {
-      i, uid: m.uid, id: m.id, slot: m.slot, icon: tpl.icon, hero: m.hero || null,
-      text: tl(tpl.text).split('{n}').join(String(m.n)).split('{hero}').join(heroName),
+      i, uid: m.uid, id: m.id, slot: m.slot, icon: over?.icon || tpl.icon, hero: m.hero || null,
+      text: text.split('{n}').join(String(m.n)).split('{hero}').join(heroName),
       target: m.n, prog: Math.min(m.prog, m.n), cur: Math.min(m.prog, m.n), done: !!m.done, claimed: !!m.claimed, claimable: !!m.done && !m.claimed,
       today: m.day === this.today, reward: this._missionReward(m), items: this._items([this._missionReward(m)]),
     };
@@ -1227,7 +1288,7 @@ export class Meta {
       case 'map': case 'signin': return c(0, 0);
       case 'missions': return c(0, 1);
       case 'road': return c(0, 2);
-      case 'heroes': return c(0, 2) || this.P.heroes.length > 1;
+      case 'heroes': return this.P.heroes.length > 1;          // ui.js announces it as "a new hero joined!"
       case 'dex': return (this.P.life.freed || 0) > 0;
       case 'wardrobe': return this._cosmeticCount() > 0;
       case 'capsule': return c(0, 4) && this.P.parent.capsule !== false;
@@ -1248,7 +1309,7 @@ export class Meta {
       if (P.features.includes(id) || !this.isUnlocked(id)) continue;
       P.features.push(id);
       newly.push(id);
-      if (!silent) {
+      if (!silent && !QUIET_FEATURES.has(id)) {
         this.featureQueue.push(id);
         this._emit('meta:feature', { id });
         this._emit('meta:unlock', { kind: 'feature', id });
@@ -1256,8 +1317,14 @@ export class Meta {
       if (id === 'missions' && !silent) this._ensureMissions();
       if (id === 'modes') {
         if (!silent) this._checkRank(true); else P.rankStep = Math.max(P.rankStep, this.rank.step);
-        for (const m of Object.keys(MODES)) if (m !== 'stage' && this.modeUnlocked(m) && !silent) this._emit('meta:unlock', { kind: 'mode', id: m });
       }
+    }
+    // each mode announces itself once when it opens (Galaxy Survival after W1, Shrink Storm / Boss Rush after W2)
+    const seen = (P.modesSeen ||= []);
+    for (const m of Object.keys(MODES)) {
+      if (m === 'stage' || seen.includes(m) || !this.modeUnlocked(m)) continue;
+      seen.push(m);
+      if (!silent) this._emit('meta:unlock', { kind: 'mode', id: m });
     }
     return newly;
   }
@@ -1304,7 +1371,8 @@ export class Meta {
     const bossDefeated = !!results.bossDefeated || (stage?.boss && win);
     if (bossDefeated && !freedBy.king) freedBy.king = 1;
     const freedRun = sumVals(results.freed) || L.freed || sumVals(L.freedBy) || (results.smashes | 0);
-    const wave = results.wave ?? results.wavesCleared ?? 0;
+    // wave REACHED as the HUD shows it: run.wave is the 0-based index of the current wave
+    const wave = Number.isFinite(+results.wave) ? (results.wave | 0) + 1 : (results.wavesCleared | 0);
     const hitsTaken = results.hitsTaken ?? 0;
 
     // ---- crowns 👑 (independent & permanent)
@@ -1326,7 +1394,7 @@ export class Meta {
     if (rec) { newBest = score > rec.best && rec.plays > 1; if (score > rec.best) rec.best = score; best = rec.best; }
 
     // ---- mode bests / medals
-    let medalsNew = 0, endlessPB = false, medalRange = [0, 0];
+    let medalsNew = 0, endlessPB = false, medalRange = [0, 0], medalBest = null;
     if (mode === 'endless') {
       endlessPB = wave > P.modes.endlessBest;
       if (endlessPB) P.modes.endlessBest = wave;
@@ -1334,6 +1402,7 @@ export class Meta {
       best = P.modes.endlessScore;
     } else if (mode === 'storm') {
       const medals = MODES.storm.medals.filter((m) => freedRun >= m).length;
+      medalBest = medals > 0 ? medals - 1 : null;
       if (medals > P.modes.stormMedals) { medalsNew = medals - P.modes.stormMedals; }
       const oldMedals = P.modes.stormMedals;
       P.modes.stormMedals = Math.max(oldMedals, medals);
@@ -1386,16 +1455,17 @@ export class Meta {
     if (stage && firstClear) {
       const W = WORLDS[w];
       if (s + 1 < W.stages.length) unlocks.push({ kind: 'stage', worldId: w, stageId: s + 1, id: W.stages[s + 1].id });
-      else if (w + 1 < WORLDS.length) { unlocks.push({ kind: 'world', worldId: w + 1, id: WORLDS[w + 1].id }); this._emit('meta:unlock', { kind: 'world', id: WORLDS[w + 1].id }); }
+      else if (w + 1 < WORLDS.length) { unlocks.push({ kind: 'world', worldId: w + 1, id: WORLDS[w + 1].id }); this._emit('meta:unlock', { kind: 'world', id: w + 1, worldId: w + 1, key: WORLDS[w + 1].id }); }
     }
-    let rescued = null, rescuedDup = false;
+    let rescued = null, rescuedDup = false, rescuedId = null;
     const rescueId = stage?.boss && firstClear ? (results.rescued || WORLDS[w].boss?.rescue || null) : null;
     if (rescueId && HEROES.some((h) => h.id === rescueId)) {
       rescuedDup = P.heroes.includes(rescueId);
       // new hero → full-screen rescue ceremony (meta:unlock); already owned → the 3 tickets get a 领取 popup
       this.grant([{ hero: rescueId }], 'rescue', { popup: rescuedDup });
-      rescued = rescueId;
-      if (!rescuedDup) unlocks.push({ kind: 'hero', id: rescueId });
+      rescuedId = rescueId;
+      // `rescued` drives ui.js's full-screen NEW HERO reveal → only for a hero the child did not own yet
+      if (!rescuedDup) { rescued = rescueId; unlocks.push({ kind: 'hero', id: rescueId }); }
     }
 
     // ---- coins
@@ -1454,6 +1524,10 @@ export class Meta {
     const tierUp = rankUp && Math.floor(P.rankStep / 3) > Math.floor(rankStepBefore / 3);
     const placement = feats.includes('modes');
 
+    // ---- Galaxy Road overflow chests (every 400 cubes past the end) are auto-granted: they have no node to tap
+    this._grantOverflow();
+    if (P.lastPlayDay !== today) { P.lastPlayDay = today; P.playDays = (P.playDays || 0) + 1; }
+
     // ---- guardian (between runs only)
     this._guardAfterRun();
 
@@ -1463,11 +1537,13 @@ export class Meta {
       trophies, trophiesBefore, trophiesAfter: P.trophies, rankBefore, rankAfter, rankUp, tierUp, placement,
       rankVisible: this.isUnlocked('modes'), par,
       freedRun, freedBefore, freedAfter: this.freed, roadNextBefore, roadNext: this.roadNext(), roadClaimable: this.road().claimable,
-      missionsProgress, newDex, unlocks, rescued, rescuedDup,
+      missionsProgress, newDex, unlocks, rescued, rescuedDup, rescuedId,
       newBest, best, score, starsNew, crownsBefore, crowns: rec ? rec.c.map(Boolean) : null,
       firstClear, firstWin, rested, restedLeft: P.rested, fails: rec?.fails || 0,
       helperOffer: !!rec && !win && rec.fails >= 2 && !assist,
-      medalsNew, medal: mode === 'storm' ? MODES.storm.medals.filter((m) => freedRun >= m).length : undefined, endlessBest: P.modes.endlessBest,
+      // medal = index of the best medal this run (0 🥉 · 1 🥈 · 2 🥇), null when none (ui indexes a medal icon list)
+      medalsNew, medal: mode === 'storm' ? medalBest : undefined,
+      endlessBest: P.modes.endlessBest, wave,
       nextStage: this.nextStage(),
       replay: !!rec && rec.plays > 1,
     };
@@ -1500,7 +1576,7 @@ export class Meta {
     this._t += rdt;
     const run = this.G.run;
     if (this.live.active && !run) this._commitPartial();
-    if (run && run.state !== 'paused') {
+    if (run && run.state !== 'paused' && run.state !== 'ended') {      // results screen / pause don't count
       const P = this.P, g = P.guard;
       g.session += rdt; P.day.play += rdt;
       const k = P.day.key;
@@ -1527,19 +1603,29 @@ export class Meta {
     g.lastSeen = now;
     if (!g.lastActive || now - g.lastActive < TUNE.restedAwayMin * 60e3) return false;
     g.lastActive = now;
-    g.session = 0; g.nextBreak = HEALTH.breakCardMinutes; g.toast = 0;
+    g.session = 0; g.nextBreak = this._breakEvery() || HEALTH.breakCardMinutes; g.toast = 0;
     const had = this.P.rested;
     this.P.rested = ECONOMY.rested.runs;
     if (g.breakPending) { g.breakPending = 0; }
     this._commit();
     return had !== this.P.rested;
   }
+  /** break-card interval in minutes (parent zone: settings.breakMinutes 30/45/60, 0 = off); null = reminders off */
+  _breakEvery() {
+    const st = this.G.save.profile.settings || {};
+    if (st.breakReminder === false || st.breakMinutes === 0 || this.P.parent.breakMinutes === 0) return null;
+    return +st.breakMinutes || +this.P.parent.breakMinutes || HEALTH.breakCardMinutes;
+  }
   _guardAfterRun() {
     const g = this.P.guard;
     const min = g.session / 60;
-    if (this.G.save.profile.settings?.breakReminder !== false) {
-      if (min >= g.nextBreak) { this.pendingBreak = true; g.nextBreak = min + HEALTH.repeatMinutes; }
-      else if (min >= HEALTH.toastMinutes && !g.toast) { this.pendingToast = t('meta.guard.toast'); g.toast = 1; }
+    const every = this._breakEvery();
+    if (every) {
+      if (min >= g.nextBreak) {
+        this.pendingBreak = true;
+        // default: 45 min, then every 20 · a parent-chosen interval repeats at that interval
+        g.nextBreak = min + (every !== HEALTH.breakCardMinutes ? every : HEALTH.repeatMinutes);
+      } else if (min >= HEALTH.toastMinutes && min < every && !g.toast) { this.pendingToast = t('meta.guard.toast'); g.toast = 1; }
     }
     this.P.guard.lastActive = this._now();
     if (this.pendingBreak || this.pendingToast || this.limitReached) this._emit('meta:guardian', this.guardianPrompt(true) || {});
@@ -1559,7 +1645,8 @@ export class Meta {
     const g = this.P.guard;
     if (kind === 'break') {
       this.pendingBreak = false;
-      if (choice === 'rest') { this._bump('breaks', 1); g.breakPending = 1; }
+      // 休息一下 grants the rested bonus (next 3 runs ×1.5 coins) — breaks are rewarded, never punished
+      if (choice === 'rest') { this._bump('breaks', 1); g.breakPending = 1; this.P.rested = Math.max(this.P.rested, ECONOMY.rested.runs); }
     } else if (kind === 'toast') this.pendingToast = null;
     else if (kind === 'night') g.nightDay = this.today;
     this._commit(); this._changed();
@@ -1578,14 +1665,21 @@ export class Meta {
   }
   todayMinutes() { return this.P.day.play / 60; }
   get bestWave() { return this.P.modes.endlessBest; }
+  /** days the child has played at all (profile card stat; never a streak) */
+  get playDays() { return Math.max(this.P.playDays || 0, Object.keys(this.P.guard.hist).length); }
+  get rerollsLeft() { return this.P.missions.rerolls; }
 
   // ---- parent zone (the math gate lives in ui.js) ----
   get parent() { const p = this.P.parent; return { limit: p.limit, capsule: p.capsule !== false, extraToday: p.extraDay === this.today ? p.extra : 0 }; }
   setParent(key, value) {
     const p = this.P.parent;
     if (key === 'limit' || key === 'dailyLimit') p.limit = HEALTH.parentLimits.includes(+value) ? +value : 0;
-    else if (key === 'capsule') p.capsule = !!value;
-    else return false;
+    else if (key === 'capsule' || key === 'capsuleOn') p.capsule = !!value;          // ui.js sends 'capsuleOn'
+    else if (key === 'breakMinutes' || key === 'breakEvery') {
+      p.breakMinutes = Math.max(0, +value || 0);
+      const g = this.P.guard;
+      if (p.breakMinutes) g.nextBreak = p.breakMinutes;                             // the new interval applies from now
+    } else return false;
     this._commit(); this._changed();
     return true;
   }

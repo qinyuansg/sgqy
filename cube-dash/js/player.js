@@ -583,6 +583,9 @@ export class Player {
         if (isGone(e) || this.dashHit.has(e)) continue;
         const tt = segHit(px, pz, nx, nz, e.x, e.z, hr + radiusOf(e));
         if (tt < 0) continue;
+        // already touching but dashing AWAY from it (the classic escape): not a hit — otherwise the
+        // dash would knock the cube and recoil the hero straight back into it
+        if (tt === 0 && (e.x - px) * this.dashDirX + (e.z - pz) * this.dashDirZ <= 0) continue;
         let j = E.length;
         E.push(e); T.push(tt);
         while (j > 0 && T[j - 1] > tt) { E[j] = E[j - 1]; T[j] = T[j - 1]; j--; }

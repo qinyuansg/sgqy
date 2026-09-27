@@ -234,13 +234,14 @@ const rarityOf = (r) => DATA.RARITY[r] || DATA.RARITY.common;
 const worldName = (i) => tl(DATA.worlds[i]?.name);
 const stageName = (w, s) => tl(DATA.worlds[w]?.stages?.[s]?.name);
 const stageId = (w, s) => `${w + 1}-${s + 1}`;
+const worldIdx = (v) => { if (typeof v === 'number') return v; const i = DATA.worlds.findIndex((w) => w.id === v); return i < 0 ? n0(v) : i; };
 
 // hats have no mesh preview in DOM → one friendly emoji each
 const HAT_ICON = {
   none: '🚫', antenna: '📡', flower: '🌸', propeller: '🚁', cat: '🐱', headphones: '🎧', bunny: '🐰', astro: '🧑‍🚀',
   wizard: '🧙', crown: '👑', halo: '😇', w_cloud: '☁️', w_neon: '🥽', w_crystal: '🦄', w_nebula: '🪐', w_foundry: '⚙️', w_core: '💫',
 };
-const FEATURE_ICON = { missions: '📋', road: '🚀', dex: '📖', wardrobe: '👕', capsule: '__cap', modes: '🌌', achievements: '🏅', heroes: '🦸', map: '🗺️' };
+const FEATURE_ICON = { signin: '📅', rank: '🏆', missions: '📋', road: '🚀', dex: '📖', wardrobe: '👕', capsule: '__cap', modes: '🌌', achievements: '🏅', heroes: '🦸', map: '🗺️' };
 
 /** A clay "cube buddy" in CSS — used for avatars, heroes, dex, Pixel, ceremonies. */
 function cube({ color = '#2f6bff', face = 'happy', size = 64, cls = '', hat = '', antenna = false, limbs = false, sil = false, acc = '' } = {}) {
@@ -353,10 +354,16 @@ function rewardItems(rewards) {
     else if (kind === 'skin' || kind === 'hat' || kind === 'trail') { const d = itemDef(kind, id); label = tl(d?.name) || id; rarity = d?.rarity || 'common'; }
     else label = String(id ?? kind);
     out.push({ kind, id, amount, label, rarity });
+    return out[out.length - 1];
   };
   for (const r of [].concat(rewards || [])) {
     if (!r) continue;
-    if (r.kind) { push(r.kind === 'coin' ? 'coins' : r.kind === 'ticket' ? 'tickets' : r.kind, r.id, r.amount ?? r.n); continue; }
+    if (r.kind) {
+      const it = push(r.kind === 'coin' ? 'coins' : r.kind === 'ticket' ? 'tickets' : r.kind, r.id, r.amount ?? r.n);
+      if (r.name && !['coins', 'tickets'].includes(it.kind)) it.label = r.name;
+      if (r.rarity) it.rarity = r.rarity;
+      continue;
+    }
     for (const k of Object.keys(r)) {
       const v = r[k];
       if (v == null || v === false) continue;
@@ -462,8 +469,11 @@ export class UI {
     this.pendingArrow = null;
     this.casc = null; this.lvl = null; this.hold = null; this.eye = null; this.rankT = null;
     this.signinShown = false;
+    this.trayHold = false;         // pull-mode: claims left in meta.claimQueue after 3 chained popups
+    this._dirty = false;
     this._lastClaimKey = ''; this._lastClaimT = -1;
 
+    this.walletEl.querySelector('.w-lang').classList.toggle('en', getLang() === 'en');
     this._bindDom();
     this._bindBus();
   }
@@ -510,7 +520,8 @@ export class UI {
     bus.on('meta:feature', (p) => this.showFeature(typeof p === 'string' ? p : p?.feature ?? p?.id));
     bus.on('meta:break', (p) => { this.health.events = true; this.showBreak(p?.kind || 'card', p); });
     bus.on('meta:goodnight', () => { this.health.events = true; this.showGoodnight(); });
-    bus.on('meta:welcome', (p) => this.queueClaim(p?.rewards || [p], 'welcome'));
+    bus.on('meta:welcome', (p) => { if (!this._pullMode()) this.queueClaim(p?.rewards || [p], 'welcome'); });
+    bus.on('meta:change', () => { this._dirty = true; });
     bus.on('checkpoint', () => { /* HUD shows the flag; results reads run.checkpoint */ });
   }
 
@@ -530,6 +541,8 @@ export class UI {
     try { return f.apply(m, args); } catch (err) { console.warn('[ui] meta.' + name + ' failed', err); return undefined; }
   }
   _mv(name, fallback) { try { const v = this.G.meta?.[name]; return v === undefined || v === null ? fallback : v; } catch { return fallback; } }
+  /** real meta.js keeps its own claim queue (credited on grant, shown via nextClaim/ackClaim) */
+  _pullMode() { const m = this.G.meta; return !!m && Array.isArray(m.claimQueue) && typeof m.nextClaim === 'function'; }
   _unlocked(feature) { const v = this._m('isUnlocked', feature); return v === undefined ? true : !!v; }
   _dots() { return this._m('redDots') || {}; }
   _settings() { return this.G.save?.profile?.settings || {}; }
@@ -554,11 +567,8 @@ export class UI {
     if (this.eye) this._eyeUpdate(rdt);
     if (this.rankT) this._rankUpdate(rdt);
     this._healthTick(rdt);
-    if (this._canPopup()) {
-      const mq = this._m('takeClaims');                  // optional pull-style meta queue
-      if (Array.isArray(mq)) for (const c of mq) this.queueClaim(c.rewards || c, c.source, c);
-      if (this.queue.length) this._drain();
-    }
+    if (this._canPopup()) this._pump();
+    if (this._dirty && !this.overlays.length && this.screen?.name === 'home' && this.G.app?.state !== 'run') { this._dirty = false; this._rerender(); }
     this._navUpdate();
   }
 
@@ -762,13 +772,15 @@ export class UI {
     this.walletEl.classList.toggle('home', sc === 'home' && !this.overlays.length);
     this.walletEl.classList.toggle('over', ovl);
     const trayBtn = this.walletEl.querySelector('.w-tray');
-    trayBtn.classList.toggle('hidden', !this.tray.length || this.G.app?.state === 'run');
-    trayBtn.querySelector('.dot').textContent = this.tray.length;
+    const tc = this._trayCount();
+    trayBtn.classList.toggle('hidden', !tc || this.G.app?.state === 'run');
+    trayBtn.querySelector('.dot').textContent = tc;
   }
   _walletUpdate(rdt) {
     if (this.walletEl.classList.contains('hidden')) return;
-    const tc = Math.max(0, n0(this._mv('coins', 0)) - this.pending.coins);
-    const tt = Math.max(0, n0(this._mv('tickets', 0)) - this.pending.tickets);
+    const m = this.G.meta;
+    const tc = m && m.displayCoins != null ? n0(m.displayCoins) : Math.max(0, n0(this._mv('coins', 0)) - this.pending.coins);
+    const tt = m && m.displayTickets != null ? n0(m.displayTickets) : Math.max(0, n0(this._mv('tickets', 0)) - this.pending.tickets);
     if (this.wAnim) {
       const a = this.wAnim;
       a.t += rdt;
@@ -808,6 +820,29 @@ export class UI {
     }
     return !this.overlays.some((o) => o.blocking);
   }
+  /** next popup: ceremonies first, then meta's claim queue (≤ 3 chained → 待领取 tray), then the rest */
+  _pump() {
+    const pull = this._pullMode();
+    const mq = pull ? this.G.meta.claimQueue : null;
+    const hi = this.queue.length && (this.queue[0].pri || 0) > 3;
+    if (pull && !hi && !this.trayHold && mq.length) {
+      if (this.chain >= TUNE.claimChain) {
+        this.trayHold = true;
+        this._walletVisibility();
+        this.toast(t('ui.tray') + ' +' + mq.length, '📦');
+        return;
+      }
+      const c = this.G.meta.nextClaim();
+      if (!c) return;
+      this.chain++;
+      const tk = c.title && t(c.title) !== c.title ? t(c.title) : '';
+      this._showClaim({ type: 'claim', rewards: c.rewards || c.items, source: c.source, title: tk, applied: false, pulled: true, uid: c.uid });
+      return;
+    }
+    if (this.queue.length) { this._drain(); return; }
+    if (!mq?.length) this.chain = 0;
+  }
+  _trayCount() { return this._pullMode() ? (this.trayHold ? this.G.meta.claimQueue.length : 0) : this.tray.length; }
   _enqueue(item) {
     this.queue.push(item);
     this.queue.sort((a, b) => (b.pri || 0) - (a.pri || 0));
@@ -829,8 +864,8 @@ export class UI {
       this.chain++;
       this._showClaim(item);
     }
-    else if (item.type === 'feature') this._showFeatureNow(item.feature);
-    else if (item.type === 'rankup') this._showRankNow(item.rank, item.before);
+    else if (item.type === 'feature') { this._m('nextFeature'); this._showFeatureNow(item.feature); }
+    else if (item.type === 'rankup') this._showRankNow(item.rank, item.before, item.placement);
     else if (item.type === 'rescue') this._showRescueNow(item.hero, item.kind);
     else if (item.type === 'break') this._showBreakNow(item);
     else if (item.type === 'goodnight') this._showGoodnightNow();
@@ -841,6 +876,7 @@ export class UI {
 
   // ---------- incoming meta events ----------
   _onReward(p = {}) {
+    if (this._pullMode() || p.popup === false) return;     // meta.claimQueue drives popups
     const src = p.source || p.src || '';
     if (['run', 'results', 'capsule', 'silent'].includes(src)) return;
     let rewards = p.rewards;
@@ -873,13 +909,14 @@ export class UI {
     const tier = rank.tier ?? DATA.ranks.findIndex((r) => r.id === rank.id);
     const before = p.before || null;
     if (this.lastRankTier == null) this.lastRankTier = before?.tier ?? Math.max(0, tier - 1);
-    if (tier > this.lastRankTier || p.tierUp) this._enqueue({ type: 'rankup', pri: 5, rank, before });
+    if (p.placement) this._enqueue({ type: 'rankup', pri: 5, rank, before: null, placement: true });
+    else if (tier > this.lastRankTier || p.tierUp) this._enqueue({ type: 'rankup', pri: 5, rank, before });
     else this._enqueue({ type: 'toast', pri: 1, text: t('ui.rankUpStar') + ' ' + rankName(rank) + ' ' + '★'.repeat(rank.stars || 1), icon: rank.icon || '⭐' });
     this.lastRankTier = tier;
   }
   _onUnlock(p = {}) {
-    if (p.kind === 'hero' && p.id) this.showRescue(p.id, 'unlock');
-    else if (p.kind === 'world') this._enqueue({ type: 'toast', pri: 1, text: t('ui.world', { n: (+p.id || 0) + 1 }) + ' · ' + worldName(+p.id || 0), icon: '🪐' });
+    if (p.kind === 'hero' && p.id) this.showRescue(p.id, p.source === 'rescue' ? 'rescue' : 'unlock');
+    else if (p.kind === 'world') { const w = worldIdx(p.worldId ?? p.id); this._enqueue({ type: 'toast', pri: 1, text: t('ui.world', { n: w + 1 }) + ' · ' + worldName(w), icon: '🪐' }); }
     else if (p.kind === 'mode') this._enqueue({ type: 'toast', pri: 1, text: tl(DATA.modes[p.id]?.name) || String(p.id), icon: '🌌' });
   }
   showFeature(f) { if (f) this._enqueue({ type: 'feature', pri: 2, feature: f }); }
@@ -933,6 +970,9 @@ export class UI {
 
   // ---------- run lifecycle ----------
   _onRunStart() {
+    const claim = this._ovl('claim');                     // unclaimed popup (e.g. R-restart on results) → show it again later
+    if (claim?.entry && !claim.claiming) { if (claim.entry.pulled) { this.G.meta.claimQueue.unshift?.({ uid: claim.entry.uid, source: claim.entry.source, items: claim.entry.rewards, rewards: claim.entry.rewards, title: '' }); this._m('ackClaim'); } else this.queue.unshift(claim.entry); }
+    this.trayHold = false; this.chain = 0;
     for (const o of [...this.overlays]) this._close(o.id, true);
     this.casc = null; this.lvl = null; this.eye = null; this.rankT = null;
     this._clearScreen();
@@ -954,7 +994,7 @@ export class UI {
       case 'poke': this._poke(); break;
       case 'lang': click(); this._setSetting('lang', getLang() === 'zh' ? 'en' : 'zh'); break;
       case 'settings': click(); if (G.app?.state === 'run') this._pauseSettings(); else this.go('settings'); break;
-      case 'tray': click(); if (this.tray.length) { this.chain = 0; const it = this.tray.shift(); this._walletVisibility(); this._showClaim(it); } break;
+      case 'tray': click(); this.chain = 0; this.trayHold = false; if (!this._pullMode() && this.tray.length) { const it = this.tray.shift(); this._showClaim(it); } this._walletVisibility(); break;
       case 'profile': click(); this.go('achievements', { tab: 'profile' }); break;
       case 'signin': click(); this._showSignin(); break;
       // --- map ---
@@ -972,7 +1012,7 @@ export class UI {
       case 'shopHero': click(); this.go('shop', { ...this.screen.params, hero: d.hero }); break;
       case 'shopItem': this._shopItem(d.kind, d.id); break;
       // --- road / missions / sign-in ---
-      case 'roadClaim': this._claimRoad(+d.i); break;
+      case 'roadClaim': this._claimRoad(d.i === 'overflow' ? 'overflow' : +d.i); break;
       case 'roadAll': this._claimRoadAll(); break;
       case 'misClaim': this._claimMission(+d.i); break;
       case 'misAll': this._claimMissionAll(); break;
@@ -992,7 +1032,7 @@ export class UI {
       case 'achPin': this._achPin(d.id); break;
       case 'rename': click(); this._namePicker(); break;
       case 'nameShuffle': click(); this._namePicker(this.time * 1000 | 0); break;
-      case 'namePick': this._setName(d.name); break;
+      case 'namePick': this._setName(this._nameOpts?.[+d.i] && this._nameOpts[+d.i].a != null ? this._nameOpts[+d.i] : d.name); break;
       case 'nameType': { const v = this._ovl('names')?.el.querySelector('input')?.value || ''; if (v.trim()) this._setName(v.trim().slice(0, 8)); else this._blip('error'); break; }
       case 'titlePick': click(); this._titlePicker(); break;
       case 'titleSet': this._setProfile({ title: d.id || null }); this._close('titles'); this._blip('claim'); this._rerender(); break;
@@ -1066,6 +1106,8 @@ export class UI {
     try { const v = m[name]; return typeof v === 'function' ? v.apply(m, args) : v; } catch { return undefined; }
   }
   _crowns(w, s) {
+    const f = this._m('stageCrowns', w, s);
+    if (Array.isArray(f)) return [0, 1, 2].map((i) => !!f[i]);
     const v = this._m('stageStars', w, s);
     if (Array.isArray(v)) return [0, 1, 2].map((i) => !!v[i]);
     if (v && typeof v === 'object') return [!!v.clear || !!v[0], !!v.fewHits || !!v[1], !!v.objective || !!v[2]];
@@ -1131,6 +1173,8 @@ export class UI {
   }
   _titleName(id) {
     if (!id) return '';
+    const mt = this._m('titleName', id);
+    if (mt) return mt;
     if (DATA.titles[id]) return tl(DATA.titles[id]);
     const a = DATA.achievements.find((x) => x.id === id);
     return a ? tl(a.name) : String(id);
@@ -1142,7 +1186,7 @@ export class UI {
   }
   _startStage(w, s) {
     if (!this._stageUnlocked(w, s)) { this._blip('error'); this.toast(t('ui.stageLocked'), '🔒'); return; }
-    const attempt = this.fails[`${w}-${s}`] || 0;
+    const attempt = n0(this._m('stageFails', w, s) ?? this.fails[`${w}-${s}`]);
     this.G.app?.startRun?.({ mode: 'stage', worldId: w, stageId: s, attempt });
   }
   _toHome() {
@@ -1226,7 +1270,7 @@ export class UI {
         </button>
       </div>
       <div class="home-col home-left">
-        ${ib(null, 'signin', '', '📅', t('ui.signin'), dots.signin)}
+        ${ib('signin', 'signin', '', '📅', t('ui.signin'), dots.signin)}
         ${ib('missions', 'go', 'missions', '📋', t('ui.missions'), dots.missions)}
       </div>
       <div class="home-col home-right">
@@ -1257,7 +1301,7 @@ export class UI {
       this.signinShown = true;
       this._enqueue({ type: 'signin', pri: 1 });
     }
-    if (!this.health.nightShown && this.G.save?.profile?.tutorialDone && this._isNight()) { this.health.nightShown = true; this._enqueue({ type: 'night', pri: 0.4 }); }
+    if (!this.health.nightShown && !this.G.meta?.healthCheck && this.G.save?.profile?.tutorialDone && this._isNight()) { this.health.nightShown = true; this._enqueue({ type: 'night', pri: 0.4 }); }
     if (this.pendingArrow) { const f = this.pendingArrow; this.pendingArrow = null; setTimeout(() => this._guideArrow(f), 350); }
   }
   _guideArrow(feature) {
@@ -1444,7 +1488,8 @@ export class UI {
     const nx = nodes[reached + 1];
     const prevAt = reached >= 0 ? nodes[reached].at : 0;
     const frac = nx ? clamp((freed - prevAt) / Math.max(1, nx.at - prevAt), 0, 1) : 1;
-    return { freed, nodes, reached, next: nx, frac, overflow: r?.overflow || null, claimable: nodes.filter((n) => n.claimable).length };
+    const overflow = r?.overflow || null;
+    return { freed, nodes, reached, next: nx, frac, overflow, claimable: nodes.filter((n) => n.claimable).length + n0(overflow?.claimable) };
   }
   _s_road() {
     const R = this._roadData();
@@ -1477,7 +1522,7 @@ export class UI {
           <svg class="road-svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><defs><clipPath id="roadClip"><rect x="0" y="0" width="${Math.max(0, hp.x)}" height="${H}"/></clipPath></defs>
             <path class="rd-base" d="${d}"/><path class="rd-dash" d="${d}"/><path class="rd-prog" d="${d}" clip-path="url(#roadClip)"/></svg>
           ${nodes}
-          <div class="rnode overflow" style="left:${endP.x}px;top:${endP.y}px"><span class="rn-vis"><span class="emo">🎁</span></span><span class="rn-at">+${DATA.roadOverflow.every}</span></div>
+          <button class="rnode overflow${n0(R.overflow?.claimable) ? ' ready' : ''}" style="left:${endP.x}px;top:${endP.y}px" data-act="roadClaim" data-i="overflow" data-nav><span class="rn-vis"><span class="emo">🎁</span></span><span class="rn-at">+${DATA.roadOverflow.every}</span>${n0(R.overflow?.claimable) ? this._dot(R.overflow.claimable) : ''}</button>
           <div class="road-hero" style="left:${hp.x}px;top:${lerp(pos(Math.floor(heroI)).y, pos(Math.floor(heroI) + 1).y, heroI % 1)}px">${heroCube(this._mv('selectedHero', 'blu'), { size: 40, limbs: true })}</div>
         </div>
       </div>
@@ -1494,6 +1539,7 @@ export class UI {
     if (sc && hero) sc.scrollLeft = hero.offsetLeft - sc.clientWidth * 0.4;
   }
   _claimRoad(i) {
+    if (i === 'overflow') { const r = this._m('claimRoad', 'overflow'); this._blip(r ? 'claim' : 'error'); if (!r) this.toast(t('ui.roadNext', { n: fmtInt(Math.max(0, n0(this._roadData().overflow?.nextAt) - this._roadData().freed)) }), '🕊️'); this._rerender(); return; }
     const n = this._roadData().nodes[i];
     if (!n) return;
     if (!n.claimable) { this._blip(n.claimed ? 'click' : 'error'); if (!n.claimed) this.toast(t('ui.roadNext', { n: fmtInt(n.at - this._roadData().freed) }), '🕊️'); return; }
@@ -1503,6 +1549,7 @@ export class UI {
     this._rerender();
   }
   _claimRoadAll() {
+    if (typeof this.G.meta?.claimAllRoad === 'function') { const r = this._m('claimAllRoad'); this._blip(r ? 'claim' : 'error'); this._rerender(); return; }
     const R = this._roadData();
     let any = false;
     for (const n of R.nodes) if (n.claimable && this._m('claimRoad', n.i) !== false) any = true;
@@ -1532,9 +1579,13 @@ export class UI {
   _signinData() {
     const s = this._m('signin') || {};
     const count = n0(s.count ?? s.days ?? s.claimedDays ?? s.total ?? 0);
-    const claimable = !!(s.claimable ?? s.canClaim ?? (s.claimedToday === undefined ? false : !s.claimedToday));
+    const claimable = !!(s.canClaim ?? s.claimable ?? (s.claimedToday === undefined ? false : !s.claimedToday));
     const k = claimable ? count : Math.max(0, count - 1);
     const base = k < 7 ? 0 : 7 + Math.floor((k - 7) / 7) * 7;
+    if (Array.isArray(s.days)) {       // meta.js: {days:[{n, state, items}], count, canClaim}
+      const cl = !!(s.canClaim ?? claimable);
+      return { count, claimable: cl, novice: !!s.novice, cards: s.days.map((d) => ({ day: n0(d.n) + 1, reward: d.items || d.reward, claimed: d.state === 'claimed', today: d.state === 'today' })) };
+    }
     const table = s.rewards || (base === 0 ? DATA.signin.novice : DATA.signin.loop);
     const cards = table.slice(0, 7).map((rw, i) => ({ day: base + i + 1, reward: rw, claimed: base + i < count, today: claimable && base + i === count }));
     return { count, claimable, cards, novice: base === 0 };
@@ -1595,6 +1646,7 @@ export class UI {
   }
   _claimMission(i) { const r = this._m('claimMission', i); this._blip(r === false ? 'error' : 'claim'); this._rerender(); }
   _claimMissionAll() {
+    if (typeof this.G.meta?.claimAllMissions === 'function') { const r = this._m('claimAllMissions'); this._blip(r ? 'claim' : 'error'); this._rerender(); return; }
     const list = this._missionData().list.filter((x) => x.done && !x.claimed);
     for (const mi of list) this._m('claimMission', mi.i);
     this._blip(list.length ? 'claim' : 'error');
@@ -1680,7 +1732,8 @@ export class UI {
     const pool = cap.pool().map((it) => ({ ...it, own: this._owns(it.kind, it.id) }));
     const left = pool.filter((x) => !x.own).length;
     const odds = Object.entries(cap.odds).map(([r, p]) => `<div class="odd r-${r}"><b>${esc(tl(rarityOf(r).name))}</b><i class="odd-bar"><i style="width:${Math.max(3, p * 100)}%"></i></i><small>${esc(t('ui.oddsLine', { n: Math.round(p * 100) }))}</small></div>`).join('');
-    const pe = clamp(cap.epicPity - C.sinceEpic, 1, cap.epicPity), pl = clamp(cap.legendHardPity - C.sinceLegend, 1, cap.legendHardPity);
+    const mp = this._m('capsuleInfo')?.pity;
+    const pe = n0(mp?.epicIn) || clamp(cap.epicPity - C.sinceEpic, 1, cap.epicPity), pl = n0(mp?.legendIn) || clamp(cap.legendHardPity - C.sinceLegend, 1, cap.legendHardPity);
     const grid = pool.map((it) => `<div class="pool-it r-${it.rarity}${it.own ? ' own' : ''}" title="${esc(tl(itemDef(it.kind, it.id)?.name))}">${itemVisual(it.kind, it.id, 30)}${it.own ? '<i class="ok">✓</i>' : ''}</div>`).join('');
     const canPay = C.free > 0 || n0(this._mv('tickets', 0)) > 0;
     const capsules = ['#ff7ab8', '#5fd0ff', '#ffd84a', '#b26bff', '#7dffc0', '#ff9a3c', '#8fb8ff', '#ffffff', '#ff7ab8', '#5fd0ff', '#ffd84a'].map((c, i) => `<i class="gc gc${i}" style="--gc:${c}"></i>`).join('');
@@ -1720,7 +1773,7 @@ export class UI {
     if (!prize || prize.ok === false || prize.error) {
       this._blip('error');
       const why = prize?.reason || prize?.error;
-      this.toast(why === 'cap' ? t('ui.capDone') : why === 'off' ? t('ui.capsuleOff') : why === 'all' ? t('ui.allOwned') : t('ui.noTickets'), '🎟️');
+      this.toast(why === 'cap' ? t('ui.capDone') : why === 'off' || why === 'locked' ? t('ui.capsuleOff') : why === 'all' ? t('ui.allOwned') : t('ui.noTickets'), '🎟️');
       return;
     }
     // normalise: {kind,id,rarity} | {refund, rarity} | {item:{…}}
@@ -1751,7 +1804,7 @@ export class UI {
     this.capBusy = null;
     if (!b) return;
     this._sfx(b.rarity === 'legend' ? 'rankup' : 'unlock');
-    if (b.refund) this.queueClaim([{ coins: b.refund }], 'capsule', { title: t('ui.refund') });
+    if (b.refund) this.queueClaim([{ coins: b.refund }], 'capsule', { title: t('ui.refund'), applied: !this._pullMode() });
     else this.queueClaim([{ kind: b.prize.kind, id: b.prize.id }], 'capsule', { applied: false, title: t('ui.gotItem') });
     this._afterClaim = () => { if (this.screen?.name === 'capsule') this._rerender(); };
   }
@@ -1774,7 +1827,12 @@ export class UI {
       });
       return { id, count, found, ms, tier: count >= 300 ? 'gold' : count >= 100 ? 'silver' : count >= 25 ? 'bronze' : '' };
     };
-    return { entry, cards: d.cards || d.seenCards || [], evos: d.evolutions || d.seenEvolutions || [] };
+    let cards = d.cards || d.seenCards || [], evos = d.evolutions || d.seenEvolutions || [];
+    if (cards && !Array.isArray(cards) && Array.isArray(cards.cards)) {   // meta.cardInfo(): {cards:[{id,seen}], evolutions:[{id,seen}]}
+      evos = (cards.evolutions || []).filter((e) => e.seen).map((e) => e.id);
+      cards = cards.cards.filter((c) => c.seen).map((c) => c.id);
+    }
+    return { entry, cards, evos };
   }
   _s_dex(p) {
     const tab = p.tab || 'cubes';
@@ -1812,7 +1870,11 @@ export class UI {
         <div class="scroll dex-body">${body}</div>
       </section>`;
   }
+  _p_dex() { this._m('markSeen', 'dex'); }
+  _p_shop() { this._m('markSeen', 'wardrobe'); }
+  _p_heroes() { this._m('markSeen', 'heroes'); }
   _dexDetail(id) {
+    this._m('markSeen', 'dexEntry', id);
     const e = this._dexData().entry(id);
     const orig = id === 'king' ? tl(DATA.boss.name) : tl(DATA.enemies[id]?.name);
     if (!e.found) {
@@ -1847,7 +1909,7 @@ export class UI {
     return DATA.achievements.map((def) => {
       const e = Array.isArray(a) ? a.find((x) => x.id === def.id) : a?.[def.id];
       const cur = n0(e?.cur ?? e?.value ?? stats[def.stat] ?? 0);
-      const tier = n0(e?.tier ?? def.tiers.filter((x) => cur >= x).length);
+      const tier = Array.isArray(e?.tiers) ? e.tiers.filter((x) => x.reached).length : n0(e?.tier ?? def.tiers.filter((x) => cur >= x).length);
       return { def, cur, tier, next: def.tiers[Math.min(tier, 2)], claimable: !!e?.claimable, max: tier >= 3 };
     });
   }
@@ -1857,8 +1919,10 @@ export class UI {
     const rank = this._mv('rank', null);
     const heroId = this._mv('selectedHero', 'blu');
     const st = this.G.save?.profile?.stats || {};
-    const best = n0(this._mq('bestWave') ?? this.G.save?.profile?.best?.endless ?? st.endlessBest ?? 0);
-    const days = n0(this._mq('playDays') ?? st.days ?? 1);
+    const ps = this._m('profile')?.stats || {};
+    const best = n0(ps.bestWave ?? this._mq('bestWave') ?? this.G.save?.profile?.best?.endless ?? st.endlessBest ?? 0);
+    const days = n0(ps.playDays ?? this._mq('playDays') ?? st.days ?? 1);
+    if (ps.perfects != null) st.perfects = Math.max(n0(st.perfects), n0(ps.perfects));
     const pins = prof.pins.slice(0, 3);
     const tierCls = ['', 'bronze', 'silver', 'gold'];
     const pinSlots = [0, 1, 2].map((i) => { const a = A.find((x) => x.def.id === pins[i]); return `<i class="pin-slot ${a ? tierCls[a.tier] : ''}">${a ? a.def.icon : '＋'}</i>`; }).join('');
@@ -1903,16 +1967,19 @@ export class UI {
     this._rerender();
   }
   _namePicker(seed = Date.now() & 0xffff) {
-    const names = nameChoices(seed);
+    const mc = this._m('nameChoices', 6);
+    this._nameOpts = Array.isArray(mc) && mc.length ? mc : nameChoices(seed).map((text) => ({ text }));
+    const names = this._nameOpts.map((c) => c.text);
     this._open('names', `<div class="panel dialog names pop">
       <button class="x-btn" data-act="close" data-id="names" data-nav>✕</button>
       <h3>${esc(t('ui.pickName'))}</h3>
-      <div class="name-list">${names.map((n, i) => `<button class="btn btn-white" data-act="namePick" data-name="${esc(n)}" data-nav ${i === 0 ? 'data-default' : ''}>${esc(n)}</button>`).join('')}</div>
+      <div class="name-list">${names.map((n, i) => `<button class="btn btn-white" data-act="namePick" data-name="${esc(n)}" data-i="${i}" data-nav ${i === 0 ? 'data-default' : ''}>${esc(n)}</button>`).join('')}</div>
       <button class="btn btn-blue sm" data-act="nameShuffle" data-nav>🎲 ${esc(t('ui.shuffle'))}</button>
       <div class="name-type"><input maxlength="8" placeholder="${esc(t('ui.typeName'))}" data-nav /><button class="btn btn-gold sm" data-act="nameType" data-nav>✓</button></div></div>`);
   }
   _setName(n) {
-    this._setProfile({ name: String(n).slice(0, 8) });
+    const ok = typeof n === 'object' ? this._m('setName', n) : undefined;
+    if (ok === undefined) this._setProfile({ name: String(typeof n === 'object' ? n.text : n).slice(0, 8) });
     this._blip('claim');
     this._close('names');
     this._rerender();
@@ -1970,7 +2037,7 @@ export class UI {
     if (!this._modeUnlocked(mode)) { this._blip('error'); return; }
     const cfg = { mode, worldId: 0, stageId: 0, ...extra };
     if (mode === 'daily' || mode === 'endless') cfg.mutatorId = cfg.mutatorId ?? this._dailyMutator()?.id;
-    if (mode === 'storm') cfg.worldId = n0(this._m('hubWorld'));
+    if (mode === 'storm') cfg.worldId = worldIdx(this._m('hubWorld') ?? 0);
     if (cfg.seed == null && mode === 'endless') cfg.seed = (Math.random() * 0x3fffff) | 0;
     this.G.app?.startRun?.(cfg);
   }
@@ -2172,13 +2239,15 @@ export class UI {
     const maxM = Math.max(30, ...days.map((d) => d.min));
     const bars = days.map((d) => `<div class="pbar${d.today ? ' today' : ''}"><i style="height:${Math.round((d.min / maxM) * 100)}%"></i><b>${d.min}</b><small>${esc(wd[d.wd])}</small></div>`).join('');
     const seg = (key, opts, cur) => `<div class="seg">${opts.map((v) => `<button class="${String(cur) === String(v) ? 'on' : ''}" data-act="pset" data-key="${key}" data-v="${v}" data-nav>${v ? esc(t('ui.minutes', { n: v })) : esc(t('ui.off'))}</button>`).join('')}</div>`;
-    const capOn = this._capInfo().enabled;
+    const mpar = this.G.meta?.parent;
+    const capOn = mpar ? !!mpar.capsule : this._capInfo().enabled;
+    const limit = mpar ? n0(mpar.limit) : n0(s.dailyLimit);
     return `${this._head(t('ui.parent'), '👪')}
       <section class="panel parent-panel scroll">
         <div class="pledge">${[['🛍️', 'ui.pledge1'], ['📺', 'ui.pledge2'], ['📡', 'ui.pledge3'], ['🔒', 'ui.pledge4']].map(([i, k]) => `<div><span class="pl-ico">${i}<i>⃠</i></span><b>${esc(t(k))}</b></div>`).join('')}</div>
         <div class="set-group"><h4>📊 ${esc(t('ui.weekPlay'))}</h4><div class="pbars">${bars}</div></div>
         <div class="set-group"><h4>⏰ ${esc(t('ui.breakEvery'))}</h4>${seg('breakMinutes', [0, 30, 45, 60], s.breakReminder === false ? 0 : n0(s.breakMinutes) || TUNE.healthCardMin)}</div>
-        <div class="set-group"><h4>🌙 ${esc(t('ui.dailyLimit'))}</h4>${seg('dailyLimit', DATA.health.parentLimits, n0(s.dailyLimit))}
+        <div class="set-group"><h4>🌙 ${esc(t('ui.dailyLimit'))}</h4>${seg('dailyLimit', DATA.health.parentLimits, limit)}
           <button class="btn btn-white sm" data-act="add15" data-nav>➕ ${esc(t('ui.add15'))}</button></div>
         <div class="set-group"><h4>${capIco()} ${esc(t('ui.capsuleToggle'))}</h4><div class="set-row"><span>${esc(capOn ? t('ui.on') : t('ui.off'))}</span><button class="toggle${capOn ? ' on' : ''}" data-act="pset" data-key="capsuleOn" data-v="${capOn ? 0 : 1}" data-nav><i></i></button></div></div>
         <div class="set-group danger"><button class="btn btn-red" data-act="reset" data-nav>🗑️ ${esc(t('ui.reset'))}</button></div>
@@ -2189,13 +2258,14 @@ export class UI {
     if (key === 'capsuleOn') value = v === '1';
     if (key === 'breakMinutes') { this._setSetting('breakReminder', value > 0); this.health.nextCard = value || TUNE.healthCardMin; }
     this._setSetting(key, value);
-    this._m('setParent', key, value);
+    if (key === 'capsuleOn') this._m('setParent', 'capsule', value);
+    else if (key === 'dailyLimit') this._m('setParent', 'limit', value);
     this._blip('click');
     this._rerender();
   }
   _add15() {
     this.health.extra += 15;
-    this._m('addPlayMinutes', 15) ?? this._m('extendLimit', 15);
+    if (this._m('extendLimit', 15) === undefined) this._m('parentExtend', 15);
     this._blip('claim');
     this.toast(t('ui.added15'), '⏰');
   }
@@ -2381,8 +2451,8 @@ export class UI {
     const win = !!results.win;
     const w = n0(results.worldId ?? run?.worldIndex), s = n0(results.stageId ?? run?.stageDef?.index);
     const key = `${w}-${s}`;
-    if (stageMode) this.fails[key] = win ? 0 : (this.fails[key] || 0) + 1;
-    const replay = this.seenStage.has(mode + key);
+    if (stageMode) this.fails[key] = win ? 0 : Math.max((this.fails[key] || 0) + 1, n0(rewards.fails));
+    const replay = rewards.replay ?? this.seenStage.has(mode + key);
     this.seenStage.add(mode + key);
     const st = DATA.worlds[w]?.stages?.[s];
     const bossStage = st?.kind === 'boss';
@@ -2427,7 +2497,7 @@ export class UI {
       steps.push({ d: C.score, start: () => show('.score-row'), tick: (k) => { const e = q('.score-n'); if (e) e.textContent = fmtInt(score * easeOutCubic(k)); }, end: () => { if (rewards.newBest) { q('.score-row .pb')?.classList.add('pop'); if (!this.casc?.silent) this._sfx('unlock'); } } });
     }
     const troph = n0(rewards.trophies);
-    if (troph > 0 && this._unlocked('modes')) {
+    if (troph > 0 && (rewards.rankVisible ?? this._unlocked('modes'))) {
       const rk = rewards.rankAfter || this._mv('rank', null);
       rows.push(`<div class="rrow troph-row step">${rankBadge(rk, 40)}<span class="tr-name">${esc(rankName(rk))}</span><b class="tr-plus">+<b class="cnt tr-n">0</b> 🏆</b></div>`);
       steps.push({ d: C.trophies, start: () => show('.troph-row'), tick: (k) => { const e = q('.tr-n'); if (e) e.textContent = Math.round(troph * k); } });
@@ -2435,12 +2505,12 @@ export class UI {
     if (this._unlocked('road')) {
       const after = n0(rewards.freedAfter ?? this._mv('freed', 0));
       const before = n0(rewards.freedBefore ?? Math.max(0, after - freedRun));
-      const nb = rewards.roadNext?.at ? rewards.roadNext : DATA.road.find((n) => n.at > before);
+      const nb = rewards.roadNextBefore?.at ? rewards.roadNextBefore : rewards.roadNext?.at && rewards.roadNext.at > before ? rewards.roadNext : DATA.road.find((n) => n.at > before);
       if (nb) {
-        const prevAt = [...DATA.road].reverse().find((n) => n.at <= before)?.at ?? 0;
+        const prevAt = nb.prevAt ?? [...DATA.road].reverse().find((n) => n.at <= before)?.at ?? 0;
         const span = Math.max(1, nb.at - prevAt);
         const f0 = clamp((before - prevAt) / span, 0, 1), f1 = clamp((after - prevAt) / span, 0, 1);
-        const it = rewardItems(nb.reward)[0];
+        const it = rewardItems(nb.items || nb.reward)[0];
         const reached = after >= nb.at;
         rows.push(`<div class="rrow road-row step"><span class="rr-ico">🚀</span><i class="bar big road"><i class="fill" style="width:${f0 * 100}%"></i></i><span class="rr-goal${reached ? ' got' : ''}">${it ? itemVisual(it.kind, it.id, 30) : '🎁'}</span><small class="rr-txt">${reached ? '🎁 ✓' : esc(t('ui.roadNext', { n: fmtInt(nb.at - after) }))}</small><b class="rr-plus">+${fmtInt(after - before)} 🕊️</b></div>`);
         steps.push({ d: C.road, start: () => show('.road-row'), tick: (k) => { const f = q('.road-row .fill'); if (f) f.style.width = lerp(f0, f1, easeOutCubic(k)) * 100 + '%'; }, end: () => { if (reached) { q('.rr-goal')?.classList.add('pop'); if (!this.casc?.silent) this._sfx('unlock'); } } });
@@ -2460,7 +2530,8 @@ export class UI {
     const cb = (rewards.coinsBreakdown || []).map((b) => {
       const k = b.key || b.id || b.kind || '';
       const lbl = b.label ? tl(b.label) : t('cb.' + k) !== 'cb.' + k ? t('cb.' + k) : k;
-      const v = b.mult ? `×${b.mult}` : `+${fmtInt(n0(b.amount ?? b.coins ?? b.value))}`;
+      const amt = n0(b.amount ?? b.coins ?? b.value);
+      const v = (b.mult ? `<i>×${b.mult}</i> ` : '') + (amt ? `+${fmtInt(amt)}` : '');
       return `<span class="cb-chip${b.mult ? ' mult' : ''}">${esc(lbl)} <b>${v}</b></span>`;
     }).join('');
     rows.push(`<div class="rrow coins-row step"><div class="cb-list">${cb}</div><span class="coin-total">${coinIco('big')}<b class="cnt coins-n">0</b></span>${n0(rewards.tickets) ? `<span class="coin-total">${ticketIco('big')}<b>×${n0(rewards.tickets)}</b></span>` : ''}</div>`);
@@ -2476,7 +2547,8 @@ export class UI {
       const tip = type === 'king' ? t('tip.boss') : tl(DATA.enemies[type]?.tip);
       tipHTML = `<div class="tip-card step">${enemyCube(type, { size: 48 })}<div><b>💡 ${esc(t('ui.tip'))}</b><p>${esc(tip)}</p></div></div>`;
       steps.push({ d: 0.3, start: () => show('.tip-card') });
-      if (stageMode && this.fails[key] >= TUNE.helperAfterFails && !this._settings().assist && !this.helperOffered) {
+      const offer = rewards.helperOffer ?? (this.fails[key] >= TUNE.helperAfterFails && !this._settings().assist);
+      if (stageMode && offer && !this._settings().assist && !this.helperOffered) {
         this.helperOffered = true;
         tipHTML += `<div class="helper-offer step">${cube({ color: '#ffffff', face: 'joy', size: 40, antenna: true })}<span class="ho-bear">🧸</span><b>${esc(t('ui.helperOffer'))}</b>
           <button class="btn btn-gold sm" data-act="helperYes" data-nav>${esc(t('ui.yes'))}</button><button class="btn btn-white sm" data-act="helperNo" data-nav>${esc(t('ui.no'))}</button></div>`;
@@ -2616,7 +2688,9 @@ export class UI {
     const e = o.entry || {};
     this._blip('claim');
     if (e.id != null) this._m('claim', e.id);
+    if (e.pulled) { const it = rewardItems(e.rewards); e.coins = it.filter((x) => x.kind === 'coins').reduce((a, x) => a + n0(x.amount), 0); e.tickets = it.filter((x) => x.kind === 'tickets').reduce((a, x) => a + n0(x.amount), 0); }
     const dur = this._flyRewards(o.el, e);
+    if (e.pulled) setTimeout(() => { this._m('ackClaim'); this._walletTick(); }, dur);
     const coins = e.applied ? e.coins || 0 : 0, tickets = e.applied ? e.tickets || 0 : 0;
     setTimeout(() => {
       this.pending.coins = Math.max(0, this.pending.coins - coins);
@@ -2679,12 +2753,12 @@ export class UI {
 
   // ═════════ NEW FEATURE (guide cube Pixel) ═════════
   _showFeatureNow(f) {
-    const lbl = { missions: 'ui.missions', road: 'ui.road', dex: 'ui.dex', wardrobe: 'ui.wardrobe', capsule: 'ui.capsule', modes: 'ui.modes', achievements: 'ui.achievements', heroes: 'ui.heroes', map: 'ui.map' }[f];
+    const lbl = { signin: 'ui.signin', rank: 'ui.rank', missions: 'ui.missions', road: 'ui.road', dex: 'ui.dex', wardrobe: 'ui.wardrobe', capsule: 'ui.capsule', modes: 'ui.modes', achievements: 'ui.achievements', heroes: 'ui.heroes', map: 'ui.map' }[f];
     const o = this._open('feature', `<div class="ovl-dim"></div>
       <div class="panel feat-box pop">
         <div class="feat-burst"><span data-text="${esc(t('ui.featureNew'))}">${esc(t('ui.featureNew'))}</span></div>
         <div class="feat-row"><div class="pixel">${cube({ color: '#ffffff', face: 'joy', size: 70, antenna: true, limbs: true })}</div>
-          <div class="bubble"><small>${esc(t('ui.pixel'))}</small><p>${esc(t('feat.' + f) !== 'feat.' + f ? t('feat.' + f) : '✨')}</p></div></div>
+          <div class="bubble"><small>${esc(t('ui.pixel'))}</small><p>${esc(t('feat.' + f) !== 'feat.' + f ? t('feat.' + f) : t('meta.hint.' + f) !== 'meta.hint.' + f ? t('meta.hint.' + f) : '✨')}</p></div></div>
         <div class="feat-icon"><span class="fi-ico">${featIcon(f)}</span><b>${esc(lbl ? t(lbl) : f)}</b></div>
         <button class="btn btn-gold big" data-act="featOk" data-nav data-default>${esc(t('ui.ok'))}</button>
       </div>`, { back: () => this._featOk() });
@@ -2702,18 +2776,18 @@ export class UI {
   }
 
   // ═════════ RANK-UP CEREMONY 段位 ═════════
-  _showRankNow(rank, before) {
+  _showRankNow(rank, before, placement = false) {
     const nr = DATA.ranks.find((x) => x.id === rank?.id) || DATA.ranks[rank?.tier ?? 1] || DATA.ranks[1];
     const ti = DATA.ranks.indexOf(nr);
     const ob = before ? DATA.ranks.find((x) => x.id === before.id) || DATA.ranks[before.tier ?? 0] : DATA.ranks[Math.max(0, ti - 1)];
     const shards = Array.from({ length: 14 }, (_, i) => `<i style="--a:${(i / 14) * 360 + Math.random() * 20}deg;--dist:${120 + Math.random() * 120}px;--sz:${10 + Math.random() * 16}px"></i>`).join('');
     this._open('rank', `<div class="ovl-dim dark"></div><div class="rays gold"></div>
       <div class="rk-stage">
-        <div class="rk-cube old" style="--rc:${ob.color}"><span>${ob.icon}</span><svg class="rk-cracks" viewBox="0 0 100 100"><path d="M50 8 L44 34 L58 46 L40 70 L52 94 M44 34 L20 40 M58 46 L84 36 M40 70 L18 78"/></svg></div>
+        <div class="rk-cube old${placement ? ' blank' : ''}" style="--rc:${placement ? '#dfe7f3' : ob.color}"><span>${ob.icon}</span><svg class="rk-cracks" viewBox="0 0 100 100"><path d="M50 8 L44 34 L58 46 L40 70 L52 94 M44 34 L20 40 M58 46 L84 36 M40 70 L18 78"/></svg></div>
         <div class="rk-shards" style="--rc:${ob.color}">${shards}</div>
         <div class="rk-flash"></div>
         <div class="rk-cube new" style="--rc:${nr.color}"><span>${nr.icon}</span></div>
-        <div class="rk-text"><small class="rk-sub">${esc(t('ui.rankUp'))}</small><b class="rk-name" data-text="${esc(rankName(rank || nr))}">${esc(rankName(rank || nr))}</b><span class="rk-stars">${'★'.repeat(Math.max(1, n0(rank?.stars) || 1))}</span></div>
+        <div class="rk-text"><small class="rk-sub">${esc(placement ? t('ui.placement') : t('ui.rankUp'))}</small><b class="rk-name" data-text="${esc(rankName(rank || nr))}">${esc(rankName(rank || nr))}</b><span class="rk-stars">${'★'.repeat(Math.max(1, n0(rank?.stars) || 1))}</span></div>
       </div>
       <button class="btn btn-gold big rk-btn" data-act="rankSkip" data-nav data-default>${esc(t('ui.great'))}</button>`, { back: () => this._rankEnd() });
     this.rankT = { t: 0, t0: performance.now() };
@@ -2963,6 +3037,6 @@ export class UI {
 function seedFrom(s) { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
 
 addStrings({
-  zh: { 'ui.r3': '解救!', 'ui.r4': '完美!', 'tip.boss': '大王砸地后会晕倒，冲向它发光的核心!' },
-  en: { 'ui.r3': 'POP!', 'ui.r4': 'PERFECT!', 'tip.boss': 'After King Glitch slams he gets dizzy — dash into his glowing core!' },
+  zh: { 'ui.placement': '段位定级!', 'feat.signin': '每天来点一下签到，就有礼物!', 'ui.r3': '解救!', 'ui.r4': '完美!', 'tip.boss': '大王砸地后会晕倒，冲向它发光的核心!' },
+  en: { 'ui.placement': 'Your rank!', 'feat.signin': 'Tap Sign-in once a day for a gift!', 'ui.r3': 'POP!', 'ui.r4': 'PERFECT!', 'tip.boss': 'After King Glitch slams he gets dizzy — dash into his glowing core!' },
 });

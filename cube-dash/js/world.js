@@ -272,6 +272,9 @@ void main(){
   float ang = atan(p.y, p.x);
   float sw = abs(fract(ang / 6.2831853 * 2.0 + r * 0.055 - 0.08) - 0.5);
   col = mix(col, vec3(1.0), (1.0 - smoothstep(0.0, 0.035, sw)) * 0.14 * smoothstep(2.5, 5.0, r) * (1.0 - smoothstep(uR - 3.0, uR - 1.0, r)));
+  // sunlit centre + fine clay/sand grain (subtle: the floor must stay calm & light)
+  col *= 1.0 + 0.045 * (1.0 - smoothstep(0.0, uR * 0.8, r));
+  col *= 0.985 + 0.03 * vnoise2(p * 5.3);
   float inside = 1.0 - smoothstep(uR - 0.6, uR + 0.2, r);
   // --- hologram grid (1.5 u)
   vec2 g = abs(fract(p / 1.5 - 0.5) - 0.5) * 1.5;
@@ -353,7 +356,7 @@ void main(){
       col = mix(col, wc, m * 0.8 * fl);
       col = mix(col, uInk, bang(vec2(q.x, -q.y) / (T.z * 0.8)) * m);
     }
-    if (st >= 1.0 && st < 2.0) col += uGlitch * (1.0 - smoothstep(0.0, 0.3, hd)) * 0.9;
+    if (st >= 1.0 && st < 2.0) col += uGlitch * (1.0 - smoothstep(0.0, 0.3, hd)) * 0.55;
     if (st >= 2.0) col = mix(col, uGlitch, m * (1.0 - (st - 2.0)) * 0.45);
   }
   // --- storm: outside the play radius = orange / yellow-white hatch + bright edge
@@ -736,7 +739,7 @@ varying vec2 vUv; varying vec3 vPos;
 ${GLSL_COMMON}
 void main(){
   float depth = clamp(-vPos.y, 0.0, 1.0);
-  vec3 c = mix(uGlitch * 1.6, uVoid, smoothstep(0.0, 0.55, depth));
+  vec3 c = mix(uGlitch * 0.95, uVoid, smoothstep(0.0, 0.4, depth));
   vec2 sp = vec2(vUv.x * 40.0, vUv.y * 12.0 + uTime * 0.6);
   float st = step(0.93, hash12(floor(sp))) * smoothstep(0.35, 0.9, depth);
   c += vec3(1.0, 0.9, 1.0) * st * (0.6 + 0.4 * sin(uTime * 5.0 + vUv.x * 40.0));
@@ -977,6 +980,7 @@ export class World {
         if (r > this.arenaRadius - 1.8) this.rimRipple(Math.atan2(p.z, p.x), 0.22);
       }),
       bus.on('post:quality', (p) => this._applyDetail(p?.tier ?? 2)),
+      bus.on('progress', (p) => { if (p && p.total > 0) this._progress = clamp(p.freed / p.total, 0, 1); }),
     ];
   }
 
@@ -1541,6 +1545,7 @@ export class World {
   }
 
   _resetGimmicks() {
+    this._progress = 0;
     for (const t of this._tiles) { t.state = 'idle'; t.t = 0; }
     this._tileTimer = (this._tileCfg?.every ?? 7) * 0.6;
     this._lastTile = -1;
@@ -1705,6 +1710,11 @@ export class World {
     this._feverK = damp(this._feverK, this.fever ? 1 : 0, 3, rdt);
     U.uFever.value = this._feverK;
 
+    // W1 rainbow grows brighter as cubes are freed (restoring the sky); full in menus
+    if (this.look.rainbow) {
+      const want = this.look.rainbow * (G.run ? 0.45 + 0.55 * (this._progress || 0) : 1);
+      this.skyU.uRainbow.value = damp(this.skyU.uRainbow.value, want, 1.5, rdt);
+    }
     // keep the dome centred on the camera ("infinitely far")
     this.sky.position.copy(G.camera.position);
 
@@ -2093,7 +2103,7 @@ const SET_BUILDERS = {
     return {
       group,
       update(t) {
-        gearDefs.forEach((g, i) => setMat(gears, i, g.x, g.y, g.z, g.s, g.s, g.s, g.rx, 0, t * g.sp));
+        for (let i = 0; i < gearDefs.length; i++) { const g = gearDefs[i]; setMat(gears, i, g.x, g.y, g.z, g.s, g.s, g.s, g.rx, 0, t * g.sp); }
         gears.instanceMatrix.needsUpdate = true;
         rings[0].rotation.y = t * 0.1; rings[1].rotation.y = -t * 0.07;
       },
@@ -2153,7 +2163,8 @@ const SET_BUILDERS = {
     wells.frustumCulled = false;
     wells.count = 0;
     group.add(wells);
-    const wellK = new Float32Array(6);
+    const wellK = new Float32Array(6);     // target (0 closed / 1 open)
+    const wellA = new Float32Array(6);     // animated depth
     let glitchT = 0;
     return {
       group,
@@ -2174,10 +2185,8 @@ const SET_BUILDERS = {
         shards.instanceMatrix.needsUpdate = true;
         const tl = w._tiles;
         for (let i = 0; i < tl.length && i < 6; i++) {
-          const target = wellK[i] ? 1 : 0;
-          const cur = wells.userData['k' + i] ?? 0;
-          const nk = damp(cur, target, 10, rdt);
-          wells.userData['k' + i] = nk;
+          const nk = damp(wellA[i], wellK[i], 10, rdt);
+          wellA[i] = nk;
           const rr = tl[i].r / 0.8660254;
           setMat(wells, i, tl[i].x, 0.001, tl[i].z, nk > 0.01 ? rr : 0.0001, Math.max(0.0001, nk * 6), nk > 0.01 ? rr : 0.0001);
         }

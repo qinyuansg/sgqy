@@ -1358,7 +1358,8 @@ class Freed {
       this._e.set(0, fo.rotY, rotZ, 'YXZ');
       this._q.setFromEuler(this._e);
       this._p.set(fo.x, fo.y, fo.z);
-      this._s.set(fo.sx + 0.07, fo.sy + 0.07, fo.sz + 0.07);
+      const ol = 0.07 * Math.min(1, s / 0.35);          // outline thins out with the cube (never a lone speck)
+      this._s.set(fo.sx + ol, fo.sy + ol, fo.sz + ol);
       this._m.compose(this._p, this._q, this._s);
       this.outline.setMatrixAt(k, this._m);
       this.shadows.add(fo.x, fo.z, s * 0.9, Math.max(0, y - s * 0.5));
@@ -2621,7 +2622,7 @@ export class FX {
     this.rings.anim(0, 0, 0.01, 0.01, 0.05, HEX.white, 0, { y });
     this.shards.add(0, y, 0, 0, 0, 0, 0.001, col(HEX.white), 1, 0.05);
     this.ghosts.add(0, y, 0, 0, 0.001, col(HEX.white), 0, 0.05);
-    this.freed.add(0, y, 0, 0.001, false);
+    this.freed.add(0, y, -400, 0.001, false);
     this.bolts.spawn(0, y, 0, 0, y - 1, 0, col(HEX.white), { life: 0.05, branches: 0 });
     // immediate systems: draw one invisible instance for their first frame
     this.beams.now(0, 0, y, 0.001, 0.001, col(HEX.white), 0);

@@ -751,8 +751,10 @@ export class Run {
     // kid rule: every hit costs exactly 1 heart — bigger sources hit harder via knockback
     let dmg = Math.min(1, p.hp);
     if (this.unloseable) dmg = Math.min(dmg, Math.max(0, p.hp - 1));
-    const kbMult = (this._knockbackDist(kind, srcX, srcZ) / TUNE.player.knockback) *
-      (1 + TUNE_R.knockbackPerHeart * Math.max(0, (hearts || 1) - 1));
+    // enemies.js encodes size knockback into `hearts` (1 + 0.45 per extra); plain 1-heart sources
+    // (boss body, hazards, older callers) get their knockback looked up here instead — never both
+    const kbMult = hearts > 1 ? 1 + TUNE_R.knockbackPerHeart * (hearts - 1)
+      : this._knockbackDist(kind, srcX, srcZ) / TUNE.player.knockback;
     p.hp -= dmg;
     this.hitsTaken += dmg;
     this.damageTaken += dmg;
