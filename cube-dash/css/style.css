@@ -1334,7 +1334,7 @@ kbd.wide { min-width: 70px; font-size: 15px; }
   .lc-desc { font-size: 12px; }
   .lc-pips i { width: 13px; height: 13px; }
   .lc-rec { font-size: 12px; padding: 3px 8px; }
-  .res-wrap { width: 96vw; }
+  .res-wrap { width: 96vw; padding-top: calc(56px + var(--safe-t)); }
   .rc-slot small { font-size: 11px; }
   .ci { width: 118px; min-height: 136px; }
   .keystrip { padding: 10px 12px 6px; gap: 6px 10px; }

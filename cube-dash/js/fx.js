@@ -541,7 +541,7 @@ void main() {
     float spin = seed > 0.5 ? -1.0 : 1.0;
     float arms = 0.5 + 0.5 * sin(ang * 3.0 * spin - q * 8.0 + uTime * 7.0);
     float body = 1.0 - smoothstep(0.8, 1.0, q);
-    a = body * (0.18 + 0.4 * arms) * (0.4 + 0.6 * q);
+    a = body * (0.22 + 0.5 * arms) * (0.45 + 0.55 * q);
     col = mix(col, vec3(1.25), arms * 0.35 * q);
     float rimR = smoothstep(0.9, 0.95, q) * (1.0 - smoothstep(0.97, 1.0, q));
     a += rimR * 0.8; col += rimR * 0.4;
@@ -2011,7 +2011,7 @@ export class FX {
       case K.PORTAL: this._tickPortal(e, t, edt); break;
       case K.PILLAR: {
         const u = t / e.dur;
-        this.beams.now(e.x, e.z, 0, e.r * (1 - u * 0.6), e.a || 20, e.color, (1 - u) * (e.b || 1), (1 - u) * 0.6, 0, 1);
+        this.beams.now(e.x, e.z, 0, e.r * (1 - u * 0.6), e.a || 20, e.color, (1 - u) * (e.b || 0.75), (1 - u) * 0.35, 0, 1);
         this.rings.now(e.x, e.z, e.r * 1.6, 0.2, e.color, (1 - u) * 0.6, RS.DISC, 1, 0, 0, 0, 0, 1);
         break;
       }
@@ -2043,7 +2043,7 @@ export class FX {
           s.x = cx + rr(-11, 11); s.y = rr(7, 11); s.z = cz + rr(-9, 7);
           s.vx = rr(-1, 1); s.vz = rr(-1, 1); s.vy = -rr(1, 3); s.grav = rr(2.5, 3.5);
           s.mode = MO.FLUTTER; s.k1 = rr(3, 7); s.k2 = rnd() * TAU; s.rot = rnd() * TAU; s.rotV = rr(-5, 5);
-          s.life = rr(3, 4); s.size = rr(0.22, 0.32); s.shape = SH.RECT; s.add = 0; s.fade = 6; s.self = 1;
+          s.life = rr(3, 4); s.size = rr(0.3, 0.44); s.shape = SH.RECT; s.add = 0; s.fade = 6; s.self = 1;
           s.color(pick(PAL.confetti), 1.05);
           this.sp.add(s);
         }
@@ -2081,7 +2081,7 @@ export class FX {
     const beamA = clamp((u - 0.5) / 0.5, 0, 1);
     if (beamA > 0) {
       const pulse = 0.85 + 0.15 * Math.sin(t * 20);
-      this.beams.now(e.x, e.z, 0, e.r * (0.3 + 0.25 * beamA), P.beamH, col(white ? HEX.white : HEX.teleWhite), (0.2 + 0.8 * beamA) * pulse, white, e.c, 0);
+      this.beams.now(e.x, e.z, 0, e.r * (0.28 + 0.2 * beamA), P.beamH, col(white ? HEX.white : HEX.teleWhite), (0.15 + 0.6 * beamA) * pulse, white * 0.6, e.c, 0);
     }
     // suction sparkles spiralling in
     e.acc -= edt;
@@ -2108,7 +2108,7 @@ export class FX {
     const k = open * close;
     this.rings.now(e.x, e.z, e.r * k, 0.1, e.color, 0.9 * close, RS.VORTEX, 0, 1, 0, 0, 0, 0, 0);
     this.rings.now(e.x, e.z, e.r * 1.35 * k, 0.16, col(HEX.white), 0.8 * close, RS.DASHED, 0, 0, 0, 0, 0, 0, 0);
-    this.beams.now(e.x, e.z, 0, e.r * 0.8 * k, 18, e.color, 0.7 * close, 0, 1, 0);
+    this.beams.now(e.x, e.z, 0, e.r * 0.6 * k, 18, e.color, 0.42 * close, 0, 1, 0);
     e.acc -= fdt;
     if (e.acc <= 0) {
       e.acc = 0.05;
@@ -2211,8 +2211,8 @@ export class FX {
     const pull = e.b;          // pull seconds
     if (t < pull) {
       const open = easeOutBack(Math.min(1, t / 0.3));
-      this.rings.now(x, z, 3.4 * open, 0.1, c, 0.85, RS.VORTEX, 1, 1, 0, 0, 0, 1, 0);
-      this.rings.now(x, z, 2.2 * open, 0.12, col(0xff7ad9), 0.7, RS.DASHED, 0, 1, 0, 0, 0, 1, 0);
+      this.rings.now(x, z, 3.6 * open, 0.1, c, 1, RS.VORTEX, 1, 1, 0, 0, 0, 1, 0);
+      this.rings.now(x, z, 2.2 * open, 0.14, col(0xff7ad9), 0.85, RS.DASHED, 0, 1, 0, 0, 0, 1, 0);
       this.rings.now(x, z, 4.6 * open, 0.1, col(0xd9c8ff), 0.5, RS.DASHED, 0, 0, 0, 0, 0, 1, 0);
       this.shells.now(x, 1.2, z, 0.75 * open + Math.sin(t * 20) * 0.03, c, 1, 2, 1, 1);
       this.shells.now(x, 1.2, z, 1.25 * open, c, 0.5, 0, 1, 1);
@@ -2510,7 +2510,7 @@ export class FX {
       s.x = x; s.y = y; s.z = z;
       s.vx = Math.cos(a) * sp; s.vz = Math.sin(a) * sp; s.vy = rr(5, 9); s.grav = 3;
       s.mode = MO.FLUTTER; s.k1 = rr(3, 7); s.k2 = rnd() * TAU; s.rot = rnd() * TAU; s.rotV = rr(-6, 6);
-      s.life = rr(1.8, 2.6); s.size = rr(0.2, 0.3); s.shape = SH.RECT; s.add = 0; s.fade = 5; s.self = self ? 1 : 0;
+      s.life = rr(1.8, 2.6); s.size = rr(0.28, 0.4); s.shape = SH.RECT; s.add = 0; s.fade = 5; s.self = self ? 1 : 0;
       s.color(pick(PAL.confetti), 1.05);
       this.sp.add(s);
     }

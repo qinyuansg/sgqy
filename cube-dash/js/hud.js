@@ -399,7 +399,7 @@ export class HUD {
     this.root.classList.add('ended');
     this.el.second.classList.remove('on'); this.el.cue.classList.remove('on'); this.el.combo.classList.remove('on');
     this._hideTutorial(); this.el.hint.classList.remove('on'); this.el.dizzy.classList.remove('on');
-    for (const a of this.arrowPool) { a.on = false; a.el.style.display = 'none'; }
+    this._hideArrows();
     try { this.G.input?.setNovaReady?.(false); } catch { /* */ }
     this.v.novaReady = false;
   }
@@ -608,7 +608,8 @@ export class HUD {
     this._updHints(run, rdt, ready);
     if (e.hint.classList.contains('on')) { const s = this._w2s((p.x ?? 0) + 0.6, (p.y ?? 0) + 2.9, p.z ?? 0); e.hint.style.transform = `translate3d(${s.x.toFixed(1)}px,${s.y.toFixed(1)}px,0)`; }
     if (this._device === 'touch' && (this._novaPlaceT = (this._novaPlaceT || 0) - rdt) <= 0) { this._novaPlaceT = 1; this._placeNova(); }
-    this._updArrows(run, p, rdt);
+    if (run.state === 'ended' || run.state === 'victory' || run.state === 'dying') this._hideArrows();
+    else this._updArrows(run, p, rdt);
 
     // ---- second chance
     const sc = run.state === 'secondChance';
@@ -636,7 +637,7 @@ export class HUD {
       const r = total > 0 ? clamp(cur / total, 0, 1) : 0;
       e.objBar.style.transform = `scaleX(${r.toFixed(3)})`;
       e.objNum.textContent = total > 0 ? `${cur}/${total}` : `${cur}`;
-      if (v.obj != null && cur > (v.objCur ?? 0)) e.objNum.animate?.([{ transform: 'scale(1.3)' }, { transform: 'scale(1)' }], { duration: 220 });
+      if (v.obj != null && cur > (v.objCur ?? 0)) e.objNum.animate?.([{ transform: 'translateY(-50%) scale(1.3)' }, { transform: 'translateY(-50%) scale(1)' }], { duration: 220 });
       v.obj = key; v.objCur = cur;
     }
     const fever = !!run.fever;
@@ -706,7 +707,7 @@ export class HUD {
     let style = +run.styleMult || 0;
     if (!style) { style = 1; for (const tr of DT.style.tiers) if ((run.combo | 0) >= tr.at) style = tr.mult; }
     const mult = style * (+run.scoreMult || 1);
-    const mk = mult > 1 ? '×' + mult.toFixed(2).replace(/0$/, '') : '';
+    const mk = mult > 1 ? '×' + String(+mult.toFixed(2)) : '';
     if (v.mult !== mk) { e.mult.textContent = mk; e.mult.classList.toggle('on', !!mk); if (mk) e.mult.animate?.([{ transform: 'scale(1.5)' }, { transform: 'scale(1)' }], { duration: 300 }); v.mult = mk; }
     const wn = this._wave.n || (run.wave | 0);
     if (v.eWave !== wn) { e.eWave.textContent = t('hud.wave', { n: Math.max(1, wn) }); v.eWave = wn; }
@@ -831,6 +832,8 @@ export class HUD {
     }
     for (let i = used; i < this.arrowPool.length; i++) { const A = this.arrowPool[i]; if (A.on) { A.on = false; A.el.style.display = 'none'; } }
   }
+
+  _hideArrows() { for (const A of this.arrowPool) if (A.on) { A.on = false; A.el.style.display = 'none'; } }
 
   // ---- pops follow their world anchor
   _updPops(rdt) {

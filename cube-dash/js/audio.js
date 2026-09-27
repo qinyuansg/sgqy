@@ -556,6 +556,7 @@ class Song {
     if (!n) return;
     const midi = degMidi(this.root, this.scale, n.deg);
     sys._leadNote(this.def.lead, midi, t, n.len * sd * 2 * 0.92, this.stem.lead, 0.9, this);
+    if (sys.debug) sys._logEv({ t: +t.toFixed(3), type: 'lead', midi, bar: this.bar, deg: n.deg });
   }
 
   _drums(st, t, barIn8) {
@@ -898,6 +899,7 @@ export class AudioSys {
     on('enemy:shieldPop', S('shieldPop'));
     on('boss:intro', (p) => {
       this.flags.drone = false;
+      this._runTrack = 'boss';
       this.music('boss');
       this.sfx('roar', p);
       this.sfx('babble', { hero: 'king', mood: 'laugh', at: this.ctx ? this._now() + 1.2 : 0 });
@@ -945,6 +947,7 @@ export class AudioSys {
     if (mode === 'endless') track = 'endless';
     else if (mode === 'rush') track = 'boss';
     this.flags.drone = isBoss && mode !== 'rush';      // the boss theme starts on boss:intro
+    this._runTrack = track;
     if (this.track === track && this.song && !this._stinger) { this._retempo(); return; }   // retry: keep the groove going
     this.music(track);
   }
@@ -1180,11 +1183,18 @@ export class AudioSys {
     f.progress = run.progress ?? 0;
     const sc = G.time?.scale ?? 1;
     this._slowT = sc > 0 && sc < 0.9 ? this._slowT + rdt : 0;
-    // state transitions → stingers
+    // state transitions → stingers / drops
     if (st !== prev) {
       if (st === 'victory' && this._stingerFor !== run) { this._stingerFor = run; this.music('victory'); }
       if (st === 'dying' && this._stingerFor !== run) { this._stingerFor = run; this.music('defeat'); }
-      if (prev === 'dying' && st === 'playing') this._stingerFor = null;     // revived
+      if (st === 'playing' && (prev === 'dying' || prev === 'ended')) {      // revived / continue
+        this._stingerFor = null; this._defeatLp = false;
+        if (this._runTrack && this.track !== this._runTrack) this.music(this._runTrack);
+      }
+      if (st === 'playing' && prev === 'bossIntro' && this.song?.def?.boss && !this.song.stopped) {
+        const t = now + 0.03;                                                // boss theme drops on the downbeat
+        this.song.resync(t); this._crash(t, this._sfxIn, 0.6);
+      }
     }
     this._prevRunState = st;
     // endless: tempo / key climb
