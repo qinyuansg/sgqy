@@ -45,7 +45,7 @@ addStrings({
 
 const CARD_BY_ID = new Map(CARDS.map((c) => [c.id, c]));
 const EVO_BY_ID = new Map(EVOLUTIONS.map((e) => [e.id, e]));
-const isGone = (e) => !e || e.state === 'dying' || e.state === 'portal' || e.dead;
+const isGone = (e) => !e || e.dead || e.portal === true || e.state === 'dying' || e.state === 'portal';
 const smashableOf = (e) => e.smashable ?? e.coreOpen ?? false;
 const harmfulOf = (e) => e.harmful ?? (!smashableOf(e) && !isGone(e));
 const isHeavy = (e) => e.isBoss || e.type === 'bruiser' || e.type === 'beamer' || (e.mass ?? 1) >= 2.5;
@@ -163,8 +163,9 @@ export class Upgrades {
     this.group.add(this.satCrowd.mesh, this.friendCrowd.mesh, this.shadows.mesh);
     // comet trail
     const qg = new THREE.PlaneGeometry(1, 1); qg.rotateX(-Math.PI / 2);
+    // normal blending: stays saturated cyan / fire-orange on the bright pastel floors
     this.trailMesh = new THREE.InstancedMesh(qg, new THREE.MeshBasicMaterial({
-      map: softTexture(), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false,
+      map: softTexture(), transparent: true, opacity: 0.9, depthWrite: false, toneMapped: false,
     }), TUNE_U.comet.cap);
     this.trailMesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(TUNE_U.comet.cap * 3), 3);
     this.trailMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
@@ -191,8 +192,16 @@ export class Upgrades {
     this.group.add(this.zone, this.fieldRing, this.fieldStars);
     this._m = new THREE.Matrix4(); this._q = new THREE.Quaternion(); this._e = new THREE.Euler();
     this._p = new THREE.Vector3(); this._s = new THREE.Vector3(); this._c = new THREE.Color();
-    this._cCyan = new THREE.Color(0x8ff6ff); this._cWhite = new THREE.Color(0xffffff);
-    this._cFire = new THREE.Color(0xff8a2a); this._cGold = new THREE.Color(0xffe066);
+    this._cCyan = new THREE.Color(0x19c6ff); this._cWhite = new THREE.Color(0xb8f6ff);
+    this._cFire = new THREE.Color(0xff5a1a); this._cGold = new THREE.Color(0xffd23a);
+    this._o = { x: 0, y: 0, z: 0, s: 1, sx: undefined, sy: undefined, sz: undefined, rotX: 0, rotY: 0, rotZ: 0, color: 0, expr: 0, blink: 0, lookX: 0, lookY: 0, flash: 0, glow: 0, opacity: 1 };
+  }
+
+  /** CubeCrowd.set through one reused scratch record (no per-frame allocations) */
+  _crowd(crowd, i, x, y, z, s, rotX, rotY, color, expr, glow) {
+    const o = this._o;
+    o.x = x; o.y = y; o.z = z; o.s = s; o.rotX = rotX; o.rotY = rotY; o.color = color; o.expr = expr; o.glow = glow;
+    crowd.set(i, o);
   }
 
   // ============ queries ============
@@ -200,6 +209,7 @@ export class Upgrades {
   has(id) { return this.owned.has(id) || this.evos.has(id); }
   value(id) { const l = this.level(id); return l ? CARD_BY_ID.get(id).values[l - 1] : 0; }
   get slotsUsed() { return this.owned.size; }
+  get rerollsLeft() { return this.rerolls; }
 
   _unlockedSet() {
     let ids = null;
@@ -239,7 +249,7 @@ export class Upgrades {
   }
 
   /** 3 choices for a level-up (evolution forced into slot 1 when eligible) */
-  offer({ exclude = null } = {}) {
+  offer({ exclude = null, count, recommend = false } = {}) {
     const run = this.run;
     const rng = run.rng || rand;
     const unlocked = this._unlockedSet();
@@ -251,7 +261,7 @@ export class Upgrades {
       if (!lvl && (slotsFull || !unlocked.has(c.id))) continue;
       pool.push(c);
     }
-    const want = CARD_RULES.offer;
+    const want = clamp(count || CARD_RULES.offer, 1, CARD_RULES.offer);
     const picks = [];
     const evo = EVOLUTIONS.find((e) => !this.evos.has(e.id) && this._evoReady(e));
     if (evo) picks.push(this._choice(evo, true));
@@ -279,6 +289,15 @@ export class Upgrades {
     }
     const hadEpic = picks.some((p) => p.rarity === 'epic' || p.isEvo);
     this.offersSinceEpic = hadEpic ? 0 : this.offersSinceEpic + 1;
+    // first stages: one friendly card gets a "recommended" bounce (UI)
+    if (recommend) {
+      const pref = ['boots', 'punch', 'stars', 'snack', 'magnet', 'sats', 'battery', 'quick', 'rim', 'core'];
+      const rank = (c) => (pref.includes(c.id) ? pref.indexOf(c.id) : pref.length);
+      let best = null;
+      for (const c of picks) if (!c.isEvo && (!best || rank(c) < rank(best))) best = c;
+      if (best) best.recommended = true;
+    }
+    this._lastArgs = { count, recommend };
     this.lastOffer = picks;
     return picks;
   }
@@ -287,7 +306,7 @@ export class Upgrades {
     if (this.rerolls <= 0) return null;
     this.rerolls--;
     const ex = new Set(this.lastOffer.filter((c) => !c.isEvo).map((c) => c.id));
-    return this.offer({ exclude: ex });
+    return this.offer({ ...(this._lastArgs || {}), exclude: ex });
   }
 
   // ============ taking a card ============
@@ -335,6 +354,7 @@ export class Upgrades {
       const run = this.run, p = run.player;
       if (tag === 'guard') run.addMaxHearts?.(1, 'full');
       if (tag === 'dash' && p) p.stamina = p.maxStamina;
+      if (this._silent) continue;
       this.G.bus?.emit('card:setBonus', { tag, icon: TAGS[tag].icon, bonus: TAGS[tag].bonus });
       this.G.hud?.banner?.(`${TAGS[tag].icon} ${t('card.set')} ${tl(TAGS[tag].bonus)}`, 'set', 2.2);
     }
@@ -365,7 +385,7 @@ export class Upgrades {
     m.maxHops = m.pinball ? 6 : TUNE.knock.maxHops + m.extraHops;
     m.rimBounce = v('rim') || (m.pinball ? 1.4 : 0);
     m.rimDizzyBonus = L('rim') || m.pinball ? 1 : 0;
-    m.dizzyBonus = v('stars') + (this.sets.has('bonk') ? 1 : 0) + (hero?.passive?.dizzyBonus ?? 0);
+    m.dizzyBonus = v('stars') + (this.sets.has('bonk') ? 1 : 0);   // hero passives (Starlight) are enemies.js' job
     m.pop = v('pop');
     m.reaction = this.evos.has('reaction');
     if (m.reaction && !m.pop) m.pop = TUNE_U.reaction.radius;
@@ -418,14 +438,19 @@ export class Upgrades {
 
   onPerfect(x, z) {
     const m = this.run.cardMods;
+    const em = this.run.enemies;
     if (m.timemagic > 0) {
       this.slowZone.x = x; this.slowZone.z = z; this.slowZone.t = TUNE_U.time.slowTime;
+      // prefer the EnemyManager's own slow (it scales AI + physics); else revert displacement ourselves
+      this.slowZone.native = typeof em?.slowRadius === 'function';
+      if (this.slowZone.native) { try { em.slowRadius(x, z, TUNE_U.time.slowR, TUNE_U.time.keep, TUNE_U.time.slowTime); } catch { this.slowZone.native = false; } }
     }
     if (m.timestop) {
       this.freezeT = TUNE_U.time.stop;
-      const em = this.run.enemies;
+      this.freezeNative = typeof em?.freezeAll === 'function';
+      if (this.freezeNative) { try { em.freezeAll(TUNE_U.time.stop); } catch { this.freezeNative = false; } }
       const snap = this._snapshot();
-      for (const e of snap) if (!isGone(e) && !e.isBoss && !smashableOf(e)) em?.dizzy?.(e, TUNE_U.time.stop, 'timestop');
+      if (!this.freezeNative) for (const e of snap) if (!isGone(e) && !e.isBoss && !smashableOf(e)) em?.dizzy?.(e, TUNE_U.time.stop, 'timestop');
       this.G.post?.pulse?.({ flash: 0.18, flashColor: 0x9fe8ff, chroma: 0.3, duration: 0.35 });
       this.G.hud?.pop?.(x, 2.2, z, t('card.timestop'), 'crit');
     }
@@ -455,7 +480,7 @@ export class Upgrades {
     const L = this._trailLast;
     let dx = x - L.x, dz = z - L.z;
     let d = Math.hypot(dx, dz);
-    const gap = TUNE_U.comet.gap;
+    const gap = TUNE_U.comet.gap * (this.G.quality === 'low' ? 1.6 : 1);
     let guard = 40;
     while (d >= gap && guard-- > 0) {
       L.x += (dx / d) * gap; L.z += (dz / d) * gap;
@@ -546,7 +571,8 @@ export class Upgrades {
   }
 
   preEnemies() {
-    if (this.slowZone.t <= 0 && this.freezeT <= 0) return;
+    const slow = this.slowZone.t > 0 && !this.slowZone.native, freeze = this.freezeT > 0 && !this.freezeNative;
+    if (!slow && !freeze) return;
     const list = this.run.enemies?.list;
     if (!list) return;
     for (const e of list) { e._gaPx = e.x; e._gaPz = e.z; }
@@ -554,7 +580,7 @@ export class Upgrades {
 
   postEnemies(dt) {
     const list = this.run.enemies?.list;
-    const slow = this.slowZone.t > 0, freeze = this.freezeT > 0;
+    const slow = this.slowZone.t > 0 && !this.slowZone.native, freeze = this.freezeT > 0 && !this.freezeNative;
     if (list && (slow || freeze)) {
       const R = TUNE_U.time.slowR, keep = TUNE_U.time.keep;
       for (const e of list) {
@@ -621,11 +647,8 @@ export class Upgrades {
           break;
         }
         const hit = this.satCd[i] > TUNE_U.sat.cd - 0.25;
-        this.satCrowd.set(i, {
-          x: sx, y: sy, z: sz, s: TUNE_U.sat.size * (hit ? 1.25 : 1),
-          rotY: a + Math.PI / 2, color: m.satSmash ? 0x8f7bff : TUNE_U.sat.color,
-          expr: hit || bk > 0 ? EXPR.FOCUS : EXPR.HAPPY, blink: 0, glow: m.satSmash ? 0.35 : 0.15,
-        });
+        this._crowd(this.satCrowd, i, sx, sy, sz, TUNE_U.sat.size * (hit ? 1.25 : 1), 0, a + Math.PI / 2,
+          m.satSmash ? 0x8f7bff : TUNE_U.sat.color, hit || bk > 0 ? EXPR.FOCUS : EXPR.HAPPY, m.satSmash ? 0.35 : 0.15);
         this.shadows.add(sx, sz, TUNE_U.sat.size, sy);
       }
       this.satCrowd.count = nSat;
@@ -659,8 +682,8 @@ export class Upgrades {
       this._s.set(sc, 1, sc);
       this._m.compose(this._p, this._q, this._s);
       this.trailMesh.setMatrixAt(ti, this._m);
-      if (fire) this._c.copy(this._cFire).lerp(this._cGold, k * 0.6).multiplyScalar(0.4 + k * 0.9);
-      else this._c.copy(this._cCyan).lerp(this._cWhite, k * 0.5).multiplyScalar(0.3 + k * 0.8);
+      if (fire) this._c.copy(this._cFire).lerp(this._cGold, k * 0.7).multiplyScalar(0.9 + k * 0.5);
+      else this._c.copy(this._cCyan).lerp(this._cWhite, k * 0.6).multiplyScalar(0.9 + k * 0.4);
       this.trailMesh.setColorAt(ti, this._c);
       ti++;
     }
@@ -706,10 +729,7 @@ export class Upgrades {
         }
         continue;
       }
-      this.friendCrowd.set(fi++, {
-        x: f.x, y: f.y, z: f.z, s: 0.5, rotY: Math.atan2(tx - f.fx, tz - f.fz), rotX: -0.3,
-        color: 0xf4fbff, expr: EXPR.JOY, glow: 0.35,
-      });
+      this._crowd(this.friendCrowd, fi++, f.x, f.y, f.z, 0.5, -0.3, Math.atan2(tx - f.fx, tz - f.fz), 0xf4fbff, EXPR.JOY, 0.35);
       this.shadows.add(f.x, f.z, 0.5, f.y);
     }
     this.friendCrowd.count = fi;
@@ -761,7 +781,7 @@ export class Upgrades {
 
     // ---------- bubble visual ----------
     if (p) {
-      const on = (p.shield | 0) > 0;
+      const on = (p.shield | 0) > 0 || !!p.bubbled;
       if (this.bubblePop > 0) this.bubblePop = Math.max(0, this.bubblePop - dt);
       const vis = on || this.bubblePop > 0;
       this.bubble.visible = vis;
@@ -769,7 +789,7 @@ export class Upgrades {
         const size = p.size ?? 1;
         const pop = this.bubblePop > 0 ? 1 + (0.3 - this.bubblePop) * 3 : 1 + Math.sin(time * 3) * 0.03;
         this.bubble.position.set(p.x, 0.55 * size + (p.y || 0), p.z);
-        this.bubble.scale.setScalar(size * pop);
+        this.bubble.scale.setScalar(size * pop * (p.bubbled ? 1.25 : 1));
         this.bubbleMat.uniforms.uAlpha.value = on ? 1 : this.bubblePop / 0.3;
         this.bubbleMat.uniforms.uTime.value = time;
       }

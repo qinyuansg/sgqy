@@ -32,7 +32,7 @@ const TUNE_P = {
   restY: { crystal: 0.42, heart: 0.46, coin: 0.44, magnet: 0.46 },
   crystalScale: { S: 0.82, M: 1.0, L: 1.2, XL: 1.55 },
   caps: { crystal: 300, heart: 32, coin: 160, magnet: 4 },
-  glow: { crystal: [0x39e8ff, 1.25], heart: [0xff5fa2, 1.35], coin: [0xffc629, 1.15], magnet: [0xff5f6d, 1.4] },
+  glow: { crystal: [0x18c8ff, 1.15], heart: [0xff3f8e, 1.25], coin: [0xffb020, 1.0], magnet: [0xff4f5d, 1.3] },
 };
 const KINDS = ['crystal', 'heart', 'coin', 'magnet'];
 
@@ -142,15 +142,16 @@ export class Pickups {
     this.live = 0;
     this.counts = { crystal: 0, heart: 0, coin: 0, magnet: 0 };
     this._seq = 0;
+    this.vacuumMode = false;          // victory: everything (incl. later spawns) flies to the hero
     this.group = new THREE.Group();
     this.group.name = 'pickups';
     G.scene?.add(this.group);
 
     const low = G.quality === 'low';
     const mats = {
-      crystal: new THREE.MeshStandardMaterial({ color: 0x8ff7ff, emissive: 0x19d4ff, emissiveIntensity: 0.95, roughness: 0.12, metalness: 0.15, flatShading: true }),
+      crystal: new THREE.MeshStandardMaterial({ color: 0x1ec8ff, emissive: 0x0078ff, emissiveIntensity: 0.6, roughness: 0.15, metalness: 0.0, flatShading: true }),
       heart: new THREE.MeshStandardMaterial({ color: 0xff6fae, emissive: 0xff2f86, emissiveIntensity: 0.55, roughness: 0.3, metalness: 0.05 }),
-      coin: new THREE.MeshStandardMaterial({ vertexColors: true, emissive: 0x8a5a00, emissiveIntensity: 0.55, roughness: 0.28, metalness: low ? 0.3 : 0.75 }),
+      coin: new THREE.MeshStandardMaterial({ vertexColors: true, emissive: 0xb07000, emissiveIntensity: 0.45, roughness: 0.32, metalness: low ? 0.05 : 0.18 }),
       magnet: new THREE.MeshStandardMaterial({ vertexColors: true, emissive: 0x551018, emissiveIntensity: 0.5, roughness: 0.35, metalness: 0.2 }),
     };
     const geos = { crystal: crystalGeometry(), heart: heartGeometry(), coin: coinGeometry(), magnet: magnetGeometry() };
@@ -167,8 +168,9 @@ export class Pickups {
     // shared additive ground glow under every pickup
     const gg = new THREE.PlaneGeometry(1, 1);
     gg.rotateX(-Math.PI / 2);
+    // normal blending (not additive): a coloured halo that stays readable on bright pastel floors
     this.glow = new THREE.InstancedMesh(gg, new THREE.MeshBasicMaterial({
-      map: glowTexture(), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false,
+      map: glowTexture(), transparent: true, opacity: 0.55, depthWrite: false, toneMapped: false,
     }), TUNE_P.cap);
     this.glow.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     this.glow.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(TUNE_P.cap * 3), 3);
@@ -221,7 +223,7 @@ export class Pickups {
     it.scale = opts.scale ?? 1;
     it.spin = rand() * TAU;
     it.ph = rand() * TAU;
-    it.homing = false; it.vacuum = false; it.grounded = false;
+    it.homing = false; it.vacuum = this.vacuumMode; it.grounded = false;
     it.seq = ++this._seq;
     this.live++;
     this.counts[kind]++;
@@ -247,6 +249,7 @@ export class Pickups {
   }
   /** victory vacuum: everything flies to the hero fast */
   collectAll() {
+    this.vacuumMode = true;
     for (const it of this.items) if (it.alive) { it.homing = true; it.vacuum = true; it.life = Math.max(it.life, it.t + 6); }
   }
 
@@ -293,7 +296,7 @@ export class Pickups {
       // start homing once the pop has played and the hero is inside the magnet radius
       if (!it.homing && canGrab && it.t > TUNE_P.homeDelay) {
         const mr = (it.kind === 'crystal' ? crystalMag : TUNE_P.magnet[it.kind]) + (heroGrow - 1) * 0.6;
-        if (d < mr) it.homing = true;
+        if (d < mr || it.vacuum) it.homing = true;
       }
 
       if (it.homing && canGrab) {
@@ -337,7 +340,6 @@ export class Pickups {
         }
         if (it.t >= it.life) { this._free(it); continue; }
       }
-      if (it.homing && !canGrab && it.t >= it.life) { this._free(it); continue; }
 
       // ---------- render ----------
       const mesh = this.meshes[it.kind];
@@ -367,7 +369,7 @@ export class Pickups {
         this._m.makeScale(g, 1, g);
         this._m.setPosition(it.x, 0.035, it.z);
         this.glow.setMatrixAt(gi, this._m);
-        this._c.copy(this._glowCol[it.kind]).multiplyScalar(it.kind === 'crystal' ? 0.85 : 0.7);
+        this._c.copy(this._glowCol[it.kind]);
         this.glow.setColorAt(gi, this._c);
         gi++;
       }
@@ -383,6 +385,7 @@ export class Pickups {
   }
 
   clear() {
+    this.vacuumMode = false;
     for (const it of this.items) if (it.alive) this._free(it);
     for (const k of KINDS) this.meshes[k].count = 0;
     this.glow.count = 0;

@@ -2,6 +2,9 @@
 // CUBE DASH — hero controller (run.player === run.playerCtl.state)
 //
 //   Movement with weight (accel/decel, skid, ice, conveyors, bumpers, rim).
+//   Kid-UX core promise (DESIGN_BRIEF §7): dashing is ALWAYS invulnerable,
+//   dizzy cubes are ALWAYS harmless (walking into one nudges it), a dash into
+//   a healthy cube ALWAYS knocks it and S/mini cubes are dizzied by the bump.
 //   DASH = the cue stick: KNOCK solid cubes (billiards), SMASH (pierce) dizzy
 //   ones, per-hero dash kinds (knock · bash · blink · well), aim assist,
 //   0.12 s input buffer, hold for SPRINT, stamina + TIRED lockout (source DNA).
@@ -28,7 +31,11 @@ const TUNE_H = {
   skidMinFrac: 0.7,
   sprintMinMove: 0.3,
   deniedEvery: 0.3,
-  pip: { inner: 0.8, outer: 0.99, gap: 0.16, fadeIn: 10, fadeOut: 4 },
+  pip: { inner: 0.8, outer: 0.99, gap: 0.16, fadeIn: 10, fadeOut: 4, shake: 0.28 },
+  groundRing: { inner: 0.6, outer: 0.68, color: 0x5ff2ff, opacity: 0.6 },   // permanent readability ring
+  cueEvery: 0.45,          // min seconds between "!" cue events
+  nudge: 0.6,              // walking into a dizzy cube pushes it by this share of the overlap
+  bubbleY: 0.9,
   nova: { rise: 0.45, riseH: 0.9, iframes: 1.1 },
   mega: { touchCd: 0.8, stompEvery: 0.5, stompR: 3, stompDizzy: 1, speedMult: 1.1, grow: 0.3, shrink: 0.4, knock: 12, heavyDizzy: 2 },
   storm: { range: 12, heavyDizzy: 4 },
@@ -36,14 +43,14 @@ const TUNE_H = {
   stormZone: { tick: 1.5, push: 3.5 },
   lookRange: 7,
   starlightRange: 3, starlightStop: 1.2,
-  bolts: 12, boltSegs: 5, boltLife: 0.2,
+  bolts: 12, boltSegs: 5, boltLife: 0.26,
 };
 const COS_SKID = Math.cos((TUNE.player.skidAngle * Math.PI) / 180);
 const DEG = Math.PI / 180;
 
 let BOSS_REF = null;                       // em.boss (may or may not also live in em.list)
-const bossy = (e) => !!e && (e.isBoss === true || (BOSS_REF !== null && e === BOSS_REF));
-const isGone = (e) => !e || e.state === 'dying' || e.state === 'portal' || e.dead;
+const bossy = (e) => !!e && (!!e.isBoss || (BOSS_REF !== null && e === BOSS_REF));
+const isGone = (e) => !e || e.dead || e.portal === true || e.state === 'dying' || e.state === 'portal';
 const smashableOf = (e) => e.smashable ?? e.coreOpen ?? false;
 const harmfulOf = (e) => e.harmful ?? (!smashableOf(e) && !isGone(e) && !e.treasure);
 const isHeavy = (e) => bossy(e) || e.type === 'bruiser' || e.type === 'beamer' || (e.mass ?? 1) >= 2.5;
@@ -129,8 +136,9 @@ export class Player {
       lockout: false, dashing: false, invuln: false, shield: 0,
       heroId: hero.id, color, object3d: null,
       // extras (read-only for other modules)
-      radius: TUNE.player.hurtRadius, dirX: 0, dirZ: 1, sprinting: false, tired: false,
-      mega: false, nova: null, dashKind: hero.dashKind, iframes: 0, dead: false,
+      radius: TUNE.player.hurtRadius, hurtRadius: TUNE.player.hurtRadius, perfectDash: false,
+      dirX: 0, dirZ: 1, sprinting: false, tired: false,
+      mega: false, nova: null, dashKind: hero.dashKind, iframes: 0, dead: false, bubbled: false,
     };
 
     // ---------- model ----------
@@ -168,6 +176,7 @@ export class Player {
     this._push = { x: 0, z: 0 };
     this._anim = { moving: false, speed: 0, dashing: false, sprinting: false, tired: false, hurt: false, airborne: false, lookX: 0, lookY: 0, expr: undefined, celebrate: false, glow: 0 };
     this._lookX = 0; this._lookY = 0;
+    this._ttc = Infinity; this._cueOn = false; this._cueT = 0; this.pipShakeT = 0;
 
     this._buildPips();
     this._buildKit();
@@ -188,9 +197,15 @@ export class Player {
     this.pipTrackMat = new THREE.MeshBasicMaterial({ color: 0x0b1a3a, transparent: true, opacity: 0, depthWrite: false });
     this.pipTrack = new THREE.Mesh(track, this.pipTrackMat);
     this.pipTrack.renderOrder = 3;
-    this.G.scene?.add(this.pipTrack, this.pipMesh);
+    const GR = TUNE_H.groundRing;
+    const gr = new THREE.RingGeometry(GR.inner, GR.outer, 56);
+    gr.rotateX(-Math.PI / 2);
+    this.groundMat = new THREE.MeshBasicMaterial({ color: GR.color, transparent: true, opacity: GR.opacity, depthWrite: false, toneMapped: false });
+    this.groundRing = new THREE.Mesh(gr, this.groundMat);
+    this.groundRing.renderOrder = 3;
+    this.G.scene?.add(this.pipTrack, this.pipMesh, this.groundRing);
     this._pc = new THREE.Color(); this._cFull = new THREE.Color(0x8ff8ff); this._cPart = new THREE.Color(0x3d7bff);
-    this._cEmpty = new THREE.Color(0x24345e); this._cTired = new THREE.Color(0xff8a3d);
+    this._cEmpty = new THREE.Color(0x24345e); this._cTired = new THREE.Color(0xa7b0c4);
     this._m = new THREE.Matrix4(); this._q = new THREE.Quaternion(); this._e = new THREE.Euler();
     this._v = new THREE.Vector3(); this._v2 = new THREE.Vector3(); this._s = new THREE.Vector3(); this._up = new THREE.Vector3(0, 1, 0);
   }
@@ -282,8 +297,14 @@ export class Player {
     else if (this.bufferT > 0) this.bufferT -= dt;
     if (!inp?.held?.('dash')) this.sprintArmed = false;
 
+    // ---------- Perfect "!" cue: any threat inside the window + cueExtra ----------
+    this._updateCue(rdt);
+
     // ---------- nova ----------
-    if (inp?.pressed?.('nova')) this.tryNova();
+    if (inp?.pressed?.('nova') && !this.tryNova() && !run.novaReady && !s.nova && !s.dead) {
+      this.model.squash?.(1.08, 0.94, 1.08);                     // soft "not yet" wobble
+      this.G.bus?.emit('nova:notReady', { x: s.x, z: s.z, charge: run.nova });
+    }
 
     // ---------- dash start ----------
     if (this.bufferT > 0 && this.canDash()) {
@@ -291,6 +312,7 @@ export class Player {
       this.startDash(ix, iz, mag);
     } else if (pressed && s.lockout && this.deniedT <= 0) {
       this.deniedT = TUNE_H.deniedEvery;
+      this.pipShakeT = TUNE_H.pip.shake;
       this.G.bus?.emit('player:dashDenied', { x: s.x, z: s.z });
       this.model.squash?.(1.12, 0.88, 1.12);
       this.G.fx?.burst?.('dust', s.x, 0.4, s.z, { count: 4, color: 0xffffff });
@@ -305,6 +327,14 @@ export class Player {
       else this._updateDash(dt);
     } else this._move(dt, ix, iz, mag);
     this.moved += Math.hypot(s.x - px, s.z - pz);
+    // Mochi's Bouncy Belly runs BEFORE enemies.js' own contact pass so a frontal bump never hurts
+    if (this.hero.passive?.id === 'bouncyBelly' && !s.dashing && this.em?.list) {
+      for (const e of this.em.list) {
+        if (isGone(e) || !harmfulOf(e)) continue;
+        const dx = e.x - s.x, dz = e.z - s.z, d = Math.hypot(dx, dz);
+        if (d < s.radius + radiusOf(e) + 0.12) this._bellyBump(e, dx, dz, d);
+      }
+    }
 
     // perfect via hazard overlap during the first frames of a dash
     if (s.dashing && !this.dashPerfect && this.dashAge <= TUNE.perfect.hazardWindow) this._hazardPerfect();
@@ -338,12 +368,17 @@ export class Player {
         if (harmfulOf(e)) {
           if (d < s.radius + rr * 0.92) {
             if (this._bellyBump(e, dx, dz, d)) continue;
-            run.hurtPlayer(e.hearts ?? e.contactHearts ?? 1, e.x, e.z, bossy(e) ? 'boss' : 'contact');
+            run.hurtPlayer(e.hearts ?? e.contactHearts ?? 1, e.x, e.z, bossy(e) ? 'boss' : e.type || 'contact');
           }
         } else if (!s.dashing && d > 1e-4 && d < TUNE_H.bodyR + rr) {
-          // soft push-out from harmless cubes (sleeping / dizzy / treasure)
           const ov = TUNE_H.bodyR + rr - d;
-          s.x -= (dx / d) * ov * 0.5; s.z -= (dz / d) * ov * 0.5;
+          if (smashableOf(e) && !bossy(e)) {
+            // walking into a dizzy cube nudges it gently
+            e.x += (dx / d) * ov * TUNE_H.nudge; e.z += (dz / d) * ov * TUNE_H.nudge;
+          } else {
+            // soft push-out from other harmless cubes (sleeping / treasure / boss core)
+            s.x -= (dx / d) * ov * 0.5; s.z -= (dz / d) * ov * 0.5;
+          }
         }
       }
       this._nearMiss(list);
@@ -451,6 +486,11 @@ export class Player {
   startLockout() {
     const s = this.state;
     if (s.lockout) return;
+    if (this.run.assist && !(TUNE.stamina.assistLockout > 0)) {
+      // Helper mode: no TIRED — the bar is just empty and refills normally
+      s.stamina = 0; s.sprinting = false; this.pendingLockout = false; this.sinceSpend = 0;
+      return;
+    }
     s.lockout = true; s.tired = true; s.sprinting = false;
     this.pendingLockout = false;
     this.lockDur = this.run.assist ? TUNE.stamina.assistLockout : TUNE.stamina.lockout;
@@ -480,13 +520,8 @@ export class Player {
         if (al > 0.05) { dx = ax / al; dz = az / al; }
       }
     }
-    // perfect: threat time-to-contact at the press (pre-dash velocity)
-    let perfect = false;
-    const ttcWin = (run.assist ? TUNE.assist.perfectTtc : TUNE.perfect.ttc) + (this.hero.passive?.ttcBonus ?? 0) + (this.mods.perfectTtcBonus || 0);
-    try {
-      const ttc = em?.threatTTC?.(s.x, s.z, s.vx, s.vz, s.radius);
-      if (typeof ttc === 'number' && ttc <= ttcWin) perfect = true;
-    } catch { /* optional */ }
+    // perfect: threat time-to-contact at the press (pre-dash velocity), or gap ≤ 0.5 u
+    let perfect = this._ttc <= this.perfectWindow() || this._gapPerfect();
     // stamina (a dash is never refused while not tired: overspending → TIRED after it)
     const cost = this.hero.dashCost ?? TUNE.dash.cost;
     s.stamina -= cost;
@@ -494,7 +529,7 @@ export class Player {
     if (s.stamina <= 0) { s.stamina = 0; this.pendingLockout = true; }
 
     this.dashDirX = dx; this.dashDirZ = dz;
-    this.dashAge = 0; this.dashExt = 0; this.dashSmashes = 0; this.dashPerfect = false;
+    this.dashAge = 0; this.dashExt = 0; this.dashSmashes = 0; this.dashPerfect = false; s.perfectDash = false;
     this.dashHit.clear();
     s.dashing = true; s.sprinting = false;
     s.iframes = Math.max(s.iframes, TUNE.dash.iframes);
@@ -595,9 +630,11 @@ export class Player {
     kx /= kl; kz /= kl;
     const bash = this.hero.dashKind === 'bash';
     const speed = TUNE.knock.speed * (mods.knockMult || 1) * (bash ? 1.4 : 1);
-    const small = e.sizeKey === 'S' || (e.size ?? 1) <= 0.75;
-    em.knock?.(e, kx, kz, speed, { byPlayer: true, bash, heroId: this.hero.id, dizzy: bash && small ? TUNE.bonk.dizzy : 0 });
-    if (bash && small && !e.treasure) em.dizzy?.(e, TUNE.bonk.dizzy, 'bash');
+    // kid rule: S / mini cubes are dizzied directly by the bump (Mochi's bash: up to M)
+    const sz = e.size ?? 1;
+    const small = !e.treasure && !isHeavy(e) && (e.sizeKey === 'S' || e.mini || sz <= 0.75 || (bash && sz <= 1.05));
+    em.knock?.(e, kx, kz, speed, { byPlayer: true, bash, heroId: this.hero.id, dizzy: small ? TUNE.bonk.dizzy : 0 });
+    if (small) em.dizzy?.(e, TUNE.bonk.dizzy, bash ? 'bash' : 'bump');
     run.onPlayerKnock?.(e, { bash });
     return false;
   }
@@ -619,6 +656,7 @@ export class Player {
     const s = this.state, run = this.run;
     if (!s.dashing) return;
     s.dashing = false;
+    s.perfectDash = false;
     const wasBlink = this.blinking;
     this.blinking = false;
     this.cooldownT = TUNE.dash.cooldown;
@@ -636,6 +674,45 @@ export class Player {
     run.upgrades?.onDashEnd?.(s.x, s.z);
     if (this.pendingLockout) this.startLockout();
     this.sprintArmed = !!this.G.input?.held?.('dash');
+  }
+
+  /** Perfect window in seconds (assist / Blu passive / Just Right card) */
+  perfectWindow() {
+    const run = this.run;
+    const base = run.assist ? (TUNE.perfect.assistTtc ?? TUNE.assist.perfectTtc) : TUNE.perfect.ttc;
+    return base + (this.hero.passive?.ttcBonus ?? 0) + (this.mods.perfectTtcBonus || 0);
+  }
+
+  _updateCue(rdt) {
+    const s = this.state, run = this.run, em = this.em;
+    let ttc = Infinity;
+    if (em?.threatTTC && !s.dead) {
+      try { const v = em.threatTTC(s.x, s.z, s.vx, s.vz, s.radius); if (typeof v === 'number' && v >= 0) ttc = v; } catch { ttc = Infinity; }
+    }
+    this._ttc = ttc;
+    const cue = !s.dead && this.canDash() && (ttc <= this.perfectWindow() + (TUNE.perfect.cueExtra ?? 0.2) || this._gapPerfect());
+    run.perfectCue = cue;
+    this._cueT -= rdt;
+    if (cue && !this._cueOn && this._cueT <= 0) {
+      this._cueT = TUNE_H.cueEvery;
+      this.G.bus?.emit('player:cue', { x: s.x, z: s.z, ttc });
+    }
+    this._cueOn = cue;
+  }
+
+  /** gap rule: a harmful cube within TUNE.perfect.gap (surface to surface) that isn't moving away */
+  _gapPerfect() {
+    const s = this.state, list = this.em?.list;
+    if (!list) return false;
+    const gap = TUNE.perfect.gap ?? 0.5;
+    for (const e of list) {
+      if (isGone(e) || !harmfulOf(e)) continue;
+      const dx = e.x - s.x, dz = e.z - s.z, d = Math.hypot(dx, dz);
+      if (d - radiusOf(e) - s.radius > gap) continue;
+      const rvx = (e.vx || 0) - s.vx, rvz = (e.vz || 0) - s.vz;
+      if (dx * rvx + dz * rvz <= 0.05 * d) return true;
+    }
+    return false;
   }
 
   _hazardPerfect(atPress = false) {
@@ -659,6 +736,7 @@ export class Player {
     if (this.dashPerfect) return;
     this.dashPerfect = true;
     const s = this.state, em = this.em, mods = this.mods;
+    s.perfectDash = true;                          // boss.js reads this for the 2-crack core hit
     const R = TUNE.perfect.radius + (this.hero.passive?.radiusBonus ?? 0) + (mods.perfectRadiusBonus || 0);
     em?.dizzyRadius?.(s.x, s.z, R, TUNE.perfect.dizzy);
     s.stamina = Math.min(s.maxStamina, s.stamina + TUNE.perfect.refund);
@@ -748,6 +826,8 @@ export class Player {
   _pull(cx, cz, r, pull, orbit, dt, stopAt = 0.35) {
     const em = this.em;
     if (!em?.list) return;
+    // enemies.js owns cube physics: its pull() applies the force (and bonks) this frame
+    if (typeof em.pull === 'function') { try { em.pull(cx, cz, r, pull, orbit); return; } catch { /* fall back */ } }
     for (const e of em.list) {
       if (isGone(e) || bossy(e) || e.treasure) continue;
       const dx = cx - e.x, dz = cz - e.z, d = Math.hypot(dx, dz);
@@ -774,8 +854,9 @@ export class Player {
     }
   }
 
+  /** Stella's Starlight drift — only when the EnemyManager doesn't do it itself (enemies.js has heroPassives) */
   _updateStarlight(dt) {
-    if (this.hero.passive?.id !== 'starlight') return;
+    if (this.hero.passive?.id !== 'starlight' || typeof this.em?.pull === 'function') return;
     const s = this.state, em = this.em;
     if (!em?.list) return;
     const drift = this.hero.passive.drift ?? 2;
@@ -807,7 +888,7 @@ export class Player {
     this.model.flash?.(0.25);
     this.model.squash?.(0.8, 1.35, 0.8);
     run.shake?.(TUNE.shake.nova, 0.7);
-    run.kick?.(0.8);
+    run.kick?.(0.1);
     this.G.input?.rumble?.(1, 0.8, 380);
     this.novaBossHit = false;
     const rm = mods.novaRadiusMult || 1;
@@ -817,8 +898,8 @@ export class Player {
     else if (kind === 'storm') { n.dur = nv.duration ?? 2.5; n.bolts = Math.round((nv.bolts ?? 12) * rm); radius = TUNE_H.storm.range; }
     else if (kind === 'blackhole') { n.dur = nv.duration ?? 3; n.r = (nv.radius ?? 11) * rm; radius = n.r; }
     s.nova = n;
+    // (camera.js runs its 'nova' pull-out shot from this event)
     this.G.bus?.emit('nova', { x: s.x, z: s.z, radius, heroId: this.hero.id, color: s.color, kind });
-    try { const pr = this.G.cam?.cinematic?.('nova', { x: s.x, z: s.z, radius }); pr?.catch?.(() => {}); } catch { /* optional */ }
     if (kind === 'bigbang') em?.nova?.(s.x, s.z, radius, this.hero.id);
     run.upgrades?.onNova?.(s.x, s.z, radius);
     return true;
@@ -967,7 +1048,7 @@ export class Player {
   }
 
   // ---------- damage response (called by Run.hurtPlayer) ----------
-  onHurt(srcX, srcZ) {
+  onHurt(srcX, srcZ, kbMult = 1) {
     const s = this.state;
     s.iframes = TUNE.player.iframes;
     this.hurtBlinkT = TUNE.player.iframes;
@@ -978,7 +1059,8 @@ export class Player {
     s.sprinting = false;
     let dx = s.x - srcX, dz = s.z - srcZ, d = Math.hypot(dx, dz);
     if (d < 1e-3) { dx = -Math.sin(s.rotY); dz = -Math.cos(s.rotY); d = 1; }
-    s.vx = (dx / d) * TUNE_H.hurtKnockSpeed; s.vz = (dz / d) * TUNE_H.hurtKnockSpeed;
+    const kb = TUNE_H.hurtKnockSpeed * Math.sqrt(clamp(kbMult, 0.6, 2.2));   // distance ∝ v²
+    s.vx = (dx / d) * kb; s.vz = (dz / d) * kb;
     this.hurtStunT = TUNE_H.hurtStun;
     this._nmGen++;
   }
@@ -990,6 +1072,17 @@ export class Player {
     s.vx = (dx / d) * TUNE_H.shieldKnock; s.vz = (dz / d) * TUNE_H.shieldKnock;
     this._nmGen++;
   }
+  /** hearts hit 0 the first time: float in a bubble, frozen, waiting for the button */
+  onSecondChance() {
+    const s = this.state;
+    s.dashing = false; s.sprinting = false; this.blinking = false;
+    if (s.nova) this._endNova();
+    s.vx = 0; s.vz = 0;
+    s.bubbled = true;
+    this.hurtBlinkT = 0;
+    this.model.setBlink?.(false);
+  }
+
   onDeath() {
     const s = this.state;
     s.dead = true; s.dashing = false; s.sprinting = false; this.blinking = false;
@@ -999,9 +1092,9 @@ export class Player {
     this.model.setBlink?.(false);
     this.hurtBlinkT = 0;
   }
-  onRevive(iframes = 2) {
+  onRevive(iframes = 2, hearts = null) {
     const s = this.state;
-    s.dead = false; s.hp = s.maxHp;
+    s.dead = false; s.bubbled = false; s.hp = hearts ? Math.min(s.maxHp, hearts) : s.maxHp;
     s.iframes = iframes; this.hurtBlinkT = iframes;
     this.model.setBlink?.(true);
     s.lockout = false; s.tired = false; s.stamina = s.maxStamina;
@@ -1017,10 +1110,15 @@ export class Player {
     if (Math.hypot(s.vx, s.vz) < 1) return false;
     const fx = Math.sin(s.rotY), fz = Math.cos(s.rotY);
     if ((dx * fx + dz * fz) / (d || 1) < 0.5) return false;           // only from the front
-    const last = this._bumped.get(e);
-    if (last !== undefined && this.time - last < (pas.bumpCooldown ?? 1.5)) return false;
-    this._bumped.set(e, this.time);
     const l = d || 1;
+    const last = this._bumped.get(e);
+    if (last !== undefined && this.time - last < (pas.bumpCooldown ?? 1.5)) {
+      // on cooldown: the belly just shoves it along (still no damage from the front)
+      const ov = s.radius + radiusOf(e) - d + 0.03;
+      if (ov > 0) { e.x += (dx / l) * ov; e.z += (dz / l) * ov; }
+      return true;
+    }
+    this._bumped.set(e, this.time);
     this.em?.knock?.(e, dx / l, dz / l, pas.bumpSpeed ?? 6, { byPlayer: true, bump: true });
     this.model.squash?.(1.25, 0.8, 0.85);
     this.G.bus?.emit('player:bump', { x: e.x, z: e.z });
@@ -1120,11 +1218,15 @@ export class Player {
     } else if (mode === 'idle' && !s.dashing) {
       s.rotY = angleLerp(s.rotY, 0, Math.min(1, 3 * dt));
     }
-    if (mode === 'dying' || s.dead) {
+    if (mode === 'bubble' || s.bubbled) {
+      y += TUNE_H.bubbleY + Math.sin(time * 2.4) * 0.12;
+      s.rotY = angleLerp(s.rotY, 0, Math.min(1, 3 * rdt));
+    } else if (mode === 'dying' || s.dead) {
       this.spin = Math.max(2.5, this.spin - 10 * dt);
       s.rotY += this.spin * dt;
     }
     s.y = y;
+    s.invuln = s.iframes > 0 || s.dashing || s.mega || s.dead || !!s.bubbled || run.state !== 'playing';
     const g = this.model.group;
     g.position.set(s.x, y, s.z);
     g.rotation.y = s.rotY;
@@ -1162,7 +1264,7 @@ export class Player {
     a.lookX = this._lookX; a.lookY = this._lookY;
     a.celebrate = mode === 'victory';
     a.glow = run.novaReady ? 0.55 + 0.45 * Math.sin(time * 6) : s.nova ? 1 : 0;
-    a.expr = s.dead || mode === 'dying' ? EXPR.DIZZY
+    a.expr = s.bubbled ? EXPR.HURT : s.dead || mode === 'dying' ? EXPR.DIZZY
       : mode === 'victory' ? EXPR.JOY
         : this.hurtStunT > 0 ? EXPR.HURT
           : s.dashing || s.nova ? EXPR.FOCUS : undefined;
@@ -1172,6 +1274,10 @@ export class Player {
     this.shadows.begin();
     this.shadows.add(s.x, s.z, 1.05 * s.size, y);
     this.shadows.end();
+    this.groundRing.visible = !s.dead && mode !== 'victory';
+    this.groundRing.position.set(s.x, 0.03, s.z);
+    this.groundRing.scale.setScalar(s.size);
+    this.groundMat.opacity = TUNE_H.groundRing.opacity * (s.bubbled ? 0.4 : 1) * (0.85 + 0.15 * Math.sin(time * 3));
 
     this._renderPips(rdt, mode, time);
     this._renderKit(dt, rdt, time);
@@ -1193,7 +1299,9 @@ export class Player {
     const filled = s.stamina / cost;
     const seg = TAU / n;
     const sc = s.size;
-    const pulse = s.lockout ? (Math.sin(time * 18) > 0 ? 1 : 0.45) : 1;
+    const pulse = s.lockout ? 0.75 + 0.25 * Math.sin(time * 6) : 1;
+    if (this.pipShakeT > 0) this.pipShakeT -= rdt;
+    const shake = this.pipShakeT > 0 ? Math.sin(time * 70) * 0.09 * (this.pipShakeT / TUNE_H.pip.shake) : 0;
     for (let i = 0; i < n; i++) {
       const f = clamp(filled - i, 0, 1);
       if (s.lockout) this._pc.copy(this._cTired).multiplyScalar(f > 0 ? pulse : 0.35 * pulse);
@@ -1203,7 +1311,7 @@ export class Player {
       this.pipMesh.setColorAt(i, this._pc);
       this._e.set(0, -i * seg, 0);
       this._q.setFromEuler(this._e);
-      this._v.set(s.x, 0.04, s.z);
+      this._v.set(s.x + shake, 0.04, s.z);
       const pop = f >= 1 && !s.lockout ? 1 : 0.94;
       this._s.set(sc * pop, 1, sc * pop);
       this._m.compose(this._v, this._q, this._s);
@@ -1212,7 +1320,7 @@ export class Player {
     this.pipMesh.count = n;
     this.pipMesh.instanceMatrix.needsUpdate = true;
     if (this.pipMesh.instanceColor) this.pipMesh.instanceColor.needsUpdate = true;
-    this.pipTrack.position.set(s.x, 0.035, s.z);
+    this.pipTrack.position.set(s.x + shake, 0.035, s.z);
     this.pipTrack.scale.setScalar(sc);
   }
 
@@ -1237,8 +1345,9 @@ export class Player {
       const m = this.holeMesh;
       m.visible = true;
       m.position.set(n.x, 0.08, n.z);
-      m.scale.setScalar(n.r * (0.35 + 0.65 * Math.min(1, n.t / 0.35)) * (1 - 0.25 * k));
-      m.material.uniforms.uAlpha.value = clamp(n.t / 0.2, 0, 1);
+      // the pull radius is huge (r 11): draw the vortex smaller and lighter so the field stays readable
+      m.scale.setScalar(n.r * 0.62 * (0.35 + 0.65 * Math.min(1, n.t / 0.35)) * (1 - 0.35 * k));
+      m.material.uniforms.uAlpha.value = 0.8 * clamp(n.t / 0.2, 0, 1);
       m.material.uniforms.uTime.value = time * (1 + k * 2);
     } else this.holeMesh.visible = false;
     // bolts
@@ -1248,7 +1357,7 @@ export class Player {
       if (!b.on) continue;
       b.t += rdt;
       if (b.t >= TUNE_H.boltLife) { b.on = false; continue; }
-      const wdt = 0.22 * (1 - b.t / TUNE_H.boltLife) + 0.04;
+      const wdt = 0.36 * (1 - b.t / TUNE_H.boltLife) + 0.06;
       for (let i = 0; i < segs; i++) {
         this._v.set(b.pts[i * 3], b.pts[i * 3 + 1], b.pts[i * 3 + 2]);
         this._v2.set(b.pts[i * 3 + 3], b.pts[i * 3 + 4], b.pts[i * 3 + 5]).sub(this._v);
@@ -1276,6 +1385,7 @@ export class Player {
     sc?.remove(this.pipMesh, this.pipTrack);
     this.pipMesh.geometry.dispose(); this.pipMat.dispose(); this.pipMesh.dispose?.();
     this.pipTrack.geometry.dispose(); this.pipTrackMat.dispose();
+    sc?.remove(this.groundRing); this.groundRing.geometry.dispose(); this.groundMat.dispose();
     sc?.remove(this.kit);
     for (const w of this.wells) w.mesh.material.dispose();
     this.holeMesh.material.dispose();

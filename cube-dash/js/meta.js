@@ -47,6 +47,7 @@ const TUNE = {
   clockGuardMs: 3600e3,       // clock moved back > 1 h → freeze daily refreshes
   dupHeroTickets: 3,          // duplicate hero → 3 tickets
   dupCardCoins: 50,           // duplicate card unlock (shouldn't happen) → coins
+  claimQueueMax: 30,          // pull-queue cap (rewards are credited on grant; the queue is presentation only)
   rushPerBoss: 25,            // Boss Rush coins per boss beaten
   dailyRepeatCoins: 30,       // a 2nd+ Daily Challenge clear on the same day
   highTier: 5,                // tier-up from this tier index on grants tierUpHigh (Crystal+)
@@ -118,7 +119,7 @@ addStrings({
     'meta.claim.title': '恭喜获得', 'meta.claim.welcome': '欢迎回来!', 'meta.claim.rank': '段位提升!', 'meta.claim.placement': '段位定级!',
     'meta.claim.signin': '签到奖励', 'meta.claim.missions': '任务奖励', 'meta.claim.chest': '每日宝箱', 'meta.claim.road': '银河之路',
     'meta.claim.dex': '图鉴奖励', 'meta.claim.ach': '成就达成!', 'meta.claim.worldChest': '皇冠宝箱',
-    'meta.dup': '已拥有 → 换成奖励',
+    'meta.dup': '已拥有 → 换成奖励', 'meta.tickets': '扭蛋券',
     'meta.guard.toast': '已经玩了30分钟啦，眨眨眼休息一下吧',
     'meta.guard.break': '休息一下吧!', 'meta.guard.breakSub': '看看远处，数到20',
     'meta.guard.rest': '休息一下', 'meta.guard.more': '再玩一会',
@@ -143,7 +144,7 @@ addStrings({
     'meta.claim.title': 'You got!', 'meta.claim.welcome': 'Welcome back!', 'meta.claim.rank': 'Rank up!', 'meta.claim.placement': 'Your rank!',
     'meta.claim.signin': 'Sign-in gift', 'meta.claim.missions': 'Mission rewards', 'meta.claim.chest': 'Daily chest', 'meta.claim.road': 'Galaxy Road',
     'meta.claim.dex': 'Dex reward', 'meta.claim.ach': 'Achievement!', 'meta.claim.worldChest': 'Crown chest',
-    'meta.dup': 'Already owned → swapped',
+    'meta.dup': 'Already owned → swapped', 'meta.tickets': 'Tickets',
     'meta.guard.toast': "30 minutes of play! Blink and rest your eyes a little.",
     'meta.guard.break': 'Break time!', 'meta.guard.breakSub': 'Look far away and count to 20',
     'meta.guard.rest': 'Take a break', 'meta.guard.more': 'Play a bit more',
@@ -225,12 +226,15 @@ export class Meta {
 
   _afterLoad(isReset) {
     const P = this.P;
+    if (isReset) { this.claimQueue.length = 0; this.featureQueue.length = 0; this._showing = null; this.live = this._freshLive(); }
     if (!P.name) P.name = { a: (Math.random() * NAME_A.length) | 0, b: (Math.random() * NAME_B.length) | 0 };
     for (const k of Object.keys(DEFAULT_OWNED)) for (const id of DEFAULT_OWNED[k]) if (!P.owned[k].includes(id)) P.owned[k].push(id);
     if (!P.heroes.includes('blu')) P.heroes.unshift('blu');
     if (!P.heroes.includes(P.selHero)) P.selHero = P.heroes[0];
     const now = this._now();
     const today = this._dayKey(now);
+    // features already unlocked by an older/imported save are known — mark them silently
+    this._checkFeatures(true);
     // welcome-back gift (≥ 7 days away) — never mentions missed rewards
     if (!isReset && P.lastDay && daysBetween(P.lastDay, today) >= ECONOMY.welcomeBack.days) {
       this.grant([{ coins: ECONOMY.welcomeBack.coins, tickets: ECONOMY.welcomeBack.tickets }], 'welcome');
@@ -238,8 +242,6 @@ export class Meta {
     // rested bonus after ≥ 15 min away (only once the child has actually played)
     if (!isReset) this._checkAway(now);
     this._refreshDay();
-    // features already unlocked by an older/imported save are known — announce silently
-    this._checkFeatures(true);
     this._commit();
   }
 
@@ -324,7 +326,7 @@ export class Meta {
   stat(name, scope = 'life', heroId = null) {
     const P = this.P;
     if (heroId) return P.hero[heroId]?.[name] || 0;
-    if (scope === 'run') return this.live[name] ?? sumVals(this.live.freedBy);
+    if (scope === 'run') return name === 'freed' ? (this.live.freed || sumVals(this.live.freedBy)) : (+this.live[name] || 0);
     if (name === 'totalStars') return this.totalCrowns();
     if (name === 'dexFound') return DEX.entries.filter((e) => (P.dex.count[e] || 0) > 0).length;
     if (name === 'cosmetics') return this._cosmeticCount();
@@ -408,16 +410,23 @@ export class Meta {
       if (it.convert?.kind === 'tickets') tickets += it.convert.amount;
     }
     const claim = { uid: ++P.uid, source, items, title: opts.title || this._claimTitle(source) };
-    if (opts.popup !== false) {
-      this.claimQueue.push(claim);
-      this._emit('meta:claim', { count: this.claimQueue.length });
-      for (const fn of this._claimFns) { try { fn(claim); } catch (e) { console.error('[meta] onClaim', e); } }
-    }
-    this._emit('meta:reward', { coins, gems: 0, tickets, items, source });
+    // what the child actually received (duplicates shown as their conversion) — ready for a 领取 popup
+    claim.rewards = items.map((it) => (it.dup && it.convert ? it.convert : it));
+    const popup = opts.popup !== false;
+    if (popup) this._queue(claim);
+    // listeners that build popups from events: source 'silent' = no popup (shop, capsule reveal, rescue ceremony)
+    this._emit('meta:reward', { coins, gems: 0, tickets, items, rewards: claim.rewards, source: popup ? source : 'silent', origin: source,
+      popup, id: claim.uid, title: t(claim.title), applied: true });
     this._checkFeatures(false);
     this._commit();
     this._changed();
     return claim;
+  }
+  _queue(claim) {
+    this.claimQueue.push(claim);
+    if (this.claimQueue.length > TUNE.claimQueueMax) this.claimQueue.shift();   // everything is already credited
+    this._emit('meta:claim', { count: this.claimQueue.length });
+    for (const fn of this._claimFns) { try { fn(claim); } catch (e) { console.error('[meta] onClaim', e); } }
   }
   onClaim(fn) { this._claimFns.add(fn); return () => this._claimFns.delete(fn); }
   nextClaim() { this._showing = this.claimQueue.shift() || null; if (this._showing) this._changed(); return this._showing; }
@@ -645,13 +654,14 @@ export class Meta {
     const cl = this.P.chests[w] || [0, 0, 0];
     return ECONOMY.worldChests.map((c, i) => {
       const reached = got >= c.stars, claimed = !!cl[i];
-      return { index: i, stars: c.stars, reached, claimed, claimable: reached && !claimed, items: this._items([c.reward], { world: w }) };
+      const reward = c.reward.worldHat ? { hat: HATS.find((h) => h.source === 'chest' && h.world === w)?.id } : c.reward;
+      return { index: i, stars: c.stars, have: got, reached, claimed, claimable: reached && !claimed, reward, items: this._items([c.reward], { world: w }) };
     });
   }
   claimWorldChest(worldId, i) {
     const w = worldIndex(worldId);
     const c = this.worldChests(w)[i];
-    if (!c?.claimable) return null;
+    if (!c?.claimable) return false;
     (this.P.chests[w] ||= [0, 0, 0])[i] = 1;
     return this.grant([ECONOMY.worldChests[i].reward], 'worldChest', { world: w });
   }
@@ -768,7 +778,7 @@ export class Meta {
     const P = this.P, freed = this.freed;
     const nodes = ROAD.map((n, i) => {
       const reached = freed >= n.at, claimed = P.road.claimed.includes(i);
-      return { index: i, at: n.at, reached, claimed, claimable: reached && !claimed, items: this._items([n.reward], { titleId: n.reward.title }) };
+      return { index: i, at: n.at, reached, claimed, claimable: reached && !claimed, reward: n.reward, items: this._items([n.reward], { titleId: n.reward.title }) };
     });
     const last = ROAD[ROAD.length - 1].at;
     const earned = freed > last ? Math.floor((freed - last) / ROAD_OVERFLOW.every) : 0;
@@ -800,13 +810,13 @@ export class Meta {
     const P = this.P;
     if (index === 'overflow' || index === ROAD.length) {
       const o = this.road().overflow;
-      if (o.claimable <= 0) return null;
+      if (o.claimable <= 0) return false;
       const r = ROAD_OVERFLOW.rewards[P.road.overflow % ROAD_OVERFLOW.rewards.length];
       P.road.overflow++;
       return this.grant([r], 'road');
     }
     const n = ROAD[index];
-    if (!n || this.freed < n.at || P.road.claimed.includes(index)) return null;
+    if (!n || this.freed < n.at || P.road.claimed.includes(index)) return false;
     P.road.claimed.push(index);
     return this.grant([n.reward], 'road', { titleId: n.reward.title });
   }
@@ -815,7 +825,7 @@ export class Meta {
     ROAD.forEach((n, i) => { if (this.freed >= n.at && !P.road.claimed.includes(i)) { P.road.claimed.push(i); rewards.push(n.reward); } });
     let o = this.road().overflow.claimable;
     while (o-- > 0) { rewards.push(ROAD_OVERFLOW.rewards[P.road.overflow % ROAD_OVERFLOW.rewards.length]); P.road.overflow++; }
-    return rewards.length ? this.grant(rewards, 'road', { titleId: 'roadLegend' }) : null;
+    return rewards.length ? this.grant(rewards, 'road', { titleId: 'roadLegend' }) : false;
   }
 
   // ═══════════════ daily missions 每日任务 ═══════════════
@@ -865,7 +875,7 @@ export class Meta {
     const P = this.P, M = P.missions;
     const rewards = [];
     for (const m of M.list) if (m.done && !m.claimed) { m.claimed = 1; rewards.push(this._missionReward(m)); }
-    const chestUnclaimed = prevClaims + rewards.length >= TUNE.dailyChestAfter && M.chestDay !== prevKey && M.day === prevKey;
+    const chestUnclaimed = prevClaims + rewards.length >= TUNE.dailyChestAfter && M.chestDay !== prevKey;
     if (chestUnclaimed) { rewards.push(ECONOMY.dailyChest); M.chestDay = prevKey; }
     M.list = M.list.filter((m) => !m.claimed);
     if (rewards.length) this.grant(rewards, 'missions');
@@ -877,8 +887,8 @@ export class Meta {
     return {
       i, uid: m.uid, id: m.id, slot: m.slot, icon: tpl.icon, hero: m.hero || null,
       text: tl(tpl.text).split('{n}').join(String(m.n)).split('{hero}').join(heroName),
-      target: m.n, prog: Math.min(m.prog, m.n), done: !!m.done, claimed: !!m.claimed, claimable: !!m.done && !m.claimed,
-      today: m.day === this.today, items: this._items([this._missionReward(m)]),
+      target: m.n, prog: Math.min(m.prog, m.n), cur: Math.min(m.prog, m.n), done: !!m.done, claimed: !!m.claimed, claimable: !!m.done && !m.claimed,
+      today: m.day === this.today, reward: this._missionReward(m), items: this._items([this._missionReward(m)]),
     };
   }
   /** mission list (array) + .rerolls .chest {progress, target, claimable, claimed} .refresh ('tomorrow') */
@@ -889,7 +899,7 @@ export class Meta {
     const claims = P.day.c.missionClaims || 0;
     list.rerolls = M.rerolls;
     list.chest = {
-      progress: Math.min(claims, TUNE.dailyChestAfter), target: TUNE.dailyChestAfter,
+      progress: Math.min(claims, TUNE.dailyChestAfter), target: TUNE.dailyChestAfter, need: TUNE.dailyChestAfter, reward: ECONOMY.dailyChest,
       claimed: M.chestDay === P.day.key, claimable: claims >= TUNE.dailyChestAfter && M.chestDay !== P.day.key,
       items: this._items([ECONOMY.dailyChest]),
     };
@@ -898,7 +908,7 @@ export class Meta {
   }
   claimMission(i) {
     const m = this.P.missions.list[i];
-    if (!m || !m.done || m.claimed) return null;
+    if (!m || !m.done || m.claimed) return false;
     m.claimed = 1;
     this._bump('missionClaims', 1);
     return this.grant([this._missionReward(m)], 'missions');
@@ -908,21 +918,21 @@ export class Meta {
     for (const m of this.P.missions.list) if (m.done && !m.claimed) { m.claimed = 1; this._bump('missionClaims', 1); rewards.push(this._missionReward(m)); }
     const chest = this.missions().chest;
     if (chest.claimable) { this.P.missions.chestDay = this.P.day.key; rewards.push(ECONOMY.dailyChest); }
-    return rewards.length ? this.grant(rewards, 'missions') : null;
+    return rewards.length ? this.grant(rewards, 'missions') : false;
   }
   claimDailyChest() {
     const chest = this.missions().chest;
-    if (!chest.claimable) return null;
+    if (!chest.claimable) return false;
     this.P.missions.chestDay = this.P.day.key;
     return this.grant([ECONOMY.dailyChest], 'chest');
   }
   /** 1 free reroll per day: swap an unfinished mission for a different one of the same slot */
   rerollMission(i) {
     const M = this.P.missions, m = M.list[i];
-    if (!m || m.done || m.claimed || M.rerolls <= 0) return null;
+    if (!m || m.done || m.claimed || M.rerolls <= 0) return false;
     const rng = makeRng(hashStr('reroll:' + this.today + ':' + m.uid));
     const tpl = this._pickTemplate(m.slot, rng, M.list.filter((x) => x !== m), m.id);
-    if (!tpl) return null;
+    if (!tpl) return false;
     M.list[i] = this._makeMission(tpl, rng);
     M.rerolls--;
     this._commit(); this._changed();
@@ -970,7 +980,7 @@ export class Meta {
   claimSignin() {
     this._refreshDay();
     const S = this.P.signin;
-    if (S.last === this.today) return null;
+    if (S.last === this.today) return false;
     const r = this._signinReward(S.count);
     S.count++; S.last = this.today;
     return this.grant([r], 'signin', { titleId: r.title });
@@ -985,7 +995,8 @@ export class Meta {
     for (const r of Object.keys(CAPSULE.odds)) left[r] = pool.filter((x) => x.rarity === r && !x.owned).length;
     return {
       enabled: this.isUnlocked('capsule'), parentOn: P.parent.capsule !== false,
-      tickets: P.tickets, free: C.free, cost: ECONOMY.capsule.tickets, today: C.today, dailyCap: ECONOMY.capsule.dailyCap,
+      tickets: P.tickets, free: C.free, freePulls: C.free, cost: ECONOMY.capsule.tickets, today: C.today, dailyCap: ECONOMY.capsule.dailyCap, cap: ECONOMY.capsule.dailyCap,
+      sinceEpic: C.sinceEpic, sinceLegend: C.sinceLegend,
       odds: { ...CAPSULE.odds }, per100: Object.fromEntries(Object.entries(CAPSULE.odds).map(([k, v]) => [k, Math.round(v * 100)])),
       pity: {
         epicIn: Math.max(1, CAPSULE.epicPity - C.sinceEpic), epicEvery: CAPSULE.epicPity,
@@ -999,18 +1010,19 @@ export class Meta {
   _capsuleBlock(payWith = 'ticket') {
     const P = this.P, C = P.capsule;
     if (payWith === 'coins') return 'ticketsOnly';                      // kid-UX: no coin gacha at all
-    if (P.parent.capsule === false) return 'parentOff';
+    if (P.parent.capsule === false) return 'off';
     if (!this.isUnlocked('capsule')) return 'locked';
-    if (CAPSULE.pool().every((it) => this.owns(it.kind, it.id))) return 'allOwned';
-    if (C.today >= ECONOMY.capsule.dailyCap) return 'dailyCap';
+    if (CAPSULE.pool().every((it) => this.owns(it.kind, it.id))) return 'all';
+    if (C.today >= ECONOMY.capsule.dailyCap) return 'cap';
     if (C.free <= 0 && P.tickets < ECONOMY.capsule.tickets) return 'tickets';
     return null;
   }
-  /** one pull → {ok, prize:{kind,id,rarity,name,…}, rarity, refund?, free, pity} | {ok:false, error} */
+  /** one pull → {ok, prize:{kind,id,rarity,name,…} (also spread on the result), rarity, refund?, free, pity}
+   *  | {ok:false, error: 'ticketsOnly'|'off'|'locked'|'all'|'cap'|'tickets'} */
   capsule(payWith = 'ticket', rng = Math.random) {
     this._refreshDay();
     const err = this._capsuleBlock(payWith);
-    if (err) return { ok: false, error: err };
+    if (err) return { ok: false, error: err, reason: err };
     const P = this.P, C = P.capsule;
     const free = C.free > 0;
     if (free) C.free--; else P.tickets -= ECONOMY.capsule.tickets;
@@ -1043,7 +1055,8 @@ export class Meta {
       prize = this.grant([{ coins: refund }], 'capsule', { popup: false })?.items[0];
     }
     this._commit(); this._changed();
-    return { ok: true, prize, rarity, refund, rarityComplete: !cands.length, free, pity: this.capsuleInfo().pity };
+    // the prize's own fields are spread on top so `capsule().kind/.id/.name` work as well as `.prize`
+    return { ...prize, ok: true, prize, rarity, refund, rarityComplete: !cands.length, free, pity: this.capsuleInfo().pity };
   }
 
   // ═══════════════ Cube-dex 图鉴 ═══════════════
@@ -1066,13 +1079,14 @@ export class Meta {
     list.cards = this.cardInfo();
     return list;
   }
-  claimDex(id, mi = null) {
+  /** claimDex(id) claims every reached milestone of an entry; claimDex(id, n) only the one with threshold n (1/25/100/300) */
+  claimDex(id, n = null) {
     const P = this.P;
     const count = P.dex.count[id] || 0;
     const cl = (P.dex.claimed[id] ||= []);
     const rewards = [];
-    DEX.milestones.forEach((ms, i) => { if ((mi === null || mi === i) && count >= ms.n && !cl.includes(i)) { cl.push(i); rewards.push(ms.reward); } });
-    return rewards.length ? this.grant(rewards, 'dex') : null;
+    DEX.milestones.forEach((ms, i) => { if ((n == null || ms.n === +n) && count >= ms.n && !cl.includes(i)) { cl.push(i); rewards.push(ms.reward); } });
+    return rewards.length ? this.grant(rewards, 'dex') : false;
   }
   claimAllDex() {
     const P = this.P, rewards = [];
@@ -1080,7 +1094,7 @@ export class Meta {
       const count = P.dex.count[id] || 0, cl = (P.dex.claimed[id] ||= []);
       DEX.milestones.forEach((ms, i) => { if (count >= ms.n && !cl.includes(i)) { cl.push(i); rewards.push(ms.reward); } });
     }
-    return rewards.length ? this.grant(rewards, 'dex') : null;
+    return rewards.length ? this.grant(rewards, 'dex') : false;
   }
 
   // ═══════════════ achievements 成就 & titles ═══════════════
@@ -1090,9 +1104,9 @@ export class Meta {
       const value = this.stat(a.stat);
       const claimedN = P.ach[a.id] || 0;
       const tiers = a.tiers.map((target, i) => ({ tier: i, target, reached: value >= target, claimed: i < claimedN, claimable: value >= target && i === claimedN,
-        items: this._items([ACH_REWARD[i]], { titleId: 'ach_' + a.id }) }));
+        items: this._items([ACH_REWARD[i]], { titleId: a.id }) }));
       const next = tiers.find((x) => !x.reached);
-      return { id: a.id, icon: a.icon, name: tl(a.name), stat: a.stat, value, tier: claimedN, tiers, claimable: tiers.some((x) => x.claimable),
+      return { id: a.id, icon: a.icon, name: tl(a.name), stat: a.stat, value, cur: value, tier: claimedN, tiers, claimable: tiers.some((x) => x.claimable),
         next: next ? next.target : null, progress: next ? clamp(value / next.target, 0, 1) : 1 };
     });
     list.claimable = list.filter((a) => a.claimable).length;
@@ -1100,11 +1114,11 @@ export class Meta {
   }
   claimAchievement(id) {
     const a = ACHIEVEMENTS.find((x) => x.id === id);
-    if (!a) return null;
+    if (!a) return false;
     const P = this.P, i = P.ach[id] || 0;
-    if (i >= a.tiers.length || this.stat(a.stat) < a.tiers[i]) return null;
+    if (i >= a.tiers.length || this.stat(a.stat) < a.tiers[i]) return false;
     P.ach[id] = i + 1;
-    return this.grant([ACH_REWARD[i]], 'ach', { titleId: 'ach_' + id });
+    return this.grant([ACH_REWARD[i]], 'ach', { titleId: id });
   }
   claimAllAchievements() {
     const P = this.P, rewards = [];
@@ -1112,18 +1126,18 @@ export class Meta {
       let i = P.ach[a.id] || 0;
       while (i < a.tiers.length && this.stat(a.stat) >= a.tiers[i]) {
         const r = { ...ACH_REWARD[i] };
-        if (r.title === true) r.title = 'ach_' + a.id;
+        if (r.title === true) r.title = a.id;
         rewards.push(r); i++;
       }
       P.ach[a.id] = i;
     }
-    return rewards.length ? this.grant(rewards, 'ach') : null;
+    return rewards.length ? this.grant(rewards, 'ach') : false;
   }
   titleName(id) {
     if (!id) return '';
     if (TITLES[id]) return tl(TITLES[id]);
-    if (id.startsWith('ach_')) { const a = ACHIEVEMENTS.find((x) => 'ach_' + x.id === id); return a ? tl(a.name) : id; }
-    return id;
+    const a = ACHIEVEMENTS.find((x) => x.id === id || 'ach_' + x.id === id);   // gold achievement tiers grant their name as a title
+    return a ? tl(a.name) : String(id);
   }
   setTitle(id) { if (id && !this.P.titles.includes(id)) return false; this.P.title = id || ''; this._commit(); this._changed(); return true; }
 
@@ -1157,17 +1171,26 @@ export class Meta {
     this._commit(); this._changed();
     return true;
   }
+  titles() { return [...this.P.titles]; }
+  /** patch {name?, title?, pins?} — ui convenience over setName / setTitle / setPins */
+  setProfile(patch = {}) {
+    if (patch.name != null) this.setName(patch.name);
+    if ('title' in patch) this.setTitle(patch.title || '');
+    if (Array.isArray(patch.pins)) this.setPins(patch.pins);
+    return true;
+  }
   setPins(ids) { this.P.pins = (ids || []).filter((id) => ACHIEVEMENTS.some((a) => a.id === id)).slice(0, 3); this._commit(); this._changed(); }
   profile() {
     const P = this.P;
     return {
-      name: this._nameText(P.name), title: P.title, titleName: this.titleName(P.title), titles: P.titles.map((id) => ({ id, name: this.titleName(id) })),
+      name: this._nameText(P.name), title: P.title || null, titleName: this.titleName(P.title), titles: [...P.titles],
+      titlesInfo: P.titles.map((id) => ({ id, name: this.titleName(id) })), pins: [...P.pins],
       rank: this.rank, rankVisible: this.isUnlocked('modes'), heroId: P.selHero, skinId: this.selectedSkin(), hatId: this.selectedHat(),
-      pins: P.pins.map((id) => { const a = this.achievements().find((x) => x.id === id); return a ? { id, icon: a.icon, name: a.name, tier: a.tier } : null; }).filter(Boolean),
+      pinsInfo: (() => { const all = P.pins.length ? this.achievements() : []; return P.pins.map((id) => { const a = all.find((x) => x.id === id); return a ? { id, icon: a.icon, name: a.name, tier: a.tier } : null; }).filter(Boolean); })(),
       stats: {
         freed: this.freed, crowns: this.totalCrowns(), bestWave: P.modes.endlessBest, perfects: P.life.perfects || 0,
         bonks: P.life.bonks || 0, bestCombo: P.life.bestCombo || 0, runs: P.life.runs || 0, wins: P.life.wins || 0,
-        playDays: Object.keys(P.guard.hist).length, heroes: P.heroes.length, cosmetics: this._cosmeticCount(),
+        playDays: Object.keys(P.guard.hist).length, heroes: P.heroes.length, cosmetics: this._cosmeticCount(), endlessScore: P.modes.endlessScore,
       },
     };
   }
@@ -1206,7 +1229,7 @@ export class Meta {
         this._emit('meta:feature', { id });
         this._emit('meta:unlock', { kind: 'feature', id });
       }
-      if (id === 'missions') this._ensureMissions();
+      if (id === 'missions' && !silent) this._ensureMissions();
       if (id === 'modes') {
         if (!silent) this._checkRank(true); else P.rankStep = Math.max(P.rankStep, this.rank.step);
         for (const m of Object.keys(MODES)) if (m !== 'stage' && this.modeUnlocked(m) && !silent) this._emit('meta:unlock', { kind: 'mode', id: m });
@@ -1234,8 +1257,8 @@ export class Meta {
   }
 
   // ═══════════════ applyRun → results cascade breakdown ═══════════════
-  applyRun(results = {}) {
-    if (!results || typeof results !== 'object') results = {};
+  applyRun(results) {
+    if (!results || typeof results !== 'object') return this.lastBreakdown;
     if (this._applied?.has(results)) return this.lastBreakdown;
     (this._applied ||= new WeakSet()).add(results);
     this._refreshDay();
@@ -1249,6 +1272,7 @@ export class Meta {
     const today = this.today;
 
     const rankBefore = this.rank, trophiesBefore = P.trophies, freedBefore = this.freed, coinsBefore = P.coins;
+    const featBefore = P.features.length, rankStepBefore = P.rankStep, roadNextBefore = this.roadNext();
     const dexBefore = new Set(DEX.entries.filter((e) => (P.dex.count[e] || 0) > 0));
 
     // ---- authoritative run values (results) with bus fallbacks
@@ -1265,7 +1289,7 @@ export class Meta {
       rec = this._srec(w, s, true);
       crownsBefore = rec.c.map(Boolean);
       let flags = Array.isArray(results.starFlags) ? results.starFlags.map(Boolean) : [0, 1, 2].map((i) => i < (results.stars | 0));
-      if (!win) flags[0] = false;
+      if (!win) { flags[0] = false; flags[1] = false; }   // clear & few-hits need a clear; the challenge crown is independent
       flags.forEach((f, i) => { if (f && !rec.c[i]) { rec.c[i] = 1; starsNew.push(i); } });
       if (crownsBefore.filter(Boolean).length < 3 && rec.c.every(Boolean)) newThree = 1;
       firstClear = win && !rec.cl;
@@ -1278,7 +1302,7 @@ export class Meta {
     if (rec) { newBest = score > rec.best && rec.plays > 1; if (score > rec.best) rec.best = score; best = rec.best; }
 
     // ---- mode bests / medals
-    let medalsNew = 0, endlessPB = false;
+    let medalsNew = 0, endlessPB = false, medalRange = [0, 0];
     if (mode === 'endless') {
       endlessPB = wave > P.modes.endlessBest;
       if (endlessPB) P.modes.endlessBest = wave;
@@ -1291,7 +1315,7 @@ export class Meta {
       P.modes.stormMedals = Math.max(oldMedals, medals);
       newBest = freedRun > P.modes.stormBest && P.modes.stormBest > 0;
       P.modes.stormBest = Math.max(P.modes.stormBest, freedRun); best = P.modes.stormBest;
-      results._medalRange = [oldMedals, P.modes.stormMedals];
+      medalRange = [oldMedals, P.modes.stormMedals];
     } else if (mode === 'rush') {
       const beaten = results.bossKills ?? results.wavesCleared ?? L.bossKills ?? 0;
       newBest = beaten > P.modes.rushBest && P.modes.rushBest > 0;
@@ -1314,22 +1338,6 @@ export class Meta {
     this.live = this._freshLive();   // consumed
     const missionsProgress = this._commitVals(vals);
 
-    // ---- unlocks: stage / world / hero rescue
-    const unlocks = [];
-    if (stage && firstClear) {
-      const W = WORLDS[w];
-      if (s + 1 < W.stages.length) unlocks.push({ kind: 'stage', worldId: w, stageId: s + 1, id: W.stages[s + 1].id });
-      else if (w + 1 < WORLDS.length) { unlocks.push({ kind: 'world', worldId: w + 1, id: WORLDS[w + 1].id }); this._emit('meta:unlock', { kind: 'world', id: WORLDS[w + 1].id }); }
-    }
-    let rescued = null, rescuedDup = false;
-    const rescueId = results.rescued ?? (stage?.boss && firstClear ? WORLDS[w].boss?.rescue : null);
-    if (rescueId && (firstClear || results.rescued)) {
-      const claim = this.grant([{ hero: rescueId }], 'rescue', { popup: false });
-      rescued = rescueId; rescuedDup = !!claim?.items[0]?.dup;
-      if (!rescuedDup) unlocks.push({ kind: 'hero', id: rescueId });
-      else this.claimQueue.push(claim);          // the 3 tickets still get a 领取 moment
-    }
-
     // ---- trophies
     const TR = ECONOMY.trophies;
     let trophies = 0;
@@ -1342,12 +1350,29 @@ export class Meta {
       trophies += T;
     }
     if (mode === 'storm' && medalsNew) {
-      const [a, b] = results._medalRange;
+      const [a, b] = medalRange;
       let T = 0; for (let i = a; i < b; i++) T += TR.modeMedal[i] || 0;
       if (assist) T = Math.max(1, Math.ceil(T * TR.assistMult));
       trophies += T;
     }
     P.trophies += trophies;
+
+    // ---- unlocks: stage / world / hero rescue
+    const unlocks = [];
+    if (stage && firstClear) {
+      const W = WORLDS[w];
+      if (s + 1 < W.stages.length) unlocks.push({ kind: 'stage', worldId: w, stageId: s + 1, id: W.stages[s + 1].id });
+      else if (w + 1 < WORLDS.length) { unlocks.push({ kind: 'world', worldId: w + 1, id: WORLDS[w + 1].id }); this._emit('meta:unlock', { kind: 'world', id: WORLDS[w + 1].id }); }
+    }
+    let rescued = null, rescuedDup = false;
+    const rescueId = stage?.boss && firstClear ? (results.rescued || WORLDS[w].boss?.rescue || null) : null;
+    if (rescueId && HEROES.some((h) => h.id === rescueId)) {
+      rescuedDup = P.heroes.includes(rescueId);
+      // new hero → full-screen rescue ceremony (meta:unlock); already owned → the 3 tickets get a 领取 popup
+      this.grant([{ hero: rescueId }], 'rescue', { popup: rescuedDup });
+      rescued = rescueId;
+      if (!rescuedDup) unlocks.push({ kind: 'hero', id: rescueId });
+    }
 
     // ---- coins
     const E = ECONOMY, lines = [];
@@ -1366,7 +1391,7 @@ export class Meta {
       else line('fail', E.fail.base + Math.floor(freedRun / 2) * E.fail.perTwoFreed);
     } else if (mode === 'storm') {
       line('fail', E.fail.base + Math.floor(freedRun / 2) * E.fail.perTwoFreed);
-      if (medalsNew) { const [a, b] = results._medalRange; let c = 0; for (let i = a; i < b; i++) c += E.modeMedal[i] || 0; line('medal', c); }
+      if (medalsNew) { const [a, b] = medalRange; let c = 0; for (let i = a; i < b; i++) c += E.modeMedal[i] || 0; line('medal', c); }
     } else if (mode === 'rush') {
       line('rush', E.stageClear.base + TUNE.rushPerBoss * (vals.bossKills || 0));
     } else line('fail', E.fail.base);
@@ -1396,10 +1421,14 @@ export class Meta {
 
     // ---- dex news, features, rank
     const newDex = DEX.entries.filter((e) => !dexBefore.has(e) && (P.dex.count[e] || 0) > 0);
-    const feats = this._checkFeatures(false);
+    this._checkFeatures(false);
+    this._checkRank(false);
+    const feats = P.features.slice(featBefore);          // incl. features unlocked inside grants above
     for (const f of feats) unlocks.push({ kind: 'feature', id: f });
-    const rankUp = this._checkRank(false);
     const rankAfter = this.rank;
+    const rankUp = P.rankStep > rankStepBefore;
+    const tierUp = rankUp && Math.floor(P.rankStep / 3) > Math.floor(rankStepBefore / 3);
+    const placement = feats.includes('modes');
 
     // ---- guardian (between runs only)
     this._guardAfterRun();
@@ -1407,9 +1436,9 @@ export class Meta {
     const breakdown = {
       mode, win, worldId: w, stageId: s, stageKey: stage?.id || null, heroId, assist,
       coins, coinsBreakdown: lines, coinsBefore, coinsAfter: P.coins, tickets: 0,
-      trophies, trophiesBefore, trophiesAfter: P.trophies, rankBefore, rankAfter, rankUp: !!rankUp, tierUp: !!rankUp?.tierUp,
+      trophies, trophiesBefore, trophiesAfter: P.trophies, rankBefore, rankAfter, rankUp, tierUp, placement,
       rankVisible: this.isUnlocked('modes'), par,
-      freedRun, freedBefore, freedAfter: this.freed, roadNext: this.roadNext(), roadClaimable: this.road().claimable,
+      freedRun, freedBefore, freedAfter: this.freed, roadNextBefore, roadNext: this.roadNext(), roadClaimable: this.road().claimable,
       missionsProgress, newDex, unlocks, rescued, rescuedDup,
       newBest, best, score, starsNew, crownsBefore, crowns: rec ? rec.c.map(Boolean) : null,
       firstClear, firstWin, rested, restedLeft: P.rested, fails: rec?.fails || 0,
@@ -1468,13 +1497,11 @@ export class Meta {
   }
   /** ≥ 15 min away (closed, hidden or idle in menus) → rested bonus + fresh session */
   _checkAway(now) {
+    // lastActive only advances while a run is live, so this gap covers a closed tab,
+    // a hidden tab and idling in the lobby alike
     const g = this.P.guard;
-    const last = Math.max(g.lastSeen || 0, g.lastActive || 0);
-    const idle = g.lastActive ? now - g.lastActive : 0;
-    const away = last ? now - (this._visibleSince ? Math.max(g.lastActive || 0, 0) : last) : 0;
-    const gap = Math.max(idle, away);
     g.lastSeen = now;
-    if (!g.lastActive || gap < TUNE.restedAwayMin * 60e3) return false;
+    if (!g.lastActive || now - g.lastActive < TUNE.restedAwayMin * 60e3) return false;
     g.lastActive = now;
     g.session = 0; g.nextBreak = HEALTH.breakCardMinutes; g.toast = 0;
     const had = this.P.rested;
@@ -1490,12 +1517,13 @@ export class Meta {
       if (min >= g.nextBreak) { this.pendingBreak = true; g.nextBreak = min + HEALTH.repeatMinutes; }
       else if (min >= HEALTH.toastMinutes && !g.toast) { this.pendingToast = t('meta.guard.toast'); g.toast = 1; }
     }
-    if (this.pendingBreak || this.pendingToast || this.limitReached) this._emit('meta:guardian', this.guardianPrompt() || {});
+    this.P.guard.lastActive = this._now();
+    if (this.pendingBreak || this.pendingToast || this.limitReached) this._emit('meta:guardian', this.guardianPrompt(true) || {});
   }
   /** the prompt ui.js should show between runs (never mid-run), highest priority first */
-  guardianPrompt() {
+  guardianPrompt(force = false) {
     const run = this.G.run;
-    if (run && run.state !== 'ended') return null;
+    if (!force && run && run.state !== 'ended') return null;
     if (this.limitReached) return { kind: 'limit', icon: '😴', text: t('meta.guard.limit') };
     if (this.pendingBreak) return { kind: 'break', icon: '🧘', text: t('meta.guard.break'), sub: t('meta.guard.breakSub'), rest: t('meta.guard.rest'), more: t('meta.guard.more'), seconds: 20 };
     if (this.pendingToast) return { kind: 'toast', icon: '👀', text: this.pendingToast };
@@ -1512,8 +1540,20 @@ export class Meta {
     else if (kind === 'night') g.nightDay = this.today;
     this._commit(); this._changed();
   }
-  takeBreak() { this.resolveGuardian('break', 'rest'); }
-  keepPlaying() { this.resolveGuardian('break', 'more'); }
+  takeBreak() { this.resolveGuardian('break', 'rest'); return true; }
+  keepPlaying() { this.resolveGuardian('break', 'more'); return true; }
+  snoozeBreak() { return this.keepPlaying(); }
+  /** after-run check for ui.js: {card, toast, limit, night} — consumes the one-shot prompts */
+  healthCheck() {
+    const r = { card: !!this.pendingBreak, toast: !!this.pendingToast, limit: this.limitReached, night: false, minutes: Math.round(this.sessionMinutes) };
+    if (this.isNight && this.P.guard.nightDay !== this.today && (this.P.life.runs || 0) > 0) { r.night = true; this.P.guard.nightDay = this.today; }
+    this.pendingToast = null;
+    this.pendingBreak = false;          // the card is on screen now; takeBreak()/snoozeBreak() record the choice
+    this._commit();
+    return r;
+  }
+  todayMinutes() { return this.P.day.play / 60; }
+  get bestWave() { return this.P.modes.endlessBest; }
 
   // ---- parent zone (the math gate lives in ui.js) ----
   get parent() { const p = this.P.parent; return { limit: p.limit, capsule: p.capsule !== false, extraToday: p.extraDay === this.today ? p.extra : 0 }; }
@@ -1525,10 +1565,12 @@ export class Meta {
     this._commit(); this._changed();
     return true;
   }
+  extendLimit(minutes = 15) { return this.parentExtend(minutes); }
   parentExtend(minutes = 15) {
     const p = this.P.parent;
     if (p.extraDay !== this.today) { p.extraDay = this.today; p.extra = 0; }
     p.extra += minutes; this._commit(); this._changed();
+    return true;
   }
   /** last N days of active play (parent zone chart): [{day, minutes}] oldest → newest */
   playHistory(days = 7) {
