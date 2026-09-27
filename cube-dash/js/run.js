@@ -300,6 +300,12 @@ export class Run {
     const on = (ev, fn) => this._offs.push(bus.on(ev, fn));
     on('enemy:smash', (p) => this._onSmash(p || {}));
     on('enemy:freed', (p) => this._onFreed(p || {}));
+    // a rare golden freed cube (1%, fx.js) showers +10 small crystals — a tiny variable-reward surprise
+    on('fx:goldenFreed', (p) => {
+      if (!p || this.state === 'ended' || !this.pickups) return;
+      for (let i = 0; i < 10; i++) this.pickups.spawnCrystal(p.x + (Math.random() - 0.5) * 1.6, p.z + (Math.random() - 0.5) * 1.6, 'S');
+      this.G.hud?.pop?.(p.x, 1.6, p.z, '✨ +10', 'crit');
+    });
     on('enemy:bonk', (p) => this._onBonk(p || {}));
     on('enemy:dizzy', (p) => this._onDizzy(p || {}));
     on('enemy:explode', (p) => this._onExplode(p || {}));
