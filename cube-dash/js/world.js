@@ -1743,6 +1743,8 @@ export class World {
     U.uBeat.value = typeof beat === 'number' ? Math.pow(Math.max(0, 1 - beat * 2.2), 2) : 0;
     this._feverK = damp(this._feverK, this.fever ? 1 : 0, 3, rdt);
     U.uFever.value = this._feverK;
+    // conveyor chevrons are a gameplay gimmick — keep them off the lobby / title floor
+    if (this.floorU) this.floorU.uBeltN.value = G.run ? (this._belts?.length ?? 0) : 0;
 
     // W1 rainbow grows brighter as cubes are freed (restoring the sky); full in menus
     if (this.look.rainbow) {
