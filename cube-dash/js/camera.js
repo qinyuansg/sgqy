@@ -38,6 +38,8 @@ const TUNE = {
   deadZone: 0.14,             // fraction of the visible half-span
   touchBias: 0.06,            // touch: hero sits below the centre by this fraction of the vertical span
   hudTop: 0.06,               // fraction of the screen height kept clear at the top (HUD bar) when fitting the arena
+  hudSafePx: 64,              // follow mode: the far rim never scrolls higher than this many CSS px from the top (hearts / objective panels)
+  hudSafeBottomPx: 36,        // … and the near rim stays this far above the bottom edge (thumbs / NOVA button)
   posRate: 6, posRateDash: 3,
   shake: { max: 0.35, amp: 0.5, pow: 1.6, roll: 1.2, decay: 1.8, freq: 17 },
   kick: { k: 180, c: 18, max: 0.05 },
@@ -332,11 +334,18 @@ export class CameraDirector {
     for (let i = 0; i < 6; i++) dFit = Math.max(dFit, RfFit / kX - fzBand(dFit, RfFit) * cp);   // widest row fits the width
     const pxAt = (d) => H / (2 * d * tf);
     let dist = dFit, fit = true;
-    if (pxAt(dFit) < TUNE.minPxPerU) { dist = H / (2 * tf * TUNE.minPxPerU); fit = false; }
+    // (3 % tolerance: a 1280×720 laptop still sees the whole R 14 Endless arena at 25.7 px/u instead of flipping to follow mode)
+    if (pxAt(dFit) < TUNE.minPxPerU * 0.97) { dist = Math.min(dFit, H / (2 * tf * TUNE.minPxPerU)); fit = false; }
     const Rf = R + TUNE.rimOut + TUNE.fitMargin;
+    // ground distance from the focus up to the HUD-safe line (NDC y = ys): the follow clamp stops the far
+    // rim there instead of at the very top edge, so a hero hugging the far rim is never under the HUD
+    const ys = 1 - 2 * Math.max(TUNE.hudTop, TUNE.hudSafePx / Math.max(1, H));
+    const kSafe = sp - ys * cp * tf > 0.05 ? (ys * tf) / (sp - ys * cp * tf) : kFar;
+    const yb = 1 - 2 * (TUNE.hudSafeBottomPx / Math.max(1, H));
+    const kNearSafe = (yb * tf) / (sp + yb * cp * tf);
     this._rig = {
       dist, fov, fit, aspect, pitch: p,
-      near: kNear * dist, far: kFar * dist, halfX: kX * dist,
+      near: kNear * dist, far: kFar * dist, farSafe: Math.min(kFar, kSafe) * dist, nearSafe: Math.min(kNear, kNearSafe) * dist, halfX: kX * dist,
       centreZ: fzBand(dist, Rf),
       Rf, R, touch, pxPerU: pxAt(dist),
     };
@@ -380,11 +389,12 @@ export class CameraDirector {
       const room = Math.min(TUNE.slack, (span - 2 * Rf) / 2 + TUNE.slack * (rig.fit ? 1 : 0));
       fz = centre + clamp(az * TUNE.followK - bias, -room, room);
     } else {
-      const up = TUNE.deadZone * rig.far, down = TUNE.deadZone * rig.near;
+      const up = TUNE.deadZone * rig.farSafe, down = TUNE.deadZone * rig.near;
       fz = F.z;
       const want = az - bias;
       if (want > fz + down) fz = want - down; else if (want < fz - up) fz = want + up;
-      fz = clamp(fz, -Rf + rig.far, Rf - rig.near);
+      const lo = -Rf + rig.farSafe, hi = Rf - rig.nearSafe;
+      fz = lo <= hi ? clamp(fz, lo, hi) : (lo + hi) / 2;
     }
     const rate = this._looseT > 0 ? TUNE.posRateDash : TUNE.posRate;
     this._looseT -= rdt;

@@ -44,12 +44,12 @@ const TUNE = {
 // Per-world art direction that isn't gameplay data (palette itself lives in DATA.worlds).
 const LOOK = {
   cloud: {
-    below: 0x86bfff, fog: 0xcfe4ff, fogNear: 110, fogFar: 700, skyMid: 0x8cc8ff, skyGain: 0.7,
+    below: 0x86bfff, fog: 0xcfe4ff, fogNear: 160, fogFar: 1150, skyMid: 0x8cc8ff, skyGain: 0.7,
     sunSky: [-0.42, 0.34, -0.84], sunSkyCol: 0xfff3c4,
     stars: 0, nebula: 0, nebA: 0xffc6e8, nebB: 0xbfe0ff, rainbow: 1,
     planet: { dir: [0.4, 0.2, -0.9], size: 62, c1: 0xffb7d5, c2: 0xfff0f6, atmo: 0xffffff, ring: 0xfff0c2, ringA: 0.85, tilt: [0.42, 0.25], mode: 0 },
     cloudK: 1, cloudS: 1,
-    cloudLit: 0xffffff, cloudShade: 0xaebfe8, cloudRim: 0xffe6f4, cloudEmit: 0, cloudTints: [0xffffff, 0xfff4fa, 0xf2f8ff, 0xfffaf0],
+    cloudLit: 0xffffff, cloudShade: 0xc2d0f2, cloudRim: 0xffe6f4, cloudEmit: 0, cloudTints: [0xffffff, 0xfff4fa, 0xf2f8ff, 0xfffaf0],
     island: { top: 0x8fe38a, side: 0xf3d7a6, bottom: 0xcfa87e },
     rock: [0xf0d3a4, 0xc79ad8], tip: 0xffb7d5,
     sparkle: [0xffffff, 0xfff3b0, 0xffd9f0, 0xc8ecff],
@@ -975,6 +975,10 @@ export class World {
       bus.on('run:end', () => { this.setFever(false); this._resetGimmicks(); this._progress = 0; }),
       bus.on('run:start', () => { this.setFever(false); this._resetGimmicks(); this._progress = 0; }),
       bus.on('wave:start', (p) => this.pulseRim(p?.isBoss ? 0xff8af2 : 0xffffff, p?.isBoss ? 1 : 0.6)),
+      // stage-start beats (cinematic spec: "the rim blocks ripple" as the fly-in lands, big pop on GO!)
+      bus.on('cine:end', (p) => { if (p?.name === 'intro') this.rimJump(0.18); }),
+      bus.on('run:countdown', (p) => { if (p?.n > 0) this.pulseRim(0xffffff, 0.35); }),
+      bus.on('run:go', () => { this.pulseRim(0xffffff, 1); this.rimJump(0.3); }),
       bus.on('boss:intro', () => this.pulseRim(0xff8af2, 1)),
       bus.on('boss:phase', () => { this.pulseRim(0xff8af2, 1); this.rimJump(0.35); }),
       bus.on('boss:slam', () => this.rimJump(0.28)),
@@ -1573,15 +1577,16 @@ export class World {
     for (const b of this._bumpers) { b.sy = 1; b.v = 0; b.flash = 0; b.cool = 0; b.touchT = -9; }
   }
 
-  _writeTiles() {
+  _writeTiles() {                     // (runs every frame while a tile animates: plain loops, no closures)
     const F = this.floorU;
-    this._tiles.forEach((t, i) => {
+    for (let i = 0; i < this._tiles.length; i++) {
+      const t = this._tiles[i];
       let st = 0;
       if (t.state === 'warn') st = Math.min(0.999, 0.001 + t.t / (this._tileCfg.flicker || 1));
       else if (t.state === 'gone') st = 1.5;
       else if (t.state === 'back') st = 2 + Math.min(1, t.t / TUNE.tileBack);
       F.uTile.value[i].set(t.x, t.z, t.r, st);
-    });
+    }
     this._set?.wells?.(this._tiles);
   }
 
@@ -1782,7 +1787,10 @@ export class World {
     // run.arenaRadius over 3 s) the wall tracks it exactly, so what a kid sees = what hurts
     let want = this._playTarget, rate = 2.2;
     const runR = G.run?.arenaRadius;
-    if (want < this.arenaRadius - 0.01 && Number.isFinite(runR) && runR > want + 0.01) { want = Math.min(runR, this.arenaRadius); rate = 14; }
+    if (Number.isFinite(runR) && Math.abs(runR - (this._runRPrev ?? runR)) > 1e-5) this._trackT = 0.3;   // gameplay radius is animating
+    else this._trackT = Math.max(0, (this._trackT || 0) - rdt);
+    this._runRPrev = runR;
+    if (this._trackT > 0 && want < this.arenaRadius - 0.01 && runR > want + 0.01) { want = Math.min(runR, this.arenaRadius); rate = 14; }
     if (Math.abs(this.playRadius - want) > 1e-3) {
       this.playRadius = damp(this.playRadius, want, rate, dt > 0 ? dt : rdt * 0.5);
       if (Math.abs(this.playRadius - want) < 0.01) this.playRadius = want;
@@ -2203,8 +2211,8 @@ const SET_BUILDERS = {
     return {
       group,
       wells(tiles) {
-        wells.count = tiles.length;
-        tiles.forEach((t, i) => { wellK[i] = t.state === 'gone' || t.state === 'back' ? 1 : 0; });
+        wells.count = Math.min(6, tiles.length);
+        for (let i = 0; i < wells.count; i++) { const st = tiles[i].state; wellK[i] = st === 'gone' || st === 'back' ? 1 : 0; }
       },
       update(t, rdt) {
         glow.quaternion.copy(w.G.camera.quaternion);

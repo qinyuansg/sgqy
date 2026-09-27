@@ -576,19 +576,21 @@ const HAT_BUILDERS = {
     const tip = K.mesh(G_SPHERE_LO(), K.glow(0xffe14d, 2.0));
     tip.scale.setScalar(0.045); tip.position.set(0.18, ant.position.y + 0.17, 0);
     K.hat.add(glass, collar, ant, tip);
+    tip.userData.keep = true;
     K.tick((t) => { tip.visible = (t % 1.2) < 0.8; });
   },
   wizard(K) {
     const hatCol = 0x5b3cc4;
-    const brim = K.mesh(geo('hat.brim', () => new THREE.CylinderGeometry(0.52, 0.54, 0.04, 32)), K.clay(hatCol));
+    const hm = K.clay(hatCol);
+    const brim = K.mesh(geo('hat.brim', () => new THREE.CylinderGeometry(0.52, 0.54, 0.04, 32)), hm);
     brim.position.y = 0.02; brim.scale.set(K.bw, 1, K.bd);
-    const cone = K.mesh(geo('hat.wizLow', () => new THREE.CylinderGeometry(0.13, 0.33, 0.42, 24).translate(0, 0.21, 0)), K.clay(hatCol));
+    const cone = K.mesh(geo('hat.wizLow', () => new THREE.CylinderGeometry(0.13, 0.33, 0.42, 24).translate(0, 0.21, 0)), hm);
     cone.position.y = 0.03;
     const bandM = K.mesh(geo('hat.wizBand', () => new THREE.TorusGeometry(0.31, 0.035, 8, 32)), K.clay(0xffd23f, { shine: 0.8, spec: 0.6 }));
     bandM.rotation.x = Math.PI / 2; bandM.position.y = 0.09;
     const tipPiv = new THREE.Group();
     tipPiv.position.y = 0.44;
-    const tip = K.mesh(geo('hat.wizTip', () => new THREE.ConeGeometry(0.13, 0.36, 20).translate(0, 0.18, 0)), K.clay(hatCol));
+    const tip = K.mesh(geo('hat.wizTip', () => new THREE.ConeGeometry(0.13, 0.36, 20).translate(0, 0.18, 0)), hm);
     const pom = K.mesh(G_SPHERE_LO(), K.glow(0xffe27a, 2.2));
     pom.scale.setScalar(0.05); pom.position.y = 0.37;
     tipPiv.add(tip, pom);
@@ -702,6 +704,7 @@ const HAT_BUILDERS = {
     const light = K.mesh(G_SPHERE_LO(), K.glow(0x3cffd1, 2));
     light.scale.setScalar(0.045); light.position.y = 0.18;
     K.hat.add(gear, bolt, light);
+    gear.userData.keep = true;
     K.tick((t, dt) => { gear.rotation.y += dt * 0.9; });
   },
   w_core(K) {
@@ -799,6 +802,7 @@ const ACCENTS = {
     const starMat = K.clay(0xffe27a, { emissive: 0xffc23a, emissiveIntensity: 0.55, shine: 0.7, spec: 0.8 });
     const big = K.mesh(starG, starMat);
     big.scale.setScalar(0.3); big.position.set(0, 0.15, K.bd / 2 - 0.1); big.rotation.x = -0.4;
+    big.userData.keep = true;                 // wobbles on its own (not merged)
     const sm = [-1, 1].map((sd) => {
       const s = K.mesh(starG, starMat);
       s.scale.setScalar(0.15); s.position.set(sd * 0.25, 0.08, K.bd / 2 - 0.1); s.rotation.set(-0.4, 0, sd * -0.3);
@@ -809,6 +813,70 @@ const ACCENTS = {
     K.tick((t) => { em.setRGB(1, 0.76, 0.23).multiplyScalar(0.4 + 0.3 * (0.5 + 0.5 * Math.sin(t * 3))); big.rotation.y = Math.sin(t * 1.5) * 0.25; });
   },
 };
+
+// ─────────────────────────────────────────────────────────────
+// Static merge: sibling meshes that share a material and are not animated on
+// their own (userData.keep) are baked into ONE geometry → one draw call.
+// Animated pivots/groups are parents, so their children still move together.
+// ─────────────────────────────────────────────────────────────
+function mergeStatic(root, own) {
+  const parents = [];
+  root.traverse((o) => { if (o.children.length > 1) parents.push(o); });
+  for (const par of parents) {
+    const groups = new Map();
+    for (const c of par.children) {
+      if (!c.isMesh || c.isInstancedMesh || c.userData.keep || c.children.length || !c.geometry?.attributes?.normal) continue;
+      let l = groups.get(c.material);
+      if (!l) groups.set(c.material, (l = []));
+      l.push(c);
+    }
+    for (const list of groups.values()) {
+      if (list.length < 2) continue;
+      const g = bakeGeometries(list);
+      if (!g) continue;
+      const m = new THREE.Mesh(g, list[0].material);
+      m.renderOrder = list[0].renderOrder;
+      m.name = 'merged';
+      for (const c of list) par.remove(c);
+      par.add(m);
+      own.push(g);
+    }
+  }
+}
+function bakeGeometries(list) {
+  const withColor = list.every((m) => m.geometry.attributes.color);
+  const parts = [];
+  let total = 0;
+  for (const m of list) {
+    m.updateMatrix();
+    const src = m.geometry;
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', src.attributes.position.clone());
+    g.setAttribute('normal', src.attributes.normal.clone());
+    if (withColor) g.setAttribute('color', src.attributes.color.clone());
+    if (src.index) g.setIndex(src.index.clone());
+    const flat = g.index ? g.toNonIndexed() : g;
+    if (flat !== g) g.dispose();
+    flat.applyMatrix4(m.matrix);
+    parts.push(flat);
+    total += flat.attributes.position.count;
+  }
+  const pos = new Float32Array(total * 3), nor = new Float32Array(total * 3), cl = withColor ? new Float32Array(total * 3) : null;
+  let o = 0;
+  for (const g of parts) {
+    pos.set(g.attributes.position.array, o * 3);
+    nor.set(g.attributes.normal.array, o * 3);
+    if (cl) cl.set(g.attributes.color.array, o * 3);
+    o += g.attributes.position.count;
+    g.dispose();
+  }
+  const out = new THREE.BufferGeometry();
+  out.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  out.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+  if (cl) out.setAttribute('color', new THREE.BufferAttribute(cl, 3));
+  out.computeBoundingSphere();
+  return out;
+}
 
 // ─────────────────────────────────────────────────────────────
 // HeroModel
@@ -977,6 +1045,9 @@ class HeroModel {
     this.sq.add(this.hatNode);
     K.hat = this.hatNode;
     if (HAT_BUILDERS[this.hatId]) HAT_BUILDERS[this.hatId](K);
+    // bake static same-material props into one mesh each (crown 14 → 4 draws, cloud 6 → 1 …)
+    mergeStatic(this.accentNode, this._own);
+    mergeStatic(this.hatNode, this._own);
 
     // ---- animation state
     this.sqS = new THREE.Vector3(1, 1, 1);

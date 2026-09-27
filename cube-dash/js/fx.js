@@ -29,7 +29,7 @@
 import * as THREE from 'three';
 import { roundedBoxGeometry, CubeCrowd, BlobShadows, EXPR } from './art.js';
 import { createClayMaterial } from './hero_model.js';
-import { HEROES, TRAILS, TUNE as GT, MODES } from './data.js';
+import { HEROES, TRAILS, TUNE as GT, MODES, RARITY } from './data.js';
 
 const TAU = Math.PI * 2;
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
@@ -89,6 +89,16 @@ function col(hex) {
   return c;
 }
 const pick = (arr) => arr[(rnd() * arr.length) | 0];
+/** partial GPU upload of the first `count` floats WITHOUT allocating (addUpdateRange() pushes a new
+ *  {start,count} object every call; the renderer clears the list after uploading). */
+function upload(at, count) {
+  const r = at._cdRange || (at._cdRange = { start: 0, count: 0 });
+  r.count = count;
+  at.updateRanges.length = 0;
+  at.updateRanges.push(r);
+  at.needsUpdate = true;
+}
+function uploadAll(attrs, count) { for (let i = 0; i < attrs.length; i++) upload(attrs[i], count); }
 // payload sizes may be numbers (world units) or size keys
 const SIZE_KEY = { S: 0.7, M: 1.0, L: 1.4, XL: 2.0 };
 const sizeOf = (v, d = 1) => (typeof v === 'number' && Number.isFinite(v) ? v : SIZE_KEY[v] ?? d);
@@ -248,7 +258,11 @@ void main() {
   } else if (sh == 7) {                // comic impact burst
     float ang = atan(uv.y, uv.x);
     float spikes = 0.6 + 0.36 * pow(abs(cos(ang * 4.0 + 0.4)), 5.0);
-    a = 1.0 - smoothstep(-0.03, 0.02, r - spikes);
+    float e = r - spikes;
+    a = 1.0 - smoothstep(-0.03, 0.02, e);
+    // saturated cel rim (col³ keeps the hue: pale yellow → gold, pink-white → pink) so the
+    // "POW" reads on the light sand floor instead of dissolving into it
+    col = mix(col, col * col * col * 1.1, smoothstep(-0.17, -0.07, e) * 0.85);
     col = mix(col, vec3(1.6), 1.0 - smoothstep(0.1, 0.5, r));
   } else if (sh == 8) {                // bubble
     float ring = smoothstep(0.7, 0.88, r) * (1.0 - smoothstep(0.9, 1.0, r));
@@ -440,9 +454,7 @@ class Sprites {
     // idle systems cost no draw call / program switch at all
     if (this.mesh) this.mesh.visible = n > 0;
     if (n === 0) return;
-    for (const at of this._attrs) {
-      at.clearUpdateRanges(); at.addUpdateRange(0, n * 4); at.needsUpdate = true;
-    }
+    uploadAll(this._attrs, n * 4);
   }
 }
 
@@ -702,9 +714,7 @@ class Rings {
     this.geo.instanceCount = n;
     if (this.mesh) this.mesh.visible = n > 0;
     if (n === 0) return;
-    for (const at of this._attrs) {
-      at.clearUpdateRanges(); at.addUpdateRange(0, n * 4); at.needsUpdate = true;
-    }
+    uploadAll(this._attrs, n * 4);
   }
 }
 
@@ -787,7 +797,7 @@ class Beams {
     this.geo.instanceCount = this.m;
     if (this.mesh) this.mesh.visible = this.m > 0;
     if (this.m === 0) return;
-    for (const at of this._attrs) { at.clearUpdateRanges(); at.addUpdateRange(0, this.m * 4); at.needsUpdate = true; }
+    uploadAll(this._attrs, this.m * 4);
   }
 }
 
@@ -885,7 +895,7 @@ class Shells {
     this.geo.instanceCount = this.m;
     if (this.mesh) this.mesh.visible = this.m > 0;
     if (this.m === 0) return;
-    for (const at of this._attrs) { at.clearUpdateRanges(); at.addUpdateRange(0, this.m * 4); at.needsUpdate = true; }
+    uploadAll(this._attrs, this.m * 4);
   }
 }
 
@@ -1194,9 +1204,7 @@ class Bolts {
     this.geo.setDrawRange(0, (v / 4) * 6);
     if (this.mesh) this.mesh.visible = v > 0;
     if (v > 0) {
-      this.aPos.clearUpdateRanges(); this.aPos.addUpdateRange(0, v * 3); this.aPos.needsUpdate = true;
-      this.aUv.clearUpdateRanges(); this.aUv.addUpdateRange(0, v * 2); this.aUv.needsUpdate = true;
-      this.aCol.clearUpdateRanges(); this.aCol.addUpdateRange(0, v * 4); this.aCol.needsUpdate = true;
+      upload(this.aPos, v * 3); upload(this.aUv, v * 2); upload(this.aCol, v * 4);
     }
   }
 }
@@ -1495,6 +1503,7 @@ const DIRECTOR = {
   'run:end': 'onRunEnd', 'gate:open': 'onGateOpen', 'gate:close': 'onGateClose', 'settings:change': 'onSettings',
   // hero-kit sync events (player.js draws its own wells / black-hole disc / bolts; fx adds the flourish)
   'player:bolt': 'onPlayerBolt', 'player:stomp': 'onPlayerStomp', 'player:implode': 'onPlayerImplode', 'player:bump': 'onPlayerBump',
+  'card:chosen': 'onCardChosen',
 };
 
 export class FX {
@@ -1554,6 +1563,7 @@ export class FX {
     this._v = new THREE.Vector3(); this._w = new THREE.Vector3();
     this._c = new THREE.Color();
     this._trailCache = new Map();
+    this._rainbow = PAL.rainbow.map((h) => new THREE.Color(h));
 
     // wire the director (listeners only; systems looked up lazily)
     this._offs = [];
@@ -1744,7 +1754,8 @@ export class FX {
     this._stars(x, 1.1, z, Math.round(R.stars * (0.75 + s * 0.25)) + 1, 0.46 + 0.08 * s);
     this._sparks(x, 0.7, z, Math.round(R.sparks * this.emit * s), IP6, 8, 0.3, false);
     this.rings.anim(x, z, 0.2, R.ring * (0.8 + 0.3 * s), 0.28, HEX.star, 0.95, { t0: 0.34, t1: 0.06 });
-    this._flash(x, 0.8, z, 1.3 * (0.8 + 0.2 * s), 0xfff3b0, 0.12, SH.BURST);
+    // the BONK "POW" sits between the two cubes that crashed → draw it over them (comic read)
+    this._flash(x, 0.9, z, 1.2 * (0.8 + 0.2 * s), 0xfff3b0, 0.12, SH.BURST, 'top');
   }
 
   onSpawnWarn(p) {
@@ -1814,7 +1825,8 @@ export class FX {
     D.size = this.G.run?.player?.size ?? 1;
     const given = Array.isArray(p.trailColors) ? p.trailColors : Array.isArray(p.trail) ? p.trail : null;
     D.trail = (typeof p.trail === 'string' && p.trail) || this.G.meta?.selectedTrail?.() || 'default';
-    D.colors = this._trailColors(given, D.trail, p.color ?? HEROES.find((h) => h.id === D.heroId)?.color ?? 0x2f6bff);
+    D.colors = this.G.run?.fever ? this._rainbow   // FEVER: the dash ribbon turns rainbow (cinematic spec)
+      : this._trailColors(given, D.trail, p.color ?? HEROES.find((h) => h.id === D.heroId)?.color ?? 0x2f6bff);
     this.ribbon.colors = D.colors;
     const hero = HEROES.find((h) => h.id === D.heroId);
     D.time = hero?.dashTime ?? GT.dash.time;
@@ -2019,7 +2031,10 @@ export class FX {
     this._sparkles(x, 1, z, 20, PAL.rainbow, 1.5, true);
   }
 
-  onCrystal(p) { this._gemGlints(p.x ?? 0, 0.5, p.z ?? 0, 2, HEX.cyan); this._sparkles(p.x ?? 0, 0.6, p.z ?? 0, 2, IP13, 0.35, false); }
+  onCrystal(p) {
+    const k = this.G.run?.fever ? 2 : 1;                // FEVER: crystal sparkles double
+    this._gemGlints(p.x ?? 0, 0.5, p.z ?? 0, 2 * k, HEX.cyan); this._sparkles(p.x ?? 0, 0.6, p.z ?? 0, 2 * k, IP13, 0.35, false);
+  }
   onHeartPickup(p) { this._hearts(p.x ?? 0, 0.7, p.z ?? 0, 2, true); this._sparkles(p.x ?? 0, 0.7, p.z ?? 0, 4, IP10, 0.5, true); }
   onCoin(p) {
     const n = Math.min(10, 2 + ((p.amount ?? 1) / 3 | 0));
@@ -2109,6 +2124,17 @@ export class FX {
 
   onPlayerImplode(p) {
     for (const e of this.evs) if (e.on && e.kind === K.BLACKHOLE) { e.f3 = 1; if (p.x != null) { e.x = p.x; e.z = p.z; } }
+  }
+
+  /** level-up card picked (run resumes): a rarity-coloured pop around the hero */
+  onCardChosen(p) {
+    const pl = this.G.run?.player;
+    if (!pl || !Number.isFinite(pl.x)) return;
+    const r = RARITY[p.rarity] ? p.rarity : 'common';
+    const hex = r === 'common' ? HEX.cyanSoft : new THREE.Color(RARITY[r].color).getHex();
+    this.rings.anim(pl.x, pl.z, 0.3, 2.4, 0.4, hex, 0.9, { t0: 0.3, t1: 0.05, self: 1 });
+    this._sparkles(pl.x, 1, pl.z, Math.round(10 * this.emit), r === 'legend' ? IP5 : IP13, 1, true);
+    if (r === 'epic' || r === 'legend') this._confettiBurst(pl.x, 1.2, pl.z, r === 'legend' ? 40 : 20, true);
   }
 
   onPlayerBump(p) {
@@ -2589,7 +2615,8 @@ export class FX {
     const s = this.sp.s();
     const rf = this.reduceFlash;
     s.x = x; s.y = y; s.z = z; s.life = life; s.size = size * (rf ? 0.6 : 0.55); s.size1 = size * (rf ? 0.8 : 1.15);
-    s.shape = shape; s.rot = rnd() * TAU; s.add = 0.35; s.alpha = rf ? 0.3 : 0.85; s.fade = 1.5; s.self = 0;
+    // default: floor-projected (bodies stay on top); 'top' = true depth, pops OVER the bodies it hits
+    s.shape = shape; s.rot = rnd() * TAU; s.add = 0.35; s.alpha = rf ? 0.3 : 0.85; s.fade = 1.5; s.self = self === 'top' ? 2 : 0;
     s.color(hex, 1.1);
     this.sp.add(s);
   }

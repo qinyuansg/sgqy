@@ -555,6 +555,15 @@ noscript { position: fixed; inset: 0; display: grid; place-items: center; font: 
 #ui .pad-lock { position: absolute; right: -6px; top: -8px; font-family: var(--emoji); font-size: 24px; font-style: normal; }
 #ui .pad-new { position: absolute; left: -10px; top: -12px; font-style: normal; animation: bob 1.6s ease-in-out infinite; }
 #ui .pad-hero { position: absolute; top: -40px; font-style: normal; animation: bob 1s ease-in-out infinite; }
+/* 👑3 challenge pictogram on every open pad (gold ring once that crown is earned) */
+#ui .pad-obj { position: absolute; right: -10px; bottom: -8px; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-family: var(--emoji); font-size: 17px; font-style: normal;
+  background: #fff; border: 3px solid #d7e4f7; box-shadow: 0 3px 6px rgba(20, 40, 110, .22); }
+#ui .pad-obj.got { border-color: #ffc62e; background: #fff6cc; box-shadow: 0 0 0 2px #fff, 0 0 12px rgba(255, 200, 40, .7); }
+/* planets still under the Glitch (open but not cleared) flicker with scanlines until their boss is beaten */
+#ui .planet-btn:not(.done):not(.locked) .planet { filter: saturate(.72); }
+#ui .planet-btn:not(.done):not(.locked) .planet::before { content: ''; position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+  background: repeating-linear-gradient(0deg, transparent 0 6px, rgba(255, 61, 242, .16) 6px 8px); animation: glitchBars 2.2s steps(1) infinite; }
+@keyframes glitchBars { 0%, 88%, 100% { transform: none; opacity: .9; } 90% { transform: translateX(-4px); opacity: 1; } 94% { transform: translateX(3px) skewX(-6deg); opacity: .6; } }
 
 /* stage card */
 #ui .stage-card { position: relative; width: min(440px, 92vw); padding: 22px 24px 24px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
@@ -713,7 +722,7 @@ noscript { position: fixed; inset: 0; display: grid; place-items: center; font: 
 #ui .it-price { display: inline-flex; align-items: center; gap: 4px; font: 900 15px var(--font); background: #fff4c7; padding: 3px 12px 3px 4px; border-radius: 99px; }
 #ui .it-price .i-coin { width: 22px; height: 22px; }
 #ui .it-src { font: 800 12px/1.3 var(--font); color: var(--muted); text-align: center; }
-#ui .it-also { font: 700 11px var(--font); color: var(--muted); }
+#ui .it-also { font: 700 11px/1.25 var(--font); color: var(--muted); text-align: center; padding: 0 2px; }
 #ui .dlg-vis { display: grid; place-items: center; min-height: 70px; }
 
 /* ============ CAPSULE MACHINE ============ */
@@ -771,6 +780,12 @@ noscript { position: fixed; inset: 0; display: grid; place-items: center; font: 
 #ui .pool-it .emo.big { font-size: 26px; } #ui .pool-it .trail-sw { width: 34px; height: 12px; border-width: 2px; }
 #ui .pool-it.own { opacity: .5; }
 #ui .pool-it .ok { position: absolute; right: 1px; bottom: 1px; width: 16px; height: 16px; border-radius: 50%; background: var(--green); color: #fff; font: 900 10px/16px var(--font); text-align: center; font-style: normal; }
+
+/* list screens: tabs / hint on the left, 一键领取 on the right */
+#ui .panel-top { display: flex; align-items: center; justify-content: center; gap: 10px 14px; flex-wrap: wrap; margin-bottom: 10px; }
+#ui .panel-top .tabs { margin: 0; }
+#ui .ach-panel .panel-top { justify-content: space-between; margin-bottom: 6px; }
+#ui .claim-all { flex: none; }
 
 /* ============ CUBE-DEX ============ */
 #ui .dex-panel { left: 50%; transform: translateX(-50%); top: calc(84px + var(--safe-t)); bottom: calc(16px + var(--safe-b)); width: min(960px, calc(100% - 24px)); padding: 14px; display: flex; flex-direction: column; }
@@ -1036,7 +1051,8 @@ noscript { position: fixed; inset: 0; display: grid; place-items: center; font: 
 #ui .r-stars { font-style: normal; font-family: var(--emoji); font-size: 13px; }
 #ui .c-pink { color: #ff4f86; } #ui .c-gold { color: #e89a00; font-size: 17px; -webkit-text-stroke: .5px #b36b00; }
 #ui .pp-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-top: 6px; }
-#ui .pp-btns .btn.big { grid-column: 1 / -1; }
+#ui .pp-btns .btn.big, #ui .pp-btns .helper-btn { grid-column: 1 / -1; }
+#ui .helper-btn { white-space: nowrap; }
 
 /* ============ RESULTS CASCADE ============ */
 #ui .ovl-results { padding: 0; display: flex; align-items: center; justify-content: center; }
@@ -1082,9 +1098,15 @@ noscript { position: fixed; inset: 0; display: grid; place-items: center; font: 
 #ui .score-n { font: 900 30px/1.1 var(--font); font-variant-numeric: tabular-nums; }
 #ui .pb { font: 900 13px var(--font); font-style: normal; color: #fff; background: linear-gradient(180deg, #ff6f8e, #ff3b4e); padding: 3px 10px; border-radius: 99px; border: 2px solid #fff; transform: scale(0); }
 #ui .pb.pop { animation: stampIn .4s var(--spring) forwards; }
-#ui .troph-row { font: 900 16px var(--font); }
-#ui .tr-name { flex: 1; }
-#ui .tr-plus { color: #d97a00; font-size: 20px; }
+#ui .troph-row { position: relative; font: 900 16px var(--font); }
+#ui .tr-mid { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+#ui .tr-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#ui .tr-stars { font-style: normal; color: #f0a400; letter-spacing: .05em; }
+#ui .tr-bar { height: 10px; }
+#ui .tr-bar > i { background: linear-gradient(180deg, #ffe07a, #ff9d1c); transition: none; }
+#ui .tr-plus { color: #d97a00; font-size: 20px; white-space: nowrap; }
+#ui .tr-up { position: absolute; left: 30px; top: -10px; font: 900 13px var(--font); font-style: normal; color: #fff; background: linear-gradient(180deg, #ffc93a, #ff8a00); border: 2px solid #fff; padding: 1px 8px; border-radius: 99px; box-shadow: 0 2px 0 #c46a00; transform: scale(0); }
+#ui .tr-up.pop { animation: stampIn .42s var(--spring) forwards; }
 #ui .road-row { flex-wrap: wrap; background: #f5f0ff; }
 #ui .rr-ico { font-family: var(--emoji); font-size: 24px; }
 #ui .road-row .bar { flex: 1; min-width: 120px; }
@@ -1115,6 +1137,7 @@ noscript { position: fixed; inset: 0; display: grid; place-items: center; font: 
 #ui .tip-card { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 18px; background: #fff; border: 3px dashed #ffc3a6; }
 #ui .tip-card b { font: 900 15px var(--font); color: #e06b1f; }
 #ui .tip-card p { margin: 2px 0 0; font: 800 15px/1.4 var(--font); }
+#ui .tip-emo { flex: none; width: 48px; height: 48px; display: grid; place-items: center; font-family: var(--emoji); font-size: 36px; }
 #ui .helper-offer { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 12px; border-radius: 18px; background: linear-gradient(90deg, #fff6e0, #ffeef6); border: 3px solid #fff; box-shadow: var(--shadow-sm); }
 #ui .helper-offer b { flex: 1; min-width: 150px; font: 900 16px var(--font); }
 #ui .ho-bear { font-family: var(--emoji); font-size: 30px; margin-left: -18px; }
@@ -1328,8 +1351,11 @@ noscript { position: fixed; inset: 0; display: grid; place-items: center; font: 
   #ui .mc-btns { grid-column: 1 / -1; flex-direction: row; justify-content: flex-end; }
   #ui .pledge { grid-template-columns: repeat(2, 1fr); }
   #ui .rules { grid-template-columns: repeat(2, 1fr); }
-  #ui .lv-cards { gap: 8px; padding: 0 6px; }
-  #ui .lv-card { width: 31vw; min-height: 230px; padding: 26px 6px 12px; border-width: 4px; border-radius: 20px; }
+  #ui .ovl-levelup { padding: 8px; }
+  #ui .lv-cards { gap: 6px; padding: 0; }
+  #ui .lv-cards.n3 .lv-card { width: calc((100vw - 44px) / 3); }
+  #ui .lv-card { width: 38vw; min-height: 230px; padding: 26px 6px 12px; border-width: 4px; border-radius: 20px; }
+  #ui .x-btn { top: -12px; right: -6px; width: 42px; height: 42px; }
   #ui .lc-ico { font-size: 44px; }
   #ui .lc-name { font-size: 17px; }
   #ui .lc-desc { font-size: 12px; }
@@ -1344,6 +1370,14 @@ noscript { position: fixed; inset: 0; display: grid; place-items: center; font: 
   #ui kbd.wide { min-width: 58px; font-size: 13px; }
   #ui .k-sep { display: none; }
   #ui .numpad { grid-template-columns: repeat(3, 64px); }
+}
+@media (max-width: 520px) {
+  #ui .home-top { top: calc(62px + var(--safe-t)); max-width: calc(100% - 100px); }
+  #ui .home-left, #ui .home-right { top: calc(138px + var(--safe-t)); }
+  #ui .ribbon { font-size: 18px; padding: 6px 14px; gap: 6px; }
+  #ui .scr-head { gap: 8px; }
+  #ui .pill-stat { font-size: 13px; padding: 5px 10px; }
+  #ui .lc-key { display: none; }
 }
 @media (max-height: 760px) {
   #ui .res-hero .cube { --s: 46px !important; }

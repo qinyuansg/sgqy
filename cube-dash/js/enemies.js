@@ -1628,6 +1628,12 @@ export class EnemyManager {
         this.knock(o, nx + B.dirX * 0.4, nz + B.dirZ * 0.4, 12, { hops: 1 });
         this.dizzy(o, D.bonk.dizzy, 'charge');
       }
+    } else if (o.type === 'zippy' && o.ai === 'charge') {  // a Zippy rams the king: BIG BONK for the Zippy + a stagger chunk
+      this._zippyStop(o, nx * 2.5, nz * 2.5);
+      this.dizzy(o, o.def.bigBonk ?? D.bonk.dizzy, 'charge');
+      B.addStagger?.(DATA.boss.stagger.knockedCube, 'zippy');
+      B.flashHit?.();
+      this._emitBonk(B.x + nx * B.radius, B.z + nz * B.radius, o.def.chargeSpeed, { boss: true, byZippy: true, big: true, noStagger: true });
     } else if (o.proj && sp > 0.5 && o._bossHit !== o._bonkT + ':' + o.hops) {
       o._bossHit = o._bonkT + ':' + o.hops;
       B.addStagger?.(DATA.boss.stagger.knockedCube, 'cube');

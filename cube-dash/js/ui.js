@@ -50,6 +50,7 @@ const TUNE = {
 
 const REDUCED = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const LOBBY_ONLY = ['feature', 'signin', 'night'];
+const OWN_HEADLINE = ['rank', 'placement', 'ach'];   // claim sources whose meta title IS the headline (段位提升! · 成就达成!)
 const LOCAL_OVLS = ['stage', 'signin', 'dexd', 'names', 'titles', 'code', 'savecode', 'saveimp', 'confirm', 'gate', 'share'];   // closed when the screen changes
 const FULL_SCREENS = ['map', 'road', 'missions', 'dex', 'achievements', 'modes', 'settings', 'parent', 'capsule'];
 const HUB_SCREENS = ['home', 'map', 'heroes', 'road', 'missions', 'shop', 'capsule', 'dex', 'achievements', 'modes', 'settings', 'parent'];
@@ -270,6 +271,12 @@ const heroCube = (id, opts = {}) => {
   return cube({ color: opts.color ?? h.color, face: 'happy', acc: id === 'zap' ? 'bolt' : id === 'stella' ? 'tiara' : id === 'mochi' ? 'band' : 'antenna', ...opts });
 };
 const ENEMY_ACC = { zippy: 'thrust', splitter: 'seam', popper: 'fuse', beamer: 'lens', bruiser: 'helmet', coin: 'tophat', king: 'crown' };
+// §7.16: ⭐ means DIZZY only — stage ratings are 👑 crowns, so the crown-collecting badge shows a crown
+const ACH_VIEW = { stars: { icon: '👑', name: { zh: '皇冠收藏家', en: 'Crown Collector' } } };
+// §7.17: Nova is 大招 in Chinese UI (data.js card copy still says 新星)
+const CARD_VIEW = { core: { desc: { zh: '大招充能更快' } }, supernova: { desc: { zh: '大招范围×1.5，留下星星力场' } } };
+// run.lastHitBy → which enemy's "how to beat" tip the Oops screen shows (hazard kinds from enemies.js / boss.js)
+const HIT_KIND = { contact: null, hazard: null, charge: 'zippy', blast: 'popper', beam: 'beamer', boss: 'king', slam: 'king', ring: 'king', laser: 'king', mine: 'king', rain: 'king' };
 function enemyCube(type, opts = {}) {
   const def = DATA.enemies[type];
   const color = type === 'king' ? DATA.boss.color : def?.color ?? 0xef4b3c;
@@ -297,9 +304,9 @@ function rankBadge(rank, size = 56) {
   return `<div class="rank-badge" style="--rc:${color};--rs:${size}px"><div class="rb-gem"><span>${r.icon || def.icon}</span></div>`
     + `<div class="rb-stars">${legend ? `<b>★${Math.max(1, stars)}</b>` : [0, 1, 2].map((i) => `<i class="${i < stars ? 'on' : ''}">★</i>`).join('')}</div></div>`;
 }
-const rankName = (rank) => {
+const rankName = (rank) => {     // from data.js (bilingual) first: meta's rank.name is a string frozen in the old language
   const def = DATA.ranks.find((x) => x.id === rank?.id) || DATA.ranks[rank?.tier ?? 0] || DATA.ranks[0];
-  return tl(rank?.name || def.name);
+  return tl(def?.name || rank?.name);
 };
 
 // sources for cosmetics & heroes (where can a kid get this?)
@@ -508,6 +515,14 @@ export class UI {
     root.addEventListener('pointercancel', endHold);
     root.addEventListener('pointerleave', endHold);
     window.addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse' && (Math.abs(e.movementX) + Math.abs(e.movementY) > 2)) this._setKb(false); }, { passive: true });
+    // typing a name / code / save text must not reach input.js (M = mute, R = restart, Space = dash …)
+    root.addEventListener('keydown', (e) => {
+      const tg = e.target;
+      if (!tg || !(tg.tagName === 'TEXTAREA' || (tg.tagName === 'INPUT' && tg.type !== 'range'))) return;
+      e.stopPropagation();
+      if (e.key === 'Escape') tg.blur();
+      else if (e.key === 'Enter' && tg.closest('.name-type')) { e.preventDefault(); this._act('nameType', tg, e); }
+    });
     // number keys: 1/2/3 pick level-up cards; digits feed the parent gate; hold Enter on the gear
     window.addEventListener('keydown', (e) => {
       if (this._typing()) return;
@@ -532,6 +547,8 @@ export class UI {
     bus.on('meta:goodnight', () => { this.health.events = true; this.showGoodnight(); });
     bus.on('meta:welcome', (p) => { if (!this._pullMode()) this.queueClaim(p?.rewards || [p], 'welcome'); });
     bus.on('meta:change', () => { this._dirty = true; });
+    // main.js forwards only p.choices to showLevelUp; remember the level being resolved for the header
+    bus.on('player:levelup', (p) => { this._lvlEvt = { level: p?.level, t: this.time }; });
     bus.on('checkpoint', () => { /* HUD shows the flag; results reads run.checkpoint */ });
   }
 
@@ -789,9 +806,11 @@ export class UI {
   }
   _walletUpdate(rdt) {
     if (this.walletEl.classList.contains('hidden')) return;
+    // target = what the child has "claimed" so far: meta's display balance (queued claims excluded)
+    // minus amounts whose 领取 fly-in is still travelling to the counter
     const m = this.G.meta;
-    const tc = m && m.displayCoins != null ? n0(m.displayCoins) : Math.max(0, n0(this._mv('coins', 0)) - this.pending.coins);
-    const tt = m && m.displayTickets != null ? n0(m.displayTickets) : Math.max(0, n0(this._mv('tickets', 0)) - this.pending.tickets);
+    const tc = Math.max(0, (m && m.displayCoins != null ? n0(m.displayCoins) : n0(this._mv('coins', 0))) - this.pending.coins);
+    const tt = Math.max(0, (m && m.displayTickets != null ? n0(m.displayTickets) : n0(this._mv('tickets', 0))) - this.pending.tickets);
     if (this.wAnim) {
       const a = this.wAnim;
       a.t += rdt;
@@ -916,7 +935,7 @@ export class UI {
     const coins = items.filter((i) => i.kind === 'coins').reduce((a, i) => a + n0(i.amount), 0);
     const tickets = items.filter((i) => i.kind === 'tickets').reduce((a, i) => a + n0(i.amount), 0);
     if (applied) { this.pending.coins += coins; this.pending.tickets += tickets; }
-    this._enqueue({ type: 'claim', pri: source === 'welcome' ? 6 : 3, rewards, source, coins, tickets, applied, id: opts.id, title: opts.title });
+    this._enqueue({ type: 'claim', pri: source === 'welcome' ? 6 : 3, rewards, source, coins, tickets, applied, id: opts.id, title: opts.title, headline: opts.headline });
   }
   _onRankUp(p = {}) {
     const rank = p.rank || this._mv('rank', null);
@@ -926,7 +945,7 @@ export class UI {
     if (this.lastRankTier == null) this.lastRankTier = before?.tier ?? Math.max(0, tier - 1);
     if (p.placement) this._enqueue({ type: 'rankup', pri: 5, rank, before: null, placement: true });
     else if (tier > this.lastRankTier || p.tierUp) this._enqueue({ type: 'rankup', pri: 5, rank, before });
-    else this._enqueue({ type: 'toast', pri: 1, text: t('ui.rankUpStar') + ' ' + rankName(rank) + ' ' + '★'.repeat(rank.stars || 1), icon: rank.icon || '⭐' });
+    else this._enqueue({ type: 'toast', pri: 1, text: t('ui.rankUpStar') + ' ' + rankName(rank) + ' ' + '★'.repeat(rank.stars || 1), icon: rank.icon || '🏆' });
     this.lastRankTier = tier;
   }
   _onUnlock(p = {}) {
@@ -971,7 +990,7 @@ export class UI {
     }
     if (!r) return;
     if (r.limit) this.showGoodnight();
-    else if (r.card) this.showBreak('card', { minutes: Math.round(h.active / 60) });
+    else if (r.card) this.showBreak('card', { minutes: n0(r.minutes) || Math.round(h.active / 60) });
     else if (r.toast) this.showBreak('toast');
     if (r.night) this.showBreak('night');
   }
@@ -1041,6 +1060,8 @@ export class UI {
       case 'dexTab': click(); this.go('dex', { tab: d.tab }); break;
       case 'dexEntry': click(); this._dexDetail(d.id); break;
       case 'dexClaim': this._dexClaim(d.id, +d.n); break;
+      case 'dexAll': this._claimAllOf('claimAllDex', () => DATA.dex.entries.forEach((id) => this._m('claimDex', id))); break;
+      case 'achAll': this._claimAllOf('claimAllAchievements', () => this._achData().filter((a) => a.claimable).forEach((a) => this._m('claimAchievement', a.def.id))); break;
       // --- achievements / profile ---
       case 'achTab': click(); this.go('achievements', { tab: d.tab }); break;
       case 'achClaim': this._achClaim(d.id); break;
@@ -1188,6 +1209,7 @@ export class UI {
   }
   _titleName(id) {
     if (!id) return '';
+    if (ACH_VIEW[id]?.name) return tl(ACH_VIEW[id].name);
     const mt = this._m('titleName', id);
     if (mt) return mt;
     if (DATA.titles[id]) return tl(DATA.titles[id]);
@@ -1219,7 +1241,7 @@ export class UI {
     if (!host) return;
     const b = document.createElement('div');
     b.className = 'emote';
-    b.textContent = ['😄', '💪', '🎉', '✨', '😎', '💙', '⭐'][Math.floor(Math.random() * 7)];
+    b.textContent = ['😄', '💪', '🎉', '✨', '😎', '💙', '🌈'][Math.floor(Math.random() * 7)];
     host.appendChild(b);
     setTimeout(() => b.remove(), 1200);
   }
@@ -1253,7 +1275,8 @@ export class UI {
     this._titleLeaving = true;
     setTimeout(() => { this._titleLeaving = false; }, 400);
     this._blip('click');
-    if (!this.G.save?.profile?.tutorialDone) {
+    // first ever launch → straight into 1-1 (no menus); an older save that already cleared 1-1 goes Home
+    if (!this.G.save?.profile?.tutorialDone && !this._crowns(0, 0)[0]) {
       this._clearScreen();
       this.G.app?.startRun?.({ mode: 'stage', worldId: 0, stageId: 0 });
     } else this.go('home');
@@ -1305,7 +1328,7 @@ export class UI {
         </div>
         <button class="btn-play" data-act="play" data-nav data-default>
           <span class="bp-main" data-text="${esc(t('ui.play'))}">${esc(t('ui.play'))}</span>
-          <span class="bp-sub">${allDone ? '⭐ ' + esc(t('ui.allClear')) : `${stageId(n.worldId, n.stageId)} · ${esc(stageName(n.worldId, n.stageId))}`}</span>
+          <span class="bp-sub">${allDone ? '👑 ' + esc(t('ui.allClear')) : `${stageId(n.worldId, n.stageId)} · ${esc(stageName(n.worldId, n.stageId))}`}</span>
           ${fw ? `<i class="bp-tag">${esc(t('ui.firstWin'))}</i>` : ''}
           ${rested > 0 ? `<i class="bp-moon" title="${esc(t('ui.rested'))}">🌙<b>${rested}</b></i>` : ''}
         </button>
@@ -1373,6 +1396,7 @@ export class UI {
         <span class="pad-top">${boss ? enemyCube('king', { size: 40 }) : `<b class="pad-id">${stageId(w, s)}</b>`}</span>
         <span class="pad-crowns">${cr.map((c) => crown(c)).join('')}</span>
         ${st.newEnemy && un ? `<i class="pad-new">${enemyCube(st.newEnemy, { size: 22 })}</i>` : ''}
+        ${un && st.objective ? `<i class="pad-obj${cr[2] ? ' got' : ''}" title="${esc(objText(st.objective))}">${st.objective.icon}</i>` : ''}
         ${un ? '' : '<i class="pad-lock">🔒</i>'}
       </button>`;
     }).join('');
@@ -1420,7 +1444,7 @@ export class UI {
     const cr = this._crowns(w, s);
     const o = st.objective;
     const reqs = [
-      ['🏁', t('ui.crownClear')], ['💔≤2', t('ui.crownHits')], [o?.icon || '⭐', o ? objText(o) : t('obj.freeAll')],
+      ['🏁', t('ui.crownClear')], ['💔≤2', t('ui.crownHits')], [o?.icon || '👑', o ? objText(o) : t('obj.freeAll')],
     ].map(([ic, lb], i) => `<div class="req${cr[i] ? ' got' : ''}">${crown(cr[i])}<span class="req-ico">${ic}</span><small>${esc(lb)}</small></div>`).join('');
     const ne = st.newEnemy || (st.kind === 'boss' ? 'king' : null);
     const neName = ne === 'king' ? tl(DATA.boss.name) : tl(DATA.enemies[ne]?.name);
@@ -1590,7 +1614,7 @@ export class UI {
       const cur = Math.min(target, n0(mi.cur ?? mi.progress ?? 0));
       const heroName = mi.hero ? tl(heroById(mi.hero).name) : '';
       const text = (mi.text ? tl(mi.text) : tl(def.text) || String(mi.id)).replace('{n}', target).replace('{hero}', heroName);
-      return { i: mi.index ?? i, id: mi.id, icon: mi.icon || def.icon || '⭐', text, cur, target, done: mi.done ?? cur >= target,
+      return { i: mi.index ?? i, id: mi.id, icon: (mi.id === 'star3' ? '👑' : mi.icon || def.icon) || '📋', text, cur, target, done: mi.done ?? cur >= target,
         claimed: !!mi.claimed, reward: mi.reward || DATA.economy.missionReward[def.slot || 'easy'], slot: mi.slot || def.slot };
     });
     const chestRaw = m?.chest ?? this._m('dailyChest');
@@ -1828,7 +1852,7 @@ export class UI {
     if (!b) return;
     this._sfx(b.rarity === 'legend' ? 'rankup' : 'unlock');
     if (b.refund) this.queueClaim([{ coins: b.refund }], 'capsule', { title: t('ui.refund'), applied: !this._pullMode() });
-    else this.queueClaim([{ kind: b.prize.kind, id: b.prize.id }], 'capsule', { applied: false, title: t('ui.gotItem') });
+    else this.queueClaim([{ kind: b.prize.kind, id: b.prize.id }], 'capsule', { applied: false, headline: t('ui.gotItem') });
     this._afterClaim = () => { if (this.screen?.name === 'capsule') this._rerender(); };
   }
 
@@ -1887,9 +1911,11 @@ export class UI {
       }).join('');
       body = `<div class="card-grid">${cards}</div><h4 class="sub-h">🧬 ${esc(t('ui.recipe'))}</h4><div class="evo-list">${evos}</div>`;
     }
+    const dexClaims = ids.reduce((n, id) => n + D.entry(id).ms.filter((m) => m.claimable).length, 0);
+    const allBtn = dexClaims ? `<button class="btn btn-gold sm claim-all" data-act="dexAll" data-nav>${esc(t('ui.claimAll'))}${this._dot(dexClaims)}</button>` : '';
     return `${this._head(t('ui.dex'), '📖', `<span class="pill-stat">${esc(t('ui.found', { n: foundN, max: ids.length }))}</span>`)}
       <section class="panel dex-panel">
-        <div class="tabs">${['cubes', 'cards'].map((k) => `<button class="tab${k === tab ? ' on' : ''}" data-act="dexTab" data-tab="${k}" data-nav ${k === tab ? 'data-default' : ''}>${esc(t(k === 'cubes' ? 'ui.dexCubes' : 'ui.dexCards'))}</button>`).join('')}</div>
+        <div class="panel-top"><div class="tabs">${['cubes', 'cards'].map((k) => `<button class="tab${k === tab ? ' on' : ''}" data-act="dexTab" data-tab="${k}" data-nav ${k === tab ? 'data-default' : ''}>${esc(t(k === 'cubes' ? 'ui.dexCubes' : 'ui.dexCards'))}</button>`).join('')}</div>${allBtn}</div>
         <div class="scroll dex-body">${body}</div>
       </section>`;
   }
@@ -1929,7 +1955,8 @@ export class UI {
   _achData() {
     const a = this._m('achievements');
     const stats = this.G.save?.profile?.stats || {};
-    return DATA.achievements.map((def) => {
+    return DATA.achievements.map((d0) => {
+      const def = ACH_VIEW[d0.id] ? { ...d0, ...ACH_VIEW[d0.id] } : d0;
       const e = Array.isArray(a) ? a.find((x) => x.id === def.id) : a?.[def.id];
       const cur = n0(e?.cur ?? e?.value ?? stats[def.stat] ?? 0);
       const tier = Array.isArray(e?.tiers) ? e.tiers.filter((x) => x.reached).length : n0(e?.tier ?? def.tiers.filter((x) => cur >= x).length);
@@ -1948,6 +1975,7 @@ export class UI {
     if (ps.perfects != null) st.perfects = Math.max(n0(st.perfects), n0(ps.perfects));
     const pins = prof.pins.slice(0, 3);
     const tierCls = ['', 'bronze', 'silver', 'gold'];
+    const achClaims = A.filter((a) => a.claimable).length;
     const pinSlots = [0, 1, 2].map((i) => { const a = A.find((x) => x.def.id === pins[i]); return `<i class="pin-slot ${a ? tierCls[a.tier] : ''}">${a ? a.def.icon : '＋'}</i>`; }).join('');
     const badges = A.map((a) => `<button class="badge ${tierCls[a.tier]}${pins.includes(a.def.id) ? ' pinned' : ''}" data-act="${a.claimable ? 'achClaim' : 'achPin'}" data-id="${a.def.id}" data-nav>
       <span class="bd-ico">${a.def.icon}</span><b>${esc(tl(a.def.name))}</b>
@@ -1972,8 +2000,16 @@ export class UI {
           </div>
           <button class="btn btn-blue" data-act="share" data-nav>📤 ${esc(t('ui.share'))}</button>
         </section>
-        <section class="panel ach-panel"><small class="note">${esc(t('ui.pinHint'))}</small><div class="badge-grid scroll">${badges}</div></section>
+        <section class="panel ach-panel"><div class="panel-top"><small class="note">${esc(t('ui.pinHint'))}</small>${achClaims ? `<button class="btn btn-gold sm claim-all" data-act="achAll" data-nav data-default>${esc(t('ui.claimAll'))}${this._dot(achClaims)}</button>` : ''}</div><div class="badge-grid scroll">${badges}</div></section>
       </div>`;
+  }
+  /** 一键领取 on a list screen: meta's bulk call when it has one, else claim one by one */
+  _claimAllOf(bulk, each) {
+    let r;
+    if (typeof this.G.meta?.[bulk] === 'function') r = this._m(bulk);
+    else { each(); r = true; }
+    this._blip(r ? 'claim' : 'error');
+    this._rerender();
   }
   _achClaim(id) {
     const r = this._m('claimAchievement', id);
@@ -2010,7 +2046,8 @@ export class UI {
   _titlePicker() {
     const prof = this._profile();
     const owned = new Set(prof.titles || []);
-    for (const a of this._achData()) if (a.tier >= 3) owned.add(a.def.id);
+    // a meta that tracks titles only accepts claimed ones (setTitle refuses the rest)
+    if (typeof this.G.meta?.setTitle !== 'function') for (const a of this._achData()) if (a.tier >= 3) owned.add(a.def.id);
     const list = [...owned];
     this._open('titles', `<div class="panel dialog pop"><button class="x-btn" data-act="close" data-id="titles" data-nav>✕</button><h3>${esc(t('ui.pickTitle'))}</h3>
       <div class="name-list">${list.length ? list.map((id) => `<button class="btn btn-white${prof.title === id ? ' on' : ''}" data-act="titleSet" data-id="${esc(id)}" data-nav>🏷️ ${esc(this._titleName(id))}</button>`).join('') : `<p class="note">${esc(t('ui.noTitle'))}</p>`}
@@ -2283,6 +2320,7 @@ export class UI {
     this._setSetting(key, value);
     if (key === 'capsuleOn') this._m('setParent', 'capsule', value);
     else if (key === 'dailyLimit') this._m('setParent', 'limit', value);
+    else if (key === 'breakMinutes') this._m('setParent', 'breakMinutes', value);   // meta re-arms its break timer
     this._blip('click');
     this._rerender();
   }
@@ -2305,8 +2343,9 @@ export class UI {
   // ═════════ LEVEL-UP CARDS ═════════
   _cardInfo(c) {
     const id = typeof c === 'string' ? c : c?.id;
-    const def = cardById(id);
-    if (!def) return null;
+    const base = cardById(id);
+    if (!base) return null;
+    const def = CARD_VIEW[id] ? { ...base, desc: { ...base.desc, ...CARD_VIEW[id].desc } } : base;
     const evoDef = DATA.evolutions.find((e) => e.id === id);
     const evo = !!evoDef || !!c?.evolution || !!c?.isEvolution;
     const owned = this.G.run?.cards?.find?.((x) => x.id === id);
@@ -2320,10 +2359,12 @@ export class UI {
     const hasFn = typeof run?.rerollCards === 'function' || typeof run?.reroll === 'function' || typeof run?.upgrades?.reroll === 'function';
     return hasFn ? n0(run?.rerollsLeft ?? run?.upgrades?.rerollsLeft ?? run?.upgrades?.rerolls ?? 0) : 0;
   }
-  showLevelUp(choices) {
+  showLevelUp(choices, opts = {}) {
     const run = this.G.run;
     const list = [].concat(choices || []).map((c) => this._cardInfo(c)).filter(Boolean);
     if (!list.length) return;
+    // the level being resolved (player:levelup {level}) — run.level may already be ahead when several queue up
+    const shownLevel = n0(opts.level ?? (this._lvlEvt && this.time - this._lvlEvt.t < 0.5 ? this._lvlEvt.level : 0)) || n0(run?.level);
     this.hidePause();
     this.G.input?.setTouchControls?.(false);
     let rec = list.findIndex((c) => c.recommended);
@@ -2352,12 +2393,12 @@ export class UI {
     const rr = this._rerollsLeft();
     this._open('levelup', `<div class="lv-dim"></div>
       <div class="lv-wrap">
-        <div class="lv-head"><h2 class="lv-title" data-text="${esc(t('ui.levelUp'))}">${esc(t('ui.levelUp'))}</h2><span class="lv-level">${esc(t('ui.lv'))} ${n0(run?.level) || ''}</span></div>
+        <div class="lv-head"><h2 class="lv-title" data-text="${esc(t('ui.levelUp'))}">${esc(t('ui.levelUp'))}</h2>${shownLevel ? `<span class="lv-level">${esc(t('ui.lv'))} ${shownLevel}</span>` : ''}</div>
         <p class="lv-sub">${esc(t('ui.pickCard'))}</p>
         <div class="lv-cards n${n}">${cards}</div>
         ${rr > 0 ? `<button class="btn btn-white sm lv-reroll" data-act="reroll" data-nav>🔄 ${esc(t('ui.rerollCards'))} ×${rr}</button>` : ''}
       </div>`, { back: false, cls: 'guard' });
-    this.lvl = { list, t: 0, t0: performance.now(), picked: false };
+    this.lvl = { list, t: 0, t0: performance.now(), picked: false, level: shownLevel };
     const evoI = list.findIndex((c) => c.evo);
     if (evoI >= 0) {
       this._sfx('star');
@@ -2405,10 +2446,10 @@ export class UI {
   _rerollCards() {
     const run = this.G.run;
     if (!this.lvl || this.lvl.picked || this.lvl.t < TUNE.levelGuard) return;
-    const r = run?.rerollCards?.() ?? run?.reroll?.() ?? run?.upgrades?.reroll?.();
-    if (r === false || r === undefined && !this.lvl) { this._blip('error'); return; }
+    const r = typeof run?.rerollCards === 'function' ? run.rerollCards() : typeof run?.reroll === 'function' ? run.reroll() : run?.upgrades?.reroll?.();
+    if (r === false || r === null) { this._blip('error'); this._shake(this._ovl('levelup')?.el.querySelector('.lv-reroll')); return; }
     this._sfx('whoosh');
-    if (Array.isArray(r) && r.length) this.showLevelUp(r);   // (else: run re-emitted player:levelup → main re-called us)
+    if (Array.isArray(r) && r.length) this.showLevelUp(r, { level: this.lvl?.level });   // (else: run re-emitted player:levelup → main re-called us)
   }
 
   // ═════════ PAUSE ═════════
@@ -2434,7 +2475,7 @@ export class UI {
       <div class="panel pause-panel pop">
         <h2 class="ribbon"><span>❚❚ ${esc(t('ui.paused'))}</span></h2>
         <div class="pp-stage">${esc(stageLbl)}</div>
-        ${mode === 'stage' && o ? `<div class="pp-crown3">${crown(!!o.done)}<span class="pp-ico">${o.icon || '⭐'}</span><b>${esc(objText(o))}</b><span class="pp-prog">${n0(o.cur)}/${n0(o.target)}</span></div>` : ''}
+        ${mode === 'stage' && o ? `<div class="pp-crown3">${crown(!!o.done)}<span class="pp-ico">${o.icon || '👑'}</span><b>${esc(objText(o))}</b><span class="pp-prog">${n0(o.cur)}/${n0(o.target)}</span></div>` : ''}
         <h4 class="pp-h">${esc(t('ui.howTo'))}</h4>
         ${this._rulesHTML()}
         <div class="pp-btns">
@@ -2498,7 +2539,7 @@ export class UI {
     const q = (sel) => this._ovl('results')?.el.querySelector(sel);
     const show = (sel) => q(sel)?.classList.add('show');
     if (stageMode && win) {
-      const labels = [['🏁', t('ui.crownClear')], ['💔≤2', t('ui.crownHits')], [obj?.icon || '⭐', obj ? objText(obj) : t('obj.freeAll')]];
+      const labels = [['🏁', t('ui.crownClear')], ['💔≤2', t('ui.crownHits')], [obj?.icon || '👑', obj ? objText(obj) : t('obj.freeAll')]];
       rows.push(`<div class="rrow crowns-row step" data-step="crowns">${labels.map(([ic, lb], i) => `<div class="rc-slot${flags[i] ? ' got' : ''}${isNew(i) ? ' new' : ''}" data-i="${i}">${crown(flags[i], 'big')}<span class="rc-ico">${ic}</span><small>${esc(lb)}</small>${isNew(i) ? `<i class="rc-new">${esc(t('ui.new'))}</i>` : ''}</div>`).join('')}</div>`);
       steps.push({ d: C.crown * 0.5, start: () => show('.crowns-row') });
       flags.forEach((f, i) => steps.push({ d: C.crown, end: () => { const el = q(`.rc-slot[data-i="${i}"]`); el?.classList.add('stamped'); if (f && !this.casc?.silent) { this._sfx('star', { pitch: 1 + i * 0.25 }); this.G.input?.rumble?.(0.2, 0.3, 60); } } }));
@@ -2511,7 +2552,9 @@ export class UI {
     if (!stageMode) {
       const wave = n0(results.wave ?? results.wavesCleared);
       const medal = results.medal ?? rewards.medal;
-      rows.push(`<div class="rrow mode-row step"><span class="mr-wave">🌌 ${esc(t('ui.wave', { n: wave || 1 }))}</span><span class="mr-freed">🕊️ ${fmtInt(freedRun)}</span>${medal != null && medal >= 0 ? `<span class="mr-medal">${['🥉', '🥈', '🥇'][medal] || '🏅'} ${esc(t('ui.medalGot'))}</span>` : ''}</div>`);
+      const lead = mode === 'rush' ? `<span class="mr-wave">👑 ×${n0(results.bossKills ?? rewards.bossKills)}</span>`
+        : mode === 'storm' ? '' : `<span class="mr-wave">🌌 ${esc(t('ui.wave', { n: wave || 1 }))}</span>`;
+      rows.push(`<div class="rrow mode-row step">${lead}<span class="mr-freed">🕊️ ${fmtInt(freedRun)}</span>${medal != null && medal >= 0 ? `<span class="mr-medal">${['🥉', '🥈', '🥇'][medal] || '🏅'} ${esc(t('ui.medalGot'))}</span>` : ''}</div>`);
       steps.push({ d: C.missions, start: () => show('.mode-row') });
     }
     const score = n0(results.score);
@@ -2521,9 +2564,16 @@ export class UI {
     }
     const troph = n0(rewards.trophies);
     if (troph > 0 && (rewards.rankVisible ?? this._unlocked('modes'))) {
-      const rk = rewards.rankAfter || this._mv('rank', null);
-      rows.push(`<div class="rrow troph-row step">${rankBadge(rk, 40)}<span class="tr-name">${esc(rankName(rk))}</span><b class="tr-plus">+<b class="cnt tr-n">0</b> 🏆</b></div>`);
-      steps.push({ d: C.trophies, start: () => show('.troph-row'), tick: (k) => { const e = q('.tr-n'); if (e) e.textContent = Math.round(troph * k); } });
+      const rk = rewards.rankAfter || this._mv('rank', null), rb = rewards.rankBefore || null;
+      // trophies fill the bar toward the next ★; a star-up pops inline (a new material tier gets the full ceremony)
+      const up = !!(rewards.rankUp ?? (rb && rk && n0(rk.step) > n0(rb.step)));
+      const p0 = clamp(n0(up ? rb?.progress : rb?.progress ?? rk?.progress), 0, 1), p1 = clamp(n0(rk?.progress), 0, 1);
+      const legend = DATA.ranks.find((x) => x.id === rk?.id)?.legendEvery;
+      const starsTxt = legend ? `★${n0(rk?.stars) || 1}` : '★'.repeat(Math.max(1, n0(rk?.stars)));
+      rows.push(`<div class="rrow troph-row step">${rankBadge(rk, 40)}<div class="tr-mid"><span class="tr-name">${esc(rankName(rk))} <i class="tr-stars">${starsTxt}</i></span><i class="bar tr-bar"><i class="fill" style="width:${Math.round(p0 * 100)}%"></i></i></div><b class="tr-plus">+<b class="cnt tr-n">0</b> 🏆</b>${up ? `<i class="tr-up">${rewards.tierUp ? '🎉' : '★+1'}</i>` : ''}</div>`);
+      steps.push({ d: C.trophies, start: () => show('.troph-row'),
+        tick: (k) => { const e = q('.tr-n'); if (e) e.textContent = Math.round(troph * k); const f = q('.tr-bar .fill'); if (f) f.style.width = lerp(p0, up ? 1 : p1, easeOutCubic(k)) * 100 + '%'; },
+        end: () => { if (!up) return; const f = q('.tr-bar .fill'); if (f) f.style.width = p1 * 100 + '%'; q('.tr-up')?.classList.add('pop'); if (!this.casc?.silent) this._sfx('star', { pitch: 1.5 }); } });
     }
     if (this._unlocked('road')) {
       const after = n0(rewards.freedAfter ?? this._mv('freed', 0));
@@ -2565,10 +2615,16 @@ export class UI {
     if (!win) {
       const hb = results.hitBy ?? run?.hitBy ?? results.lastHitBy ?? run?.lastHitBy;
       let type = typeof hb === 'string' ? hb : hb && typeof hb === 'object' ? Object.entries(hb).sort((a, b) => n0(b[1]) - n0(a[1]))[0]?.[0] : null;
-      if (type === 'boss') type = 'king';
-      if (!type || !(DATA.enemies[type] || type === 'king')) type = bossStage ? 'king' : st?.newEnemy || DATA.worlds[w]?.newEnemy || 'grumpy';
-      const tip = type === 'king' ? t('tip.boss') : tl(DATA.enemies[type]?.tip);
-      tipHTML = `<div class="tip-card step">${enemyCube(type, { size: 48 })}<div><b>💡 ${esc(t('ui.tip'))}</b><p>${esc(tip)}</p></div></div>`;
+      // run.lastHitBy is an enemy type or a hazard kind (enemies.js / boss.js hazards, player.js storm & holes)
+      type = HIT_KIND[type] ?? type;
+      let tip, vis;
+      if (type === 'storm' || type === 'fall') { tip = t('tip.' + type); vis = `<span class="tip-emo">${type === 'storm' ? '🌪️' : '🕳️'}</span>`; }
+      else {
+        if (!type || !(DATA.enemies[type] || type === 'king')) type = bossStage ? 'king' : st?.newEnemy || DATA.worlds[w]?.newEnemy || 'grumpy';
+        tip = type === 'king' ? t('tip.boss') : tl(DATA.enemies[type]?.tip);
+        vis = enemyCube(type, { size: 48 });
+      }
+      tipHTML = `<div class="tip-card step">${vis}<div><b>💡 ${esc(t('ui.tip'))}</b><p>${esc(tip)}</p></div></div>`;
       steps.push({ d: 0.3, start: () => show('.tip-card') });
       const offer = rewards.helperOffer ?? (this.fails[key] >= TUNE.helperAfterFails && !this._settings().assist);
       if (stageMode && offer && !this._settings().assist && !this.helperOffered) {
@@ -2694,9 +2750,15 @@ export class UI {
   _showClaim(entry) {
     const items = rewardItems(entry.rewards);
     if (!items.length) return;
-    const title = entry.title || (entry.source === 'welcome' ? t('ui.welcomeBack') : t('ui.youGot'));
+    // headline = "恭喜获得!" (brief §4.3) unless the moment has its own (welcome back / rank / badge / capsule);
+    // the source ("银河之路", "任务奖励" …) goes in the small pill under it — never the same words twice
     const sk = 'src.' + entry.source;
-    const src = entry.source && t(sk) !== sk ? t(sk) : '';
+    const srcLbl = entry.source && t(sk) !== sk ? t(sk) : '';
+    let title = entry.headline || t('ui.youGot'), src = entry.title || srcLbl;
+    if (entry.source === 'welcome') title = t('ui.welcomeBack');
+    else if (!entry.headline && entry.title && OWN_HEADLINE.includes(entry.source)) { title = entry.title; src = srcLbl; }
+    const bare = (s) => String(s || '').replace(/[!！?？.。\s]/g, '').toLowerCase();
+    if (bare(src) === bare(title)) src = '';
     const cards = items.map((it, i) => `<div class="ci r-${it.rarity}" data-kind="${it.kind}" style="--d:${120 + i * 80}ms">
       <span class="ci-vis">${itemVisual(it.kind, it.id, 60)}</span>${it.amount ? `<i class="ci-amt">×${fmtInt(it.amount)}</i>` : ''}<b class="ci-name">${esc(it.label)}</b></div>`).join('');
     const o = this._open('claim', `<div class="ovl-dim dark"></div><div class="rays"></div>
@@ -2717,9 +2779,18 @@ export class UI {
     const e = o.entry || {};
     this._blip('claim');
     if (e.id != null) this._m('claim', e.id);
-    if (e.pulled) { const it = rewardItems(e.rewards); e.coins = it.filter((x) => x.kind === 'coins').reduce((a, x) => a + n0(x.amount), 0); e.tickets = it.filter((x) => x.kind === 'tickets').reduce((a, x) => a + n0(x.amount), 0); }
+    if (e.pulled) {
+      // meta.claimQueue popup: acknowledge NOW (a delayed ackClaim would clear the *next* popup's
+      // "showing" record once the queue pumps on) and hold the amount back locally until the
+      // coin fly-in lands, so the top-bar counter still ticks up on arrival.
+      const it = rewardItems(e.rewards);
+      e.coins = it.filter((x) => x.kind === 'coins').reduce((a, x) => a + n0(x.amount), 0);
+      e.tickets = it.filter((x) => x.kind === 'tickets').reduce((a, x) => a + n0(x.amount), 0);
+      this._m('ackClaim');
+      e.applied = true;
+      this.pending.coins += e.coins; this.pending.tickets += e.tickets;
+    }
     const dur = this._flyRewards(o.el, e);
-    if (e.pulled) setTimeout(() => { this._m('ackClaim'); this._walletTick(); }, dur);
     const coins = e.applied ? e.coins || 0 : 0, tickets = e.applied ? e.tickets || 0 : 0;
     setTimeout(() => {
       this.pending.coins = Math.max(0, this.pending.coins - coins);
@@ -3066,6 +3137,8 @@ export class UI {
 function seedFrom(s) { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
 
 addStrings({
-  zh: { 'ui.placement': '段位定级!', 'feat.signin': '每天来点一下签到，就有礼物!', 'ui.r3': '解救!', 'ui.r4': '完美!', 'tip.boss': '大王砸地后会晕倒，冲向它发光的核心!' },
-  en: { 'ui.placement': 'Your rank!', 'feat.signin': 'Tap Sign-in once a day for a gift!', 'ui.r3': 'POP!', 'ui.r4': 'PERFECT!', 'tip.boss': 'After King Glitch slams he gets dizzy — dash into his glowing core!' },
+  zh: { 'ui.placement': '段位定级!', 'feat.signin': '每天来点一下签到，就有礼物!', 'ui.r3': '解救!', 'ui.r4': '完美!', 'tip.boss': '大王砸地后会晕倒，冲向它发光的核心!',
+    'tip.storm': '风暴墙外会掉心，待在亮圈里面!', 'tip.fall': '地板一闪一闪时，快跳到别的地方!' },
+  en: { 'ui.placement': 'Your rank!', 'feat.signin': 'Tap Sign-in once a day for a gift!', 'ui.r3': 'POP!', 'ui.r4': 'PERFECT!', 'tip.boss': 'After King Glitch slams he gets dizzy — dash into his glowing core!',
+    'tip.storm': 'Stay inside the glowing circle — the storm stings!', 'tip.fall': 'Flickering tiles vanish — hop off them fast!' },
 });
