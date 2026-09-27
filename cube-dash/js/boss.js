@@ -5,7 +5,7 @@
 // (isBoss:true) so dash / aim-assist code sees it like any other cube.
 //   read:  hp, maxHp, name, x, z, radius, coreOpen, stagger, staggerMax,
 //          harmful, smashable, phase, weary, mode, dead, speedK
-//   call:  hitCore({perfect})  → bool  (dash into the OPEN core: 1 crack, perfect 2)
+//   call:  hitCore({perfect})  → bool  (dash into the OPEN core: 1 crack — a perfect still counts 1, kid rule §7.13)
 //          novaHit()           → bool  (1 crack + dizzy 3 s)
 //          addStagger(v, src)  (knocked cube +34, bonk near +10, perfect near +15)
 //          onKnock(...)        (dash into the shell: CLANG, no effect)
@@ -671,7 +671,8 @@ export class Boss {
     if (this.dead || this.mode === 'intro' || this.mode === 'phase') return false;
     if (this.mode === 'chase') return this._chaseHit();
     if (!this.coreOpen || this.hitCd > 0 || this.invulnT > 0) return false;
-    this._crack(perfect ? 2 : 1, perfect);
+    // Kid-UX §7.13: every core dash is exactly 1 crack (a perfect gets the bigger stamp/slow-mo, not double damage)
+    this._crack(1, perfect);
     if (!this.dead && this.mode === 'dizzy') {
       this.coreOpen = false; this.mode = 'recoil'; this.modeT = 0;
       const p = this.run?.player;
