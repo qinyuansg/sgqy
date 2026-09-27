@@ -24,7 +24,7 @@ import { DATA } from './data.js';
 // ============ tuning ============
 const TUNE = {
   mix: {
-    master: 0.8, music: 0.45, sfx: 0.8, ui: 0.6,
+    master: 0.8, music: 0.34, sfx: 0.8, ui: 0.6,
     comp: { threshold: -18, knee: 12, ratio: 4, attack: 0.003, release: 0.15 },
     limiter: { threshold: -3, knee: 0, ratio: 20, attack: 0.001, release: 0.08 },
     softClip: true,              // final tanh-ish shaper: peak can never reach 1.0
@@ -54,6 +54,14 @@ const TUNE = {
     freeBpm: 110,                           // beat phase keeps ticking with no music
     endless: { bpmStep: 2, every: 60, maxBpm: 144, keyEvery: 180, keyStep: 2, maxKey: 4 },
     bossPhase: { semis: 1, bpm: 4 },
+  },
+  // per-sound mix trims (measured with _dev/audio offline renders: core verbs ≈ 0.35–0.45 peak,
+  // telegraphs ≈ 0.2, ambient/UI ticks ≈ 0.05–0.15)
+  level: {
+    zap: 0.5, bolt: 0.8, babble: 0.6, stomp: 0.8, miniNova: 0.7, dash: 0.8,
+    crystal: 1.6, nearMiss: 1.4, coin: 3, freed: 2.5, dizzy: 1.5, whoosh: 3.5, open: 3.5, coinTick: 2,
+    cue: 1.6, windup: 2, checkpoint: 2, coinBurst: 2, motif: 2.2, novaReady: 2.2, land: 0.6, wave: 1.8,
+    claim: 1.8, buy: 1.8, milestone: 1.8,
   },
   ladder: { reset: 1.2, max: 10 },          // smash chime: 2 octaves of pentatonic
   crystalLadder: { reset: 0.5, max: 7 },
@@ -1322,7 +1330,7 @@ export class AudioSys {
     const ctx = this.ctx;
     const sp = this._spatial(o);
     const out = ctx.createGain();
-    out.gain.value = clamp((o.volume ?? o.gain ?? 1) * sp.g, 0, 2);
+    out.gain.value = clamp((o.volume ?? o.gain ?? 1) * sp.g * (TUNE.level[name] ?? 1), 0, 4);
     let tail = out;
     if (sp.pan && ctx.createStereoPanner) {
       const pn = ctx.createStereoPanner(); pn.pan.value = sp.pan;
