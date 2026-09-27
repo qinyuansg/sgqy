@@ -2483,6 +2483,7 @@ export class UI {
     const stageLbl = mode === 'stage' && st ? `${stageId(w, st.index ?? 0)} · ${tl(st.name)}` : tl(DATA.modes[mode]?.name);
     this._open('pause', `<div class="ovl-dim"></div>
       <div class="panel pause-panel pop">
+        <button class="pp-gear" data-act="settings" data-nav aria-label="${esc(t('ui.settings'))}" title="${esc(t('ui.settings'))}">⚙</button>
         <h2 class="ribbon"><span>❚❚ ${esc(t('ui.paused'))}</span></h2>
         <div class="pp-stage">${esc(stageLbl)}</div>
         ${mode === 'stage' && o ? `<div class="pp-crown3">${crown(!!o.done)}<span class="pp-ico">${o.icon || '👑'}</span><b>${esc(objText(o))}</b><span class="pp-prog">${n0(o.cur)}/${n0(o.target)}</span></div>` : ''}
@@ -2492,7 +2493,6 @@ export class UI {
           <button class="btn btn-gold big" data-act="resume" data-nav data-default>▶ ${esc(t('ui.resume'))}</button>
           <button class="btn btn-blue" data-act="restart" data-nav>↻ ${esc(t('ui.restart'))}</button>
           <button class="btn btn-white" data-act="quit" data-nav>🏠 ${esc(t('ui.home'))}</button>
-          <button class="btn btn-white" data-act="settings" data-nav>⚙️ ${esc(t('ui.settings'))}</button>
           <button class="btn btn-white helper-btn${assist ? ' on' : ''}" data-act="helper" data-nav>🧸 ${esc(t('ui.helper'))} <i class="toggle mini${assist ? ' on' : ''}"><i></i></i></button>
         </div>
       </div>`, { back: () => this.G.app?.resume?.() });
