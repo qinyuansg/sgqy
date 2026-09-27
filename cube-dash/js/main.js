@@ -387,7 +387,8 @@ let coveredFrame = 0;
 G.world.load(DATA.worlds[0].id);
 hubSetHero(G.meta.selectedHero, G.meta.selectedSkin?.(G.meta.selectedHero) ?? null);
 hubShow(true);
-G.cam.setHub(true, { x: 0, y: 0.8, z: 0 });
+// title framing: the hero sits in the band between the logo and the "press any key" pill
+G.cam.setHub(true, { x: 0, y: 1.15, z: 0 });
 app.state = 'title';
 G.ui.go('title');
 document.getElementById('boot')?.remove();

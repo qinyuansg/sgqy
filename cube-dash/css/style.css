@@ -431,7 +431,7 @@ noscript { position: fixed; inset: 0; display: grid; place-items: center; font: 
 #ui .logo-block { position: relative; display: flex; flex-direction: column; align-items: center; animation: logoDrop .9s var(--spring) both; }
 #ui .logo {
   --oc: var(--outline); --oc2: var(--navy-2); --ow: clamp(14px, 2vw, 22px); --ex: clamp(7px, 1vw, 12px);
-  margin: 0; font: 900 clamp(56px, 10vw, 136px)/1.08 var(--font); letter-spacing: .03em; white-space: nowrap; color: #fff;
+  margin: 0; font: 900 clamp(52px, min(8.4vw, 14vh), 116px)/1.08 var(--font); letter-spacing: .03em; white-space: nowrap; color: #fff;
 }
 #ui .logo::after { /* soft top-to-bottom sheen on the white fill */
   content: attr(data-text); position: absolute; left: 0; top: 0; width: 100%; pointer-events: none;
