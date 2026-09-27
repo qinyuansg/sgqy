@@ -75,6 +75,8 @@ const SCALES = {
   minorPent: [0, 3, 5, 7, 10],
 };
 const mtof = (m) => 440 * Math.pow(2, (m - 69) / 12);
+/** finite number or fallback (payloads come from many modules — never feed NaN to an AudioParam) */
+const num = (v, d = 0) => (typeof v === 'number' && Number.isFinite(v) ? v : d);
 /** MIDI note of pentatonic degree d (0 = root) above `root` */
 function degMidi(root, scale, d) {
   const s = SCALES[scale] || SCALES.majorPent;
@@ -660,8 +662,16 @@ export class AudioSys {
 
   update(rdt = 1 / 60) {
     this._frameNo++;
+    rdt = clamp(num(rdt, 1 / 60), 0, 0.25);
     if (!this.ctx) { this._freeBeat(rdt); return; }
-    this._frame(rdt, this._now());
+    try { this._frame(rdt, this._now()); } catch (err) { this._warnOnce('frame', err); }
+  }
+
+  _warnOnce(key, err) {
+    this._warned ||= new Set();
+    if (this._warned.has(key)) return;
+    this._warned.add(key);
+    console.warn('[audio] ' + key + ' failed (further errors muted)', err);
   }
 
   music(track) {
@@ -703,11 +713,12 @@ export class AudioSys {
     const recipe = SFX[name];
     if (!recipe) { if (this.debug) console.warn('[audio] unknown sfx', name); return null; }
     if (!this._allow(name)) return null;
-    let t = opts.at ?? (this._now() + 0.005);
+    if (!opts || typeof opts !== 'object') opts = {};
+    let t = Number.isFinite(opts.at) ? Math.max(opts.at, this._now()) : this._now() + 0.005;
     if (QUANTISED.has(name) && opts.at == null) t = this._nextEighth(t);
     const bus = UI_SOUNDS.has(name) && !this.G?.run ? this._uiIn : this._sfxIn;
     const v = this._voiceBegin(name, bus, t, opts);
-    this._pm = opts.pitch > 0 ? opts.pitch : 1;
+    this._pm = num(opts.pitch, 1) > 0 ? clamp(opts.pitch, 0.25, 4) : 1;
     this._cur = v;
     let dur = 0.5;
     try { dur = recipe(this, t, opts, v.out) || 0.5; } catch (err) { console.warn('[audio] sfx failed', name, err); }
@@ -788,7 +799,10 @@ export class AudioSys {
     this._pulse25 = pw(0.25); this._pulse12 = pw(0.125);
     // scheduler timer (realtime only; offline tests pump manually)
     if (!offline && typeof setInterval !== 'undefined') {
-      this._timer = setInterval(() => { if (this.ctx.state === 'running') this._pumpMusic(this._now()); }, TUNE.music.timerMs);
+      this._timer = setInterval(() => {
+        if (this.ctx.state !== 'running') return;
+        try { this._pumpMusic(this._now()); } catch (err) { this._warnOnce('scheduler', err); }
+      }, TUNE.music.timerMs);
     }
     if (this.track) this._startTrack(this.track);
   }
@@ -1175,14 +1189,15 @@ export class AudioSys {
     f.inRun = true; f.state = st;
     f.active = ACTIVE_STATES.has(st);
     f.paused = st === 'paused' || st === 'levelup';
-    f.style = run.combo | 0;
+    f.style = num(run.combo, 0) | 0;
     f.novaReady = run.novaReady ?? (run.nova >= 1);
     f.fever = f.fever || !!run.fever;
     const p = run.player;
-    f.danger = !!p && (p.maxHp ?? 2) > 1 && p.hp <= 1 && p.hp > 0;
+    const hp = num(p?.hp, 9), maxHp = num(p?.maxHp, 9);
+    f.danger = !!p && maxHp > 1 && hp <= 1 && hp > 0;
     f.boss = !!(run.boss || run.enemies?.boss);
-    f.progress = run.progress ?? 0;
-    const sc = G.time?.scale ?? 1;
+    f.progress = clamp(num(run.progress, 0), 0, 1);
+    const sc = num(G.time?.scale, 1);
     this._slowT = sc > 0 && sc < 0.9 ? this._slowT + rdt : 0;
     // state transitions → stingers / drops
     if (st !== prev) {
@@ -1216,7 +1231,7 @@ export class AudioSys {
         if (list && p) for (let i = 0; i < list.length; i++) { const e = list[i]; if (e && e.harmful !== false && (e.x - p.x) ** 2 + (e.z - p.z) ** 2 < 64) n++; }
         this._iNear = n;
       }
-      const lowHp = p && p.maxHp > 0 && p.hp / p.maxHp < 0.3 ? 0.3 : 0;
+      const lowHp = p && maxHp > 0 && hp / maxHp < 0.3 ? 0.3 : 0;
       target = clamp(0.25 * f.progress + 0.04 * this._iNear + lowHp + (f.style >= 5 ? 0.2 : 0), 0, 1);
     }
     if (f.boss) target = Math.max(0.7, target);
@@ -1311,8 +1326,8 @@ export class AudioSys {
   }
 
   _spatial(o) {
-    if (o.pan != null) return { pan: clamp(+o.pan || 0, -1, 1), g: 1 };
-    if (o.x == null || o.z == null) return { pan: 0, g: 1 };
+    if (o.pan != null) return { pan: clamp(num(o.pan, 0), -1, 1), g: 1 };
+    if (!Number.isFinite(o.x) || !Number.isFinite(o.z)) return { pan: 0, g: 1 };
     let pan = null;
     try {
       const sc = this.G?.cam?.worldToScreen?.(o.x, o.y ?? 0.5, o.z);
@@ -1322,8 +1337,8 @@ export class AudioSys {
     if (pan === null) pan = o.x / (this.G?.world?.arenaRadius || 12);
     let g = 1;
     const p = this.G?.run?.player;
-    if (p && Number.isFinite(p.x)) g = 1 / (1 + Math.hypot(o.x - p.x, o.z - p.z) / 12);
-    return { pan: clamp(pan, -0.7, 0.7), g };
+    if (p && Number.isFinite(p.x) && Number.isFinite(p.z)) g = 1 / (1 + Math.hypot(o.x - p.x, o.z - p.z) / 12);
+    return { pan: clamp(num(pan, 0), -0.7, 0.7), g };
   }
 
   _voiceBegin(name, bus, t, o) {
@@ -1343,7 +1358,7 @@ export class AudioSys {
     const ctx = this.ctx;
     const sp = this._spatial(o);
     const out = ctx.createGain();
-    out.gain.value = clamp((o.volume ?? o.gain ?? 1) * sp.g * (TUNE.level[name] ?? 1), 0, 4);
+    out.gain.value = clamp(num(o.volume ?? o.gain, 1) * sp.g * (TUNE.level[name] ?? 1), 0, 4);
     let tail = out;
     if (sp.pan && ctx.createStereoPanner) {
       const pn = ctx.createStereoPanner(); pn.pan.value = sp.pan;
@@ -1758,7 +1773,7 @@ const SFX = {
   },
   // ---------- combo / pickups ----------
   milestone(A, t, o, out) {
-    const c = o.count || 5;
+    const c = num(o.count, 5);
     const n = c >= 100 ? 7 : c >= 50 ? 6 : c >= 25 ? 5 : c >= 10 ? 4 : 3;
     for (let i = 0; i < n; i++) A._tone('square', A._deg(3 + i, 0), null, t + i * 0.055, 0.08, 0.05, out, 0.002);
     A._bell(A._deg(3 + n, 0), t + n * 0.055, 0.8, 0.08, out);
@@ -1789,7 +1804,7 @@ const SFX = {
   magnet(A, t, o, out) { A._nz(t, 0.4, 0.12, out, 'bandpass', 500, 4000, 1.5, 0.05); A._chime([5, 6, 7, 8, 9], t + 0.15, 0.04, 0.3, 0.05, out, 0, 'bell'); return 0.7; },
   // ---------- enemies ----------
   portal(A, t, o, out) {
-    const dur = clamp(o.delay || DATA.TUNE?.spawn?.portalTime || 1.1, 0.3, 3);
+    const dur = clamp(num(o.delay, 0) || DATA.TUNE?.spawn?.portalTime || 1.1, 0.3, 3);
     const c = A._osc('sine', 200, t, t + dur + 0.1);
     c.frequency.exponentialRampToValueAtTime(800 * A._pm, t + dur);
     const m = A._osc('sine', 100, t, t + dur + 0.1);
@@ -1802,10 +1817,10 @@ const SFX = {
     A._tone('sine', 300, 700, t + dur, 0.06, 0.08, out, 0.002);
     return dur + 0.15;
   },
-  land(A, t, o, out) { const s = clamp(o.size || 1, 0.5, 2); A._tone('sine', 180 / s, 90 / s, t, 0.08, 0.1 * s, out, 0.002); return 0.12; },
+  land(A, t, o, out) { const s = clamp(num(o.size, 1), 0.5, 2); A._tone('sine', 180 / s, 90 / s, t, 0.08, 0.1 * s, out, 0.002); return 0.12; },
   bonk(A, t, o, out) {
-    const s = o.strength;
-    const k = s == null ? 1 : s <= 1 ? 0.6 + 0.4 * s : clamp(0.6 + s / 20, 0.6, 1.2);
+    const s = num(o.strength, -1);
+    const k = s < 0 ? 1 : s <= 1 ? 0.6 + 0.4 * s : clamp(0.6 + s / 20, 0.6, 1.2);
     A._pm *= rnd(0.94, 1.06);
     const wb = A._osc('square', 1200, t, t + 0.04);
     const bp = A._filter('bandpass', 1200, 4); wb.connect(bp); bp.connect(A._env(t, 0.001, 0.35 * k, 0, 0.015, out));
@@ -1829,12 +1844,12 @@ const SFX = {
     const E = DATA.enemies || {};
     const type = o.type;
     if (type === 'popper') {
-      const fuse = clamp(o.fuse ?? o.time ?? E.popper?.fuse ?? 2, 0.4, 4);
+      const fuse = clamp(num(o.fuse, num(o.time, E.popper?.fuse ?? 2)), 0.4, 4);
       [0, 0.4, 0.68, 0.84, 0.93].forEach((u, i) => A._tone('square', 1320 * Math.pow(2, i / 24), null, t + u * fuse, 0.05, 0.05, out, 0.001));
       return fuse + 0.1;
     }
     if (type === 'beamer') {
-      const dur = clamp(o.time ?? E.beamer?.telegraph ?? 1.2, 0.3, 3);
+      const dur = clamp(num(o.time, E.beamer?.telegraph ?? 1.2), 0.3, 3);
       const s = A._osc('sawtooth', 600, t, t + dur + 0.1);
       s.frequency.exponentialRampToValueAtTime(1100 * A._pm, t + dur);
       A._vibrato(s, 880, t, t + dur);
@@ -1845,7 +1860,7 @@ const SFX = {
       A._tone('square', 1800, 900, t + dur, 0.12, 0.05, out, 0.002);    // zap
       return dur + 0.2;
     }
-    const dur = clamp(o.time ?? (type === 'zippy' ? E.zippy?.windup : 0.6) ?? 0.8, 0.2, 3);
+    const dur = clamp(num(o.time, (type === 'zippy' ? E.zippy?.windup : 0.6) ?? 0.8), 0.2, 3);
     const s = A._osc('square', 300, t, t + dur + 0.05);
     s.frequency.exponentialRampToValueAtTime(900 * A._pm, t + dur);
     const lp = A._filter('lowpass', 2000, 1); s.connect(lp);
@@ -1856,7 +1871,7 @@ const SFX = {
   },
   smash(A, t, o, out) {
     const L = A._ladder;
-    const chain = Math.max(0, (o.combo | 0) - 1);
+    const chain = clamp((num(o.combo, 0) | 0) - 1, 0, 99);
     const next = t - L.t < TUNE.ladder.reset ? L.idx + 1 : 0;
     L.idx = Math.min(TUNE.ladder.max, Math.max(chain, next)); L.t = t;
     const k = o.byNova ? 0.7 : 1;
@@ -1865,7 +1880,7 @@ const SFX = {
     A._nz(t, 0.06, 0.22 * k, out, 'bandpass', 1200, 500, 1, 0.001);
     A._tone('triangle', A._deg(L.idx, 0), null, t + 0.01, 0.3, 0.15, out, 0.002);
     A._bell(A._deg(L.idx, 1), t + 0.01, 0.35, 0.045, out);
-    if ((o.size || 1) >= 1.3) A._tone('sine', 90, 40, t, 0.15, 0.3, out, 0.002);
+    if (num(o.size, 1) >= 1.3) A._tone('sine', 90, 40, t, 0.15, 0.3, out, 0.002);
     return 0.45;
   },
   freed(A, t, o, out) { [0, 2, 3].forEach((d, i) => A._tone('square', A._deg(d, 1), null, t + 0.05 + i * 0.04, 0.04, 0.03, out, 0.002)); return 0.25; },
@@ -1923,7 +1938,7 @@ const SFX = {
   bossHit(A, t, o, out) {
     crack(A, t, out, 0.3);
     A._nz(t + 0.02, 0.3, 0.12, out, 'highpass', 5000, null, 0.7, 0.001);
-    const done = Math.max(0, (o.maxHp ?? 5) - (o.hp ?? 4));
+    const done = clamp(num(o.maxHp, 5) - num(o.hp, 4), 0, 6) | 0;
     A._bell(A._deg(5 + done * 2, 0), t + 0.03, 0.8, 0.12, out);
     A._tone('sine', 100, 45, t, 0.2, 0.4, out, 0.002);
     return 0.9;
