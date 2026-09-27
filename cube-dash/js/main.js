@@ -165,7 +165,7 @@ function hubUpdate(dt) {
     if (hub.jumpT > 0) {
       hub.jumpT += dt;
       const k = hub.jumpT / 0.55;
-      y = Math.sin(Math.min(1, k) * Math.PI) * 1.1;
+      y = Math.sin(Math.min(1, k) * Math.PI) * 0.6;   // small hop: stays clear of the title logo
       if (k >= 1) { hub.jumpT = 0; hub.hero.squash?.(1.25, 0.75, 1.25); }
     } else if (Math.random() < dt * 0.08) hub.jumpT = 0.001;
     hub.hero.group.position.y = y;

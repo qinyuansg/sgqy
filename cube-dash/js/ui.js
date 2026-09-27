@@ -1061,6 +1061,7 @@ export class UI {
       case 'misClaim': this._claimMission(+d.i); break;
       case 'misAll': this._claimMissionAll(); break;
       case 'misReroll': this._rerollMission(+d.i); break;
+      case 'misDemo': this._misDemo(el, d.id); break;
       case 'dailyChest': this._claimDailyChest(); break;
       case 'signinClaim': this._claimSignin(); break;
       // --- capsule ---
@@ -1676,7 +1677,7 @@ export class UI {
     const M = this._missionData();
     const rows = M.list.map((mi) => `
       <div class="mis-row${mi.done ? ' done' : ''}${mi.claimed ? ' claimed' : ''}">
-        <span class="mis-ico">${mi.icon}</span>
+        <button class="mis-ico" data-act="misDemo" data-i="${mi.i}" data-id="${esc(mi.id)}" data-nav aria-label="?">${mi.icon}<i class="mis-q">?</i></button>
         <div class="mis-mid"><b>${esc(mi.text)}</b><i class="bar"><i style="width:${Math.round((mi.cur / mi.target) * 100)}%"></i></i><small>${fmtInt(mi.cur)} / ${fmtInt(mi.target)}</small></div>
         <span class="mis-rw">${rewardIconLine(mi.reward)}</span>
         ${mi.claimed ? `<i class="stamp sm">${esc(t('ui.claimed'))}</i>`
@@ -1715,6 +1716,34 @@ export class UI {
     this._blip('click'); this._sfx('whoosh');
     this._rerender();
     this.screen?.el.querySelectorAll('.mis-row')[i]?.classList.add('flip');
+  }
+  /** tap / long-press a mission icon → a wordless 3-frame strip showing the verb (Kid-UX: icons > text) */
+  _misDemo(btn, id) {
+    const row = btn.closest('.mis-row');
+    if (!row) return;
+    this._blip('click');
+    const open = row.querySelector('.mis-demo');
+    if (open) { open.remove(); return; }
+    this.screen?.el.querySelectorAll('.mis-demo').forEach((e) => e.remove());
+    const R = (f = 'angry', s = 30) => cube({ color: '#ef4b3c', face: f, size: s });
+    const B = (f = 'happy', s = 30) => heroCube(this._mv('selectedHero', 'blu'), { size: s, face: f, color: this._skinColor(this._mv('selectedHero', 'blu')) });
+    const W = (s = 28) => cube({ color: '#ffffff', face: 'joy', size: s, cls: 'freed' });
+    const e = (x) => `<b class="md-e">${x}</b>`;
+    const F = {
+      free: [B('focus') + e('⚡') + R('dizzy'), e('💥') + R('dizzy', 26), W() + e('✨')],
+      bonk: [R() + e('➜') + e('⬅') + R(), R() + e('💥') + R(), e('⭐') + R('dizzy', 26) + e('⭐')],
+      perfect: [R() + e('➜') + B(), B('focus') + e('!') + R(), e('⚡') + `<b class="md-txt gold">${esc(t('ui.r4'))}</b>`],
+      near: [R() + e('➜') + B(), B('wow') + e('🌬️') + R(), B('joy') + e('😎')],
+      combo: [B('focus') + e('⚡') + R('dizzy'), W(24) + W(24) + e('✨'), `<b class="md-txt">×10</b>` + e('🔥')],
+      novaMulti: [B('focus') + e('✦'), e('💥') + R('dizzy', 24) + R('dizzy', 24), W(22) + W(22) + W(22)],
+      crystal: [W() + e('💎'), B() + e('⬅') + e('💎'), B('joy') + e('✨')],
+      clears: [B() + e('➜') + e('🏁'), e('💥') + W(24) + W(24), B('joy') + e('🏁')],
+      hero: [B() + e('▶'), B('focus') + e('⚡'), B('joy') + e('🏁')],
+      endless: [e('🌌') + B(), e('🌊') + R(24) + R(24), `<b class="md-txt">${esc(t('ui.wave', { n: 'N' }))}</b>`],
+      star3: [crown(true, 'md-cr'), crown(true, 'md-cr') + crown(true, 'md-cr'), crown(true, 'md-cr') + crown(true, 'md-cr') + crown(true, 'md-cr')],
+      boss: [enemyCube('king', { size: 34 }), B('focus') + e('⚡') + e('💥'), freedCube('king', { size: 34 }) + e('💖')],
+    }[id] || [B() + e('➜'), e('⚡'), B('joy') + e('✨')];
+    row.insertAdjacentHTML('beforeend', `<div class="mis-demo">${F.map((f, i) => `<div class="md-f" style="--i:${i}"><i class="md-n">${i + 1}</i>${f}</div>`).join('<b class="md-arr">➜</b>')}</div>`);
   }
   _claimDailyChest() { const r = this._m('claimDailyChest'); this._blip(r === false || r === undefined ? 'error' : 'claim'); this._rerender(); }
 
@@ -2556,7 +2585,8 @@ export class UI {
     }
     if (stageMode && !win) {
       const frac = total ? freedRun / total : 0;
-      rows.push(`<div class="rrow almost step"><b>${esc(t('ui.almost'))}</b><i class="bar big"><i class="fill" style="width:0%"></i></i><span class="al-n"><b class="cnt">0</b>/${fmtInt(total || freedRun)}</span></div>`);
+      // "差一点!" only when it really was close — an early wipe-out gets a cheer instead (never a jab)
+      rows.push(`<div class="rrow almost step"><b>${esc(t(frac >= 0.5 ? 'ui.almost' : 'ui.goodStart'))}</b><i class="bar big"><i class="fill" style="width:0%"></i></i><span class="al-n"><b class="cnt">0</b>/${fmtInt(total || freedRun)}</span></div>`);
       steps.push({ d: C.almost, start: () => show('.almost'), tick: (k) => { const e = easeOutCubic(k); const f = q('.almost .fill'); if (f) f.style.width = Math.round(frac * e * 100) + '%'; const c = q('.almost .cnt'); if (c) c.textContent = fmtInt(Math.round(freedRun * e)); } });
     }
     if (!stageMode) {
@@ -3148,7 +3178,7 @@ function seedFrom(s) { let h = 2166136261; for (const c of String(s)) { h ^= c.c
 
 addStrings({
   zh: { 'ui.placement': '段位定级!', 'feat.signin': '每天来点一下签到，就有礼物!', 'ui.r3': '解救!', 'ui.r4': '完美!', 'tip.boss': '大王砸地后会晕倒，冲向它发光的核心!',
-    'tip.storm': '风暴墙外会掉心，待在亮圈里面!', 'tip.fall': '地板一闪一闪时，快跳到别的地方!' },
+    'tip.storm': '风暴墙外会掉心，待在亮圈里面!', 'ui.goodStart': '好的开始!', 'tip.fall': '地板一闪一闪时，快跳到别的地方!' },
   en: { 'ui.placement': 'Your rank!', 'feat.signin': 'Tap Sign-in once a day for a gift!', 'ui.r3': 'POP!', 'ui.r4': 'PERFECT!', 'tip.boss': 'After King Glitch slams he gets dizzy — dash into his glowing core!',
-    'tip.storm': 'Stay inside the glowing circle — the storm stings!', 'tip.fall': 'Flickering tiles vanish — hop off them fast!' },
+    'tip.storm': 'Stay inside the glowing circle — the storm stings!', 'ui.goodStart': 'Good start!', 'tip.fall': 'Flickering tiles vanish — hop off them fast!' },
 });

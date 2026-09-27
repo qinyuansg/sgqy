@@ -685,7 +685,18 @@ noscript { position: fixed; inset: 0; display: grid; place-items: center; font: 
 #ui .mis-row.claimed { opacity: .65; }
 #ui .mis-row.flip { animation: flipIn .45s var(--spring); }
 @keyframes flipIn { from { transform: rotateX(80deg); opacity: 0; } }
-#ui .mis-ico { width: 54px; height: 54px; border-radius: 16px; background: #fff; display: grid; place-items: center; font-family: var(--emoji); font-size: 30px; box-shadow: var(--shadow-sm); }
+#ui .mis-ico { position: relative; width: 54px; height: 54px; padding: 0; border: 0; border-radius: 16px; background: #fff; display: grid; place-items: center; font-family: var(--emoji); font-size: 30px; box-shadow: var(--shadow-sm); transition: transform .15s var(--spring); }
+#ui .mis-ico:active { transform: scale(.92); }
+#ui .mis-q { position: absolute; right: -5px; bottom: -5px; width: 20px; height: 20px; border-radius: 50%; background: var(--blue); color: #fff; border: 2px solid #fff; font: 900 12px/16px var(--font); font-style: normal; text-align: center; }
+/* wordless 3-frame demo of a mission's verb (tap the icon) */
+#ui .mis-demo { grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 4px 2px; animation: popIn .3s var(--spring) both; }
+#ui .md-f { position: relative; display: flex; align-items: center; justify-content: center; gap: 3px; min-width: 96px; min-height: 58px; padding: 8px 10px; border-radius: 16px; background: linear-gradient(180deg, #f6fbff, #e2eefc); border: 3px solid #fff; box-shadow: var(--shadow-sm); animation: popIn .35s var(--spring) calc(var(--i) * 140ms) both; }
+#ui .md-n { position: absolute; top: -8px; left: -6px; width: 20px; height: 20px; border-radius: 50%; background: var(--blue); color: #fff; font: 900 11px/16px var(--font); text-align: center; font-style: normal; border: 2px solid #fff; }
+#ui .md-e { font-family: var(--emoji); font-size: 18px; line-height: 1; }
+#ui .md-txt { font: 900 15px var(--font); color: var(--navy); white-space: nowrap; }
+#ui .md-txt.gold { color: #e89a00; }
+#ui .md-arr { color: #9db3d8; font-size: 16px; }
+#ui .md-cr { width: 26px; height: 22px; }
 #ui .mis-mid { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 #ui .mis-mid b { font: 900 16px/1.3 var(--font); }
 #ui .mis-mid small { font: 800 12px var(--font); color: var(--muted); }
@@ -1338,6 +1349,10 @@ noscript { position: fixed; inset: 0; display: grid; place-items: center; font: 
   #ui .mis-row .mis-rw { grid-column: 2; grid-row: 2; justify-self: start; }
   #ui .mis-row > .btn, #ui .mis-row > .stamp { grid-column: 3; grid-row: 1 / span 2; }
   #ui .mis-ico { width: 44px; height: 44px; font-size: 24px; }
+  #ui .mis-demo { gap: 3px; }
+  #ui .md-f { min-width: 0; flex: 1; padding: 6px 4px; min-height: 52px; }
+  #ui .md-f .cube { --s: 24px !important; }
+  #ui .md-arr { font-size: 12px; }
   #ui .si-row { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   #ui .si-card { min-height: 92px; }
   #ui .cap-layout { flex-direction: column; overflow-y: auto; pointer-events: auto; inset: calc(124px + var(--safe-t)) 12px 0; justify-content: flex-start; padding-bottom: 20px; }
@@ -1389,6 +1404,13 @@ noscript { position: fixed; inset: 0; display: grid; place-items: center; font: 
   #ui .res-head { flex-direction: row; flex-wrap: wrap; justify-content: center; column-gap: 12px; }
   #ui .res-sub { flex-basis: 100%; max-width: max-content; margin: 0 auto; }
   #ui .tip-card { padding: 6px 12px; } #ui .tip-card .cube { --s: 38px !important; }
+}
+@media (max-height: 620px) and (min-aspect-ratio: 1/1) {
+  /* short landscape screens: the "press any key" pill docks onto the keycap strip so the 3D hero stays visible */
+  #ui .title-wrap { gap: 8px; }
+  #ui .logo { font-size: clamp(48px, 17vh, 120px); }
+  #ui .title-wrap .press-any { position: relative; z-index: 1; margin-bottom: -30px; padding: 6px 28px; font-size: 22px; }
+  #ui .keystrip { padding-top: 26px; }
 }
 @media (max-height: 560px) {
   #ui .home-left { top: calc(84px + var(--safe-t)); }
