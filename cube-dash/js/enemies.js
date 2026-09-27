@@ -763,7 +763,7 @@ export class EnemyManager {
     });
     this._emit('enemy:freed', { x: e.x, z: e.z, size: e.size, type: e.type, crystal, minion: e.minion });
     if (e.type === 'splitter' && !opts.noSplit) this._split(e, dx, dz, opts.splitSpeed);
-    else if (e.type === 'splitter') {                  // fell into a hole: its minis count as freed too (objective total)
+    else if (e.type === 'splitter') {                  // fell into a hole / victory cleanup: its minis count as freed too (objective total)
       for (let i = 0; i < (e.def.splitInto ?? 2); i++) this._emit('enemy:freed', { x: e.x, z: e.z, size: EN.splitter.miniSize, type: 'grumpy', crystal: null, mini: true, minion: e.minion });
     }
     if (e.type === 'popper' && !opts.fromOwnBlast) this._explode(e, { harmless: !e.fuseLit || !!opts.byNova, smashed: true });
@@ -985,7 +985,7 @@ export class EnemyManager {
   }
   /** end of stage cleanup: free everything left (victory rain) */
   freeAll() {
-    for (const e of this.list) if (!e.dead && !e.isBoss && !e.treasure) this.smash(e, { force: true });
+    for (const e of this.list) if (!e.dead && !e.isBoss && !e.treasure) this.smash(e, { force: true, noSplit: true });   // minis credited, not spawned
   }
 
   // ─────────────── update ───────────────

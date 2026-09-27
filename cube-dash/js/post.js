@@ -288,15 +288,19 @@ export class Post {
     const r = this.renderer;
     const pr = r.getPixelRatio();
     const w = this._w, h = this._h;
-    const samples = L.msaa && r.capabilities.isWebGL2 ? L.msaa : 0;
-    const rt = new THREE.WebGLRenderTarget(Math.max(1, w * pr), Math.max(1, h * pr), { type: THREE.HalfFloatType, samples });
+    // HDR buffer when the GPU can render to half floats; otherwise an 8-bit fallback (bloom threshold lowered)
+    const ext = r.extensions;
+    const hdr = r.capabilities.isWebGL2 && (ext.has('EXT_color_buffer_float') || ext.has('EXT_color_buffer_half_float'));
+    this._hdr = hdr;
+    const samples = hdr && L.msaa && ext.has('EXT_color_buffer_float') ? L.msaa : 0;
+    const rt = new THREE.WebGLRenderTarget(Math.max(1, w * pr), Math.max(1, h * pr), { type: hdr ? THREE.HalfFloatType : THREE.UnsignedByteType, samples });
     rt.texture.name = 'Post.rt1';
     const composer = new EffectComposer(r, rt);
     composer.setPixelRatio(pr);
     composer.setSize(w, h);
     composer.addPass(new RenderPass(this.scene, this.camera));
     this._bloomRes = L.bloomRes;
-    const bloom = new UnrealBloomPass(new THREE.Vector2(Math.max(1, w * L.bloomRes), Math.max(1, h * L.bloomRes)), TUNE.bloom.strength, TUNE.bloom.radius, TUNE.bloom.threshold);
+    const bloom = new UnrealBloomPass(new THREE.Vector2(Math.max(1, w * L.bloomRes), Math.max(1, h * L.bloomRes)), TUNE.bloom.strength, TUNE.bloom.radius, hdr ? TUNE.bloom.threshold : 0.93);
     const baseSetSize = bloom.setSize.bind(bloom);
     bloom.setSize = (x, y) => baseSetSize(Math.max(1, Math.round(x * this._bloomRes)), Math.max(1, Math.round(y * this._bloomRes)));
     composer.addPass(bloom);

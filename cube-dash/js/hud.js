@@ -324,7 +324,15 @@ export class HUD {
     on('objective:progress', (p) => this._onObjective(p));
     on('fever', () => this.banner('hud.fever', 'fever', 2.2, 'hud.feverSub'));
     on('checkpoint', () => this.banner('🚩 ' + t('hud.checkpoint'), 'checkpoint', 1.8, 'hud.checkpointSub'));
-    on('player:perfect', (p) => { const h = this._hero(); this.pop(p.x ?? h.x, 3.3, p.z ?? h.z, t('hud.p.perfect'), 'perfect'); this._cueMute = this._t + 0.7; });
+    on('player:perfect', (p) => {
+      const h = this._hero();
+      // the gold stamp owns the moment: a wave/info banner gets out of the way, a boss/phase banner pushes the stamp lower
+      const bn = this._bn;
+      if (bn && (BANNER_PRI[bn.style] || 1) <= 1) bn.t = Math.max(bn.t, bn.seconds - 0.05);
+      const y = bn && (BANNER_PRI[bn.style] || 1) > 1 ? 1.9 : 3.3;
+      this.pop(p.x ?? h.x, y, p.z ?? h.z, t('hud.p.perfect'), 'perfect');
+      this._cueMute = this._t + 0.7;
+    });
     on('player:nearMiss', (p) => { if (this._t - this._last.near > 0.7) { this._last.near = this._t; this.pop(p.x, 1.5, p.z, t('hud.p.near'), 'near'); } });
     on('player:shieldBlock', (p) => this.pop(p.x, 1.8, p.z, '🫧 ' + t('hud.p.block'), 'shield'));
     on('player:heal', (p) => this.pop(p.x, 1.7, p.z, `+${p.amount || 1} ♥`, 'heal'));
@@ -397,6 +405,8 @@ export class HUD {
   }
   _onRunEnd() {
     this.root.classList.add('ended');
+    this._queue.length = 0;
+    clearTimeout(this._neTimer); this.el.ne.classList.remove('on');
     this.el.second.classList.remove('on'); this.el.cue.classList.remove('on'); this.el.combo.classList.remove('on');
     this._hideTutorial(); this.el.hint.classList.remove('on'); this.el.dizzy.classList.remove('on');
     this._hideArrows();
@@ -413,8 +423,11 @@ export class HUD {
     else this.banner(t('hud.wave', { n }), 'wave', 1.2, t('hud.waveSub', { n }));
   }
   _onObjective(p) {
-    this.el.crown.animate?.([{ transform: 'scale(1.35)' }, { transform: 'scale(1)' }], { duration: 320, easing: 'cubic-bezier(.34,1.56,.64,1)' });
-    if (!this._objDone && p.target && p.cur >= p.target) {
+    // fastClear ticks every second and noNova only ever fails — only real progress bumps the 👑 chip
+    const timed = p.kind === 'fastClear' || p.kind === 'noNova';
+    if (!timed && !p.failed) this.el.crown.animate?.([{ transform: 'scale(1.35)' }, { transform: 'scale(1)' }], { duration: 320, easing: 'cubic-bezier(.34,1.56,.64,1)' });
+    const done = p.done != null ? !!p.done : (!timed && p.target > 0 && p.cur >= p.target);
+    if (!this._objDone && done) {
       this._objDone = true;
       const h = this._hero();
       this.pop(h.x, 2.4, h.z, '👑 ' + t('hud.p.objDone'), 'tier');
@@ -661,14 +674,16 @@ export class HUD {
   _updCrown(run) {
     const e = this.el, v = this.v;
     const o = run.objective;
-    const ok = o ? `${o.icon}|${o.cur}|${o.target}|${o.done}` : '';
+    const ok = o ? `${o.icon}|${o.cur}|${o.target}|${o.done}|${o.failed}` : '';
     if (v.crown === ok) return;
     e.crown.style.display = o ? '' : 'none';
     if (o) {
-      e.oIco.textContent = o.icon || '★';
-      const fast = o.kind === 'fastClear';
-      e.oNum.textContent = o.done ? '✓' : fast ? fmtTime(o.target) : `${Math.min(o.cur | 0, o.target | 0)}/${o.target | 0}`;
+      e.oIco.textContent = o.icon || '✦';
+      const fast = o.kind === 'fastClear', noNova = o.kind === 'noNova';
+      // noNova: "no 大招" pictogram that stays happy until a nova is used · fastClear: the time to beat
+      e.oNum.textContent = o.done ? '✓' : noNova ? (o.failed ? '' : '🚫') : fast ? fmtTime(o.target) : `${Math.min(o.cur | 0, o.target | 0)}/${o.target | 0}`;
       e.crown.classList.toggle('done', !!o.done);
+      e.crown.classList.toggle('missed', !o.done && !!o.failed);     // soft grey — never a red ✗ (never shaming)
     }
     v.crown = ok;
   }
@@ -947,6 +962,8 @@ export class HUD {
   }
   _showTutorial(id, payload = null) {
     const e = this.el;
+    if (payload) this._tutPayload = payload;
+    else if (id === this._tutId) payload = this._tutPayload || null;
     if (id === 'dash') { this._hideTutorial(); this._showDizzyPrompt(); return; }
     const known = ['move', 'bonk', 'knock', 'blob', 'nova'];
     if (!known.includes(id)) {
@@ -974,7 +991,7 @@ export class HUD {
     e.animate?.([{ transform: 'translate(-50%,0) scale(1)' }, { transform: 'translate(-50%,0) scale(1.12)' }, { transform: 'translate(-50%,0) scale(.8)', opacity: 0 }], { duration: 380 });
     setTimeout(() => this._hideTutorial(), 360);
   }
-  _hideTutorial() { this._tutId = null; this._tutOrigin = null; this.el.tut.classList.remove('on'); }
+  _hideTutorial() { this._tutId = null; this._tutOrigin = null; this._tutPayload = null; this.el.tut.classList.remove('on'); }
 
   // ═══════════════ hint whispers (W1–2 or Helper mode) ═══════════════
   _updHints(run, rdt, novaReady) {

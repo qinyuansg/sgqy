@@ -107,7 +107,7 @@ const LOOK = {
     sunSky: [-0.5, 0.22, -0.84], sunSkyCol: 0xd6fff6,
     stars: 0.7, nebula: 0.3, nebA: 0x3cffd1, nebB: 0x4b5bd6, rainbow: 0,
     planet: { dir: [0.4, 0.22, -0.89], size: 90, c1: 0x9effe8, c2: 0x5fb8d0, atmo: 0xd6fff6, ring: 0xd6fff6, ringA: 0.7, tilt: [0.25, -0.4], mode: 0 },
-    cloudK: 0.4, cloudS: 0.7,
+    cloudK: 0.3, cloudS: 0.65,
     cloudLit: 0xe6fffb, cloudShade: 0x5a93aa, cloudRim: 0x9effe8, cloudEmit: 0.08, cloudTints: [0xffffff, 0xe4f6ff, 0xe8fff6],
     island: { top: 0xdcebf2, side: 0x7f9bb4, bottom: 0x4f6a86 },
     rock: [0xb8ccd8, 0x4f6a86], tip: 0x3cffd1,
@@ -2092,12 +2092,12 @@ const SET_BUILDERS = {
       { x: R + 11, y: -8, z: 5, s: 8, rx: Math.PI / 2, sp: 0.3 },
     ];
     // glowing orbit rings below the arena
-    const ringGeo = new THREE.TorusGeometry(1, 0.012, 6, 160);
+    const ringGeo = new THREE.TorusGeometry(1, 0.008, 6, 160);
     ringGeo.rotateX(Math.PI / 2);
     const ringMat = new THREE.ShaderMaterial({
       uniforms: { uGlowCol: { value: col(P.accent).multiplyScalar(1) }, uTime: w.U.uTime, uGlowA: { value: 1 } },
       vertexShader: UV_VS,
-      fragmentShader: `uniform vec3 uGlowCol; uniform float uTime; varying vec2 vUv; void main(){ float d = step(0.5, fract(vUv.x * 40.0 - uTime * 0.8)); gl_FragColor = vec4(uGlowCol * (1.2 + 1.6 * d), 1.0); }`,
+      fragmentShader: `uniform vec3 uGlowCol; uniform float uTime; varying vec2 vUv; void main(){ float d = step(0.6, fract(vUv.x * 40.0 - uTime * 0.8)); gl_FragColor = vec4(uGlowCol * (0.55 + 1.1 * d), 1.0); }`,
     });
     const rings = [R + 5, R + 9].map((rr, i) => { const m = new THREE.Mesh(ringGeo, ringMat); m.scale.setScalar(rr); m.position.y = -2.2 - i * 3; group.add(m); return m; });
     return {

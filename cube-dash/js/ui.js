@@ -40,6 +40,7 @@ const TUNE = {
 };
 
 const REDUCED = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const LOBBY_ONLY = ['feature', 'signin', 'night'];
 const LOCAL_OVLS = ['stage', 'signin', 'dexd', 'names', 'titles', 'code', 'savecode', 'saveimp', 'confirm', 'gate', 'share'];   // closed when the screen changes
 const FULL_SCREENS = ['map', 'road', 'missions', 'dex', 'achievements', 'modes', 'settings', 'parent', 'capsule'];
 const HUB_SCREENS = ['home', 'map', 'heroes', 'road', 'missions', 'shop', 'capsule', 'dex', 'achievements', 'modes', 'settings', 'parent'];
@@ -839,7 +840,7 @@ export class UI {
       this._showClaim({ type: 'claim', rewards: c.rewards || c.items, source: c.source, title: tk, applied: false, pulled: true, uid: c.uid });
       return;
     }
-    if (this.queue.length) { this._drain(); return; }
+    if (this.queue.length && this._drain()) return;
     if (!mq?.length) this.chain = 0;
   }
   _trayCount() { return this._pullMode() ? (this.trayHold ? this.G.meta.claimQueue.length : 0) : this.tray.length; }
@@ -849,8 +850,11 @@ export class UI {
   }
   _drain() {
     if (!this.queue.some((q) => q.type === 'claim')) this.chain = 0;
-    const item = this.queue.shift();
-    if (!item) return;
+    // lobby-only items (feature intro + arrow, sign-in, night note) wait until the child is on Home
+    const atHome = this.screen?.name === 'home' && this.G.app?.state !== 'run';
+    const idx = this.queue.findIndex((q) => atHome || !LOBBY_ONLY.includes(q.type));
+    if (idx < 0) return false;
+    const [item] = this.queue.splice(idx, 1);
     if (item.type === 'claim') {
       if (this.chain >= TUNE.claimChain) {        // too many in a row → 待领取 tray
         const rest = [item, ...this.queue.filter((q) => q.type === 'claim')];
@@ -872,6 +876,7 @@ export class UI {
     else if (item.type === 'night') { this.toast(t('ui.night'), '🌙'); }
     else if (item.type === 'toast') this.toast(item.text, item.icon);
     else if (item.type === 'signin') this._showSignin();
+    return true;
   }
 
   // ---------- incoming meta events ----------
