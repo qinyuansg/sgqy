@@ -41,6 +41,7 @@ const TUNE = {
 
 const REDUCED = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const LOCAL_OVLS = ['stage', 'signin', 'dexd', 'names', 'titles', 'code', 'savecode', 'saveimp', 'confirm', 'gate', 'share'];   // closed when the screen changes
+const FULL_SCREENS = ['map', 'road', 'missions', 'dex', 'achievements', 'modes', 'settings', 'parent', 'capsule'];
 const HUB_SCREENS = ['home', 'map', 'heroes', 'road', 'missions', 'shop', 'capsule', 'dex', 'achievements', 'modes', 'settings', 'parent'];
 
 // ============ strings (Chinese primary; English must survive 1.6× length) ============
@@ -422,6 +423,7 @@ export class UI {
     if (!root) { root = document.createElement('div'); root.id = 'ui'; document.body.appendChild(root); }
     this.root = root;
     root.classList.toggle('reduced', REDUCED);
+    root.classList.toggle('q-low', G.quality === 'low');
     root.innerHTML = `
       <div class="ui-screens"></div>
       <div class="ui-wallet hidden">
@@ -539,6 +541,9 @@ export class UI {
   }
   _typing() { const a = document.activeElement; return !!a && (a.tagName === 'INPUT' && a.type !== 'range' || a.tagName === 'TEXTAREA'); }
 
+  /** true while a full-panel screen hides the 3D hub (main may skip / throttle hub rendering) */
+  get coversScene() { return !!this.screen && FULL_SCREENS.includes(this.screen.name) && !this.overlays.length; }
+
   // ═════════ frame update ═════════
   update(rdt) {
     this.time += rdt;
@@ -610,8 +615,8 @@ export class UI {
       const cross = dir === 'left' || dir === 'right' ? Math.abs(dy) : Math.abs(dx);
       // overlap on the cross axis is strongly preferred (grids / rows)
       const overlap = dir === 'left' || dir === 'right' ? (r.bottom > r0.top && r.top < r0.bottom) : (r.right > r0.left && r.left < r0.right);
-      if (main <= 2) continue;
-      const s = main + cross * (overlap ? 0.4 : 2.5);
+      if (main <= 2 || (!overlap && main < 16)) continue;     // must really be in that direction
+      const s = main + cross * (overlap ? 0.4 : 1.6);
       if (s < bs) { bs = s; best = e; }
     }
     if (best) this._focus(best);
@@ -1281,7 +1286,7 @@ export class UI {
       const pal = wd.palette;
       const cr = this._worldCrowns(i), max = wd.stages.length * 3;
       const chestDot = un && this._worldChests(i).some((c) => c.claimable);
-      return `<button class="planet-btn${i === w ? ' sel' : ''}${un ? '' : ' locked'}${this._worldCleared(i) ? ' done' : ''}" data-act="${un ? 'world' : 'worldLocked'}" data-w="${i}" data-nav ${i === w ? 'data-default' : ''}>
+      return `<button class="planet-btn${i === w ? ' sel' : ''}${un ? '' : ' locked'}${this._worldCleared(i) ? ' done' : ''}" data-act="${un ? 'world' : 'worldLocked'}" data-w="${i}" data-nav>
         <div class="planet p${i}" style="--p1:${hex(pal.planet)};--p2:${hex(pal.skyTop)};--p3:${hex(pal.rim)};--p4:${hex(pal.skyBottom)}"><i class="pl-ring"></i><i class="pl-shine"></i>${un ? '' : '<i class="pl-lock">🔒</i>'}${i === next.worldId ? `<i class="pl-here">${heroCube(this._mv('selectedHero', 'blu'), { size: 26 })}</i>` : ''}</div>
         <b class="pl-name">${i + 1}. ${esc(tl(wd.name))}</b>
         <span class="pl-crowns">${crown(cr > 0)}<b>${cr}/${max}</b></span>${chestDot ? '<i class="dot"></i>' : ''}

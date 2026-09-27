@@ -449,8 +449,12 @@
   #hud .hud-xp { width: min(78vw, 280px); }
   #hud .bp { width: 24px; height: 24px; }
   #hud .hb-name em { font-size: 18px; }
-  #hud .hud-endless { top: calc(12px + env(safe-area-inset-top)); padding: 4px 10px; min-width: 0; }
-  #hud .he-score b { font-size: 22px; }
+  #hud .hud-endless { top: calc(12px + env(safe-area-inset-top)); right: calc(70px + env(safe-area-inset-right)); padding: 4px 9px 5px; min-width: 0; border-radius: 16px; }
+  #hud .he-score small { display: none; }
+  #hud .he-score b { font-size: 19px; }
+  #hud .he-mult { font-size: 12px; padding: 0 6px; }
+  #hud .he-row { font-size: 11px; gap: 6px; }
+  #hud .warp-ico { width: 14px; height: 14px; }
   #hud .bn-main { font-size: 40px; --w: 3.5px; }
   #hud .b-boss .bn-main { font-size: 46px; }
   #hud .b-checkpoint .bn-main, #hud .b-nova .bn-main, #hud .b-warp .bn-main, #hud .b-wave .bn-main, #hud .b-set .bn-main, #hud .b-info .bn-main { font-size: 30px; white-space: normal; max-width: 92vw; }

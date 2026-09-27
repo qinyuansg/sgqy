@@ -121,7 +121,7 @@ const LOOK = {
     below: 0x2c1266, fog: 0x3a1a70, fogNear: 60, fogFar: 420,
     sunSky: [0.4, 0.2, -0.9], sunSkyCol: 0xb6a6ff,
     stars: 1, nebula: 0.95, nebA: 0xff3df2, nebB: 0x39e6ff, rainbow: 0,
-    planet: { dir: [-0.38, 0.19, -0.9], size: 80, c1: 0x1a0b3d, c2: 0x2a1060, atmo: 0xff6fd8, ring: 0xffffff, ringA: 1.0, tilt: [0.28, 0.2], mode: 1 },
+    planet: { dir: [-0.38, 0.19, -0.9], size: 80, c1: 0x1a0b3d, c2: 0x2a1060, atmo: 0xff6fd8, ring: 0xffffff, ringA: 1.0, tilt: [0.62, 0.3], mode: 1 },
     cloudK: 0.6, cloudS: 0.8,
     cloudLit: 0xb9a2ff, cloudShade: 0x5a2c9c, cloudRim: 0xff6fd8, cloudEmit: 0.22, cloudTints: [0xffffff, 0xe0d0ff, 0xd0f4ff],
     island: { top: 0xa6f8ff, side: 0x4b3a8a, bottom: 0x2a1a5a },

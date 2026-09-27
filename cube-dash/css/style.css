@@ -417,8 +417,8 @@ kbd.wide { min-width: 70px; font-size: 15px; }
 .scr-map::before, .scr-road::before, .scr-missions::before, .scr-dex::before, .scr-achievements::before, .scr-modes::before,
 .scr-settings::before, .scr-parent::before, .scr-capsule::before {
   content: ''; position: absolute; inset: 0; pointer-events: auto;
-  background: radial-gradient(120% 90% at 50% 0%, rgba(233, 246, 255, .78), rgba(191, 230, 255, .72) 60%, rgba(160, 205, 255, .78));
-  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  /* no backdrop blur here: it would re-blur the live 3D canvas every frame (expensive on phones) */
+  background: radial-gradient(120% 90% at 50% 0%, rgba(236, 247, 255, .9), rgba(196, 232, 255, .86) 60%, rgba(165, 208, 255, .9));
 }
 .scr > section.panel, .scr > .scroll, .scr > div { position: absolute; }
 
@@ -1369,3 +1369,6 @@ kbd.wide { min-width: 70px; font-size: 15px; }
   .rc-slot .crown { transform: none; }
 }
 #ui.reduced .rays, #ui.reduced .confetti { display: none; }
+/* weak devices: no backdrop blur anywhere (dims get a little darker instead) */
+#ui.q-low * { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+#ui.q-low .ovl-dim, #ui.q-low .lv-dim, #ui.q-low .res-dim { background-color: rgba(18, 30, 90, .55); }

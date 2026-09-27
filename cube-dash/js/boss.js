@@ -4,7 +4,7 @@
 // Created through em.spawnBoss(opts) (enemies.js). Lives in em.boss AND em.list
 // (isBoss:true) so dash / aim-assist code sees it like any other cube.
 //   read:  hp, maxHp, name, x, z, radius, coreOpen, stagger, staggerMax,
-//          harmful, smashable, phase, enraged, mode, dead
+//          harmful, smashable, phase, weary, mode, dead, speedK
 //   call:  hitCore({perfect})  → bool  (dash into the OPEN core: 1 crack, perfect 2)
 //          novaHit()           → bool  (1 crack + dizzy 3 s)
 //          addStagger(v, src)  (knocked cube +34, bonk near +10, perfect near +15)
@@ -32,26 +32,30 @@ const TUNE = {
   hopHeight: 5.5,
   recoilTime: 0.75, recoilDist: 1.6,
   hitCd: 0.35,
-  enrageColor: 0x8f1026, enrageSpeed: 1.2, enrageTele: 0.85, teleFloor: 0.7,
+  wearyColor: 0x9a2238,       // kid rule 13: fight ≤ 2.5 min → the king gets WEARY (easier), never enraged
+  wearySlow: 0.85, wearyDizzy: 2.5,
   minionCap: 10,
   phaseRise: 1.6,
   crackMax: 12,
   chaseRadiusK: 0.8,
   chaseZig: 0.6, chaseZigDeg: 50, chaseHitSpeed: 18, coreSize: 1.0,
   deathTime: 1.6,
-  autoCoreHit: true,         // hero dashing into the open core for 2+ frames cracks it even if run.js didn't
+  autoCoreHit: true,         // fallback when no player.js controller resolves the dash
+  driveShake: false,         // run.js shakes / hit-stops on boss:hit, boss:slam, enemy:bonk
+  laserGapStart: 2.0, laserGapLen: 1.7,   // guaranteed safe band along every beam (u past the body)
+  rings: 6,
   slamPushSpeed: 9,
   laserStartR: 0.85,         // beams start at the body surface (× radius)
 };
 const COL = {
   crown: 0xffc630, core: BD.coreColor, crack: 0xff3df2, metal: 0x3a3450, shutter: 0x6b6f8f,
-  glitchA: 0xff3df2, glitchB: 0x3df2ff, beamGlow: 0xff2f5e, beamCore: 0xfff2f6, flame: 0xffa531,
+  glitchA: 0xff3df2, glitchB: 0x3df2ff, beamGlow: 0xffa23a, beamCore: 0xfffbe8, flame: 0xffa531, aim: 0xfff4c2, safe: 0x62f4ff,
   tint: 0xffe8f2,
 };
 
 addStrings({
-  zh: { 'boss.core': '故障核心', 'boss.phase': '第{n}阶段', 'boss.enrage': '大王暴怒!', 'boss.stagger': '晕啦!' },
-  en: { 'boss.core': 'GLITCH CORE', 'boss.phase': 'PHASE {n}', 'boss.enrage': 'ENRAGED!', 'boss.stagger': 'STAGGERED!' },
+  zh: { 'boss.core': '故障核心', 'boss.phase': '第{n}阶段', 'boss.weary': '大王累啦!', 'boss.stagger': '晕啦!' },
+  en: { 'boss.core': 'GLITCH CORE', 'boss.phase': 'PHASE {n}', 'boss.weary': 'KING IS TIRED!', 'boss.stagger': 'STAGGERED!' },
 });
 
 export class Boss {
@@ -73,9 +77,19 @@ export class Boss {
     this.maxHp = Math.max(1, Math.round(BD.cracks[wi] * (opts.hpMult ?? 1)));
     this.hp = this.maxHp;
     this.phase = 1; this.stagger = 0; this.staggerMax = BD.stagger.max;
+    const sp = clamp(Math.round(opts.startPhase ?? run?.bossPhase ?? 1), 1, 3);
+    if (sp > 1 && !opts.noCheckpoint) {                     // 🚩 retry from phase N
+      this.phase = sp;
+      this.hp = Math.max(1, Math.min(this.maxHp - 1, Math.floor(this.maxHp * BD.phaseAt[sp - 2] + 1e-6)));
+    }
     this.state = 'portal'; this.coreOpen = false; this.smashable = false; this.harmful = false;
     this.dead = false; this.removeMe = false;
-    this.mode = 'intro'; this.modeT = 0; this.gap = 0; this.fightT = 0; this.enraged = false; this.invulnT = 0;
+    this.mode = 'intro'; this.modeT = 0; this.gap = 0; this.fightT = 0; this.enraged = false; this.weary = false; this.invulnT = 0;
+    // kid rule 13: each failed attempt slows attacks 10% (min 70%); retry from a phase checkpoint
+    const attempt = Math.max(0, opts.attempt ?? run?.attempt ?? 0);
+    this.slowK = Math.max(BD.failSlowMin ?? 0.7, 1 - (BD.failSlowStep ?? 0.1) * attempt);
+    this.wearyAt = Math.min(BD.maxFightSeconds ?? 150, BD.enrageAt?.[wi] ?? 150);
+    this.ringQ = [];
     this.act = null; this.rotIdx = 0; this.moveId = 0; this.charging = false; this.dirX = 0; this.dirZ = 1;
     this.dizzyT = 0; this.hitCd = 0; this.flashT = 0; this.sq = 1; this.sqV = 0; this.coreK = 0;
     this.pushT = 0; this.pushNx = 0; this.pushNz = 0; this.recX = 0; this.recZ = 0;
@@ -89,17 +103,19 @@ export class Boss {
     this.hzBody = em.makeHazard('boss', BD.contactHearts, (x, z, r) => len2(x - self.x, z - self.z) < self.radius * 0.95 + r, false, { boss: true });
     this.hzSlam = em.makeHazard('slam', MV.slam.hearts, (x, z, r) => len2(x - self.slamX, z - self.slamZ) < MV.slam.radius + r, false, { boss: true });
     this.rings = [];
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < TUNE.rings; i++) {
       const ring = { x: 0, z: 0, r: 0, on: false };
       ring.hz = em.makeHazard('ring', MV.slam.ringHearts, (x, z, r) => Math.abs(len2(x - ring.x, z - ring.z) - ring.r) < MV.slam.ringWidth * 0.5 + r * 0.6, true, { boss: true });
       this.rings.push(ring);
     }
     this.lasers = [];
     for (let i = 0; i < 4; i++) {
-      const L = { a: 0, len: 0, on: false };
+      const L = { a: 0, len: 0, on: false, g0: 0, g1: 0 };
       L.hz = em.makeHazard('laser', MV.laser.hearts, (x, z, r) => {
         const dx = Math.sin(L.a), dz = Math.cos(L.a), px = x - self.x, pz = z - self.z;
-        const tt = clamp(px * dx + pz * dz, self.radius * TUNE.laserStartR, L.len);
+        const along = px * dx + pz * dz;
+        if (L.g1 > L.g0 && along > L.g0 + r && along < L.g1 - r) return false;   // guaranteed safe gap
+        const tt = clamp(along, self.radius * TUNE.laserStartR, L.len);
         return len2(px - dx * tt, pz - dz * tt) < MV.laser.width * 0.5 + r;
       }, true, { boss: true });
       this.lasers.push(L);
@@ -129,11 +145,10 @@ export class Boss {
 
   get solid() { return !this.removeMe && !this.dead && this.y < 1.0; }
   get R() { return this.em.R; }
-  tele(base) {
-    let v = base * (this.run?.assist ? D.assist.telegraph : 1);
-    if (this.enraged) v = Math.max(TUNE.teleFloor, v * TUNE.enrageTele);
-    return v;
-  }
+  /** telegraph time: assist ×1.3, failed attempts / weary → longer (never shorter than data) */
+  tele(base) { return base * (this.run?.assist ? D.assist.telegraph : 1) / this.speedK; }
+  /** attack speed factor (≤ 1): failed-attempt slowdown × weary */
+  get speedK() { return this.slowK * (this.weary ? TUNE.wearySlow : 1); }
 
   // ─────────────── rig ───────────────
   _buildRig() {
@@ -148,7 +163,7 @@ export class Boss {
     this.body = new THREE.Mesh(this.bodyGeo, this.bodyMat);
     this.body.scale.setScalar(S); this.body.position.y = S / 2;
     this.pivot.add(this.body);
-    this.baseColor = new THREE.Color(BD.color); this.enrColor = new THREE.Color(TUNE.enrageColor);
+    this.baseColor = new THREE.Color(BD.color); this.wearyCol = new THREE.Color(TUNE.wearyColor);
     this.tint = new THREE.Color(COL.tint); this._c = new THREE.Color();
     // core socket on the forehead (body-local unit coords, face = +Z)
     const metal = own(new THREE.MeshStandardMaterial({ color: COL.metal, metalness: 0.6, roughness: 0.35 }));
@@ -267,6 +282,7 @@ export class Boss {
     if (this.hitCd > 0) this.hitCd -= dt;
     if (this.invulnT > 0) this.invulnT -= dt;
     if (this.slamHzT > 0) { this.slamHzT -= dt; if (this.slamHzT <= 0) this.hzSlam.active = false; }
+    this._updateRingQueue(dt);
     this._updateRings(dt);
     this._updateMines(dt);
     if (this.pushT > 0 && p) {
@@ -281,8 +297,8 @@ export class Boss {
     if (this.mode !== 'intro') {
       this.fightT += dt;
       this.stagger = Math.max(0, this.stagger - BD.stagger.decay * dt);
-      if (!this.enraged && this.mode !== 'chase' && this.fightT >= (BD.enrageAt[this.worldIndex] ?? 150)) this._enrage();
-      if (this.enraged && (this._steamT -= dt) <= 0) {
+      if (!this.weary && this.mode !== 'chase' && this.fightT >= this.wearyAt) this._makeWeary();
+      if (this.weary && (this._steamT -= dt) <= 0) {
         this._steamT = 0.35;
         this._fx('dust', this.x + (rand() - 0.5) * 2, this.size + 0.3, this.z + (rand() - 0.5) * 2, { color: 0xffffff, count: 2, size: 0.8 });
       }
@@ -291,7 +307,7 @@ export class Boss {
       case 'intro':
         this.rotY = turnTo(this.rotY, 0, 3 * dt);
         if (this.modeT > 0.5 && this.modeT < 0.6) this.sq = 1.25;
-        if (this.modeT >= this.introT) this._toIdle(0.6);
+        if (this.modeT >= this.introT && this.run?.state !== 'bossIntro') this._toIdle(0.6);   // hero is frozen during the intro shot
         break;
       case 'idle': this._idle(dt, p); if (this.modeT >= this.gap) this._nextMove(p); break;
       case 'move': this._tickMove(dt, p); break;
@@ -327,7 +343,7 @@ export class Boss {
   }
 
   _fx(kind, x, y, z, opts) { try { this.G.fx?.burst?.(kind, x, y, z, opts); } catch { /* */ } }
-  _shake(k, s) { try { this.G.cam?.shake?.(k, s); } catch { /* */ } }
+  _shake(k, s) { if (!TUNE.driveShake) return; try { this.G.cam?.shake?.(k, s); } catch { /* */ } }
 
   _publish() {
     const m = this.mode;
@@ -337,7 +353,7 @@ export class Boss {
       : m === 'chase' ? 'chase' : m === 'move' ? (this.charging || this.act?.active ? 'charge' : 'windup') : m === 'phase' ? 'windup' : 'chase';
     this.hzBody.active = this.harmful;
     this.hzBody.hearts = this.charging ? MV.charge.hearts : BD.contactHearts;
-    this.hearts = this.hzBody.hearts;
+    this.hearts = 2.2;                    // run.hurtPlayer: 1 heart, 'hearts' only scales knockback (big king = big bump)
     this.hzBody.srcX = this.x; this.hzBody.srcZ = this.z;
   }
 
@@ -346,13 +362,14 @@ export class Boss {
     const dx = p.x - this.x, dz = p.z - this.z, d = len2(dx, dz) || 1e-4;
     const rr = this.radius + (p.hurtRadius ?? D.player.hurtRadius);
     if (d >= rr + 0.05 || this.y > 1.0) { this._ovF = 0; return; }
+    const ctl = typeof this.run?.playerCtl?.resolve === 'function';     // player.js owns contact damage + dash hits
     if (this.smashable && p.dashing) {                        // dash into the open core
       this._ovF++;
-      if (TUNE.autoCoreHit && this._ovF >= 2) this.hitCore({ perfect: !!(p.perfect || p.perfectDash || p.lastPerfect) });
+      if (TUNE.autoCoreHit && !ctl && this._ovF >= 2) this.hitCore({ perfect: !!(p.perfect || p.perfectDash || p.lastPerfect) });
       return;
     }
     this._ovF = 0;
-    if (this.harmful && !p.invuln && !p.dashing && this.run?.hurtPlayer) {
+    if (!ctl && this.harmful && !p.invuln && !p.dashing && this.run?.hurtPlayer) {
       try { this.run.hurtPlayer(this.hearts, this.x, this.z, 'boss'); } catch { /* */ }
     }
     if (this.mode !== 'chase') {                              // the king is a solid wall
@@ -362,22 +379,24 @@ export class Boss {
   }
 
   _toIdle(gap) { this.mode = 'idle'; this.modeT = 0; this.gap = gap; this.act = null; this.charging = false; this._lasersOff(); }
+  /** end of a move without its own punish window: weary kings flop over anyway */
+  _endMove(gap) { if (this.weary) this._dizzy(TUNE.wearyDizzy, 'weary'); else this._toIdle(gap); }
 
   _idle(dt, p) {
     if (!p) return;
     const dx = p.x - this.x, dz = p.z - this.z, d = len2(dx, dz) || 1;
     this.rotY = turnTo(this.rotY, Math.atan2(dx, dz), 3 * dt);
     if (d > this.radius + TUNE.keepDist) {
-      const sp = TUNE.walkSpeed * (this.enraged ? TUNE.enrageSpeed : 1);
+      const sp = TUNE.walkSpeed * this.speedK;
       this.x += dx / d * sp * dt; this.z += dz / d * sp * dt;
       this.y = Math.abs(Math.sin(this.fightT * 5)) * 0.25;       // heavy stomp-walk
       if (Math.floor(this.fightT * 5 / Math.PI) !== Math.floor((this.fightT - dt) * 5 / Math.PI)) this.sq = 0.9;
     } else this.y = Math.max(0, this.y - 4 * dt);
   }
 
-  _enrage() {
-    this.enraged = true;
-    this.bus.emit('boss:enrage', { x: this.x, z: this.z, textKey: 'boss.enrage', text: t('boss.enrage') });
+  _makeWeary() {
+    this.weary = true;
+    this.bus.emit('boss:weary', { x: this.x, z: this.z, textKey: 'boss.weary', text: t('boss.weary') });
   }
 
   // ─────────────── moves ───────────────
@@ -402,8 +421,8 @@ export class Boss {
       }
       case 'laser': {
         const ph = this.phase - 1;
-        a.n = MV.laser.beams[ph] ?? 2;
-        a.speed = (MV.laser.speed[ph] ?? 50) * DEG * (this.enraged ? TUNE.enrageSpeed : 1);
+        a.n = MV.laser.beams[ph] ?? 1;
+        a.speed = (MV.laser.speed[ph] ?? 30) * DEG * this.speedK;
         a.dir = rand() < 0.5 ? -1 : 1;
         a.ang = Math.atan2(px - this.x, pz - this.z) + Math.PI / a.n;
         a.fill = this.tele(MV.laser.fill); a.stage = 'tele';
@@ -473,12 +492,12 @@ export class Boss {
     const R = MV.slam.radius;
     this.slamX = this.x; this.slamZ = this.z; this.slamHzT = 0.12;
     this.hzSlam.active = true; this.hzSlam.srcX = this.x; this.hzSlam.srcZ = this.z;
-    this._spawnRing(this.x, this.z);
-    this.bus.emit('boss:slam', { x: this.x, z: this.z, radius: R });
+    const nRings = MV.slam.rings?.[this.phase - 1] ?? 1;          // kid rule 13: 1/2/3 rings ≥ 1.2 s apart
+    for (let k = 0; k < nRings; k++) this.ringQ.push({ t: k * (MV.slam.ringGap ?? 1.2) / this.speedK, x: this.x, z: this.z });
+    this.bus.emit('boss:slam', { x: this.x, z: this.z, radius: R, rings: nRings });
     this.em.dizzyRadius(this.x, this.z, R, 2.0, 'slam');
     this.em.pushRadius(this.x, this.z, R + 2.5, TUNE.slamPushSpeed, { hops: 1 });
     this._shake(D.shake.bossSlam, 0.4);
-    try { this.G.hitStop?.(60); } catch { /* */ }
     a.slams--;
     if (a.slams > 0) { a.stage = 'gap'; a.t = 0; }
     else this._dizzy(MV.slam.dizzy[this.phase - 1] ?? 2, 'slam');
@@ -489,10 +508,17 @@ export class Boss {
     ring.x = x; ring.z = z; ring.r = MV.slam.radius; ring.on = true;
     ring.hz.active = true; ring.hz.srcX = x; ring.hz.srcZ = z;
   }
+  _updateRingQueue(dt) {
+    for (let i = this.ringQ.length - 1; i >= 0; i--) {
+      const q = this.ringQ[i];
+      q.t -= dt;
+      if (q.t <= 0) { this._spawnRing(q.x, q.z); this.ringQ.splice(i, 1); }
+    }
+  }
   _updateRings(dt) {
     for (const r of this.rings) {
       if (!r.on) continue;
-      r.r += MV.slam.ringSpeed * dt;
+      r.r += MV.slam.ringSpeed * this.speedK * dt;
       if (r.r > MV.slam.ringMax || r.r > this.R + 1) { r.on = false; r.hz.active = false; }
     }
   }
@@ -510,7 +536,7 @@ export class Boss {
         this.bus.emit('boss:charge', { x: this.x, z: this.z, dirX: this.dirX, dirZ: this.dirZ });
       }
     } else if (a.stage === 'run') {
-      const sp = MV.charge.speed * (this.enraged ? TUNE.enrageSpeed : 1);
+      const sp = MV.charge.speed * this.speedK;
       this.vx = this.dirX * sp; this.vz = this.dirZ * sp;
       this.x += this.vx * dt; this.z += this.vz * dt;
       this.rotY = Math.atan2(this.dirX, this.dirZ);
@@ -519,9 +545,7 @@ export class Boss {
         this.charging = false; a.active = false; this.y = 0; this.vx = this.vz = 0;
         const d = len2(this.x, this.z) || 1;
         this.bus.emit('enemy:bonk', { x: this.x / d * this.R, z: this.z / d * this.R, strength: sp, rim: true, boss: true });
-        this._shake(0.55, 0.45);
         try { this.G.world?.pulseRim?.(0xffd84a); } catch { /* */ }
-        try { this.G.hitStop?.(90); } catch { /* */ }
         this._dizzy(MV.charge.wallDizzy, 'wall');
       }
     }
@@ -540,7 +564,7 @@ export class Boss {
       a.ang += a.speed * a.dir * dt;
       this.rotY = a.ang;
       this._setLasers(a, true);
-      if (a.t >= T) { this._lasersOff(); this._toIdle(BD.moveGap); }
+      if (a.t >= T) { this._lasersOff(); this._endMove(BD.moveGap); }
     }
   }
   _setLasers(a, on) {
@@ -549,6 +573,9 @@ export class Boss {
       L.on = i < a.n;
       L.a = a.ang + (i * TAU) / a.n;
       L.len = rayToRim(this.x, this.z, Math.sin(L.a), Math.cos(L.a), this.R);
+      if (MV.laser.safeGap !== false) {
+        L.g0 = this.radius + TUNE.laserGapStart; L.g1 = Math.min(L.len - 0.5, L.g0 + TUNE.laserGapLen);
+      } else L.g0 = L.g1 = 0;
       L.hz.active = on && L.on;
       L.hz.srcX = this.x; L.hz.srcZ = this.z;
     }
@@ -565,7 +592,7 @@ export class Boss {
       });
       a.i++;
     }
-    if (a.i >= a.n && a.t >= a.n * gap + a.fall + 0.3) { this.y = 0; this._toIdle(BD.moveGap); }
+    if (a.i >= a.n && a.t >= a.n * gap + a.fall + 0.3) { this.y = 0; this._endMove(BD.moveGap); }
   }
   _rainPoint(a, p) {
     const R = this.R - 1.4;
@@ -603,7 +630,7 @@ export class Boss {
         }
         a.stage = 'idle'; a.t = 0;
       }
-    } else if (a.t >= MV.summon.idle) this._toIdle(BD.moveGap * 0.5);
+    } else if (a.t >= MV.summon.idle) this._endMove(BD.moveGap * 0.5);
   }
 
   // ─────────────── vulnerability · damage · phases ───────────────
@@ -672,7 +699,6 @@ export class Boss {
   _crack(dmg, perfect, byNova = false) {
     this.hp = Math.max(0, this.hp - dmg);
     this.hitCd = TUNE.hitCd; this.flashT = 1; this.sq = 0.68;
-    try { this.G.hitStop?.(D.hitstop.bossCrack); } catch { /* */ }
     this._shake(D.shake.bossCrack, 0.35);
     const cy = this.y + this.size * 0.85;
     this._fx('shards', this.x + Math.sin(this.rotY) * this.size * 0.5, cy, this.z + Math.cos(this.rotY) * this.size * 0.5, { color: COL.core, count: 18 });
@@ -757,7 +783,7 @@ export class Boss {
       fx += (tx * s * 1.5 - this.x / r * 1.3) * k; fz += (tz * s * 1.5 - this.z / r * 1.3) * k;
     }
     const fl = len2(fx, fz) || 1;
-    const sp = C.speed * (this.enraged ? TUNE.enrageSpeed : 1);
+    const sp = C.speed * this.speedK;
     this.vx += (fx / fl * sp - this.vx) * Math.min(1, 6 * dt);
     this.vz += (fz / fl * sp - this.vz) * Math.min(1, 6 * dt);
     this.x += this.vx * dt; this.z += this.vz * dt;
@@ -818,7 +844,6 @@ export class Boss {
     this._fx('shards', this.x, 2, this.z, { color: BD.color, count: 50 });
     this._fx('confetti', this.x, 3, this.z, { count: 60 });
     this._shake(0.8, 0.8);
-    try { this.G.hitStop?.(200); } catch { /* */ }
     this.bus.emit('boss:defeat', { x: this.x, z: this.z, bossId: this.bossId, worldIndex: this.worldIndex, final: this.final, finale });
     this._publish();
   }
@@ -875,7 +900,7 @@ export class Boss {
     const chase = this.mode === 'chase';
     const S = BD.size;
     // glitch intensity: phase, hits, enrage
-    const gi = (this.phase >= 3 ? 0.32 : this.phase === 2 ? 0.2 : 0.1) + (this.flashT > 0.5 ? 0.4 : 0) + (this.enraged ? 0.12 : 0) + (this.mode === 'phase' ? 0.5 : 0);
+    const gi = (this.phase >= 3 ? 0.32 : this.phase === 2 ? 0.2 : 0.1) + (this.flashT > 0.5 ? 0.4 : 0) + (this.weary ? 0.08 : 0) + (this.mode === 'phase' ? 0.5 : 0);
     const bucket = Math.floor(tr * 14);
     const hash = (k) => { const v = Math.sin(bucket * 12.9898 + k * 78.233 + this._glitchSeed) * 43758.5453; return v - Math.floor(v); };
     const glitch = hash(0) < gi * 0.6;
@@ -895,7 +920,7 @@ export class Boss {
     }
     // body: colour · face · flash
     const u = this.bodyMat.uniforms;
-    this._c.copy(this.enraged ? this.enrColor : this.baseColor);
+    this._c.copy(this.weary ? this.wearyCol : this.baseColor);
     if (this.coreOpen && !chase) this._c.lerp(this.tint, 0.4);
     u.uColor.value.copy(this._c);
     const p = this.run?.player;
@@ -904,7 +929,7 @@ export class Boss {
     const lookX = p ? clamp(Math.sin(angDiff(this.rotY, Math.atan2(p.x - this.x, p.z - this.z))) * 1.3, -1, 1) : 0;
     const blink = expr === EXPR.ANGRY && ((tr + this._glitchSeed) % 4.1) < 0.1 ? 1 : 0;
     u.uFace.value.set(expr, blink, lookX, -0.2);
-    const glow = this.coreOpen ? 0.15 + 0.1 * Math.sin(tr * 8) : this.enraged ? 0.12 : 0;
+    const glow = this.coreOpen ? 0.15 + 0.1 * Math.sin(tr * 8) : 0;
     u.uFx.value.set(Math.max(this.flashT * 0.85, glitch ? 0.25 : 0), glow, 1, 0);
     // core shutters
     this.coreK += ((this.coreOpen ? 1 : 0) - this.coreK) * Math.min(1, dt * 10 || 0);
@@ -942,8 +967,8 @@ export class Boss {
     }
     // shadow + dizzy stars
     sh.add(this.x, this.z, chase ? 1.1 : S * 0.95 * (this.dead ? Math.max(0, 1 - this.deathT / TUNE.deathTime) : 1), this.y);
-    if (this.mode === 'dizzy') em.stars(this.x, this.z, this.y + S * sq + 1.35, 1.5, 5, 0.55, 0);
-    if (chase && this.dizzyT > 0 && !this.kvx && !this.kvz) em.stars(this.x, this.z, this.y + 1.2, 0.7, 3, 0.3, 0);
+    if (this.mode === 'dizzy') em.stars(this.x, this.z, this.y + S * sq + 1.35, 1.5, 5, 0.55, 0, this.dizzyT);
+    if (chase && this.dizzyT > 0 && !this.kvx && !this.kvz) em.stars(this.x, this.z, this.y + 1.2, 0.7, 3, 0.3, 0, this.dizzyT);
     this._drawTelegraphs(dec, tr, em);
   }
 
@@ -952,6 +977,7 @@ export class Boss {
     if (a && (a.name === 'slam' || a.name === 'double') && (a.stage === 'crouch' || a.stage === 'air')) {
       dec.disc(a.tx, a.tz, MV.slam.radius, clamp(a.t / a.fill, 0, 1), a.fill - a.t < 0.15 ? 1 : 0, 1, 0);
     }
+    for (const q of this.ringQ) dec.disc(q.x, q.z, MV.slam.radius, 1, 0, 0.35 + 0.3 * Math.sin(tr * 12), 2, 0, 0, 0);   // next ring warming up
     if (this.slamHzT > 0) dec.disc(this.slamX, this.slamZ, MV.slam.radius, 1, 0, clamp(this.slamHzT / 0.12, 0, 1), 3);
     const w = MV.slam.ringWidth;
     for (const r of this.rings) {
@@ -961,22 +987,35 @@ export class Boss {
     }
     if (a && a.name === 'charge' && a.stage === 'aim') {
       const len = rayToRim(this.x, this.z, this.dirX, this.dirZ, this.R);
-      dec.rect(this.x, this.z, Math.atan2(this.dirX, this.dirZ), len, MV.charge.width, clamp(a.t / a.fill, 0, 1), a.fill - a.t < 0.15 ? 1 : 0, 1, 0);
+      const fl = a.fill - a.t < 0.15 ? 1 : 0;
+      dec.rect(this.x, this.z, Math.atan2(this.dirX, this.dirZ), len, MV.charge.width, clamp(a.t / a.fill, 0, 1), fl, 1, 0);
+      const bd = this.radius + 1.3;
+      dec.bang(this.x + this.dirX * bd, this.z + this.dirZ * bd, 0.6, fl);
     }
     if (a && a.name === 'laser') {
       const by = this.y + this.size * 0.5, r0 = this.radius * TUNE.laserStartR;
+      let gapR = 0;
       for (const L of this.lasers) {
         if (!L.on) continue;
-        const sx = this.x + Math.sin(L.a) * r0, sz = this.z + Math.cos(L.a) * r0, len = Math.max(0.1, L.len - r0);
-        if (a.stage === 'tele') {
-          dec.rect(sx, sz, L.a, len, MV.laser.width + 0.25, clamp(a.t / a.fill, 0, 1), a.fill - a.t < 0.15 ? 1 : 0, 1, 0);
-          dec.beam(sx, by, sz, L.a, len, 0.06, COL.beamGlow, 0.5 + 0.4 * Math.sin(tr * 24));
-        } else {
-          dec.rect(sx, sz, L.a, len, MV.laser.width * 1.2, 1, 0, 1, 3);
-          dec.beam(sx, by, sz, L.a, len, MV.laser.width * 1.1, COL.beamGlow, 1);
-          dec.beam(sx, by, sz, L.a, len, MV.laser.width * 0.4, COL.beamCore, 1.1);
+        const dx = Math.sin(L.a), dz = Math.cos(L.a);
+        // beam segments: [r0, g0] and [g1, len] — the gap between them is always safe
+        const hasGap = L.g1 > L.g0;
+        gapR = hasGap ? (L.g0 + L.g1) * 0.5 : 0;
+        for (let seg = 0; seg < (hasGap ? 2 : 1); seg++) {
+          const from = seg === 0 ? r0 : L.g1, to = hasGap && seg === 0 ? L.g0 : L.len;
+          const len = Math.max(0.1, to - from), sx = this.x + dx * from, sz = this.z + dz * from;
+          if (a.stage === 'tele') {
+            dec.rect(sx, sz, L.a, len, MV.laser.width + 0.25, clamp(a.t / a.fill, 0, 1), a.fill - a.t < 0.15 ? 1 : 0, 1, 4);
+            dec.beam(sx, by, sz, L.a, len, 0.06, COL.aim, 0.5 + 0.4 * Math.sin(tr * 24));
+          } else {
+            dec.rect(sx, sz, L.a, len, MV.laser.width * 1.2, 1, 0, 1, 3);
+            dec.beam(sx, by, sz, L.a, len, MV.laser.width * 1.1, COL.beamGlow, 1);
+            dec.beam(sx, by, sz, L.a, len, MV.laser.width * 0.4, COL.beamCore, 1.1);
+          }
         }
+        if (a.stage === 'tele') dec.bang(this.x + dx * (r0 + 0.9), this.z + dz * (r0 + 0.9), 0.5, a.fill - a.t < 0.15 ? 1 : 0);
       }
+      if (gapR > 0) dec.disc(this.x, this.z, gapR + TUNE.laserGapLen * 0.5, 1, 0, 0.8, 2, 0, 0.3, 1);   // cyan = safe band
     }
     const mr = BD.coreChase.mineRadius;
     for (const m of this.mines) {

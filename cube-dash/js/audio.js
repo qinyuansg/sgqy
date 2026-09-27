@@ -37,6 +37,7 @@ const TUNE = {
     defaultCap: 4,
     perFrame: { smash: 3, freed: 2, crystal: 2, spawnWarn: 2, bonk: 2, dizzy: 1, knock: 2, coin: 2 },
     defaultPerFrame: 2,
+    perFrameTotal: 12,           // new sfx voices per frame across all names (protects the audio thread)
     minGap: { click: 0.04, back: 0.04, claim: 0.05, buy: 0.05, error: 0.08, whoosh: 0.06, hover: 0.03, tick: 0.035, pop: 0.03, star: 0.05, cue: 0.3, puff: 0.15, notYet: 0.25, dizzy: 0.12, babble: 0.25, heartbeat: 0.2 },
   },
   music: {
@@ -49,7 +50,7 @@ const TUNE = {
     novaHypeBars: 4,
     iTau: 2,                                // intensity smoothing (s)
     padLp: [800, 2000],                     // pad lowpass opens with stage progress
-    dangerLp: 1200, slowLp: 450, hurtLp: 600, pauseLp: 1300, droneLp: 700, defeatLp: 400,
+    dangerLp: 1200, slowLp: 450, hurtLp: 600, pauseLp: 1300, droneLp: 700,
     duck: { pause: 0.35, slow: 0.5, nova: 0.5, second: 0.3 },
     freeBpm: 110,                           // beat phase keeps ticking with no music
     endless: { bpmStep: 2, every: 60, maxBpm: 144, keyEvery: 180, keyStep: 2, maxKey: 4 },
@@ -208,7 +209,7 @@ const SONGS = {
     form: ['A', 'B', 'A', 'C'],
   },
   w3: { // Crystal Moon — sparkly, bittersweet
-    lead: 'bell', arp: 'updown', arpTone: 'bell', bass: 'synth', drums: 'break',
+    lead: 'bell', leadOct: -1, arp: 'updown', arpTone: 'bell', bass: 'synth', drums: 'break',
     prog: { A: ['vi', 'IV', 'I', 'V'], B: ['IV', 'I', 'V', 'vi'] },
     motifs: [
       '4 . 2 4 5 - 4 2 | 0 - 2 . 4 - . .',
@@ -273,7 +274,7 @@ const SONGS = {
     form: ['A', 'B', 'A', 'B'], boss: true,
   },
   endless: { // Galaxy Survival — epic, speeds up over time
-    bpm: 132, key: 'E', scale: 'minorPent', lead: 'pulse', arp: 'updown', arpTone: 'pulse', bass: 'drive', drums: 'four',
+    bpm: 132, key: 'E', scale: 'minorPent', lead: 'pulse', leadOct: -1, arp: 'updown', arpTone: 'pulse', bass: 'drive', drums: 'four',
     prog: { A: ['i', 'bVI', 'bIII', 'bVII'], B: ['iv', 'bVI', 'bVII', 'i'] },
     motifs: [
       '0 . 1 2 3 - 2 1 | 0 - 1 - 3 - . .',
@@ -407,7 +408,7 @@ class Song {
 
   get stepDur() { return 60 / this.bpm / 4; }
   get barDur() { return this.stepDur * 16; }
-  get root() { return leadRoot(this.pc) + this.transpose; }
+  get root() { return leadRoot(this.pc) + this.transpose + 12 * (this.def.leadOct || 0); }
   _setDelayTime(t) { this.delay.delayTime.setValueAtTime(Math.min(1.4, (60 / this.bpm) * 0.75), t); }
 
   /** jump back to bar 0 at time t (the "drop" on GO) */
@@ -613,7 +614,7 @@ export class AudioSys {
     this._stinger = null;                 // {out, end, track}
     this._i = 0; this._iExt = 0; this._iExtAt = -99; this._iNearT = 0; this._iNear = 0;
     this.flags = { inRun: false, state: null, active: false, style: 0, novaReady: false, fever: false, danger: false, boss: false, progress: 0, paused: false, drone: false };
-    this._slowT = 0; this._hurtAt = -99; this._perfectAt = -99; this._novaDuckUntil = -99; this._defeatLp = false;
+    this._slowT = 0; this._hurtAt = -99; this._perfectAt = -99; this._novaDuckUntil = -99;
     this._bossPhase = 1; this._runT0 = 0; this._endlessT = 0; this._stingerFor = null; this._prevRunState = null;
     this._lastGo = -99; this._lastCheer = -99;
     this._mix = { duck: 1, lp: 20000 };
@@ -941,12 +942,14 @@ export class AudioSys {
     const isBoss = !!(run?.isBossStage || stageDef?.boss || stageDef?.kind === 'boss');
     this._stingerFor = null; this._prevRunState = null; this._bossPhase = 1;
     this._ladder.idx = -1; this._crys.idx = -1; this._near.idx = 0;
-    this.flags.novaReady = false; this.flags.fever = false; this._defeatLp = false;
+    this.flags.novaReady = false; this.flags.fever = false;
     this._runT0 = this.G?.time?.real ?? 0; this._endlessT = 0;
     let track = 'w' + (wi + 1);
     if (mode === 'endless') track = 'endless';
     else if (mode === 'rush') track = 'boss';
     this.flags.drone = isBoss && mode !== 'rush';      // the boss theme starts on boss:intro
+    // flags must be right for the very first bar (scheduled before the next frame reads G.run)
+    this.flags.inRun = true; this.flags.state = run?.state || 'intro'; this.flags.active = false; this.flags.danger = false; this.flags.progress = 0;
     this._runTrack = track;
     if (this.track === track && this.song && !this._stinger) { this._retempo(); return; }   // retry: keep the groove going
     this.music(track);
@@ -1056,7 +1059,6 @@ export class AudioSys {
     const root = leadRoot(pc);
     let end;
     if (kind === 'victory') {
-      this._defeatLp = false;
       const e = 0.14;                      // 8th note
       const deg = (d) => degMidi(root, 'majorPent', d);
       // hero motif pickup
@@ -1078,7 +1080,7 @@ export class AudioSys {
       for (let i = 0; i < 8; i++) this._note('bell', deg(5 + i), t1 + 9 * e + 0.08 + i * 0.06, 0.4, out, 0.35, false);
       end = t1 + 9 * e + 1.6;
     } else {
-      this._defeatLp = true;
+
       // playful sad trombone: saw through a closing wah, chromatic steps down
       const base = 55 + ((pc + 7) % 12);
       const notes = [[0, 0.3], [-1, 0.3], [-2, 0.3], [-3, 1.1]];
@@ -1108,7 +1110,6 @@ export class AudioSys {
     const back = () => {
       if (this._stinger?.out !== out) return;
       this._stinger = null;
-      this._defeatLp = false;
       if (this.track === kind) { this.track = 'hub'; this._startTrack('hub'); }
     };
     if (this.offline) this._pendingBack = { at: end + after, fn: back };
@@ -1188,7 +1189,7 @@ export class AudioSys {
       if (st === 'victory' && this._stingerFor !== run) { this._stingerFor = run; this.music('victory'); }
       if (st === 'dying' && this._stingerFor !== run) { this._stingerFor = run; this.music('defeat'); }
       if (st === 'playing' && (prev === 'dying' || prev === 'ended')) {      // revived / continue
-        this._stingerFor = null; this._defeatLp = false;
+        this._stingerFor = null;
         if (this._runTrack && this.track !== this._runTrack) this.music(this._runTrack);
       }
       if (st === 'playing' && prev === 'bossIntro' && this.song?.def?.boss && !this.song.stopped) {
@@ -1229,7 +1230,7 @@ export class AudioSys {
     let duck = 1, lp = 20000, fast = false;
     if (f.paused) { duck *= M.duck.pause; lp = Math.min(lp, M.pauseLp); }
     if (f.state === 'secondChance') { duck *= M.duck.second; lp = Math.min(lp, 900); }
-    if (this._slowT > 0.06) { duck *= M.duck.slow; lp = Math.min(lp, M.slowLp); }
+    if (this._slowT > 0.06 && f.active && f.state !== 'victory' && !this._stinger) { duck *= M.duck.slow; lp = Math.min(lp, M.slowLp); }
     if (now < this._novaDuckUntil) duck *= M.duck.nova;
     const h = now - this._hurtAt;
     if (h >= 0 && h < 0.4) { lp = Math.min(lp, h < 0.04 ? M.hurtLp : M.hurtLp * Math.pow(20000 / M.hurtLp, (h - 0.04) / 0.34)); fast = h < 0.05; }
@@ -1237,7 +1238,6 @@ export class AudioSys {
     if (pf >= 0 && pf < 0.45) lp = Math.min(lp, 800);
     if (f.danger && f.active) lp = Math.min(lp, M.dangerLp);
     if (f.drone && f.inRun && !this.song?.def?.boss) lp = Math.min(lp, M.droneLp);
-    if (this._defeatLp) lp = Math.min(lp, M.defeatLp * 3);
     const m = this._mix;
     if (Math.abs(duck - m.duck) > 0.01) { m.duck = duck; this._duck.gain.setTargetAtTime(duck, now, 0.08); }
     if (Math.abs(lp - m.lp) / m.lp > 0.03) { m.lp = lp; this._musicLp.frequency.setTargetAtTime(lp, now, fast ? 0.012 : 0.07); }
@@ -1303,6 +1303,9 @@ export class AudioSys {
     if (gap && now - r.last < gap) return false;
     if (r.frame !== this._frameNo) { r.frame = this._frameNo; r.n = 0; }
     if (r.n >= (V.perFrame[name] ?? V.defaultPerFrame)) return false;
+    if (this._fcFrame !== this._frameNo) { this._fcFrame = this._frameNo; this._fc = 0; }
+    if (this._fc >= V.perFrameTotal) return false;
+    this._fc++;
     r.n++; r.last = now;
     return true;
   }

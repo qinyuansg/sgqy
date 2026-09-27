@@ -32,6 +32,28 @@
 //
 // Crowns 👑: internal fields are called `stars` (contract), every UI shows 👑.
 // Daily refresh at 04:00 local with a silent clock-rollback guard.
+//
+// Public API (ARCHITECTURE §6 + extras). Claim-style calls return the claim record, or false.
+//   balances   coins · tickets · trophies · freed · rank · bestWave · displayCoins · displayTickets
+//   run        applyRun(results) → breakdown · lastBreakdown · stat(name, scope, heroId)
+//   rewards    grant(rewards, source, opts) · claimQueue · nextClaim() · ackClaim() · onClaim(fn) · describe(item)
+//   stages     isStageUnlocked(w,s) · isStageCleared · stageStars · stageCrowns · stageInfo · stageFails · nextStage()
+//              worldInfo(w) · worldCrowns(w) · totalCrowns() · worldChests(w) · claimWorldChest(w,i) · hubWorld() · modeUnlocked(m)
+//   heroes     heroUnlocked(id) · heroes() · selectedHero · selectHero(id)
+//   cosmetics  owns(kind,id) · ownedSkins(hero) · ownedHats() · ownedTrails() · selectedSkin/Hat(hero) · selectedTrail()
+//              equip(kind,id,hero) · buy(kind,id) · price(kind,id) · wardrobe(hero)
+//   cards      unlockedCards() · cardInfo()
+//   road       road() · roadNext() · claimRoad(i|'overflow') · claimAllRoad()
+//   missions   missions() · claimMission(i) · claimAllMissions() · rerollMission(i) · claimDailyChest()
+//   sign-in    signin() · claimSignin()
+//   capsule    capsuleInfo() · capsule('ticket')        (coins → {ok:false, error:'ticketsOnly'})
+//   dex        dex() · claimDex(id, n?) · claimAllDex()
+//   achieve    achievements() · claimAchievement(id) · claimAllAchievements() · titleName(id) · titles() · setTitle(id)
+//   profile    profile() · nameChoices(n) · setName(choice|text) · setPins(ids) · setProfile({name,title,pins})
+//   features   isUnlocked(f) · featureQueue · nextFeature() · redDots() · isNew(kind,id) · markSeen(kind,id)
+//   guardian   tick(rdt) · pendingBreak · pendingToast · limitReached · isNight · restedRuns · firstWinAvailable
+//              guardianPrompt() · resolveGuardian(kind, choice) · healthCheck() · takeBreak() · snoozeBreak()
+//              parent · setParent(key,v) · parentExtend(min) / extendLimit(min) · playHistory(days) · todayMinutes()
 // ─────────────────────────────────────────────────────────────
 import { makeRng, dayKey, daysBetween, clamp } from './core.js';
 import { t, tl, addStrings, getLang } from './i18n.js';
@@ -801,10 +823,12 @@ export class Meta {
     if (i < 0) {
       const o = this.road().overflow;
       const prev = o.nextAt - ROAD_OVERFLOW.every;
-      return { index: 'overflow', at: o.nextAt, prevAt: prev, remaining: o.nextAt - freed, progress: clamp((freed - prev) / ROAD_OVERFLOW.every, 0, 1), items: o.items };
+      return { index: 'overflow', at: o.nextAt, prevAt: prev, remaining: o.nextAt - freed, progress: clamp((freed - prev) / ROAD_OVERFLOW.every, 0, 1),
+        reward: ROAD_OVERFLOW.rewards[this.P.road.overflow % ROAD_OVERFLOW.rewards.length], items: o.items };
     }
     const prev = i > 0 ? ROAD[i - 1].at : 0;
-    return { index: i, at: ROAD[i].at, prevAt: prev, remaining: ROAD[i].at - freed, progress: clamp((freed - prev) / (ROAD[i].at - prev), 0, 1), items: this._items([ROAD[i].reward], { titleId: ROAD[i].reward.title }) };
+    return { index: i, at: ROAD[i].at, prevAt: prev, remaining: ROAD[i].at - freed, progress: clamp((freed - prev) / (ROAD[i].at - prev), 0, 1),
+      reward: ROAD[i].reward, items: this._items([ROAD[i].reward], { titleId: ROAD[i].reward.title }) };
   }
   claimRoad(index) {
     const P = this.P;
@@ -1333,7 +1357,7 @@ export class Meta {
       clears, endlessWave: mode === 'endless' ? wave : 0, endlessBest: mode === 'endless' ? wave : 0,
       newThreeStar: newThree, bossKills: mode === 'rush' ? (results.bossKills ?? L.bossKills ?? 0) : (bossDefeated ? 1 : 0),
       popperFreed: freedBy.popper || 0, coinCubes: results.coinCubes ?? (freedBy.coin || 0),
-      noHitClears: win && mode === 'stage' && hitsTaken === 0 ? 1 : 0, evolutions: L.evolutions,
+      noHitClears: win && mode === 'stage' && hitsTaken === 0 ? 1 : 0, evolutions: results.evolutions ?? L.evolutions,
     };
     this.live = this._freshLive();   // consumed
     const missionsProgress = this._commitVals(vals);
@@ -1443,7 +1467,7 @@ export class Meta {
       newBest, best, score, starsNew, crownsBefore, crowns: rec ? rec.c.map(Boolean) : null,
       firstClear, firstWin, rested, restedLeft: P.rested, fails: rec?.fails || 0,
       helperOffer: !!rec && !win && rec.fails >= 2 && !assist,
-      medalsNew, endlessBest: P.modes.endlessBest,
+      medalsNew, medal: mode === 'storm' ? MODES.storm.medals.filter((m) => freedRun >= m).length : undefined, endlessBest: P.modes.endlessBest,
       nextStage: this.nextStage(),
       replay: !!rec && rec.plays > 1,
     };

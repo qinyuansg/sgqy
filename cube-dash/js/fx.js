@@ -87,6 +87,9 @@ function col(hex) {
   return c;
 }
 const pick = (arr) => arr[(rnd() * arr.length) | 0];
+// payload sizes may be numbers (world units) or size keys
+const SIZE_KEY = { S: 0.7, M: 1.0, L: 1.4, XL: 2.0 };
+const sizeOf = (v, d = 1) => (typeof v === 'number' && Number.isFinite(v) ? v : SIZE_KEY[v] ?? d);
 
 // sprite shapes
 const SH = { DOT: 0, SPARKLE: 1, STAR: 2, HEART: 3, STREAK: 4, PUFF: 5, RECT: 6, BURST: 7, BUBBLE: 8, FLASH: 9, GEM: 10, SWISH: 11 };
@@ -309,6 +312,7 @@ class Sprites {
     g.setAttribute('iPos', this.iPos); g.setAttribute('iCol', this.iCol);
     g.setAttribute('iMisc', this.iMisc); g.setAttribute('iDir', this.iDir);
     g.instanceCount = 0;
+    this._attrs = [this.iPos, this.iCol, this.iMisc, this.iDir];
     this.geo = g;
   }
   make(uniforms) {
@@ -430,7 +434,7 @@ class Sprites {
       D[j + 3] = d[o + P_SELF];
     }
     this.geo.instanceCount = n;
-    for (const at of [this.iPos, this.iCol, this.iMisc, this.iDir]) {
+    for (const at of this._attrs) {
       at.clearUpdateRanges(); at.addUpdateRange(0, Math.max(4, n * 4)); at.needsUpdate = true;
     }
   }
@@ -601,6 +605,7 @@ class Rings {
     this.iD = new THREE.InstancedBufferAttribute(new Float32Array(cap * 4), 4).setUsage(THREE.DynamicDrawUsage);
     g.setAttribute('iA', this.iA); g.setAttribute('iB', this.iB); g.setAttribute('iC', this.iC); g.setAttribute('iD', this.iD);
     g.instanceCount = 0;
+    this._attrs = [this.iA, this.iB, this.iC, this.iD];
     this.geo = g;
   }
   make(uniforms) {
@@ -671,7 +676,7 @@ class Rings {
   end() {
     const n = this.n + this.m;
     this.geo.instanceCount = n;
-    for (const at of [this.iA, this.iB, this.iC, this.iD]) {
+    for (const at of this._attrs) {
       at.clearUpdateRanges(); at.addUpdateRange(0, Math.max(4, n * 4)); at.needsUpdate = true;
     }
   }
@@ -731,6 +736,7 @@ class Beams {
     this.iC = new THREE.InstancedBufferAttribute(new Float32Array(cap * 4), 4).setUsage(THREE.DynamicDrawUsage);
     g.setAttribute('iA', this.iA); g.setAttribute('iB', this.iB); g.setAttribute('iC', this.iC);
     g.instanceCount = 0;
+    this._attrs = [this.iA, this.iB, this.iC];
     this.geo = g;
   }
   make(uniforms) {
@@ -752,7 +758,7 @@ class Beams {
   }
   end() {
     this.geo.instanceCount = this.m;
-    for (const at of [this.iA, this.iB, this.iC]) { at.clearUpdateRanges(); at.addUpdateRange(0, Math.max(4, this.m * 4)); at.needsUpdate = true; }
+    for (const at of this._attrs) { at.clearUpdateRanges(); at.addUpdateRange(0, Math.max(4, this.m * 4)); at.needsUpdate = true; }
   }
 }
 
@@ -825,6 +831,7 @@ class Shells {
     this.iC = new THREE.InstancedBufferAttribute(new Float32Array(cap * 4), 4).setUsage(THREE.DynamicDrawUsage);
     g.setAttribute('iA', this.iA); g.setAttribute('iB', this.iB); g.setAttribute('iC', this.iC);
     g.instanceCount = 0;
+    this._attrs = [this.iA, this.iB, this.iC];
     this.geo = g;
   }
   make(uniforms) {
@@ -846,7 +853,7 @@ class Shells {
   }
   end() {
     this.geo.instanceCount = this.m;
-    for (const at of [this.iA, this.iB, this.iC]) { at.clearUpdateRanges(); at.addUpdateRange(0, Math.max(4, this.m * 4)); at.needsUpdate = true; }
+    for (const at of this._attrs) { at.clearUpdateRanges(); at.addUpdateRange(0, Math.max(4, this.m * 4)); at.needsUpdate = true; }
   }
 }
 
@@ -1334,9 +1341,10 @@ class Freed {
         rotY = tau * 9;
         sy = 1.3; sx = 0.8;
         handUp = 1.4;
-        if (emit) emit(d[o], y - size * 0.5, d[o + 2], golden, u);
+        if (emit) emit(d[o], y - size * 0.5, d[o + 2], golden, u, 2);
       }
       const s = size * sc;
+      if (golden && emit && t < waveEnd) emit(d[o], y, d[o + 2], true, t / waveEnd, 1);
       fo.x = d[o]; fo.y = y; fo.z = d[o + 2];
       fo.sx = s * sx; fo.sy = s * sy; fo.sz = s * sx;
       fo.rotY = rotY + d[o + 8]; fo.rotZ = rotZ; fo.rotX = 0;
@@ -1352,7 +1360,7 @@ class Freed {
       this.outline.setMatrixAt(k, this._m);
       this.shadows.add(fo.x, fo.z, s * 0.9, Math.max(0, y - s * 0.5));
       // hands
-      this._hc.copy(c).multiplyScalar(0.88);
+      this._hc.copy(c).multiplyScalar(0.8);
       for (let h = 0; h < 2; h++) {
         const sd = h ? 1 : -1;
         const up = handUp * (h ? 1 : 0.7);
@@ -1363,7 +1371,7 @@ class Freed {
         this._q.setFromEuler(this._e);
         this._p.set(hx * s, hy * s * sy, hz * s).applyQuaternion(this._q);
         this._p.x += fo.x; this._p.y += fo.y; this._p.z += fo.z;
-        const hs = 0.15 * s;
+        const hs = 0.19 * s;
         this._s.set(hs, hs, hs);
         this._m.compose(this._p, this._q, this._s);
         this.hands.setMatrixAt(k * 2 + h, this._m);
@@ -1389,6 +1397,37 @@ const K = { PORTAL: 1, PILLAR: 2, SHELL: 3, VORTEX: 4, BIGBANG: 5, MEGA: 6, STOR
 function newEv() {
   return { on: false, kind: 0, t: 0, dur: 1, x: 0, y: 0, z: 0, r: 1, a: 0, b: 0, c: 0, e: 0, n: 0, f1: 0, f2: 0, f3: 0, acc: 0, color: new THREE.Color(), game: false };
 }
+
+// inline palettes hoisted out of hot paths (zero per-frame allocation)
+const IP_GOLD = [HEX.gold, 0xfff3b0, HEX.white];
+const IP0 = [HEX.white, HEX.cyanSoft];
+const IP1 = [HEX.white];
+const IP2 = [HEX.storm, HEX.cyanSoft, HEX.white];
+const IP3 = [HEX.star, HEX.cyan, 0xff9ed8];
+const IP4 = [0xfff05a, 0x7ff6ff, 0xff9ed8, 0xb8f2e6];
+const IP5 = [HEX.gold, 0xfff3b0, HEX.white];
+const IP6 = [HEX.white, HEX.star, 0xfff3b0];
+const IP7 = [HEX.white, HEX.star, HEX.orange];
+const IP8 = [HEX.white, 0xffd0d6];
+const IP9 = [HEX.star, 0xfff3b0];
+const IP10 = [HEX.pinkSoft, HEX.white];
+const IP11 = [HEX.cyan, HEX.white, HEX.pinkSoft];
+const IP12 = [HEX.gold, HEX.white];
+const IP13 = [HEX.cyan, HEX.white];
+const IP14 = [HEX.gold, 0xfff3b0];
+const IP15 = [HEX.magenta, HEX.white];
+const IP16 = [HEX.gold, HEX.white, 0xff7ab8, HEX.cyan];
+const IP17 = [HEX.violet, 0xd9c8ff, HEX.white];
+const IP18 = [HEX.teleWhite, HEX.orange, HEX.white];
+const IP19 = [HEX.teleWhite, HEX.white];
+const IP20 = [HEX.cyan, HEX.white, 0xd9c8ff];
+const IP21 = [HEX.cyan, HEX.white, HEX.cyanSoft];
+const IP22 = [HEX.mega, HEX.white, 0xffc1dc];
+const IP23 = [HEX.mega, HEX.white];
+const IP24 = [HEX.storm, HEX.white];
+const IP25 = [HEX.violet, 0xff7ad9, HEX.white, 0xd9c8ff];
+const IP26 = [HEX.violet, 0xff7ad9, HEX.white];
+const IP27 = [HEX.white, 0xd9c8ff, 0xfff3b0];
 
 // ─────────────────────────────────────────────────────────────
 // Feedback Director: bus event → handler (the "juice table")
@@ -1563,7 +1602,7 @@ export class FX {
     switch (kind) {
       case 'shards': this._shards(x, y || 0.5, z, n ?? 10, o.color ?? 0xef4b3c, o.dirX ?? 0, o.dirZ ?? 0, o.size ?? 0.18, o.speed ?? 1); break;
       case 'sparks': this._sparks(x, y || 0.5, z, n ?? 12, o.colors || (o.color != null ? [o.color] : PAL.sparkWarm), o.speed ?? 10, o.life ?? 0.35, !!o.self); break;
-      case 'sparkle': this._sparkles(x, y || 0.6, z, n ?? 8, o.colors || (o.color != null ? [o.color] : [HEX.white, HEX.cyanSoft]), o.radius ?? 0.8, !!o.self); break;
+      case 'sparkle': this._sparkles(x, y || 0.6, z, n ?? 8, o.colors || (o.color != null ? [o.color] : IP0), o.radius ?? 0.8, !!o.self); break;
       case 'dust': this._dust(x, z, n ?? 8, o.radius ?? 0.5, o.speed ?? 3, o.size ?? 0.45); break;
       case 'confetti': this._confettiBurst(x, y || 1, z, n ?? TUNE.confetti.burst, !!o.self); break;
       case 'ring': this.rings.anim(x, z, o.r0 ?? 0.2, o.radius ?? 2.5, o.life ?? 0.35, o.color ?? HEX.white, o.alpha ?? 0.9, { t0: o.thick ?? 0.35, t1: 0.08, self: o.self ? 1 : 0 }); break;
@@ -1577,7 +1616,7 @@ export class FX {
       case 'bubbles': this._bubbles(x, y || 0.6, z, n ?? 8, o.color ?? HEX.cyanSoft); break;
       case 'steam': this._steam(x, y || 1.3, z, n ?? 5); break;
       case 'bolt': this.bolt(x, z, o); break;
-      default: this._sparkles(x, y || 0.6, z, n ?? 6, [HEX.white], 0.6, false);
+      default: this._sparkles(x, y || 0.6, z, n ?? 6, IP1, 0.6, false);
     }
   }
 
@@ -1593,7 +1632,7 @@ export class FX {
     if (opts.impact !== false) {
       this.rings.anim(x, z, 0.2, 1.9, 0.3, HEX.storm, 0.95, { t0: 0.4, t1: 0.08 });
       this.rings.anim(x, z, 0.1, 1.0, 0.22, HEX.white, 0.9, { t0: 0.25, t1: 0.05 });
-      this._sparks(x, 0.3, z, Math.round(12 * this.emit), [HEX.storm, HEX.cyanSoft, HEX.white], 9, 0.3, false);
+      this._sparks(x, 0.3, z, Math.round(12 * this.emit), IP2, 9, 0.3, false);
       this._flash(x, 0.4, z, 1.6, HEX.storm, 0.12);
       this._dust(x, z, Math.round(4 * this.deco), 0.4, 3, 0.35);
     }
@@ -1603,14 +1642,14 @@ export class FX {
   // Director handlers
   // =========================================================
   onSmash(p) {
-    const x = p.x ?? 0, z = p.z ?? 0, size = p.size ?? 1;
+    const x = p.x ?? 0, z = p.z ?? 0, size = sizeOf(p.size);
     const y = p.y ?? size * 0.5;
     const R = TUNE.smash;
     const k = p.byNova ? 0.5 : 1;
     const shards = Math.round((size >= 1.8 ? R.shardsXL : size >= 1.3 ? R.shardsL : R.shards) * this.emit * k);
     this._shards(x, y, z, shards, p.color ?? 0xef4b3c, p.dirX ?? 0, p.dirZ ?? 0, 0.17 + size * 0.1, 1);
     this._sparks(x, y, z, Math.round(R.sparks * this.emit * k), PAL.sparkWarm, 11, 0.34, false);
-    this._sparkles(x, y + 0.3, z, Math.round(4 * this.deco * k), [HEX.star, HEX.cyan, 0xff9ed8], 0.6, false);
+    this._sparkles(x, y + 0.3, z, Math.round(4 * this.deco * k), IP3, 0.6, false);
     const combo = p.combo | 0;
     const ringHex = combo >= 10 ? PAL.rainbow[combo % PAL.rainbow.length] : combo >= 5 ? HEX.gold : combo >= 3 ? HEX.cyan : 0x9ff3ff;
     this.rings.anim(x, z, 0.3 * size, R.ring * (0.8 + size * 0.25) * (p.byNova ? 0.7 : 1), R.ringTime, ringHex, 0.95, { t0: 0.42, t1: 0.08 });
@@ -1619,13 +1658,13 @@ export class FX {
   }
 
   onFreed(p) {
-    const x = p.x ?? 0, z = p.z ?? 0, size = clamp((p.size ?? 1) * 0.78, 0.5, 1.05);
+    const x = p.x ?? 0, z = p.z ?? 0, size = clamp(sizeOf(p.size) * 0.78, 0.5, 1.05);
     const golden = p.golden ?? (rnd() < TUNE.freed.goldChance);
     if (this.freed.add(x, size * 0.5, z, size, golden) < 0) return;
-    this._sparkles(x, 0.9, z, Math.round(6 * this.deco), [0xfff05a, 0x7ff6ff, 0xff9ed8, 0xb8f2e6], 0.7, false);
+    this._sparkles(x, 0.9, z, Math.round(6 * this.deco), IP4, 0.7, false);
     if (golden) {
       this.rings.anim(x, z, 0.3, 2.2, 0.45, HEX.gold, 1, { t0: 0.4, t1: 0.1 });
-      this._sparkles(x, 1.2, z, 16, [HEX.gold, 0xfff3b0, HEX.white], 1.1, false);
+      this._sparkles(x, 1.2, z, 16, IP5, 1.1, false);
       this.G.bus?.emit('fx:goldenFreed', { x, z });
     }
   }
@@ -1634,7 +1673,7 @@ export class FX {
     const x = p.x ?? 0, z = p.z ?? 0, s = clamp(p.strength ?? 1, 0.5, 2);
     const R = TUNE.bonk;
     this._stars(x, 1.1, z, Math.round(R.stars * (0.75 + s * 0.25)) + 1, 0.46 + 0.08 * s);
-    this._sparks(x, 0.7, z, Math.round(R.sparks * this.emit * s), [HEX.white, HEX.star, 0xfff3b0], 8, 0.3, false);
+    this._sparks(x, 0.7, z, Math.round(R.sparks * this.emit * s), IP6, 8, 0.3, false);
     this.rings.anim(x, z, 0.2, R.ring * (0.8 + 0.3 * s), 0.28, HEX.star, 0.95, { t0: 0.34, t1: 0.06 });
     this._flash(x, 0.8, z, 1.3 * (0.8 + 0.2 * s), 0xfff3b0, 0.12, SH.BURST);
   }
@@ -1644,14 +1683,13 @@ export class FX {
     if (!e) return;
     e.game = true;
     e.x = p.x ?? 0; e.z = p.z ?? 0;
-    const size = p.size ?? 1;
-    e.r = 0.55 + (typeof size === 'number' ? size : 1) * 0.55;
+    e.r = 0.55 + sizeOf(p.size) * 0.55;
     e.dur = Math.max(0.3, p.delay ?? GT.spawn?.portalTime ?? 1.1);
     e.a = 0; e.f1 = 0; e.c = rnd() * 6;
   }
 
   onSpawn(p) {
-    const x = p.x ?? 0, z = p.z ?? 0, size = p.size ?? 1;
+    const x = p.x ?? 0, z = p.z ?? 0, size = sizeOf(p.size);
     // close the matching portal early (collapse)
     for (const e of this.evs) {
       if (e.on && e.kind === K.PORTAL && !e.f1) {
@@ -1677,7 +1715,7 @@ export class FX {
       p2.drag = 4; p2.life = rr(0.4, 0.65); p2.size = rr(0.5, 0.9); p2.size1 = p2.size * 1.8; p2.shape = SH.PUFF; p2.add = 0; p2.fade = 2;
       p2.color(pick(PAL.candy)); s.add(p2);
     }
-    this._sparks(x, 0.6, z, Math.round(18 * this.emit), [HEX.white, HEX.star, HEX.orange], 13, 0.4, false);
+    this._sparks(x, 0.6, z, Math.round(18 * this.emit), IP7, 13, 0.4, false);
     this._flash(x, 0.8, z, R * 0.9, 0xfff3b0, 0.14, SH.BURST);
     this._shards(x, 0.6, z, Math.round(6 * this.emit), 0xff5a36, 0, 0, 0.16, 1.2);
   }
@@ -1688,13 +1726,13 @@ export class FX {
     s.x = x; s.y = 0.8; s.z = z; s.life = 0.18; s.size = 0.28; s.size1 = 0.4; s.shape = SH.STREAK; s.stretch = 104;
     s.ox = 0; s.oy = 1; s.oz = 0; s.color(HEX.white, 1.4); s.add = 0.6;
     this.sp.add(s);
-    this._sparks(x, 0.7, z, Math.round(10 * this.emit), [HEX.white, 0xffd0d6], 8, 0.3, false);
+    this._sparks(x, 0.7, z, Math.round(10 * this.emit), IP8, 8, 0.3, false);
     this.rings.anim(x, z, 0.2, 1.6, 0.28, HEX.white, 0.8, { t0: 0.3, t1: 0.05 });
   }
 
   onDizzy(p) {
-    const x = p.x ?? 0, z = p.z ?? 0, size = p.size ?? 1;
-    this._sparkles(x, size + 0.3, z, Math.round(3 * this.deco), [HEX.star, 0xfff3b0], 0.4, false);
+    const x = p.x ?? 0, z = p.z ?? 0, size = sizeOf(p.size);
+    this._sparkles(x, size + 0.3, z, Math.round(3 * this.deco), IP9, 0.4, false);
   }
 
   onDash(p) {
@@ -1717,7 +1755,7 @@ export class FX {
     if (D.heroId === 'zap') {
       this._blinkFrom.x = x; this._blinkFrom.z = z; this._blinkFrom.has = true;
       this.rings.anim(x, z, 0.3, hero?.passive?.sparkRadius ?? 1.6, 0.25, HEX.storm, 0.9, { style: RS.DASHED, t0: 0.25, t1: 0.1 });
-      this._sparks(x, 0.5, z, Math.round(10 * this.emit), [HEX.storm, HEX.cyanSoft, HEX.white], 7, 0.28, true);
+      this._sparks(x, 0.5, z, Math.round(10 * this.emit), IP2, 7, 0.28, true);
     }
     if (D.heroId === 'stella') {
       const w = hero?.well;
@@ -1736,7 +1774,7 @@ export class FX {
       const f = this._blinkFrom;
       this.bolt(x, z, { fromX: f.x, fromY: 0.55, fromZ: f.z, y: 0.55, width: 0.22, amp: 0.6, branches: 1, impact: false, auto: true, color: HEX.storm });
       this.rings.anim(x, z, 0.3, 1.6, 0.25, HEX.storm, 0.9, { style: RS.DASHED, t0: 0.25, t1: 0.1 });
-      this._sparks(x, 0.5, z, Math.round(10 * this.emit), [HEX.storm, HEX.cyanSoft, HEX.white], 7, 0.28, true);
+      this._sparks(x, 0.5, z, Math.round(10 * this.emit), IP2, 7, 0.28, true);
       f.has = false;
     }
   }
@@ -1844,7 +1882,7 @@ export class FX {
     this._hearts(x, 0.9, z, 3 + Math.min(4, (p.amount ?? 1) * 2), true);
     this.rings.anim(x, z, 0.2, 1.4, 0.4, HEX.pink, 0.7, { t0: 0.25, t1: 0.05, self: 1 });
     this.rings.anim(x, z, 1.1, 1.1, 0.45, HEX.pink, 0.35, { style: RS.DISC, self: 1 });
-    this._sparkles(x, 0.9, z, 6, [HEX.pinkSoft, HEX.white], 0.7, true);
+    this._sparkles(x, 0.9, z, 6, IP10, 0.7, true);
   }
 
   onShieldBlock(p) {
@@ -1869,7 +1907,7 @@ export class FX {
     this.rings.anim(x, z, 0.4, 6, 0.5, HEX.cyan, 1, { t0: 0.6, t1: 0.1, self: 1 });
     this.rings.anim(x, z, 0.3, 5, 0.5, HEX.white, 0.8, { t0: 0.3, t1: 0.05, delay: 0.08, self: 1 });
     this._hearts(x, 1, z, 6, true);
-    this._sparkles(x, 1, z, 14, [HEX.cyan, HEX.white, HEX.pinkSoft], 1.2, true);
+    this._sparkles(x, 1, z, 14, IP11, 1.2, true);
     const e = this._ev(K.PILLAR);
     if (e) { e.x = x; e.z = z; e.r = 0.9; e.dur = 0.6; e.color.copy(col(HEX.cyan)); e.a = 18; }
   }
@@ -1886,14 +1924,14 @@ export class FX {
     const pl = this.G.run?.player;
     const x = pl?.x ?? 0, z = pl?.z ?? 0;
     this.rings.anim(x, z, 0.3, 3, 0.45, HEX.gold, 0.9, { t0: 0.35, t1: 0.06, self: 1 });
-    this._sparkles(x, 1, z, 12, [HEX.gold, HEX.white], 1, true);
+    this._sparkles(x, 1, z, 12, IP12, 1, true);
   }
 
   onNovaReady() {
     const pl = this.G.run?.player;
     if (!pl) return;
     this.rings.anim(pl.x, pl.z, 0.3, 2.4, 0.45, HEX.gold, 0.9, { t0: 0.3, t1: 0.05, self: 1 });
-    this._sparkles(pl.x, 1, pl.z, 12, [HEX.gold, 0xfff3b0, HEX.white], 0.9, true);
+    this._sparkles(pl.x, 1, pl.z, 12, IP5, 0.9, true);
   }
 
   onMilestone(p) {
@@ -1912,17 +1950,17 @@ export class FX {
     this._sparkles(x, 1, z, 20, PAL.rainbow, 1.5, true);
   }
 
-  onCrystal(p) { this._gemGlints(p.x ?? 0, 0.5, p.z ?? 0, 2, HEX.cyan); this._sparkles(p.x ?? 0, 0.6, p.z ?? 0, 2, [HEX.cyan, HEX.white], 0.35, false); }
-  onHeartPickup(p) { this._hearts(p.x ?? 0, 0.7, p.z ?? 0, 2, true); this._sparkles(p.x ?? 0, 0.7, p.z ?? 0, 4, [HEX.pinkSoft, HEX.white], 0.5, true); }
+  onCrystal(p) { this._gemGlints(p.x ?? 0, 0.5, p.z ?? 0, 2, HEX.cyan); this._sparkles(p.x ?? 0, 0.6, p.z ?? 0, 2, IP13, 0.35, false); }
+  onHeartPickup(p) { this._hearts(p.x ?? 0, 0.7, p.z ?? 0, 2, true); this._sparkles(p.x ?? 0, 0.7, p.z ?? 0, 4, IP10, 0.5, true); }
   onCoin(p) {
     const n = Math.min(10, 2 + ((p.amount ?? 1) / 3 | 0));
-    this._sparkles(p.x ?? 0, 0.6, p.z ?? 0, n, [HEX.gold, 0xfff3b0], 0.5, false);
+    this._sparkles(p.x ?? 0, 0.6, p.z ?? 0, n, IP14, 0.5, false);
     this.rings.anim(p.x ?? 0, p.z ?? 0, 0.1, 0.8, 0.22, HEX.gold, 0.8, { t0: 0.18, t1: 0.04 });
   }
   onMagnet(p) {
     const x = p.x ?? 0, z = p.z ?? 0;
     for (let i = 0; i < 3; i++) this.rings.anim(x, z, 0.3, 14, 0.8, HEX.cyan, 0.8, { t0: 0.4, t1: 0.1, delay: i * 0.15, self: 1 });
-    this._sparkles(x, 0.8, z, 10, [HEX.cyan, HEX.white], 1, true);
+    this._sparkles(x, 0.8, z, 10, IP13, 1, true);
   }
 
   onBossSlam(p) {
@@ -1955,13 +1993,13 @@ export class FX {
     const b = this.G.run?.boss || this.G.run?.enemies?.boss;
     const x = b?.x ?? 0, z = b?.z ?? 0;
     for (let i = 0; i < 2; i++) this.rings.anim(x, z, 1, 9 + i * 3, 0.6, i ? HEX.white : HEX.magenta, 0.85, { t0: 0.5, t1: 0.08, delay: i * 0.12 });
-    this._sparkles(x, 2, z, 20, [HEX.magenta, HEX.white], 2, false);
+    this._sparkles(x, 2, z, 20, IP15, 2, false);
   }
 
   onBossDefeat(p) {
     const x = p.x ?? 0, z = p.z ?? 0;
     for (let i = 0; i < 4; i++) this.rings.anim(x, z, 0.5, 6 + i * 3, 0.7, i % 2 ? HEX.white : HEX.gold, 0.9, { t0: 0.6, t1: 0.1, delay: i * 0.1 });
-    this._sparkles(x, 2, z, 40, [HEX.gold, HEX.white, 0xff7ab8, HEX.cyan], 2.5, false);
+    this._sparkles(x, 2, z, 40, IP16, 2.5, false);
     this._confettiRain();
   }
 
@@ -2028,7 +2066,7 @@ export class FX {
         e.acc -= fdt;
         if (e.acc <= 0 && u < 0.85) {
           e.acc = 0.05 / Math.max(0.3, this.deco);
-          this._spiralIn(e.x, e.z, e.r, [HEX.violet, 0xd9c8ff, HEX.white], 0.5, false);
+          this._spiralIn(e.x, e.z, e.r, IP17, 0.5, false);
         }
         break;
       }
@@ -2078,7 +2116,7 @@ export class FX {
     const fill = clamp(u / P.fill, 0, 1);
     const white = t > e.dur - P.white ? 1 : 0;
     this.rings.now(e.x, e.z, e.r * open, 0.1, oc, 1, RS.PORTAL, fill, e.c, 0, 0, white, 0, 0);
-    const beamA = clamp((u - 0.5) / 0.5, 0, 1);
+    const beamA = clamp((u - P.fill) / (1 - P.fill), 0, 1);   // stage 2: sky beam brightens
     if (beamA > 0) {
       const pulse = 0.85 + 0.15 * Math.sin(t * 20);
       this.beams.now(e.x, e.z, 0, e.r * (0.28 + 0.2 * beamA), P.beamH, col(white ? HEX.white : HEX.teleWhite), (0.15 + 0.6 * beamA) * pulse, white * 0.6, e.c, 0);
@@ -2091,7 +2129,7 @@ export class FX {
       s.mode = MO.SPIRAL; s.ox = e.x; s.oz = e.z; s.oy = 0.2; s.k1 = rnd() * TAU; s.k2 = e.r * 1.1;
       s.x = e.x + Math.cos(s.k1) * s.k2; s.z = e.z + Math.sin(s.k1) * s.k2; s.y = rr(0.2, 0.7);
       s.vx = 1.5; s.grav = 6; s.vz = 5; s.life = 0.6; s.size = 0.28; s.shape = SH.SPARKLE; s.rotV = 6;
-      s.color(pick([HEX.teleWhite, HEX.orange, HEX.white]), 1.2);
+      s.color(pick(IP18), 1.2);
       this.sp.add(s);
     }
   }
@@ -2099,7 +2137,7 @@ export class FX {
   _portalCollapse(e) {
     e.f2 = 1;
     this._flash(e.x, 0.6, e.z, e.r * 1.6, HEX.teleWhite, 0.12, SH.FLASH);
-    this._sparkles(e.x, 0.6, e.z, Math.round(6 * this.deco), [HEX.teleWhite, HEX.white], e.r * 0.6, false);
+    this._sparkles(e.x, 0.6, e.z, Math.round(6 * this.deco), IP19, e.r * 0.6, false);
   }
 
   _tickGate(e, t, fdt) {
@@ -2116,7 +2154,7 @@ export class FX {
       const a = rnd() * TAU, r = rr(0.2, e.r);
       s.x = e.x + Math.cos(a) * r; s.z = e.z + Math.sin(a) * r; s.y = 0.1; s.vy = rr(2, 5);
       s.life = rr(0.6, 1); s.size = rr(0.25, 0.4); s.shape = SH.SPARKLE; s.rotV = 3;
-      s.color(pick([HEX.cyan, HEX.white, 0xd9c8ff]), 1.3); s.self = 1;
+      s.color(pick(IP20), 1.3); s.self = 1;
       this.sp.add(s);
     }
   }
@@ -2130,7 +2168,7 @@ export class FX {
       this.shells.now(x, 1.1, z, 0.3 + u * 1.1, c, 0.5 + u * 0.5, 0, 1, 1);
       this.rings.now(x, z, 4 * (1 - u) + 0.6, 0.18, c, 0.8, RS.SHOCK, 1, 0, 0, 0, 0, 1, 0);
       e.acc -= fdt;
-      while (e.acc <= 0) { e.acc += 0.012; this._spiralIn(x, z, rr(2.5, 4), [HEX.cyan, HEX.white, HEX.cyanSoft], 1.1, true); }
+      while (e.acc <= 0) { e.acc += 0.012; this._spiralIn(x, z, rr(2.5, 4), IP21, 1.1, true); }
       return;
     }
     if (!e.f1) {
@@ -2140,13 +2178,13 @@ export class FX {
       for (let i = 0; i < 3; i++) this.rings.anim(x, z, 0.5, e.r * (1.05 - i * 0.12), 0.55, i === 1 ? HEX.white : HEX.cyan, 1, { t0: 0.8, t1: 0.12, delay: i * 0.08, self: 1 });
       this.rings.anim(x, z, e.r * 0.8, e.r * 0.8, 0.5, HEX.cyan, 0.3, { style: RS.DISC, self: 1 });
       const pe = this._ev(K.PILLAR);
-      if (pe) { pe.x = x; pe.z = z; pe.r = 1.1; pe.dur = 0.7; pe.color.copy(col(HEX.cyan)); pe.a = 30; pe.b = 0.7; }
+      if (pe) { pe.x = x; pe.z = z; pe.r = 1.1; pe.dur = 0.7; pe.color.copy(col(HEX.cyan)); pe.a = 30; pe.b = 0.7 * this._flashK(); }
       const n = Math.round(40 * this.emit);
       for (let i = 0; i < n; i++) { // cube-shaped shards blasting outward
         const a = (i / n) * TAU + rnd() * 0.15, sp = rr(9, 16);
         this.shards.add(x, 1, z, Math.cos(a) * sp, rr(4, 9), Math.sin(a) * sp, rr(0.14, 0.26), col(i % 3 ? HEX.cyan : HEX.white), 1.4, rr(0.7, 1));
       }
-      this._sparks(x, 1, z, Math.round(60 * this.emit), [HEX.cyan, HEX.white, HEX.cyanSoft], 18, 0.5, true);
+      this._sparks(x, 1, z, Math.round(60 * this.emit), IP21, 18, 0.5, true);
       this._flash(x, 1, z, 3, HEX.cyanSoft, 0.16, SH.BURST, true);
     }
   }
@@ -2159,7 +2197,7 @@ export class FX {
       this._spawnShell(x, 0.2, z, 4.2, c, 0.9, 1, 0.7 * this._flashK());
       for (let i = 0; i < 3; i++) this.rings.anim(x, z, 0.8, 5 + i * 1.5, 0.5, i === 1 ? 0xffc1dc : HEX.mega, 1, { t0: 0.6, t1: 0.1, delay: i * 0.1, self: 1 });
       this._dust(x, z, Math.round(12 * this.deco + 2), 1.4, 6, 0.6);
-      this._sparkles(x, 1.5, z, 16, [HEX.mega, HEX.white, 0xffc1dc], 1.8, true);
+      this._sparkles(x, 1.5, z, 16, IP22, 1.8, true);
       e.acc = 0.5;
     }
     // ground-pound stomps every 0.5 s while giant
@@ -2171,7 +2209,7 @@ export class FX {
       this._dust(x, z, Math.round(8 * this.deco + 2), 1.1, 4.5, 0.6);
     }
     e.b -= fdt;
-    if (e.b <= 0) { e.b = 0.08; this._sparkles(x, rr(0.5, 2.5), z, 1, [HEX.mega, HEX.white], 1.4, true); }
+    if (e.b <= 0) { e.b = 0.08; this._sparkles(x, rr(0.5, 2.5), z, 1, IP23, 1.4, true); }
   }
 
   _tickStorm(e, t, fdt) {
@@ -2180,7 +2218,7 @@ export class FX {
     const k = Math.min(1, t / 0.3) * Math.min(1, (e.dur - t) / 0.4);
     this.rings.now(x, z, e.r, 0.22, e.color, 0.55 * k, RS.DASHED, 0.6, 0, 0, 0, 0, 1, 0);
     this.rings.now(x, z, e.r * 0.62, 0.12, col(HEX.cyanSoft), 0.4 * k, RS.DASHED, 0, 1, 0, 0, 0, 1, 0);
-    if (!e.f1) { e.f1 = 1; this._sparks(x, 1, z, Math.round(24 * this.emit), [HEX.storm, HEX.white], 12, 0.4, true); this._flash(x, 1, z, 2.4, HEX.storm, 0.15, SH.BURST, true); }
+    if (!e.f1) { e.f1 = 1; this._sparks(x, 1, z, Math.round(24 * this.emit), IP24, 12, 0.4, true); this._flash(x, 1, z, 2.4, HEX.storm, 0.15, SH.BURST, true); }
     // auto bolts only if gameplay isn't calling fx.bolt() itself
     const external = this.extBoltT >= e.a;
     if (external || e.n <= 0 || t < TUNE.storm.firstDelay) return;
@@ -2217,7 +2255,7 @@ export class FX {
       this.shells.now(x, 1.2, z, 0.75 * open + Math.sin(t * 20) * 0.03, c, 1, 2, 1, 1);
       this.shells.now(x, 1.2, z, 1.25 * open, c, 0.5, 0, 1, 1);
       e.acc -= fdt;
-      while (e.acc <= 0) { e.acc += 0.018 / Math.max(0.35, this.deco); this._spiralIn(x, z, rr(4, e.r), [HEX.violet, 0xff7ad9, HEX.white, 0xd9c8ff], 1.2, true, true); }
+      while (e.acc <= 0) { e.acc += 0.018 / Math.max(0.35, this.deco); this._spiralIn(x, z, rr(4, e.r), IP25, 1.2, true, true); }
       return;
     }
     const u = (t - pull);
@@ -2233,8 +2271,8 @@ export class FX {
       this._spawnShell(x, 1.2, z, R * 1.1, c, 0.7, 0, 0.9 * this._flashK());
       this._spawnShell(x, 1.2, z, R * 0.6, col(0xff9ed8), 0.5, 0, 0.6 * this._flashK());
       for (let i = 0; i < 3; i++) this.rings.anim(x, z, 0.3, R + i * 1.2, 0.5, i === 1 ? HEX.white : HEX.violet, 1, { t0: 0.7, t1: 0.1, delay: i * 0.07, self: 1 });
-      this._sparks(x, 1.2, z, Math.round(60 * this.emit), [HEX.violet, 0xff7ad9, HEX.white], 16, 0.5, true);
-      this._sparkles(x, 1.2, z, 20, [HEX.white, 0xd9c8ff, 0xfff3b0], 2.5, true);
+      this._sparks(x, 1.2, z, Math.round(60 * this.emit), IP26, 16, 0.5, true);
+      this._sparkles(x, 1.2, z, 20, IP27, 2.5, true);
       this._flash(x, 1.2, z, 3, 0xd9c8ff, 0.16, SH.BURST, true);
     }
   }
@@ -2336,11 +2374,26 @@ export class FX {
     }
   }
 
-  _freedTrail = (x, y, z, golden, u) => {
+  _freedTrail = (x, y, z, golden, u, phase) => {
+    if (phase === 1) { // golden aura: sparkles orbiting the lucky cube
+      const s = this.sp.s();
+      const a = rnd() * TAU, r = rr(0.5, 0.8);
+      s.x = x + Math.cos(a) * r; s.y = y + rr(-0.4, 0.5); s.z = z + Math.sin(a) * r;
+      s.vy = rr(0.3, 1.2); s.life = rr(0.3, 0.5); s.size = rr(0.3, 0.45); s.shape = SH.SPARKLE; s.rotV = rr(-5, 5);
+      s.color(pick(IP_GOLD), 1.3); s.add = 0.4;
+      this.sp.add(s);
+      return;
+    }
+    if (rnd() < 0.5) { // rocket contrail
+      const q = this.sp.s();
+      q.x = x; q.y = y - 0.2; q.z = z; q.vy = -2; q.life = 0.22; q.size = 0.14; q.shape = SH.STREAK; q.stretch = 106;
+      q.ox = 0; q.oy = 1; q.oz = 0; q.color(golden ? HEX.gold : HEX.white, 1.2); q.add = 0.3;
+      this.sp.add(q);
+    }
     const s = this.sp.s();
-    s.x = x + rr(-0.15, 0.15); s.y = y; s.z = z + rr(-0.15, 0.15);
-    s.vy = -rr(0.5, 1.5); s.life = rr(0.3, 0.45); s.size = rr(0.22, 0.34) * (1 - u * 0.4); s.shape = SH.SPARKLE; s.rotV = rr(-5, 5);
-    s.color(golden ? pick([HEX.gold, 0xfff3b0]) : pick(PAL.rainbow), 1.2); s.add = 0.4;
+    s.x = x + rr(-0.18, 0.18); s.y = y; s.z = z + rr(-0.18, 0.18);
+    s.vy = -rr(0.5, 1.5); s.life = rr(0.3, 0.45); s.size = rr(0.3, 0.44) * (1 - u * 0.4); s.shape = SH.SPARKLE; s.rotV = rr(-5, 5);
+    s.color(golden ? pick(IP14) : pick(PAL.rainbow), 1.2); s.add = 0.4;
     this.sp.add(s);
   };
 

@@ -974,7 +974,7 @@ class HeroModel {
     this.blinkT = 0; this.blinkNext = 1 + Math.random() * 2; this.blinkQueued = 0;
     this.lx = 0; this.ly = 0;
     this.tiredAmt = 0; this.glowAmt = 0; this.bubbleAmt = 0; this.celebAmt = 0;
-    this.wasAir = false; this.wasDash = false;
+    this.wasAir = false; this.wasDash = false; this.wasHurt = false;
     this.liftY = 0; this.liftV = 0;
     this.wob = { x: 0, z: 0, vx: 0, vz: 0 };
     this.ringOn = true;
@@ -1092,7 +1092,8 @@ class HeroModel {
     if (this.wasAir && !air) this.squash(...TUNE.land);
     if (dashing && !this.wasDash) this.squash(...TUNE.dashKick);
     if (!dashing && this.wasDash) this.squash(...TUNE.dashEnd);
-    this.wasAir = air; this.wasDash = dashing;
+    if (hurt && !this.wasHurt) { this.flash(0.12); this.squash(0.85, 1.2, 0.85); }
+    this.wasAir = air; this.wasDash = dashing; this.wasHurt = hurt;
 
     // ---- squash spring target
     let tx = 1, ty = 1, tz = 1;

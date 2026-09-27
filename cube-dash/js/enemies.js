@@ -45,6 +45,9 @@ const TUNE = {
   bumperBounce: 1.05,
   bowlSpeed: 7.5, bowlCd: 0.6,
   zippyHitSpeed: 11,
+  zippyBackUp: 0.3,           // u backed up during the wind-up (kid rule 9)
+  dizzyTilt: 0.26,            // ~15° lean while dizzy
+  shakeWarn: 0.12,
   wobbleHz: 6,
   smashTint: 0.4, smashTintColor: 0xffe8f2,
   hazardDizzy: 2.0, hazardDizzyCd: 0.8,
@@ -54,18 +57,18 @@ const TUNE = {
   miniPop: 6.5,
   eliteSpeedy: 1.4,
   fallTime: 0.7,
-  contactDamage: true,        // enemies.js calls run.hurtPlayer on harmful contact (idempotent w/ i-frames)
+  contactDamage: true,        // fallback only: skipped when run.playerCtl.resolve() owns hero contact
   heroPassives: true,         // Stella Starlight drift handled here (enemy physics)
-  driveShake: true,           // light camera shake on bonks / rim bonks
+  driveShake: false,          // run.js already shakes / hit-stops on enemy:bonk (kept as an option)
   blastChainBudget: 8,        // popper chain explosions resolved per frame
   beamerTurn: 60,             // °/s idle turn toward the hero
   steerTogetherDefault: 0.4,
 };
 
 const COL = {
-  tele: 0xff7a1a, tele2: 0xffc04d, white: 0xffffff, cyan: 0x62f4ff,
-  beamGlow: 0xff2f5e, beamCore: 0xfff2f6, star: 0xffe14a, crown: 0xffc630,
-  steel: 0x9aa6c4, horn: 0xfff1d6, seam: 0xffd2f0, lens: 0xff2d6f, pylon: 0xc9c6ec,
+  tele: 0xff8a1c, tele2: 0xffd65a, white: 0xffffff, cyan: 0x62f4ff,
+  beamGlow: 0xffa23a, beamCore: 0xfffbe8,   // danger = yellow-white / orange, never plain red (kid rule 12) star: 0xffe14a, crown: 0xffc630,
+  steel: 0x9aa6c4, horn: 0xfff1d6, seam: 0xffd2f0, lens: 0xffe36b, pylon: 0xc9c6ec, aim: 0xfff4c2,
   hat: 0x2b2d4f, hatBand: 0xffcf3a, shield: 0x7fe8ff, flame: 0xffa531, spark: 0xfff3a0,
   fuse: 0x5a3a2e, nozzle: 0x3b3f5c, fin: 0xffd06b, pipOff: 0x3a3f55, pipOn: 0xffb13b,
 };
@@ -146,6 +149,12 @@ void main() {
 const DECAL_COMMON = /* glsl */`
 uniform float uTime; uniform vec3 uO1; uniform vec3 uO2; uniform vec3 uW; uniform vec3 uC; uniform vec3 uR;
 varying vec2 vUv; varying vec4 vA; varying vec4 vB;
+float sdSegD(vec2 p, vec2 a, vec2 b) { vec2 pa = p - a, ba = b - a; float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0); return length(pa - ba * h); }
+// "!" glyph (screen-upright on the ground), height s in world units → (fill, outline)
+vec2 bang(vec2 p, float s) {
+  float d = min(sdSegD(p, vec2(0.0, 0.02 * s), vec2(0.0, 0.40 * s)) - 0.1 * s, length(p - vec2(0.0, -0.32 * s)) - 0.11 * s);
+  return vec2(1.0 - smoothstep(-0.012, 0.012, d), 1.0 - smoothstep(0.05 * s, 0.09 * s, d));
+}
 `;
 const DISC_FRAG = DECAL_COMMON + /* glsl */`
 void main() {
@@ -167,6 +176,9 @@ void main() {
     float lead = (1.0 - smoothstep(0.0, 0.06, abs(r - fill))) * step(0.02, fill) * (1.0 - step(0.995, fill));
     col = mix(col, uO2, lead); a = max(a, lead * 0.9);
     col = mix(col, uO1, edge); a = max(a, edge * 0.95);
+    vec2 g = bang(wp, min(R * 0.55, 1.1));   // "!" in the middle of every danger zone
+    col = mix(col, uO1 * 0.75, g.y); a = max(a, g.y * 0.9);
+    col = mix(col, uW, g.x); a = max(a, g.x);
   } else if (mode < 1.5) {                // shockwave ring band (inner..1)
     float inner = vB.y;
     float band = smoothstep(inner - fw, inner + fw, r) * (1.0 - smoothstep(1.0 - fw * 2.0, 1.0, r));
@@ -181,8 +193,13 @@ void main() {
     col = tint; a = ring * pulse * 0.9 + (1.0 - r) * 0.10 * vB.w;
     float spin = step(0.5, fract(atan(p.y, p.x) / 6.2831 * 8.0 + uTime * 0.6 * (vB.w > 0.5 ? 1.0 : -1.0)));
     a *= mix(1.0, 0.55 + 0.45 * spin, vB.w);
-  } else {                                // blast flash (filled glow)
+  } else if (mode < 3.5) {                // blast flash (filled glow)
     col = mix(uO2, uW, 0.55); a = (1.0 - r * r) * 0.85;
+  } else {                                // "!" badge (lanes / beams get one at their base)
+    vec2 g = bang(p * R, R * 1.5);
+    float bg = (1.0 - smoothstep(0.86, 1.0, r)) * 0.35;
+    col = mix(uO2, uO1 * 0.75, g.y); a = max(bg, g.y * 0.95);
+    col = mix(col, uW, g.x); a = max(a, g.x);
   }
   col = mix(col, uW, flash); a = mix(a, max(a, 0.85) * step(0.001, a + flash), flash);
   gl_FragColor = vec4(col, clamp(a * alpha, 0.0, 1.0));
@@ -219,10 +236,16 @@ void main() {
     float pulse = 0.55 + 0.45 * sin(uTime * 14.0 - v * L * 1.5);
     col = mix(uO1, uO2, core);
     a = core * (0.35 + 0.5 * pulse) * (1.0 - smoothstep(0.85, 1.0, v));
-  } else {                                // active beam scorch on the floor
+  } else if (mode < 3.5) {                // active beam scorch on the floor
     float core = 1.0 - smoothstep(0.0, 0.5, abs(u) * 2.0);
     col = mix(uR, uW, core * core);
     a = (0.35 + 0.55 * core) * (1.0 - smoothstep(0.92, 1.0, v));
+  } else {                                // thick dashed yellow-white line (Beamer / laser telegraph)
+    float dash = step(0.42, fract(wp.y / 0.9 - uTime * 1.4));
+    float body = 1.0 - smoothstep(0.40, 0.5, abs(u));
+    float inFill = 1.0 - smoothstep(fill - fwv, fill, v);
+    col = mix(uO2, uW, 0.45 + 0.55 * inFill);
+    a = body * mix(0.12, 0.2, inFill) + body * dash * mix(0.4, 0.95, inFill);
   }
   col = mix(col, uW, flash); a = mix(a, max(a, 0.8), flash);
   gl_FragColor = vec4(col, clamp(a * alpha, 0.0, 1.0));
@@ -278,6 +301,8 @@ class DecalLayer {
     L.mesh.setMatrixAt(i, this._m);
     L.aA.setXYZW(i, fill, flash, alpha, mode); L.aB.setXYZW(i, radius, inner, seed, tint);
   }
+  /** screen-upright "!" badge on the ground (lanes / beams / charges) */
+  bang(x, z, size = 0.5, flash = 0, alpha = 1) { this.disc(x, z, size, 1, flash, alpha, 4); }
   /** ground rect from (x,z) along angle (atan2(dx,dz)) — mode 0 lane · 1 chevrons · 2 thin line · 3 beam scorch */
   rect(x, z, angle, length, width, fill = 1, flash = 0, alpha = 1, mode = 0) {
     const L = this.r; if (L.n >= L.cap || length <= 0.01) return;
@@ -328,8 +353,8 @@ const BODY = {        // per-type body proportions (× size)
 };
 const LIGHT_TYPES = { grumpy: 1, zippy: 1, splitter: 1, popper: 1 };
 const TOKEN_TYPES = { grumpy: 1, splitter: 1, popper: 1, bruiser: 1 };
-const BRUISER_PIP_SOURCES = { rim: 1, bumper: 1, blast: 1, laser: 1, beam: 1, charge: 1, knock: 1, shock: 1, bonk: 1, slam: 1, ring: 1, mine: 1 };
-const BRUISER_DIZZY_SOURCES = { nova: 1, armor: 1, timestop: 1 };
+const BRUISER_PIP_SOURCES = { rim: 1, bumper: 1, laser: 1, beam: 1, charge: 1, knock: 1, shock: 1, bonk: 1, slam: 1, ring: 1, mine: 1 };
+const BRUISER_DIZZY_SOURCES = { nova: 1, armor: 1, timestop: 1, blast: 1, victory: 1 };   // popper blasts dizzy Bruisers too (kid rule 10)
 
 export class EnemyManager {
   constructor(G, run) {
@@ -486,6 +511,9 @@ export class EnemyManager {
       if (type === 'bruiser') sizeKey = 'L';
     }
     if (opts.elite) xp = 'XL';
+    // kid rule 2: every hit = 1 heart; 'hearts' only scales knockback in run.hurtPlayer (1 + 0.45 per extra)
+    const kb = (type === 'grumpy' ? def.sizes[sizeKey]?.knockback : def.knockback) ?? D.player.knockback;
+    if (hearts > 0) hearts = Math.max(1, 1 + (kb / D.player.knockback - 1) / 0.45);
     const mass = (def.mass ?? 1) * (type === 'grumpy' ? Math.max(0.6, Math.pow(size, 1.5)) : 1);
     let sMult = (opts.speedMult ?? 1);
     if (opts.elite === 'speedy') sMult *= TUNE.eliteSpeedy;
@@ -613,7 +641,7 @@ export class EnemyManager {
   }
   _popperHazard(e) {
     const R = e.def.blastRadius;
-    e.hz = this.makeHazard('blast', e.def.blastHearts ?? 1, (x, z, r) => len2(x - e.x, z - e.z) < R + r * 0.5, true, { e, noAutoDizzy: true });
+    e.hz = this.makeHazard('blast', e.def.blastHearts ?? 1, (x, z, r) => len2(x - e.x, z - e.z) < R + r * 0.25, true, { e, noAutoDizzy: true });
   }
   _beamerHazard(e) {
     const W = e.def.beamWidth;
@@ -645,7 +673,7 @@ export class EnemyManager {
       this._emit('enemy:shieldPop', { x: e.x, z: e.z });
       this._fx('sparks', e.x, e.size * 0.6, e.z, { color: COL.shield, count: 14 });
     }
-    if (e.type === 'bruiser' && e.dizzyT <= 0 && !(opts.heavy || (byPlayer && this._heroBash()))) {
+    if (e.type === 'bruiser' && e.dizzyT <= 0 && !(opts.heavy || opts.bash || (byPlayer && this._heroBash()))) {
       this._armorHit(e, byPlayer ? 'player' : 'knock');
       e.vx += dirX * 0.6; e.vz += dirZ * 0.6;
       return true;
@@ -658,6 +686,10 @@ export class EnemyManager {
         this._emit('enemy:clang', { x: e.x, z: e.z, type: e.type });
       }
       e.sq = 0.8;
+      return true;
+    }
+    if (e.type === 'splitter' && e.def.splitOnKnock && !e.portal) {   // kid rule 8: a knock splits it → 2 dizzy minis (jackpot)
+      this.smash(e, { force: true, dirX, dirZ, byKnock: true, byPlayer, splitSpeed: sp });
       return true;
     }
     if (e.type === 'popper' && !e.fuseLit) {
@@ -729,7 +761,7 @@ export class EnemyManager {
       byBlast: !!opts.fromBlast, byFall: !!opts.byFall, crystal, elite: e.elite, minion: e.minion, mini: e.mini, id: e.id,
     });
     this._emit('enemy:freed', { x: e.x, z: e.z, size: e.size, type: e.type, crystal, minion: e.minion });
-    if (e.type === 'splitter' && !opts.noSplit) this._split(e, dx, dz);
+    if (e.type === 'splitter' && !opts.noSplit) this._split(e, dx, dz, opts.splitSpeed);
     if (e.type === 'popper' && !opts.fromOwnBlast) this._explode(e, { harmless: !e.fuseLit || !!opts.byNova, smashed: true });
     return crystal;
   }
@@ -742,14 +774,15 @@ export class EnemyManager {
     if (e.minion) this.minionCount = Math.max(0, this.minionCount - 1);
   }
 
-  _split(e, dx, dz) {
+  _split(e, dx, dz, knockSpeed = 0) {
     const n = e.def.splitInto ?? 2;
+    const fwd = knockSpeed > 0 ? 0.8 : 0.4, pop = knockSpeed > 0 ? Math.max(TUNE.miniPop, knockSpeed * 0.55) : TUNE.miniPop;
     for (let i = 0; i < n; i++) {
       const side = i % 2 ? 1 : -1;
-      const px = -dz * side, pz = dx * side;              // perpendicular to the dash
-      const vx = (px * 0.9 + dx * 0.4) * TUNE.miniPop, vz = (pz * 0.9 + dz * 0.4) * TUNE.miniPop;
+      const px = -dz * side, pz = dx * side;              // fan out sideways from the hit direction
+      const vx = (px * 0.75 + dx * fwd) * pop, vz = (pz * 0.75 + dz * fwd) * pop;
       this._deferred.push(['grumpy', e.x + px * 0.3, e.z + pz * 0.3, {
-        size: 'S', mini: true, wave: e.waveIndex, vx, vz, dizzy: TUNE.miniPop > 0 ? EN.splitter.miniDizzy ?? 0.6 : 0.6, airborne: 0.4,
+        size: 'S', mini: true, wave: e.waveIndex, vx, vz, dizzy: EN.splitter.miniDizzy ?? 2, airborne: 0.4,
         minion: e.minion, speedMult: e.baseSpeedMult,
       }]);
     }
@@ -842,7 +875,7 @@ export class EnemyManager {
     this._blastBudget--;
     if (!harmless && e.hz) {
       e.hz.active = true; e.hz.srcX = e.x; e.hz.srcZ = e.z; e.hz.t = 0.15;
-      e.hz.test = ((ex, ez) => (x, z, r) => len2(x - ex, z - ez) < R + r * 0.5)(e.x, e.z);
+      e.hz.test = ((ex, ez) => (x, z, r) => len2(x - ex, z - ez) < R + r * 0.25)(e.x, e.z);
       this._lingering.push(e.hz); e.hz = null;       // keep the blast hazard alive a few frames after death
     }
     let count = 0;
@@ -855,7 +888,7 @@ export class EnemyManager {
       if (o.portal && !o.dropping) continue;
       if (o.treasure) { this.knock(o, dx, dz, 9); continue; }
       if (o.smashable) { if (this.smash(o, { dirX: dx, dirZ: dz, fromBlast: true })) count++; continue; }
-      if (o.type === 'bruiser') { if (this._armorHit(o, 'blast')) count++; continue; }
+      if (o.type === 'bruiser') { if (this.dizzy(o, e.def.blastDizzy ?? 3, 'blast')) count++; continue; }
       if (this.dizzy(o, e.def.blastDizzy ?? 2.5, 'blast')) count++;
       this.knock(o, d > 0.01 ? dx : 1, d > 0.01 ? dz : 0, 9 * (1 - d / (R + o.radius) * 0.5), { hops: 1 });
     }
@@ -1040,7 +1073,7 @@ export class EnemyManager {
     if (e.dizzyT > 0) {
       e.dizzyT -= dt;
       if (e.dizzyT <= 0) {
-        e.dizzyT = 0; e.immuneT = TUNE.bonkImmune; e.sq = 1.25;
+        e.dizzyT = 0; e.immuneT = D.bonk.immunity ?? TUNE.bonkImmune; e.sq = 1.25;
         if (e.type === 'beamer') { e.phase = 'idle'; e.phT = 0; e.cd = e.def.cooldown; }
         if (e.type === 'bruiser') e.pips = 0;
       }
@@ -1236,6 +1269,8 @@ export class EnemyManager {
       }
       e.rotY = turnTo(e.rotY, Math.atan2(e.cdx, e.cdz), 14 * dt);
       e.heading = e.rotY;
+      const back = TUNE.zippyBackUp / Math.max(0.2, e.wDur);          // kid rule 9: backs up 0.3 u
+      e.x -= e.cdx * back * dt; e.z -= e.cdz * back * dt;
       e.sq = Math.min(e.sq, 1 - 0.14 * clamp(e.wT / e.wDur, 0, 1));
       if (e.wT >= e.wDur) {
         e.ai = 'charge';
@@ -1269,6 +1304,11 @@ export class EnemyManager {
     this._steer(e, p.x, p.z, e.maxSpeed * this._speedMult(), dt, fr);
   }
 
+  _zippyStop(e, vx = 0, vz = 0) {
+    e.ai = 'chase'; e.chargeLeft = 0; e.cd = e.def.cooldown ?? 3.5;
+    if (e.hz) e.hz.active = false;
+    e.vx = vx; e.vz = vz; e.sq = 0.7;
+  }
   _zippyTire(e) {
     e.ai = 'tired'; e.tiredT = e.def.tired; e.chargeLeft = 0;
     if (e.hz) e.hz.active = false;
@@ -1405,8 +1445,7 @@ export class EnemyManager {
 
   _pair(a, b, nx, nz, overlap) {
     const sa = len2(a.vx, a.vz), sb = len2(b.vx, b.vz);
-    const minB = D.knock.bonkMinSpeed;
-    const aP = a.proj && sa >= minB, bP = b.proj && sb >= minB;
+    const aP = a.proj && sa > 0.5, bP = b.proj && sb > 0.5;   // kid rule 5: a knocked cube always bonks
     const zA = a.type === 'zippy' && a.ai === 'charge', zB = b.type === 'zippy' && b.ai === 'charge';
     if (aP || bP) {
       if (aP && (!bP || sa >= sb)) this._impact(a, b, nx, nz, sa); else this._impact(b, a, -nx, -nz, sb);
@@ -1480,7 +1519,7 @@ export class EnemyManager {
   }
 
   _bonk(a, b, strength, info = {}) {
-    if (a._bonkId === b.id && this.time - a._bonkT < 0.35) return;
+    if (a._bonkId === b.id && this.time - a._bonkT < (D.bonk.pairCooldown ?? 1.5)) return;
     a._bonkId = b.id; a._bonkT = this.time; b._bonkId = a.id; b._bonkT = this.time;
     const sec = D.bonk.dizzy;
     const da = this.dizzy(a, sec, 'bonk'), db = this.dizzy(b, sec, 'bonk');
@@ -1495,7 +1534,7 @@ export class EnemyManager {
     this._emit('enemy:bonk', { x, z, strength, ice, ...extra });
     const b = this.boss;
     if (b && !b.dead && !extra.noStagger && len2(b.x - x, b.z - z) < b.radius + 3) b.addStagger?.(DATA.boss.stagger.bonkNear, 'bonk');
-    if (this._hitStopFrame !== this._frame) {
+    if (TUNE.driveShake && this._hitStopFrame !== this._frame) {
       this._hitStopFrame = this._frame;
       try { this.G.hitStop?.(D.hitstop.bonk); } catch { /* */ }
     }
@@ -1506,18 +1545,17 @@ export class EnemyManager {
     if (o._zipHit === zp.id && this.time - o._zipT < 0.5) return;
     o._zipHit = zp.id; o._zipT = this.time;
     if (o.treasure) { this.knock(o, nx, nz, TUNE.zippyHitSpeed); return; }
-    if (o.type === 'bruiser' || o.stationary) {
-      if (o.type === 'bruiser') this._armorHit(o, 'charge'); else this.dizzy(o, D.bonk.dizzy, 'bonk');
-      this._zippyTire(zp);
-      zp.vx = -nx * 3; zp.vz = -nz * 3;
-      this.dizzy(zp, D.bonk.dizzy, 'bonk');
-      this._emitBonk((zp.x + o.x) / 2, (zp.z + o.z) / 2, 10, { byZippy: true });
-      return;
+    const big = zp.def.bigBonk ?? D.bonk.dizzy;
+    if (o.type === 'bruiser') this._armorHit(o, 'charge');
+    else if (o.stationary) this.dizzy(o, big, 'charge');
+    else {
+      const px = -zp.cdz, pz = zp.cdx, side = (px * nx + pz * nz) >= 0 ? 1 : -1;
+      this.knock(o, nx * 0.6 + px * side * 0.8, nz * 0.6 + pz * side * 0.8, TUNE.zippyHitSpeed, { hops: 1 });
+      if (!o.dead) this.dizzy(o, big, 'charge');
     }
-    const px = -zp.cdz, pz = zp.cdx, side = (px * nx + pz * nz) >= 0 ? 1 : -1;
-    this.knock(o, nx * 0.6 + px * side * 0.8, nz * 0.6 + pz * side * 0.8, TUNE.zippyHitSpeed, { hops: 1 });
-    this.dizzy(o, D.bonk.dizzy, 'charge');
-    this._emitBonk(o.x, o.z, 9, { byZippy: true });
+    this._zippyStop(zp, -nx * 2.5, -nz * 2.5);
+    this.dizzy(zp, big, 'charge');
+    this._emitBonk((zp.x + o.x) / 2, (zp.z + o.z) / 2, 10, { byZippy: true, big: true });
   }
 
   _bowl(br, o, nx, nz) {
@@ -1539,7 +1577,7 @@ export class EnemyManager {
         this.knock(o, nx + B.dirX * 0.4, nz + B.dirZ * 0.4, 12, { hops: 1 });
         this.dizzy(o, D.bonk.dizzy, 'charge');
       }
-    } else if (o.proj && sp >= D.knock.bonkMinSpeed && o._bossHit !== o._bonkT + ':' + o.hops) {
+    } else if (o.proj && sp > 0.5 && o._bossHit !== o._bonkT + ':' + o.hops) {
       o._bossHit = o._bonkT + ':' + o.hops;
       B.addStagger?.(DATA.boss.stagger.knockedCube, 'cube');
       const vn = o.vx * nx + o.vz * nz;
@@ -1577,7 +1615,7 @@ export class EnemyManager {
       const d = len2(e.x, e.z), lim = R - e.size * 0.5;
       if (d > lim && d > 1e-4) {
         const nx = e.x / d, nz = e.z / d, vn = e.vx * nx + e.vz * nz, sp = len2(e.vx, e.vz);
-        if (e.proj && sp >= D.knock.bonkMinSpeed && vn > 0) {
+        if (e.proj && vn > 0) {
           const bounce = cm.rimBounce || TUNE.rimBounceBase;
           e.vx -= (1 + bounce) * vn * nx; e.vz -= (1 + bounce) * vn * nz;
           e.hops--;
@@ -1586,7 +1624,11 @@ export class EnemyManager {
           this._emitBonk(nx * R, nz * R, sp, { rim: true, byKnock: true, byPlayer: e.byPlayer });
           if (cm.pinball) { try { w?.pulseRim?.(0xffd84a); } catch { /* */ } }
         } else if (vn > 0) { e.vx -= vn * nx; e.vz -= vn * nz; }
-        if (e.type === 'zippy' && e.ai === 'charge') { this._zippyTire(e); this._emit('enemy:clang', { x: e.x, z: e.z, type: 'zippy', rim: true }); }
+        if (e.type === 'zippy' && e.ai === 'charge') {   // kid rule 9: Zippy into the rim = dizzy 3 s
+          this._zippyStop(e, -nx * 2, -nz * 2);
+          this.dizzy(e, e.def.rimDizzy ?? D.bonk.rimDizzy, 'rim');
+          this._emitBonk(nx * R, nz * R, e.def.chargeSpeed, { rim: true, byZippy: true });
+        }
         e.x = nx * lim; e.z = nz * lim;
       }
     }
@@ -1602,14 +1644,14 @@ export class EnemyManager {
     } else { e.x += nx * 0.12; e.z += nz * 0.12; }
     const vn = e.vx * nx + e.vz * nz, sp = len2(e.vx, e.vz);
     if (vn >= 0) return;
-    if (e.proj && sp >= D.knock.bonkMinSpeed) {
+    if (e.proj && sp > 0.5) {
       e.vx -= (1 + TUNE.bumperBounce) * vn * nx; e.vz -= (1 + TUNE.bumperBounce) * vn * nz;
       e.hops--;
       this.dizzy(e, D.bonk.rimDizzy, 'bumper');
       e.sq = 0.7;
       this._emitBonk(e.x - nx * e.radius, e.z - nz * e.radius, sp, { bumper: true, byKnock: true, byPlayer: e.byPlayer, bumperRef: b || null });
     } else { e.vx -= vn * nx; e.vz -= vn * nz; }
-    if (e.type === 'zippy' && e.ai === 'charge') this._zippyTire(e);
+    if (e.type === 'zippy' && e.ai === 'charge') { this._zippyStop(e, nx * 2, nz * 2); this.dizzy(e, e.def.rimDizzy ?? D.bonk.rimDizzy, 'bumper'); }
   }
 
   // ─────────────── hazards that dizzy red cubes (lasers, rings, mines…) ───────────────
@@ -1634,7 +1676,7 @@ export class EnemyManager {
   // ─────────────── contact with the hero ───────────────
   _contactPass(dt) {
     const p = this.player;
-    if (!p) return;
+    if (!p || typeof this.run?.playerCtl?.resolve === 'function') return;   // player.js owns hero contact + nudges
     const hr = p.hurtRadius ?? D.player.hurtRadius;
     const body = (p.size ?? 1) * 0.45;
     let hurt = false;
@@ -1668,12 +1710,15 @@ export class EnemyManager {
   _wx(e, lx, lz, rot) { return e.x + Math.cos(rot) * lx + Math.sin(rot) * lz; }
   _wz(e, lx, lz, rot) { return e.z - Math.sin(rot) * lx + Math.cos(rot) * lz; }
 
-  /** yellow dizzy stars orbiting above (shared by cubes and the boss) */
-  stars(x, z, y, r, count, scale, ph = 0) {
+  /** yellow dizzy stars orbiting above (shared by cubes and the boss).
+   *  remaining (s): kid rule 6 — one star fades out each second (a countdown without numbers) */
+  stars(x, z, y, r, count, scale, ph = 0, remaining = 99) {
     const t = this.G.time?.real ?? this.time, A = this.acc.stars;
     for (let k = 0; k < count; k++) {
-      const a = t * 4 + ph + (k * TAU) / count;
-      this._put(A, x + Math.cos(a) * r, y + Math.sin(t * 6 + k * 2) * 0.06, z + Math.sin(a) * r, 0, -a + t * 3, 0, scale, scale, scale);
+      const vis = count === 3 ? clamp(remaining - k, 0, 1) : clamp(remaining * count / 3 - k, 0, 1);
+      if (vis <= 0.02) continue;
+      const a = t * 4 + ph + (k * TAU) / count, sc = scale * (0.35 + 0.65 * vis);
+      this._put(A, x + Math.cos(a) * r, y + Math.sin(t * 6 + k * 2) * 0.06, z + Math.sin(a) * r, 0, -a + t * 3, 0, sc, sc, sc);
     }
   }
 
@@ -1720,7 +1765,12 @@ export class EnemyManager {
       o.x = e.x; o.z = e.z; o.y = baseY + hY * 0.5;
       o.sx = s * B[0] * sxz; o.sy = hY; o.sz = s * B[2] * sxz;
       o.rotY = e.rotY; o.rotX = 0; o.rotZ = 0;
-      if (smash) o.rotZ = Math.sin(t * TUNE.wobbleHz * TAU + e.wobPh) * 0.13;
+      const rem = Math.max(e.dizzyT, e.tiredT, e.freezeT);
+      const warn = smash && e.freezeT <= 0 && rem < (D.bonk.wakeWarn ?? 0.5);
+      if (smash) {                                   // ~15° lean + 6 Hz wobble; last 0.5 s: shake = wake-up warning
+        o.rotZ = (e.wobPh > Math.PI ? 1 : -1) * TUNE.dizzyTilt + Math.sin(t * TUNE.wobbleHz * TAU + e.wobPh) * 0.08;
+        if (warn) { o.rotZ += Math.sin(tr * 44) * TUNE.shakeWarn; o.x += Math.sin(tr * 57) * 0.05; }
+      }
       else if (e.proj) o.rotX = -0.22;
       else if (e.ai === 'windup' && e.type === 'zippy') o.rotX = 0.12;
       if (e.fall > 0) { o.rotX = e.fall * 5; o.rotZ = e.fall * 3; }
@@ -1728,7 +1778,7 @@ export class EnemyManager {
       if (smash) this._col.lerp(this._tint, TUNE.smashTint);
       o.color = this._col;
       const winding = e.ai === 'windup' || e.ai === 'charge' || e.phase === 'tele' || e.phase === 'sweep';
-      o.expr = smash ? EXPR.DIZZY : e.ai === 'sleep' ? EXPR.SLEEP : (e.proj || e.stunT > 0) ? EXPR.HURT
+      o.expr = smash ? (warn ? EXPR.ANGRY : EXPR.DIZZY) : e.ai === 'sleep' ? EXPR.SLEEP : (e.proj || e.stunT > 0) ? EXPR.HURT
         : winding ? EXPR.CHARGE : e.treasure ? EXPR.JOY : EXPR.ANGRY;
       o.blink = o.expr === EXPR.ANGRY && ((e.t + e.wobPh * 3) % 3.7) < 0.1 ? 1 : 0;
       if (p && !smash) {
@@ -1830,7 +1880,7 @@ export class EnemyManager {
       const k = s * 1.6 * (1 + Math.sin(t * 5 + e.wobPh) * 0.03);
       this._put(A.bubble, e.x, baseY + hY * 0.5, e.z, 0, 0, 0, k, k, k);
     }
-    if (e.smashable) this.stars(e.x, e.z, top + 0.3 + 0.08 * s, 0.3 + 0.35 * s, 3, 0.26 + 0.08 * s, e.wobPh);
+    if (e.smashable) this.stars(e.x, e.z, top + 0.3 + 0.08 * s, 0.3 + 0.35 * s, 3, 0.26 + 0.08 * s, e.wobPh, Math.max(e.dizzyT, e.tiredT, e.freezeT));
   }
 
   _telegraphs(e, t) {
@@ -1838,7 +1888,9 @@ export class EnemyManager {
     if (e.type === 'zippy' && e.ai === 'windup') {
       const len = Math.min(e.def.chargeDist, rayToRim(e.x, e.z, e.cdx, e.cdz, this.R - 0.2));
       const k = clamp(e.wT / e.wDur, 0, 1);
-      dec.rect(e.x + e.cdx * e.radius, e.z + e.cdz * e.radius, Math.atan2(e.cdx, e.cdz), Math.max(0.5, len - e.radius), 1.35, k, e.wDur - e.wT < 0.15 ? 1 : 0, 1, 1);
+      const fl = e.wDur - e.wT < 0.15 ? 1 : 0;
+      dec.rect(e.x + e.cdx * e.radius, e.z + e.cdz * e.radius, Math.atan2(e.cdx, e.cdz), Math.max(0.5, len - e.radius), 1.35, k, fl, 1, 1);
+      dec.bang(e.x + e.cdx * (e.radius + 1.2), e.z + e.cdz * (e.radius + 1.2), 0.42, fl);
     } else if (e.type === 'popper' && e.armed) {
       const k = 1 - clamp(e.fuse / e.fuseMax, 0, 1);
       dec.disc(e.x, e.z, e.def.blastRadius, k, e.fuse < 0.15 ? 1 : 0, 0.9, 0);
@@ -1849,9 +1901,11 @@ export class EnemyManager {
       const L = e.beamLen;
       if (e.phase === 'tele') {
         const dur = e.def.telegraph * this.teleMult, k = clamp(e.phT / dur, 0, 1);
-        dec.rect(e.x, e.z, e.beamA, L, e.def.beamWidth + 0.15, k, dur - e.phT < 0.15 ? 1 : 0, 1, 0);
+        const fl = dur - e.phT < 0.15 ? 1 : 0;
+        dec.rect(e.x, e.z, e.beamA, L, e.def.beamWidth + 0.2, k, fl, 1, 4);       // thick dashed yellow-white line
         dec.rect(e.x, e.z, e.beamA0 + e.beamSign * e.def.sweepDeg * DEG, L, 0.3, 1, 0, 0.45, 2);   // where the sweep ends
-        dec.beam(ox, ly, oz, e.beamA, L, 0.05, COL.beamGlow, 0.45 + 0.4 * Math.sin(t * 24));
+        dec.bang(e.x + dx * 1.6, e.z + dz * 1.6, 0.42, fl);
+        dec.beam(ox, ly, oz, e.beamA, L, 0.05, COL.aim, 0.45 + 0.4 * Math.sin(t * 24));
       } else if (e.phase === 'sweep') {
         dec.rect(e.x, e.z, e.beamA, L, e.def.beamWidth * 1.15, 1, 0, 1, 3);
         dec.beam(ox, ly, oz, e.beamA, L, e.def.beamWidth, COL.beamGlow, 0.95);

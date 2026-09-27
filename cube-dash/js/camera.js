@@ -290,15 +290,26 @@ export class CameraDirector {
     const kNear = cp - sp / Math.tan(p + f);
     const kFar = p - f > 0.05 ? sp / Math.tan(p - f) - cp : 50;
     const kX = tf * aspect;
-    const Rf = R + TUNE.rimOut + TUNE.fitMargin + TUNE.slack;
-    const dFit = Math.max((2 * Rf) / (kNear + kFar), Rf / kX);
+    const RfFit = R + TUNE.rimOut + TUNE.fitMargin + TUNE.slack;
+    // focus offset that centres the ground span [−Rf, Rf] symmetrically ON SCREEN (perspective-aware):
+    // ndcY(w) = −w·sinp / ((d − w·cosp)·tanf) with w = z − fz  ⇒  cosp·fz² + d·fz − cosp·Rf² = 0
+    const fzSym = (d, rf) => (-d + Math.sqrt(d * d + 4 * cp * cp * rf * rf)) / (2 * cp);
+    let dFit = (2 * RfFit) / (kNear + kFar);
+    for (let i = 0; i < 12; i++) {
+      const fz = fzSym(dFit, RfFit);
+      const dz = (RfFit - fz) * (sp / tf + cp);                 // near rim touches the bottom edge
+      const dx = RfFit / kX - fz * cp;                          // widest row (arena centre) fits the width
+      dFit = Math.max(dz, dx);
+    }
     const pxAt = (d) => H / (2 * d * tf);
     let dist = dFit, fit = true;
     if (pxAt(dFit) < TUNE.minPxPerU) { dist = H / (2 * tf * TUNE.minPxPerU); fit = false; }
+    const Rf = R + TUNE.rimOut + TUNE.fitMargin;
     this._rig = {
       dist, fov, fit, aspect, pitch: p,
       near: kNear * dist, far: kFar * dist, halfX: kX * dist,
-      Rf: R + TUNE.rimOut + TUNE.fitMargin, R, touch, pxPerU: pxAt(dist),
+      centreZ: fzSym(dist, Rf),
+      Rf, R, touch, pxPerU: pxAt(dist),
     };
     if (!this._inited) { this._inited = true; this._snapFocus(); }
   }
@@ -336,7 +347,7 @@ export class CameraDirector {
     const bias = rig.touch ? TUNE.touchBias * span : 0;
     let fz;
     if (span >= 2 * Rf) {
-      const centre = (rig.far - rig.near) / 2;            // arena centred on screen
+      const centre = rig.centreZ;                         // arena centred on screen
       const room = Math.min(TUNE.slack, (span - 2 * Rf) / 2 + TUNE.slack * (rig.fit ? 1 : 0));
       fz = centre + clamp(az * TUNE.followK - bias, -room, room);
     } else {
@@ -356,7 +367,7 @@ export class CameraDirector {
   _snapFocus() {
     this.focus.set(0, 0, 0);
     const rig = this._rig;
-    if (rig && rig.near + rig.far >= 2 * rig.Rf) this.focus.z = (rig.far - rig.near) / 2;
+    if (rig && rig.near + rig.far >= 2 * rig.Rf) this.focus.z = rig.centreZ;
   }
 
   _snapFocusIfFar() {
