@@ -213,7 +213,7 @@ noscript { position: fixed; inset: 0; display: grid; place-items: center; font: 
 #ui .tabs { display: flex; gap: 6px; padding: 5px; background: #e3effd; border-radius: 99px; width: max-content; max-width: 100%; margin: 0 auto 10px; }
 #ui .tab { border: 0; background: transparent; padding: 8px 18px; min-height: 44px; border-radius: 99px; font: 900 16px var(--font); color: var(--muted) !important; white-space: nowrap; }
 #ui .tab.on { background: #fff; color: var(--navy) !important; box-shadow: 0 3px 0 #bcd3f3, 0 4px 10px rgba(30, 70, 160, .15); }
-#ui .tabs.sm .tab { padding: 6px 14px; min-height: 38px; font-size: 14px; }
+#ui .tabs.sm .tab { padding: 6px 14px; min-height: 44px; font-size: 14px; }
 #ui .seg { display: inline-flex; gap: 4px; padding: 4px; background: #e3effd; border-radius: 16px; flex-wrap: wrap; }
 #ui .seg button { border: 0; background: transparent; min-height: 44px; min-width: 52px; padding: 6px 12px; border-radius: 12px; font: 900 15px var(--font); color: var(--muted) !important; }
 #ui .seg button.on { background: linear-gradient(180deg, var(--blue-hi), var(--blue-lo)); color: #fff !important; box-shadow: 0 3px 0 var(--blue-edge); }
@@ -287,7 +287,7 @@ noscript { position: fixed; inset: 0; display: grid; place-items: center; font: 
 #ui .rb-stars i.on, #ui .rb-stars b { color: #ffd23f; }
 
 /* ============ cube buddies (CSS clay cubes with faces) ============ */
-#ui .cube { position: relative; display: inline-block; width: var(--s); height: var(--s); font-size: var(--s); flex: none; vertical-align: middle; }
+#ui .cube { position: relative; display: inline-block; width: var(--s); height: var(--s); font-size: var(--s); flex: none; vertical-align: middle; isolation: isolate; }   /* face parts (z 2-4) and limbs (z -1) stay inside the cube: nothing bleeds through a later overlay */
 #ui .cube > i, #ui .cube > b { position: absolute; display: block; font-style: normal; }
 #ui .cube .body { inset: 0; border-radius: 24%;
   background: radial-gradient(120% 100% at 28% 18%, var(--c2) 0%, var(--c) 46%, var(--c3) 125%);
@@ -720,7 +720,7 @@ noscript { position: fixed; inset: 0; display: grid; place-items: center; font: 
 #ui .hero-chips { display: flex; justify-content: center; gap: 8px; margin: -2px 0 10px; }
 #ui .hchip { width: 52px; height: 52px; border-radius: 16px; border: 3px solid #fff; background: #eef5ff; display: grid; place-items: center; box-shadow: var(--shadow-sm); padding-top: 4px; }
 #ui .hchip.on { background: #fff4bf; box-shadow: 0 0 0 3px var(--gold), var(--shadow-sm); }
-#ui .item-grid { flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 12px; align-content: start; padding: 6px 4px 8px; }
+#ui .item-grid { flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); grid-auto-rows: max-content; gap: 12px; align-content: start; padding: 6px 4px 8px; }   /* rows fit their tallest card: a 2-line source label never slides under the next row */
 #ui .item { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 22px 6px 10px; min-height: 170px; border-radius: 22px; border: 4px solid var(--rc);
   background: radial-gradient(120% 70% at 50% 20%, #fff 0%, color-mix(in srgb, var(--rc) 18%, #fff) 100%); box-shadow: var(--shadow-sm); transition: transform .15s var(--spring); }
 #ui .item:hover { transform: translateY(-2px); }
@@ -845,8 +845,8 @@ noscript { position: fixed; inset: 0; display: grid; place-items: center; font: 
 #ui .profile-big { width: 340px; flex: none; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
 #ui .pb-top { display: flex; align-items: center; gap: 12px; }
 #ui .pb-id { flex: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; }
-#ui .pb-name { font: 900 22px/1.2 var(--font); word-break: break-all; }
-#ui .pb-title { border: 0; background: #eef5ff; border-radius: 99px; min-height: 40px; padding: 4px 14px; font: 800 13px var(--font); color: var(--navy); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#ui .pb-name { font: 900 22px/1.2 var(--font); word-break: normal; overflow-wrap: anywhere; }
+#ui .pb-title { border: 0; background: #eef5ff; border-radius: 99px; min-height: 44px; padding: 4px 14px; font: 800 13px var(--font); color: var(--navy); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #ui .pb-rank { display: flex; flex-direction: column; align-items: center; gap: 2px; font: 900 12px var(--font); }
 #ui .pb-pins { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; border-radius: 16px; background: #f0f6ff; }
 #ui .pb-pins small { font: 800 13px var(--font); color: var(--muted); }
@@ -966,7 +966,7 @@ noscript { position: fixed; inset: 0; display: grid; place-items: center; font: 
 #ui .numpad .btn { min-height: 58px; font-size: 24px; border-radius: 18px; }
 
 /* ============ OVERLAYS (shared) ============ */
-#ui .ovl { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: auto; opacity: 0; transition: opacity .22s ease; padding: 16px; }
+#ui .ovl { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: auto; opacity: 0; transition: opacity .22s ease; padding: 16px; isolation: isolate; }   /* each overlay is its own layer */
 #ui .ovl.in { opacity: 1; }
 #ui .ovl.out { opacity: 0; pointer-events: none; }
 #ui .ovl-dim { position: absolute; inset: 0; background: rgba(20, 36, 100, .42); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
@@ -976,6 +976,7 @@ noscript { position: fixed; inset: 0; display: grid; place-items: center; font: 
 #ui .ovl.out .pop { animation: popOut .2s ease-in forwards; }
 @keyframes popIn { from { transform: scale(.6); opacity: 0; } }
 @keyframes popOut { to { transform: scale(.85); opacity: 0; } }
+#ui .ovl > .panel > .ribbon { flex: none; }   /* a height-capped popup scrolls; it never squashes its title ribbon */
 #ui .dialog { width: min(440px, 92vw); padding: 22px 22px 20px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
 #ui .dialog h3 { margin: 0; font: 900 22px var(--font); }
 #ui .dlg-ico { font-family: var(--emoji); font-size: 48px; }
@@ -997,7 +998,7 @@ noscript { position: fixed; inset: 0; display: grid; place-items: center; font: 
 #ui .lv-head { display: flex; align-items: center; gap: 14px; animation: popIn .45s var(--spring) both; }
 #ui .lv-title { --ow: 14px; --ex: 7px; margin: 0; font: 900 clamp(40px, 6vw, 64px)/1.1 var(--font); color: #fff; letter-spacing: .04em; }
 #ui .lv-level { font: 900 20px var(--font); color: #fff; background: linear-gradient(180deg, #5ee8a0, #22b86a); padding: 4px 14px; border-radius: 99px; border: 3px solid #fff; box-shadow: 0 4px 0 #148a4c; }
-#ui .lv-sub { margin: 0 0 10px; font: 900 18px var(--font); color: #e7f1ff; text-shadow: 0 2px 4px rgba(0, 0, 40, .5); }
+#ui .lv-sub { margin: 0 0 30px; font: 900 18px var(--font); color: #e7f1ff; text-shadow: 0 2px 4px rgba(0, 0, 40, .5); }
 #ui .lv-cards { display: flex; align-items: center; justify-content: center; gap: clamp(10px, 2vw, 26px); perspective: 900px; }
 #ui .lv-card {
   --tilt: calc((var(--i) - (var(--n) - 1) / 2) * 5deg);
@@ -1158,7 +1159,7 @@ noscript { position: fixed; inset: 0; display: grid; place-items: center; font: 
 #ui .helper-offer b { flex: 1; min-width: 150px; font: 900 16px var(--font); }
 #ui .ho-bear { font-family: var(--emoji); font-size: 30px; margin-left: -18px; }
 #ui .res-btns { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px; padding: 4px 8px; animation: popIn .4s var(--spring) .3s both; }
-#ui .res-skip { position: absolute; top: calc(10px + var(--safe-t)); right: 6px; border: 3px solid rgba(255, 255, 255, .8); background: rgba(27, 47, 122, .5); color: #fff !important; font: 900 14px var(--font); padding: 6px 14px; border-radius: 99px; min-height: 44px; }
+#ui .res-skip { position: absolute; top: calc(10px + var(--safe-t)); left: 6px; border: 3px solid rgba(255, 255, 255, .8); background: rgba(27, 47, 122, .5); color: #fff !important; font: 900 14px var(--font); padding: 6px 14px; border-radius: 99px; min-height: 44px; }
 #ui .done .res-skip { display: none; }
 
 /* ============ CLAIM POPUP 领取 ============ */
@@ -1398,13 +1399,23 @@ noscript { position: fixed; inset: 0; display: grid; place-items: center; font: 
   #ui .scr-head { gap: 8px; }
   #ui .pill-stat { font-size: 13px; padding: 5px 10px; }
   #ui .lc-key { display: none; }
-  #ui .pb-name { font-size: 19px; word-break: normal; overflow-wrap: anywhere; }
+  #ui .pb-name { font-size: 19px; }
 }
 @media (max-height: 760px) {
   #ui .res-hero .cube { --s: 46px !important; }
   #ui .res-head { flex-direction: row; flex-wrap: wrap; justify-content: center; column-gap: 12px; }
   #ui .res-sub { flex-basis: 100%; max-width: max-content; margin: 0 auto; }
   #ui .tip-card { padding: 6px 12px; } #ui .tip-card .cube { --s: 38px !important; }
+}
+@media (max-height: 760px) and (min-aspect-ratio: 1/1) and (min-width: 761px) {
+  /* the one-row results head keeps clear of the Skip pill in the top-left corner (symmetric, so it stays centred);
+     ≤760 px wide screens keep their head-room row under the wallet, where the Skip pill sits */
+  #ui .res-head { padding: 0 92px; }
+}
+@media (max-height: 680px) and (min-aspect-ratio: 1/1) and (min-width: 761px) {
+  /* heroes: the four-card roster becomes a 2×2 grid so the last hero never drops below the fold */
+  #ui .hero-roster { display: grid; grid-template-columns: repeat(2, 104px); gap: 8px; }
+  #ui .hero-card { width: 104px; }
 }
 @media (max-height: 620px) and (min-aspect-ratio: 1/1) {
   /* short landscape screens: the "press any key" pill docks onto the keycap strip so the 3D hero stays visible */
@@ -1414,7 +1425,7 @@ noscript { position: fixed; inset: 0; display: grid; place-items: center; font: 
   #ui .keystrip { padding-top: 26px; }
 }
 @media (max-height: 560px) {
-  #ui .home-left { top: calc(84px + var(--safe-t)); }
+  #ui .home-left { top: calc(104px + var(--safe-t)); }   /* clear of the profile card */
   #ui .home-right { top: calc(66px + var(--safe-t)); flex-direction: row; flex-wrap: wrap; justify-content: flex-end; max-width: 300px; }
   #ui .home-bottom .btn-play { min-height: 84px; }
   #ui .map-planets { height: 170px; top: calc(74px + var(--safe-t)); }
@@ -1422,6 +1433,172 @@ noscript { position: fixed; inset: 0; display: grid; place-items: center; font: 
   #ui .world-panel { top: calc(248px + var(--safe-t)); }
   #ui .lv-card { min-height: 220px; }
   #ui .rk-cube { width: 110px; height: 110px; }
+  /* safety net: a popup never runs off a short screen — its panel scrolls instead, and ✕ tucks inside the corner */
+  #ui .ovl > .panel.pop:not(.feat-box):not(.gate) { max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); overflow-y: auto; overscroll-behavior: contain; }
+  #ui .ovl > .panel:not(.gate) > .x-btn { top: 8px; right: 8px; }
+  #ui .signin-pop .si-head { padding-right: 50px; }
+  /* hero rescue / new hero: compact column (short portrait windows; landscape gets the side-by-side layout below) */
+  #ui .rescue-stage { gap: 4px; }
+  #ui .rs-hero { margin: 8px 0 4px; }
+  #ui .rs-hero .cube { --s: 90px !important; }
+  #ui .rs-name { font-size: 40px; }
+  #ui .rs-blurb { display: none; }
+}
+
+/* ============ short LANDSCAPE phones (≈ 568–1000 × 320–560): side-by-side layouts, every button above the fold ============ */
+@media (max-height: 560px) and (min-aspect-ratio: 1/1) {
+  /* screen head back on the top row, left of the wallet (undoes the portrait ≤760 px stacking) */
+  #ui .scr-head { top: calc(8px + var(--safe-t)); right: calc(250px + var(--safe-r)); height: 56px; }
+  /* home: PLAY + Map/Heroes/Modes stay a row in the bottom-right corner */
+  #ui .home-bottom { left: auto; right: calc(14px + var(--safe-r)); bottom: calc(12px + var(--safe-b)); flex-direction: row; align-items: flex-end; gap: 10px; }
+  #ui .home-sub { justify-content: flex-end; }
+  #ui .home-bottom .btn-play { min-width: min(300px, 36vw); width: auto; min-height: 78px; }
+  #ui .home-bottom .btn-play .bp-main { font-size: 34px; }
+  /* world map: slimmer planet strip, one row of pads */
+  #ui .map-planets { top: calc(64px + var(--safe-t)); height: 134px; padding: 20px 16px 0; }
+  #ui .planet-btn { width: 116px; gap: 3px; padding: 4px; }
+  #ui .planet { width: 60px; height: 60px; }
+  #ui .pl-name { font-size: 13px; }
+  #ui .pl-crowns { font-size: 12px; padding: 1px 8px 1px 4px; }
+  #ui .pl-crowns .crown { width: 18px; height: 15px; }
+  #ui .pl-lock { font-size: 28px; }
+  #ui .pl-path { margin-bottom: 34px; }
+  #ui .planet-btn.done .planet::after { width: 24px; height: 24px; font-size: 13px; line-height: 18px; }
+  #ui .world-panel { top: calc(204px + var(--safe-t)); bottom: calc(8px + var(--safe-b)); padding: 8px 14px 10px; }
+  #ui .wp-title b { font-size: 17px; }
+  #ui .wp-title small { display: none; }
+  #ui .wchest { flex-direction: row; width: auto; min-height: 44px; padding: 2px 10px 2px 6px; gap: 4px; border-radius: 14px; }
+  #ui .wchest .chest-ico { width: 30px; height: 26px; }
+  #ui .pads { min-height: 0; padding: 4px 4px 0; flex-wrap: nowrap; align-content: normal; gap: 8px; }
+  #ui .pad { width: 96px; max-width: none; height: 82px; gap: 3px; border-width: 4px; border-radius: 22px; }
+  #ui .pad.boss { width: 104px; height: 88px; }
+  #ui .pad.boss .cube { --s: 32px !important; }
+  #ui .pad:nth-child(even) { transform: none; }
+  #ui .pad-id { font-size: 22px; }
+  #ui .pad-crowns .crown { width: 19px; height: 16px; }
+  #ui .pad-obj { width: 28px; height: 28px; font-size: 14px; right: -8px; bottom: -6px; }
+  #ui .pad-hero { top: -30px; }
+  /* heroes: 2×2 roster on the left, details on the right, the 3D hero in between */
+  #ui .hero-roster { top: calc(70px + var(--safe-t)); left: calc(12px + var(--safe-l)); right: auto; display: grid; grid-template-columns: repeat(2, 92px); gap: 8px; }
+  #ui .hero-card { width: 92px; max-width: none; padding: 10px 4px 6px; gap: 4px; font-size: 14px; }
+  #ui .hero-card .cube { --s: 44px !important; }
+  #ui .hero-card.sel { transform: scale(1.03); }
+  #ui .hero-detail { left: auto; right: calc(12px + var(--safe-r)); top: calc(70px + var(--safe-t)); bottom: calc(8px + var(--safe-b)); width: min(420px, 40vw); padding: 12px 14px; }
+  #ui .hd-name { font-size: 24px; }
+  /* wardrobe: side panel again */
+  #ui .shop-panel { left: auto; right: calc(12px + var(--safe-r)); top: calc(70px + var(--safe-t)); bottom: calc(8px + var(--safe-b)); width: min(500px, 42vw); padding: 10px; }
+  #ui .hero-chips { margin: 0 0 6px; }
+  #ui .hchip { width: 46px; height: 46px; }
+  /* capsule: machine (scaled) with the big pull button beside it, odds panel on the right */
+  #ui .cap-layout { inset: calc(70px + var(--safe-t)) calc(12px + var(--safe-r)) calc(8px + var(--safe-b)) calc(12px + var(--safe-l)); flex-direction: row; justify-content: center; gap: 14px; overflow: visible; pointer-events: none; padding-bottom: 0; }
+  #ui .gacha-wrap { flex: 0 1 auto; flex-direction: row; gap: 6px; }
+  #ui .gacha { transform: scale(.62); transform-origin: 50% 0; margin: 0 -47px -111px; }
+  #ui .cap-actions { margin-top: 0; }
+  #ui .cap-info { width: min(380px, 40vw); align-self: stretch; overflow-x: hidden; overflow-y: auto; }
+  /* achievements: profile card scrolls on its own so Share is always reachable */
+  #ui .ach-layout { top: calc(70px + var(--safe-t)); bottom: calc(8px + var(--safe-b)); flex-direction: row; gap: 10px; overflow: visible; pointer-events: none; padding-bottom: 0; }
+  #ui .profile-big { width: min(300px, 40vw); padding: 12px; gap: 8px; overflow-y: auto; overscroll-behavior: contain; }
+  #ui .pb-top > .cube { --s: 56px !important; }
+  #ui .pb-stats div { padding: 6px 4px; }
+  #ui .pb-stats b { font-size: 18px; }
+  #ui .ach-panel { flex: 1; min-width: 0; }
+  #ui .badge-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; overflow-x: hidden; overflow-y: auto; }
+  /* galaxy road, lists, panels: start right under the head */
+  #ui .road-scroll { top: calc(64px + var(--safe-t)); bottom: calc(86px + var(--safe-b)); }
+  #ui .road-foot { bottom: calc(8px + var(--safe-b)); grid-template-columns: 1fr auto; padding: 8px 14px; }
+  #ui .road-foot .btn { grid-column: 2; grid-row: 1 / span 2; }
+  #ui .mis-wrap, #ui .modes-wrap { top: calc(70px + var(--safe-t)); }
+  #ui .dex-panel, #ui .settings-panel, #ui .parent-panel { top: calc(70px + var(--safe-t)); bottom: calc(8px + var(--safe-b)); }
+  #ui .dex-grid { grid-template-columns: repeat(4, 1fr); }
+  #ui .si-row { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+  #ui .si-card { min-height: 92px; }
+  /* parent gate: question on the left, keypad on the right (all four key rows on screen) */
+  #ui .gate { width: min(600px, 94vw); display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "h pad" "note pad" "q pad"; align-content: center; align-items: center; justify-items: center; column-gap: 20px; row-gap: 2px; padding: 18px 40px 18px 22px; }
+  #ui .gate > h3 { grid-area: h; }
+  #ui .gate > .note { grid-area: note; }
+  #ui .gate-q { grid-area: q; margin: 4px 0 0; font-size: 34px; }
+  #ui .gate .numpad { grid-area: pad; grid-template-columns: repeat(3, 64px); gap: 6px; }
+  #ui .gate .numpad .btn { min-height: 50px; font-size: 22px; }
+  /* break card: sky scene on the left, eye-rest + buttons on the right */
+  #ui .break-card { width: min(720px, 94vw); display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); align-items: center; justify-items: center; column-gap: 18px; row-gap: 6px; padding: 14px 18px 14px 0; }
+  #ui .bk-scene { grid-column: 1; grid-row: 1 / span 5; align-self: stretch; justify-self: stretch; width: auto; height: auto; min-height: 200px; margin: -14px 0; }
+  #ui .break-card > :not(.bk-scene) { grid-column: 2; }
+  #ui .break-card h3 { margin: 0; font-size: 22px; }
+  #ui .break-card p { font-size: 15px; }
+  #ui .eye-rest { width: 96px; height: 96px; margin: 0; }
+  #ui .er-n { font-size: 28px; }
+  #ui .eye-rest small { bottom: 16px; }
+  /* new-feature popup: Pixel's bubble and the icon side by side */
+  #ui .feat-box { width: min(640px, 94vw); display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "row icon" "btn btn"; align-items: center; justify-items: center; column-gap: 16px; row-gap: 10px; padding: 34px 20px 16px; }
+  #ui .feat-row { grid-area: row; margin-top: 0; }
+  #ui .feat-icon { grid-area: icon; }
+  #ui .feat-box > .btn { grid-area: btn; }
+  #ui .fi-ico { width: 76px; height: 76px; }
+  /* hero rescue / new hero: hero on the left, name + buttons on the right */
+  #ui .rescue-stage { display: grid; grid-template-columns: auto minmax(0, 400px); grid-template-areas: "hero rib" "hero name" "hero role" "hero blurb" "hero row"; align-items: center; justify-items: center; column-gap: 34px; row-gap: 6px; }
+  #ui .rs-ribbon { grid-area: rib; padding: 6px 24px; }
+  #ui .rs-ribbon span { font-size: 24px; }
+  #ui .rs-hero { grid-area: hero; margin: 0; }
+  #ui .rs-hero .cube { --s: 130px !important; }
+  #ui .rs-name { grid-area: name; font-size: 52px; }
+  #ui .rs-role { grid-area: role; }
+  #ui .rs-blurb { grid-area: blurb; display: block; margin: 0; font-size: 15px; }
+  #ui .rescue-stage .row { grid-area: row; margin-top: 4px; }
+  /* share poster: poster on the left, code + buttons on the right (the code pill never covers the poster) */
+  #ui .share-pop { width: min(640px, 94vw); display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "poster rib" "poster code" "poster row"; align-content: center; align-items: center; justify-items: center; column-gap: 20px; row-gap: 12px; padding: 16px 20px; }
+  #ui .share-pop > .ribbon { grid-area: rib; }
+  #ui .share-pop .poster-box { grid-area: poster; }
+  #ui .share-pop .share-code { grid-area: code; }
+  #ui .share-pop > .row { grid-area: row; }
+  #ui .poster-box canvas { height: calc(100vh - 72px); height: min(calc(100dvh - 72px), 360px); width: auto; max-width: none; max-height: none; }
+  /* goodnight: smaller sleepy Blu so the parent's +15 link stays on screen */
+  #ui .gn-stage { gap: 6px; }
+  #ui .gn-blu .cube { --s: 84px !important; }
+  #ui .gn-title { margin: 4px 0 0; font-size: 36px; }
+  #ui .gn-stage p { font-size: 16px; }
+  /* rank-up ceremony: tighter column so the name never sits under the button */
+  #ui .rk-stage { height: calc(100vh - 32px); height: calc(100dvh - 32px); }
+  #ui .rk-cube { top: 2%; }
+  #ui .rk-cube span { font-size: 56px; }
+  #ui .rk-shards { top: calc(2% + 55px); }
+  #ui .rk-text { top: calc(2% + 122px); gap: 0; }
+  #ui .rk-sub { font-size: 17px; }
+  #ui .rk-name { font-size: 46px; }
+  #ui .rk-stars { font-size: 26px; }
+  #ui .rk-btn { bottom: calc(12px + var(--safe-b)); }
+  /* level-up: title · hint · reroll on one row, the cards below (reroll always on screen) */
+  #ui .ovl-levelup { padding: 8px 12px; }
+  #ui .lv-wrap { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); grid-template-areas: "head sub reroll" "cards cards cards"; align-items: center; column-gap: 14px; row-gap: 22px; }
+  #ui .lv-head { grid-area: head; justify-self: end; gap: 10px; }
+  #ui .lv-title { --ow: 10px; --ex: 5px; font-size: 34px; }
+  #ui .lv-level { font-size: 16px; padding: 2px 10px; }
+  #ui .lv-sub { grid-area: sub; margin: 0; font-size: 16px; }
+  #ui .lv-cards { grid-area: cards; }
+  #ui .lv-reroll { grid-area: reroll; justify-self: start; margin: 0; }
+  #ui .lv-card { min-height: 0; padding: 22px 10px 10px; gap: 5px; }
+  #ui .lc-ico { font-size: 40px; margin-top: 0; }
+  #ui .lc-name { font-size: 19px; }
+  #ui .lc-desc { font-size: 13px; }
+  #ui .lc-pips i { width: 14px; height: 14px; }
+  #ui .lc-tag { width: 30px; height: 30px; font-size: 16px; }
+  #ui .lc-recipe { font-size: 20px; }
+  #ui .lv-card:hover, #ui.kbnav .lv-card.nav-focus { transform: rotate(0) translateY(-6px) scale(1.04); }
+  /* pause: one row of rule tiles, Resume / Restart / Home (/ Helper) in one row */
+  #ui .pause-panel { width: min(760px, 94vw); padding: 14px 18px; gap: 6px; }
+  #ui .pause-panel .ribbon { margin-top: 0; font-size: 20px; padding: 5px 22px; }
+  #ui .pp-gear { top: 8px; right: 8px; width: 46px; height: 46px; font-size: 22px; }
+  #ui .pp-stage { font-size: 14px; }
+  #ui .pp-crown3 { padding: 4px 14px; font-size: 15px; }
+  #ui .pp-h { display: none; }
+  #ui .rules { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  #ui .rule { min-height: 0; padding: 12px 4px 6px; gap: 4px; }
+  #ui .pp-btns { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 2px; }
+  #ui .pp-btns .btn.big { min-height: 52px; padding: 8px 28px; font-size: 19px; }
+  #ui .res-wrap { padding-bottom: calc(8px + var(--safe-b)); }
+}
+@media (max-height: 560px) and (min-aspect-ratio: 1/1) and (min-width: 761px) {
+  /* wide enough for the results head to share the top row with the wallet */
+  #ui .res-wrap { padding-top: calc(8px + var(--safe-t)); }
 }
 
 /* ============ reduced motion ============ */

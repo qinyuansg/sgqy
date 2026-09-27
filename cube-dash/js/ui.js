@@ -43,6 +43,13 @@ const TUNE = {
   rankCeremony: 4.0, rankSkipAfter: 1.0,
   eyeRest: 20,
   guideArrow: 6,
+  featPerVisit: 2,             // "新功能开启!" intros per Home visit (the rest wait for the next visit)
+  featGap: 1.5,                // after 好的! on an intro, let its guide arrow show before the next popup
+  resGuard: 0.8,               // results: keyboard/pad confirm + button clicks ignored this long after opening
+  resDoneGuard: 0.5,           // …and confirm ignored this long after the cascade lands
+  resMashGap: 0.3,             // a confirm this soon after the previous one is still mashing → not a fresh press
+  rescueTapAfter: 2.0,         // rescue / new-hero reveal: tap anywhere closes it once the buttons are in
+  dupHeroTickets: 3,           // an already-owned hero reward turns into 3 tickets (meta TUNE.dupHeroTickets)
   healthToastMin: DATA.health?.toastMinutes ?? 30,
   healthCardMin: DATA.health?.breakCardMinutes ?? 45,
   healthRepeatMin: DATA.health?.repeatMinutes ?? 20,
@@ -176,7 +183,7 @@ addStrings({
     'ui.freedTotal': 'Freed {n}', 'ui.roadNext': '{n} more', 'ui.roadDone': 'All claimed!', 'ui.overflow': 'Bonus chest', 'ui.roadHint': 'Free cubes to travel the Galaxy Road!',
     'ui.signinTitle': 'Sign-in days', 'ui.day': 'Day {n}', 'ui.today': 'Today', 'ui.refreshTomorrow': 'New ones tomorrow', 'ui.reroll': 'Swap',
     'ui.rerollLeft': 'Free swaps ×{n}', 'ui.dailyChest': 'Daily chest', 'ui.chestHint': 'Finish 3 missions', 'ui.noMissions': 'All done for today!',
-    'ui.signinDays': '{n} days signed in',
+    'ui.signinDays': 'Days signed in: {n}',
     'ui.equip': 'Wear', 'ui.equipped': 'Wearing', 'ui.buy': 'Buy', 'ui.buyConfirm': 'Buy "{name}" for {n} coins?', 'ui.notEnough': 'Not enough coins',
     'ui.srcStarter': 'Starter', 'ui.srcShop': 'Shop', 'ui.srcCapsule': 'Capsule', 'ui.srcRoad': 'Galaxy Road {n}', 'ui.srcChest': 'World {n} chest',
     'ui.srcSignin': 'Sign-in day {n}', 'ui.srcRank': 'Rank reward', 'ui.bought': 'Got it!', 'ui.none': 'None', 'ui.owned': 'Owned', 'ui.needHero': 'Unlock {hero} first',
@@ -393,6 +400,28 @@ function rewardItems(rewards) {
   }
   return out;
 }
+/** 2nd+ items of a multi-item reward (sign-in Day 14 🎟️+🪙, Galaxy Road 5000 🏷️+🎟️×5) as small "+icon×n"
+ *  chips under / beside the big first item */
+function miniIcon(it) {
+  if (it.kind === 'coins') return coinIco();
+  if (it.kind === 'tickets') return ticketIco();
+  const emo = { trophies: '🏆', hat: HAT_ICON[it.id] || '🎩', card: cardById(it.id)?.icon || '🃏', title: '🏷️', hero: '🦸', skin: '🎨', trail: '✨' }[it.kind] || '🎁';
+  return `<span class="emo">${emo}</span>`;
+}
+function plusChips(items) {
+  if (!items?.length) return '';
+  return `<span class="rw-plus">${items.map((it) => `<i class="rw-p" title="${esc(it.label)}">+${miniIcon(it)}${it.amount ? `×${fmtInt(it.amount)}` : ''}</i>`).join('')}</span>`;
+}
+// (the chips' few rules ship with ui.js so they work whatever style.css version is loaded)
+const EXTRA_CSS = `
+#ui .rw-plus{display:flex;flex-wrap:wrap;justify-content:center;gap:2px;max-width:100%;pointer-events:none}
+#ui .rw-p{display:inline-flex;align-items:center;gap:2px;padding:1px 6px 1px 4px;border-radius:99px;border:2px solid #fff;background:var(--navy,#1b2f7a);color:#fff;font:900 11px/1.25 var(--font,system-ui);font-style:normal;white-space:nowrap}
+#ui .rw-p .i-coin{width:13px;height:13px}#ui .rw-p .i-coin::after{inset:3px;border-width:1px}
+#ui .rw-p .i-ticket{width:16px;height:11px;border-radius:3px}#ui .rw-p .i-ticket::after{font-size:7px}
+#ui .rw-p .emo{font-size:12px}
+#ui .rnode .rw-plus{position:absolute;left:-14px;bottom:-8px;z-index:2}
+#ui .rf-vis{grid-auto-flow:column;gap:4px}
+`;
 function rewardIconLine(rewards) {    // compact "🪙100 🎩" line for lists
   return rewardItems(rewards).map((it) => (it.kind === 'coins' ? `${coinIco()}<b>${fmtInt(it.amount)}</b>`
     : it.kind === 'tickets' ? `${ticketIco()}<b>×${it.amount}</b>` : `<span class="ri-mini">${itemVisual(it.kind, it.id, 26)}</span>`)).join(' ');
@@ -446,6 +475,7 @@ export class UI {
     let root = document.getElementById('ui');
     if (!root) { root = document.createElement('div'); root.id = 'ui'; document.body.appendChild(root); }
     this.root = root;
+    if (!document.getElementById('ui-extra-css')) { const st = document.createElement('style'); st.id = 'ui-extra-css'; st.textContent = EXTRA_CSS; document.head.appendChild(st); }
     root.classList.toggle('reduced', REDUCED);
     root.classList.toggle('q-low', G.quality === 'low');
     root.innerHTML = `
@@ -489,6 +519,10 @@ export class UI {
     this.trayHold = false;         // pull-mode: claims left in meta.claimQueue after 3 chained popups
     this._dirty = false;
     this._lastClaimKey = ''; this._lastClaimT = -1;
+    this._featShownThisVisit = 0;  // feature intros shown on this Home visit (cap TUNE.featPerVisit)
+    this._popHoldUntil = 0;        // performance.now() before which no queued popup opens (guide-arrow gap)
+    this._resGuard = null;         // {t0, last, done} results confirm guard (see _resConfirmOk)
+    this._noSaveShown = false;     // "this browser can't save" toast shown this session
 
     this.walletEl.querySelector('.w-lang').classList.toggle('en', getLang() === 'en');
     this._bindDom();
@@ -520,7 +554,8 @@ export class UI {
       const tg = e.target;
       if (!tg || !(tg.tagName === 'TEXTAREA' || (tg.tagName === 'INPUT' && tg.type !== 'range'))) return;
       e.stopPropagation();
-      if (e.key === 'Escape') tg.blur();
+      // Esc in a text box (challenge code, name, save code — all inside popups) closes that popup in one press
+      if (e.key === 'Escape') { e.preventDefault(); tg.blur(); if (!e.repeat) this._back(); }
       else if (e.key === 'Enter' && tg.closest('.name-type')) { e.preventDefault(); this._act('nameType', tg, e); }
     });
     // number keys: 1/2/3 pick level-up cards; digits feed the parent gate; hold Enter on the gear
@@ -691,7 +726,7 @@ export class UI {
       }
       this._navMove(dir);
     }
-    if (inp.pressed('confirm')) {
+    if (inp.pressed('confirm') && this._resConfirmOk(layer)) {
       if (this.casc && !this.casc.done) { this._cascTap(); return; }
       this._setKb(true);
       if (!this.focusEl) this._focusDefault();
@@ -701,8 +736,25 @@ export class UI {
         else if (!f.dataset.hold) f.click();
       }
     }
-    const back = inp.pressed('back') && !(inRun && inp.pressed('pause'));
+    // Esc = 'pause' + 'back': while a run is live, main.js owns it (pause / resume). Once the run has
+    // ended (results + share / claim / rank / rescue popups on top) it is a plain back again.
+    const inPlay = inRun && G.run.state !== 'ended';
+    const back = inp.pressed('back') && !(inPlay && inp.pressed('pause'));
     if (back) this._back();
+  }
+  /** results guard: a kid mashing Space/Enter/(A) through the victory celebration must not skip the
+   *  结算 cascade AND the Next button in one go. Confirm is ignored for TUNE.resGuard after results open,
+   *  for TUNE.resDoneGuard after the cascade lands, and after that it must be a fresh press (a pause in
+   *  the mashing). Arrow keys are never blocked. */
+  _resConfirmOk(layer) {
+    const g = this._resGuard;
+    if (!g || layer?.id !== 'results') return true;
+    const now = performance.now(), gap = now - g.last;
+    g.last = now;
+    if (now - g.t0 < TUNE.resGuard * 1000) return false;
+    if (this.casc && !this.casc.done) return true;                       // taps just speed the cascade up
+    if (now - (g.done || 0) < TUNE.resDoneGuard * 1000) return false;
+    return gap >= TUNE.resMashGap * 1000;
   }
   _back() {
     const top = this.overlays[this.overlays.length - 1];
@@ -753,6 +805,11 @@ export class UI {
     if (name !== 'title' && G.app?.state === 'title') { G.app.toHub?.(); if (G.app.state === 'title') G.app.state = 'hub'; }
     if (name !== 'parent' && this.screen?.name === 'parent') this.parentOk = false;
     for (const o of [...this.overlays]) if (LOCAL_OVLS.includes(o.id)) this._close(o.id, true);
+    const prev = this.screen?.name;
+    // a new Home visit (from a run, the title or another screen — not a same-screen refresh) re-opens the
+    // feature-intro budget; leaving the wardrobe puts the selected hero back on the 3D stage
+    if (name === 'home' && prev !== 'home') this._featShownThisVisit = 0;
+    if (prev === 'shop' && name !== 'shop') G.app?.refreshHub?.();
     const old = this.screen?.el;
     const el = document.createElement('div');
     el.className = `scr scr-${name}${silent ? ' static' : ''}`;
@@ -768,6 +825,14 @@ export class UI {
     this._layerChanged();
     if (!silent) this._emit('open', { screen: name });   // (a data refresh of the same screen is not a page turn: no whoosh)
     if (name === 'home') this._afterHome();
+    if (name === 'home') this._noSaveNotice();
+  }
+  /** storage blocked (private mode / sandboxed frame / site data off): say so once per session, on the first
+   *  Home visit or run start (the title shows it as a quiet foot line instead of covering the logo) */
+  _noSaveNotice() {
+    if (this._noSaveShown || this.G.save?.persistent !== false) return;
+    this._noSaveShown = true;
+    this.toast(t('ui.noSave'), '🔒');
   }
   _clearScreen() {
     const old = this.screen?.el;
@@ -782,7 +847,17 @@ export class UI {
     this.walletEl.querySelector('.w-lang').classList.toggle('en', lang === 'en');
     this.walletEl.querySelector('.w-tray').title = t('ui.tray');
     if (this.screen) { const f = this.focusEl?.dataset?.act; this.go(this.screen.name, this.screen.params); if (f && this.kb) { const e = this.screen.el.querySelector(`[data-act="${f}"]`); if (e) this._focus(e); } }
-    if (this._isOpen('pause')) this.showPause();
+    // in-run pause (+ its settings popup on top): translate both IN PLACE so the stack order stays
+    // pause → settings (re-opening pause would put it above the settings the child is using)
+    if (this._isOpen('pause')) this.showPause({ inPlace: true });
+    const so = this._ovl('settingsOvl');
+    if (so) {
+      so.el.innerHTML = this._pauseSettingsHTML();
+      so.el.querySelector('.pop')?.style.setProperty('animation', 'none');
+      this._bindSliders(so.el);
+      this._layerChanged();
+      if (this.kb) { const e = so.el.querySelector('[data-act="set"][data-key="lang"].on'); if (e) this._focus(e); }
+    }
   }
   /** redraw the current screen in place (after a claim / equip / data change): no pop-in animation, no whoosh,
    *  scroll positions and the keyboard focus survive */
@@ -854,6 +929,7 @@ export class UI {
     const G = this.G;
     if (!this.screen && G.app?.state !== 'run') return false;
     if (this.screen?.name === 'title') return false;
+    if (performance.now() < this._popHoldUntil) return false;   // a guide arrow is pointing: let it be seen
     if (G.app?.state === 'run') {
       if (!G.run || G.run.state !== 'ended') return false;
       if (!this._isOpen('results') || (this.casc && !this.casc.done)) return false;
@@ -889,9 +965,18 @@ export class UI {
   }
   _drain() {
     if (!this.queue.some((q) => q.type === 'claim')) this.chain = 0;
-    // lobby-only items (feature intro + arrow, sign-in, night note) wait until the child is on Home
+    // lobby-only items (feature intro + arrow, sign-in, night note) wait until the child is on Home.
+    // No popup storm: at most TUNE.featPerVisit intros per Home visit (the rest wait for the next visit),
+    // and the sign-in popup waits for a visit without intros.
     const atHome = this.screen?.name === 'home' && this.G.app?.state !== 'run';
-    const idx = this.queue.findIndex((q) => atHome || !LOBBY_ONLY.includes(q.type));
+    const nf = this._featShownThisVisit;
+    const idx = this.queue.findIndex((q) => {
+      if (!LOBBY_ONLY.includes(q.type)) return true;
+      if (!atHome) return false;
+      if (q.type === 'feature') return nf < TUNE.featPerVisit;
+      if (q.type === 'signin') return nf === 0;
+      return true;
+    });
     if (idx < 0) return false;
     const [item] = this.queue.splice(idx, 1);
     if (item.type === 'claim') {
@@ -907,14 +992,14 @@ export class UI {
       this.chain++;
       this._showClaim(item);
     }
-    else if (item.type === 'feature') { this._m('nextFeature'); this._showFeatureNow(item.feature); }
+    else if (item.type === 'feature') { this._featShownThisVisit++; this._m('nextFeature'); this._showFeatureNow(item.feature); }
     else if (item.type === 'rankup') this._showRankNow(item.rank, item.before, item.placement);
     else if (item.type === 'rescue') this._showRescueNow(item.hero, item.kind);
     else if (item.type === 'break') this._showBreakNow(item);
     else if (item.type === 'goodnight') this._showGoodnightNow();
     else if (item.type === 'night') { this.toast(t('ui.night'), '🌙'); }
     else if (item.type === 'toast') this.toast(item.text, item.icon);
-    else if (item.type === 'signin') this._showSignin();
+    else if (item.type === 'signin') { if (!this._dots().signin) return false; this._showSignin(); }   // (maybe claimed by hand meanwhile)
     return true;
   }
 
@@ -1022,6 +1107,7 @@ export class UI {
     this._clearScreen();
     this._walletVisibility();
     this.toastHost.classList.add('in-run');
+    this._noSaveNotice();
   }
 
   // ═════════ action dispatcher (every [data-act] button) ═════════
@@ -1111,9 +1197,10 @@ export class UI {
       case 'quit': click(); this._toHome(); break;
       case 'helper': this._toggleHelper(); break;
       // --- results ---
-      case 'resNext': click(); this._resNext(); break;
-      case 'resRetry': click(); this._resRetry(d.how); break;
-      case 'resHome': click(); this._toHome(); break;
+      // (a tap still landing from the victory celebration — e.g. on the dash button's spot — must not leave results)
+      case 'resNext': if (this._resEarly()) break; click(); this._resNext(); break;
+      case 'resRetry': if (this._resEarly()) break; click(); this._resRetry(d.how); break;
+      case 'resHome': if (this._resEarly()) break; click(); this._toHome(); break;
       case 'resSkip': this._cascSkip(); break;
       case 'resTap': this._cascTap(); break;
       case 'helperYes': this._setSetting('assist', true); this._blip('claim'); this.toast(t('ui.helperOn'), '🧸'); el.closest('.helper-offer')?.remove(); break;
@@ -1122,7 +1209,7 @@ export class UI {
       case 'claimOk': this._claimOk(); break;
       case 'featOk': this._featOk(); break;
       case 'rankSkip': this._rankEnd(); break;
-      case 'rescueOk': click(); this._close('rescue'); break;
+      case 'rescueOk': this._rescueOk(); break;
       case 'rescueTry': click(); this._close('rescue'); G.app?.selectHero?.(d.id); if (this.screen) this._rerender(); break;
       case 'breakRest': this._breakRest(); break;
       case 'breakMore': click(); this._m('snoozeBreak'); this.eye = null; this._close('break'); break;
@@ -1195,6 +1282,12 @@ export class UI {
     const arr = o?.[kind + 's'] ?? o?.[kind];
     if (Array.isArray(arr)) return arr.includes(id);
     return !!arr?.[id];
+  }
+  /** a reward as the child will actually receive it: a hero they already have turns into 🎟️×3
+   *  (meta's duplicate rule) — so a future node never shows a face they can't get again */
+  _rewardView(reward, claimed = false) {
+    return rewardItems(reward).map((it) => (!claimed && it.kind === 'hero' && this._heroUnlocked(it.id)
+      ? { kind: 'tickets', id: null, amount: TUNE.dupHeroTickets, label: t('ui.tickets'), rarity: 'rare' } : it));
   }
   _equipped(kind, heroId) {
     if (kind === 'skin') return this._m('selectedSkin', heroId) || DATA.skins.find((s) => s.hero === heroId && s.default)?.id;
@@ -1278,6 +1371,7 @@ export class UI {
         </div>
         <div class="press-any">${esc(touch ? t('ui.pressAnyTouch') : t('ui.pressAny'))}</div>
         ${keys}
+        ${this.G.save?.persistent === false ? `<div class="title-foot">🔒 ${esc(t('ui.noSave'))}</div>` : ''}
         <div class="title-foot">${esc(t('ui.offline'))}</div>
       </div>`;
   }
@@ -1360,10 +1454,17 @@ export class UI {
     }
     if (!this.health.nightShown && !this.G.meta?.healthCheck && this.G.save?.profile?.tutorialDone && this._isNight()) { this.health.nightShown = true; this._enqueue({ type: 'night', pri: 0.4 }); }
     if (this.pendingArrow) { const f = this.pendingArrow; this.pendingArrow = null; setTimeout(() => this._guideArrow(f), 350); }
+    // an arrow still pointing survives an in-place redraw of Home (meta:change / claim refresh)
+    else if (this._arrow && performance.now() < this._arrow.until) {
+      const { f, until } = this._arrow, el = this.screen?.el;
+      const place = () => { if (this.screen?.el === el && el && !el.querySelector('.guide-arrow') && performance.now() < until) this._guideArrow(f, until); };
+      if (el?.classList.contains('static')) place(); else setTimeout(place, 350);   // (a page turn animates in first)
+    }
   }
-  _guideArrow(feature) {
+  _guideArrow(feature, until = performance.now() + TUNE.guideArrow * 1000) {
     const target = this.screen?.el.querySelector(`[data-feature="${feature}"]`);
     if (!target) return;
+    this._arrow = { f: feature, until };
     const r = target.getBoundingClientRect();
     const a = document.createElement('div');
     const left = r.left + r.width / 2 < innerWidth / 2;
@@ -1373,8 +1474,8 @@ export class UI {
     a.style.left = (left ? r.right + 8 : r.left - 8) + 'px';
     this.screen.el.appendChild(a);
     target.classList.add('pulse-new');
-    const kill = () => { a.remove(); target.classList.remove('pulse-new'); };
-    setTimeout(kill, TUNE.guideArrow * 1000);
+    const kill = () => { a.remove(); target.classList.remove('pulse-new'); if (this._arrow?.f === feature && this._arrow.until === until) this._arrow = null; };
+    setTimeout(kill, Math.max(0, until - performance.now()));
     target.addEventListener('click', kill, { once: true });
   }
 
@@ -1525,7 +1626,7 @@ export class UI {
     heroId = heroId || this._mv('selectedHero', 'blu');
     if (!this._owns(kind, id)) { this._blip('error'); return; }
     this._m('equip', kind, id, heroId);
-    this.G.app?.refreshHub?.();
+    this._syncHubHero();
     this._blip('click');
     this._sfx('whoosh');
     this._rerender();
@@ -1562,18 +1663,18 @@ export class UI {
     const W = pts[pts.length - 1].x + 120;
     const nodes = R.nodes.map((n, i) => {
       const p = pos(i);
-      const it = rewardItems(n.reward)[0];
+      const its = this._rewardView(n.reward, n.claimed), it = its[0];
       const upcoming = i > R.reached && i <= R.reached + 3;
       const cls = n.claimed ? 'claimed' : n.claimable ? 'ready' : i <= R.reached ? 'reached' : upcoming ? 'big' : 'far';
       return `<button class="rnode ${cls} r-${it?.rarity || 'common'}" style="left:${p.x}px;top:${p.y}px" data-act="roadClaim" data-i="${i}" data-nav ${n.claimable && !this._roadDef ? (this._roadDef = 'data-default') : ''}>
         <span class="rn-vis">${it ? itemVisual(it.kind, it.id, 34) : '🎁'}</span>
-        ${it?.amount ? `<b class="rn-amt">×${fmtInt(it.amount)}</b>` : ''}
+        ${it?.amount ? `<b class="rn-amt">×${fmtInt(it.amount)}</b>` : ''}${plusChips(its.slice(1))}
         <span class="rn-at">🕊️${fmtInt(n.at)}</span>${n.claimed ? '<i class="rn-check">✓</i>' : ''}${n.claimable ? '<i class="dot"></i>' : ''}</button>`;
     }).join('');
     this._roadDef = null;
     const endP = pos(R.nodes.length);
     const next = R.next;
-    const nextIt = next ? rewardItems(next.reward)[0] : null;
+    const nextIts = next ? this._rewardView(next.reward) : [], nextIt = nextIts[0] || null;
     return `${this._head(t('ui.road'), '🚀', `<span class="pill-stat">🕊️ ${esc(t('ui.freedTotal', { n: fmtInt(R.freed) }))}</span>`)}
       <div class="road-scroll scroll scroll-x">
         <div class="road-track" style="width:${W}px;height:${H}px">
@@ -1585,7 +1686,7 @@ export class UI {
         </div>
       </div>
       <footer class="panel road-foot">
-        ${next ? `<div class="rf-next"><span>${esc(t('ui.roadNext', { n: fmtInt(next.at - R.freed) }))}</span><b class="rf-arrow">→</b><span class="rf-vis">${nextIt ? itemVisual(nextIt.kind, nextIt.id, 30) : '🎁'}</span>
+        ${next ? `<div class="rf-next"><span>${esc(t('ui.roadNext', { n: fmtInt(next.at - R.freed) }))}</span><b class="rf-arrow">→</b><span class="rf-vis">${nextIt ? itemVisual(nextIt.kind, nextIt.id, 30) : '🎁'}${plusChips(nextIts.slice(1))}</span>
           <i class="bar"><i style="width:${Math.round(R.frac * 100)}%"></i></i></div>` : `<div class="rf-next"><b>${esc(t('ui.roadDone'))}</b></div>`}
         <small class="rf-hint">${esc(t('ui.roadHint'))}</small>
         ${R.claimable ? `<button class="btn btn-gold" data-act="roadAll" data-nav data-default>${esc(t('ui.claimAll'))}${this._dot(R.claimable)}</button>` : ''}
@@ -1651,11 +1752,11 @@ export class UI {
   _signinStrip() {
     const S = this._signinData();
     const cards = S.cards.map((c) => {
-      const it = rewardItems(c.reward)[0];
+      const its = this._rewardView(c.reward, c.claimed), it = its[0];
       return `<div class="si-card${c.claimed ? ' claimed' : ''}${c.today ? ' today' : ''}${c.day % 7 === 0 ? ' big' : ''} r-${it?.rarity || 'common'}">
         <small>${esc(c.today ? t('ui.today') : t('ui.day', { n: c.day }))}</small>
         <span class="si-vis">${it ? itemVisual(it.kind, it.id, 32) : '🎁'}</span>
-        <b>${it?.amount ? '×' + fmtInt(it.amount) : esc(it?.label || '')}</b>
+        <b>${it?.amount ? '×' + fmtInt(it.amount) : esc(it?.label || '')}</b>${plusChips(its.slice(1))}
         ${c.claimed ? `<i class="stamp">${esc(t('ui.claimed'))}</i>` : ''}</div>`;
     }).join('');
     return `<div class="si-head"><b>📅 ${esc(t('ui.signinTitle'))}</b><small>${esc(t('ui.signinDays', { n: S.count }))}</small></div>
@@ -1795,9 +1896,26 @@ export class UI {
       if (r === false || r?.ok === false || r === undefined) { this._blip('error'); this.toast(t('ui.notEnough'), '🪙'); return; }
       this._blip('buy');
       this.toast(t('ui.bought') + ' ' + tl(def.name), '🛍️');
-      if (kind !== 'skin' || this._heroUnlocked(def.hero)) { this._m('equip', kind, id, hero); this.G.app?.refreshHub?.(); }
+      if (kind !== 'skin' || this._heroUnlocked(def.hero)) { this._m('equip', kind, id, hero); this._syncHubHero(); }
       this._rerender();
     }, { icon: `<span class="dlg-vis">${itemVisual(kind, id, 60)}</span>`, yesLabel: t('ui.buy') });
+  }
+  /** wardrobe try-on shows on the 3D hub hero: the hero being dressed (the chip picked in the wardrobe),
+   *  not only the selected one. Everywhere else the hub shows the selected hero. */
+  _p_shop(el, p) { this._m('markSeen', 'wardrobe'); this._syncHubHero(p); }
+  _shopHeroShown(p = this.screen?.params) {
+    const sel = this._mv('selectedHero', 'blu');
+    const h = p?.hero;
+    return h && h !== sel && this._heroUnlocked(h) ? h : sel;
+  }
+  _syncHubHero(p) {
+    const app = this.G.app;
+    if (!app || app.state === 'run') return;
+    if (this.screen?.name === 'shop' && typeof app.previewHub === 'function') {
+      const h = this._shopHeroShown(p || this.screen.params);
+      if (h !== this._mv('selectedHero', 'blu')) { app.previewHub(h); return; }
+    }
+    app.refreshHub?.();
   }
   _shake(el) { if (!el) return; el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); }
 
@@ -1959,7 +2077,6 @@ export class UI {
       </section>`;
   }
   _p_dex() { this._m('markSeen', 'dex'); }
-  _p_shop() { this._m('markSeen', 'wardrobe'); }
   _p_heroes() { this._m('markSeen', 'heroes'); }
   _dexDetail(id) {
     this._m('markSeen', 'dexEntry', id);
@@ -2148,7 +2265,7 @@ export class UI {
       <button class="btn btn-gold" data-act="codeGo" data-nav>${esc(t('ui.codeGo'))}</button></div>`);
     const inp = this._ovl('code').el.querySelector('input');
     inp.addEventListener('input', () => { inp.value = inp.value.toUpperCase().replace(/[^0-9A-Z]/g, '').slice(0, 6); });
-    inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); this._codeGo(); } if (e.key === 'Escape') inp.blur(); });
+    inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); this._codeGo(); } });   // (Esc: the #ui root handler blurs + closes)
     setTimeout(() => inp.focus(), 60);
   }
   _codeGo() {
@@ -2210,8 +2327,10 @@ export class UI {
     this._blip('click');
     if (key === 'quality') this.toast(t('ui.qualityNote'), '✨');
     if (key === 'assist' && value) this.toast(t('ui.helperOn'), '🧸');
-    // re-render in place (screen or pause overlay)
-    const host = el.closest('.settings-panel, .settings-ovl-body');
+    // re-render in place (screen or pause overlay). A language switch already re-rendered everything via
+    // refresh() (settings:change → setLang → onLangChange), detaching `el` → find the live panel again
+    const host = el.isConnected ? el.closest('.settings-panel, .settings-ovl-body')
+      : this._ovl('settingsOvl')?.el.querySelector('.settings-ovl-body') || this.screen?.el.querySelector('.settings-panel');
     if (host) {
       const inRun = host.classList.contains('settings-ovl-body');
       host.innerHTML = this._settingsBody(inRun);
@@ -2243,8 +2362,11 @@ export class UI {
       <div class="kd-row"><span class="kd-keys"><kbd>E</kbd><kbd>Q</kbd><kbd>K</kbd><kbd class="wide">Enter</kbd></span><b>✦ ${L('ui.keysNova')}</b></div>
       <div class="kd-row"><span class="kd-keys"><kbd>Esc</kbd><kbd>P</kbd></span><b>${L('ui.pause')}</b><span class="kd-keys"><kbd>R</kbd></span><b>${L('ui.keysRetry')}</b><span class="kd-keys"><kbd>M</kbd></span><b>${L('ui.mute')}</b></div></div>`;
   }
+  _pauseSettingsHTML() {
+    return `<div class="panel settings-ovl pop"><button class="x-btn" data-act="close" data-id="settingsOvl" data-nav>✕</button><h3 class="ribbon small">⚙️ ${esc(t('ui.settings'))}</h3><div class="settings-ovl-body scroll">${this._settingsBody(true)}</div></div>`;
+  }
   _pauseSettings() {
-    this._open('settingsOvl', `<div class="panel settings-ovl pop"><button class="x-btn" data-act="close" data-id="settingsOvl" data-nav>✕</button><h3 class="ribbon small">⚙️ ${esc(t('ui.settings'))}</h3><div class="settings-ovl-body scroll">${this._settingsBody(true)}</div></div>`);
+    this._open('settingsOvl', this._pauseSettingsHTML());
     this._bindSliders(this._ovl('settingsOvl').el);
   }
   _exportSave() {
@@ -2326,13 +2448,20 @@ export class UI {
   _s_parent() {
     if (!this.parentOk) return `${this._head(t('ui.parent'), '👪')}<section class="panel"><p class="note">🔒</p></section>`;
     const s = this._settings();
-    const hist = this._m('playHistory') || this.G.save?.profile?.playLog || [];
-    const days = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(Date.now() - i * 86400000), k = dayKey(d);
-      const e = Array.isArray(hist) ? hist.find((x) => x.day === k) : null;
-      const min = n0(e ? e.minutes ?? e.min : typeof hist === 'object' && !Array.isArray(hist) ? n0(hist[k]) / 60 : 0);
-      days.push({ wd: (d.getDay() + 6) % 7, min: Math.round(min), today: i === 0 });
+    const mh = this._m('playHistory', 7);
+    let days = [];
+    if (Array.isArray(mh) && mh.length) {
+      // meta's days are its own 04:00-to-04:00 days (oldest → newest, last = meta.today): use them as they are,
+      // so play after midnight still lands on "today"
+      days = mh.slice(-7).map((e, i, a) => ({ wd: (new Date(e.day + 'T12:00:00').getDay() + 6) % 7, min: Math.round(n0(e.minutes ?? e.min)), today: i === a.length - 1 }));
+    } else {                                   // no meta: calendar days from the save's own log
+      const hist = this.G.save?.profile?.playLog || [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(Date.now() - i * 86400000), k = dayKey(d);
+        const e = Array.isArray(hist) ? hist.find((x) => x.day === k) : null;
+        const min = n0(e ? e.minutes ?? e.min : typeof hist === 'object' && !Array.isArray(hist) ? n0(hist[k]) / 60 : 0);
+        days.push({ wd: (d.getDay() + 6) % 7, min: Math.round(min), today: i === 0 });
+      }
     }
     const wd = t('ui.wd').split(',');
     const maxM = Math.max(30, ...days.map((d) => d.min));
@@ -2344,6 +2473,7 @@ export class UI {
     return `${this._head(t('ui.parent'), '👪')}
       <section class="panel parent-panel scroll">
         <div class="pledge">${[['🛍️', 'ui.pledge1'], ['📺', 'ui.pledge2'], ['📡', 'ui.pledge3'], ['🔒', 'ui.pledge4']].map(([i, k]) => `<div><span class="pl-ico">${i}<i>⃠</i></span><b>${esc(t(k))}</b></div>`).join('')}</div>
+        ${this.G.save?.persistent === false ? `<p class="note">⚠️ <b>${esc(t('ui.noSave'))}</b> · ${esc(t('ui.noSaveHint'))}</p>` : ''}
         <div class="set-group"><h4>📊 ${esc(t('ui.weekPlay'))}</h4><div class="pbars">${bars}</div></div>
         <div class="set-group"><h4>⏰ ${esc(t('ui.breakEvery'))}</h4>${seg('breakMinutes', [0, 30, 45, 60], s.breakReminder === false ? 0 : n0(s.breakMinutes) || TUNE.healthCardMin)}</div>
         <div class="set-group"><h4>🌙 ${esc(t('ui.dailyLimit'))}</h4>${seg('dailyLimit', DATA.health.parentLimits, limit)}
@@ -2501,7 +2631,7 @@ export class UI {
       <div class="rule"><i class="rn">3</i><div class="rv">${blu('focus')}<b class="r-zap">⚡</b>${red('dizzy')}</div><span class="rcap">${cube({ color: '#ffffff', face: 'joy', size: 24 })}<b>${esc(t('ui.r3'))}</b></span></div>
       <div class="rule"><i class="rn">4</i><div class="rv">${blu('focus')}<b class="r-bang">!</b>${red()}</div><span class="rcap"><b class="c-gold">${esc(t('ui.r4'))}</b></span></div></div>`;
   }
-  showPause() {
+  showPause({ inPlace = false } = {}) {
     const run = this.G.run;
     const st = run?.stageDef;
     const o = run?.objective || (st?.objective ? { ...st.objective, cur: 0 } : null);
@@ -2510,7 +2640,7 @@ export class UI {
     this.G.input?.setTouchControls?.(false);
     const assist = !!this._settings().assist;
     const stageLbl = mode === 'stage' && st ? `${stageId(w, st.index ?? 0)} · ${tl(st.name)}` : tl(DATA.modes[mode]?.name);
-    this._open('pause', `<div class="ovl-dim"></div>
+    const html = `<div class="ovl-dim"></div>
       <div class="panel pause-panel pop">
         <button class="pp-gear" data-act="settings" data-nav aria-label="${esc(t('ui.settings'))}" title="${esc(t('ui.settings'))}">⚙</button>
         <h2 class="ribbon"><span>❚❚ ${esc(t('ui.paused'))}</span></h2>
@@ -2524,7 +2654,15 @@ export class UI {
           <button class="btn btn-white" data-act="quit" data-nav>🏠 ${esc(t('ui.home'))}</button>
           <button class="btn btn-white helper-btn${assist ? ' on' : ''}" data-act="helper" data-nav>🧸 ${esc(t('ui.helper'))} <i class="toggle mini${assist ? ' on' : ''}"><i></i></i></button>
         </div>
-      </div>`, { back: () => this.G.app?.resume?.() });
+      </div>`;
+    const cur = inPlace && this._ovl('pause');
+    if (cur) {                        // language switch: same overlay, same stack slot, no pop-in
+      cur.el.innerHTML = html;
+      cur.el.querySelector('.pop')?.style.setProperty('animation', 'none');
+      this._layerChanged();
+      return;
+    }
+    this._open('pause', html, { back: () => this.G.app?.resume?.() });
   }
   hidePause() {
     const was = this._isOpen('pause');
@@ -2570,6 +2708,7 @@ export class UI {
     const obj = st?.objective;
     this.res = { results, rewards, mode, w, s, key, checkpoint, phase, win, bossStage };
     this.resultsDone = false;
+    this._resGuard = { t0: performance.now(), last: 0, done: 0 };
 
     // ---- rows ----
     const rows = [];
@@ -2583,11 +2722,15 @@ export class UI {
       steps.push({ d: C.crown * 0.5, start: () => show('.crowns-row') });
       flags.forEach((f, i) => steps.push({ d: C.crown, end: () => { const el = q(`.rc-slot[data-i="${i}"]`); el?.classList.add('stamped'); if (f && !this.casc?.silent) { this._sfx('star', { pitch: 1 + i * 0.25 }); this.G.input?.rumble?.(0.2, 0.3, 60); } } }));
     }
-    if (stageMode && !win) {
-      const frac = total ? freedRun / total : 0;
+    if (stageMode && !win && (bossStage || total > 0)) {
+      // boss stage: no cubes to count — show how far into King Glitch's 3 phases the child got
+      const ph = clamp(Math.round(phase) || 1, 1, 3);
+      const got = bossStage ? ph : freedRun, of = bossStage ? 3 : total;
+      const frac = got / of;
       // "差一点!" only when it really was close — an early wipe-out gets a cheer instead (never a jab)
-      rows.push(`<div class="rrow almost step"><b>${esc(t(frac >= 0.5 ? 'ui.almost' : 'ui.goodStart'))}</b><i class="bar big"><i class="fill" style="width:0%"></i></i><span class="al-n"><b class="cnt">0</b>/${fmtInt(total || freedRun)}</span></div>`);
-      steps.push({ d: C.almost, start: () => show('.almost'), tick: (k) => { const e = easeOutCubic(k); const f = q('.almost .fill'); if (f) f.style.width = Math.round(frac * e * 100) + '%'; const c = q('.almost .cnt'); if (c) c.textContent = fmtInt(Math.round(freedRun * e)); } });
+      const lbl = bossStage ? `👑 ${t('ui.phase')}` : t(frac >= 0.5 ? 'ui.almost' : 'ui.goodStart');
+      rows.push(`<div class="rrow almost step"><b>${esc(lbl)}</b><i class="bar big"><i class="fill" style="width:0%"></i></i><span class="al-n"><b class="cnt">0</b>/${fmtInt(of)}</span></div>`);
+      steps.push({ d: C.almost, start: () => show('.almost'), tick: (k) => { const e = easeOutCubic(k); const f = q('.almost .fill'); if (f) f.style.width = Math.round(frac * e * 100) + '%'; const c = q('.almost .cnt'); if (c) c.textContent = fmtInt(Math.round(got * e)); } });
     }
     if (!stageMode) {
       const wave = n0(results.wave ?? results.wavesCleared);
@@ -2749,6 +2892,7 @@ export class UI {
     if (!c || c.done) return;
     c.done = true;
     this.resultsDone = true;
+    if (this._resGuard) this._resGuard.done = performance.now();
     const o = this._ovl('results');
     o?.el.classList.add('done');
     this._layerChanged();
@@ -2773,6 +2917,17 @@ export class UI {
     if (!this._stageUnlocked(nx.w, nx.s)) { this._toHome(); this.go('map', { w: nx.w }); return; }
     this._startStage(nx.w, nx.s);
   }
+  /** R on the results screen (main.js): exactly the results Retry button — finishes the cascade, shows a
+   *  pending rescue / rank / break ceremony first (a later R then retries) and keeps the attempt count
+   *  (Helper offer, boss slow-down). Returns true when a new run started. */
+  retryFromResults() {
+    if (!this._isOpen('results') || !this.res) return false;
+    const before = this.G.run;
+    this._blip('click');
+    this._resRetry('plain');
+    return this.G.run !== before;
+  }
+  _resEarly() { return !!this._resGuard && performance.now() - this._resGuard.t0 < TUNE.resGuard * 1000; }
   _resRetry(how) {
     const r = this.res, G = this.G;
     if (this._resHold()) return;
@@ -2839,7 +2994,7 @@ export class UI {
       this._walletTick();
     }, dur);
     this._close('claim');
-    if (rewardItems(e.rewards).some((i) => !['coins', 'tickets', 'trophies'].includes(i.kind))) this.G.app?.refreshHub?.();
+    if (rewardItems(e.rewards).some((i) => !['coins', 'tickets', 'trophies'].includes(i.kind))) this._syncHubHero();
     const after = this._afterClaim;
     this._afterClaim = null;
     after?.();
@@ -2912,8 +3067,10 @@ export class UI {
     const f = o.feature;
     this._blip('click');
     this._close('feature');
-    if (this.screen?.name === 'home' && this.G.app?.state !== 'run') { this.pendingArrow = f; this._rerender(); }
-    else this.pendingArrow = f;
+    if (this.screen?.name === 'home' && this.G.app?.state !== 'run') {
+      this.pendingArrow = f; this._rerender();
+      this._popHoldUntil = performance.now() + TUNE.featGap * 1000;   // the arrow gets its moment before any next popup
+    } else this.pendingArrow = f;
   }
 
   // ═════════ RANK-UP CEREMONY 段位 ═════════
@@ -2952,7 +3109,7 @@ export class UI {
   _showRescueNow(heroId, kind) {
     const h = heroById(heroId);
     const bars = Array.from({ length: 6 }, (_, i) => `<i style="--i:${i}"></i>`).join('');
-    this._open('rescue', `<div class="rescue-bg" style="--hc:${hex(h.color)};--ha:${hex(h.accent)}"></div><div class="rays"></div>
+    const o = this._open('rescue', `<div class="rescue-bg" style="--hc:${hex(h.color)};--ha:${hex(h.accent)}"></div><div class="rays"></div>
       <div class="rescue-stage">
         <div class="rs-ribbon"><span data-text="${esc(kind === 'rescue' ? t('ui.rescued') : t('ui.newHero'))}">${esc(kind === 'rescue' ? t('ui.rescued') : t('ui.newHero'))}</span></div>
         <div class="rs-hero"><div class="rs-cage">${bars}</div>${heroCube(heroId, { size: 150, limbs: true, face: 'joy' })}</div>
@@ -2964,7 +3121,20 @@ export class UI {
       </div>`, { back: () => this._close('rescue') });
     this._sfx('unlock');
     setTimeout(() => this._sfx('rankup'), 700);
-    this._confetti(this._ovl('rescue').el, 50);
+    this._confetti(o.el, 50);
+    // once the buttons have faded in, a tap ANYWHERE on the reveal = 太棒了! (a short landscape phone may
+    // not even show the buttons; a kid taps the big hero anyway). Buttons keep their own actions.
+    o.tapOk = false;
+    setTimeout(() => { o.tapOk = true; }, (REDUCED ? 1 : TUNE.rescueTapAfter) * 1000);
+    o.el.addEventListener('click', (e) => {
+      if (!o.tapOk || e.target.closest('[data-act]') || this._ovl('rescue') !== o) return;
+      this._rescueOk();
+    });
+  }
+  _rescueOk() {
+    if (!this._isOpen('rescue')) return;
+    this._blip('click');
+    this._close('rescue');
   }
 
   // ═════════ PLAY-TIME GUARDIAN: break card · eye rest · goodnight ═════════
@@ -3025,11 +3195,11 @@ export class UI {
     try { canvas = this._drawPoster({ res, heroId, code }); } catch (err) { console.error('[ui] poster', err); this._blip('error'); return; }
     const canShare = !!navigator.share;
     const o = this._open('share', `<div class="ovl-dim"></div>
-      <div class="panel share-pop pop"><button class="x-btn" data-act="close" data-id="share" data-nav>✕</button>
+      <div class="panel share-pop pop"><button class="x-btn" data-act="close" data-id="share" data-nav data-default>✕</button>
         <h3 class="ribbon small">📤 ${esc(t('ui.shareTitle'))}</h3>
         <div class="poster-box"></div>
         <div class="share-code"><small>${esc(t('ui.challengeCode'))}</small><b>${code}</b></div>
-        <div class="row"><button class="btn btn-gold" data-act="shareSave" data-nav data-default>💾 ${esc(t('ui.saveImg'))}</button>${canShare ? `<button class="btn btn-blue" data-act="shareSend" data-nav>📤 ${esc(t('ui.shareBtn'))}</button>` : ''}</div>
+        <div class="row"><button class="btn btn-gold" data-act="shareSave" data-nav>💾 ${esc(t('ui.saveImg'))}</button>${canShare ? `<button class="btn btn-blue" data-act="shareSend" data-nav>📤 ${esc(t('ui.shareBtn'))}</button>` : ''}</div>
       </div>`);
     o.el.querySelector('.poster-box').appendChild(canvas);
     o.canvas = canvas; o.code = code;
@@ -3179,7 +3349,9 @@ function seedFrom(s) { let h = 2166136261; for (const c of String(s)) { h ^= c.c
 
 addStrings({
   zh: { 'ui.placement': '段位定级!', 'feat.signin': '每天来点一下签到，就有礼物!', 'ui.r3': '解救!', 'ui.r4': '完美!', 'tip.boss': '大王砸地后会晕倒，冲向它发光的核心!',
-    'tip.storm': '风暴墙外会掉心，待在亮圈里面!', 'ui.goodStart': '好的开始!', 'tip.fall': '地板一闪一闪时，快跳到别的地方!' },
+    'tip.storm': '风暴墙外会掉心，待在亮圈里面!', 'ui.goodStart': '好的开始!', 'tip.fall': '地板一闪一闪时，快跳到别的地方!',
+    'ui.phase': '阶段', 'ui.noSave': '这个浏览器不能保存进度哦', 'ui.noSaveHint': '可以在设置里导出存档码，下次再导入' },
   en: { 'ui.placement': 'Your rank!', 'feat.signin': 'Tap Sign-in once a day for a gift!', 'ui.r3': 'POP!', 'ui.r4': 'PERFECT!', 'tip.boss': 'After King Glitch slams he gets dizzy — dash into his glowing core!',
-    'tip.storm': 'Stay inside the glowing circle — the storm stings!', 'ui.goodStart': 'Good start!', 'tip.fall': 'Flickering tiles vanish — hop off them fast!' },
+    'tip.storm': 'Stay inside the glowing circle — the storm stings!', 'ui.goodStart': 'Good start!', 'tip.fall': 'Flickering tiles vanish — hop off them fast!',
+    'ui.phase': 'Phase', 'ui.noSave': "This browser can't save your progress", 'ui.noSaveHint': 'Export a save code in Settings to keep it for next time' },
 });
