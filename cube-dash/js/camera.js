@@ -321,11 +321,11 @@ export class CameraDirector {
     // The arena must fit the band [bot, top] (top leaves room for the HUD bar).
     const top = 1 - 2 * TUNE.hudTop, bot = -1;
     const nd = (w, d) => (-w * sp) / ((d - w * cp) * tf);
-    const fzBand = (d, rf) => {          // focus z that centres [−rf, rf] inside the band (bisection; monotonic)
+    const fzBand = (d, rf, tp = top) => {          // focus z that centres [−rf, rf] inside the band (bisection; monotonic)
       let lo = -rf * 2, hi = rf * 2;
       for (let i = 0; i < 40; i++) {
         const m = (lo + hi) / 2;
-        if (nd(-rf - m, d) + nd(rf - m, d) - (top + bot) > 0) hi = m; else lo = m;
+        if (nd(-rf - m, d) + nd(rf - m, d) - (tp + bot) > 0) hi = m; else lo = m;
       }
       return (lo + hi) / 2;
     };
@@ -346,7 +346,7 @@ export class CameraDirector {
     this._rig = {
       dist, fov, fit, aspect, pitch: p,
       near: kNear * dist, far: kFar * dist, farSafe: Math.min(kFar, kSafe) * dist, nearSafe: Math.min(kNear, kNearSafe) * dist, halfX: kX * dist,
-      centreZ: fzBand(dist, Rf),
+      centreZ: fzBand(dist, Rf, fit ? top : Math.min(top, ys)),   // follow mode (phones): keep the whole depth below the HUD panels
       Rf, R, touch, pxPerU: pxAt(dist),
     };
     if (!this._inited) { this._inited = true; this._snapFocus(); }
