@@ -506,10 +506,10 @@ export default async function create(ctx) {
         vec2 p = vUv;
         vec3 velvet = vec3(0.006, 0.008, 0.013);
         // the open rattan case and the faded violet stamp far behind the glass, deeply defocused (soft blobs)
-        float caseG = exp(-pow(length((p - vec2(0.62, 0.47)) * vec2(4.2, 7.0)), 2.0));
+        float caseG = exp(-pow(length((p - vec2(0.63, 0.47)) * vec2(5.5, 9.0)), 2.0));
         float stamp = exp(-pow(length((p - vec2(0.60, 0.50)) * vec2(14.0, 26.0)), 2.0));
         float edge = smoothstep(0.035, 0.0, p.y) * 0.6 + smoothstep(0.03, 0.0, 1.0 - p.x) * 0.4;     // moon-silver highlight along the pane edge
-        vec3 col = velvet + vec3(0.20, 0.13, 0.065) * caseG * 0.5 + vec3(0.10, 0.08, 0.13) * stamp * 0.5 + vec3(0.09, 0.1, 0.12) * edge;
+        vec3 col = velvet + vec3(0.20, 0.13, 0.065) * caseG * 0.22 + vec3(0.10, 0.08, 0.13) * stamp * 0.22 + vec3(0.09, 0.1, 0.12) * edge;
         vec4 sm = texture2D(uSm, p * vec2(1.6, 0.8));
         col += vec3(0.05, 0.055, 0.065) * (sm.r * 0.4 + sm.b * 0.8) * dustK;   // dust & smudge catching the gallery light
         gl_FragColor = vec4(col, k); }`,
@@ -548,6 +548,13 @@ export default async function create(ctx) {
     if (isExt && o.seeInside) for (const l of LIGHTS.int) l.visible = false;
     partMesh.visible = !o.noPartition; southWall.visible = !o.noPartition;
     for (const m of shell) m.castShadow = isExt;
+    // light economy (each light / shadow pass costs on every lit pixel): per-shot switches
+    candle.light.castShadow = isInt && o.candleShadow !== false;
+    if (moonWL.bounce) moonWL.bounce.visible = isInt && o.bounce !== false;
+    tableBounce.visible = isInt && o.bounce !== false;
+    lampIn.light.visible = false;                                   // the reveal-niche lamp reads by its flame alone
+    moonDirL.castShadow = isExt && o.moonShadow !== false;
+    sky.object3D.visible = isExt && o.sky !== false; sea.object3D.visible = isExt && o.sea !== false;
     lampIn.object3D.visible = isInt && !!o.lampIn;
     farCandle.visible = isExt;
     wife = o.wife === 'mid' ? wifeMid : wifeHi;
@@ -604,7 +611,7 @@ export default async function create(ctx) {
   doorCard.rotation.y = -Math.PI / 2 + 0.25;   // the warm candle-lit room as seen through the door (cheap stand-in for the interior light)
   const yardRough0 = 1.0;
   function exterior(T0, ch, tl, o = {}) {
-    mode('ext', { seeInside: true, wife: o.wife || 'mid', child: o.child, glass41: o.glass41, rain: o.rain, env: ch === 'ch1' ? envExtA : envExtB });
+    mode('ext', { seeInside: true, wife: o.wife || 'mid', child: o.child, glass41: o.glass41, rain: o.rain, env: ch === 'ch1' ? envExtA : envExtB, moonShadow: ch === 'ch1', sky: o.sky, sea: o.sea });
     sky.set(ch === 'ch1' ? SKY_CH1 : ch === 'ch2' ? SKY_CH2 : SKY_CH3); sky.update(T0);
     let mI = ch === 'ch1' ? 0.75 : ch === 'ch2' ? 0.16 : 0.06;
     if (ch === 'ch1') { const dip = Math.sin(clamp((T0 - T.S019 - 0.3) / 1.0) * Math.PI); mI *= 1 - 0.3 * dip; sky.uniforms.uMoonIntensity.value = SKY_CH1.moonIntensity * (1 - 0.65 * dip); sky.uniforms.uMoonHalo.value = SKY_CH1.moonHalo * (1 + 0.6 * dip); }
@@ -773,7 +780,7 @@ export default async function create(ctx) {
     for (const m of gloveMats) m.opacity = fade;
     for (const m of twinMats) m.opacity = 0.3 * fade;
     gloveR.root.visible = gloveTwin.root.visible = fade > 0.003;
-    gl41Key.position.copy(gloveC).add(V3(0.6, 0.9, 0.4)); gl41Key.target.position.copy(gloveC); gl41Key.target.updateMatrixWorld();
+    gl41Key.position.copy(gloveC).addScaledVector(dir19, -0.7).add(V3(0, 0.8, 0)).addScaledVector(side, 0.35); gl41Key.target.position.copy(gloveC); gl41Key.target.updateMatrixWorld();
   }
 
   // ---- aim solver: yaw/pitch (no roll) that best places world points at registered screen positions, camera at `pos`
@@ -874,7 +881,7 @@ export default async function create(ctx) {
     // 0.6–1.1), 1.17 s a 15° glance toward the open door at screen left; focus racks 1.47–1.98 s from her hands/mouth to
     // the small oil lamp just past the left jamb (0.22, 0.44), sharp on '谁的' (120.31).
     S035(tl, u, T0) {
-      mode('int', { sew: true, lampIn: true, bowlT: false });
+      mode('int', { sew: true, lampIn: true, bowlT: false, candleShadow: false, bounce: false });
       setCandle('A', T0); setMoonIn(MOON_S35);
       candle.object3D.position.copy(S35.candle); candle.update(T0, { intensity: 0.5 });
       stand.position.set(S35.candle.x, 0, S35.candle.z);
@@ -886,7 +893,7 @@ export default async function create(ctx) {
       const dNear = cam.distTo(camera, wife.hands.R.sockets.pinch.getWorldPosition(V3())), dLamp = cam.distTo(camera, lampIn.object3D.position);
       const f = smoothstep(1.47, 1.98, tl);
       const focus = Math.exp(lerp(Math.log(dNear), Math.log(dLamp), f));
-      return { dof: { focus, fstop: 2.0 }, exposure: 1.5, bloom: { strength: 0.5, threshold: 0.7 } };
+      return { dof: { focus, fstop: 2.0 }, exposure: 1.3, bloom: { strength: 0.5, threshold: 0.7 } };
     },
     // S041 — WS 32 mm. REFLECTION hand-off from S040 (G3c glass, gloved hand at (0.36, 0.56)): 0–1.6 s a 15 cm push toward
     // the glass ending exactly on S019's camera, focus racks from the glove's reflection plane into mirror depth while the
@@ -914,14 +921,14 @@ export default async function create(ctx) {
     // stone between. 139.02 '等' a child's bare feet step out of the dark doorway and settle between them; 139.68 '雨' the toes
     // wiggle. Nothing above the ankles in frame.
     S042(tl, u, T0) {
-      exterior(T0, 'ch2', tl, { child: true, wife: 'hi' });
+      exterior(T0, 'ch2', tl, { child: true, wife: 'mid', sky: false, sea: false });
       lampLit(true); lampOut.update(T0, { intensity: 0.35 });
       doorPivot.rotation.y = -0.95;
       wifeOnDoorstone(T0, {});
       childFeet(tl, T0);
       cam.place(camera, C42.pos, C42.target); cam.lens(camera, 24);
       camera.near = 0.01; camera.far = 600;
-      return { dof: { focus: cam.distTo(camera, V3(-3.42, -0.14, 1.36)), fstop: 4.0 }, exposure: 1.7, temp: -0.08, saturation: 0.88, bloom: { strength: 0.5, threshold: 0.7 } };
+      return { dof: { focus: cam.distTo(camera, V3(-3.42, -0.14, 1.36)), fstop: 4.0 }, exposure: 2.3, temp: -0.06, saturation: 0.88, lift: [0.014, 0.014, 0.018], bloom: { strength: 0.55, threshold: 0.65 } };
     },
 
     // ---------------------------------------------------------------- named views (nested; no post — linear HDR straight into a pane)
@@ -950,7 +957,7 @@ export default async function create(ctx) {
     // palm out ~207.3) and loops on a 4 s cycle for other callers.
     view_home_rain(tl, u, T0) {
       const Tr = T0 >= 204 && T0 <= 214 ? T0 : 206.0 + ((T0 % 4) + 4) % 4;
-      exterior(Tr, 'ch3', tl, { rain: true });
+      exterior(Tr, 'ch3', tl, { rain: true, sky: false, sea: false });
       lampLit(true); lampOut.update(Tr, { intensity: 1.1 });
       doorPivot.rotation.y = -0.95;
       wifeReachRain(Tr);
@@ -980,7 +987,7 @@ export default async function create(ctx) {
     const mouth = V3(0, 0.0, 0.44 * wife.P.hu).applyMatrix4(hb.matrixWorld), lampP = lampIn.object3D.localToWorld(V3(0.043, 0.06, 0));
     let best = null;
     const ldir = mouth.clone().sub(lampP).setY(0).normalize();
-    for (const k of [1.1, 1.3, 1.5, 1.7]) for (const off of [-0.6, -0.45, -0.3, -0.15, 0, 0.15, 0.3, 0.45, 0.6]) for (const cy of [0.85, 0.95, 1.05]) {
+    for (const k of [1.1, 1.3, 1.5, 1.7]) for (const off of [-0.6, -0.45, -0.3, -0.15, 0, 0.15, 0.3, 0.45, 0.6]) for (const cy of [0.5, 0.58, 0.66, 0.74]) {
       const cx = mouth.x + ldir.x * k - ldir.z * off, cz = mouth.z + ldir.z * k + ldir.x * off;
       if (cx > 2.42 || cz < -1.9 || cz > 1.9) continue;
       const hands = cuffG.position.clone();
@@ -990,10 +997,10 @@ export default async function create(ctx) {
     C35.pos.copy(best.pos); C35.target.copy(best.target);
     { // the candle she sews by: beyond her face and off frame left → a side-back key on her profile
       const v = C35.target.clone().sub(C35.pos).setY(0).normalize(), left = V3(v.z, 0, -v.x);
-      S35.candle = mouth.clone().addScaledVector(v, 0.45).addScaledVector(left, 0.62).setY(0.515);
+      S35.candle = mouth.clone().addScaledVector(v, 0.55).addScaledVector(left, -0.42).setY(0.515);   // beyond her, behind her head from the camera
     }
     console.log('OH C35 err', best.err.toFixed(5));
-    exterior(T.S042 + 1.0, 'ch2', 1.0, { child: true, wife: 'hi' }); wifeOnDoorstone(T.S042 + 1.0, {});
+    exterior(T.S042 + 1.0, 'ch2', 1.0, { child: true, wife: 'mid', sky: false, sea: false }); wifeOnDoorstone(T.S042 + 1.0, {});
     const toe = wife.worldPos('legL.foot').add(V3(-0.12, -0.02, 0.03)), rim = BOWL_S.clone().add(V3(0, 0.055, 0));
     best = null;
     for (const cx of [-4.0, -3.94, -3.88, -3.82]) for (const cz of [1.2, 1.28, 1.36, 1.44, 1.52]) {
@@ -1042,7 +1049,12 @@ export default async function create(ctx) {
         if (OFF.has('inside')) G.interior.visible = false;
         if (OFF.has('ext')) G.exterior.visible = false;
         if (OFF.has('bloom')) r.bloom = { strength: 0 };
-      } else { candle.light.castShadow = true; moonWL.light.castShadow = true; moonDirL.castShadow = true; }
+        if (OFF.has('bounce')) { if (moonWL.bounce) moonWL.bounce.visible = false; tableBounce.visible = false; }
+        if (OFF.has('figshadow')) for (const f of [wifeHi, wifeMid, child]) f.root.traverse((o) => { if (o.isMesh) o.castShadow = false; });
+        if (OFF.has('yb')) yardBounce.visible = false;
+        if (OFF.has('door')) doorGlow.visible = false;
+        if (OFF.has('lamp')) lampOut.light.visible = false;
+      } else { moonWL.light.castShadow = true; for (const f of [wifeHi, wifeMid, child]) f.root.traverse((o) => { if (o.isMesh) o.castShadow = true; }); }
       return r;
     },
   };

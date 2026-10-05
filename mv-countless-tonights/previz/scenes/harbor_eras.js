@@ -35,7 +35,7 @@ export default async function create(ctx) {
   const { cam, util } = ctx;
   const { clamp, lerp, smoothstep, ease } = util;
   const Q = new URLSearchParams(location.search);
-  const DBG = Q.get('he') || '';
+  const DBG = Q.get('he') || 'dev';
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x05070b);
   const camera = new THREE.PerspectiveCamera(30, ctx.aspect, 1.0, 9000);
@@ -57,6 +57,7 @@ export default async function create(ctx) {
     g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); return g;
   }
   const box = (w, h, d, mat, parent, x, y, z, cast = true) => mesh(metreUV(new THREE.BoxGeometry(w, h, d).translate(x, y, z)), mat, parent, 0, 0, 0, cast);
+  const boxR = (w, h, d, mat, parent, x, y, z, rx = 0, ry = 0, rz = 0, cast = true) => { const m = mesh(metreUV(new THREE.BoxGeometry(w, h, d)), mat, parent, x, y, z, cast); m.rotation.set(rx, ry, rz); return m; };
   const cyl = (r0, r1, h, mat, parent, x, y, z, seg = 10, cast = true) => mesh(new THREE.CylinderGeometry(r0, r1, h, seg), mat, parent, x, y, z, cast);
   const group = (parent, name) => { const g = new THREE.Group(); if (name) g.name = name; (parent || setRoot).add(g); return g; };
   const canvas = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
@@ -95,8 +96,11 @@ export default async function create(ctx) {
   function bisect(f, a, b, n = 48) { let fa = f(a); for (let i = 0; i < n; i++) { const m = (a + b) / 2, fm = f(m); if ((fm > 0) === (fa > 0)) { a = m; fa = fm; } else b = m; } return (a + b) / 2; }
 
   // ---- S046 / S080 locked camera (LOC_HARBOR lock: 40 mm, lens 1.6 m, looking east along the waterfront)
-  const C46 = { pos: V3(-60, 1.6, 22), yaw: 90, pitch: -Math.atan(0.08 * Math.tan(Math.atan(36 / ctx.aspect / 2 / 40))) / D2R, mm: 40 }; // horizon at y 0.46
-  C46.pos.z = bisect((z) => { orient(tc, V3(C46.pos.x, 1.6, z), 90, C46.pitch, 40); return projOf(tc, V3(62, 7.6, 0))[0] - 0.30; }, 4, 60);
+  // yaw 95°: looking east along the waterfront, 5° toward the harbour mouth (SE) so the customs house's far end, its corner
+  // flagpole and the east-end light clear the gate's left pier (the shot list's (0.30, 0.38) light point would sit behind it)
+  const C46 = { pos: V3(-60, 1.6, 22), yaw: 95, pitch: -Math.atan(0.08 * Math.tan(Math.atan(36 / ctx.aspect / 2 / 40))) / D2R, mm: 40 }; // horizon at y 0.46
+  const BAYP = V3(58, 7.4, -0.28);                   // E5: the east-end light (bay lamp seen through the last glazed arch)
+  C46.pos.z = bisect((z) => { orient(tc, V3(C46.pos.x, 1.6, z), C46.yaw, C46.pitch, 40); return projOf(tc, BAYP)[0] - 0.235; }, 4, 60);
   orient(tc, C46.pos, C46.yaw, C46.pitch, C46.mm);
   const TH = hitY(tc, 0.38, 0.66, 0.13);          // threshold front (camera-side) edge, top of the sill
   const SPOT = hitY(tc, 0.38, 0.70, 0.0);         // the waiting spot (feet)
@@ -118,16 +122,20 @@ export default async function create(ctx) {
   const THETA = Math.atan2(moonSet.x, -moonSet.z) - MOON_AZW * D2R;   // world az = set az − THETA
   setRoot.rotation.y = THETA; setRoot.updateMatrixWorld(true);
   const azW = (azSetDeg) => azSetDeg - THETA / D2R;
-  if (DBG) console.log('harbor layout', JSON.stringify({ C46: C46.pos, pitch46: C46.pitch, TH, SPOT, LANT, D46, MOON_EL, MOON_AZW, p0: S18.p0, p1: S18.p1, pitch0: S18.pitch0, pitch1: S18.pitch1, THETA: THETA / D2R }));
+  if (DBG) console.warn('harbor layout', JSON.stringify({ C46: C46.pos, pitch46: C46.pitch, TH, SPOT, LANT, D46, MOON_EL, MOON_AZW, p0: S18.p0, p1: S18.p1, pitch0: S18.pitch0, pitch1: S18.pitch1, THETA: THETA / D2R }));
 
   // ================================================================ sky, sea, environment
-  const SKY46 = { preset: 'dusk', zenith: ['#16294a', 0.95], horizon: ['#a98a9c', 0.62], haze: ['#4a587c', 0.55], hazeAmt: 0.62, ground: ['#0c1220', 0.3],
-    sunAz: azW(262), sunElev: -4, sunColor: ['#d89a7c', 0.6], sunGlow: 0.25, sunGlowWidth: 10, sunSharp: 4, moonIntensity: 0, moonHalo: 0, stars: 0.0,
-    cloudCover: 0.26, cloudDensity: 0.55, cloudScale: 0.06, cloudLit: ['#b08f9e', 0.42], cloudDark: ['#3a4462', 0.36], wind: [0.0012, 0.0004], exposure: 1.0 };
-  const SKY80a = { preset: 'predawn', zenith: ['#22355a', 0.8], horizon: ['#5B6F8A', 0.78], haze: ['#7a87a2', 0.6], hazeAmt: 0.4,
-    sunAz: azW(101), sunElev: -3.2, sunColor: ['#EBB894', 1.0], sunGlow: 0.85, sunGlowWidth: 26, sunSharp: 14, moonIntensity: 0, moonHalo: 0, stars: 0.0,
-    cloudCover: 0.3, cloudDensity: 0.6, cloudScale: 0.07, cloudLit: ['#c8a8a0', 0.5], cloudDark: ['#3e4a66', 0.4], wind: [0.0015, 0.0003], exposure: 1.0 };
-  const SKY80b = { ...SKY80a, zenith: ['#2c4268', 0.85], horizon: ['#7e8aa0', 0.85], haze: ['#a8a2ac', 0.62], sunGlow: 1.15, sunElev: -2.4, cloudLit: ['#e0b8a4', 0.6] };
+  // dusk just after sunset, looking EAST: deep blue (P02 → P03 toward the horizon), a faint mauve-rose band low down
+  // (anti-twilight) and a few high clouds catching the last pink; the sun itself is behind camera (set WSW)
+  const SKY46 = { preset: 'dusk', zenith: ['#14274a', 1.0], horizon: ['#3c5479', 0.86], haze: ['#8a7a92', 0.5], hazeAmt: 0.42, ground: ['#0c1220', 0.3],
+    sunAz: azW(262), sunElev: -4, sunColor: ['#d89a7c', 0.6], sunGlow: 0.2, sunGlowWidth: 10, sunSharp: 4, moonIntensity: 0, moonHalo: 0, stars: 0.0,
+    cloudCover: 0.36, cloudDensity: 0.62, cloudScale: 0.045, cloudLit: ['#c49ca6', 0.5], cloudDark: ['#2e3a5a', 0.55], wind: [0.0012, 0.0004], exposure: 1.0 };
+  // dawn 20 min before sunrise, looking east: P20 blue-grey sky and sea, ONE thin peach line (P21) on the horizon right of
+  // centre where the sun will rise (set az 101°, x ≈ 0.62–0.85); light comes up over the shot, never orange
+  const SKY80a = { preset: 'predawn', zenith: ['#2a3c5e', 0.78], horizon: ['#5B6F8A', 0.82], haze: ['#7f88a0', 0.5], hazeAmt: 0.32,
+    sunAz: azW(101), sunElev: -3.0, sunColor: ['#EBB894', 1.0], sunGlow: 0.85, sunGlowWidth: 46, sunSharp: 9, moonIntensity: 0, moonHalo: 0, stars: 0.0,
+    cloudCover: 0.34, cloudDensity: 0.55, cloudScale: 0.05, cloudLit: ['#b8a4a4', 0.55], cloudDark: ['#46526e', 0.5], wind: [0.0015, 0.0003], exposure: 1.0 };
+  const SKY80b = { ...SKY80a, zenith: ['#32486c', 0.84], horizon: ['#6c7c96', 0.9], haze: ['#9a98a8', 0.52], sunGlow: 1.2, sunElev: -2.4, cloudLit: ['#d6b4a4', 0.66] };
   const SKY18W = { ...SKY18, moonAz: MOON_AZW, moonElev: MOON_EL };
   const sky = createSky(SKY46); scene.add(sky.object3D);
   // the sea reflects its own sky copy: same sky everywhere, except S018 where its moon is raised (glitter path on the basin)
@@ -146,8 +154,8 @@ export default async function create(ctx) {
     brick: TX.brick({ rows: 12, perRow: 4, limewash: 0.0, seed: 30 }),
     plaster: TX.plaster({ tone: 'lime', damp: 0.35, flake: 0.2, cracks: 0.25, strokes: 0.5, seed: 2 }),
     granite: TX.granite({ rows: 5, seed: 31 }),
-    stone: TX.stone({ tone: 'granite', rows: 5, seed: 3, wear: 0.6 }),
-    earth: TX.stone({ tone: 'warm', rows: 3, seed: 9, wear: 0.9, grout: 0.4 }),
+    stone: TX.stone({ tone: 'granite', rows: 9, seed: 3, wear: 0.7 }),
+    earth: TX.plaster({ tone: 'warm', damp: 0.8, flake: 0.0, cracks: 0.2, strokes: 0.1, seed: 9 }),
     wood: TX.wood({ tone: 'beam', planks: 5, seed: 5 }),
     noise: TX.noiseTexture(),
   };
@@ -156,8 +164,8 @@ export default async function create(ctx) {
   const M = {
     granite: matOf(T.granite, 3.0, { color: 0xb8b2a8 }),
     graniteDark: matOf(T.granite, 3.0, { color: 0x8e8a84 }),
-    paving: matOf(T.stone, 4.0, { color: 0xa09a90 }),
-    earth: matOf(T.earth, 6.0, { color: 0x8a7a66 }),
+    paving: matOf(T.stone, 3.2, { color: 0x9a948a }),
+    earth: matOf(T.earth, 7.0, { color: 0x7a6a58 }),
     timber: matOf(T.wood, 2.0, { color: 0x9a8a78 }),
     timberDark: matOf(T.wood, 2.0, { color: 0x6a5a4c }),
     joinery: std({ color: 0xE3DED3, roughness: 0.6 }),
@@ -175,7 +183,7 @@ export default async function create(ctx) {
   function facadeMaterial() {
     const b = R(T.brick, 0.9);
     const m = std({ map: b.map, normalMap: b.normalMap, roughnessMap: b.roughnessMap, roughness: 1 });
-    const U = { uPlaster: { value: T.plaster.map }, uPlS: { value: 1 / 4.5 }, uMask: { value: T.noise }, uMaskS: { value: 1 / 16 }, uCover: { value: 1 }, uPaint: { value: new THREE.Color(1, 1, 1) }, uGrime: { value: 0.2 } };
+    const U = { uPlaster: { value: T.plaster.map }, uPlS: { value: 1 / 4.5 }, uMask: { value: T.noise }, uMaskS: { value: 1 / 34 }, uCover: { value: 1 }, uPaint: { value: new THREE.Color(1, 1, 1) }, uGrime: { value: 0.2 } };
     m.onBeforeCompile = (sh) => {
       Object.assign(sh.uniforms, U);
       sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec2 vMU;').replace('#include <uv_vertex>', '#include <uv_vertex>\nvMU = uv;');
@@ -184,7 +192,8 @@ export default async function create(ctx) {
           vec3 bc = texture2D(map, vMapUv).rgb;
           vec3 pc = texture2D(uPlaster, vMU * uPlS).rgb * uPaint;
           float mk = texture2D(uMask, vMU * uMaskS).r * 0.7 + texture2D(uMask, vMU * uMaskS * 3.7 + 0.31).a * 0.3;
-          float cov = uCover > 0.995 ? 1.0 : smoothstep(1.0 - uCover - 0.05, 1.0 - uCover + 0.05, mk);
+          float fl = texture2D(uMask, vMU * 0.37 + 0.11).g - 0.5;
+          float cov = uCover > 0.995 ? 1.0 : smoothstep(1.0 - uCover - 0.16, 1.0 - uCover + 0.16, mk + fl * 0.2 + 0.18 * smoothstep(1.0, 9.0, vMU.y)) * 0.88;
           float gs = texture2D(uMask, vec2(vMU.x * 0.31, vMU.y * 0.035 + 0.2)).g;
           vec3 fcol = mix(bc, pc, cov);
           fcol *= 1.0 - uGrime * smoothstep(0.42, 0.8, gs) * 0.55 - uGrime * 0.25 * smoothstep(3.0, 0.0, vMU.y);
@@ -194,6 +203,20 @@ export default async function create(ctx) {
     m.userData.U = U;
     return m;
   }
+  // damp ground: large-scale puddle mask lowers roughness (lamp + sky reflections on the setts), darkens slightly
+  function damp(m, k = 1) {
+    const U = { uMask: { value: T.noise }, uWet: { value: k } };
+    const prev = m.onBeforeCompile;
+    m.onBeforeCompile = (sh) => {
+      Object.assign(sh.uniforms, U);
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec2 vWU;').replace('#include <uv_vertex>', '#include <uv_vertex>\nvWU = uv;');
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec2 vWU; uniform sampler2D uMask; uniform float uWet; float wetK;')
+        .replace('#include <map_fragment>', '#include <map_fragment>\n  { float pm = texture2D(uMask, vWU * 0.021).r * 0.75 + texture2D(uMask, vWU * 0.09 + 0.3).a * 0.25; wetK = uWet * smoothstep(0.5, 0.64, pm); diffuseColor.rgb *= 1.0 - 0.35 * wetK; }')
+        .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\n  roughnessFactor = mix(roughnessFactor, 0.08, wetK);');
+    };
+    m.customProgramCacheKey = () => 'harborDamp' + m.uuid; m.userData.wet = U; return m;
+  }
+  damp(M.paving, 1.0); damp(M.earth, 0.6);
   M.facade = facadeMaterial();
   M.facadeTrim = facadeMaterial();     // cornice / string course / pilasters (always rendered, slightly lighter)
   // roof tiles (weathered terracotta courses) and E1 grey channel tiles
@@ -348,7 +371,7 @@ export default async function create(ctx) {
     box(1.6, 0.4, 4.2, M.granite, bayG, bx + 0.8, y0 - 0.2, bz); box(1.7, 0.3, 4.3, M.granite, bayG, bx + 0.85, y0 + h + 0.15, bz);
     const pane = std({ color: 0x14181c, roughness: 0.08, envMapIntensity: 1.4 });
     const pE = box(0.08, h, 2.2, pane, bayG, bx + 1.6, y0 + h / 2, bz, false);
-    for (const s of [-1, 1]) { const p = box(0.08, h, 1.45, pane, bayG, bx + 0.8, y0 + h / 2, bz + s * 1.6, false); p.geometry.rotateY(0); p.rotation.y = s * Math.PI / 4; p.position.set(0, 0, 0); }
+    for (const s of [-1, 1]) boxR(0.08, h, 1.45, pane, bayG, bx + 0.8, y0 + h / 2, bz + s * 1.62, 0, s * Math.PI / 4, 0, false);
   }
   // flagpole on the SE roof corner (E2–E4 flags; E5 bare)
   const FP = V3(63.3, CH.corn + 0.15, -0.9);
@@ -390,13 +413,14 @@ export default async function create(ctx) {
     box(0.9, 0.12, 2 * half + 1.3, M.roofGrey, gateE1, GX - 0.05, 3.42, GZ);
     const stakes = [], r = util.rng(17);
     for (let z = GZ - half - 0.45; z > GZ - 22; z -= 0.26) stakes.push(M4(GX + (r() - 0.5) * 0.05, 1.15 + r() * 0.12, z, r() * 3, 1, 1 + (r() - 0.5) * 0.1, 1));
-    for (let z = GZ + half + 0.45; z < QUAY_Z - 0.3; z += 0.26) stakes.push(M4(GX + (r() - 0.5) * 0.05, 1.15 + r() * 0.12, z, r() * 3, 1, 1 + (r() - 0.5) * 0.1, 1));
+    for (let z = GZ + half + 0.45; z < QUAY_Z - 5.2; z += 0.26) stakes.push(M4(GX + (r() - 0.5) * 0.05, 1.15 + r() * 0.12, z, r() * 3, 1, 1 + (r() - 0.5) * 0.1, 1));
     const sg = new THREE.CylinderGeometry(0.035, 0.1, 2.5, 6); const sgt = new THREE.ConeGeometry(0.1, 0.25, 6).translate(0, 1.37, 0);
     instanced(sg, M.timber, stakes, gateE1); instanced(sgt, M.timber, stakes, gateE1);
-    box(0.12, 0.12, 22, M.timberDark, gateE1, GX - 0.1, 1.9, GZ - half - 11); box(0.12, 0.12, QUAY_Z - GZ - half, M.timberDark, gateE1, GX - 0.1, 1.9, (GZ + half + QUAY_Z) / 2);
+    box(0.12, 0.12, 22, M.timberDark, gateE1, GX - 0.1, 1.9, GZ - half - 11); box(0.12, 0.12, QUAY_Z - 5.2 - GZ - half, M.timberDark, gateE1, GX - 0.1, 1.9, (GZ + half + QUAY_Z - 5.2) / 2); box(0.3, 2.9, 0.3, M.timber, gateE1, GX, 1.45, QUAY_Z - 5.1);
     // gate leaf (open inward) and a bracket with the lantern on the right post
-    const leaf = box(0.08, 2.4, half * 0.95, M.timberDark, gateE1, GX + 0.5, 1.35, GZ + half + 0.05); leaf.rotation.y = 0.0; leaf.position.x += 0; leaf.geometry.translate(0, 0, 0);
-    box(0.06, 0.06, 0.55, M.iron, gateE1, GX - 0.05, LANT.y + 0.45, LANT.z + 0.25, false);
+    boxR(half * 0.95, 2.4, 0.08, M.timberDark, gateE1, GX + 0.42, 1.35, GZ + half - 0.1, 0, -1.25, 0);
+    boxR(half * 0.95, 2.4, 0.08, M.timberDark, gateE1, GX + 0.42, 1.35, GZ - half + 0.1, 0, 1.25, 0);
+    { const zp = GZ + half; box(0.06, 0.06, zp - LANT.z, M.iron, gateE1, GX - 0.05, LANT.y + 0.16, (zp + LANT.z) / 2, false); }
   }
   {
     // E2–E5: granite piers with caps, sill + iron edge strip, iron gate leaves, low wall + railing
@@ -411,21 +435,22 @@ export default async function create(ctx) {
     // low wall + railing to the left (off frame) and right (quay edge)
     const zL0 = GZ - half - 0.72, zR0 = GZ + half + 0.72, zL1 = GZ - 30, zR1 = QUAY_Z - 0.4;
     box(0.5, 0.5, zL0 - zL1, M.granite, gateStone, GX, 0.25, (zL0 + zL1) / 2); box(0.5, 0.5, zR1 - zR0, M.granite, gateStone, GX, 0.25, (zR0 + zR1) / 2);
-    box(0.62, 1.6, 0.62, M.granite, gateStone, GX, 0.8, zR1 + 0.1);
-    const rb = []; for (let z = zL0 - 0.12; z > zL1; z -= 0.16) rb.push(M4(GX, 1.06, z)); for (let z = zR0 + 0.12; z < zR1 - 0.3; z += 0.16) rb.push(M4(GX, 1.06, z));
-    instanced(new THREE.CylinderGeometry(0.011, 0.011, 1.12, 5), M.iron, rb, gateStone);
-    for (const y of [0.56, 1.58]) { box(0.05, 0.04, zL0 - zL1, M.iron, gateStone, GX, y, (zL0 + zL1) / 2, false); box(0.05, 0.04, zR1 - zR0, M.iron, gateStone, GX, y, (zR0 + zR1) / 2, false); }
+    box(0.62, 1.3, 0.62, M.granite, gateStone, GX, 0.65, zR1 + 0.1);
+    const rb = []; for (let z = zL0 - 0.12; z > zL1; z -= 0.16) rb.push(M4(GX, 0.85, z)); for (let z = zR0 + 0.12; z < zR1 - 0.3; z += 0.16) rb.push(M4(GX, 0.85, z));
+    instanced(new THREE.CylinderGeometry(0.011, 0.011, 0.7, 5), M.iron, rb, gateStone);
+    for (const y of [0.56, 1.2]) { box(0.05, 0.04, zL0 - zL1, M.iron, gateStone, GX, y, (zL0 + zL1) / 2, false); box(0.05, 0.04, zR1 - zR0, M.iron, gateStone, GX, y, (zR0 + zR1) / 2, false); }
   }
   // ================================================================ LAMPS per era (posts + heads + glows + pools; ≤ 2 real lights)
-  const lampX = [-30, -6, 18, 42, 66, 90, 114, 138];
+  const lampX = [-30, -6, 18, 42, 76, 100, 124, 148];
   const lampsG = {};
-  function lampRig(key, { post, head, color, glowSize = 0.7, glowK = 0.8, poolK = 0.14, poolR = 5, height = 4.2, facade = false, piers = false }) {
+  function lampRig(key, { post, head, color, glowSize = 0.7, glowK = 0.8, poolK = 0.14, poolR = 5, height = 4.2, arm = 0, facade = false, piers = false }) {
     const g = group(setRoot, 'lamps_' + key), glows = [], pools = [];
     const add = (x, y, z, onPost = true) => {
       if (onPost && post) post(g, x, z);
-      if (head) head(g, x, y, z);
-      const gl = FX.glow({ color, size: glowSize, intensity: glowK, falloff: 2.0 }); gl.object3D.position.set(x, y - 0.12, z); g.add(gl.object3D); glows.push(gl);
-      if (poolK > 0 && y < 6) pools.push(pool(g, x, z, poolR, color, poolK));
+      const hz = onPost ? z - arm : z;
+      if (head) head(g, x, y, hz);
+      const gl = FX.glow({ color, size: glowSize, intensity: glowK, falloff: 2.0 }); gl.object3D.position.set(x, y - 0.1, hz); g.add(gl.object3D); glows.push(gl);
+      if (poolK > 0 && onPost) pools.push(pool(g, x, hz, poolR, color, poolK));
     };
     for (const x of lampX) add(x, height, QUAY_Z - 0.9);
     if (facade) for (let x = 4; x <= 60; x += 8) add(x, 4.1, 0.6, false);
@@ -445,45 +470,70 @@ export default async function create(ctx) {
     torches.push({ fl, gl, p: pool(e1Lights, x, z, 4.5, 0xff9a48, 0.16) });
   }
   const lantern = FX.lantern({ style: 'paper', size: 0.55, intensity: 0, seed: 5, pendulum: 0.03, period: 6, paper: '#ead6b0' });
-  lantern.object3D.position.set(LANT.x, LANT.y + 0.42, LANT.z); e1Lights.add(lantern.object3D);
+  lantern.object3D.position.set(LANT.x, LANT.y + 0.11, LANT.z); e1Lights.add(lantern.object3D);
   // E2 kerosene posts (cast iron, glass lantern heads), E3 electric (enamel shades, bracket arms), E4 sodium (concrete poles,
   // cobra heads), E5 LED (slim steel poles)
   lampRig('E2', { color: 0xffb062, glowSize: 0.9, glowK: 0.55, poolK: 0.1, height: 3.6, facade: true, piers: true,
     post: (g, x, z) => { cyl(0.06, 0.1, 3.3, M.ironGreen, g, x, 1.65, z, 8); cyl(0.16, 0.2, 0.3, M.ironGreen, g, x, 0.15, z, 8); },
     head: (g, x, y, z) => { box(0.3, 0.42, 0.3, kerosene, g, x, y, z, false); const c = new THREE.Mesh(new THREE.ConeGeometry(0.26, 0.24, 4), M.ironGreen); c.position.set(x, y + 0.32, z); c.rotation.y = Math.PI / 4; g.add(c); } });
-  lampRig('E3', { color: 0xffc27a, glowSize: 1.0, glowK: 0.75, poolK: 0.16, height: 4.6, facade: true, piers: true,
+  lampRig('E3', { color: 0xffc27a, glowSize: 1.0, glowK: 0.75, poolK: 0.16, height: 4.6, arm: 0.75, facade: true, piers: true,
     post: (g, x, z) => { cyl(0.07, 0.1, 4.9, M.ironGreen, g, x, 2.45, z, 8); box(0.05, 0.05, 0.8, M.ironGreen, g, x, 4.85, z - 0.4); },
-    head: (g, x, y, z) => { const sh = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.16, 14, 1, true), std({ color: 0x2a3a34, roughness: 0.4, side: THREE.DoubleSide })); sh.position.set(x, y + 0.08, z - 0.75); g.add(sh); const b = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), bulbM); b.position.set(x, y, z - 0.75); g.add(b); } });
-  lampRig('E4', { color: 0xe0a860, glowSize: 1.3, glowK: 0.85, poolK: 0.2, poolR: 7, height: 7.6,
+    head: (g, x, y, z) => { const sh = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.16, 14, 1, true), std({ color: 0x2a3a34, roughness: 0.4, side: THREE.DoubleSide })); sh.position.set(x, y + 0.08, z); g.add(sh); const b = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), bulbM); b.position.set(x, y, z); g.add(b); } });
+  lampRig('E4', { color: 0xe0a860, glowSize: 1.3, glowK: 0.85, poolK: 0.2, poolR: 7, height: 7.6, arm: 1.5,
     post: (g, x, z) => { cyl(0.1, 0.16, 7.8, M.concrete, g, x, 3.9, z, 8); box(0.08, 0.08, 1.6, M.concrete, g, x, 7.8, z - 0.8); },
-    head: (g, x, y, z) => { box(0.3, 0.14, 0.6, sodiumM, g, x, y, z - 1.5, false); } });
-  lampRig('E5', { color: 0xeef2f8, glowSize: 0.9, glowK: 0.6, poolK: 0.1, poolR: 6, height: 6.4,
+    head: (g, x, y, z) => { box(0.3, 0.14, 0.6, sodiumM, g, x, y, z, false); } });
+  lampRig('E5', { color: 0xeef2f8, glowSize: 0.9, glowK: 0.6, poolK: 0.1, poolR: 6, height: 6.4, arm: 0.3,
     post: (g, x, z) => { cyl(0.06, 0.08, 6.4, std({ color: 0x3a3d40, roughness: 0.5, metalness: 0.5 }), g, x, 3.2, z, 8); },
-    head: (g, x, y, z) => { box(0.22, 0.08, 0.7, ledM, g, x, y, z - 0.3, false); } });
-  for (const k of ['E3', 'E4', 'E5']) for (const gl of lampsG[k].glows) gl.object3D.position.z -= (k === 'E3' ? 0.75 : k === 'E4' ? 1.5 : 0.3);
+    head: (g, x, y, z) => { box(0.22, 0.08, 0.7, ledM, g, x, y, z, false); } });
   // E3 overhead wires (two timber poles on the quay + catenaries to the building), E3 gate canopy, E4 sentry box with bars
   const e3G = group(setRoot, 'E3extras'), e4G = group(setRoot, 'E4extras');
   {
-    const poles = [[GX - 7, QUAY_Z - 2.0], [GX + 16, QUAY_Z - 2.0], [GX + 40, QUAY_Z - 2.0]];
-    for (const [x, z] of poles) { cyl(0.11, 0.15, 8.4, M.timberDark, e3G, x, 4.2, z, 7); box(0.1, 0.1, 1.6, M.timberDark, e3G, x, 7.9, z); }
+    // timber telegraph poles along the quay edge beyond the gate; wires sag between them and run to the building
+    const poles = [[GX + 21, QUAY_Z - 1.6], [GX + 49, QUAY_Z - 1.6], [GX + 77, QUAY_Z - 1.6], [GX + 105, QUAY_Z - 1.6]];
+    for (const [x, z] of poles) { cyl(0.1, 0.14, 8.6, M.timberDark, e3G, x, 4.3, z, 7); box(0.09, 0.09, 1.5, M.timberDark, e3G, x, 8.1, z); }
     const pts = [];
-    const cat = (a, b, sag, n = 16) => { for (let i = 0; i < n; i++) { const t0 = i / n, t1 = (i + 1) / n; const p0 = a.clone().lerp(b, t0), p1 = a.clone().lerp(b, t1); p0.y -= sag * 4 * t0 * (1 - t0); p1.y -= sag * 4 * t1 * (1 - t1); pts.push(p0, p1); } };
-    for (let i = 0; i < poles.length - 1; i++) for (const dz of [-0.7, 0, 0.7]) cat(V3(poles[i][0], 7.95, poles[i][1] + dz), V3(poles[i + 1][0], 7.95, poles[i + 1][1] + dz), 0.45);
-    cat(V3(poles[1][0], 7.95, poles[1][1] - 0.7), V3(4, 9.6, 0.3), 0.8); cat(V3(poles[0][0], 7.95, poles[0][1] - 0.7), V3(GX, 3.4, GZ + 1.56), 0.35);
-    cat(V3(poles[2][0], 7.95, poles[2][1] - 0.7), V3(20, 9.6, 0.3), 0.7);
-    const lg = new THREE.BufferGeometry().setFromPoints(pts);
-    e3G.add(new THREE.LineSegments(lg, new THREE.LineBasicMaterial({ color: 0x0c0d0f })));
-    // canopy over the gate: corrugated sheet on two iron brackets
-    const cp = box(1.9, 0.05, 3.6, M.corrugated, e3G, GX - 0.55, 3.62, GZ); cp.rotation.z = -0.14;
-    for (const s of [-1, 1]) { const br = box(1.5, 0.05, 0.05, M.iron, e3G, GX - 0.55, 3.42, GZ + s * 1.56, false); br.rotation.z = -0.5; }
-    // facade awning (along the ground floor of the south facade)
-    const aw = box(64, 0.05, 2.8, M.corrugated, e3G, 32, 4.65, 1.35); aw.rotation.x = 0.18;
-    for (let x = 2; x <= 62; x += 6) cyl(0.04, 0.04, 4.2, M.ironGreen, e3G, x, 2.1, 2.65, 6);
+    const cat = (a, b, sag, n = 18) => { for (let i = 0; i < n; i++) { const t0 = i / n, t1 = (i + 1) / n; const p0 = a.clone().lerp(b, t0), p1 = a.clone().lerp(b, t1); p0.y -= sag * 4 * t0 * (1 - t0); p1.y -= sag * 4 * t1 * (1 - t1); pts.push(p0, p1); } };
+    for (let i = 0; i < poles.length - 1; i++) for (const dz of [-0.6, 0.6]) cat(V3(poles[i][0], 8.15, poles[i][1] + dz), V3(poles[i + 1][0], 8.15, poles[i + 1][1] + dz), 0.5);
+    cat(V3(poles[0][0], 8.15, poles[0][1] - 0.6), V3(GX + 0.3, 3.9, GZ + 1.56), 0.25);
+    cat(V3(poles[1][0], 8.15, poles[1][1] - 0.6), V3(6, 9.4, 0.4), 0.9); cat(V3(poles[2][0], 8.15, poles[2][1] - 0.6), V3(30, 9.4, 0.4), 0.9);
+    e3G.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0x17181a, fog: true })));
+    // rain awning over the gate: pale painted corrugated sheet on a timber frame with a fascia, sloping toward the quay road
+    const awM = std({ color: 0xb4b8ae, roughness: 0.7, metalness: 0.15, side: THREE.DoubleSide });
+    boxR(1.9, 0.04, 4.3, awM, e3G, GX - 0.5, 4.32, GZ, 0, 0, -0.17);
+    box(0.05, 0.1, 4.3, awM, e3G, GX - 1.43, 4.12, GZ, false);
+    for (const s of [-1, 1]) { boxR(0.06, 0.95, 0.06, M.timberDark, e3G, GX, 3.85, GZ + s * 1.62, 0, 0, 0, false); boxR(1.5, 0.06, 0.06, M.timberDark, e3G, GX - 0.62, 3.98, GZ + s * 1.62, 0, 0, 0.36, false); }
+    // facade awning along the south front (corrugated iron on slender posts)
+    boxR(56, 0.05, 2.6, awM, e3G, 32, 4.62, 1.3, 0.2, 0, 0);
+    for (let x = 6; x <= 58; x += 6.5) cyl(0.04, 0.04, 4.3, M.ironGreen, e3G, x, 2.15, 2.55, 6);
     // E4: concrete sentry box with an iron-barred window, left of the gate behind the wall
     const sbx = GX + 1.4, sbz = GZ - 4.2;
     box(1.7, 2.7, 1.7, M.concrete, e4G, sbx, 1.35, sbz); box(2.0, 0.16, 2.0, M.concrete, e4G, sbx, 2.78, sbz);
     box(0.04, 0.8, 0.9, std({ color: 0x8a6a3a, emissive: new THREE.Color(0xd09050), emissiveIntensity: 0.35 }), e4G, sbx - 0.86, 1.6, sbz, false);
     for (let k = -3; k <= 3; k++) box(0.03, 0.85, 0.025, M.iron, e4G, sbx - 0.9, 1.6, sbz + k * 0.13, false);
+  }
+
+  // ---- era props: what lies about on the quay (frames the waiting spot without competing with it)
+  const props = { 1: group(setRoot, 'props1'), 2: group(setRoot, 'props2'), 3: group(setRoot, 'props3'), 4: group(setRoot, 'props4'), 5: group(setRoot, 'props5') };
+  {
+    const crateM = std({ color: 0x7a6650, roughness: 0.85, map: R(T.wood, 1.2).map }), barrelM = std({ color: 0x5a4434, roughness: 0.8 }), sackM = std({ color: 0x9a8a6c, roughness: 0.95 });
+    const crate = (g, x, z, s = 1, ry = 0) => boxR(0.9 * s, 0.7 * s, 0.7 * s, crateM, g, x, 0.35 * s, z, 0, ry, 0);
+    const barrel = (g, x, z, ry = 0) => { const b = cyl(0.3, 0.27, 0.85, barrelM, g, x, 0.425, z, 12); for (const y of [0.15, 0.7]) { const h = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.015, 4, 16), M.iron); h.rotation.x = Math.PI / 2; h.position.set(x, y, z); g.add(h); } return b; };
+    const sack = (g, x, z, ry = 0) => { const m = new THREE.Mesh(new THREE.SphereGeometry(0.34, 10, 8), sackM); m.scale.set(0.9, 0.5, 0.62); m.position.set(x, 0.2, z); m.rotation.y = ry; m.castShadow = m.receiveShadow = true; g.add(m); };
+    const basketP = (g, x, z, h = 0.4) => { const b = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.24, h, 14, 1, true), std({ map: TX.mat('rattan', { repeat: [3, 1] }).map, color: 0xb09870, side: THREE.DoubleSide, roughness: 0.9 })); b.position.set(x, h / 2, z); b.castShadow = true; g.add(b); };
+    // E1: baskets of produce, a coil of rope, sacks by the palisade
+    basketP(props[1], GX - 6.5, GZ - 4.2); basketP(props[1], GX - 6.0, GZ - 3.5, 0.32); sack(props[1], GX - 7.2, GZ - 3.6, 0.4); sack(props[1], GX - 3.2, GZ + 6.8, 1.1); basketP(props[1], GX - 2.6, GZ + 7.5);
+    { const c = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.07, 6, 18), M.rope); c.rotation.x = Math.PI / 2; c.position.set(GX - 9, 0.07, GZ + 5.5); props[1].add(c); }
+    // E2: tea crates and a porter's handcart
+    crate(props[2], GX - 6.2, GZ - 4.5, 1, 0.1); crate(props[2], GX - 6.0, GZ - 4.4, 0.8, 0.05).position.y = 0.98; crate(props[2], GX - 4.8, GZ - 5.3, 1, -0.2); barrel(props[2], GX - 3.0, GZ + 7.0);
+    // E3: luggage — a steamer trunk, cloth bundles, a second rattan case — and a bench
+    boxR(0.95, 0.62, 0.55, std({ color: 0x4a3a2a, roughness: 0.6 }), props[3], GX - 5.4, 0.31, GZ - 4.4, 0, 0.3, 0); boxR(0.58, 0.38, 0.21, TX.mat('rattan', { repeat: [2, 1] }), props[3], GX - 4.6, 0.19, GZ - 3.4, 0, 1.2, 0);
+    { const bm = std({ color: 0x5a4632, roughness: 0.8 }); box(2.2, 0.06, 0.45, bm, props[3], GX - 3.0, 0.46, GZ + 6.8); for (const dx of [-0.95, 0.95]) box(0.08, 0.46, 0.4, M.iron, props[3], GX - 3.0 + dx, 0.23, GZ + 6.8); }
+    // E4: oil drums and a bicycle leaning on the wall
+    for (const [dx, dz] of [[-5.6, -4.6], [-5.0, -5.3], [-6.3, -5.0]]) { const d = cyl(0.29, 0.29, 0.88, std({ color: 0x3e4a44, roughness: 0.55, metalness: 0.4 }), props[4], GX + dx, 0.44, GZ + dz, 14); }
+    { const bk = group(props[4]); bk.position.set(GX - 0.45, 0, GZ + 4.2); bk.rotation.y = Math.PI / 2 + 0.1; for (const sx of [-0.52, 0.52]) { const w = new THREE.Mesh(new THREE.TorusGeometry(0.33, 0.018, 5, 22), M.iron); w.position.set(sx, 0.34, 0); bk.add(w); } const f1 = box(1.0, 0.03, 0.03, M.iron, bk, 0, 0.62, 0, false); f1.rotation.z = 0.1; box(0.03, 0.4, 0.03, M.iron, bk, 0.32, 0.8, 0, false); box(0.03, 0.03, 0.42, M.iron, bk, 0.36, 1.0, 0, false); }
+    // E5: museum quay — a bench, planter boxes with low shrubs
+    { const bm = std({ color: 0x6a5a48, roughness: 0.6 }); box(2.0, 0.08, 0.5, bm, props[5], GX - 5.5, 0.45, GZ - 4.4); box(2.0, 0.4, 0.06, bm, props[5], GX - 5.5, 0.7, GZ - 4.65); for (const dx of [-0.85, 0.85]) box(0.06, 0.45, 0.5, M.iron, props[5], GX - 5.5 + dx, 0.22, GZ - 4.4);
+    }
   }
 
   // ================================================================ FLAGS (all invented; far, limp, half-furled or partly hidden) + E1 pennants
@@ -513,9 +563,9 @@ export default async function create(ctx) {
   }
   const flagGeo = (W, H, nx = 16, ny = 8) => new THREE.PlaneGeometry(W, H, nx, ny).translate(W / 2, -H / 2, 0);
   const flags = {};
-  for (const [k, W, H, droop, furl] of [['FB', 1.8, 1.2, 1.12, 0.0], ['FC', 1.8, 1.2, 1.2, 0.0], ['FD', 2.0, 1.0, 1.25, 0.45]]) {
+  for (const [k, W, H, droop, furl] of [['FB', 2.1, 1.4, 1.0, 0.0], ['FC', 2.1, 1.4, 1.15, 0.0], ['FD', 2.4, 1.2, 1.2, 0.45]]) {
     const m = flagMaterial(flagCanvas(k), { W, H, droop }); m.userData.U.uFurl.value = furl;
-    const f = new THREE.Mesh(flagGeo(W, H), m); f.position.set(FP.x, FP.y + 8.0, FP.z); f.rotation.y = 2.4 + (k === 'FC' ? 0.5 : 0); f.castShadow = false; chG.add(f); flags[k] = f;
+    const f = new THREE.Mesh(flagGeo(W, H), m); f.position.set(FP.x, FP.y + 8.0, FP.z); f.rotation.y = -Math.PI / 2 - 0.25 + (k === 'FC' ? -0.45 : 0); f.castShadow = false; chG.add(f); flags[k] = f;
   }
 
   // ================================================================ SHIPS (lofted hulls, simple superstructures, rigging)
@@ -539,7 +589,7 @@ export default async function create(ctx) {
     const base = pos.length / 3; const dc = new THREE.Color(0x3a3430);
     for (let i = 0; i <= ns; i++) for (const side of [1, -1]) { const k = vid(side, i, nt); pos.push(pos[k * 3], pos[k * 3 + 1] - 0.05, pos[k * 3 + 2]); col.push(dc.r, dc.g, dc.b); }
     for (let i = 0; i < ns; i++) { const a = base + i * 2, b = a + 1, c = a + 2, d = a + 3; idx.push(a, c, b, b, c, d); }
-    for (let j = 0; j < nt; j++) { const a = vid(1, 0, j), b = vid(1, 0, j + 1), c = vid(-1, 0, j + 1), d = vid(-1, 0, j); idx.push(a, c, b, a, d, c); }
+    for (let j = 0; j < nt; j++) { const a = vid(1, 0, j), b = vid(1, 0, j + 1), c = vid(-1, 0, j + 1), d = vid(-1, 0, j); idx.push(a, b, c, a, c, d); }
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); g.setIndex(idx); g.computeVertexNormals();
     g.userData.deckY = deckY; return g;
   }
@@ -586,11 +636,15 @@ export default async function create(ctx) {
   function steamer(parent, o) {
     const g = ship(parent, { draft: o.draft ?? 4.2, ...o }), L = o.L, B = o.B, D = o.D;
     g.add(new THREE.Mesh(hullGeo({ L, B, D, sheerAft: 0.06, sheerFwd: 0.12, bilge: 0.12, sternW: 0.5, bowRake: 0.06, colors: o.colors }), hullM));
-    for (const [x, w, h, d, m] of o.houses) box(w, h, d, m, g, x, D + h / 2, 0);
+    for (const [x, w, h, d, m] of o.houses) { box(w, h, d, m, g, x, D + h / 2, 0); if (o.band) box(w * 0.94, h * 0.36, d + 0.06, o.band, g, x, D + h * 0.58, 0, false); }
     if (o.funnel) { const [fx, fh, fr, fcol, band] = o.funnel; const yb = D + (o.houses[0] ? o.houses[0][2] : 2); cyl(fr, fr * 1.05, fh, std({ color: fcol, roughness: 0.6 }), g, fx, yb + fh / 2, 0, 16); if (band) cyl(fr * 1.01, fr * 1.01, fh * 0.16, std({ color: band, roughness: 0.6 }), g, fx, yb + fh * 0.62, 0, 16); cyl(fr * 1.02, fr * 1.02, fh * 0.12, blackM, g, fx, yb + fh * 0.94, 0, 16); }
     for (const [mx, mh] of o.masts || []) cyl(0.18, 0.26, mh, mastM, g, mx, D + mh / 2, 0, 6);
     if (o.masts && o.masts.length > 1) lines(g, [[V3(o.masts[0][0], D + o.masts[0][1], 0), V3(o.masts[1][0], D + o.masts[1][1], 0)], [V3(o.masts[0][0], D + o.masts[0][1], 0), V3(L * 0.5, D + 0.5, 0)], [V3(o.masts[1][0], D + o.masts[1][1], 0), V3(-L * 0.5, D + 0.5, 0)]]);
-    if (o.ports) { const pts = []; const r = util.rng(o.seed || 3); for (let k = 0; k < o.ports; k++) if (r() < 0.55) { const px = (r() - 0.5) * L * 0.6, py = D + (o.houses[0] ? 0.9 + Math.floor(r() * 2) * 2.2 : -1.2); pts.push([px, py, B / 2 * 0.97, 0xffc07a, 0.7 + r() * 0.5], [px, py, -B / 2 * 0.97, 0xffc07a, 0.6]); } lampPoints(g, pts, { px: 1.4, intensity: 3.0 }).material.uniforms.uTw.value = 0.05; }
+    if (o.ports) { const pts = []; const r = util.rng(o.seed || 3); const hs = o.houses[0];
+      for (let k = 0; k < o.ports; k++) { const lit = r() < (o.portLit ?? 0.5), onHouse = hs && r() < 0.45, k2 = Math.floor(r() * 2); if (!lit) continue;
+        if (onHouse) { const px = hs[0] + (r() - 0.5) * hs[1] * 0.9, py = D + 0.7 + k2 * Math.min(2.2, hs[2] - 1.2) * 0.9; pts.push([px, py, hs[3] / 2 + 0.05, 0xffc07a, 0.7 + r() * 0.5]); }
+        else { const px = (r() - 0.5) * L * 0.62, py = D - 1.1 - k2 * 1.3; pts.push([px, py, B / 2 + 0.05, 0xffc07a, 0.6 + r() * 0.5]); } }
+      const lp = lampPoints(g, pts, { px: 1.1, intensity: 2.6 }); lp.material.uniforms.uTw.value = 0.04; }
     bobbers.push({ g, amp: 0.004, per: 9 }); return g;
   }
   // ---- per-era fleets (set space; the harbour is +Z)
@@ -606,13 +660,13 @@ export default async function create(ctx) {
     houses: [[-38, 16, 9, 13, std({ color: 0xc8c6bc, roughness: 0.6 })]], funnel: [-40, 7, 1.9, 0xb9a882, 0x2a2c2e], masts: [[30, 16], [-10, 14]], ports: 18, seed: 9 });
   { const bg = ship(shipsE[4], { x: GX + 58, z: QUAY_Z + 5.5, heading: 0.02, draft: 1.4 }); bg.add(new THREE.Mesh(hullGeo({ L: 32, B: 8, D: 3.0, sheerAft: 0.04, sheerFwd: 0.04, bilge: 0.08, sternW: 0.9, colors: [[1.4, 0x2a2420], [99, 0x2c2a28]] }), hullM)); box(26, 0.8, 6.4, std({ color: 0x4a4038, roughness: 0.9 }), bg, 0, 3.4, 0); bobbers.push({ g: bg, amp: 0.01, per: 7 }); }
   steamer(shipsE[5], { x: GX + 74, z: QUAY_Z + 7.0, heading: 0, L: 44, B: 11, D: 4.6, draft: 2.0, colors: [[2.0, 0x2a3036], [4.2, 0xdcdcd8], [4.6, 0x2a3036], [99, 0xdcdcd8]],
-    houses: [[2, 30, 2.6, 9.5, std({ color: 0xe6e6e2, roughness: 0.5 })], [4, 22, 2.2, 8, std({ color: 0xd8d8d4, roughness: 0.5 })]], masts: [[8, 6]], ports: 14, seed: 11 });
+    houses: [[2, 30, 2.6, 9.5, std({ color: 0xe6e6e2, roughness: 0.5 })], [4, 22, 2.2, 8, std({ color: 0xd8d8d4, roughness: 0.5 })]], band: std({ color: 0x1a2028, roughness: 0.1, envMapIntensity: 1.4 }), masts: [[8, 6]], ports: 14, portLit: 0.25, seed: 11 });
   // E5: container cranes far out on the right (gantry silhouettes + tiny warm obstruction lights) and the fishing lamps on the sea
   const cranes = group(shipsE[5], 'cranes');
   { const cm = std({ color: 0x3a3e44, roughness: 0.8 }), obst = [];
-    for (let k = 0; k < 4; k++) { const cx = 1650 + k * 110, cz = 900 + k * 60; for (const dx of [-7, 7]) for (const dz of [-8, 8]) box(1.6, 44, 1.6, cm, cranes, cx + dx, 22, cz + dz, false); box(18, 4, 20, cm, cranes, cx, 44, cz, false); const bm = box(70, 2.5, 3, cm, cranes, cx + 18, 50, cz, false); bm.rotation.y = -0.5; obst.push([cx, 47, cz, 0xff9a50, 0.8], [cx + 46, 52, cz - 26, 0xff9a50, 0.6]); }
+    for (let k = 0; k < 4; k++) { const cx = 1650 + k * 110, cz = 900 + k * 60; for (const dx of [-7, 7]) for (const dz of [-8, 8]) box(1.6, 44, 1.6, cm, cranes, cx + dx, 22, cz + dz, false); box(18, 4, 20, cm, cranes, cx, 44, cz, false); boxR(70, 2.5, 3, cm, cranes, cx + 18, 50, cz - 10, 0, -0.5, 0, false); obst.push([cx, 47, cz, 0xff9a50, 0.8], [cx + 46, 52, cz - 26, 0xff9a50, 0.6]); }
     lampPoints(cranes, obst, { px: 2.2, intensity: 2.5 }); }
-  const FISH = [[1500, SEA_Y + 1.2, 640], [2300, SEA_Y + 1.2, 980], [3000, SEA_Y + 1.2, 560], [2700, SEA_Y + 1.2, 1500]].map(([x, y, z]) => V3(GX + x, y, z));
+  const FISH = [[97.5, 1700], [101.5, 2600], [105, 1150], [108.5, 3200]].map(([az, d]) => V3(C46.pos.x + Math.sin(az * D2R) * d, SEA_Y + 1.4, C46.pos.z - Math.cos(az * D2R) * d));
   const fishPts = lampPoints(shipsE[5], FISH.map((p) => [p.x, p.y, p.z, 0xE2A458, 1.0]), { px: 2.6, intensity: 5.0 });
 
   // ================================================================ DISTANT: far shores (set azimuths, east view) + era shore lights
@@ -629,9 +683,9 @@ export default async function create(ctx) {
   // ================================================================ THE HILLSIDE CITY (E5; S018 + far view in S080)
   const Hter = (x, z) => {
     const d = -z - 34; if (d <= 0) return 0.0;
-    let h = 0.012 * Math.min(d, 140) + 175 * Math.pow(smoothstep(120, 1650, d), 1.25);
-    h += 28 * Math.sin(x / 260 + 0.7) * Math.cos(x / 410 - 0.3) * smoothstep(250, 1300, d) + 14 * Math.sin(x / 95 + z / 130) * smoothstep(200, 900, d);
-    h += 55 * Math.exp(-((x - 420) ** 2) / (520 ** 2) - ((z + 1350) ** 2) / (380 ** 2));
+    let h = 0.012 * Math.min(d, 140) + 96 * Math.pow(smoothstep(110, 1700, d), 1.1);
+    h += 16 * Math.sin(x / 260 + 0.7) * Math.cos(x / 410 - 0.3) * smoothstep(250, 1300, d) + 8 * Math.sin(x / 95 + z / 130) * smoothstep(200, 900, d);
+    h += 26 * Math.exp(-((x - 520) ** 2) / (560 ** 2) - ((z + 1450) ** 2) / (420 ** 2)) - 14 * Math.exp(-((x + 300) ** 2) / (300 ** 2) - ((z + 900) ** 2) / (500 ** 2));
     return h;
   };
   const cityG = group(setRoot, 'city');
@@ -643,19 +697,20 @@ export default async function create(ctx) {
   })();
   const CITY = (() => {
     const r = util.rng(1234), mats = [], aB = [], aT = [];
-    const free = (x, z) => !((x > -120 && x < 80 && z > -46) || (z > -6));
-    for (let gx = -1500; gx < 1800; gx += 15) for (let gz = -1650; gz < -6; gz += 15) {
-      const x = gx + (r() - 0.5) * 7, z = gz + (r() - 0.5) * 7, d = -z;
+    const free = (x, z) => !((x > -150 && x < 96 && z > -60) || (z > (x > 110 && x < 700 ? 9 : -8)));
+    for (let gx = -1500; gx < 1800; gx += 13) for (let gz = -1700; gz < 10; gz += 13) {
+      const x = gx + (r() - 0.5) * 6, z = gz + (r() - 0.5) * 6, d = -z;
       if (!free(x, z)) continue;
-      const dens = d < 160 ? 0.9 : d < 700 ? 0.72 : d < 1300 ? 0.55 : 0.3;
-      if (r() > dens) continue;
-      const w = 7 + r() * (d < 200 ? 14 : 8), dp = 7 + r() * 9;
-      const floors = d < 160 ? 3 + Math.floor(r() * (r() < 0.3 ? 14 : 7)) : d < 600 ? 2 + Math.floor(r() * 6) : 2 + Math.floor(r() * 3);
-      const fh = 3.1 + r() * 0.4, h = floors * fh + 0.8;
+      const nearCH = Math.abs(x - 32) < 260 && d < 260;
+      const dens = d < 160 ? 0.88 : d < 700 ? 0.74 : d < 1300 ? 0.58 : 0.34;
+      if (r() > dens * (0.75 + 0.25 * Math.sin(x / 70 + z / 55))) continue;
+      const w = 6 + r() * (d < 200 && !nearCH ? 12 : 7), dp = 6 + r() * 7;
+      const floors = nearCH ? 2 + Math.floor(r() * 3) : d < 200 ? 3 + Math.floor(r() * (r() < 0.25 ? 10 : 5)) : d < 700 ? 2 + Math.floor(r() * 4) : 2 + Math.floor(r() * 2.6);
+      const fh = 3.0 + r() * 0.4, h = floors * fh + 0.6;
       const y = Math.min(Hter(x - w / 2, z), Hter(x + w / 2, z), Hter(x, z - dp / 2), Hter(x, z + dp / 2)) - 0.8;
-      mats.push(M4(x, y, z, (r() - 0.5) * 0.25 + (d > 600 ? Math.sin(x / 300) * 0.3 : 0), w, h + (Hter(x, z) - y), dp));
-      aB.push(r() * 97.0, 0.22 + 0.25 * r() * (d < 400 ? 1.2 : 1), 2.6 + r() * 1.6, fh);
-      const tone = 0.32 + r() * 0.35, warm = r(); aT.push(tone * (0.92 + 0.12 * warm), tone * (0.9 + 0.04 * warm), tone * (0.88 - 0.06 * warm));
+      mats.push(M4(x, y, z, (r() - 0.5) * 0.2 + (d > 500 ? 0.35 * Math.sin(x / 300 + z / 400) : 0), w, h + (Hter(x, z) - y), dp));
+      aB.push(r() * 97.0, (0.16 + 0.24 * r()) * (d < 300 ? 1.15 : 1), 2.8 + r() * 0.9, fh);
+      const tone = 0.1 + r() * 0.16, warm = r(); aT.push(tone * (0.95 + 0.1 * warm), tone * (0.93 + 0.04 * warm), tone * (0.9 - 0.04 * warm));
     }
     return { mats, aB, aT };
   })();
@@ -686,14 +741,14 @@ export default async function create(ctx) {
             float face = vNl.x > 0.5 ? 1.0 : vNl.x < -0.5 ? 2.0 : vNl.z > 0.5 ? 3.0 : 4.0;
             vec2 g = vec2(u / vB.z, (vP.y - 0.6) / vB.w);
             vec2 c = floor(g), f = fract(g), fw = fwidth(g);
-            float wx = smoothstep(0.18 - fw.x, 0.18 + fw.x, f.x) * (1.0 - smoothstep(0.82 - fw.x, 0.82 + fw.x, f.x));
-            float wy = smoothstep(0.28 - fw.y, 0.28 + fw.y, f.y) * (1.0 - smoothstep(0.86 - fw.y, 0.86 + fw.y, f.y));
+            float wx = smoothstep(0.3 - fw.x, 0.3 + fw.x, f.x) * (1.0 - smoothstep(0.7 - fw.x, 0.7 + fw.x, f.x));
+            float wy = smoothstep(0.34 - fw.y, 0.34 + fw.y, f.y) * (1.0 - smoothstep(0.8 - fw.y, 0.8 + fw.y, f.y));
             float win = wx * wy * step(0.0, g.y);
             float hA = h3(vec3(c, face + vB.x)), hB = h3(vec3(c.yx + 17.0, face * 3.1 + vB.x));
             float lit = step(hA, vB.y * uLit);
-            vec3 wc = mix(vec3(1.0, 0.56, 0.24), vec3(1.0, 0.8, 0.56), hB); if (hB > 0.9) wc = vec3(0.72, 0.82, 1.0);
-            float far = smoothstep(0.32, 0.85, max(fw.x, fw.y));
-            vec3 em = mix(wc * (0.55 + 0.9 * hB) * win * lit, vec3(1.0, 0.68, 0.38) * 0.42 * vB.y * uLit * 0.62, far) * uWin;
+            vec3 wc = mix(vec3(1.0, 0.6, 0.3), vec3(0.95, 0.78, 0.58), hB); if (hB > 0.92) wc = vec3(0.7, 0.8, 0.95);
+            float far = smoothstep(0.16, 0.5, max(fw.x, fw.y));
+            vec3 em = mix(wc * (0.3 + 0.75 * hB * hB) * win * lit, vec3(1.0, 0.66, 0.36) * 0.17 * vB.y * uLit * 0.55, far) * uWin;
             col = mix(col, col * 0.45 + uSkyAmb * 0.6, win * (1.0 - lit) * (1.0 - far));
             col += em;
           } else col *= 0.75;
@@ -708,7 +763,7 @@ export default async function create(ctx) {
   // street lamps of the city (warm sodium-ish + a few cool LEDs) along contour "streets"
   const cityLamps = (() => {
     const r = util.rng(77), pts = [];
-    for (let k = 0; k < 46; k++) { const z0 = -40 - k * 34 - r() * 12; for (let x = -1500 + r() * 40; x < 1800; x += 18 + r() * 26) { const z = z0 + 18 * Math.sin(x / 140 + k); if (z > -46 && x > -120 && x < 80) continue; if (r() < 0.25) continue; pts.push([x, Hter(x, z) + 4.5, z, r() < 0.78 ? 0xe8a868 : 0xdfe8f2, 0.5 + r() * 0.6]); } }
+    for (let k = 0; k < 52; k++) { const z0 = -50 - k * 31 - r() * 12; for (let x = -1500 + r() * 40; x < 1800; x += 14 + r() * 22) { const z = z0 + 18 * Math.sin(x / 140 + k); if (z > -60 && x > -150 && x < 96) continue; if (r() < 0.2) continue; pts.push([x, Hter(x, z) + 4.5, z, r() < 0.75 ? 0xe8a868 : 0xdfe8f2, 0.45 + r() * 0.6]); } }
     for (let x = -800; x < 1400; x += 22) if (x < -120 || x > 80) pts.push([x, 5.5, -3, 0xe0e6ee, 0.8]);
     return lampPoints(cityG, pts, { px: 1.25, intensity: 3.2 });
   })();
@@ -761,11 +816,15 @@ export default async function create(ctx) {
   for (const f of Object.values(figs)) setRoot.add(f.root);
   setRoot.add(mig.root, child.root);
   const recolor = (f, col, skip = ['skin', 'hair']) => { for (const [k, m] of Object.entries(f.materials)) if (!skip.some((s) => k.startsWith(s)) && m && m.color) m.color.setHex(col); };
-  recolor(figs.E1, 0x4a5568); if (figs.E1.materials.skirt) figs.E1.materials.skirt.color.setHex(0x2a2826);
+  const recolorN = (f, prefix, col) => { for (const [k, m] of Object.entries(f.materials)) if (k.startsWith(prefix) && m && m.color) m.color.setHex(col); };
+  recolor(figs.E1, 0x4a5568); recolorN(figs.E1, 'skirt', 0x2a2826); recolorN(figs.E1, 'shoes', 0x1e1c1a);
   for (const k of ['g2a', 'g2b']) recolor(figs[k], 0xE6E1D6);
   for (const k of ['g3a', 'g3b']) recolor(figs[k], 0x7d7866);
-  for (const k of ['g4a', 'g4b']) { recolor(figs[k], 0xA9ADB0); for (const [n, m] of Object.entries(figs[k].materials)) if (n.startsWith('trousers') && m.color) m.color.setHex(0x4e5560); }
-  if (figs.E4.materials.shirt) figs.E4.materials.shirt.color.setHex(0xd8d4c8);
+  for (const k of ['g4a', 'g4b']) { recolor(figs[k], 0xA9ADB0); recolorN(figs[k], 'trousers', 0x4e5560); recolorN(figs[k], 'shoes', 0x1c1c1e); }
+  for (const k of ['g2a', 'g2b']) recolorN(figs[k], 'shoes', 0x2a2420);
+  for (const k of ['g3a', 'g3b']) { recolorN(figs[k], 'trousers', 0x6e6a58); recolorN(figs[k], 'shoes', 0x241e18); }
+  recolorN(figs.E4, 'shirt', 0xd8d4c8);
+  if (DBG) console.warn('harbor mats', Object.keys(figs.E1.materials).join(','), '|', Object.keys(figs.g3a.materials).join(','));
   // hats (attached to the head bone): E2 soft-top cap with band, E3 peaked cap with invented ring-and-wave badge, E4 soft cap
   function hat(f, kind) {
     const hb = f.bone('head'), hu = f.P.hu || 0.23, g = new THREE.Group();
@@ -816,6 +875,13 @@ export default async function create(ctx) {
     key.target.position.copy(t); key.color.set(color); key.intensity = intensity; key.target.updateMatrixWorld();
   }
 
+  // E5: the east-end light (bay reading lamp seen through the last glazed arch) — a small steady warm point
+  const bayGlow = FX.glow({ color: 0xffb46a, size: 1.6, intensity: 0.0, falloff: 2.2 }); bayGlow.object3D.position.copy(BAYP).add(V3(0, 0, 0.5)); setRoot.add(bayGlow.object3D);
+  // S080 skylight band: a soft high spot sliding R→L over the quay onto the empty spot + its sheen on the water
+  const bandL = new THREE.SpotLight(0xffe6cc, 0, 0, 0.32, 1.0, 0); setRoot.add(bandL, bandL.target);
+  const bandSheen = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: radial, color: new THREE.Color(0, 0, 0), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
+  bandSheen.rotation.x = -Math.PI / 2; bandSheen.renderOrder = 4; setRoot.add(bandSheen);
+
   // ================================================================ STATE (era + time of day)
   const ERA_GROUPS = { e1G, gateE1, e1Lights, stepsG, chG, gateStone, e3G, e4G };
   function state(era, tod, T) {
@@ -824,21 +890,24 @@ export default async function create(ctx) {
     chG.visible = gateStone.visible = !E1; pave.visible = !E1; bollards.visible = !E1;
     e3G.visible = era === 3 || era === 4; e4G.visible = era === 4;
     for (const k of ['E2', 'E3', 'E4', 'E5']) lampsG[k].g.visible = k === 'E' + era;
-    for (let e = 1; e <= 5; e++) { shipsE[e].visible = e === era; shoreLights[e].visible = e === era; }
+    for (let e = 1; e <= 5; e++) { shipsE[e].visible = e === era; shoreLights[e].visible = e === era; props[e].visible = e === era; }
     // E3 keeps the bracket lamps on the gate piers; E4 the canopy but no pier lamps
     flags.FB.visible = era === 2; flags.FC.visible = era === 3; flags.FD.visible = era === 4;
     // facade per era: E2 fresh lime render · E3 render greyed with streaks · E4 repainted buff with white trim · E5 brick + patchy lime
     const U = M.facade.userData.U, Ut = M.facadeTrim.userData.U;
     if (era === 2) { U.uCover.value = 1; U.uPaint.value.setRGB(1.04, 1.02, 0.98); U.uGrime.value = 0.08; M.facade.normalScale.set(0.15, 0.15); }
     if (era === 3) { U.uCover.value = 1; U.uPaint.value.setRGB(0.86, 0.84, 0.8); U.uGrime.value = 0.6; M.facade.normalScale.set(0.2, 0.2); }
-    if (era === 4) { U.uCover.value = 1; U.uPaint.value.setRGB(1.0, 0.9, 0.7); U.uGrime.value = 0.18; M.facade.normalScale.set(0.15, 0.15); }
-    if (era === 5) { U.uCover.value = 0.42; U.uPaint.value.setRGB(0.95, 0.94, 0.92); U.uGrime.value = 0.35; M.facade.normalScale.set(0.9, 0.9); }
+    if (era === 4) { U.uCover.value = 1; U.uPaint.value.setRGB(1.0, 0.8, 0.52); U.uGrime.value = 0.12; M.facade.normalScale.set(0.15, 0.15); }
+    if (era === 5) { U.uCover.value = 0.5; U.uPaint.value.setRGB(0.74, 0.73, 0.7); U.uGrime.value = 0.3; M.facade.normalScale.set(0.8, 0.8); }
     Ut.uCover.value = era === 5 ? 0.42 : 1; Ut.uPaint.value.copy(U.uPaint.value).multiplyScalar(era === 4 ? 1.12 : 1.0); Ut.uGrime.value = U.uGrime.value;
     arcGlaze.visible = arcGlazeEnd.visible = era === 5;
     for (const k of Object.keys(figs)) figs[k].root.visible = false; mig.root.visible = child.root.visible = false;
     basket.visible = poleLoad.visible = caseObj.visible = false;
     for (const k of Object.keys(crowds)) crowds[k].visible = k === 'E' + era;
-    cityG.visible = era === 5; labG.visible = false; labSash.visible = true;
+    cityG.visible = era === 5; labG.visible = false; labSash.visible = true; rest.root.visible = false;
+    M.steelGlazeLit.emissive.setHex(0xffb46a); M.steelGlazeLit.emissiveIntensity = tod === 'dawn' ? 0.9 : 0; labLamp.intensity = 0; labG.userData.spill.intensity = 0;
+    M.steelGlaze.envMapIntensity = tod === 'night' ? 3.0 : 1.5;
+    key.castShadow = tod === 'dusk'; bayGlow.set(0); bandL.intensity = 0; bandSheen.visible = false; cityLamps.visible = harbourLights.visible = tod === 'night';
     terrain.visible = true;
     scene.environment = ENV[tod]; scene.environmentIntensity = tod === 'night' ? 0.8 : 1.0;
   }
@@ -885,9 +954,9 @@ export default async function create(ctx) {
   }
   function guards(era, T) {
     const gIn = (f, dx, dz, rot, s) => { stand(f, GX + dx, GZ + dz, rot, T, 0.2, s); };
-    if (era === 2) { gIn(figs.g2a, 1.2, 1.3, -Math.PI / 2 - 0.2, 5); gIn(figs.g2b, 3.4, -0.9, -Math.PI / 2 + 0.6, 6); }
-    if (era === 3) { gIn(figs.g3a, 1.1, 1.25, -Math.PI / 2 - 0.15, 7); gIn(figs.g3b, 2.6, -1.5, -Math.PI / 2 + 0.35, 8); }
-    if (era === 4) { gIn(figs.g4a, 1.0, 1.2, -Math.PI / 2 - 0.1, 9); gIn(figs.g4b, 1.6, -3.4, -Math.PI / 2 + 0.9, 10); }
+    if (era === 2) { gIn(figs.g2a, 1.0, -0.72, -Math.PI / 2 + 0.25, 5); gIn(figs.g2b, 4.2, 0.85, -Math.PI / 2 - 0.3, 6); }
+    if (era === 3) { gIn(figs.g3a, 1.0, -0.7, -Math.PI / 2 + 0.3, 7); gIn(figs.g3b, 4.6, 0.9, -Math.PI / 2 - 0.4, 8); }
+    if (era === 4) { gIn(figs.g4a, 0.95, -0.72, -Math.PI / 2 + 0.25, 9); gIn(figs.g4b, 1.6, -4.4, -Math.PI / 2 + 0.9, 10); }
   }
   function animate(T) {
     for (const b of bobbers) { const u = b.g.userData.base; b.g.position.y = u.y + 0.05 * Math.sin(T * 2 * Math.PI / b.per + u.x); b.g.rotation.set(b.amp * Math.sin(T * 2 * Math.PI / b.per + u.z), u.heading, b.amp * 0.6 * Math.sin(T * 2 * Math.PI / (b.per * 1.3) + 1)); }
@@ -903,7 +972,7 @@ export default async function create(ctx) {
   }
   function dbgLog(tag) {
     if (!DBG) return; const pr = (p) => { const v = setRoot.localToWorld(p.clone()).project(camera); return [((v.x + 1) / 2).toFixed(3), ((1 - v.y) / 2).toFixed(3)]; };
-    console.log('harbor', tag, JSON.stringify({ spot: pr(SPOT), th: pr(TH), thL: pr(V3(TH.x, 0.13, GZ - 1.2)), thR: pr(V3(TH.x, 0.13, GZ + 1.2)), lant: pr(LANT), bay: pr(V3(58, 7.6, 0)), flag: pr(V3(FP.x, FP.y + 7.4, FP.z)), win18: pr(W18), corner: pr(V3(64, 3, 0)) }));
+    console.warn('harbor', tag, JSON.stringify({ spot: pr(SPOT), th: pr(TH), thL: pr(V3(TH.x, 0.13, GZ - 1.2)), thR: pr(V3(TH.x, 0.13, GZ + 1.2)), lant: pr(LANT), bay: pr(V3(58, 7.6, 0)), flag: pr(V3(FP.x, FP.y + 7.4, FP.z)), win18: pr(W18), corner: pr(V3(64, 3, 0)) }));
   }
 
   // ================================================================ SHOT SET-UPS
@@ -911,7 +980,7 @@ export default async function create(ctx) {
     // ---------------------------------------------------------------- S046 — locked, four eras, hard cuts on the beat
     S046(tl, u, T0, shot) {
       const f = Math.round(T0 * 24), era = f < CUT_E2 ? 1 : f < CUT_E3 ? 2 : f < CUT_E4 ? 3 : 4;
-      state(era, 'dusk', T0);
+      state(era, 'dusk', T0); M.paving.userData.wet.uWet.value = 1.0;
       sky.set(SKY46); seaSky.set(SKY46); sky.update(T0); seaSky.update(T0);
       // unified dusk: afterglow from behind camera-right (set WSW, low), deep-blue sky fill; same in every slice
       setKey(256, 13, 0xf0b4a0, 1.55, V3(GX, 0, GZ));
@@ -929,44 +998,48 @@ export default async function create(ctx) {
       return { dof: null, exposure: 1.45, contrast: 1.03, vignette: 0.36, bloom: { strength: 0.42, radius: 0.55, threshold: 0.78 }, ...per };
     },
     // ---------------------------------------------------------------- S080 — the same locked frame today at dawn (E5)
+    // Cut in on the tail swell (246.06). Pre-sunrise: no direct sun, the sky is the light (blue-grey → soft peach); 248.10
+    // (tl 2.04) a band of brighter skylight slides right → left over the water and the quay and settles on the empty spot.
     S080(tl, u, T0) {
       state(5, 'dawn', T0);
-      const t = clamp(tl / 3.25), up = smoothstep(0, 1, t) * 0.6 + 0.4 * smoothstep(0.55, 1.0, t);
+      cityG.visible = false; M.paving.userData.wet.uWet.value = 1.0;                                    // the old customs house alone against the waterfront (no towers)
+      const t = clamp(tl / 3.25), up = smoothstep(0, 1, t);
       sky.blend(SKY80a, SKY80b, up); seaSky.blend(SKY80a, SKY80b, up); sky.update(T0); seaSky.update(T0);
-      cityU.uHide.value.set(-200, 300, -160, 40); cityU.uLit.value = 0.25; cityU.uWin.value = 0.6;
-      cityU.uSkyAmb.value.setRGB(0.12, 0.14, 0.19); cityU.uGndAmb.value.setRGB(0.05, 0.05, 0.05); cityU.uKeyCol.value.setRGB(0.12, 0.09, 0.07); cityU.uFogCol.value.copy(sky.horizonColor()); cityU.uFogDen.value = 0.0012;
-      cityU.uKeyDir.value.set(Math.sin(azW(101) * D2R), 0.05, -Math.cos(azW(101) * D2R)).normalize();
-      // dawn skylight from ahead-right (set ESE), soft; the band of brighter skylight sweeps R→L over the water/quay 2.06–2.9 s
-      setKey(101, 9, 0xf2c8a8, lerp(0.35, 0.65, up), V3(GX, 0, GZ));
-      hemi.color.setRGB(0.5, 0.56, 0.7); hemi.groundColor.setRGB(0.18, 0.16, 0.15); hemi.intensity = lerp(0.75, 0.95, up);
-      fog.color.copy(sky.horizonColor()).multiplyScalar(0.9); fog.density = 0.0011;
-      practicals(5, T0); pA.intensity *= 1 - 0.5 * up;
-      M.steelGlazeLit.emissiveIntensity = 0; arcGlazeEnd.material = M.steelGlazeLit;
-      M.steelGlazeLit.emissive.setHex(0xffb46a); M.steelGlazeLit.emissiveIntensity = 0.9;
+      setKey(101, 18, 0xe8d4c8, lerp(0.12, 0.2, up), V3(GX, 0, GZ));   // faint directional share of the dawn sky (no specular glare)
+      hemi.color.setRGB(0.55, 0.6, 0.74); hemi.groundColor.setRGB(0.2, 0.18, 0.17); hemi.intensity = lerp(0.95, 1.2, up);
+      fog.color.copy(sky.horizonColor()).multiplyScalar(0.95); fog.density = 0.0011;
+      practicals(5, T0); pA.intensity *= 1 - 0.4 * up;
+      bayGlow.set(0.55);
+      // the skylight band: travels from the water (+Z) onto the spot 2.04 → 2.70 s, the spot keeps a soft residue
+      const bt = smoothstep(2.04, 2.72, tl), bz = lerp(SPOT.z + 34, SPOT.z, bt), bI = smoothstep(1.95, 2.25, tl) * (1 - 0.45 * smoothstep(2.75, 3.6, tl));
+      bandL.position.set(SPOT.x + 9, 42, bz + 6); bandL.target.position.set(SPOT.x + 1.5, 0, bz); bandL.target.updateMatrixWorld(); bandL.intensity = 1.25 * bI;
+      bandSheen.visible = bI > 0.001; const over = smoothstep(QUAY_Z + 2, QUAY_Z + 12, bz);
+      bandSheen.position.set(SPOT.x + 30, SEA_Y + 0.15, Math.max(bz, QUAY_Z + 6)); bandSheen.scale.set(120, 26, 1); bandSheen.material.color.setRGB(0.07, 0.065, 0.06).multiplyScalar(bI * over);
       animate(T0);
       placeCam(C46.pos, C46.yaw, C46.pitch, C46.mm); camera.near = 1; camera.far = 9000;
-      sea.setLamps(FISH.map((p) => ({ position: setRoot.localToWorld(p.clone()), color: 0xE2A458, intensity: 40 })));
+      sea.setLamps(FISH.map((p) => ({ position: setRoot.localToWorld(p.clone()), color: 0xE2A458, intensity: 26 })));
       sea.update(T0, camera);
       dbgLog('S080');
-      return { dof: null, exposure: lerp(1.25, 1.38, up), temp: lerp(-0.04, 0.12, up), saturation: 0.86, contrast: 1.0, vignette: 0.32, grain: 0.035, bloom: { strength: 0.38, radius: 0.6, threshold: 0.8 } };
+      return { dof: null, exposure: lerp(1.3, 1.42, up), temp: lerp(-0.06, 0.08, up), saturation: 0.86, contrast: 1.0, vignette: 0.32, grain: 0.034, bloom: { strength: 0.38, radius: 0.6, threshold: 0.8 } };
     },
     // ---------------------------------------------------------------- S018 — lab window → heavy-lift rise + pull-back → veiled moon
     S018(tl, u, T0) {
       state(5, 'night', T0);
       sky.set(SKY18W); sky.update(T0);
-      seaSky.set({ ...SKY18W, moonElev: 17, moonAz: MOON_AZW + 6, moonIntensity: 3.2 }); seaSky.update(T0);
+      seaSky.set({ ...SKY18W, moonElev: 14, moonAz: MOON_AZW - 14, moonIntensity: 3.2, cloudCover: 0.25 }); seaSky.update(T0);
       // veil: the moon reads as a glow behind gathering cloud, the veil thins as it enters the top third (2.6 → 2.9 s)
-      const veil = 1 - smoothstep(2.45, 2.88, tl);
-      sky.uniforms.uMoonIntensity.value = SKY18.moonIntensity * (1 - 0.72 * veil); sky.uniforms.uMoonHalo.value = SKY18.moonHalo * (1 - 0.35 * veil);
+      const veil = 1 - smoothstep(2.5, 2.86, tl);
+      sky.uniforms.uMoonIntensity.value = SKY18.moonIntensity * (1 - 0.96 * veil); sky.uniforms.uMoonHalo.value = SKY18.moonHalo * (1 - 0.6 * veil);
       cityU.uHide.value.set(1e9, -1e9, 1e9, -1e9); cityU.uLit.value = 1; cityU.uWin.value = 1.25;
       cityU.uSkyAmb.value.setRGB(0.012, 0.016, 0.03); cityU.uGndAmb.value.setRGB(0.004, 0.004, 0.006); cityU.uKeyCol.value.setRGB(0.05, 0.058, 0.07); cityU.uFogCol.value.setRGB(0.028, 0.038, 0.06); cityU.uFogDen.value = 0.0006;
       cityU.uKeyDir.value.copy(moonW).setY(0).normalize().multiplyScalar(Math.cos(32 * D2R)).setY(Math.sin(32 * D2R));
       // moonlight (lighting cheat: the moon's azimuth, raised to 32°) from behind the building → the south facade stays dark
-      setKey(Math.atan2(moonSet.x, -moonSet.z) / D2R, 32, 0xc8d4e6, 0.5, V3(58, 0, 0)); key.castShadow = false;
+      setKey(Math.atan2(moonSet.x, -moonSet.z) / D2R, 32, 0xc8d4e6, 0.5, V3(58, 0, 0));
       hemi.color.setRGB(0.1, 0.13, 0.2); hemi.groundColor.setRGB(0.03, 0.03, 0.035); hemi.intensity = 0.5;
       fog.color.setRGB(0.03, 0.04, 0.062); fog.density = 0.0006;
       lampsG.E5.g.visible = true; practicals(5, T0); pA.intensity = 0; pB.intensity = 0;
-      labG.visible = true; labSash.visible = false; labLamp.intensity = 2.2; labG.userData.spill.intensity = 30;
+      labG.visible = true; labSash.visible = false; labLamp.intensity = 9.0; labG.userData.spill.intensity = 40; shipsE[5].visible = false;
+      M.paving.userData.wet.uWet.value = 0.45;
       rest.root.visible = true;
       rest.pose('sit_desk', { seat: 0.5, lean: 0.55 }); rest.pose({ 'neck.x': 0.35, 'head.x': 0.25, 'chest.x': 0.12 }, { add: true }); rest.breathe(T0, 0.8);
       animate(T0);
@@ -989,7 +1062,6 @@ export default async function create(ctx) {
     scene, camera,
     post: { exposure: 1.4, bloom: { strength: 0.4, radius: 0.55, threshold: 0.8 }, vignette: 0.34, grain: 0.038 },
     setShot(shot, tl, u, T0) {
-      key.castShadow = true;
       return (setups[shot.id] || setups.default)(tl, u, T0, shot);
     },
   };

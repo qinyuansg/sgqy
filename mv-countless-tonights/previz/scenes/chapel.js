@@ -14,10 +14,12 @@ import * as TX from '../lib/textures.js';
 import * as FX from '../lib/fx.js';
 import { envTexture } from '../lib/env.js';
 import { loadCharacter } from '../lib/cast.js';
+import { Figure } from '../lib/figure.js';
+const Figure_blend = (a, b, t) => Figure.blend(a, b, t);
 import { handPose, blendHandChannels } from '../lib/hand.js';
 import { rng, noise1, fbm1, clamp, lerp, smoothstep, ease } from '../engine/util.js';
 
-const DBG = false;
+const DBG = true;
 const OFF = new Set(((typeof location !== 'undefined' && new URLSearchParams(location.search).get('chx')) || '').split(',').filter(Boolean)); // perf A/B switches
 const V3 = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
 const D2R = Math.PI / 180;
@@ -191,7 +193,9 @@ export function paintWindow(seed, W, H, opts = {}) {
   cg.fillStyle = '#000'; cg.fillRect(0, 0, W, H);
   cg.filter = `blur(${Math.max(1, W / 320)}px)`; cg.drawImage(c, 0, 0); cg.filter = 'none';
   const cim = cg.getImageData(0, 0, W, H), cd = cim.data;
-  for (let i = 0; i < cd.length; i += 4) { const l = (cd[i] + cd[i + 1] + cd[i + 2]) / 765; const k = l < 0.12 ? l / 0.12 * 0.4 : 1.0; cd[i] *= k * 1.05; cd[i + 1] *= k * 1.05; cd[i + 2] *= k * 1.05; cd[i + 3] = 255; }
+  // light through coloured glass is more saturated than the glass looks in reflection: boost chroma ×1.6, leads → dark gaps
+  for (let i = 0; i < cd.length; i += 4) { const l = (cd[i] + cd[i + 1] + cd[i + 2]) / 765, k = l < 0.16 ? Math.pow(l / 0.16, 2) * 0.5 : 1.0, m = l * 255;
+    for (let ch = 0; ch < 3; ch++) cd[i + ch] = clamp((m + (cd[i + ch] - m) * 1.6) * k * 1.04, 0, 255); cd[i + 3] = 255; }
   cg.putImageData(cim, 0, 0);
   return { glass: c, cookie: ck, ys };
 }
@@ -256,16 +260,15 @@ export default async function create(ctx) {
   const add = (geo, mat, cast = true, recv = true, parent = scene) => { const m = new THREE.Mesh(geo, mat); m.castShadow = cast; m.receiveShadow = recv; parent.add(m); return m; };
 
   // ================================================================ materials
-  const plasterM = TX.mat('plaster', { repeat: [0.22, 0.22], tex: { tone: 'lime', damp: 0.35, flake: 0.18, cracks: 0.3, seed: 41 } });
-  plasterM.color = new THREE.Color(0xf4efe4);
+  const lam = (m, color) => new THREE.MeshLambertMaterial({ map: m.map, normalMap: m.normalMap, normalScale: m.normalScale, color: color ?? m.color, side: m.side });
+  const plasterM = lam(TX.mat('plaster', { repeat: [0.22, 0.22], tex: { tone: 'lime', damp: 0.35, flake: 0.18, cracks: 0.3, seed: 41 } }), new THREE.Color(0xf4efe4));
   const floorM = TX.mat('tiles_terracotta', { repeat: [32 / 1.2, 14 / 1.2], tex: { wear: 0.5, seed: 33 } });
   floorM.color = new THREE.Color(0xfff2ea);
-  const vaultM = TX.mat('wood_pale', { repeat: [0.5, 0.18], tex: { planks: 8, joints: 1, knots: 0.3, seed: 45 } });
-  vaultM.color = new THREE.Color(0xa9aaa8); vaultM.side = THREE.FrontSide;
-  const beamM = TX.mat('wood_beam', { repeat: [1, 0.4], tex: { seed: 46 } }); beamM.color = new THREE.Color(0xb8b6b0);
+  const vaultM = lam(TX.mat('wood_pale', { repeat: [0.5, 0.18], tex: { planks: 8, joints: 1, knots: 0.3, seed: 45 } }), new THREE.Color(0xb4b5b2));
+  const beamM = lam(TX.mat('wood_beam', { repeat: [1, 0.4], tex: { seed: 46 } }), new THREE.Color(0xc4c2bc));
   const pewM = TX.mat('pew', { repeat: [1 / 0.6, 1 / 1.6], tex: { planks: 3, joints: 0, wear: 0.6, seed: 47 } });
   pewM.roughness = 0.62; pewM.normalMap = null;
-  const darkWoodM = TX.mat('pew', { repeat: [1, 1], tex: { planks: 3, joints: 0, seed: 48 } }); darkWoodM.color = new THREE.Color(0x8a7a6c);
+  const darkWoodM = lam(TX.mat('pew', { repeat: [1, 1], tex: { planks: 3, joints: 0, seed: 48 } }), new THREE.Color(0x8a7a6c));
   const ironM = std({ color: 0x24221f, roughness: 0.5, metalness: 0.6 });
   const clothM = std({ color: 0xe8e2d4, roughness: 0.95 });
 
@@ -394,7 +397,7 @@ export default async function create(ctx) {
   const cookieTex = ctex(cookieC); cookieTex.generateMipmaps = true; cookieTex.minFilter = THREE.LinearMipmapLinearFilter;
   // the sun: one far spot aimed at the window rectangle, colour map = the cookie warped into the spot's view (1 shadow light)
   const SUN_DIST = 70;
-  const sun = new THREE.SpotLight(0xffd8b0, 1, 0, 0.1, 0.02, 2);
+  const sun = new THREE.SpotLight(0xffe0c0, 1, 0, 0.1, 0.02, 2);
   sun.castShadow = !OFF.has('noshadow'); sun.shadow.mapSize.set(OFF.has('sh1k') ? 1024 : 2048, OFF.has('sh1k') ? 1024 : 2048); sun.shadow.bias = -0.00015; sun.shadow.normalBias = 0.006;
   scene.add(sun, sun.target);
   let sunMapC = null;
@@ -412,14 +415,14 @@ export default async function create(ctx) {
     const tl = P(WR.c.clone().sub(WR.r).add(WR.u)), tr = P(WR.c.clone().add(WR.r).add(WR.u)), bl = P(WR.c.clone().sub(WR.r).sub(WR.u));
     sunMapC = canvas(S, S); const g = sunMapC.getContext('2d'); g.fillStyle = '#000'; g.fillRect(0, 0, S, S);
     // sun's penumbra at 8–15 m from the window: lead lines melt, petals of colour stay (blur first, then warp)
-    const bl2 = canvas(ckW, ckH), bg2 = bl2.getContext('2d'); bg2.filter = 'blur(3.5px)'; bg2.drawImage(cookieC, 0, 0);
+    const bl2 = canvas(ckW, ckH), bg2 = bl2.getContext('2d'); bg2.filter = 'blur(1.6px)'; bg2.drawImage(cookieC, 0, 0);
     g.setTransform((tr[0] - tl[0]) / ckW, (tr[1] - tl[1]) / ckW, (bl[0] - tl[0]) / ckH, (bl[1] - tl[1]) / ckH, tl[0], tl[1]); g.drawImage(bl2, 0, 0);
     sun.map = ctex(sunMapC); if (OFF.has('nomip')) { sun.map.generateMipmaps = false; sun.map.minFilter = THREE.LinearFilter; }
   }
   // volumetric shafts (one ray-marched prism over the three lancets, half-res layer) + dust only inside it
   const shaft = FX.windowShaft({ center: WR.c, right: WR.r, up: WR.u, dir: sunDir(), length: 30, cookie: cookieTex, color: 0xffd6a6, intensity: 0.2, floorY: 0, noise: 0.75, penumbra: 0.012, steps: 12 });
   scene.add(shaft.object3D);
-  const dustWide = FX.dustMotes({ center: [-7, 5.5, 0.5], size: [16, 9, 12], count: 5000, moteSize: 0.006, intensity: 2.2, beam: { shaft }, ambient: 0.0, seed: 3 });
+  const dustWide = FX.dustMotes({ center: [-7, 5.5, 0.5], size: [16, 9, 12], count: 2600, moteSize: 0.005, intensity: 2.6, beam: { shaft }, ambient: 0.0, seed: 3 });
   const dustNear = FX.dustMotes({ center: [-2.6, 1.4, 2.4], size: [3.5, 1.6, 4.5], count: 1400, moteSize: 0.0028, intensity: 2.0, beam: { shaft }, ambient: 0.0, seed: 5 });
   scene.add(dustWide.object3D, dustNear.object3D);
   // first-bounce fill from the sunlit floor/pews (unshadowed, warm, a little coloured)
@@ -428,6 +431,8 @@ export default async function create(ctx) {
   scene.add(bounceA, bounceB);
   // ambient: sky through every window (cool) + warm floor
   const hemi = new THREE.HemisphereLight(0x8a96b0, 0x6a4a38, 0.3); scene.add(hemi);
+  const skyFill = new THREE.PointLight(0xc2cfe2, 0.0, 9, 2); scene.add(skyFill);
+  const winGlow = new THREE.PointLight(0x7f9cd0, 0.0, 8, 2); winGlow.position.set(-2.0, 1.9, 6.7); scene.add(winGlow);
   const blueKey = new THREE.DirectionalLight(0x6f8ab8, 0); blueKey.position.set(-12, 9, -3); blueKey.target.position.set(0, 0, 2); scene.add(blueKey, blueKey.target);
 
   // aisle windows: lower tier at seated eye level (south one beside row 7 holds the GLASSPANEL), lit by the evening sky
@@ -458,13 +463,14 @@ export default async function create(ctx) {
 
   // ================================================================ candle side tables (blue-hour warm points)
   const candles = [];
-  const tables = [{ x: 7.6, z: -6.35, n: 5 }, { x: 6.6, z: 6.35, n: 4 }];
+  const tables = [{ x: 4.6, z: -6.55, n: 2 }, { x: -0.6, z: -6.55, n: 3 }, { x: 0.1, z: 6.55, n: 3, h: 1.32 }];
   for (const [ti, t] of tables.entries()) {
-    add(boxAt(0.5, 0.86, 1.1, t.x, 0.43, t.z), darkWoodM);
-    add(boxAt(0.54, 0.02, 1.16, t.x, 0.87, t.z), clothM);
+    const th = t.h || 0.87;
+    if (t.h) { add(boxAt(0.05, th, 0.05, t.x, th / 2, t.z), ironM); add(boxAt(0.7, 0.02, 0.22, t.x, th, t.z), ironM); add(boxAt(0.4, 0.03, 0.3, t.x, 0.015, t.z), ironM); }
+    else { add(boxAt(1.1, 0.86, 0.42, t.x, 0.43, t.z), darkWoodM); add(boxAt(1.16, 0.02, 0.46, t.x, 0.87, t.z), clothM); }
     for (let i = 0; i < t.n; i++) {
       const c = FX.candle({ state: ['B', 'C', 'B', 'D', 'C'][i % 5], seed: 30 + ti * 7 + i, light: i === 1, intensity: 0.9 });
-      c.object3D.position.set(t.x + (i % 2 ? 0.08 : -0.06), 0.88, t.z - 0.4 + i * 0.8 / Math.max(1, t.n - 1));
+      c.object3D.position.set(t.x - (t.h ? 0.28 : 0.38) + i * (t.h ? 0.56 : 0.76) / Math.max(1, t.n - 1), th + 0.01, t.z + (i % 2 ? 0.06 : -0.05));
       scene.add(c.object3D); candles.push(c);
     }
   }
@@ -496,55 +502,72 @@ export default async function create(ctx) {
   scene.add(cap);
 
   // ---------------------------------------------------------------- RESTORER reflection plate (S057: the clear diamond quarry)
-  const refl = { scene: new THREE.Scene(), cam: new THREE.PerspectiveCamera(16, 0.68, 0.05, 20), rt: ctx.makeRT(204, 300) };
+  const refl = { scene: new THREE.Scene(), cam: new THREE.PerspectiveCamera(17, 0.68, 0.05, 20), rt: ctx.makeRT(204, 300) };
   refl.scene.background = new THREE.Color(0x000000);
   refl.scene.environment = envTexture(ctx.renderer, 'night_museum'); refl.scene.environmentIntensity = 0.25;
   const R = await loadCharacter('RESTORER', { lod: 'mid' });
   refl.scene.add(R.root);
-  { const box = new THREE.PointLight(0xd8e2f0, 0.5, 0, 2); box.position.set(0.05, 1.45, 0.45); refl.scene.add(box);
+  { const box = new THREE.PointLight(0xd8e2f0, 0.35, 0, 2); box.position.set(-0.1, 1.3, 0.5); refl.scene.add(box);
     const moon = new THREE.DirectionalLight(0x9fb2d8, 0.6); moon.position.set(-2, 2.5, 1); refl.scene.add(moon);
     refl.scene.add(new THREE.HemisphereLight(0x3a4a66, 0x0a0a0c, 0.4)); }
+  // the restorer looking into the corridor pane P4 (S061), seen as the pane would mirror her: drawn into refl.rt
+  function renderReflection(T, drift = 0) {
+    R.root.position.set(0, 0, 0); R.root.rotation.set(0, 0, 0);
+    R.pose('stand', { weight: 0.2 }); R.pose({ 'neck.x': 0.16, 'head.x': 0.1, 'head.y': 0.22 + 0.04 * drift, 'head.z': -0.03 }, { add: true }); R.breathe(T, 0.6);
+    const e = R.eye();
+    refl.cam.position.set(e.x - 0.3, e.y + 0.02, e.z + 1.12); refl.cam.lookAt(e.x - 0.02, e.y - 0.07, e.z); refl.cam.updateMatrixWorld();
+    const r = ctx.renderer, prev = r.getRenderTarget();
+    r.setRenderTarget(refl.rt); r.setClearColor(0x000000, 1); r.clear(true, true, true); r.render(refl.scene, refl.cam); r.setRenderTarget(prev);
+  }
 
   // ================================================================ foreground plate for S057: the low window's bottom tier with the GLASSPANEL
   const panelPw = glassPanelCanvas('then');
   const plate = new THREE.Group(); scene.add(plate);
-  const plateGlassMat = glassMat(ctex(panelPw.glass), 1.0);
-  const PLATE_S = 0.39;                        // plate scale (cheat, ruling 2): the 6 × 9 cm quarry reads ~9 % of frame height
+  const plateGlassMat = glassMat(ctex(panelPw.glass), 0.5);
+  const PLATE_S = 0.44;                        // plate scale (cheat, ruling 2): the 6 × 9 cm quarry reads ~9 % of frame height
   {
     const pg = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.9), plateGlassMat); plate.add(pg);
     // neighbouring panels of the same window (continue the glass beyond the frame edge)
     const nb = paintWindow(58, 360, 540, { shape: 'rect', variant: 2 });
-    const nbm = glassMat(ctex(nb.glass), 1.0); plate.userData.nbm = nbm;
+    const nbm = glassMat(ctex(nb.glass), 0.42); plate.userData.nbm = nbm;
     for (const [dx, dy] of [[0.6, 0], [0, 0.9], [0.6, 0.9], [0, -0.9], [0.6, -0.9]]) { const m = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.9), nbm); m.position.set(dx, dy, 0); plate.add(m); }
     // the stone reveal (left edge of the window) — dark, soft
-    const rev = new THREE.Mesh(new THREE.BoxGeometry(0.5, 2.8, 0.2), std({ color: 0x3a342e, roughness: 0.9 })); rev.position.set(-0.3 - 0.25, 0.4, 0.05); plate.add(rev);
+    const rev = new THREE.Mesh(new THREE.BoxGeometry(0.035, 2.8, 0.04), new THREE.MeshBasicMaterial({ color: 0x0c0b0a, fog: false })); rev.position.set(-0.3 - 0.012, 0.4, 0.01); plate.add(rev);
     // the clear quarry: dark (the shade behind it) + the reflected face (true mirror: u flipped)
     const q = GLASSPANEL_QUARRY, qw = q.w * 0.6, qh = q.h * 0.9, qx = (q.u - 0.5) * 0.6, qy = (0.5 - q.v) * 0.9;
     const dia = new THREE.Shape(); dia.moveTo(0, -qh / 2); dia.lineTo(qw / 2, 0); dia.lineTo(0, qh / 2); dia.lineTo(-qw / 2, 0); dia.closePath();
     const dg = new THREE.ShapeGeometry(dia); const uvs = dg.attributes.uv, pp = dg.attributes.position;
     for (let i = 0; i < pp.count; i++) uvs.setXY(i, 0.5 - pp.getX(i) / qw, 0.5 + pp.getY(i) / qh);
-    const dark = new THREE.Mesh(dg, new THREE.MeshBasicMaterial({ color: new THREE.Color(0.012, 0.014, 0.02), fog: false })); dark.position.set(qx, qy, 0.001); plate.add(dark);
+    const rim = new THREE.Mesh(dg, new THREE.MeshBasicMaterial({ color: new THREE.Color(0.32, 0.3, 0.28), fog: false })); rim.scale.setScalar(1.12); rim.position.set(qx, qy, 0.0006); plate.add(rim);
+    const dark = new THREE.Mesh(dg, new THREE.MeshBasicMaterial({ color: new THREE.Color(0.008, 0.009, 0.013), fog: false })); dark.position.set(qx, qy, 0.001); plate.add(dark);
     const face = new THREE.Mesh(dg, new THREE.MeshBasicMaterial({ map: refl.rt.texture, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0, fog: false }));
     face.position.set(qx, qy, 0.002); plate.add(face); plate.userData.face = face; plate.userData.quarry = V3(qx, qy, 0);
   }
   plate.scale.setScalar(PLATE_S); plate.visible = false;
 
+  // ================================================================ light sets (fewer lights per frame = cheaper shading)
+  const candleLights = candles.filter((c) => c.light).map((c) => c.light);
+  function lightSet({ sun: sOn = true, bounce = true, night = false, candles: cOn = false, fill = false } = {}) {
+    skyFill.visible = fill;
+    sun.visible = sOn && !OFF.has('nosun'); bounceA.visible = bounce; bounceB.visible = false; blueKey.visible = night; winGlow.visible = night;
+    for (const l of candleLights) l.visible = cOn;
+  }
   // ================================================================ time of day: k = 0 last sun … 1 blue hour
   const SUN_I = 12.0;
-  const C_SUN0 = new THREE.Color(0xffd8b0), C_SUN1 = new THREE.Color(0xff9a6a);
+  const C_SUN0 = new THREE.Color(0xffe0c0), C_SUN1 = new THREE.Color(0xffa070);
   const fogDay = new THREE.Color(0x4a4038), fogNight = new THREE.Color(0x141c2a);
   function daylight(k, { slide = 0 } = {}) {
     const s = 1 - smoothstep(0, 1, k);
     aimSun(sunDir(SUN_EL - slide * 3.5 * D2R, SUN_AZ + slide * 1.2 * D2R));
-    sun.intensity = SUN_I * s * SUN_DIST * SUN_DIST; sun.color.copy(C_SUN0).lerp(C_SUN1, smoothstep(0, 0.8, k)); sun.visible = s > 0.002;
+    sun.intensity = SUN_I * s * SUN_DIST * SUN_DIST; sun.color.copy(C_SUN0).lerp(C_SUN1, smoothstep(0, 0.8, k));
     shaft.update(ctx.T, { intensity: 0.13 * s }); shaft.object3D.visible = s > 0.01 && !OFF.has('noshaft');
     shaft.material.uniforms.uCol.value.set(0xffd6a6).lerp(new THREE.Color(0xff9a70), smoothstep(0, 0.8, k));
     dustWide.object3D.visible = dustNear.object3D.visible = s > 0.01 && !OFF.has('nodust');
     dustWide.material.uniforms.uInt.value = 2.2 * s; dustNear.material.uniforms.uInt.value = 2.0 * s;
-    bounceA.intensity = 2.6 * s; bounceB.intensity = 2.0 * s;
+    bounceA.intensity = 3.2 * s;
     hemi.color.set(0x9aa8c4).lerp(new THREE.Color(0x4a6898), k); hemi.groundColor.set(0x8a6248).lerp(new THREE.Color(0x221a18), k);
-    hemi.intensity = lerp(1.0, 0.6, k);
-    blueKey.intensity = 0.55 * smoothstep(0.3, 1, k);
+    hemi.intensity = lerp(1.0, 0.75, k);
+    blueKey.intensity = 1.1 * smoothstep(0.3, 1, k); winGlow.intensity = 0.9 * smoothstep(0.4, 1, k);
     for (const m of lancetMats) { m.uniforms.uInt.value = lerp(3.6, 0.35, smoothstep(0, 0.9, k)); m.uniforms.uTint.value.setRGB(1, 1, 1).lerp(new THREE.Color(0.55, 0.62, 1.0), smoothstep(0.3, 1, k)); m.uniforms.uHot.value = 0.7 * s; m.uniforms.uSun.value.copy(sunDir()); }
     for (const m of aisleMats) { m.uniforms.uInt.value = lerp(0.55, 0.22, k); m.uniforms.uTint.value.setRGB(1, 0.95, 0.92).lerp(new THREE.Color(0.55, 0.65, 1.0), k); }
     eastMat.uniforms.uInt.value = lerp(0.35, 0.16, k);
@@ -555,9 +578,10 @@ export default async function create(ctx) {
   // ================================================================ figures: poses (pure functions of time)
   const F = V3(1, 0, 0), RT = V3(0, 0, 1), UP = V3(0, 1, 0);   // facing east: forward +x, her right = +z (south)
   // MOTHER seated at the aisle end of row 7, letter held to her chest with both hands, head bowed
-  function letterHold(fig, T, { rub = 0, grip = 0, fwd = F, right = RT } = {}) {
+  function letterHold(fig, T, { rub = 0, grip = 0, lift = 0, fwd = null, right = null } = {}) {
+    const ry = fig.root.rotation.y; fwd = fwd || V3(Math.sin(ry), 0, Math.cos(ry)); right = right || V3(-Math.cos(ry), 0, Math.sin(ry));
     const n = fig.worldPos('neck');
-    const Lc = n.clone().addScaledVector(fwd, 0.135).addScaledVector(UP, -0.17);
+    const Lc = n.clone().addScaledVector(fwd, 0.135 - 0.02 * lift).addScaledVector(UP, -0.17 + 0.06 * lift);
     letter.position.copy(Lc);
     const zAx = fwd.clone().multiplyScalar(-1).addScaledVector(UP, -0.35).normalize(); // letter normal: toward her chest, tilted
     const m = new THREE.Matrix4().lookAt(V3(0, 0, 0), zAx.clone().negate(), UP); letter.quaternion.setFromRotationMatrix(m);
@@ -566,16 +590,17 @@ export default async function create(ctx) {
     const wl = Lc.clone().addScaledVector(right, -0.066).addScaledVector(UP, -0.07).addScaledVector(fwd, -0.004);
     fig.reach('L', wl, { palm: fwd.clone().multiplyScalar(-1).addScaledVector(right, 0.5).normalize(), fingers: UP.clone().multiplyScalar(0.8).addScaledVector(right, 0.6).normalize() });
     const hR = handPose('relaxed', { curl: 0.55 + 0.25 * grip }, fig.hands.R.dims), hL = handPose('relaxed', { curl: 0.6 + 0.25 * grip }, fig.hands.L.dims);
-    hR.thumb = [0.25 + 0.12 * rub, 0.3, 0.1 + 0.15 * rub, 0.12, 0.2];
+    hR.thumb = [0.25 + 0.12 * rub, 0.3 + 0.1 * rub, 0.1 + 0.2 * rub, 0.12 + 0.1 * rub, 0.2];
     fig.hands.R.setChannels(hR); fig.hands.L.setChannels(hL);
   }
-  function seatMother(T, { tremble = 0, rub = 0, grip = 0, bow = 1 } = {}) {
-    M.root.position.set(ROW7 + 0.05, 0, CH.motherZ); M.root.rotation.set(0, Math.PI / 2, 0);
+  function seatMother(T, { tremble = 0, rub = 0, grip = 0, bow = 1, lift = 0, z = CH.motherZ, nod = 0 } = {}) {
+    M.root.position.set(ROW7 + 0.05, 0, z); M.root.rotation.set(0, Math.PI / 2, 0);
     M.pose('sit_chair', { seat: 0.447, feet: 0.03, lean: 0.04, hands: 'none' });
     M.pose({ 'armL.clav.y': 0.1, 'armR.clav.y': 0.1, 'neck.x': 0.26 * bow, 'head.x': 0.2 * bow, 'chest.x': 0.03 }, { add: true });
     M.breathe(T, 0.9, 0.22);
     if (tremble > 0) M.tremble(T, tremble);
-    letterHold(M, T, { rub, grip });
+    if (nod) M.bone('head').rotateX(nod);
+    letterHold(M, T, { rub, grip, lift });
   }
   function seatLonely(fig, T, { loosen = 0 } = {}) {
     fig.root.position.set(ROW7 + 0.05, 0, CH.lonelyZ); fig.root.rotation.set(0, Math.PI / 2, 0);
@@ -603,7 +628,7 @@ export default async function create(ctx) {
 
   // ================================================================ the S055–S056 crane move (one continuous plate)
   const CR_T0 = 175.36, CR_T1 = 180.917;              // descent begins on '下' (175.36) … end of S056
-  const crPts = [V3(-10.6, 9.0, 1.9), V3(-9.9, 7.9, 2.0), V3(-8.7, 5.9, 2.1), V3(-7.4, 3.7, 2.1), V3(-6.2, 2.0, 1.95), V3(-5.0, 1.38, 1.75), V3(-4.0, 1.31, 1.6), V3(-3.32, 1.3, 1.55)];
+  const crPts = [V3(-10.6, 9.0, -1.6), V3(-9.9, 7.9, -1.75), V3(-8.7, 5.9, -1.8), V3(-7.4, 3.7, -1.3), V3(-6.2, 2.05, -0.2), V3(-5.0, 1.4, 0.95), V3(-4.0, 1.31, 1.42), V3(-3.32, 1.3, 1.55)];
   const crCurve = new THREE.CatmullRomCurve3(crPts, false, 'centripetal');
   const RAMP_IN = 0.75, RAMP_OUT = 2.0;             // 18-frame ease-in; long ease-out to a near stop behind her
   const crS = (T) => { // arc-length fraction for a sine-ramped constant-speed profile
@@ -614,8 +639,8 @@ export default async function create(ctx) {
     else { const x = t - RAMP_IN - cruise; s = RAMP_IN / 2 + cruise + RAMP_OUT * 2 / Math.PI * Math.sin(Math.PI / 2 * x / RAMP_OUT); }
     return s / tot;
   };
-  const crHead = [[174.5, 146], [CR_T0, 146], [176.3, 124], [177.42, 62], [177.82, 42], [178.42, 22], [179.4, 4], [180.917, -7]];
-  const crPitch = [[174.5, 5], [CR_T0, 5], [176.3, -4], [177.42, -30], [177.82, -28], [178.42, -18], [179.4, -9], [180.917, -8]];
+  const crHead = [[174.5, 146], [CR_T0, 146], [176.3, 124], [177.42, 66], [177.82, 50], [178.42, 36], [179.4, 20], [180.3, 0], [180.917, -7]];   // LONELY leaves frame right on 179.4
+  const crPitch = [[174.5, 5], [CR_T0, 5], [176.3, -8], [177.42, -30], [177.82, -28], [178.42, -18], [179.4, -10], [180.3, -7], [180.917, -6]];
   function crane(T) {
     const p = crCurve.getPointAt(crS(T));
     aim([p.x, p.y, p.z], spline1(crHead, T), spline1(crPitch, T), 32);
@@ -624,14 +649,15 @@ export default async function create(ctx) {
 
   // ================================================================ setups
   const POST_DAY = { exposure: 1.0, temp: 0.12, saturation: 1.0, contrast: 1.05 };
+  const POST_NIGHT = { exposure: 1.3, temp: -0.25, saturation: 0.9, contrast: 1.04, shadowTint: [0.44, 0.49, 0.6], highTint: [0.56, 0.52, 0.46], bloom: { strength: 0.5, radius: 0.6, threshold: 0.8 } };
   const setups = {
     // ---- S055 BR2 174.58–177.42 '彩窗下': high at the west end, the south lancet blazing at frame right, shafts slanting
     //      down-left, dust only in the light; richest at 0.18 s; the crane descent (pan left) begins at 0.78 s ('下')
     S055(tl, u, T) {
-      daylight(0); show({ M: true, Lh: false, Lm: true });
+      lightSet({ sun: true, bounce: true }); daylight(0); show({ M: true, Lh: false, Lm: true });
       seatMother(T); seatLonely(Lm, T);
-      const swell = 1 + 0.12 * Math.exp(-(((tl - 0.18) / 0.35) ** 2));
-      shaft.update(T, { intensity: 0.13 * swell });
+      const swell = 1 + 0.15 * Math.exp(-(((tl - 0.18) / 0.35) ** 2));     // richest at 0.18 s ('彩窗下')
+      shaft.update(T, { intensity: 0.24 * swell * lerp(1, 0.55, smoothstep(0.5, 1, u)) });
       crane(T);
       dbgP('lancetS top', V3(CH.west, CH.lancetSill + CH.lancetH, 3.6)); dbgP('lancetS mid', V3(CH.west, 9.5, 3.6));
       return { ...POST_DAY, dof: null, bloom: { strength: 0.5, radius: 0.65, threshold: 0.95 } };
@@ -639,7 +665,7 @@ export default async function create(ctx) {
     // ---- S056 177.42–180.92 '光分成千万瓣': the crane continues to seated height over the pews, LONELY passes out of frame
     //      right (179.4), ends behind MOTHER's back at (0.45, 0.56); follow focus onto her back
     S056(tl, u, T) {
-      daylight(0); show({ M: true, Lh: false, Lm: true });
+      lightSet({ sun: true, bounce: true }); daylight(0); show({ M: true, Lh: false, Lm: true });
       seatMother(T); seatLonely(Lm, T);
       const p = crane(T);
       const back = M.worldPos('chest');
@@ -647,14 +673,104 @@ export default async function create(ctx) {
       dbgP('mother back', back); dbgP('lonely', Lm.worldPos('chest'));
       return { ...POST_DAY, dof: { focus: lerp(12, fd, smoothstep(0.8, 2.6, tl)), fstop: 4 } };
     },
-    default(tl, u, T) { daylight(0); show({ M: true, Lm: true }); seatMother(T); seatLonely(Lm, T); crane(T); return { ...POST_DAY }; },
+    // ---- S057 BR2 180.92–182.92 '我听不懂你的祈祷': CU 100 mm locked, MOTHER's right profile at the left third facing right, eyes
+    //      closed; soft foreground at right: the low window's bottom tier (the GLASSPANEL in situ) with the clear diamond quarry
+    //      at (0.70, 0.45) holding the RESTORER's faint mirrored face (fades up 0–0.3 s, strongest ~15 % at 2 s); thumb rubs the
+    //      fold at 1.0 s; lips move on '祷' (182.44 = 1.52 s) — a tiny jaw/head motion on a faceless sculpt
+    S057(tl, u, T) {
+      lightSet({ sun: true, bounce: true, fill: true }); daylight(0); show({ M: true, Lm: false, plate: true, bag: false });
+      bounceA.intensity = 1.5; skyFill.intensity = 0.55;
+      const rub = Math.sin(clamp((tl - 0.95) / 0.5) * Math.PI);
+      const lips = Math.sin(clamp((tl - 1.5) / 0.32) * Math.PI) * 0.6 + Math.sin(clamp((tl - 1.62) / 0.22) * Math.PI) * 0.4;
+      seatMother(T, { rub, lift: 1.9, nod: 0.012 * lips });
+      const e = M.eye();
+      const D = 3.4, W = D * 36 / 100, Hh = W / ctx.aspect;
+      const cpos = V3(e.x + 0.2 * W, e.y - 0.03 * Hh, e.z + D);
+      cam.place(camera, cpos, cpos.clone().add(V3(0, 0, -1))); cam.lens(camera, 100);
+      // foreground plate: quarry centre at screen (0.70, 0.45), 2.6 m from the lens
+      const dq = 2.85, Wq = dq * 36 / 100, Hq = Wq / ctx.aspect;
+      const qW = cpos.clone().add(V3((0.70 - 0.5) * Wq, (0.5 - 0.45) * Hq, -dq));
+      plate.position.copy(qW).sub(plate.userData.quarry.clone().multiplyScalar(PLATE_S)); plate.rotation.set(0, 0, 0);
+      skyFill.position.set(e.x + 0.4, e.y + 0.3, e.z + 2.2);
+      const fade = smoothstep(0.0, 0.32, tl) * (0.1 + 0.05 * smoothstep(0.3, 2.0, tl));
+      plate.userData.face.material.opacity = fade;
+      renderReflection(T, Math.sin(tl * 0.9));
+      plate.updateMatrixWorld(true); dbgP('eye', e); dbgP('letter', letter.position); dbgP('quarry', qW); dbgP('darkMesh', plate.userData.face.getWorldPosition(V3())); dbgP('plateC', plate.getWorldPosition(V3())); if (OFF.has('faceq')) { plate.userData.face.material.opacity = 1; plate.userData.face.scale.setScalar(3); plate.userData.face.material.blending = THREE.NormalBlending; plate.userData.face.material.transparent = false; } if (OFF.has('redq')) { const dk = plate.children.filter((c) => c.material && c.material.isMeshBasicMaterial && !c.material.map)[2]; dk.material.color.set(0xff0000); dk.scale.setScalar(OFF.has('big') ? 3 : 1); plate.children[0].visible = !OFF.has('nopg'); } if (DBG) console.warn('DBG plate vis', plate.visible, plate.children.length, plate.scale.x, plate.userData.face.material.opacity);
+      for (const m of aisleMats) m.uniforms.uInt.value = 0.22;            // the north aisle window behind her head stays a soft glow
+      return { ...POST_DAY, dof: { focus: D, fstop: 2.8, maxCoc: 1.8 }, exposure: 1.05 };
+    },
+    // ---- S058 BR2 182.92–186.08 '却懂你颤抖的双肩': MCU 75 mm from her right rear 45°, slightly high, barely perceptible push;
+    //      shoulder line at (0.66, 0.50) ~28→30 % of frame width (T19 A-frame for S059); tremble starts 0.85 s ('颤抖'), peaks
+    //      2.2 s ('肩'), real time; fingers tighten, thumb rubs the fold; 2.2–2.9 s the petals slide off and fade (the sun drops),
+    //      blue hour (P03) comes in; two tiny candle points ahead of her at (0.52, 0.38)
+    S058(tl, u, T) {
+      const k = smoothstep(2.15, 2.95, tl);
+      lightSet({ sun: k < 0.999, bounce: true, night: true, candles: true }); daylight(k, { slide: smoothstep(2.0, 3.0, tl) });
+      show({ M: true, Lm: false });
+      const tr = smoothstep(0.82, 1.2, tl) * (0.55 + 0.6 * Math.exp(-(((tl - 2.2) / 0.55) ** 2))) * (1 - 0.6 * smoothstep(2.9, 3.4, tl)) * (0.85 + 0.3 * noise1(tl * 3.1, 7));
+      const grip = smoothstep(0.9, 1.6, tl) * (1 - 0.3 * smoothstep(2.6, 3.2, tl));
+      const rub = 0.5 + 0.5 * Math.sin(tl * 5.2) * smoothstep(1.0, 1.5, tl);
+      seatMother(T, { tremble: 1.35 * tr, grip, rub, bow: 1.08 });
+      const sL = M.worldPos('armL.upper'), sR = M.worldPos('armR.upper'), S = sL.clone().lerp(sR, 0.5);
+      const push = 0.1 * ease.inOutSine(smoothstep(0, 0.5, tl) * 0 + clamp(tl / 3.17)) ;
+      const dir = V3(-0.707, 0, 0.707), D = 2.42 - push;
+      const cpos = S.clone().addScaledVector(dir, D).add(V3(0, 0.13, 0));
+      const W = D * 36 / 75, side = V3(0.707, 0, 0.707);           // screen-right direction for this view
+      const tgt = S.clone().addScaledVector(side, -(0.66 - 0.5) * W).add(V3(0, 0.13 - D * Math.tan(3 * D2R), 0));
+      cam.place(camera, cpos, tgt); cam.lens(camera, 75);
+      dbgP('shoulderL', sL); dbgP('shoulderR', sR); dbgP('candle', candles[1].object3D.position.clone().add(V3(0, 0.12, 0)));
+      return { ...POST_DAY, temp: lerp(0.12, -0.22, k), saturation: lerp(1.0, 0.9, k), exposure: lerp(1.0, 1.25, k), dof: { focus: cpos.distanceTo(S), fstop: 2.4 } };
+    },
+    // ---- S069 CH4 217.71–219.71 '不过无数个今晚': MS 50 mm, eye level, locked with a ≤2 % push; blue hour, candles; opens on
+    //      her last step along row 7 (T21: left → right, downward), she sits beside LONELY at 0.81 s ('数'), his hands loosen
+    //      at 1.1 s; holds on the two sleeves side by side at (0.42, 0.62) = A-frame of the 12-frame dissolve into S070
+    S069(tl, u, T) {
+      lightSet({ sun: false, bounce: false, night: true, candles: true }); daylight(1);
+      show({ M: true, Lh: true, Lm: false, bag: false });
+      const t = clamp(tl, 0, 3);
+      // walk: last step along the row (facing south, +z), turn left to face east, sit (seated contact on 0.81 s)
+      const zSeat = CH.lonelyZ - 0.42, xWalk = ROW7 + 0.44, xSeat = ROW7 + 0.05;
+      const walkT = clamp(t / 0.62), sitT = ease.inOutSine(clamp((t - 0.3) / 0.51)), turnT = ease.inOutSine(clamp((t - 0.16) / 0.6));
+      const zz = lerp(zSeat - 0.42, zSeat, ease.outSine(walkT));
+      M.root.position.set(lerp(xWalk, xSeat, sitT), 0, zz); M.root.rotation.set(0, lerp(0, Math.PI / 2, turnT), 0);
+      const chW = M.preset('walk', { phase: 0.25 + 0.5 * walkT, stride: lerp(0.8, 0.2, walkT) }), chS = M.preset('sit_chair', { seat: 0.447, feet: 0.03, lean: 0.06, hands: 'none' });
+      M.pose(Figure_blend(chW, chS, sitT));
+      M.pose({ 'armL.clav.y': 0.08, 'armR.clav.y': 0.08, 'neck.x': lerp(0.12, 0.2, sitT), 'head.x': lerp(0.05, 0.12, sitT) }, { add: true });
+      M.breathe(T, 0.8, 0.22);
+      letterHold(M, T, { grip: 0.3 });
+      M.lookAt(V3(12, 1.2, zSeat - 0.3), 0.4 * sitT);
+      seatLonely(Lh, T, { loosen: smoothstep(1.02, 1.5, t) });
+      // camera: rear three-quarter from the aisle side, behind row 8, eye level
+      const C = V3(ROW7 - 0.08, 0.93, (zSeat + CH.lonelyZ) / 2);
+      const hd = 24 * D2R, dir = V3(Math.cos(hd), 0, Math.sin(hd)), D = 1.95 - 0.035 * ease.inOutSine(clamp(t / 2.0));
+      const W = D * 36 / 50, Hh = W / ctx.aspect;
+      const cpos = C.clone().addScaledVector(dir, -D).add(V3(0, 0.26, 0));
+      const side = V3(-Math.sin(hd), 0, Math.cos(hd));
+      const tgt = C.clone().addScaledVector(side, (0.5 - 0.42) * W).add(V3(0, (0.62 - 0.5) * Hh, 0));
+      cam.place(camera, cpos, tgt); cam.lens(camera, 50);
+      dbgP('sleeves', C); dbgP('lonely', Lh.worldPos('chest')); dbgP('mother', M.worldPos('chest')); dbgP('candle S', candles[candles.length - 1].object3D.position.clone().add(V3(0, 0.12, 0)));
+      return { ...POST_NIGHT, grain: 0.024, dof: { focus: cpos.distanceTo(C), fstop: 3.2 } };   // grain lowered: engine grain hash stripes at f5200+ (lib/ISSUES.md)
+    },
+    // ---- view_chapel (corridor pane P4, S066): the mother on the pew from her right rear, residual coloured light at blue
+    //      hour, shoulders trembling softly; self-contained, reads at 480–640 px
+    view_chapel(tl, u, T) {
+      const k = 0.72;
+      lightSet({ sun: true, bounce: true, night: true, candles: true }); daylight(k, { slide: 0.5 });
+      show({ M: true, Lm: false });
+      seatMother(T, { tremble: 0.6 + 0.25 * Math.sin(T * 0.7), grip: 0.5, rub: 0.5 + 0.5 * Math.sin(T * 4.1), bow: 1.05 });
+      const S = M.worldPos('chest');
+      const dir = V3(-0.6, 0, 0.8).normalize(), D = 3.2 + 0.05 * Math.sin(T * 0.21);
+      const cpos = S.clone().addScaledVector(dir, D).add(V3(0, 0.45, 0));
+      cam.place(camera, cpos, S.clone().add(V3(0.15, 0.05, -0.18))); cam.lens(camera, 50);
+      return { ...POST_NIGHT, dof: { focus: D, fstop: 4 } };
+    },
+    default(tl, u, T) { lightSet(); daylight(0); show({ M: true, Lm: true }); seatMother(T); seatLonely(Lm, T); crane(T); return { ...POST_DAY }; },
   };
-  setups.view_chapel = setups.default;
   // debug views (out/check/chapel/dbg_shots.json): shot.dbg = { pos, target, mm, k, fig }
   const dbgPlane = new THREE.Mesh(new THREE.PlaneGeometry(4, 4), new THREE.MeshBasicMaterial({ map: sun.map, side: THREE.DoubleSide })); dbgPlane.position.set(0, 3, 0); dbgPlane.visible = false; scene.add(dbgPlane);
   const tp = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.5), new THREE.MeshLambertMaterial({ color: 0xffffff })); tp.position.set(-2.05, 1.05, 1.28); tp.lookAt(tp.position.clone().sub(sunDir())); tp.visible = false; scene.add(tp);
   setups.DBG = (tl, u, T, shot) => {
-    const d = shot.dbg || {}; dbgPlane.visible = !!d.map; if (d.map) console.warn('DBG sun', sun.intensity, sun.visible, sun.castShadow, sun.angle, sun.position.toArray().map((x) => x.toFixed(2)).join(','), sun.map && sun.map.image.width); daylight(d.k ?? 0); show({ M: true, Lm: true, plate: !!d.plate });
+    const d = shot.dbg || {}; lightSet({ sun: (d.k ?? 0) < 1, night: (d.k ?? 0) > 0.5, candles: (d.k ?? 0) > 0.5 }); dbgPlane.visible = !!d.map; if (d.map) console.warn('DBG sun', sun.intensity, sun.visible, sun.castShadow, sun.angle, sun.position.toArray().map((x) => x.toFixed(2)).join(','), sun.map && sun.map.image.width); daylight(d.k ?? 0); show({ M: true, Lm: true, plate: !!d.plate });
     seatMother(T); seatLonely(Lm, T); console.warn('DBG after', sun.intensity, sun.visible, sun.castShadow, sun.color.getHexString(), sun.map && sun.map.uuid);
     if (d.test === 1) { sun.position.set(-2, 10, 1.25); sun.target.position.set(-1.9, 0, 1.25); sun.target.updateMatrixWorld(); sun.angle = 0.6; sun.intensity = 300; }
     if (d.test === 2) { sun.intensity = 300 * 70 * 70; }

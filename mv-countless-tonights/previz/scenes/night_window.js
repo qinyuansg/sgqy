@@ -20,6 +20,8 @@ import { createSky } from '../lib/sky.js';
 import { createSea, createCoast } from '../lib/sea.js';
 import { loadCharacter } from '../lib/cast.js';
 import { blendHandChannels, handPose } from '../lib/hand.js';
+import { Figure } from '../lib/figure.js';
+const Figure_blend = (a, b, t) => Figure.blend(a, b, t);
 
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const D2R = Math.PI / 180;
@@ -109,14 +111,17 @@ export default async function create(ctx) {
   const mDark = std({ color: hex('#2a2724'), roughness: 0.8 });
 
   // ================================================================== exterior: sky, sea, harbour
-  const SKY_BASE = { moonAz: 238, moonElev: 34, stars: 0.35, cloudCover: 0.28, cloudScale: 0.09, sunAz: 112 };
+  const SKY_BASE = { moonAz: 238, moonElev: 34, stars: 0.22, cloudCover: 0.28, cloudScale: 0.09, sunAz: 112 };
   const sky = createSky({ preset: 'night', ...SKY_BASE, exposure: 1.0 });
+  sky.object3D.renderOrder = 1000;   // after the interior + sea: the dome only shades the pixels seen through the glass
   scene.add(sky.object3D);
   const sea = createSea({ sky, swell: 'calm', windDir: 200, level: SEA_LEVEL, foam: 0.05, glitter: 0.8, cols: 96, rows: 72, fogDensity: 0.0004 });
+  sea.object3D.renderOrder = 900;  // after the opaque interior (early-z rejects the hidden water)
   scene.add(sea.object3D);
   const coastN = createCoast({ sky, distance: 5200, az0: 8, az1: 78, height: 60, seed: 12, lights: 3, lightIntensity: 4.5, lightPx: 2.4, level: SEA_LEVEL, haze: 0.35 });
   const coastS = createCoast({ sky, distance: 6400, az0: 152, az1: 182, height: 34, seed: 4, lights: 1, lightIntensity: 3.5, lightPx: 2.2, level: SEA_LEVEL, haze: 0.45 });
   scene.add(coastN.object3D, coastS.object3D);
+  coastN.land.renderOrder = coastS.land.renderOrder = 1001;          // after the dome (the land sits beyond the dome's depth)
   // silhouettes (breakwater, ships, cranes): dark, hazed toward the sky's horizon colour by distance
   const silMats = [];
   const silMat = (dist) => { const m = new THREE.MeshBasicMaterial({ color: 0x06080d, fog: false }); m.userData.dist = dist; silMats.push(m); return m; };
@@ -188,7 +193,7 @@ export default async function create(ctx) {
   const bayPoly = [[0, -ROOM_HALF], [BAY_BASE_X, -ROOM_HALF], [BAY_BASE_X, -BAY_HALF], [GLASS_X, -EAST_HALF], [GLASS_X, EAST_HALF], [BAY_BASE_X, BAY_HALF], [BAY_BASE_X, ROOM_HALF], [0, ROOM_HALF]];
   const floorPoly = [[-6, -ROOM_HALF], ...bayPoly.slice(1, 7), [-6, ROOM_HALF]];
   prism(floorPoly, -0.05, 0, mFloor, { sides: false });
-  prism(bayPoly.map(([x, z]) => [x, z]), CEIL, CEIL + 0.05, mCeil, { sides: false });
+  const ceilMesh = prism(bayPoly.map(([x, z]) => [x, z]), CEIL, CEIL + 0.05, mCeil, { sides: false });
   // room walls
   wallQuad([BAY_BASE_X, -ROOM_HALF], [0, -ROOM_HALF], 0, CEIL, mPlaster);           // north
   wallQuad([0, ROOM_HALF], [BAY_BASE_X, ROOM_HALF], 0, CEIL, mPlaster);            // south
@@ -270,17 +275,17 @@ export default async function create(ctx) {
   // reading lamp: floor lamp in the NE corner, arched arm, linen shade over the bench end
   const lampGrp = new THREE.Group(); scene.add(lampGrp);
   const mLampMetal = std({ color: hex(C.lampMetal), roughness: 0.35, metalness: 0.7 });
-  const shadeMat = std({ color: hex(C.lampShade), roughness: 0.9, emissive: K2700.clone(), emissiveIntensity: 0.6, side: THREE.DoubleSide });
+  const shadeMat = std({ color: hex(C.lampShade), roughness: 0.9, emissive: K2700.clone(), emissiveIntensity: 0.32, side: THREE.DoubleSide });
   {
     const base = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.15, 0.025, 32), mLampMetal); base.position.copy(LAMP_BASE).add(V(0, 0.012, 0)); lampGrp.add(base);
     const top = V(LAMP_BASE.x, 1.55, LAMP_BASE.z);
     const curve = new THREE.CatmullRomCurve3([V(LAMP_BASE.x, 0.02, LAMP_BASE.z), V(LAMP_BASE.x, 1.2, LAMP_BASE.z), top, V(lerp(top.x, LAMP_HEAD.x, 0.55), 1.82, lerp(top.z, LAMP_HEAD.z, 0.55)), LAMP_HEAD.clone().add(V(0, 0.1, 0))]);
     const stem = new THREE.Mesh(new THREE.TubeGeometry(curve, 48, 0.009, 8, false), mLampMetal); stem.castShadow = true; lampGrp.add(stem);
     const shade = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.15, 0.17, 40, 1, true), shadeMat); shade.position.copy(LAMP_HEAD); shade.castShadow = false; lampGrp.add(shade);
-    const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.03, 16, 10), new THREE.MeshBasicMaterial({ color: K2700.clone().multiplyScalar(14) })); bulb.position.copy(LAMP_HEAD).add(V(0, -0.02, 0)); lampGrp.add(bulb);
+    const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.03, 16, 10), new THREE.MeshBasicMaterial({ color: K2700.clone().multiplyScalar(5) })); bulb.position.copy(LAMP_HEAD).add(V(0, -0.02, 0)); lampGrp.add(bulb);
     lampGrp.userData.shade = shade;
   }
-  const lampGlow = FX.glow({ color: K2700, size: 0.55, intensity: 0.35, falloff: 2.5 }); lampGlow.object3D.position.copy(LAMP_HEAD).add(V(0, -0.04, 0)); scene.add(lampGlow.object3D);
+  const lampGlow = FX.glow({ color: K2700, size: 0.5, intensity: 0.2, falloff: 2.6 }); lampGlow.object3D.position.copy(LAMP_HEAD).add(V(0, -0.04, 0)); scene.add(lampGlow.object3D);
 
   // ================================================================== props
   // --- tea cups (PROP_TEA): lathe, celadon-white glaze, one cobalt line 6 mm below the rim, his with a chip at 2 o'clock
@@ -364,7 +369,7 @@ export default async function create(ctx) {
     phone.userData.screen = scr;
   }
   scene.add(phone);
-  const phoneLight = new THREE.PointLight(K6500, 0, 0.9, 2); scene.add(phoneLight);
+  const phoneLight = new THREE.PointLight(K6500, 0, 1.2, 2); scene.add(phoneLight);
 
   // --- folded gloves (PROP_GLOVES): a folded pair, warm white knit
   const gloves = new THREE.Group();
@@ -400,12 +405,12 @@ export default async function create(ctx) {
 
   // ================================================================== lights
   // reading lamp: the key at night (2700 K), the one shadow caster
-  const lampKey = new THREE.SpotLight(K2700, 3.2, 0, 1.05, 0.85, 2);
-  lampKey.position.copy(LAMP_HEAD).add(V(0, -0.06, 0)); lampKey.target.position.set(3.72, 0.45, -0.05);
+  const lampKey = new THREE.SpotLight(K2700, 2.6, 0, 0.78, 0.9, 2);
+  lampKey.position.copy(LAMP_HEAD).add(V(0, -0.06, 0)); lampKey.target.position.set(3.62, 0.40, -0.06);
   lampKey.castShadow = true; lampKey.shadow.mapSize.set(1536, 1536); lampKey.shadow.bias = -0.0001; lampKey.shadow.normalBias = 0.004; lampKey.shadow.radius = 3;
   lampKey.shadow.camera.near = 0.08; lampKey.shadow.camera.far = 6;
   scene.add(lampKey, lampKey.target);
-  const lampUp = new THREE.PointLight(K2700, 0.35, 4.5, 2); lampUp.position.copy(LAMP_HEAD).add(V(0, 0.2, 0)); scene.add(lampUp);   // spill through the top of the shade
+  const lampUp = new THREE.PointLight(K2700, 0.12, 4.5, 2); lampUp.position.copy(LAMP_HEAD).add(V(0, 0.2, 0)); scene.add(lampUp);   // spill through the top of the shade
   // warm bounce from the lamp-lit sill / bench / floor (motivated fill, no shadow)
   const bounce = new THREE.PointLight(hex('#ffcf9e'), 0.18, 3.0, 2); bounce.position.set(3.15, 0.55, 0.15); scene.add(bounce);
   // the window: night = faint cool harbour/sky light; dawn = the key (soft, big). RectAreaLight-like via a wide SpotLight
@@ -415,8 +420,11 @@ export default async function create(ctx) {
   winLight.shadow.camera.near = 0.5; winLight.shadow.camera.far = 9;
   scene.add(winLight, winLight.target);
   // thin cool edge from the corridor's moonlit arches (behind, west)
-  const moonEdge = new THREE.SpotLight(MOONC, 0.9, 0, 0.6, 1.0, 2);
+  const moonEdge = new THREE.SpotLight(MOONC, 0.3, 0, 0.5, 1.0, 2);
   moonEdge.position.set(-3.5, 3.4, 2.2); moonEdge.target.position.set(3.4, 1.0, 0); scene.add(moonEdge, moonEdge.target);
+  // camera-side fill: the lamp's bounce off the white frames / plaster + the corridor's 4000 K floor-level night light
+  const fill = new THREE.SpotLight(hex('#ffd9b4'), 2.2, 0, 0.75, 1.0, 2);
+  fill.position.set(1.7, 0.95, 1.9); fill.target.position.set(3.45, 0.95, -0.05); scene.add(fill, fill.target);
   const hemi = new THREE.HemisphereLight(hex('#4a5c7c'), hex('#2a2018'), 0.06); scene.add(hemi);
 
   // ================================================================== window glass (reflections)
@@ -524,9 +532,9 @@ export default async function create(ctx) {
     // window light: night faint cool → dawn key (P20 blue-grey → 5000 K → 4300 K)
     const wk = d <= 1 ? lerp(0.05, 0.9, smoothstep(0.1, 1, d)) : lerp(0.9, 3.4, smoothstep(0, 0.9, d - 1));
     const wc = d <= 1 ? hex('#8ea4cc').lerp(hex('#a9b6cc'), d) : hex('#a9b6cc').lerp(hex('#ffe2c4'), smoothstep(0, 0.85, d - 1));
-    winLight.intensity = wk * 22; winLight.color.copy(wc);
+    winLight.intensity = wk * 2.4; winLight.color.copy(wc);
     hemi.intensity = 0.06 + 0.25 * smoothstep(0.3, 1.8, d); hemi.color.copy(wc);
-    moonEdge.intensity = 0.9 * (1 - smoothstep(0.6, 1.4, d));
+    moonEdge.intensity = 0.3 * (1 - smoothstep(0.6, 1.4, d));
     return d;
   }
 
@@ -556,7 +564,8 @@ export default async function create(ctx) {
     gloves.visible = true; thermos.visible = true; thermosLid.position.set(0, 0.19, 0); thermosLid.rotation.set(0, 0, 0); if (thermosLid.parent !== thermos) thermos.add(thermosLid);
     stream.visible = false; cupG.visible = cupR.visible = true; steamG.object3D.visible = steamR.object3D.visible = true;
     G.root.visible = R.root.visible = true; mirrorOn = false; glassUniforms.uUseMirror.value = 0; glassUniforms.uRefl.value = 1;
-    lampGrp.visible = true; lampGlow.object3D.visible = true;
+    lampGrp.visible = true; lampGlow.object3D.visible = true; ceilMesh.visible = true;
+    winLight.shadow.autoUpdate = true; lampKey.shadow.autoUpdate = true;
   }
   // steam (always backlit by the lamp at night, by the window at dawn)
   function steamUpdate(T, kG, kR, light) {
@@ -566,9 +575,11 @@ export default async function create(ctx) {
   }
   // phone screen glow 0..1
   function phoneGlow(k) {
-    phoneScreenMat.color.setScalar(1.6 * k);
-    phone.userData.screen.getWorldPosition(phoneLight.position); phoneLight.position.add(V(0, 0.06, 0));
-    phoneLight.intensity = 0.32 * k;
+    phoneScreenMat.color.setScalar(0.42 * k);
+    // the light sits a hand-width off the screen along its normal (lights the lower face, the fingers)
+    const sn = V(0, 1, 0).transformDirection(phone.matrixWorld);
+    phone.userData.screen.getWorldPosition(phoneLight.position); phoneLight.position.addScaledVector(sn, 0.12);
+    phoneLight.intensity = 0.022 * k;
   }
   // camera: aim so that `subj` lands at screen (sx, sy) (0..1, y down)
   function aim(pos, subj, sx, sy, mm, roll = 0) {
@@ -607,45 +618,427 @@ export default async function create(ctx) {
 
   // ================================================================== setups
   const setups = {};
-  const BAY3Q = { pos: V(0.72, 1.32, 2.38) };
+  const dirW = (fig, x, y, z) => fig.root.localToWorld(V(x, y, z)).sub(fig.root.position).normalize();
+  const easeIO = ease.inOutSine;
+  const ramp = (t, a, b) => easeIO(clamp((t - a) / (b - a), 0, 1));
+  // 2-pass IK so that a hand's `cup` socket (centre of the gripped cup) lands on gripWorld
+  function reachSocket(fig, side, gripWorld, opt, socket = 'cup') {
+    const h = fig.hands[side]; const tgt = gripWorld.clone();
+    for (let i = 0; i < 3; i++) { fig.reach(side, tgt, opt); const sw = h.sockets[socket].getWorldPosition(V(0, 0, 0)); tgt.add(gripWorld.clone().sub(sw)); }
+    fig.reach(side, tgt, opt);
+  }
+  const CUP_GRIP = 0.034;                     // socket origin above the cup base
+  const gripAt = (base) => base.clone().add(V(0, CUP_GRIP, 0));
+  // phone lying face down on his right thigh
+  const PHONE_THIGH = () => W(G, -0.105, SEAT_Y + 0.165, 0.27);
+  function phoneOnThigh() { putWorld(phone, PHONE_THIGH(), Math.PI / 2 + 0.25); phone.rotation.x = Math.PI; phone.updateMatrixWorld(true); }
+  function phoneInHand(off = V(0.035, 0.012, -0.01)) { putLocal(phone, G.hands.R.sockets.palm, off, new THREE.Euler(0, 0, 0)); }
+  // GUARD's right hand holding the phone up in his lap, screen toward his face
+  function guardPhoneLap(k = 1) {
+    const ph = W(G, -0.07, 0.68, 0.34);
+    G.reach('R', ph, { palm: dirW(G, 0.15, 0.8, -0.6), fingers: dirW(G, 0.45, 0.1, 1) });
+    G.hands.R.setChannels(PHONE_GRIP); phoneInHand();
+  }
+  // RESTORER standing (or walking) with both cups at the waist, gloves pinned under her left thumb
+  function restCarry() {
+    holdCup(R, 'R', cupG); holdCup(R, 'L', cupR);
+    reachSocket(R, 'R', W(R, -0.17, 0.92, 0.30), { palm: dirW(R, 1, 0, 0), fingers: dirW(R, 0, 0, 1) });
+    reachSocket(R, 'L', W(R, 0.16, 0.92, 0.28), { palm: dirW(R, -1, 0, 0), fingers: dirW(R, 0, 0, 1) });
+    putLocal(gloves, R.hands.L.sockets.cup, V(0.0, 0.05, -0.03), new THREE.Euler(Math.PI / 2, 0, 0.2));
+  }
+  function standAt(fig, pos, heading, o = {}) {
+    fig.root.position.copy(pos); fig.root.rotation.set(0, heading, 0);
+    if (o.walk !== undefined) fig.pose('walk', { phase: o.walk, stride: o.stride ?? 0.85 }); else fig.pose('stand', { weight: o.weight ?? 0 });
+    if (o.lean) fig.pose({ 'hips.x': o.lean * 0.35, 'spine.x': o.lean * 0.35, 'chest.x': o.lean * 0.3, 'neck.x': -o.lean * 0.25, 'head.x': o.lean * 0.15 }, { add: true });
+    if (o.add) fig.pose(o.add, { add: true });
+    fig.root.updateMatrixWorld(true);
+  }
+  // camera presets (BAY_3Q family). pos / subject points tuned on renders
+  const BAY3Q_50 = { pos: V(0.62, 1.20, 2.30) };
 
-  // ---------------- S059: match cut from S058 — his bent back at (0.66,0.50), right rear 45°, 75 mm, phone glow at 187.3
+  // ---------------- S059: match cut from S058 — his bent back (0.66,0.50), right rear 45°, 75 mm; phone glow at 187.3
   setups.S059 = (tl, u, T) => {
     setTime(T); resetProps();
     faceGlasses.visible = true; if (hangGlasses) hangGlasses.visible = false;
     R.root.visible = false; cupG.visible = cupR.visible = false; gloves.visible = false;
     const glowK = smoothstep(1.217, 1.217 + 0.25, tl);
-    guardBase(T, { lean: 0.62, bow: 0.42 + 0.02 * glowK });
-    // phone in the right hand over the right thigh, screen toward his face; left hand on the left thigh, 0.6 s to the glasses
-    const ph = W(G, -0.07, 0.66, 0.33);
-    G.reach('R', ph, { palm: V(0, 0.4, 0).add(G.root.localToWorld(V(0, 0.9, -1)).sub(G.root.position)).normalize(), fingers: G.root.localToWorld(V(0.35, 0, 1)).sub(G.root.position).normalize() });
-    G.hands.R.setChannels(PHONE_GRIP);
-    putLocal(phone, G.hands.R.sockets.palm, V(0.035, 0.012, -0.01), new THREE.Euler(0, 0, 0));
-    const adj = smoothstep(0.45, 0.62, tl) * (1 - smoothstep(0.85, 1.05, tl));
-    const lh = W(G, 0.1, 0.62, 0.32).lerp(G.eye(V(0, 0, 0)).add(leftOf(G).multiplyScalar(0.07)).add(V(0, -0.02, 0)), adj);
-    G.reach('L', lh, { palm: V(0, -1, 0).lerp(leftOf(G).negate(), adj).normalize(), fingers: fwdOf(G) });
+    guardBase(T, { lean: 0.48, bow: 0.34 + 0.03 * glowK });
+    guardPhoneLap();
+    const adj = smoothstep(0.42, 0.62, tl) * (1 - smoothstep(0.82, 1.02, tl));     // 0.6 s: left hand touches the glasses
+    const lh = W(G, 0.12, 0.62, 0.30).lerp(G.eye(V(0, 0, 0)).add(leftOf(G).multiplyScalar(0.075)).add(V(0, -0.015, 0)), adj);
+    G.reach('L', lh, { palm: V(0, -1, 0).lerp(leftOf(G).negate(), adj).normalize(), fingers: fwdOf(G).lerp(V(0, 1, 0), adj * 0.6).normalize() });
     G.hands.L.pose(adj > 0.3 ? 'pinch' : 'relaxed', { curl: 0.8 });
-    G.lookAt(phone.getWorldPosition(V(0, 0, 0)), 0.6);
+    G.lookAt(phone.getWorldPosition(V(0, 0, 0)), 0.5);
     G.breathe(T, 1.0);
     putWorld(thermos, THERMOS_POS, 0.4);
     phoneGlow(glowK);
     steamUpdate(T, 0, 0, 1);
-    // camera: right rear 45°, slightly high; shoulder line registered at (0.66, 0.50)
-    const back = W(G, 0, 1.08, -0.08);
-    aim(V(1.62, 1.62, 2.12), back, 0.66, 0.50, 75);
-    return { dof: { focus: dist(back), fstop: 2.8 }, exposure: 1.05 };
+    const back = W(G, 0, 1.06, -0.1);
+    aim(V(1.30, 1.40, 2.32), back, 0.66, 0.50, 75);
+    return { dof: { focus: dist(back), fstop: 2.8 } };
+  };
+
+  // ---------------- S060: over-the-shoulder CU 100 mm: thumb hovers (188.71), draws back (190.03), face down + dark (190.6)
+  setups.S060 = (tl, u, T) => {
+    setTime(T); resetProps();
+    R.root.visible = false; cupG.visible = cupR.visible = false; gloves.visible = false;
+    const off = ramp(tl, 2.42, 2.62);                         // glasses off the face at ~2.55 s
+    faceGlasses.visible = off < 0.5; if (hangGlasses) hangGlasses.visible = off >= 0.5;
+    guardBase(T, { lean: 0.5, bow: 0.4 });
+    const flip = ramp(tl, 2.0, 2.39);                         // turn the phone over onto the right thigh
+    const ph = W(G, -0.07, 0.68, 0.34).lerp(PHONE_THIGH().add(V(0, 0.03, 0)), flip);
+    const palm = dirW(G, 0.15, 0.8, -0.6).lerp(V(0, -1, 0), flip).normalize();
+    G.reach('R', ph, { palm, fingers: dirW(G, 0.45, 0.1, 1) });
+    // thumb: rests at the case side → rises over the call button (0.5 s) → tiny tremor → draws back (1.82 s)
+    const hov = ramp(tl, 0.3, 0.5) * (1 - ramp(tl, 1.82, 2.02));
+    const trem = hov * 0.025 * Math.sin(T * 29) * (0.6 + 0.4 * Math.sin(T * 7.3));
+    const ch = { ...PHONE_GRIP, thumb: [lerp(0.1, 0.62, hov) + trem, lerp(0.25, 0.05, hov), lerp(0.05, 0.12, hov), lerp(0.1, 0.18, hov) + trem, 0.2] };
+    G.hands.R.setChannels(ch); phoneInHand();
+    // left hand: rests, then 2.45–2.75 slips the glasses off
+    const gl = ramp(tl, 2.38, 2.55) * (1 - ramp(tl, 2.6, 2.85));
+    G.reach('L', W(G, 0.12, 0.62, 0.30).lerp(G.eye(V(0, 0, 0)).add(leftOf(G).multiplyScalar(0.06)), gl), { palm: V(0, -1, 0).lerp(leftOf(G).negate(), gl).normalize(), fingers: fwdOf(G) });
+    G.hands.L.pose(gl > 0.3 ? 'pinch' : 'relaxed', { curl: 0.8 });
+    G.lookAt(phone.getWorldPosition(V(0, 0, 0)), 0.6 * (1 - flip));
+    G.breathe(T, 1.0);
+    putWorld(thermos, THERMOS_POS, 0.4);
+    phoneGlow(1 - smoothstep(2.30, 2.39, tl));
+    steamUpdate(T, 0, 0, 1);
+    const k = ramp(tl, 0, 2.4);                                // ~20 cm push over the shoulder
+    const tgt = W(G, -0.07, 0.68, 0.34);
+    const p0 = W(G, -0.36, 1.46, -0.42), p1 = W(G, -0.30, 1.36, -0.26);
+    aim(p0.lerp(p1, k), tgt, 0.58, 0.62, 100);
+    const thumbTip = G.hands.R.tip('thumb', V(0, 0, 0));
+    return { dof: { focus: dist(flip > 0.5 ? phone.getWorldPosition(V(0, 0, 0)) : thumbTip), fstop: 2.8 } };
+  };
+
+  // ---------------- S062: she enters from screen-left with two cups; 195.57 reach; 197.15 his cup down on the sill
+  const R_P0 = V(2.12, 0, -0.62), R_P1 = V(2.96, 0, -0.16);
+  const R_HEAD = Math.atan2(R_P1.x - R_P0.x, R_P1.z - R_P0.z);
+  setups.S062 = (tl, u, T) => {
+    setTime(T); resetProps();
+    guardBase(T, { lean: 0.38, bow: 0.16, turn: 0.18 * ramp(tl, 1.5, 2.0) });
+    guardHandsOnThighs(); phoneOnThigh();
+    putWorld(thermos, THERMOS_POS, 0.4);
+    // walk: last two steps over 0–0.9 s, then stand; turn to face the window as she arrives
+    const wk = clamp(tl / 0.9, 0, 1), we = ease.outSine(wk);
+    const pos = R_P0.clone().lerp(R_P1, we);
+    const head = lerp(R_HEAD, Math.PI / 2 - 0.25, ramp(tl, 0.5, 1.2));
+    const lean = 0.55 * ramp(tl, 0.6, 1.6) * (1 - 0.35 * ramp(tl, 2.2, 2.42));
+    standAt(R, pos, head, wk < 1 ? { walk: 0.25 + wk * 0.95, stride: 0.75 * (1 - wk * 0.6), lean } : { lean, weight: 0.4 });
+    restCarry();
+    // right hand: reach (0.57 s) → set his cup on the sill (2.15 s)
+    const r = ramp(tl, 0.57, 2.15);
+    if (tl < 2.15) {
+      const start = W(R, -0.17, 0.92, 0.30);
+      const mid = CUP_G.clone().add(V(-0.25, 0.20, -0.08));
+      const p = r < 0.5 ? start.lerp(mid, easeIO(r * 2)) : mid.lerp(gripAt(CUP_G).add(V(0, 0.004, 0)), easeIO((r - 0.5) * 2));
+      reachSocket(R, 'R', p, { palm: dirW(R, 1, 0, 0).lerp(V(0, 0, -1), r).normalize(), fingers: dirW(R, 0, 0, 1).lerp(V(1, -0.2, 0.2), r).normalize() });
+    } else {
+      putWorld(cupG, CUP_G, 0);
+      const rel = ramp(tl, 2.15, 2.42);
+      R.hands.R.pose('relaxed', { curl: 0.5 });
+      R.reach('R', gripAt(CUP_G).add(V(-0.05 - 0.12 * rel, 0.03 + 0.08 * rel, -0.06)), { palm: V(0, 0, -1), fingers: V(1, -0.3, 0.1).normalize() });
+    }
+    R.lookAt(CUP_G.clone().add(V(0, 0.05, 0)), 0.6 * ramp(tl, 0.4, 1.0));
+    G.breathe(T); R.breathe(T + 0.7);
+    steamUpdate(T, 1, 1, 1);
+    // dolly left → right ~0.5 m over 2.0 s, 12-frame ease-out
+    const k = ease.outSine(clamp(tl / 2.0, 0, 1));
+    const cp = BAY3Q_50.pos.clone().add(V(0.36 * k, 0, -0.32 * k));
+    const look = V(3.3, 0.95, -0.42).lerp(V(3.55, 0.92, -0.14), k);
+    cam.lens(camera, 50); cam.place(camera, cp, look);
+    const fp = cupG.getWorldPosition(V(0, 0, 0));
+    return { dof: { focus: dist(fp), fstop: 4 } };
+  };
+
+  // ---------------- S063: her cup 6 cm left of his (197.45), gloves on the bench corner, sits on the band entry (198.22),
+  // undoes the middle button (199.3), both shoulders drop (200.15)
+  const S063_CAM = () => { const cp = BAY3Q_50.pos.clone().add(V(0.36, 0, -0.32)); cam.lens(camera, 50); cam.place(camera, cp, V(3.55, 0.92, -0.14)); };
+  function restSit(tl, sitK, o = {}) {
+    // stand (at R_P1, leaning over the bench) → seated; the legs swing over the bench seat mid-way
+    const stand = (() => { standAt(R, R_P1, Math.PI / 2 - 0.25, { lean: o.lean ?? 0.4, weight: 0.4 }); return { ...R.ch }; })();
+    seat(R, SEAT_R, 0.12, { lean: 0.16 });
+    const sit = { ...R.ch };
+    const k = easeIO(sitK);
+    const ch = Figure_blend(stand, sit, k);
+    const lift = Math.sin(Math.PI * k);
+    ch['legL.upper.x'] = (ch['legL.upper.x'] || 0) + 0.7 * lift; ch['legR.upper.x'] = (ch['legR.upper.x'] || 0) + 0.9 * lift;
+    ch['legL.lower.x'] = (ch['legL.lower.x'] || 0) + 0.6 * lift; ch['legR.lower.x'] = (ch['legR.lower.x'] || 0) + 0.8 * lift;
+    R.root.position.copy(R_P1).lerp(SEAT_R, k);
+    R.root.rotation.set(0, lerp(Math.PI / 2 - 0.25, Math.PI / 2 + 0.12, k) + 0.35 * lift, 0);
+    R.pose(ch);
+    R.root.updateMatrixWorld(true);
+  }
+  setups.S063 = (tl, u, T) => {
+    setTime(T); resetProps();
+    const relax = ramp(tl, 2.6, 2.95);                       // 200.15 shoulders fall
+    guardBase(T, { lean: 0.38 + 0.04 * relax, bow: 0.16 + 0.18 * ramp(tl, 2.0, 2.4), turn: 0.18 * (1 - ramp(tl, 1.8, 2.3)) + 0.1 * ramp(tl, 2.0, 2.4) });
+    G.pose({ 'armL.clav.z': -0.03 * relax, 'armR.clav.z': -0.03 * relax }, { add: true });
+    guardHandsOnThighs(); phoneOnThigh();
+    putWorld(thermos, THERMOS_POS, 0.4);
+    putWorld(cupG, CUP_G, 0);
+    const sitK = clamp((tl - 0.38) / (0.80 - 0.38), 0, 1);
+    restSit(tl, sitK, { lean: 0.4 * (1 - ramp(tl, 0.0, 0.4)) + 0.15 });
+    if (sitK >= 1) R.pose({ 'armL.clav.z': -0.035 * relax, 'armR.clav.z': -0.035 * relax, 'chest.x': 0.02 * relax }, { add: true });
+    // her cup: left hand → sill at 0.03–0.35 s
+    holdCup(R, 'L', cupR);
+    const c = ramp(tl, 0.0, 0.33);
+    if (tl < 0.33) {
+      reachSocket(R, 'L', W(R, 0.16, 0.92, 0.28).lerp(gripAt(CUP_R).add(V(0, 0.004, 0)), c), { palm: dirW(R, -1, 0, 0).lerp(V(0, 0, 1), c).normalize(), fingers: dirW(R, 0, 0, 1).lerp(V(1, -0.2, 0), c).normalize() });
+      putLocal(gloves, R.hands.L.sockets.cup, V(0.0, 0.05, -0.03), new THREE.Euler(Math.PI / 2, 0, 0.2));
+    } else {
+      putWorld(cupR, CUP_R, 0);
+      // gloves to the bench corner 0.35–0.55 s, then the hand to her lap
+      const gk = ramp(tl, 0.33, 0.55);
+      R.hands.L.pose('relaxed', { curl: 0.6 });
+      if (tl < 0.55) {
+        const from = gripAt(CUP_R).add(V(-0.08, 0.06, 0)), to = GLOVES_POS.clone().add(V(0, 0.06, 0));
+        R.reach('L', from.lerp(to, gk), { palm: V(0, -1, 0), fingers: V(0.6, -0.4, -0.2).normalize() });
+        putLocal(gloves, R.hands.L.sockets.cup, V(0.0, 0.05, -0.03), new THREE.Euler(Math.PI / 2, 0, 0.2));
+      } else {
+        putWorld(gloves, GLOVES_POS, 0.3);
+        R.reach('L', W(R, 0.06, 0.6, 0.26), { palm: V(0, -1, 0), fingers: fwdOf(R) });
+      }
+    }
+    // right hand: rests on the lap; 1.88 s undoes the middle button (hand to the coat front)
+    const bt = ramp(tl, 1.6, 1.88) * (1 - ramp(tl, 2.15, 2.5));
+    R.hands.R.pose(bt > 0.4 ? 'pinch' : 'relaxed', { curl: 0.9 });
+    R.reach('R', W(R, -0.05, 0.6, 0.27).lerp(W(R, -0.02, 0.86, 0.16), bt), { palm: V(0, -1, 0).lerp(dirW(R, 0, 0, -1), bt).normalize(), fingers: fwdOf(R).lerp(dirW(R, 1, 0.3, 0), bt).normalize() });
+    R.lookAt(sitK < 1 ? GLOVES_POS : (tl < 1.7 ? G.eye(V(0, 0, 0)) : W(R, -0.02, 0.86, 0.3)), sitK < 1 ? 0.5 : 0.35);
+    G.lookAt(tl > 2.0 ? CUP_G : R.eye(V(0, 0, 0)), 0.4);
+    G.breathe(T, 1 + relax); R.breathe(T + 0.7, 1 + relax);
+    steamUpdate(T, 1, 1, 1);
+    S063_CAM();
+    return { dof: { focus: dist(R.eye(V(0, 0, 0))) * 0.5 + dist(G.eye(V(0, 0, 0))) * 0.5, fstop: 4 } };
+  };
+
+  // two seated (state after S063) — shared by S064, S065, S072–S077
+  function seatedPair(T, o = {}) {
+    guardBase(T, { lean: o.gLean ?? 0.36, bow: o.gBow ?? 0.12, turn: o.gTurn ?? 0 });
+    restBase(T, { lean: 0.16, yaw: 0.14, turn: o.rTurn ?? 0, bow: o.rBow ?? 0, shoulders: 0.03 });
+    putWorld(gloves, GLOVES_POS, 0.3); putWorld(thermos, THERMOS_POS, 0.4);
+  }
+
+  // ---------------- S064: insert 100 mm — his hands lift the chipped cup to his lap; her bare left hand by her cup, worn cuff
+  setups.S064 = (tl, u, T) => {
+    setTime(T); resetProps();
+    seatedPair(T, { gLean: 0.42, gBow: 0.3 });
+    phoneOnThigh();
+    putWorld(cupR, CUP_R, 0);
+    // her left hand on the sill by her cup, ulnar edge down so the cuff's outer worn spot faces up-camera
+    R.hands.L.pose('relaxed', { curl: 0.7 });
+    R.reach('L', CUP_R.clone().add(V(-0.06, 0.045, -0.115)), { palm: V(0.15, -0.45, 1).normalize(), fingers: V(1, -0.15, 0.15).normalize() });
+    restHandsLapR();
+    // his hands: close around the cup (0–0.4 s), lift up/back toward his lap (0.4–1.9 s)
+    holdCup(G, 'R', cupG);
+    const lift = ramp(tl, 0.4, 1.9);
+    const lap = W(G, -0.02, 0.74, 0.28);
+    const grip = gripAt(CUP_G).lerp(lap, lift).add(V(0, 0.012 * Math.sin(Math.PI * lift), 0));
+    const close = ramp(tl, 0.0, 0.4);
+    reachSocket(G, 'R', grip.clone().add(V(-0.006 * (1 - close), 0, 0.012 * (1 - close))), { palm: V(-0.2, 0, -1).normalize(), fingers: V(1, 0, -0.35).normalize() });
+    G.hands.L.pose('hold_cup', { radius: 0.036 });
+    reachSocket(G, 'L', grip.clone().add(V(0.0, 0.0, -0.004)), { palm: V(0.1, 0, 1).normalize(), fingers: V(0.85, 0, 0.5).normalize() });
+    G.breathe(T); R.breathe(T + 0.7);
+    steamUpdate(T, 1, 1, 1);
+    const fc = R.hands.L.root.getWorldPosition(V(0, 0, 0)).add(V(-0.02, 0.0, 0));
+    aim(V(3.02, 1.02, 1.18), V(3.84, 0.78, -0.02), 0.5, 0.5, 100);
+    const fb = ramp(tl, 0.6, 0.93);
+    return { dof: { focus: lerp(dist(gripAt(CUP_G)), dist(fc), fb), fstop: 4 } };
+  };
+  function restHandsLapR() { R.hands.R.pose('relaxed', { curl: 0.9 }); R.reach('R', W(R, -0.05, 0.6, 0.27), { palm: V(0, -1, 0.2), fingers: fwdOf(R) }); }
+  function guardCupLap() {
+    holdCup(G, 'R', cupG);
+    const lap = W(G, -0.02, 0.74, 0.28);
+    reachSocket(G, 'R', lap, { palm: V(-0.2, 0, -1).normalize(), fingers: V(1, 0, -0.35).normalize() });
+    G.hands.L.pose('hold_cup', { radius: 0.036 });
+    reachSocket(G, 'L', lap.clone().add(V(0, 0, -0.004)), { palm: V(0.1, 0, 1).normalize(), fingers: V(0.85, 0, 0.5).normalize() });
+  }
+
+  // ---------------- S065: close two-shot, no glass between them: he looks up (202.9), she nods (203.5), both exhale (203.9)
+  setups.S065 = (tl, u, T) => {
+    setTime(T); resetProps();
+    const look = ramp(tl, 0.19, 0.6), ex = ramp(tl, 1.19, 1.6);
+    seatedPair(T, { gLean: 0.40 - 0.04 * ex, gBow: 0.30 - 0.24 * look, gTurn: 0.55 * look, rTurn: -0.75, rBow: 0.05 });
+    const nod = tl > 0.79 ? Math.sin(Math.PI * clamp((tl - 0.79) / 0.4, 0, 1)) : 0;
+    R.pose({ 'head.x': 0.12 * nod, 'neck.x': 0.05 * nod, 'armL.clav.z': -0.03 * ex, 'armR.clav.z': -0.03 * ex }, { add: true });
+    G.pose({ 'armL.clav.z': -0.03 * ex, 'armR.clav.z': -0.03 * ex }, { add: true });
+    phoneOnThigh(); guardCupLap(); putWorld(cupR, CUP_R, 0);
+    restHandsLap();
+    G.lookAt(R.eye(V(0, 0, 0)), 0.65 * look);
+    R.lookAt(G.eye(V(0, 0, 0)), 0.7);
+    G.breathe(T, 1 + 1.2 * ex * (1 - ramp(tl, 1.6, 1.96))); R.breathe(T + 0.7, 1 + 1.2 * ex);
+    steamUpdate(T, 1, 1, 1);
+    // from behind, in the open glazed doorway: both profiles turned to each other, the steam between them (no glass)
+    const mid = G.eye(V(0, 0, 0)).lerp(R.eye(V(0, 0, 0)), 0.5);
+    aim(V(0.10, 1.22, 0.02), mid, 0.5, 0.45, 75);
+    return { dof: { focus: dist(mid), fstop: 4 } };
+  };
+
+  // ---------------- S072: cold tea (no steam); he picks up the phone (226.32), dials (226.98), to his right ear (227.46)
+  function guardPhoneEar(k) {
+    // k: 0 = phone face down on the thigh … 0.4 = up in front of him, screen up … 1 = at his right ear
+    const thigh = PHONE_THIGH().add(V(0, 0.03, 0)), front = W(G, -0.06, 0.82, 0.33), ear = W(G, -0.115, 1.28, 0.02);
+    const p = k < 0.45 ? thigh.lerp(front, easeIO(k / 0.45)) : front.lerp(ear, easeIO((k - 0.45) / 0.55));
+    const palm = k < 0.45 ? V(0, -1, 0).lerp(dirW(G, 0.15, 0.8, -0.6), easeIO(k / 0.45)).normalize() : dirW(G, 0.15, 0.8, -0.6).lerp(dirW(G, 1, 0.1, 0), easeIO((k - 0.45) / 0.55)).normalize();
+    const fing = k < 0.45 ? dirW(G, 0.45, 0.1, 1) : dirW(G, 0.45, 0.1, 1).lerp(dirW(G, 0.15, 1, 0.25), easeIO((k - 0.45) / 0.55)).normalize();
+    G.reach('R', p, { palm, fingers: fing, elbowOut: 0.6 });
+    G.hands.R.setChannels(PHONE_GRIP); phoneInHand();
+  }
+  setups.S072 = (tl, u, T) => {
+    setTime(T); resetProps();
+    const inb = Math.sin(Math.PI * clamp((tl - 0.45) / 0.5, 0, 1));
+    seatedPair(T, { gLean: 0.36, gBow: 0.24 - 0.1 * ramp(tl, 0.8, 1.17), rTurn: 0.12, rBow: -0.02 });
+    putWorld(cupG, CUP_G, 0); putWorld(cupR, CUP_R, 0);
+    const k = tl < 0.03 ? 0 : tl < 0.6 ? 0.45 * ramp(tl, 0.03, 0.6) : tl < 0.8 ? 0.45 : 0.45 + 0.55 * ramp(tl, 0.8, 1.17);
+    guardPhoneEar(k);
+    const press = Math.sin(Math.PI * clamp((tl - 0.6) / 0.2, 0, 1));
+    G.hands.R.setChannels({ ...PHONE_GRIP, thumb: [0.1 + 0.5 * press, 0.25 - 0.15 * press, 0.05, 0.1 + 0.1 * press, 0.2] });
+    G.reach('L', W(G, 0.12, 0.6, 0.30), { palm: V(0, -1, 0), fingers: fwdOf(G) }); G.hands.L.pose('relaxed', { curl: 0.8 });
+    restHandsLap();
+    G.lookAt(k < 0.6 ? phone.getWorldPosition(V(0, 0, 0)) : W(G, 0.25, 0.7, 1.0), 0.5);
+    R.lookAt(V(8, 1.0, 0.6), 0.6);
+    G.breathe(T, 1 + 1.5 * inb); R.breathe(T + 0.7);
+    steamUpdate(T, 0, 0, 1);
+    phoneGlow(smoothstep(0.3, 0.45, tl) * (1 - smoothstep(1.0, 1.2, tl)));
+    const ge = G.eye(V(0, 0, 0));
+    const pk = 0.02 * ramp(tl, 0, 2.75);
+    const cp = V(1.70, 1.25, 2.05); const eyeAt = ge.clone(); cp.lerp(eyeAt, pk);
+    aim(cp, eyeAt, 0.64, 0.45, 75);
+    return { dof: { focus: dist(ge), fstop: 2.8 } };
+  };
+
+  // ---------------- S073: CU his eyes, waiting through the full-band stop (229.1); held breath (229.82)
+  setups.S073 = (tl, u, T) => {
+    setTime(T); resetProps();
+    R.root.visible = false;
+    seatedPair(T, { gLean: 0.34, gBow: 0.16, gTurn: 0.35 });
+    putWorld(cupG, CUP_G, 0); putWorld(cupR, CUP_R, 0);
+    guardPhoneEar(1);
+    G.reach('L', W(G, 0.12, 0.6, 0.30), { palm: V(0, -1, 0), fingers: fwdOf(G) }); G.hands.L.pose('relaxed', { curl: 0.8 });
+    G.lookAt(W(G, 0.5, 0.55, 0.9), 0.55);
+    const held = tl > 0.78;
+    G.breathe(held ? 229.82 : T, held ? 0.6 : 1);
+    steamUpdate(T, 0, 0, 1);
+    const ge = G.eye(V(0, 0, 0));
+    aim(ge.clone().add(V(0.25, 0.03, -0.97)), ge, 0.52, 0.42, 100);
+    return { dof: { focus: dist(ge), fstop: 2.8 } };
+  };
+
+  // ---------------- S074: the call is answered on 这人间 (230.63) — his face eases; her smile (232.27); she looks out (233.07)
+  setups.S074 = (tl, u, T) => {
+    setTime(T); resetProps();
+    const ease1 = ramp(tl, 0.0, 1.2), smile = ramp(tl, 1.6, 2.0), out = ramp(tl, 2.45, 3.0);
+    seatedPair(T, { gLean: 0.36 - 0.06 * ease1, gBow: 0.18 - 0.14 * ease1, gTurn: 0.1, rTurn: lerp(-0.55, 0.15, out), rBow: lerp(0.04, -0.02, out) });
+    const mur = tl > 1.0 && tl < 1.6 ? 0.02 * Math.sin((tl - 1.0) * 21) : 0;
+    G.pose({ 'head.x': mur, 'armL.clav.z': -0.03 * ease1, 'armR.clav.z': -0.03 * ease1 }, { add: true });
+    R.pose({ 'head.z': -0.06 * smile * (1 - out) }, { add: true });
+    putWorld(cupG, CUP_G, 0); putWorld(cupR, CUP_R, 0);
+    guardPhoneEar(1);
+    G.reach('L', W(G, 0.12, 0.6, 0.30), { palm: V(0, -1, 0), fingers: fwdOf(G) }); G.hands.L.pose('relaxed', { curl: 0.8 });
+    restHandsLap();
+    G.lookAt(W(G, 0.4, 0.9, 1.2), 0.4);
+    R.lookAt(out > 0.5 ? V(8, 1.1, 0.4) : G.eye(V(0, 0, 0)), 0.6);
+    G.breathe(T); R.breathe(T + 0.7);
+    steamUpdate(T, 0, 0, 1);
+    const pk = 0.02 * ramp(tl, 0, 3.29);
+    const cp = BAY3Q_50.pos.clone().add(V(0.36, 0, -0.32)); const look = V(3.55, 0.92, -0.14); cp.lerp(look, pk);
+    cam.lens(camera, 50); cam.place(camera, cp, look);
+    return { dof: { focus: dist(G.eye(V(0, 0, 0))) * 0.5 + dist(R.eye(V(0, 0, 0))) * 0.5, fstop: 4 } };
+  };
+
+  // ---------------- S077: first light — he refills her cup (238.26) then his (238.97); both look to screen-right (239.6)
+  setups.S077 = (tl, u, T) => {
+    setTime(T); resetProps();
+    const look = ramp(tl, 2.45, 2.9);
+    seatedPair(T, { gLean: 0.38, gBow: 0.12 * (1 - look), gTurn: 0.25 * (1 - look) - 0.05, rTurn: lerp(-0.4, 0.2, look), rBow: 0.02 });
+    putWorld(cupG, CUP_G, 0); putWorld(cupR, CUP_R, 0);
+    putWorld(phone, W(G, -0.12, SEAT_Y + 0.17, 0.2), Math.PI / 2); phone.rotation.x = Math.PI;
+    // thermos in his right hand: pick up (0–0.3), cap off by the left hand (0.2–0.46), pour hers (1.18–1.6), his (1.89–2.15), cap on (2.2), down (2.5)
+    const pick = ramp(tl, 0.0, 0.3) * (1 - ramp(tl, 2.25, 2.6));
+    const capOff = ramp(tl, 0.2, 0.46) * (1 - ramp(tl, 2.05, 2.25));
+    const toHer = ramp(tl, 0.55, 1.1) * (1 - ramp(tl, 1.6, 1.85)), toHis = ramp(tl, 1.6, 1.85) * (1 - ramp(tl, 2.15, 2.3));
+    const tiltHer = ramp(tl, 1.0, 1.18) * (1 - ramp(tl, 1.52, 1.62)), tiltHis = ramp(tl, 1.75, 1.89) * (1 - ramp(tl, 2.08, 2.18));
+    const rest = THERMOS_POS.clone();
+    const up = W(G, -0.12, 0.92, 0.32);
+    const overHer = CUP_R.clone().add(V(-0.07, 0.17, 0.10)), overHis = CUP_G.clone().add(V(-0.07, 0.17, 0.10));
+    let tp = rest.clone().lerp(up, pick);
+    tp.lerp(overHer, toHer); tp.lerp(overHis, toHis);
+    const tilt = Math.max(tiltHer, tiltHis);
+    thermos.position.copy(tp); thermos.rotation.set(0, 0.4, 0);
+    thermos.rotateOnWorldAxis(V(0, 0, 1), 0);
+    thermos.rotateOnWorldAxis(V(-0.45, 0, 0.9).normalize(), -1.75 * tilt);   // spout toward the cup (north-east)
+    if (thermos.parent !== scene) scene.add(thermos);
+    thermos.updateMatrixWorld(true);
+    // right hand grips the thermos body
+    const grip = thermos.localToWorld(V(-0.045, 0.11, 0.0));
+    if (pick > 0.02) { G.hands.R.pose('grip', { radius: 0.04 }); G.reach('R', grip, { palm: thermos.localToWorld(V(1, 0.11, 0)).sub(grip).normalize(), fingers: V(0.2, 0, -1).normalize(), elbowOut: 0.6 }); }
+    else { G.reach('R', W(G, -0.12, 0.6, 0.30), { palm: V(0, -1, 0), fingers: fwdOf(G) }); G.hands.R.pose('relaxed', { curl: 0.8 }); }
+    // the navy cup-lid: unscrewed into his left hand
+    if (capOff > 0.02) {
+      const lidW = thermos.localToWorld(V(0, 0.19, 0)).lerp(W(G, 0.12, 0.72, 0.36), easeIO(capOff)).add(V(0, 0.06 * Math.sin(Math.PI * capOff), 0));
+      putWorld(thermosLid, lidW, capOff * 2.5);
+      G.hands.L.pose('grip', { radius: 0.044 });
+      G.reach('L', lidW.clone().add(V(0, 0.035, 0)), { palm: V(0, -1, 0), fingers: dirW(G, 0.3, -0.3, 1) });
+    } else { G.reach('L', W(G, 0.12, 0.6, 0.30), { palm: V(0, -1, 0), fingers: fwdOf(G) }); G.hands.L.pose('relaxed', { curl: 0.8 }); }
+    restHandsLap();
+    // stream + new steam
+    const pourHer = tl > 1.18 && tl < 1.6, pourHis = tl > 1.89 && tl < 2.15;
+    if (pourHer || pourHis) {
+      const spout = thermos.localToWorld(V(0, 0.225, 0)), dst = (pourHer ? CUP_R : CUP_G).clone().add(V(0, 0.055, 0));
+      stream.visible = true; stream.position.copy(spout).lerp(dst, 0.5); stream.scale.set(1, spout.distanceTo(dst), 1);
+      stream.quaternion.setFromUnitVectors(V(0, 1, 0), spout.clone().sub(dst).normalize());
+    }
+    G.lookAt(tl < 2.45 ? (toHis > 0.5 ? CUP_G : CUP_R) : V(8, 1.1, 1.2), tl < 2.45 ? 0.55 : 0.6);
+    R.lookAt(tl < 2.45 ? thermos.getWorldPosition(V(0, 0, 0)) : V(8, 1.15, 0.6), 0.6);
+    G.breathe(T); R.breathe(T + 0.7);
+    steamUpdate(T, smoothstep(1.89, 2.4, tl), smoothstep(1.18, 1.7, tl), 1.4);
+    const pk = 0.03 * ramp(tl, 0, 2.92);
+    const cp = V(1.55, 1.24, 2.15); const lk = V(3.62, 0.98, -0.30); cp.lerp(lk, pk);
+    cam.lens(camera, 50); cam.place(camera, cp, lk);
+    return { dof: { focus: dist(R.eye(V(0, 0, 0))) * 0.5 + dist(G.eye(V(0, 0, 0))) * 0.5, fstop: 4 } };
+  };
+
+  // ---------------- S079: from behind, WS 32 mm, slow pull back (~0.8 m); dawn warms from 243.56; deep focus
+  setups.S079 = (tl, u, T) => {
+    setTime(T); resetProps();
+    seatedPair(T, { gLean: 0.30, gBow: 0.04, gTurn: 0.12, rTurn: 0.08, rBow: -0.02 });
+    putWorld(cupG, CUP_G, 0); putWorld(cupR, CUP_R, 0);
+    putWorld(phone, W(G, -0.12, SEAT_Y + 0.17, 0.2), Math.PI / 2); phone.rotation.x = Math.PI;
+    guardHandsOnThighs(); restHandsLap();
+    G.breathe(T); R.breathe(T + 0.7);
+    steamUpdate(T, 0.8, 0.8, 1.6);
+    const k = easeIO(clamp(tl / 4.0, 0, 1));
+    const cp = V(1.15, 1.42, 0.0).lerp(V(0.35, 1.44, 0.0), k);
+    cam.lens(camera, 32); cam.place(camera, cp, cp.clone().add(V(1, -0.035, 0)));
+    return { dof: null };
+  };
+
+  // ---------------- S081: FINAL — the two cups on the sill, fresh steam, the brightening window, the pair reflected
+  setups.S081 = (tl, u, T) => {
+    setTime(T); resetProps();
+    seatedPair(T, { gLean: 0.30, gBow: 0.04, gTurn: 0.1, rTurn: 0.08 });
+    guardHandsOnThighs(); restHandsLap();
+    putWorld(cupG, CUP_G, 0); putWorld(cupR, CUP_R, 0);
+    G.breathe(T, 0.5); R.breathe(T + 0.7, 0.5);
+    // the people are beside / behind the camera: only their reflection is seen (approved cheat: through-view + reflection)
+    mirrorOn = true; glassUniforms.uUseMirror.value = 1;
+    G.root.visible = R.root.visible = false;
+    const ray = smoothstep(3.1, 3.9, tl);
+    steamUpdate(T, 1, 1, 1.5 + 1.5 * ray);
+    aim(V(2.86, 0.86, -0.20), V(3.875, 0.755, 0.004), 0.51, 0.63, 75);
+    return { dof: { focus: dist(V(3.875, 0.75, 0.0)), fstop: 2.8 } };
   };
 
   // ---------------- view_bay_back: the pair from behind (corridor end, S061 / S066); time-aware
   setups.view_bay_back = (tl, u, T) => {
     setTime(T); resetProps();
     const both = T >= 197.0;
-    guardBase(T, { lean: both ? 0.35 : 0.55, bow: both ? 0.15 : 0.35 });
+    guardBase(T, { lean: both ? 0.35 : 0.5, bow: both ? 0.12 : 0.35 });
     guardHandsOnThighs();
     putWorld(thermos, THERMOS_POS, 0.4);
-    if (T < 190.6) { G.reach('R', W(G, -0.07, 0.66, 0.33), {}); G.hands.R.setChannels(PHONE_GRIP); putLocal(phone, G.hands.R.sockets.palm, V(0.035, 0.012, -0.01), new THREE.Euler(0, 0, 0)); phoneGlow(T > 187.3 ? 1 : 0); }
-    else putWorld(phone, W(G, -0.1, SEAT_Y + 0.16, 0.24), Math.PI / 2 + 0.2), phone.rotation.x = Math.PI;
-    if (both) { restBase(T, { yaw: 0.1 }); restHandsLap(); putWorld(cupG, CUP_G); putWorld(cupR, CUP_R); putWorld(gloves, GLOVES_POS, 0.3); }
+    if (T < 190.6) { guardPhoneLap(); phoneGlow(T > 187.3 ? 1 : 0); faceGlasses.visible = true; if (hangGlasses) hangGlasses.visible = false; }
+    else phoneOnThigh();
+    if (both) { restBase(T, { yaw: 0.12 }); restHandsLap(); putWorld(cupG, CUP_G); putWorld(cupR, CUP_R); putWorld(gloves, GLOVES_POS, 0.3); }
     else { R.root.visible = false; cupG.visible = cupR.visible = false; gloves.visible = false; }
     G.breathe(T); R.breathe(T + 1.3);
     steamUpdate(T, both ? 1 : 0, both ? 1 : 0, 1.0);
@@ -664,7 +1057,7 @@ export default async function create(ctx) {
     putWorld(phone, W(G, -0.1, SEAT_Y + 0.16, 0.24), Math.PI / 2 + 0.2); phone.rotation.x = Math.PI;
     steamUpdate(T, 1, 1, 1);
   };
-  setups.DBG_PLAN = (tl, u, T) => { dbgState(T); cam.lens(camera, 18); cam.place(camera, [2.2, 9.0, 0.01], [2.2, 0, 0]); camera.far = 9000; return { dof: null, exposure: 1.6 }; };
+  setups.DBG_PLAN = (tl, u, T) => { dbgState(T); ceilMesh.visible = false; cam.lens(camera, 18); cam.place(camera, [2.2, 9.0, 0.01], [2.2, 0, 0]); camera.far = 9000; return { dof: null, exposure: 1.6 }; };
   setups.DBG_WIDE = (tl, u, T) => { dbgState(T); cam.lens(camera, 20); cam.place(camera, [0.3, 1.6, 2.5], [3.4, 1.0, -0.6]); return { dof: null, exposure: 1.3 }; };
   setups.DBG_BACK = (tl, u, T) => { dbgState(T); cam.lens(camera, 28); cam.place(camera, [0.4, 1.45, 0.0], [3.6, 1.1, 0]); return { dof: null, exposure: 1.3 }; };
   setups.DBG_FIG = (tl, u, T) => { dbgState(T); cam.lens(camera, 40); cam.place(camera, [3.5, 1.2, 2.0], [3.45, 0.85, 0]); return { dof: null, exposure: 1.5 }; };
@@ -688,11 +1081,13 @@ export default async function create(ctx) {
   if (OFF.has('nolampsh')) lampKey.castShadow = false;
   return {
     scene, camera,
-    post: { exposure: 1.0, contrast: 1.06, saturation: 0.9, temp: -0.08, shadowTint: [0.45, 0.49, 0.58], highTint: [0.56, 0.52, 0.47], grain: 0.035, vignette: 0.34, aberration: 0.45,
+    post: { exposure: 1.15, contrast: 1.06, saturation: 0.9, temp: -0.08, shadowTint: [0.45, 0.49, 0.58], highTint: [0.56, 0.52, 0.47], grain: 0.035, vignette: 0.34, aberration: 0.45,
       bloom: { strength: 0.42, radius: 0.6, threshold: 0.75 } },
     setShot(shot, tl, u, T) {
       const f = setups[shot.id] || setups.default;
       const p = f(tl, u, T, shot) || {};
+      if (q.get('cam')) { const c = q.get('cam').split(',').map(Number); cam.lens(camera, c[6] || 50); cam.place(camera, c.slice(0, 3), c.slice(3, 6)); if (p.dof) p.dof.focus = camera.position.distanceTo(V(c[3], c[4], c[5])); }
+      if (q.get('grain0')) p.grain = 0;
       sea.update(T, camera);
       if (OFF.has('nosea')) sea.object3D.visible = false;
       if (OFF.has('nosky')) sky.object3D.visible = false;
