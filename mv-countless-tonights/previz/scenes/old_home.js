@@ -279,6 +279,10 @@ export default async function create(ctx) {
     for (const [x, z] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) mesh(new THREE.BoxGeometry(0.055, top - t, 0.055), M.camphor, tableG, x * (s / 2 - 0.045), (top - t) / 2, z * (s / 2 - 0.045));
     for (const [x, z, w, d] of [[0, s / 2 - 0.045, s - 0.1, 0.03], [0, -s / 2 + 0.045, s - 0.1, 0.03]]) mesh(new THREE.BoxGeometry(w, 0.03, d), M.camphor, tableG, x, 0.16, z);
   }
+  // review: an invisible moon-shadow caster under the table top (colour + depth writes off, still in the shadow pass): the
+  // low lattice beam used to pass under the table and floodlight her skirt and knees (a bright blue blob in view_home_candle)
+  { const bl = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.72), new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false, side: THREE.DoubleSide }));
+    bl.rotation.y = Math.PI / 2; bl.position.set(TABLE.x + 0.15, 0.37, TABLE.z); bl.castShadow = true; bl.receiveShadow = false; bl.renderOrder = -5; G.interior.add(bl); }
   const benchG = (x) => {
     const g = new THREE.Group(); g.position.set(x, 0, 0); I.add(g);
     const L = 1.15, w = 0.19, t = 0.045;
@@ -1203,7 +1207,7 @@ export default async function create(ctx) {
       // review: the lattice moon now falls on the EMPTY bench + the bowl's side of the table (MOON_16 direction), she is lit by
       // the candle alone, her head turned a little away so the candle only rims her cheek — the face stays unresolved in the
       // pane (nested views get no DOF to hide it)
-      mode('int', { noPartition: true, wife: 'mid', moonI: 9 });
+      mode('int', { noPartition: true, wife: 'mid', moonI: 5.5 });
       setCandle('C', T0); setMoonIn(MOON_16);
       candle.update(T0, { intensity: 0.5 });                      // nested views get no post exposure: lights a touch brighter
       intHemi.intensity = 0.1;
@@ -1212,7 +1216,7 @@ export default async function create(ctx) {
       // from the front: her (screen left) by the candle, the bowl before the empty bench (screen right); tall panes get a
       // closer MS (seated figure, candle, bowl, bench edge), wide ones the room
       if (camera.aspect >= 1.6) { cam.place(camera, [0.2, 1.02, 2.55], [-0.04, 0.86, 0.0]); cam.lens(camera, 45); }
-      else { cam.place(camera, [0.02, 1.06, 1.6], [-0.08, 0.84, 0.0]); cam.lens(camera, 34); }
+      else { cam.place(camera, [-0.06, 1.1, 1.65], [-0.2, 0.86, 0.0]); cam.lens(camera, 34); }
       camera.near = 0.05; camera.far = 40;
       return { dof: null, exposure: 1.0 };
     },
@@ -1243,8 +1247,11 @@ export default async function create(ctx) {
       rainDrop(Tr);
       // low, outside the drip line, looking back at the door lamp: the drops are backlit (forward scattering), the bowl large
       // in the lower frame, her palm out under the eave beside it
+      // review: from low in the yard south-west of the bowl, looking up along the facade at the niche lamp, so the lamp is
+      // BEHIND the eave drips and the drop into the bowl (forward scatter), the bowl in the lower frame, her palm out in the
+      // rain between them; the old camera looked at the door with the lamp out of frame (wide) and the drops unlit
       const wide = camera.aspect >= 1.4;
-      cam.place(camera, CRAIN.pos, wide ? CRAIN.target.clone().add(V3(0, -0.3, 0)) : CRAIN.target); cam.lens(camera, camera.aspect < 1.1 ? 22 : wide ? 20 : 24);
+      cam.place(camera, CRAIN.pos, CRAIN.target.clone().add(V3(0, wide ? -0.12 : 0.15, 0))); cam.lens(camera, camera.aspect < 1.1 ? 30 : wide ? 26 : 28);
       camera.near = 0.03; camera.far = 600;
       return { dof: null, exposure: 1.0 };
     },
@@ -1352,7 +1359,7 @@ export default async function create(ctx) {
     // view_home_rain: hand-placed (designed for a tall vitrine pane, aspect ≈ 0.8–1.3; checked offline): at 28 mm / 0.9 the
     // niche lamp sits mid-left behind the rain curtain (0.36, 0.46), her palm upper right (0.67, 0.25), the bowl lower right
     // (0.61, 0.80); wide panes get a wider lens from the same place
-    CRAIN.pos.set(-4.0, 0.02, 2.22); CRAIN.target.set(-3.35, 0.3, 1.5);
+    CRAIN.pos.set(-4.2, -0.3, 2.85); CRAIN.target.set(-3.2, 0.5, 0.72);
     best = { err: 0 };
     console.log('OH solved CRAIN', CRAIN.pos.toArray().map((x) => x.toFixed(2)), best.err.toFixed(4));
     console.log('OH solved CHAND', CHAND.pos.toArray().map((x) => x.toFixed(2)), best.err.toFixed(4));

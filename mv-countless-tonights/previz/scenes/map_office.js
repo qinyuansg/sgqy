@@ -134,21 +134,21 @@ function mapDrawing() {
   const RIV = { x0: coastX(52.4) + 0.1, x1: 70, y0: 52.4, y1: 44.5 };
   const riverY = (x) => { const t = clamp((x - RIV.x0) / (RIV.x1 - RIV.x0), 0, 1);
     return lerp(RIV.y0, RIV.y1, Math.pow(t, 1.25)) + 0.75 * Math.sin(t * 15.0 + 0.5) * (1 - 0.5 * t) + 0.3 * Math.sin(t * 37.0 + 1.1); };
+  const PEAKS = [[57, 21, 4.6, 95, 80], [46, 7, 3.4, 45, 40], [75, 35, 4.2, 130, 85], [54, 33, 2.6, 45, 30], [67, 63, 3.3, 85, 50],
+    [83, 11, 3.2, 60, 60], [86, 52, 3.0, 70, 90], [39, 24, 1.6, 22, 18], [44, 45, 1.5, 30, 14]];
   const H = (x, y) => {
     const dist = x - coastX(y);
     if (dist < 0) return 0;
     const plainW = 2.6 + 8.2 * Math.exp(-((y - 56.6) ** 2) / 20) + 1.6 * Math.exp(-((y - 37.7) ** 2) / 5);
-    const rise = smoothstep(plainW, plainW + 8.5, dist);
-    let h = 3.6 * rise + 3.4 * smoothstep(16, 44, dist);
-    const ph = (y + 1.8 * Math.sin(dist * 0.23 + 0.4)) * (2 * Math.PI / 9.0) + 0.9 + 0.35 * N.fbm(x / 90, y / 70, 3, 2);
-    h += 1.55 * Math.sin(ph) * smoothstep(plainW + 1, plainW + 11, dist) * (1 - 0.55 * smoothstep(26, 48, dist));   // spurs ⟂ coast
-    h += 3.6 * Math.exp(-(((x - 57) ** 2) / 85 + ((y - 20) ** 2) / 75));       // the S047 hill (its south flank crosses y 29.7)
-    h += 2.6 * Math.exp(-(((x - 46) ** 2) / 40 + ((y - 6.5) ** 2) / 35));
-    h += 2.8 * Math.exp(-(((x - 74) ** 2) / 110 + ((y - 33) ** 2) / 70));
-    h += 2.2 * Math.exp(-(((x - 67) ** 2) / 70 + ((y - 64) ** 2) / 45));
-    h += 0.9 * N.fbm(x / 90, y / 70, 5, 4, 0.5) + 0.45 * N.ridged(x / 90 + 0.3, y / 70, 4, 3);
-    if (x > RIV.x0 - 1) h -= 2.6 * Math.exp(-((y - riverY(x)) ** 2) / 7) * smoothstep(plainW - 1, plainW + 6, dist);   // river valley
-    return Math.max(0, h * smoothstep(0.4, 2.6, dist));
+    const rise = smoothstep(plainW, plainW + 9, dist);
+    let h = 0.9 * rise + 1.0 * smoothstep(18, 46, dist);
+    for (const [px, py, A, sx, sy] of PEAKS) h += A * Math.exp(-(((x - px) ** 2) / sx + ((y - py) ** 2) / sy));
+    // spurs: ridged noise stretched across the coast (long in x, short in y) → ridges and ravines running down to the sea
+    const sp = N.ridged(x / 90 + 0.1 * N.fbm(x / 90, y / 70, 3, 2), y / 70, 2, 2, 5);
+    h += 0.8 * (sp - 0.45) * smoothstep(plainW + 1, plainW + 9, dist) * (0.5 + 0.5 * smoothstep(-0.3, 0.4, N.fbm(x / 90 + 0.5, y / 70, 2, 2)));
+    h += 0.3 * N.fbm(x / 90, y / 70, 6, 4, 0.5);
+    if (x > RIV.x0 - 1) h -= 1.1 * Math.exp(-((y - riverY(x)) ** 2) / 12) * smoothstep(plainW - 1, plainW + 6, dist);   // river valley
+    return 2.5 * Math.max(0, h * smoothstep(0.4, 2.6, dist));
   };
   const inVillage = (x, y) => vill.some((b) => x > b[0] - 0.5 && x < b[2] + 0.5 && y > b[1] - 0.5 && y < b[3] + 0.5);
   // ---- villages (built first: hachures avoid them)
@@ -185,21 +185,21 @@ function mapDrawing() {
   const hach = [];
   const cell = 0.15;
   for (let j = 0; j < MAPH / cell; j++) for (let i = 0; i < MAPW / cell; i++) {
-    const px = (i + r()) * cell, py = (j + r()) * cell, rr = r(), rl = r(), rw = r();
+    const px = (i + 0.15 + 0.7 * r()) * cell, py = (j + 0.15 + 0.7 * r()) * cell, rr = r(), rl = r(), rw = r();   // moderate jitter: even spacing, no lattice
     if (px < 2.7 || px > MAPW - 2.7 || py < 2.7 || py > MAPH - 2.7) continue;
     if (hAt(px, py) <= 0.03) continue;
     const [gx, gy] = grad(px, py), gm = Math.hypot(gx, gy);
-    if (gm < 0.1 || rr > smoothstep(0.1, 0.45, gm)) continue;
+    const tg = smoothstep(0.36, 1.05, gm);                                         // slope → ink weight across the slope distribution (p30 … p95)
+    if (gm < 0.2 || rr > smoothstep(0.22, 0.55, gm)) continue;
     if (inVillage(px, py)) continue;
-    const L = 0.3 * (0.8 + 0.4 * rl) * (1.15 - 0.25 * smoothstep(0.5, 2.5, gm));
+    const L = 0.3 * (0.9 + 0.2 * rl) * (1.15 - 0.3 * smoothstep(0.5, 2.5, gm));   // straight pen dashes, shorter where steep
     const ux = -gx / gm, uy = -gy / gm;
-    const mx = px + ux * L * 0.5, my = py + uy * L * 0.5;
-    const [g2x, g2y] = grad(mx, my), g2 = Math.hypot(g2x, g2y) || 1;
-    const ex = mx - g2x / g2 * L * 0.5, ey = my - g2y / g2 * L * 0.5;
+    const mx = px + ux * L * 0.5, my = py + uy * L * 0.5, ex = px + ux * L, ey = py + uy * L;
     if (ex - coastX(ey) < 1.2 || inVillage(ex, ey)) continue;
-    const w = clamp(0.006 + 0.0135 * gm, 0.007, 0.05) * (0.85 + 0.3 * rw), a = 0.5 + 0.42 * smoothstep(0.25, 2.2, gm);
+    const w = lerp(0.0045, 0.05, Math.pow(tg, 1.3)) * (0.85 + 0.3 * rw), a = 0.5 + 0.45 * tg;
     hach.push([px, py, mx, my, ex, ey, w, a]);
   }
+  if (new URLSearchParams(location.search).has('mopts')) { const gs = []; for (let k = 0; k < 20000; k++) { const x = 3 + r() * 84, y = 3 + r() * 64; if (hAt(x, y) > 0.03) gs.push(Math.hypot(...grad(x, y))); } gs.sort((a, b) => a - b); console.warn('[map_office] gm pct', [0.1, 0.3, 0.5, 0.7, 0.9, 0.97].map((q) => gs[Math.floor(q * gs.length)].toFixed(2)).join(' '), 'n', hach.length); }
   ops.push({ k: 'hach2', list: hach, c: INK });
   // ---- the river (from the hills down the valley to the coast just north of the fishing village)
   { const pts = []; for (let k = 0; k <= 160; k++) { const x = lerp(RIV.x1, RIV.x0, k / 160); pts.push([x, riverY(x)]); }
@@ -482,7 +482,7 @@ export default async function create(ctx) {
   moonL.shadow.bias = -0.0002; moonL.shadow.normalBias = 0.002; moonL.shadow.radius = 2;
   scene.add(moonL, moonL.target);
   const aimMoon = (target, I) => { moonL.target.position.copy(target); moonL.position.copy(target).addScaledVector(MOON_DIR, -6); moonL.intensity = I; moonL.target.updateMatrixWorld(); };
-  const hemi = new THREE.HemisphereLight(hex('#56666a'), hex('#2a2a24'), +(QS0.get('mhemi') || 0.12)); scene.add(hemi);   // moonlit lime-wash walls: cold grey-green fill (CT_MAP)
+  const hemi = new THREE.HemisphereLight(hex('#56666a'), hex('#2a2a24'), +(QS0.get('mhemi') || 0.4)); scene.add(hemi);   // moonlit lime-wash walls: cold grey-green fill (CT_MAP)
   const deskLights = [lampL, moonL];
 
   // ================================================================ INK LINES (procedural wet iron-gall strip)
