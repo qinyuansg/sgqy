@@ -857,7 +857,7 @@ export default async function create(ctx) {
     r.setRenderTarget(prev); r.clippingPlanes = clip;
     hidden.forEach((o, i) => { o.visible = vis[i]; });
     mc.clearViewOffset();
-    if (OFF.has('dbgm')) { const px = new Float32Array(4); const rr = ctx.renderer; rr.readRenderTargetPixels(mirror.rt, vw >> 1, vh >> 1, 1, 1, px); console.warn('MIRROR', px0, px1, py0, py1, 'cam', mc.position.toArray().map((v) => v.toFixed(2)).join(','), 'centre px', Array.from(px).map((v) => v.toFixed(4)).join(',')); }
+    if (OFF.has('dbgm')) { const px = new Float32Array(4); const rr = ctx.renderer; rr.readRenderTargetPixels(mirror.rt, vw >> 1, vh >> 1, 1, 1, px); console.log('MIRROR', px0, px1, py0, py1, 'cam', mc.position.toArray().map((v) => v.toFixed(2)).join(','), 'centre px', Array.from(px).map((v) => v.toFixed(4)).join(',')); }
     const U = diamondMat.uniforms; U.tRef.value = mirror.rt.texture; U.uOff.value.set(px0, py0); U.uSize.value.set(vw, vh); U.uFlipX.value = 1; U.uOk.value = 1; U.uNear.value = camera.near; U.uFar.value = camera.far;
   }
 
