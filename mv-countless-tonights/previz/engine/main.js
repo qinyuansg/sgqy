@@ -39,8 +39,9 @@ for (const u of [q.get('shots'), '/shotlist/shots.json', '/shotlist/skeleton.jso
 const timing = await loadJSON('/timing/timing.json');
 const TOTAL = shots[shots.length - 1].out_frame;
 
-const chainA = new Chain(renderer, W, H);
-const chainB = new Chain(renderer, W, H);
+const MSAA = +(q.get('msaa') ?? 4); // scene MSAA samples (?msaa=0 for perf A/B)
+const chainA = new Chain(renderer, W, H, { samples: MSAA });
+const chainB = new Chain(renderer, W, H, { samples: MSAA });
 const display = new Display(renderer);
 
 const instances = new Map();

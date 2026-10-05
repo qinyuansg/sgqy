@@ -1,0 +1,820 @@
+[
+ {
+  "id": "S061",
+  "prompt_en": "Close-up, 100mm anamorphic, locked, eye level, a moonlit museum corridor at 04:00, 24 fps. Screen-right: a frameless vitrine holding a leaded stained-glass panel of abstract layered petals in softened ruby, amber, cobalt, sea-green and pale rose, faintly backlit; in its small clear diamond quarry at (0.70,0.45) floats the half-seen reflection of RESTORER (~28-year-old East Asian conservator, soft oval face, tiny mole below her LEFT eye, loose low ponytail with strands at the right temple, charcoal wool coat buttoned at the middle), close enough to read her unease. Screen-left, past the vitrine's edge, the corridor recedes to a glazed timber screen; beyond it, soft, the stooped back of GUARD (~65, salt-and-pepper hair, navy attendant jacket) alone on a window bench under one warm 2700K lamp, his phone light already out. At 0.9 s her reflected eyes lift; 1.2-1.9 s focus racks to his distant back and holds. From 1.7 s her white-gloved hands rise into the soft lower-left foreground; 2.1-2.6 s focus finds them: she pinches off the right glove, then the left at 2.9 s, revealing a small healed scar on the outer side of her right index finger, folds both by 3.6 s and grips them at 4.0 s. Cold silver moonlight from behind right. CT_MODERN grade, fine 35mm grain.",
+  "prompt_zh": "近景，100mm 变形宽银幕镜头，锁定，平视，凌晨四点月光下的博物馆长廊，24 fps。画右：一只无框展柜里立着一块铅条彩窗残片，非具象的层叠花瓣色块——柔化的绛红、琥珀、钴蓝、海青与浅玫，背后极暗的灯箱让它微微发光；左下方那块透明菱形小玻璃位于 (0.70,0.45)，里面若隐若现地映着修复师（约 28 岁东亚女性文物修复师，鹅蛋脸，左眼外眼角下一颗极小的浅褐色痣，松松的低马尾、右侧太阳穴落下几缕碎发，深灰呢外套扣着中间一粒扣子）的脸，近到看得清她的不安。画左，越过展柜边缘，长廊向东退到一道木框玻璃隔断；隔断后的窗湾里，焦外是夜班工作人员（约 65 岁，花白短发，藏青值守夹克）微驼的背影，独自坐在窗凳上，一盏 2700K 阅读灯，手机的冷光已经熄灭。0.9 秒，倒影里她抬起眼；1.2–1.9 秒焦点转到远处他的背影并停住。1.7 秒起，她戴白手套的双手升入画左下前景（焦外）；2.1–2.6 秒焦点回到手上：她捏住右手手套指尖抽下，2.9 秒再摘左手——右手食指外侧一道细小的旧疤第一次露出来——3.6 秒两只叠好，4.0 秒攥在手心。冷银月光从右后方来。CT_MODERN 调色，细腻 35mm 颗粒。",
+  "negative": "gloves still on after 3.7 s, bare hands before 1.7 s, scar on the left hand or on the wrong finger, ring, watch, nail polish, glowing phone screen, the guard's face visible, the guard turning round, figurative saints, faces or symbols in the stained glass, the mother or any other era inside the panel, focus passing through the opaque lightboxed panel, her reflection sharper or brighter than the panel colour, ghost double image, readable labels, neon colours, jerky rack focus, camera movement, tears",
+  "gen": {
+   "duration_s": 4.042,
+   "refs": [
+    "CHAR_RESTORER",
+    "CHAR_GUARD",
+    "PROP_GLASSPANEL",
+    "PROP_GLOVES",
+    "PROP_COAT",
+    "PROP_PHONE",
+    "LOC_CORRIDOR",
+    "LOC_WINDOW"
+   ],
+   "keyframe_en": "Frame 0: close-up, 100mm anamorphic, lens ~1.55 m, camera just behind RESTORER's left shoulder looking east-south-east at corridor vitrine P4 (x=-4, south side, toed 20 deg west). Screen-right ~55%: the vitrine's low-iron front glass and behind it the leaded stained-glass panel (abstract layered petals in softened ruby, amber, cobalt, sea-green, pale rose; oxidised grey leads; two cracked pieces) glowing faintly from a very dim lightbox; the clear 6x9 cm diamond quarry at the panel's lower left sits at (0.70,0.45) and holds her reflected face in three-quarter, eyes on the glass, brows slightly drawn, soft-sharp at mirror depth. Screen-left: past the vitrine's north edge the moonlit teak corridor recedes to the glazed timber screen; through its clear lower glass, far and soft, the window bay - GUARD's stooped navy back at (0.27,0.46), a 2700K reading-lamp point at (0.24,0.38), harbour light points. The soft charcoal edge of her coat shoulder at the left frame edge; arched moon pool on the floor at lower left; air deep blue #1A2D4A.",
+   "keyframe_zh": "第 0 帧：近景，100mm 变形镜头，镜头高约 1.55 米，摄影机在修复师左肩后方，向东偏南望向长廊 P4 展柜（x=−4，南侧，向西偏转 20°）。画右约 55%：展柜的低铁超白前玻璃，其后是铅条彩窗残片（非具象层叠花瓣，柔化的绛红、琥珀、钴蓝、海青、浅玫；铅条氧化发灰；两处玻璃有裂纹），被极暗的灯箱微微照亮；残片左下方那块 6×9 cm 透明菱形小玻璃位于 (0.70,0.45)，里面映着她四分之三侧的脸，目光落在玻璃上，眉头微收，在镜像深处半清晰。画左：越过展柜北侧边缘，月光下的柚木长廊退向木框玻璃隔断；透过下部清玻璃，远而虚的窗湾——夜班工作人员微驼的藏青背影在 (0.27,0.46)，一点 2700K 阅读灯在 (0.24,0.38)，港口灯点。画左边缘是她外套肩头柔焦的深灰边；画左下地板上一个拱形月光斑；空气深蓝 #1A2D4A。",
+   "endframe_en": "t=4.04 s: focus on her bare hands in the lower-left foreground around (0.36,0.70), both white gloves folded together and gripped in her right fist, the small healed scar on the outer side of her right index finger readable; her shoulder beginning to turn screen-right; panel and diamond soft at right; the bay soft in the distance.",
+   "motion_en": "Camera locked on a tripod, 24 fps, no movement. 0-0.9 s: in the diamond reflection she studies the glass; 0.92 s ('还') her reflected eyes lift toward screen-left. 1.24-1.9 s: smooth focus rack (>=1 beat) from the diamond's mirror depth to the far bay (~6 m); the guard's back stays still except breathing; no phone light. 1.74 s: her gloved hands rise into the lower-left foreground, soft. 2.1-2.6 s: focus racks to her hands. 1.74-2.9 s: left fingers pinch the right glove's fingertips and draw it off; 2.94 s the left glove comes off; 3.0-3.64 s she folds the two together; 4.01 s she grips them and her shoulder starts to turn right. Real time throughout. Must NOT move: vitrine, panel, corridor, guard (breathing only), lights; her reflection stays a true mirror image.",
+   "motion_zh": "摄影机锁定在三脚架上，24 fps，不动。0–0.9 秒：菱形玻璃的倒影里她看着玻璃；0.92 秒（“还”）倒影中她的眼睛抬起、望向画左。1.24–1.9 秒：焦点平滑地（≥1 拍）从菱形玻璃的镜像深处转到远处窗湾（约 6 米）；他的背影除呼吸外不动；没有手机光。1.74 秒：她戴手套的双手升入画左下前景，焦外。2.1–2.6 秒：焦点转到她的手。1.74–2.9 秒：左手手指捏住右手手套指尖抽下；2.94 秒左手手套摘下；3.0–3.64 秒两只叠在一起；4.01 秒攥在手心，肩头开始向右转。全程真实速度。不得移动：展柜、彩窗、长廊、夜班工作人员（只允许呼吸）、灯光；她的倒影始终是真实的镜像。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 2.2,
+     "note": "Seg 1 (f4583-f4636): plate A + reflection plate B; she looks up, rack to the bay. Generate 2.7 s with a 0.5 s static head handle on the reflection."
+    },
+    {
+     "t0": 2.0,
+     "t1": 4.042,
+     "note": "Seg 2 (f4631-f4680): hands plate C over A (defocused); glove removal and grip. Generate 2.8 s (0.3 s head overlap, 0.5 s tail handle carrying her turn). Hidden seam at 2.0-2.2 s mid-rack while every plane is soft."
+    }
+   ],
+   "plates": [
+    {
+     "name": "A",
+     "desc": "Corridor/P4 plate, locked 100mm: vitrine P4 with the stained-glass panel on a very dim lightbox (diamond quarry clear and dark enough to act as a mirror), the corridor and the glazed screen visible past the vitrine's north edge, the bay with GUARD's still, stooped back on the bench under the 2700K reading lamp, phone light off. Rendered with a focus track (diamond mirror depth -> bay -> foreground)."
+    },
+    {
+     "name": "B",
+     "desc": "Reflection plate: RESTORER's face in three-quarter looking into the glass, moonlight from her right and a trace of panel colour on her cheek; at 0.92 s her eyes lift to screen-left. Rendered as a true mirror image (she is physically in the room, so the mirror rule applies without exception)."
+    },
+    {
+     "name": "C",
+     "desc": "Hands plate: RESTORER's gloved hands at chest height removing the right glove (pinched off by the left fingers), then the left, folding both and gripping them in the right fist; bare hands with long slim fingers, short unpolished nails, the 6 mm healed scar on the outer side of the right index finger; charcoal coat cuffs, the LEFT cuff's outer worn spot glimpsed; background corridor defocused to match A."
+    }
+   ],
+   "post": "Composite B only inside the diamond quarry (mask to the 6x9 cm leaded quarry, 3 px feather), screen ~40-45% over the darkened quarry so it stays 'half-seen' (若隐若现), defocused by mirror depth during the rack; the rest of the panel transmits its own soft colour (P23-P27 softened 30%). Physics: focus cannot pass THROUGH the lightboxed panel - the bay is staged past the vitrine's north edge (flagged). Rack timings: f4605 eyes lift; f4613-f4629 rack to the bay; f4634-f4646 rack to the hands. Hand QC frame by frame (five fingers, no fusion); replace with an insert plate if needed. Grade CT_MODERN, shadows #1A2D4A never cyan, highlights #C8D2DB, grain 1.0, halation 0.3 on the lamp point only. Cut at f4680 on the 195.0 beat.",
+   "match_to": "IN: S060 - his phone light went out at 190.6 s, so she finds only the dark, stooped back (timing flagged). T18: the diamond quarry at (0.70,0.45) is the same quarry seen in the chapel window in S057, seventy years apart. OUT: S062 - she enters the bay from screen-left with two cups, the folded gloves pinned under her left thumb."
+  }
+ },
+ {
+  "id": "S062",
+  "prompt_en": "Medium shot, 50mm anamorphic, eye level, inside a three-sided museum bay window at night, 24 fps; a slow stable dolly track from screen-left to screen-right follows her last two steps and eases to rest by 2.0 s. Screen-right: GUARD (~65-year-old East Asian night attendant, square-round face, pale-brown age spot on his RIGHT cheekbone, short salt-and-pepper hair, stooped back, navy attendant jacket a little big at the shoulders with a small text-free ring-and-waves badge, reading glasses hanging on a black cord) sits on the teak window bench nearest the window, his phone face-down on his right thigh, an old steel thermos by his right hip. From screen-left, through glazed doors, comes RESTORER (~28-year-old East Asian conservator, soft oval face, mole below her LEFT eye, loose low ponytail, charcoal wool coat buttoned at the middle, a small worn spot on the LEFT cuff's outer little-finger side), bare-handed, carrying two handle-less pale bluish-white cups, each ringed by one thin cobalt line under the rim, her folded white gloves pinned under her left thumb. At 0.57 s her right hand reaches out; at 2.15 s she sets his chipped cup on the deep sill beside him. Steam rises, backlit by a 2700K corner reading lamp against the dark window frame; harbour lights outside. CT_MODERN, fine 35mm grain.",
+  "prompt_zh": "中景，50mm 变形宽银幕镜头，平视，夜里博物馆的三面窗湾，24 fps；一段缓慢稳定的轨道横移由画左向画右，跟着她最后两步，2.0 秒时缓停。画右：夜班工作人员（约 65 岁东亚男性，脸型方中带圆，右颧骨一块浅褐色老年斑，花白短发，背微驼，藏青值守夹克肩部略大，左胸一枚无文字的圆环水波纹小徽章，老花镜挂在黑色挂绳上）坐在柚木窗凳靠窗的一端，旧手机屏幕朝下扣在右大腿上，右胯旁一只旧不锈钢保温壶。修复师（约 28 岁东亚女性文物修复师，鹅蛋脸，左眼下小痣，松松的低马尾，深灰呢外套扣着中间一粒扣子，左袖口外侧小指一侧一块小磨损）从画左的玻璃门进来，没戴手套，双手各端一只无柄青白釉茶杯，杯口下各一道细细的钴蓝线，叠好的白手套压在左手拇指下。0.57 秒她的右手伸出去；2.15 秒把他那只带磕口的杯子轻轻放在他身旁深深的窗台上。热气升起，被窗湾角落一盏 2700K 阅读灯逆光照亮，衬着暗色的窗框；窗外是港口的灯。CT_MODERN 调色，细腻 35mm 颗粒。",
+  "negative": "gloves on her hands, steam lit against bright sky, cups with handles, patterned or branded cups, the chip on her cup, the guard standing up or looking at camera, spilled tea, floating cups, her entering from screen-right, the guard on screen-left, reading glasses on his nose, lit phone screen, readable text, talking, shaky camera, hurried walk",
+  "gen": {
+   "duration_s": 2.417,
+   "refs": [
+    "CHAR_RESTORER",
+    "CHAR_GUARD",
+    "PROP_TEA",
+    "PROP_GLOVES",
+    "PROP_COAT",
+    "PROP_PHONE",
+    "PROP_FLASHLIGHT",
+    "LOC_WINDOW"
+   ],
+   "keyframe_en": "Frame 0: MS 50mm from the bay's south-west corner at 1.3 m, looking north-north-east across the bay: east window panes and the deep white-painted sill (24 cm) at screen-right 0.64-1.0; GUARD seated at (0.74,0.55) on the teak bench with its thin grey cushion, stooped, hands on his knees, phone face-down on his right thigh, black flashlight on his belt, thermos against the window end of the bench; the glazed timber double doors to the corridor at screen-left background (0.06-0.24) with the moon-silver corridor floor beyond; RESTORER mid-stride at (0.22,0.52), a steaming cup in each hand at waist height, folded gloves under her left thumb; the 2700K reading lamp in the bay's far corner at (0.58,0.30); harbour lights dotting the black glass; shadows with detail.",
+   "keyframe_zh": "第 0 帧：50mm 中景，摄影机在窗湾西南角，高 1.3 米，向北偏东望过窗湾：东窗玻璃与 24 厘米深的白漆窗台在画右 0.64–1.0；夜班工作人员坐在 (0.74,0.55) 的柚木窗凳上（薄灰坐垫），背微驼，双手放在膝上，手机屏幕朝下扣在右大腿上，腰侧挂着黑色手电，保温壶靠在窗凳靠窗一端；画左背景（0.06–0.24）是通往长廊的木框玻璃双开门，门外是月光照着的长廊地板；修复师迈步中，位于 (0.22,0.52)，双手各端一只冒热气的杯子在腰前，叠好的手套压在左手拇指下；2700K 阅读灯在窗湾远角 (0.58,0.30)；黑色玻璃上点点港口灯；暗部有层次。",
+   "endframe_en": "t=2.42 s: she stands at (0.55,0.50) beside him, right arm extended; his chipped cup (chip at 2 o'clock) set on the sill at (0.76,0.57), steam rising backlit against the dark window frame; her own cup still in her left hand at (0.50,0.60). S063 starts on this exact frame (same set-up).",
+   "motion_en": "Dolly track left to right ~0.5 m over 2.0 s with a 12-frame ease-out, 24 fps. 0-0.5 s her last stride from the doors; 0.57 s ('伸出') her right hand extends toward the sill; 0.6-2.15 s she leans and lowers his cup; 2.15 s ('手') the cup base meets the sill without a jump; steam continuous from both cups. GUARD still; only his head turns a few degrees toward her at 1.6 s. Must NOT move: window frames, lamp, sill; no spill; steam always rises.",
+   "motion_zh": "轨道由左向右横移约 0.5 米、历时 2.0 秒，12 帧缓出，24 fps。0–0.5 秒她从门口迈出最后一步；0.57 秒（“伸出”）右手伸向窗台；0.6–2.15 秒她俯身把他的杯子放低；2.15 秒（“手”）杯底落在窗台上，不跳帧；两只杯子的热气连续不断。夜班工作人员不动，只在 1.6 秒时头朝她转几度。不得移动：窗框、台灯、窗台；不得洒茶；热气始终向上。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 2.417,
+     "note": "Single generation (f4680-f4738); request 3.4 s: 0.5 s head handle with her stride already in motion, 0.5 s tail. The last frame is handed to S063 as its first frame."
+    }
+   ],
+   "plates": [
+    {
+     "name": "A",
+     "desc": "Main bay plate (single generation)."
+    },
+    {
+     "name": "B",
+     "desc": "Optional steam element: two thin plumes backlit by 2700K against black, 24 fps, for screen-comp if the model's steam reads weak or against bright glass."
+    }
+   ],
+   "post": "Standard bay set-up 'BAY_3Q' for S062-S065, S072-S074, S077: camera in the bay's SW corner looking NNE so the east window is screen-right, the glazed doors screen-left, GUARD foreground-right nearer the window, RESTORER beside him on his screen-left (a true side-on camera would stack them in depth - flagged). Steam must read against the dark frame, never against bright glass (bible 3.4). Her right index scar visible 0.6-1.2 s. The thermos is not a bible prop (skeleton S059/S077): lock one look - an old unbranded dull stainless-steel vacuum flask ~25 cm with a scuffed dark-navy cup-lid. His reading glasses hang on the cord from here on (keeps S065 free of any glass between their faces - flagged for S060). Grade CT_MODERN: reading-lamp warmth vs harbour cool, warm share ~25%. Sync f4694 (195.57) reach; f4732 (197.15) cup down.",
+   "match_to": "IN: S061 (she turns with the gloves in her fist; pantry omitted). OUT: S063 continues the same camera from this last frame. Seating lock: GUARD screen-right nearer the window, RESTORER screen-left, ~40 cm apart (bible 7.10)."
+  }
+ },
+ {
+  "id": "S063",
+  "prompt_en": "Medium two-shot, 50mm anamorphic, locked, eye level, a museum bay window at night, 24 fps; the same set-up as the shot before. Screen-right, nearest the window: GUARD (~65-year-old East Asian night attendant, square-round face, gentle down-turned eyes, age spot on his RIGHT cheekbone, salt-and-pepper hair, stooped back, navy attendant jacket with a small text-free badge, reading glasses on a black cord). Beside him: RESTORER (~28-year-old East Asian conservator, mole below her LEFT eye, loose low ponytail with strands at the right temple, charcoal wool coat with a small worn spot on the LEFT cuff's outer edge, bare hands). In one unhurried movement she sets her cup on the sill six centimetres to the left of his chipped one, lays her folded white gloves on the bench's left corner and sits down beside him, about 40 cm away, settled at 0.8 s as the band enters. At 1.9 s she undoes the middle horn button of her coat. At 2.1 s he glances at the tea. At 2.73 s both their shoulders drop together. No words. Steam from both cups climbs between them, backlit by a 2700K corner lamp against the dark window frame; harbour lights beyond. CT_MODERN, fine 35mm grain.",
+  "prompt_zh": "中景双人，50mm 变形宽银幕镜头，锁定，平视，夜里博物馆的窗湾，24 fps；与上一镜同一机位。画右靠窗：夜班工作人员（约 65 岁东亚男性，脸型方中带圆，眼角下垂、目光温和，右颧骨老年斑，花白短发，背微驼，藏青值守夹克与无文字小徽章，老花镜挂在黑色挂绳上）。他身旁：修复师（约 28 岁东亚女性文物修复师，左眼下小痣，松松的低马尾、右侧太阳穴几缕碎发，深灰呢外套，左袖口外侧一块小磨损，裸手）。她不慌不忙地一气呵成：把自己的杯子放在他那只带磕口的杯子左边约六厘米的窗台上，把叠好的白手套搁在长凳画左的角上，在他身旁坐下，相距约 40 厘米，在 0.8 秒全乐队进入时坐定。1.9 秒她解开外套中间那粒牛角扣。2.1 秒他看了一眼那杯茶。2.73 秒两人的肩膀同时落下来。没有一句话。两只杯子的热气在他们之间缓缓升起，被角落一盏 2700K 阅读灯逆光照亮，衬着暗色窗框；窗外是港口的灯。CT_MODERN 调色，细腻 35mm 颗粒。",
+  "negative": "talking, broad smiles, touching each other, eye contact before 2.1 s, the guard on screen-left, gloves on her hands, gloves dropped on the floor, coat still buttoned after 2.0 s, cups touching, cups far apart, steam against bright sky, any glass pane between them, glasses on his nose, slow motion, camera move, melodrama, tears",
+  "gen": {
+   "duration_s": 3.25,
+   "refs": [
+    "CHAR_RESTORER",
+    "CHAR_GUARD",
+    "PROP_TEA",
+    "PROP_GLOVES",
+    "PROP_COAT",
+    "PROP_PHONE",
+    "PROP_FLASHLIGHT",
+    "LOC_WINDOW"
+   ],
+   "keyframe_en": "Frame 0 = S062's last frame: RESTORER standing at (0.55,0.50) beside the seated GUARD at (0.74,0.55); his chipped cup on the sill at (0.76,0.57); her cup in her left hand, folded gloves under her left thumb; reading lamp at (0.58,0.30); steam backlit; glazed doors soft at left.",
+   "keyframe_zh": "第 0 帧 = S062 的末帧：修复师站在 (0.55,0.50)，身旁是坐着的夜班工作人员 (0.74,0.55)；他带磕口的杯子在窗台 (0.76,0.57)；她的杯子在左手，叠好的手套压在左手拇指下；阅读灯在 (0.58,0.30)；热气逆光；画左玻璃门虚焦。",
+   "endframe_en": "t=3.25 s: two seated figures - RESTORER at (0.50,0.56), coat open, shoulders lowered; GUARD at (0.72,0.56), stooped; cups on the sill, hers at (0.705,0.57) and his at (0.76,0.57), ~6 cm apart, steam between them; folded gloves on the bench's left corner at (0.38,0.68). This sill arrangement seeds S081.",
+   "motion_en": "Camera locked, 24 fps, real time. 0.03-0.35 s her cup goes down on the sill left of his; 0.35-0.55 s gloves laid on the bench's screen-left corner; 0.55-0.80 s she sits, continuous and unhurried, still on the 0.80 s band entry. 1.88 s her right hand undoes the middle horn button; 2.1 s his eyes go to the cup; 2.73 s both shoulders fall a centimetre together on an out-breath. Steam rises slowly throughout. Must NOT move: camera, cups after placement, gloves after placement, lamp.",
+   "motion_zh": "摄影机锁定，24 fps，真实速度。0.03–0.35 秒她把杯子放在他那只左边的窗台上；0.35–0.55 秒把手套搁在长凳画左的角上；0.55–0.80 秒坐下，连贯从容，0.80 秒全乐队进入时已坐定。1.88 秒右手解开中间那粒牛角扣；2.1 秒他的目光落到杯子上；2.73 秒两人随一口呼气同时把肩膀放下约一厘米。热气全程缓缓上升。不得移动：摄影机、放好后的杯子、放好后的手套、台灯。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 1.6,
+     "note": "Seg 1 (f4738-f4776): cup down, gloves, sit. Generate 2.1 s with a 0.5 s tail."
+    },
+    {
+     "t0": 1.4,
+     "t1": 3.25,
+     "note": "Seg 2 (f4772-f4816): I2V from the seated frame at 1.4 s - unbutton, glance, shoulders. Generate 2.4 s (0.2 s head overlap, 0.4 s tail); cross-blend 1.4-1.6 s while both bodies are still."
+    }
+   ],
+   "plates": [
+    {
+     "name": "A",
+     "desc": "Main two-shot plate (two segments, same locked camera)."
+    },
+    {
+     "name": "B",
+     "desc": "Optional steam element as in S062."
+    }
+   ],
+   "post": "Sit lands on the 198.22 full-band entry (f4757); unbutton at 199.3 (f4783) - the coat stays open in every later shot S064-S081; shoulders at 200.15 (f4804). Three actions inside 0.77 s before the band entry is tight - keep them one continuous gesture (flagged). Gloves stay folded on the bench corner for S074. Grade CT_MODERN, 2700K key at ~5:1, warm share ~30%.",
+   "match_to": "IN: S062 last frame (identical set-up). Two-shot geometry reused in S066's end (from behind), S072, S074, S077; the cup arrangement (his screen-right, hers screen-left, ~6 cm) reused in S081."
+  }
+ },
+ {
+  "id": "S064",
+  "prompt_en": "Insert, 100mm anamorphic, locked, slightly high angle over a deep white-painted window sill at night, 24 fps; behind, the dark timber window frame and black glass with soft harbour light points. Screen-right: the broad, age-spotted, ringless hands of GUARD (~65-year-old East Asian night attendant; navy jacket cuffs, pale grey-blue shirt cuff) close around a handle-less pale bluish-white porcelain cup ringed by one thin complete cobalt line 6 mm below the rim, a tiny chip at 2 o'clock, and lift it slowly from the sill toward his lap. Screen-left at (0.42,0.62): the bare left hand of RESTORER (~28-year-old East Asian conservator, long slim fingers, short unpolished nails) rests on the sill beside her own identical new cup; the LEFT cuff of her charcoal wool melton coat is turned so its small rubbed, pilled, lighter-grey worn spot, 18x8 mm on the outer little-finger side about 1 cm above the edge, sits in crisp focus by 0.9 s. Jasmine tea, golden #C9A55A, one unfurled leaf. Steam rises from both cups, backlit by a 2700K reading lamp against the dark frame, and climbs past the top of frame by 1.6 s. Quiet and warm. CT_MODERN, fine 35mm grain.",
+  "prompt_zh": "插入镜头，100mm 变形宽银幕镜头，锁定，略俯，夜里一面深深的白漆窗台，24 fps；背景是暗色木窗框与黑色玻璃，港口灯点虚焦。画右：夜班工作人员（约 65 岁东亚男性；藏青夹克袖口、浅灰蓝衬衫袖口）宽厚、布满老年斑、没有戒指的双手，慢慢合拢在一只无柄青白釉瓷杯上——杯口下 6 毫米一道完整的钴蓝细线，口沿 2 点钟位置一个小磕口——把它从窗台上捧起，移向膝头。画左 (0.42,0.62)：修复师（约 28 岁东亚女性文物修复师，手指修长，指甲短、无甲油）没戴手套的左手轻轻搭在窗台上，旁边是她那只同款新杯；深灰羊毛呢外套的左袖口转向镜头，外侧小指一侧、距袖口边约 1 厘米处那块 18×8 毫米的小磨损——呢面起毛、颜色变浅、略有光泽——0.9 秒时清晰落在焦点里。茉莉花茶汤色金黄 #C9A55A，漂着一片舒展的茶叶。两只杯子的热气被 2700K 阅读灯逆光照亮、衬着暗窗框缓缓升起，1.6 秒时升过画面上缘。安静而温暖。CT_MODERN 调色，细腻 35mm 颗粒。",
+  "negative": "wear spot on the right cuff or in the wrong place, gloves, ring, wedding band, watch, phone, faces, cups with handles, logos or text on the cups, a chip on her cup, spilled tea, steam against bright sky, cobalt pattern other than one plain line, plastic look, oversharpening, extra or fused fingers, camera movement",
+  "gen": {
+   "duration_s": 2.042,
+   "refs": [
+    "CHAR_RESTORER",
+    "CHAR_GUARD",
+    "PROP_TEA",
+    "PROP_COAT",
+    "LOC_WINDOW"
+   ],
+   "keyframe_en": "Frame 0: 100mm insert, focus on the sill plane: his two hands just closing around the chipped cup at (0.70,0.55), the chip at 2 o'clock; her cup at (0.52,0.50) steaming; her bare left hand relaxed on the sill at (0.42,0.62), coat cuff with the worn spot facing the lens (cuff width ~30% of frame height); dark window muntin and black glass behind, harbour points soft; 2700K backlight on the steam.",
+   "keyframe_zh": "第 0 帧：100mm 插入镜头，焦点在窗台平面：他的双手刚合拢在带磕口的杯子上 (0.70,0.55)，磕口在 2 点钟；她的杯子在 (0.52,0.50) 冒着热气；她没戴手套的左手放松地搭在窗台上 (0.42,0.62)，外套袖口的磨损朝向镜头（袖口宽约占画面高 30%）；背后是暗色窗棂与黑玻璃，港口灯点虚焦；2700K 逆光勾亮热气。",
+   "endframe_en": "t=2.04 s: his cup lifted out of frame low right toward his lap, a trail of steam lingering; her hand and cuff unchanged at (0.42,0.62) - the REGISTERED wear position used by S069 -> S070; her cup still steaming at (0.52,0.50).",
+   "motion_en": "Locked, 24 fps, real time. 0.0-0.4 s his hands close around the cup; 0.4-1.9 s he lifts it slowly up and back toward lower right, off the sill; her hand stays still apart from a breath. 0.6-0.93 s a small focus breath settles exactly on the cuff wear; 1.62 s steam passes the top edge. Must NOT move: her hand, her cup, the sill, the frame; no spill.",
+   "motion_zh": "锁定，24 fps，真实速度。0.0–0.4 秒他的双手合拢在杯子上；0.4–1.9 秒他慢慢把杯子向右下方捧起、离开窗台；她的手除呼吸外不动。0.6–0.93 秒焦点轻轻呼吸一下，正好落定在袖口磨损上；1.62 秒热气升过画面上缘。不得移动：她的手、她的杯子、窗台、窗框；不得洒茶。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 2.042,
+     "note": "Single generation (f4816-f4865); request 3.0 s with 0.4 s head and 0.5 s tail handles."
+    }
+   ],
+   "plates": [
+    {
+     "name": "A",
+     "desc": "Main insert plate (single generation)."
+    },
+    {
+     "name": "B",
+     "desc": "Optional steam element (two plumes, 2700K backlit, black background) for screen-comp."
+    }
+   ],
+   "post": "Register the wear spot at (0.42,0.62), cuff width ~30% of frame height; S070's aged cuff lands on the same coordinates. The skeleton has her left hand 'on the bench': since she sits on his screen-left, her left hand is on her far side and cannot sit beside his hands in a 100mm insert, so it rests on the sill by her own cup (flagged). Hand QC: five fingers each, knuckles and age spots consistent with CHAR_GUARD's hand inset. Grade CT_MODERN, warm share ~30%.",
+   "match_to": "Wear registration (0.42,0.62) -> S069 last frame (two sleeves) -> S070 frame 0 (aged cuff). Cup details (single cobalt line, his chip at 2 o'clock) carried to S077 and S081."
+  }
+ },
+ {
+  "id": "S065",
+  "prompt_en": "Close two-shot, 75mm anamorphic, locked, eye level, inside a museum bay window at night, 24 fps; nothing stands between them - no window, no glass, no reflection. Screen-right, eyes at (0.64,0.42): GUARD (~65-year-old East Asian night attendant, square-round face, three forehead lines, gentle down-turned eyes, pale-brown age spot on his RIGHT cheekbone, short salt-and-pepper hair thinning at the crown, stooped, navy attendant jacket, reading glasses hanging on a black cord), a chipped porcelain cup held in his lap. Screen-left, eyes at (0.36,0.44): RESTORER (~28-year-old East Asian conservator, soft oval face, tiny mole below the outer corner of her LEFT eye, natural brows, no make-up, loose low ponytail with strands at the right temple, charcoal wool coat now unbuttoned). At 0.19 s he lifts his eyes from the cup and looks at her; at 0.79 s she gives one small nod at real speed; at 1.19 s they both breathe out together, shoulders easing; then stillness to the end. Warm 2700K reading-lamp side light from screen-right, about 4:1 on the faces; harbour lights as soft bokeh behind. Real skin with pores and tired eyes. CT_MODERN, fine 35mm grain.",
+  "prompt_zh": "近景双人，75mm 变形宽银幕镜头，锁定，平视，夜里博物馆的窗湾，24 fps；两人之间什么都没有——没有窗、没有玻璃、没有倒影。画右，眼睛在 (0.64,0.42)：夜班工作人员（约 65 岁东亚男性，脸型方中带圆，额头三道横纹，眼角下垂、目光温和，右颧骨一块浅褐色老年斑，花白短发、头顶略稀，背微驼，藏青值守夹克，老花镜挂在黑色挂绳上），膝上捧着那只带磕口的瓷杯。画左，眼睛在 (0.36,0.44)：修复师（约 28 岁东亚女性文物修复师，鹅蛋脸，左眼外眼角下一颗极小的痣，自然平直的眉，素颜，松松的低马尾、右侧太阳穴几缕碎发，深灰呢外套此刻已解开）。0.19 秒他从茶杯上抬起眼，看向她；0.79 秒她以真实速度轻轻点一下头；1.19 秒两人同时呼出一口气，肩膀松下来；之后静止到镜头结束。2700K 阅读灯从画右侧面暖暖地照来，脸上光比约 4:1；身后港口灯化成柔和的光斑。真实的皮肤，有毛孔，有熬夜的眼睛。CT_MODERN 调色，细腻 35mm 颗粒。",
+  "negative": "glass or window pane between them, reflections, eyeglasses on his face, broad smile, laughter, talking, tears, hugging, touching, slow-motion nod, exaggerated nod, beauty filter, smoothed skin, her coat buttoned, gloves, camera movement, unmotivated rim light",
+  "gen": {
+   "duration_s": 1.958,
+   "refs": [
+    "CHAR_RESTORER",
+    "CHAR_GUARD",
+    "PROP_TEA",
+    "PROP_COAT",
+    "LOC_WINDOW"
+   ],
+   "keyframe_en": "Frame 0: 75mm close two-shot, both faces in focus (T4): GUARD in three-quarter at right, eyes lowered to the cup, eyes at (0.64,0.45); RESTORER in three-quarter at left looking at him, eyes at (0.36,0.44), the mole below her left eye visible; warm lamp light from screen-right; dark bay behind with a few warm harbour bokeh at upper right.",
+   "keyframe_zh": "第 0 帧：75mm 双人近景，两张脸都在焦内（T4）：夜班工作人员四分之三侧在画右，目光垂向茶杯，眼睛在 (0.64,0.45)；修复师四分之三侧在画左望着他，眼睛在 (0.36,0.44)，左眼下的小痣可见；暖色台灯光从画右来；背后是暗的窗湾，右上方几点暖色港口光斑。",
+   "endframe_en": "t=1.96 s: both still, eyes meeting across the middle of frame, shoulders lowered; the frame holds across '千年啊'.",
+   "motion_en": "Locked, 24 fps, real time. 0.19 s his head lifts ~10 degrees and turns to her; 0.79 s her nod - the head dips ~1.5 cm and returns in ~0.4 s; 1.19 s both exhale, shoulders settle; 1.4-1.96 s stillness. Must NOT: speak, smile widely, move the cup, move the camera.",
+   "motion_zh": "锁定，24 fps，真实速度。0.19 秒他的头抬起约 10° 并转向她；0.79 秒她点头——头低下约 1.5 厘米，约 0.4 秒内回到原位；1.19 秒两人同时呼气，肩膀落定；1.4–1.96 秒静止。不得：说话、大笑、移动茶杯、移动摄影机。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 1.958,
+     "note": "Single generation (f4865-f4912); request 2.5 s with 0.3 s head and 0.3 s tail handles."
+    }
+   ],
+   "plates": [],
+   "post": "The brief's '他抬头，她轻轻点头，两个人的呼吸渐渐放松' - real speed, never ramped. Sync: f4870 (202.9) look; f4884 (203.5 beat) nod; f4894 (203.9) breath. Skin hue protected 18-32 deg under 2700K. Grade CT_MODERN. Cut to S066 at f4912 on '不过'.",
+   "match_to": "Answers the INTERLUDE nod (S028/S029) with the roles reversed. OUT: S066 - the same pair seen from behind at the far end of the corridor."
+  }
+ },
+ {
+  "id": "S066",
+  "prompt_en": "Wide shot, 40mm anamorphic, lens 1.45 m on the centre line of a long moonlit museum corridor, motion-control dolly pushing east at a steady ~1.4 m/s, easing to a stop at 8.1 s, 24 fps. Moonlight from behind right lays arched silver pools on the waxed teak floor every 4 m. Frameless vitrines alternate left and right, dark inside, each glass holding another era's night in its own depth: left, a swinging horn stern lantern over a deep-blue swell, a battened sail edge, the tiny NAVIGATOR in an indigo head-cloth at the rail; right at 2.1 s, a granite home - candle stub, empty bench, cracked-ice lattice shadow - and through its open door rain at last falling into a blue-and-white bowl as WIFE (slender, low bun, wooden hairpin, pale-blue jacket, silver bangle on her LEFT wrist, face unresolved) holds her palm out under the eaves; left at 3.9 s, MIGRANT (~20, one long braid, faded grey-blue floral blouse) on her rattan case under warm bulbs; right at 5.7 s, MOTHER's back (~45, dove-grey qipao, low chignon) trembling in fading stained-glass colour. Small wall vitrines hold only blurred warm glows. Ahead, through clear glass, the real present: GUARD's stooped navy back at right, RESTORER's low ponytail at left, two cups steaming. CT_MODERN, panes keep their era grades, 35mm grain.",
+  "prompt_zh": "全景，40mm 变形宽银幕镜头，镜头高 1.45 米，位于一条长长的月光博物馆长廊中轴线上，运动控制轨道车以约每秒 1.4 米匀速向东推进，8.1 秒时缓停，24 fps。月光从右后方射入，每隔 4 米在打蜡的柚木地板上铺下一个拱形银色光斑。无框展柜左右交替，柜内是暗的，每一面玻璃都在自己的纵深里映着另一个时代的夜：左侧，一盏角片艉灯在深蓝长涌浪上摇晃，竹篾硬帆的一角，船舷边小小的航海人裹着靛蓝头巾；右侧（2.1 秒），一间花岗岩旧屋——残烛、空着的长凳、冰裂纹窗格影——敞开的门外，雨终于落下，落进一只青花碗里，等待的人（清瘦，低髻插素面木簪，浅蓝短袄，左腕素银细镯，脸始终看不清）把手心伸到檐外；左侧（3.9 秒），迁徙女性（约 20 岁，一条长辫，褪色灰蓝碎花衫）坐在藤箱上，头顶是暖色灯泡；右侧（5.7 秒），母亲（约 45 岁，浅鸽灰旗袍，低髻）的背影在渐褪的彩窗余光里轻轻颤抖。墙上的小壁柜里只有虚焦的暖色光斑。尽头，透过清玻璃，是真实的当下：画右是夜班工作人员微驼的藏青背影，画左是修复师的低马尾，两杯茶冒着热气。长廊为 CT_MODERN，每面玻璃保留各自时代的调色，35mm 颗粒。",
+  "negative": "ghost figures standing in the corridor, translucent people outside the glass, eras bleeding across panes, all panes one colour, the wife's face sharp, the mother's face shown, minor vitrine glows resolving into pictures, readable labels or signage, ceiling lights on, fog or haze in the air, moon disc in frame, morphing between panes, flicker, camera shake, speed changes mid-move, the two at the end facing camera, him on screen-left",
+  "gen": {
+   "duration_s": 8.542,
+   "refs": [
+    "CHAR_NAVIGATOR",
+    "CHAR_WIFE",
+    "CHAR_MIGRANT",
+    "CHAR_MOTHER",
+    "CHAR_RESTORER",
+    "CHAR_GUARD",
+    "PROP_SHIPLAMP",
+    "PROP_CANDLE",
+    "PROP_BOWL",
+    "PROP_LAMP",
+    "PROP_CASE",
+    "PROP_GLASSPANEL",
+    "PROP_TEA",
+    "LOC_CORRIDOR",
+    "LOC_DECK",
+    "LOC_HOME",
+    "LOC_PIER",
+    "LOC_CHAPEL",
+    "LOC_WINDOW"
+   ],
+   "keyframe_en": "Frame 0 at x=-12.5: one-point perspective, vanishing point (0.50,0.48); arched moon pools receding on the floor, the nearest at lower right; P1 (x=-10, left) at (0.22,0.45) as a tall dark glass with the unlit old stern lantern inside, its glass just beginning to show a sea and a warm swinging lantern at low strength; P2 (x=-8, right, before a pier) at (0.72,0.46); P3 (left) and P4 (right) smaller beyond; small out-of-focus warm glows of the minor wall vitrines on both walls; at the far end the glazed timber screen (wavy upper glass, clear lower glass) with the lit bay and two small seated backs at (0.47-0.53,0.52); arched windows with slim steel bars along the right wall; timber coffered ceiling.",
+   "keyframe_zh": "第 0 帧，x=−12.5：一点透视，灭点 (0.50,0.48)；拱形月光斑沿地板向远处排去，最近的一个在画右下；P1（x=−10，左）在 (0.22,0.45)，是一面高高的暗玻璃，柜内是不点亮的旧艉灯，玻璃里刚以很低的强度浮现出海面和一盏摇晃的暖灯；P2（x=−8，右，立在墙垛前）在 (0.72,0.46)；更远处是较小的 P3（左）与 P4（右）；两侧墙上小壁柜虚焦的暖色光斑；尽头是木框玻璃隔断（上部波纹玻璃、下部清玻璃），后面是亮着灯的窗湾与两个小小的坐着的背影 (0.47–0.53,0.52)；右墙一排细钢窗棂的拱窗；木格天花。",
+   "endframe_en": "t=8.54 s (at rest since 8.12 s, x=-1.5): the glazed screen fills the centre; through its clear lower glass the two backs on the bay bench - RESTORER at (0.43,0.55), GUARD at (0.57,0.55), ~40 cm apart - two cups steaming on the sill; the 2700K reading lamp in the bay's north-east corner at (0.38,0.36) = light-match anchor for S067's stern lantern; harbour lights beyond; P4's edge leaving frame right; a moon pool at lower right.",
+   "motion_en": "Motion-control dolly, 24 fps, already rolling at frame 0 at ~1.4 m/s from x=-12.5 (constant), 12-24-frame ease-out from 7.25 s ('握在掌间') to rest at x=-1.5 by 8.12 s, then a 10-frame hold. Lens height 1.45 m; no pan, tilt or roll. Pane timing: P1 reflection peaks 0.85 s; P2 surfaces 2.10 s, raindrop into the bowl's centre blossom 2.40 s (96 fps element, readable within ~1 s); P3 most prominent 3.90 s; P4 shoulders most prominent 5.71 s; the E pane resolves 6.5-8.1 s. Focus pulls per pane to its mirror depth (camera-to-glass + reflected depth), finally to the bay through the screen. Inside the panes only small continuous actions (lantern swing 6-8 s period, flame breath, crowd drift left to right, real-time shoulder tremble, steam). Must NOT: panes move, figures leave panes, eras overlap, minor glows resolve, camera shake.",
+   "motion_zh": "运动控制轨道车，24 fps，第 0 帧时已在运动，自 x=−12.5 以约每秒 1.4 米匀速前进，7.25 秒（“握在掌间”）起 12–24 帧缓出，8.12 秒停稳在 x=−1.5，再停留 10 帧。镜头高 1.45 米；不摇、不俯仰、不滚转。各窗时间：P1 倒影 0.85 秒最亮；P2 在 2.10 秒浮现，2.40 秒雨滴落进碗心梅花（96 fps 素材，约 1 秒内可辨）；P3 在 3.90 秒最显著；P4 母亲的肩在 5.71 秒最显著；尽头 E 在 6.5–8.1 秒清晰。焦点依次转入每面玻璃的镜像深度（摄影机到玻璃的距离 + 被反射空间的深度），最后穿过隔断落到窗湾。玻璃里只有很小的持续动作（艉灯 6–8 秒周期摆动、烛焰呼吸、人群由左向右流动、肩膀以真实速度颤抖、热气）。不得：展柜移动、人物离开各自的玻璃、时代互相重叠、小壁柜光斑变清晰、机身晃动。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 4.5,
+     "note": "Seg 1 (f4912-f5020): base corridor plate A on motion-control path MC_CORRIDOR (S027 geometry), x=-12.5 -> -6.2; P1, P2 (+rain element) and P3 approach. Generate 5.0 s with a 0.5 s pre-rolled head at speed."
+    },
+    {
+     "t0": 4.0,
+     "t1": 8.542,
+     "note": "Seg 2 (f5008-f5117): x=-6.9 -> -1.5 with the ease-out; P3 exit, P4, E stop and hold. Generate 5.0 s (0.5 s head overlap, 0.5 s tail hold). Join 4.0-4.5 s by a velocity-matched optical-flow blend while no pane is centred."
+    }
+   ],
+   "plates": [
+    {
+     "name": "A",
+     "desc": "Corridor base plate (two segments, same MC path): moon pools every 4 m from behind right (04:30, moon SW ~42 deg), the five hero vitrines dark with their museum objects (P1 unlit stern lantern, P2 brass candlestick with a stub, P3 old enamel lamp shade, P4 the stained-glass panel on a dim lightbox), the minor wall vitrines, the glazed end screen with an EMPTY bay beyond (E comes from plate E)."
+    },
+    {
+     "name": "B1",
+     "desc": "P1 era plate (CT_NAV): night sea, long swell with silver crests, the stern of a junk with the hexagonal horn-paned stern lantern swinging on a 6-8 s period at 1950K, a battened rust-ochre sail edge, the tiny NAVIGATOR (indigo head-cloth, indigo jacket) at the rail in the lamp light (<2% of the pane); clear, windy; moon from upper right. As-seen layout, camera trucking to match the pane's parallax."
+    },
+    {
+     "name": "B2",
+     "desc": "P2 era plate (CT_HOME): old granite home interior seen toward the open door at screen-left - candle stub state D (2.5 cm) on the dark camphor table, the empty screen-right bench, cracked-ice lattice moon shadow; through the door, the eaves and granite step with the blue-and-white bowl (plum-blossom rim band, centre blossom) catching rain, rain streaks visible only against the 1900K niche lamp; WIFE in the doorway, back three-quarter, silver bangle on her LEFT wrist, extending her palm under the eaves at ~2.6 s, face never resolved."
+    },
+    {
+     "name": "B2r",
+     "desc": "96 fps raindrop element (24mm probe / 100mm macro, CT_HOME): one drop falling into the bowl's centre double circle and five-petal plum blossom, crown splash, water starting to cover the blossom; backlit by the 1900K niche lamp against dark; comped inside the P2 reflection at 2.40-3.4 s with focus 'following into' it."
+    },
+    {
+     "name": "B3",
+     "desc": "P3 era plate (CT_MIG): the 1920s-30s waiting shed under enamel-shaded 2400K bulb pools, wet floor reflections, crowd drifting left to right, MIGRANT (one long braid, faded grey-blue floral blouse) seated on her rattan case under the third lamp."
+    },
+    {
+     "name": "B4",
+     "desc": "P4 era plate (CT_CHAPEL): the MOTHER from behind at the left end of a teak pew, dove-grey qipao, low chignon with grey strands, shoulders trembling slightly in real time, the last soft stained-glass petals fading into blue-hour cool, a few side-table candle points; no religious figures in focus."
+    },
+    {
+     "name": "E",
+     "desc": "Present plate (CT_MODERN), TRANSMITTED not reflected: the bay seen from behind through the glazed screen - RESTORER (charcoal coat, low ponytail) at left, GUARD (stooped, navy jacket, salt-and-pepper hair) at right, ~40 cm apart, two cups steaming on the sill, 2700K reading lamp in the north-east corner, harbour night lights beyond."
+    },
+    {
+     "name": "C",
+     "desc": "Minor-vitrine glows: ~14 permanently defocused warm glows (a fisher's lamp, a stove, a lighthouse sweep, a night-market window), circle of confusion >= 30 px, never resolving."
+    }
+   ],
+   "post": "Era plates are composited in the as-seen layouts written in the skeleton (no flop), the same mirror policy as gen_g1/g2 (S017, S024) - flagged to the director (bible 8.3-4). Mask each era plate to its pane, screen blend, strength ~10% far -> 35-45% at its peak sync point -> fading as the pane leaves frame; darken each vitrine interior ~1 stop inside the mask (dark behind the glass, bright reflected space); defocus by mirror depth and rack per pane. E is a straight transmitted comp (~90%) with the wavy upper glass distorting it slightly and a faint moon-pool reflection on the screen. Speed note: from x=-12.5 at 204.67 to rest at x=-1.5 by 212.79 needs ~1.43 m/s, not the skeleton's 1.3 (flagged). Grades: corridor CT_MODERN; panes CT_NAV / CT_HOME / CT_MIG / CT_CHAPEL attenuated by reflectance; grain per era. Sync: f4932 (205.52) P1 peak; f4962 (206.77) P2; f4970 (207.07) raindrop; f5006 (208.57) P3; f5049 (210.38) P4; f5086 (211.92) ease; f5107 (212.79) rest.",
+   "match_to": "IN: S065 (their faces) -> the same pair from behind (reverse). Geometry/MC from S027 (same corridor coordinates); pays off the lateral three-pane preview of S024. OUT: light match - reading lamp (0.38,0.36) -> S067 stern lantern (0.38,0.36)."
+  }
+ },
+ {
+  "id": "S067",
+  "prompt_en": "Medium shot, 50mm anamorphic, gentle breathing handheld, slightly high angle, the night deck of a 17th-century ocean-going junk beside a rope coil, 24 fps delivery with the coat's fall captured at 48 fps for 50% slow motion, ramping back to real time. Deep-blue sea, silver moonlight from upper right, one hexagonal horn-paned stern lantern glowing 1950K at (0.38,0.36). Screen-right: COMPANION (~17-year-old East Asian sailor, thin boyish face, no beard, lips pale with cold, peeling sunburn on the cheekbones, small topknot tied with a frayed cloth band, torn undyed hemp shirt, barefoot) curled asleep against the coil, head toward screen-right, shivering. Screen-left: NAVIGATOR (~35-year-old East Asian compass-keeper, long face, high cheekbones, deep-set eyes, short neat beard, pale scar at the tail of his LEFT eyebrow, indigo head-cloth over a topknot, salt-crusted hands) shakes open his brown padded cotton coat at 0.4 s; it spreads in the wind and falls left to right over the boy, settling at 1.04 s on the music's surge. Now in only his faded indigo short jacket, he watches; at 1.7 s the boy pulls the collar to his chin, still asleep; at 2.1 s the navigator's left fingers slip inside his own RIGHT cuff and rest on a pale-blue cloth patch. CT_NAV, fine 35mm grain.",
+  "prompt_zh": "中景，50mm 变形宽银幕镜头，带呼吸感的轻微手持，略俯，17 世纪远洋帆船的夜甲板，缆绳卷旁；以 24 fps 交付，外衣落下的过程以 48 fps 拍成 50% 慢动作，之后回到真实速度。深蓝的海，银色月光从画右上方来，一盏六角角片艉灯以 1950K 亮在 (0.38,0.36)。画右：年轻同伴（约 17 岁东亚少年水手，脸窄而稚气，没有胡须，嘴唇冻得发白，颧骨上晒脱皮，小发髻用一条磨毛的布带扎着，一件磨破的本色麻布短衫，赤足）蜷在缆绳卷旁睡着，头朝画右，冻得发抖。画左：航海人（约 35 岁东亚火长，长脸、颧骨突出、眼窝略深，短而整齐的胡须，左眉尾一道浅白旧疤，靛蓝头巾裹着发髻，手上结着海盐）在 0.4 秒抖开自己那件棕色夹棉外衣；衣料在风里展开，由画左向画右落到少年身上，在 1.04 秒音乐涌起时落定。此刻他身上只剩那件褪色的靛蓝短褂，站着看；1.7 秒少年在睡梦里把衣领拉到下巴，没醒；2.1 秒航海人的左手手指探进自己的右袖口，停在一块浅蓝布补丁上。CT_NAV 调色，细腻 35mm 颗粒。",
+  "negative": "the navigator taking off his indigo jacket, patch on the left cuff or outside the cuff, coat falling right to left, the boy waking or looking at camera, Qing queue hairstyle, modern fabric, zips, wristwatch, documentary shake, slow motion on faces, blue streak flare, fog machine haze, lantern on the wrong side, readable text, extra fingers",
+  "gen": {
+   "duration_s": 2.458,
+   "refs": [
+    "CHAR_NAVIGATOR",
+    "CHAR_COMPANION",
+    "PROP_OUTERCOAT",
+    "PROP_PATCH",
+    "PROP_SHIPLAMP",
+    "LOC_DECK"
+   ],
+   "keyframe_en": "Frame 0 (light match from S066): the stern lantern's warm point at (0.38,0.36) on its iron hook above the rail; NAVIGATOR at (0.26,0.50) standing, the brown padded coat gathered in both hands at chest height; COMPANION curled at (0.70,0.66) against a rope coil, hemp shirt, bare feet; wet deck planks with moon sheen; dark swell beyond the rail; moonlight from upper right.",
+   "keyframe_zh": "第 0 帧（承接 S066 的光点）：艉灯的暖点在 (0.38,0.36)，挂在船舷上方的铁钩上；航海人站在 (0.26,0.50)，双手把棕色夹棉外衣拢在胸前；年轻同伴蜷在 (0.70,0.66) 的缆绳卷旁，麻布短衫、赤足；湿甲板上有月光反光；船舷外是黑暗的涌浪；月光来自画右上方。",
+   "endframe_en": "t=2.46 s: the coat lies over the boy, its folds running left to right; NAVIGATOR at (0.30,0.48) in his indigo jacket, left fingertips resting on the pale-blue patch inside his turned-back right cuff at (0.36,0.62); lantern still at (0.38,0.36).",
+   "motion_en": "Handheld, breathing, small amplitude. 0-1.3 s screen time in slow motion (48 fps capture played at 24, ~0.65 s of real action): 0.39 s the coat is shaken open, 0.4-1.04 s it unfurls in the wind and falls left to right over the boy, settling exactly at 1.04 s (214.25 surge). 1.3-1.5 s ramp to 24 fps real time. 1.69 s the boy pulls the collar to his chin; 1.9-2.09 s the navigator's left thumb and forefinger turn back his right cuff and rest on the patch; hold. Lantern swings on a 6-8 s period; the sea rolls. Must NOT: slow motion on faces; the indigo jacket comes off.",
+   "motion_zh": "手持，带呼吸感，幅度小。画面时间 0–1.3 秒为慢动作（48 fps 拍摄、24 fps 播放，约等于 0.65 秒的真实动作）：0.39 秒外衣被抖开，0.4–1.04 秒衣料在风中展开、由左向右落到少年身上，恰在 1.04 秒（214.25 涌起）落定。1.3–1.5 秒升格回落到 24 fps 真实速度。1.69 秒少年把衣领拉到下巴；1.9–2.09 秒航海人用左手拇指与食指翻开右袖口，指腹停在补丁上；保持。艉灯以 6–8 秒周期摆动；海在起伏。不得：对脸部做慢动作；脱下靛蓝短褂。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 1.3,
+     "note": "Seg 1 (f5117-f5148) slow-motion coat fall: generate as a 48 fps-look clip (or 24 fps then 2x interpolation), ~0.65 s of real action plus 0.3 s handles."
+    },
+    {
+     "t0": 1.2,
+     "t1": 2.458,
+     "note": "Seg 2 (f5146-f5176) real time: the boy's collar pull and the cuff touch. Generate 1.8 s from the settled-coat frame, 0.3 s tail."
+    }
+   ],
+   "plates": [
+    {
+     "name": "A",
+     "desc": "Main deck plate (two speed segments, same handheld path)."
+    },
+    {
+     "name": "B",
+     "desc": "Optional cloth element: the brown padded coat (#5B4634, paler rope-worn shoulders, undyed lining) unfurling left to right in wind, 48 fps, for comp if the model's cloth reads stiff."
+    }
+   ],
+   "post": "Speed ramp 48 -> 24 fps at 1.3-1.5 s screen time: the skeleton marks the whole shot 48 fps, but at 50% the 2.46 s shot holds only 1.23 s of real action - too little for coat + collar + cuff (flagged). Coat settles on f5142 (214.25). Patch lock: inside the RIGHT cuff, 4.5x6 cm, #7D9CBB, off-white running stitches, one uneven corner with a double knot, turned back by the LEFT hand. Grade CT_NAV: lantern 1950K with halation 0.5, sea P01-P03, greens -20%, grain 1.15.",
+   "match_to": "IN: light match from S066's end (reading lamp (0.38,0.36) -> stern lantern (0.38,0.36)). OUT: T21 direction left -> right into S068 (the sweet). Note: S067 ends on a resting hand, so the T21 'cut mid-action' is a direction match only (flagged)."
+  }
+ },
+ {
+  "id": "S068",
+  "prompt_en": "Medium shot, 50mm anamorphic, locked, eye level, a 1920s-30s pier waiting shed at night after rain, under one enamel-shaded 2400K bulb's pool of light, wet planks reflecting it, 24 fps. On a long bench, screen-left: MIGRANT (~20-year-old East Asian woman, round-square face, full cheeks, large bright wide-set eyes, straight thick brows, small mole above her RIGHT brow peak, slightly chapped lips, one long braid, faded grey-blue cotton blouse with small white and faded-rose five-petal flowers and cloth knot buttons), her rattan case at her feet, an opened square of translucent honey oil paper with a loosened thin red string in her lap, glowing in the bulb light. Screen-right: TRAVELLER (~14-year-old East Asian boy, thin, prominent ears, darting eyes, close-cropped hair, old cloth cap, oversized grey-brown adult jacket with sleeves rolled twice) hugging a cloth bundle, a ticket crushed in his fist. The shot opens mid-gesture: her right hand carries a piece of peanut-sesame brittle left to right and at 0.27 s sets it in his open palm. He hesitates, then closes his fingers. At 0.93 s she smiles at him, her right canine just showing; at 1.53 s half his face slowly loosens into an unfinished smile. Faded-photograph softness, saturation -15%, never sepia, living skin. CT_MIG, 35mm grain.",
+  "prompt_zh": "中景，50mm 变形宽银幕镜头，锁定，平视，雨后夜里的 1920–30 年代码头候船棚，一盏搪瓷灯罩 2400K 白炽灯投下一池光，湿木板映着它，24 fps。一条长凳上，画左：迁徙女性（约 20 岁东亚女子，圆中带方的脸，颊肉饱满，大而亮、两眼距离略宽的眼睛，直而浓的眉，右眉峰上方一颗小痣，嘴唇略干微裂，一条长辫，褪色灰蓝碎花棉布大襟衫——白色与褪玫色的五瓣小花、布盘扣），藤箱放在脚边，膝上摊开一方半透明蜂蜜色的油纸，细红棉绳已经解松，在灯泡下透着暖光。画右：紧张的旅客（约 14 岁东亚少年，瘦，耳朵显大，眼睛不停地四处看，头发剃短，旧布帽，明显过大的灰褐色大人外套，袖子挽了两道），怀里紧抱布包袱，手里攥着皱巴巴的船票。镜头在动作中段切入：她的右手捏着一块花生芝麻酥由画左递向画右，0.27 秒放进他摊开的掌心。他犹豫了一下，合拢手指。0.93 秒她冲他笑了一下，右边那颗虎牙微露；1.53 秒他半边脸慢慢松开，成了一个没笑完的笑。褪色家庭照片般的柔和，饱和度 −15%，绝不做棕褐色，皮肤是活的。CT_MIG 调色，35mm 颗粒。",
+  "negative": "sepia, yellow wash, the boy grinning fully, the sweet travelling right to left, the boy on screen-left, readable ticket, readable signs, crying, beggar imagery, dirt caricature, modern clothing, plastic wrapper, slow motion, camera movement, red lanterns",
+  "gen": {
+   "duration_s": 2.042,
+   "refs": [
+    "CHAR_MIGRANT",
+    "CHAR_TRAVELLER",
+    "PROP_SWEETS",
+    "PROP_CASE",
+    "LOC_PIER"
+   ],
+   "keyframe_en": "Frame 0: her right hand mid-reach at (0.48,0.60) holding a 2x3 cm piece of brittle, moving right; the glowing oil-paper packet in her lap at (0.32,0.66); his open palm waiting at (0.62,0.62); her face in three-quarter toward him at (0.30,0.40); his wary face at (0.70,0.40); bulb pool overhead, wet floor reflections, the open seaward side and the steamer's portholes soft at far right.",
+   "keyframe_zh": "第 0 帧：她的右手伸到一半，位于 (0.48,0.60)，捏着一块 2×3 厘米的酥糖向右移动；膝上透光的油纸包在 (0.32,0.66)；他摊开的掌心在 (0.62,0.62) 等着；她四分之三侧的脸朝向他，在 (0.30,0.40)；他戒备的脸在 (0.70,0.40)；头顶灯泡光池，湿地面反光，画右远处是敞开的向海一侧与轮船虚焦的舷窗。",
+   "endframe_en": "t=2.04 s: her hand back in her lap; his fist closed around the sweet; his half smile at (0.70,0.40); her soft smile at (0.30,0.40).",
+   "motion_en": "Locked, 24 fps, real time. 0-0.27 s her hand completes the left-to-right pass and sets the sweet in his palm (cut entered mid-action, T21); 0.3-0.7 s he hesitates, fingers close; 0.93 s her smile; 1.53 s his cheek and mouth loosen on one side only; a small crowd drifts soft behind, left to right. Must NOT: camera move; the packet change; slow motion.",
+   "motion_zh": "锁定，24 fps，真实速度。0–0.27 秒她的手完成由左向右的递送，把糖放进他的掌心（在动作中段切入，T21）；0.3–0.7 秒他犹豫，手指合拢；0.93 秒她笑；1.53 秒他只有一侧的脸颊和嘴角松开；背后虚焦的人群由左向右缓缓流动。不得：移动摄影机；改变糖包；慢动作。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 2.042,
+     "note": "Single generation (f5176-f5225); request 2.6 s with a 0.3 s head (hand already moving) and 0.3 s tail."
+    }
+   ],
+   "plates": [],
+   "post": "Sweet lands on 215.94 (f5182); her smile crosses the CH4 downbeat 216.6 (f5198). Same packet as S034: 10x8 cm tung-oil paper #D8B57A, thin red cotton string (P16), peanut-sesame brittle #C8964F and candied winter-melon strips. Grade CT_MIG: 2400K bulbs, highlights creamy toward #F5E4C8, grain 1.25, halation 0.6 on the bulb.",
+   "match_to": "IN: T21 from S067 (the coat falling left -> right): giving direction left -> right and downward. OUT: S069 (the mother lowers herself to sit, left -> right)."
+  }
+ },
+ {
+  "id": "S069",
+  "prompt_en": "Medium shot, 50mm anamorphic, locked with an almost imperceptible push, eye level, the nave of a quiet 1950s tropical-port chapel just after sunset at blue hour, 24 fps. Cold blue skylight (#2E4A6E) through tall windows of now-dark abstract stained glass; a few side-table candles as warm 1850K points far behind. Screen-right, at the end of a teak pew: LONELY (~75-year-old man, thin, deep sun-darkened skin, sparse white hair, deeply lined face, eyes half closed, thin much-washed white cotton shirt, grey trousers, an old cloth cap on his knees under folded age-spotted hands). The shot opens mid-movement: MOTHER (~45-year-old East Asian woman, oval face, fairly high cheekbones, grey strands at the temples, low chignon held by black pins, pale dove-grey short-sleeved qipao, old pale-green jade bangle on her LEFT wrist, a folded pale-blue airmail letter in her hands) takes the last step in from screen-left along the pew and at 0.81 s lowers herself to sit beside him. She says nothing. He does not turn; at 1.1 s his hands loosen a little on the cap. Both look ahead. The frame rests on their two sleeves side by side at (0.42,0.62). Respectful and still. CT_CHAPEL, fine 35mm grain.",
+  "prompt_zh": "中景，50mm 变形宽银幕镜头，锁定并几乎察觉不到地推进，平视，1950 年代热带港口一座安静的礼拜堂中殿，日落之后的蓝调时刻，24 fps。冷蓝的天光（#2E4A6E）从已经暗下来的高大非具象彩窗透进来；远处侧桌上几支蜡烛是 1850K 的暖点。画右，柚木长椅的一端：另一位孤单者（约 75 岁的老人，瘦削，深色日晒肤色，白发稀疏，脸上深深的纹路，眼睛半闭，洗得很薄的白棉衬衫，灰色长裤，一顶旧布帽放在膝上，布满老年斑的双手交叠压在帽子上）。镜头在动作中切入：祈祷的母亲（约 45 岁东亚女性，椭圆脸、颧骨较高，太阳穴处几缕白发，低髻以黑发夹固定，浅鸽灰短袖旗袍，左腕一只旧的浅绿玉镯，手里握着折好的浅蓝航空信）从画左沿着长椅迈出最后一步，0.81 秒在他身旁坐下。她什么也没说。他没有转头；1.1 秒，交叠在帽子上的双手松开了一点。两人都望着前方。画面停在两只并排的衣袖上，位于 (0.42,0.62)。恭敬而安静。CT_CHAPEL 调色，细腻 35mm 颗粒。",
+  "negative": "sign of the cross, praying hand gestures, religious icons or figures in focus, figurative stained glass, him turning or talking, her talking, tears, embrace, sunset colour still on the floor, jerky or rushed sitting, slow motion, exotic caricature, readable hymn boards, text",
+  "gen": {
+   "duration_s": 2.0,
+   "refs": [
+    "CHAR_MOTHER",
+    "CHAR_LONELY",
+    "PROP_AIRLETTER",
+    "LOC_CHAPEL"
+   ],
+   "keyframe_en": "Frame 0: LONELY seated at (0.66,0.55) at the pew's screen-right end, cap on his knees; MOTHER mid-step at (0.36,0.48), entering along the pew from screen-left, the letter held to her chest; blue-hour nave, pale grey vault soft above, candle points soft at upper right (0.85,0.35); terracotta floor in cool light.",
+   "keyframe_zh": "第 0 帧：孤单的老人坐在长椅画右端 (0.66,0.55)，帽子放在膝上；母亲在 (0.36,0.48) 正迈步，从画左沿长椅走来，信贴在胸前；蓝调时刻的中殿，上方浅灰拱顶虚焦，右上方 (0.85,0.35) 几点虚焦的烛光；赤陶地砖在冷光里。",
+   "endframe_en": "t=2.0 s: both seated; her short dove-grey sleeve and his thin white cotton sleeve touching side by side at (0.42,0.62) - the A frame of the 12-frame dissolve into S070 (aged coat cuff at (0.42,0.62)).",
+   "motion_en": "Locked with a push of at most 2% over 2 s, 24 fps, real time. 0-0.6 s she takes the last step (already moving at frame 0 - cut mid-action, T21); 0.6-0.81 s she sits; 1.1 s his hands loosen; 1.53-2.0 s stillness on the sleeves. Must NOT: tilt the camera down to the sleeves; warm light on her face; any liturgical gesture.",
+   "motion_zh": "锁定，2 秒内推进不超过 2%，24 fps，真实速度。0–0.6 秒她迈出最后一步（第 0 帧已在运动中——在动作中段切入，T21）；0.6–0.81 秒坐下；1.1 秒他的双手松开；1.53–2.0 秒画面静止在两只衣袖上。不得：把摄影机下摇到衣袖；她脸上出现暖光；任何礼仪性手势。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 2.0,
+     "note": "Single generation (f5225-f5273); request 2.6 s with a 0.3 s head (already stepping) and a 0.3 s tail feeding the dissolve."
+    }
+   ],
+   "plates": [],
+   "post": "12-frame dissolve centred on the cut (f5267-f5279) into S070, motivated by fabric/composition (bible 8.1); position match only - the sleeves are ~15% of frame height against the cuff's ~30%. The skeleton's rise (217.72) to seated (218.52) is 0.8 s, impossible for a walk along a pew, so the shot opens on her last step (flagged). Grade CT_CHAPEL at blue hour: stained-glass light gone, hues softened 30%, candles 1850K, halation 0.5, grain 1.1.",
+   "match_to": "IN: T21 from S068 (downward giving, left -> right). Echo of S063 (she sits at screen-left beside the one at screen-right). OUT: dissolve to S070 at (0.42,0.62) = the wear position registered in S064."
+  }
+ },
+ {
+  "id": "S070",
+  "prompt_en": "Insert opening as a macro, 100mm, then a slow motion-control pull-back at eye level, a museum gallery in an unspecified future, 24 fps; lowest contrast, slightly high-key, silver-white light with a trace of warmth, no sci-fi teal. Frame 0: the LEFT cuff of a charcoal wool melton coat - the RESTORER's own coat from tonight, now aged: wool faded to brownish grey #5B5853, flatter and fuzzier, dark horn buttons dulled - its small 18x8 mm rubbed, pilled worn spot on the outer little-finger side about 1 cm above the edge, brighter but identical in shape and position, at (0.42,0.62). From 1.7 s the camera draws back: the coat lies folded on a padded board covered in undyed linen, tilted 12 degrees, left cuff on top facing the glass, inside the same frameless 60x60x50 cm low-iron glass cover on the same dark wooden plinth where a brass compass once stood - the compass is gone; a small blank label card with no text. By 2.7 s the whole vitrine sits centred and square to camera. Soft diffuse overhead light, gentle shadow detail, very fine grain, almost no halation. CT_FUTURE.",
+  "prompt_zh": "插入镜头，以 100mm 微距开场，随后以运动控制缓慢后拉，平视，一个不确定的未来里的博物馆展厅，24 fps；反差最低、略高调，银白色光里带一丝暖，不用科幻青色。第 0 帧：一件深灰羊毛呢外套的左袖口——就是修复师今晚穿的那件，如今已经老了：呢料褪成偏褐的灰 #5B5853，更瘪、起毛更多，深色牛角扣失去光泽——外侧小指一侧、距袖口边约 1 厘米处那块 18×8 毫米的磨损，更亮了，形状与位置却完全一致，位于 (0.42,0.62)。1.7 秒起摄影机后拉：外套叠好平放在一块包着本色亚麻布、倾斜 12° 的软垫展板上，左袖口在最上面、朝向玻璃，罩在同一只 60×60×50 厘米的无框低铁超白玻璃罩里、同一座深色木展台上——那里曾放着一枚黄铜罗盘，如今罗盘不在了；旁边一张空白的小展签，没有任何文字。2.7 秒时整只展柜居中、正对镜头。柔和的顶部漫射光，暗部层次轻柔，极细的颗粒，几乎没有光晕。CT_FUTURE 调色。",
+  "negative": "compass in the vitrine, readable label, text, holograms, screens, devices, sci-fi teal, chrome, futuristic architecture, people, reflections of people, wear on the right cuff, a fresh new-looking coat, coat on a mannequin or hanger, high contrast, crushed blacks, yellow wash, lens flare, morphing fabric",
+  "gen": {
+   "duration_s": 3.667,
+   "refs": [
+    "PROP_COAT",
+    "LOC_GALLERY"
+   ],
+   "keyframe_en": "Frame 0 (dissolve B frame): 100mm macro of the aged left cuff, cuff width ~30% of frame height, the pale worn spot at (0.42,0.62) in crisp focus, weave and pilling readable; linen board texture soft behind; silver-white high-key light from above.",
+   "keyframe_zh": "第 0 帧（叠化的 B 帧）：100mm 微距拍老旧的左袖口，袖口宽约占画面高 30%，浅色磨损在 (0.42,0.62) 清晰对焦，织纹与起毛可辨；后面是虚焦的亚麻展板纹理；银白色高调光从上方来。",
+   "endframe_en": "t=3.67 s: the full G1 vitrine frontal and centred - 60x60x50 cm glass cover on the 95 cm dark plinth, the folded coat inside with its left cuff on top toward the glass, the blank label card at the plinth's right front; the camera now square to the same south glass face used in S001/S002 (the axis S071 returns to).",
+   "motion_en": "0-1.69 s locked macro (the dissolve resolves 0-0.25 s); 1.69 s ('翻') motion-control pull-back begins with a 12-frame ease-in, ~1.4 m over ~1.0 s, then easing; 2.71 s ('段') the whole vitrine in frame; 2.71-3.67 s a very slow continuing drift back of ~5 cm, settling. Focus follows from the cuff to the whole coat. Must NOT: pan, tilt or rotate; the coat must not move or reshape.",
+   "motion_zh": "0–1.69 秒锁定的微距（叠化在 0–0.25 秒完成）；1.69 秒（“翻”）运动控制后拉开始，12 帧缓入，约 1.0 秒内后退约 1.4 米，随后放缓；2.71 秒（“段”）整只展柜入画；2.71–3.67 秒继续极缓慢地后退约 5 厘米并停稳。焦点由袖口跟到整件外套。不得：摇、俯仰或旋转；外套不得移动或变形。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 3.667,
+     "note": "Single generation (f5273-f5361); request 4.2 s with a 0.25 s head (dissolve overlap) and 0.3 s tail."
+    }
+   ],
+   "plates": [
+    {
+     "name": "A",
+     "desc": "Future G1 vitrine plate on the S001/S002 motion-control path family (MC_G1_OPEN extended): macro start on the aged cuff, pull-back to the frontal vitrine on the same plinth and glass cover."
+    }
+   ],
+   "post": "12-frame dissolve centred on the cut (f5267-f5279) from S069's sleeves at (0.42,0.62); the skeleton's sync wording 'dissolve complete at 219.72' implies a dissolve ending on the cut - centred is used here, as for S076/S079 (flagged). Future coat state follows the skeleton (folded to fit the 60x60x50 cm cover, revision V25); the bible's PROP_COAT future text still says 'laid flat, sleeves in a natural curve' (flagged). Grade CT_FUTURE: grain 0.7, halation 0.15, lowest contrast. Sync 221.4 (f5314) pull-back; 222.42 (f5338) vitrine complete.",
+   "match_to": "IN: dissolve from S069 at (0.42,0.62) = S064's registered wear position. OUT: S071 cuts back in to the opening ECU camera (MC_G1_OPEN) on the same glass face."
+  }
+ },
+ {
+  "id": "S071",
+  "prompt_en": "Extreme close-up, 100mm macro, locked on the exact camera of the film's opening - lens 1.18 m high, axis square to the south glass face of a frameless museum vitrine, focus plane on the glass surface - in a gallery of an unspecified future, 24 fps; soft high-key silver-white light with a trace of warmth, very low contrast, very fine grain. The thin clean glass fills the frame; beyond it, soft, a folded brownish-grey wool coat on undyed linen. At 0.13 s a faint reflection forms in the glass: FUTURE, a stranger of no clear age or gender in a seamless pale warm-grey high-collared knit garment, short soft dark hair, face always defocused and attenuated, never resolved. At 0.79 s their right hand rises toward the glass, palm facing it, fingers relaxed; in the reflection we see the palm, thumb at frame left. At 2.29 s it stops at (0.50,0.55), hand width about 45% of frame height, exactly where two hands met in the opening - a finger-width from the glass, not touching. It stays. It is only a reflection: no real hand on the camera side. Quiet, curious, tender. CT_FUTURE.",
+  "prompt_zh": "大特写，100mm 微距，锁定在全片开场完全相同的机位上——镜头高 1.18 米，光轴垂直于一只无框博物馆展柜的南侧玻璃面，焦平面在玻璃表面——一个不确定的未来里的展厅，24 fps；柔和的高调银白光带一丝暖，反差极低，颗粒极细。薄而干净的玻璃占满画面；玻璃后虚焦的是一件叠好的偏褐灰色呢外套，放在本色亚麻布上。0.13 秒，玻璃里浮现一层淡淡的倒影：未来观看者，一个看不出年龄与性别的陌生人，穿浅暖灰色无缝高领针织长衣，短而柔软的深色头发，脸始终处于焦外并被反射衰减，永远看不清。0.79 秒，他/她的右手朝玻璃抬起，掌心朝向玻璃，手指放松；在倒影里我们看到的是掌心，拇指在画左。2.29 秒，手停在 (0.50,0.55)，手宽约占画面高 45%——正是开场两只手重合的位置——离玻璃一指宽，没有碰上。手停在那里。这只是倒影：玻璃靠镜头的一侧没有真实的手。安静、好奇、温柔。CT_FUTURE 调色。",
+  "negative": "sharp or identifiable face, a real hand in front of the glass, hand touching the glass, devices, wristwatch, ring, sci-fi suit, LEDs, holograms, the compass, the restorer's hand, a second hand, text, readable label, non-mirrored reflection, glow, ghost body standing in the room, reflection stronger than ~40%, teal cast",
+  "gen": {
+   "duration_s": 2.917,
+   "refs": [
+    "CHAR_FUTURE",
+    "PROP_COAT",
+    "LOC_GALLERY"
+   ],
+   "keyframe_en": "Frame 0: identical framing to S002 at 15.14 s without the hands - glass-surface ECU, the soft folded coat beyond (cuff at lower centre), clean thin glass with only a faint dust sparkle; the T01 point (0.50,0.55) empty; high-key silver-white.",
+   "keyframe_zh": "第 0 帧：与 S002 在 15.14 秒时的构图完全相同，只是没有手——玻璃表面大特写，玻璃后是虚焦的叠好的外套（袖口在画面中下），薄而干净的玻璃上只有一点淡淡的灰尘闪光；T01 点 (0.50,0.55) 空着；高调银白。",
+   "endframe_en": "t=2.92 s: the future viewer's reflected right hand at (0.50,0.55), palm to camera, thumb at frame left, width 45% of frame height, soft at mirror depth just behind the glass plane; the face a pale unresolved blur above-left of the hand. Must register with S002's T01 frame within +/-3%.",
+   "motion_en": "Camera locked on MC_G1_OPEN data (no move), 24 fps. 0.13 s the reflection fades up as the viewer steps into place (physical, not a dissolve) to ~30% strength by 0.6 s; 0.79-2.29 s the hand rises slowly from below frame centre to (0.50,0.55), decelerating; 2.29-2.92 s stillness. Must NOT: anything appear on the camera side of the glass; the coat move; the light change.",
+   "motion_zh": "摄影机锁定在 MC_G1_OPEN 数据上（不动），24 fps。0.13 秒，随着观看者走到柜前，倒影浮现（物理的，不是叠化），0.6 秒时达到约 30% 强度；0.79–2.29 秒手从画面中下方缓缓抬起，减速停在 (0.50,0.55)；2.29–2.92 秒静止。不得：玻璃靠镜头一侧出现任何东西；外套移动；光线变化。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 2.917,
+     "note": "Single generation (f5361-f5431); request 3.4 s with 0.25 s head and tail handles."
+    }
+   ],
+   "plates": [
+    {
+     "name": "A",
+     "desc": "Future G1 glass ECU clean plate on MC_G1_OPEN (S001/S002 data), the folded coat beyond, focus on the glass surface."
+    },
+    {
+     "name": "B",
+     "desc": "Reflection plate: the FUTURE viewer's raised right hand palm-forward plus the defocused pale knit body and face, rendered in true mirror orientation against a soft pale future gallery; perspective matched to a 100mm lens at the opening distance."
+    }
+   ],
+   "post": "Composite B as a true reflection (screen ~30%, max 35%), defocused by mirror depth; darken the vitrine interior ~0.5 stop inside the hand area so it reads (bible 8.3); face contrast held below ~15%. Register the hand to S002's T01 frame (0.50,0.55; 45% of frame height). Grade CT_FUTURE. Sync 223.5 (f5364) reflection; 224.16 (f5380) rise; 225.66 (f5416) stop.",
+   "match_to": "T22/T23: same camera as S001/S002 (MC_G1_OPEN), same point (0.50,0.55) - the third hand. OUT: S072 - his phone hand rises (gesture rhyme; the A side ends on a held hand, so this is a direction match, flagged)."
+  }
+ },
+ {
+  "id": "S072",
+  "prompt_en": "Medium close-up, 75mm anamorphic, locked with a very slight push, eye level a little to his left, the museum bay window just before dawn, about 05:40, 24 fps. Screen-right in focus: GUARD (~65-year-old East Asian night attendant, square-round face, three forehead lines, gentle down-turned eyes, pale-brown age spot on his RIGHT cheekbone, short salt-and-pepper hair, stooped, navy attendant jacket with a small text-free badge, reading glasses on a black cord). At 0.03 s he lifts an old unbranded phone in a worn navy flip case from his right thigh, draws one breath, presses to dial at 0.69 s - the screen angled away and never readable - and at 1.17 s holds it to his right ear. Screen-left, out of focus: RESTORER (~28-year-old East Asian conservator, loose low ponytail, charcoal wool coat open), quietly looking out of the window. Their two cups sit on the sill; the tea has gone cool, no steam. Key: the 2700K reading lamp from screen-right; a brief cold phone glow on his chin and fingers; the window sky only beginning to pale from deep blue #1A2D4A. CT_MODERN moving toward CT_DAWN, fine 35mm grain.",
+  "prompt_zh": "中近景，75mm 变形宽银幕镜头，锁定并极轻微推进，平视、略偏他的左侧，博物馆窗湾，黎明前约 05:40，24 fps。画右在焦内：夜班工作人员（约 65 岁东亚男性，脸型方中带圆，额头三道横纹，眼角下垂、目光温和，右颧骨一块浅褐色老年斑，花白短发，背微驼，藏青值守夹克与无文字小徽章，老花镜挂在黑色挂绳上）。0.03 秒，他从右大腿上拿起那部装在磨旧藏青翻盖套里的无品牌旧手机，吸一口气，0.69 秒按下拨号——屏幕侧向别处，永不可读——1.17 秒把它贴到右耳边。画左焦外：修复师（约 28 岁东亚女性文物修复师，松松的低马尾，深灰呢外套敞着），安静地望着窗外。两只杯子放在窗台上，茶已经凉了，没有热气。主光：画右的 2700K 阅读灯；手机屏幕的冷光短暂地照在他的下巴与手指上；窗外的天刚刚开始从深蓝 #1A2D4A 变淡。CT_MODERN 向 CT_DAWN 过渡，细腻 35mm 颗粒。",
+  "negative": "readable phone screen, a name, numbers, brand logo, him smiling yet, her in focus, her watching him, steam from the cups, bright dawn, sun, glasses on his nose, phone at his left ear, ring, talking, camera shake, fast motion",
+  "gen": {
+   "duration_s": 2.75,
+   "refs": [
+    "CHAR_GUARD",
+    "CHAR_RESTORER",
+    "PROP_PHONE",
+    "PROP_TEA",
+    "PROP_COAT",
+    "LOC_WINDOW"
+   ],
+   "keyframe_en": "Frame 0: GUARD in three-quarter at (0.64,0.45), face lowered, his right hand at his thigh just beginning to lift the phone (0.62,0.78); RESTORER soft at (0.28,0.46) in profile toward screen-right; window panes at the right edge, deep blue a touch paler at the bottom; reading lamp warm on his face; the two cups as soft shapes on the sill at right.",
+   "keyframe_zh": "第 0 帧：夜班工作人员四分之三侧在 (0.64,0.45)，脸低着，右手在大腿上，刚开始拿起手机 (0.62,0.78)；修复师在 (0.28,0.46) 虚焦，侧脸朝画右；画右边缘是窗玻璃，深蓝在底部略淡；阅读灯暖光落在他脸上；窗台上两只杯子是画右虚焦的形状。",
+   "endframe_en": "t=2.75 s: the phone at his right ear, his eyes lowered to screen-left, waiting; she soft at left; the sky still deep blue.",
+   "motion_en": "Locked with a 2% push over 2.75 s, 24 fps, real time. 0.03-0.6 s the phone rises (an upward hand movement rhyming with S071's rising hand); 0.6 s a small in-breath; 0.69 s his thumb presses (screen hidden by angle and thumb); 0.8-1.17 s the phone travels to his right ear; 1.17-2.75 s still, waiting. Must NOT: show any screen content; bring her into focus.",
+   "motion_zh": "锁定，2.75 秒内推进 2%，24 fps，真实速度。0.03–0.6 秒手机抬起（向上的手部动作，与 S071 抬起的手押韵）；0.6 秒轻轻吸一口气；0.69 秒拇指按下（屏幕被角度与拇指挡住）；0.8–1.17 秒手机移到右耳边；1.17–2.75 秒静止，等待。不得：露出任何屏幕内容；让她进入焦内。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 2.75,
+     "note": "Single generation (f5431-f5497); request 3.2 s with a 0.25 s head and 0.2 s tail."
+    }
+   ],
+   "plates": [],
+   "post": "Phone glow 6500K (#C9D8E6) only on his lower face and fingers 0.4-1.2 s, then hidden at the ear. Story time jumps from ~04:20 (S065) to ~05:40: the tea is cold, so no steam here and in S073/S074 - the refill in S077 then motivates the dawn steam (flagged). His cup is back on the sill (he lifted it in S064; not shown returning - flagged). Phone has stayed face-down on his right thigh since S060. Sync 226.98 (f5448) dial; 227.46 (f5459) ear.",
+   "match_to": "IN: S071's rising right hand -> his rising right hand (gesture rhyme). Bay two-shot geometry as S063 (he screen-right, she screen-left). Bible T24 (worn cuff macro -> same cuff on her now) is not used here - the skeleton replaces it with this hand match (flagged)."
+  }
+ },
+ {
+  "id": "S073",
+  "prompt_en": "Close-up, 100mm anamorphic, locked, eye level, in the museum bay window before dawn, 24 fps; almost nothing moves. GUARD (~65-year-old East Asian night attendant, square-round face, three forehead lines, gentle down-turned eyes with deep creases, pale-brown age spot on his RIGHT cheekbone, clean-shaven with the faintest grey stubble, short salt-and-pepper hair, the collar of his navy attendant jacket, the reading-glasses cord at his neck) holds an old phone in a worn navy flip case to his right ear, half hidden behind his jaw. His eyes are lowered to screen-left, waiting for an answer that has not come. At 0.78 s he holds his breath: the lips close, the nostrils still, a tiny swallow. Nothing else - this is the silence of the full-band stop. Light: the warm 2700K reading lamp from screen-right models his face at about 5:1, the far side falling into deep blue shadow that keeps detail; a few harbour lights as soft bokeh behind; no dawn visible yet. Real skin with pores, age spots and fine lines, no retouching. CT_MODERN, fine 35mm grain, faint halation on the bokeh only.",
+  "prompt_zh": "近景，100mm 变形宽银幕镜头，锁定，平视，黎明前的博物馆窗湾，24 fps；几乎什么都不动。夜班工作人员（约 65 岁东亚男性，脸型方中带圆，额头三道横纹，眼角下垂、目光温和、纹路很深，右颧骨一块浅褐色老年斑，胡子刮得干净、只有极淡的灰白胡茬，花白短发，藏青值守夹克的领口，脖子上是老花镜的挂绳）把装在磨旧藏青翻盖套里的旧手机贴在右耳边，一半藏在下颌后面。他的目光垂向画左，在等一个还没有来的回答。0.78 秒，他屏住呼吸：嘴唇抿上，鼻翼不动，轻轻咽了一下。别的什么都没有——这是全乐队骤停的那片静默。光：画右的 2700K 暖色阅读灯以约 5:1 的光比塑出他的脸，另一侧沉入保留层次的深蓝阴影；身后几点港口灯化为柔和光斑；天还没有亮。真实的皮肤，有毛孔、老年斑与细纹，不做修饰。CT_MODERN 调色，细腻 35mm 颗粒，只有光斑周围有极淡的光晕。",
+  "negative": "phone screen visible, text, smiling, talking, tears, eyes to camera, slow motion, camera move, beauty filter, smoothed skin, glasses on his face, ring, bright sky, flicker",
+  "gen": {
+   "duration_s": 1.583,
+   "refs": [
+    "CHAR_GUARD",
+    "PROP_PHONE",
+    "LOC_WINDOW"
+   ],
+   "keyframe_en": "Frame 0: CU, his eyes at (0.52,0.42), face in three-quarter toward camera-left, the phone at his right ear on the far side (case edge at (0.70,0.45)), warm lamp light from screen-right; deep-blue background with a few warm bokeh.",
+   "keyframe_zh": "第 0 帧：近景，他的眼睛在 (0.52,0.42)，脸四分之三侧朝向镜头左侧，手机在远侧的右耳边（手机套边缘在 (0.70,0.45)），暖色台灯光从画右来；深蓝背景，几点暖色光斑。",
+   "endframe_en": "t=1.58 s: unchanged but for the held breath; brows still tight - they ease only in S074.",
+   "motion_en": "Locked, 24 fps, real time. 0-0.78 s stillness with one micro blink; 0.78 s the breath is held (lips press, a tiny swallow); hold to the end. Must NOT: any camera or lighting change; any speech.",
+   "motion_zh": "锁定，24 fps，真实速度。0–0.78 秒静止，只眨一次极小的眼；0.78 秒屏住呼吸（嘴唇抿紧，轻轻咽一下）；保持到结束。不得：摄影机或光线有任何变化；说话。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 1.583,
+     "note": "Single generation (f5497-f5535); request 2.0 s with 0.2 s handles."
+    }
+   ],
+   "plates": [],
+   "post": "Cut in on the 229.1 full-band stop (cut at f5497, stop from f5498); hold the grade stable; S074 cuts on the 230.6 re-entry. Skin hue protected under 2700K (P18 #C99A78 reference).",
+   "match_to": "Between S072 and S074 (same set, same light). Eyeline to screen-left-down."
+  }
+ },
+ {
+  "id": "S074",
+  "prompt_en": "Medium close two-shot, 50mm anamorphic, locked with a very slow push, eye level, inside the museum bay window at about 05:40, 24 fps; the glass beside them beginning to pale from deep blue #1A2D4A. Screen-right, nearer the window: GUARD (~65-year-old East Asian night attendant, square-round face, gentle down-turned eyes, pale-brown age spot on his RIGHT cheekbone, salt-and-pepper hair, stooped, navy attendant jacket, reading glasses on a black cord) holds an old phone in a worn navy flip case to his right ear. Screen-left: RESTORER (~28-year-old East Asian conservator, soft oval face, tiny mole below her LEFT eye, loose low ponytail with more strands loose at the right temple, charcoal wool coat open), her folded white gloves on the bench corner beside her. At 0.01 s someone answers - we hear nothing: his brows slowly ease, the corners of his mouth loosen, and he murmurs a few unreadable words. At 1.65 s she smiles quietly; at 2.45 s she turns her gaze out of the window, leaving the moment to him. Warm 2700K reading-lamp key, a faint cool pre-dawn fill from the window, harbour lights soft. CT_MODERN easing toward CT_DAWN, fine 35mm grain.",
+  "prompt_zh": "中近景双人，50mm 变形宽银幕镜头，锁定并极缓慢推进，平视，约 05:40 的博物馆窗湾，24 fps；他们身旁的玻璃开始从深蓝 #1A2D4A 变淡。画右靠窗：夜班工作人员（约 65 岁东亚男性，脸型方中带圆，眼角下垂、目光温和，右颧骨浅褐色老年斑，花白短发，背微驼，藏青值守夹克，老花镜挂在黑色挂绳上）把装在磨旧藏青翻盖套里的旧手机贴在右耳边。画左：修复师（约 28 岁东亚女性文物修复师，鹅蛋脸，左眼下一颗极小的痣，松松的低马尾、右侧太阳穴的碎发比夜里多了些，深灰呢外套敞着），叠好的白手套放在她身旁长凳的角上。0.01 秒，电话那头有人接了——我们什么也听不见：他的眉眼慢慢舒展，嘴角松开，低声说了几句听不清、也读不出的话。1.65 秒她安静地微笑；2.45 秒她把目光移向窗外，把这一刻留给他。2700K 暖色阅读灯为主光，窗外黎明前一点淡淡的冷光作补光，港口灯虚焦。CT_MODERN 向 CT_DAWN 过渡，细腻 35mm 颗粒。",
+  "negative": "readable lips, visible phone screen, loud laughter, tears, hug, her leaning in to listen, her on screen-right, gloves on her hands, coat buttoned, steam from the cups, bright dawn, sun, slow-motion face, camera shake",
+  "gen": {
+   "duration_s": 3.292,
+   "refs": [
+    "CHAR_GUARD",
+    "CHAR_RESTORER",
+    "PROP_PHONE",
+    "PROP_TEA",
+    "PROP_GLOVES",
+    "PROP_COAT",
+    "LOC_WINDOW"
+   ],
+   "keyframe_en": "Frame 0: GUARD at (0.66,0.44), phone at his right ear, brows still tight; RESTORER at (0.34,0.47) looking softly toward him; folded gloves on the bench corner at (0.18,0.78); window panes at right with the deep blue just paling; reading lamp warm; cups on the sill at the right edge, no steam.",
+   "keyframe_zh": "第 0 帧：夜班工作人员在 (0.66,0.44)，手机贴在右耳，眉头仍紧；修复师在 (0.34,0.47) 柔和地望着他；叠好的手套在长凳角上 (0.18,0.78)；画右窗玻璃的深蓝刚刚变淡；阅读灯暖光；画右边缘窗台上的杯子，没有热气。",
+   "endframe_en": "t=3.29 s: his face eased, eyes lifted a little; her profile turned to screen-right toward the window at (0.34,0.46) - the first warmth of the outro composition.",
+   "motion_en": "Locked, ~2% push, 24 fps, real time. 0.0-1.2 s his brows ease and his mouth loosens gradually (never slow motion); 1.0-1.6 s he murmurs, lips barely moving; 1.65 s her small smile; 2.45 s her eyes, then her head, turn to the window; hold. Must NOT: camera tilt; big mouth movements implying audible dialogue.",
+   "motion_zh": "锁定，约 2% 推进，24 fps，真实速度。0.0–1.2 秒他的眉头逐渐舒展、嘴角松开（绝不慢放）；1.0–1.6 秒他低声说话，嘴唇几乎不动；1.65 秒她浅浅一笑；2.45 秒她先是目光、再是头转向窗外；保持。不得：摄影机俯仰；大幅度的口型让人以为有可听的对白。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 3.292,
+     "note": "Single generation (f5535-f5614); request 3.8 s with 0.25 s handles."
+    }
+   ],
+   "plates": [],
+   "post": "Cut on the 230.6 re-entry (f5535). Window sky ramps from P02 to slightly lifted by the end (dawn table: 233.8 = P02, warm ~10%). Sync 232.27 (f5574) smile; 233.07 (f5594) look away. Gloves remain where S063 left them.",
+   "match_to": "Two-shot geometry = S063. OUT: light-led cut to S075 (the first glimmer from screen-right)."
+  }
+ },
+ {
+  "id": "S075",
+  "prompt_en": "Medium close-up, 100mm anamorphic, locked, side-on at eye level, the stern-castle rail of a 17th-century ocean-going junk in the last minutes before dawn, 24 fps. NAVIGATOR (~35-year-old East Asian compass-keeper, long face, high cheekbones, slightly deep-set dark-brown eyes with sun creases, short neat beard and moustache, a pale old scar at the tail of his LEFT eyebrow, indigo head-cloth over a topknot with a few strands loose in the wind, faded indigo short jacket with a cross collar, no outer coat) stands in the left third of frame, at first facing screen-left toward home, his left profile and the scar toward us. On '你', at 1.08 s, he slowly turns his face to screen-right, where the first glimmer of day touches the horizon - blue-grey #5B6F8A with a thin peach line #EBB894 - and lights his cheek; the sea below is still deep blue. Wind moves the ends of the head-cloth. The only light is the sky at screen-right; no lantern on his face. Real weathered skin, salt on the rail. CT_NAV moving toward dawn, fine 35mm grain; a short, warm horizontal flare at the horizon is allowed.",
+  "prompt_zh": "中近景，100mm 变形宽银幕镜头，锁定，侧面平视，黎明前最后几分钟里一艘 17 世纪远洋帆船的艉楼船舷，24 fps。航海人（约 35 岁东亚火长，长脸、颧骨突出，眼窝略深的深褐色眼睛带着日晒细纹，短而整齐的胡须与上唇须，左眉尾一道浅白旧疤，靛蓝头巾裹着发髻、几缕碎发被风吹乱，褪色的靛蓝交领短褂，没有外衣）站在画面左三分之一，起初面朝画左——家的方向——左侧脸和那道疤对着我们。“你”字上，1.08 秒，他慢慢把脸转向画右：天边第一缕微光碰到海平线——蓝灰 #5B6F8A 上一线细细的晨光桃色 #EBB894——照亮了他的脸颊；下面的海仍是深蓝。风吹动头巾的尾端。唯一的光来自画右的天空；他脸上没有灯笼光。真实的风霜皮肤，船舷上有盐。CT_NAV 向黎明过渡，细腻 35mm 颗粒；允许海平线处有一道短而暖的水平光晕。",
+  "negative": "sun disc, orange sky, the outer coat on him, Qing queue, modern clothing, shore lights at screen-right, light from screen-left, tears, smile, slow-motion head turn, camera move, blue streak flare, fog",
+  "gen": {
+   "duration_s": 1.625,
+   "refs": [
+    "CHAR_NAVIGATOR",
+    "LOC_DECK"
+   ],
+   "keyframe_en": "Frame 0: NAVIGATOR at (0.30,0.42) in left profile facing screen-left, the eyebrow scar visible, eyes on the dark coast; the right half of frame open deep-blue sea with the first pale band of sky at the right horizon; a strip of weathered rail across the bottom.",
+   "keyframe_zh": "第 0 帧：航海人在 (0.30,0.42)，左侧脸面朝画左，眉尾旧疤可见，望着黑暗的海岸；画面右半是开阔的深蓝海面，右侧海平线上第一道淡淡的天光；画面底部一段风化的船舷。",
+   "endframe_en": "t=1.62 s: his face turned to screen-right, eye at (0.33,0.40), his cheek lit by the cool-peach horizon; the dissolve anchor for S076 (her eye at the same point).",
+   "motion_en": "Locked, 24 fps, real time. 0-1.0 s still, breathing, wind in the head-cloth; 1.0-1.5 s his head turns about 120 degrees from screen-left to screen-right, slow and natural; the swell rises and falls behind. Must NOT: slow-motion turn; camera move.",
+   "motion_zh": "锁定，24 fps，真实速度。0–1.0 秒静止，呼吸，风吹着头巾；1.0–1.5 秒他的头从画左转向画右约 120°，缓慢而自然；身后涌浪起伏。不得：慢动作转头；移动摄影机。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 1.625,
+     "note": "Single generation (f5614-f5653); request 2.0 s with a 0.2 s head and a 0.3 s tail (feeds the 12-frame dissolve)."
+    }
+   ],
+   "plates": [],
+   "post": "12-frame dissolve centred on the cut (f5647-f5659) into S076, eyes aligned at (0.33,0.40). First time in the film he looks screen-right (bible 4.5, F9). Grade CT_NAV blending toward CT_DAWN (dawn table 233.8-238: sky P02 -> P20 with a thin P21 line); skin P19 protected.",
+   "match_to": "T25 echo-group lock: figure in the left third, profile, eyeline slightly above horizontal, light from screen-right. IN: light-led from S074's paling window. OUT: dissolve to S076."
+  }
+ },
+ {
+  "id": "S076",
+  "prompt_en": "Medium close-up, 100mm anamorphic, locked, side-on at eye level, the white-painted steel rail of a 1920s-30s black-hulled passenger steamer at first light in a soft sea haze, 24 fps. MIGRANT (~20-year-old East Asian woman, round-square face, full cheeks, large bright wide-set eyes, straight thick brows, small mole above her RIGHT brow peak, slightly chapped lips, sun-pink cheekbones, thin fringe, one long braid down her back tied with black thread, faded grey-blue floral cotton blouse, a thin grey-blue cotton over-jacket around her shoulders) stands in the left third of frame in profile, facing screen-right; the handle of her rattan case is just visible at the lower right edge, by her right hand. Through the haze at screen-right, at 0.86 s, the low outline of a new coastline slowly appears on the horizon. Light from screen-right: the cool-warm boundary of first daylight, blue-grey #5B6F8A with a thin peach edge; her face keeps a living warmth. Wind lifts a few fringe hairs. The faded softness of an old family photograph, saturation -15%, never sepia. CT_MIG toward dawn, 35mm grain.",
+  "prompt_zh": "中近景，100mm 变形宽银幕镜头，锁定，侧面平视，1920–30 年代一艘黑色船壳客轮的白漆钢栏杆边，清晨第一道光，海上薄雾，24 fps。迁徙女性（约 20 岁东亚女子，圆中带方的脸，颊肉饱满，大而亮、两眼距离略宽的眼睛，直而浓的眉，右眉峰上方一颗小痣，嘴唇略干微裂，颧骨有点日晒的红，稀薄的刘海，一条长辫垂到背中、辫梢用黑棉线扎紧，褪色灰蓝碎花棉布衫，肩上披着灰蓝薄棉外褂）站在画面左三分之一，侧脸朝向画右；藤箱的提手刚好在画右下边缘露出一点，就在她右手边。0.86 秒，画右薄雾里，一道新的海岸线低低的轮廓慢慢显出来。光从画右来：清晨第一道天光冷暖交界，蓝灰 #5B6F8A 带一线细细的桃色边；她的脸保留着活的暖。风吹起几根刘海。像一张褪色家庭照片的柔和，饱和度 −15%，绝不做棕褐色。CT_MIG 向黎明过渡，35mm 颗粒。",
+  "negative": "sepia, yellow wash, broad smile, tears, the case in her left hand, light from screen-left, sun disc, modern ship details, readable ship name or text, real shipping-line colours, crowd faces, slow motion, camera movement",
+  "gen": {
+   "duration_s": 1.542,
+   "refs": [
+    "CHAR_MIGRANT",
+    "PROP_CASE",
+    "LOC_PIER"
+   ],
+   "keyframe_en": "Frame 0 (dissolve B frame): her eye at (0.33,0.40), right profile toward screen-right, the mole above her right brow visible; the white rail across the lower frame; haze and pale sea at right.",
+   "keyframe_zh": "第 0 帧（叠化的 B 帧）：她的眼睛在 (0.33,0.40)，右侧脸朝向画右，右眉峰上的小痣可见；白色栏杆横过画面下部；画右是薄雾与淡淡的海。",
+   "endframe_en": "t=1.54 s: a soft new coastline across the right horizon at y~0.52; her face unchanged, lit from the right.",
+   "motion_en": "Locked, 24 fps, real time. Only breath, wind in the fringe and the braid's tip, haze drifting; 0.86 s the coastline emerges as the haze thins (atmospheric, not a dissolve). Must NOT: camera move; her head turn.",
+   "motion_zh": "锁定，24 fps，真实速度。只有呼吸、风吹动刘海与辫梢、薄雾飘移；0.86 秒随着薄雾变淡，海岸线显现（大气变化，不是叠化）。不得：移动摄影机；她转头。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 1.542,
+     "note": "Single generation (f5653-f5690); request 2.0 s with a 0.25 s head (dissolve) and a 0.2 s tail."
+    }
+   ],
+   "plates": [],
+   "post": "No location reference exists for the steamer deck at dawn (LOC_PIER covers the shed, pier and ship exterior only) - generate a LOC ref first: black hull #1C1C1E, white superstructure #D9D6CC, white-painted steel rail, invented funnel colours (ochre #B58B4A, slate band #4E6273) if seen (flagged). Dissolve in at f5647-f5659. Grade CT_MIG, grain 1.25, halation 0.6.",
+   "match_to": "T25 echo lock; dissolve-aligned to S075's eye (0.33,0.40). OUT: match cut to S077 (profiles to screen-right, light from screen-right) on the 237.0 accent."
+  }
+ },
+ {
+  "id": "S077",
+  "prompt_en": "Medium two-shot, 50mm anamorphic, very slow push, side-on at eye level, the museum bay window at first dawn, 24 fps. The window at screen-right is now the key light, cool about 6500K, sky #5B6F8A with a thin peach horizon line; a small 2700K corner reading lamp still glows. On the teak window bench, screen-right nearer the window: GUARD (~65-year-old East Asian night attendant, square-round face, gentle down-turned eyes, pale-brown age spot on his RIGHT cheekbone, salt-and-pepper hair, stooped, navy attendant jacket, reading glasses on a black cord). Screen-left: RESTORER (~28-year-old East Asian conservator, soft oval face, mole below her LEFT eye, loose low ponytail with more strands loose at the right temple, charcoal wool coat open). At 0.46 s he unscrews an old dull-steel thermos; at 1.18 s he pours hot tea into her cup on the sill, then at 1.89 s into his own chipped cup - fresh steam rises, backlit against the dark window frame. She watches and says nothing. At 2.52 s both turn their faces to screen-right, out of the window, as the sky pales. Both cups are handle-less, pale bluish-white, with one cobalt line. CT_DAWN, fine 35mm grain.",
+  "prompt_zh": "中景双人，50mm 变形宽银幕镜头，极缓慢推进，侧面平视，黎明初现时的博物馆窗湾，24 fps。画右的窗此刻成为主光，约 6500K 的冷光，天色 #5B6F8A，地平线一线细细的桃色；角落那盏 2700K 小阅读灯还亮着。柚木窗凳上，画右靠窗：夜班工作人员（约 65 岁东亚男性，脸型方中带圆，眼角下垂、目光温和，右颧骨浅褐色老年斑，花白短发，背微驼，藏青值守夹克，老花镜挂在黑色挂绳上）。画左：修复师（约 28 岁东亚女性文物修复师，鹅蛋脸，左眼下小痣，松松的低马尾、右侧太阳穴的碎发多了些，深灰呢外套敞着）。0.46 秒，他拧开身边那只旧的哑光不锈钢保温壶；1.18 秒先把热茶续进窗台上她的杯子，1.89 秒再续进自己那只带磕口的杯子——新的热气升起来，逆光衬着暗色窗框。她看着，什么也没说。2.52 秒两人一起把脸转向画右的窗外，天色渐淡。两只杯子都是无柄青白釉，口沿下一道钴蓝细线。CT_DAWN 调色，细腻 35mm 颗粒。",
+  "negative": "branded thermos, cups with handles, spilling, steam against bright sky, sun, orange sky, talking, laughing, her pouring, cups filled in the wrong order, him on screen-left, gloves on her hands, coat buttoned, camera shake",
+  "gen": {
+   "duration_s": 2.917,
+   "refs": [
+    "CHAR_RESTORER",
+    "CHAR_GUARD",
+    "PROP_TEA",
+    "PROP_COAT",
+    "LOC_WINDOW"
+   ],
+   "keyframe_en": "Frame 0 (match to S076's composition): RESTORER's eye at (0.33,0.43), profile turned slightly to screen-right; GUARD at (0.56,0.44) reaching for the thermos by his right hip; cups on the sill, hers at (0.70,0.60) and his at (0.75,0.60), no steam yet; window panes at screen-right 0.66-1.0 with pale sky; the lamp warm in the corner.",
+   "keyframe_zh": "第 0 帧（与 S076 构图匹配）：修复师的眼睛在 (0.33,0.43)，侧脸略朝画右；夜班工作人员在 (0.56,0.44)，伸手去拿右胯旁的保温壶；窗台上两只杯子，她的在 (0.70,0.60)、他的在 (0.75,0.60)，还没有热气；画右 0.66–1.0 是窗玻璃与淡淡的天；角落台灯暖光。",
+   "endframe_en": "t=2.92 s: both profiles to screen-right - hers at (0.33,0.43), his at (0.56,0.41) - fresh steam from both cups backlit against the dark muntins; the sky lighter. Dissolve source for S078 (the future viewer's profile at (0.33,0.43)).",
+   "motion_en": "Push ~3% over 2.9 s, 24 fps, real time. 0.46 s cap unscrewed; 1.18 s pour into her cup (left), stops at 1.6 s; 1.89 s pour into his cup (right); 2.2 s cap back on; 2.52 s both heads turn to the window. Steam begins where the tea lands. Must NOT: spill; the cups slide on the sill; the sky jump in brightness.",
+   "motion_zh": "约 3% 推进、历时 2.9 秒，24 fps，真实速度。0.46 秒拧开壶盖；1.18 秒倒进她的杯子（左），1.6 秒停；1.89 秒倒进他的杯子（右）；2.2 秒盖回壶盖；2.52 秒两人转头望向窗外。茶一落进杯里热气就升起。不得：洒茶；杯子在窗台上滑动；天空亮度跳变。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 2.917,
+     "note": "Single generation (f5690-f5760); request 3.4 s with 0.25 s handles."
+    }
+   ],
+   "plates": [
+    {
+     "name": "A",
+     "desc": "Main two-shot plate (single generation)."
+    },
+    {
+     "name": "B",
+     "desc": "Optional steam element: two fresh plumes, window-backlit, on black, 24 fps, comped from the pour onward."
+    }
+   ],
+   "post": "Cut on the 237.0 accent (f5690). Thermos look as locked in S062 (old unbranded dull stainless-steel vacuum flask with a scuffed dark-navy cup-lid; not a bible prop, flagged). Dawn table at 238 s: sky P20 with a thin P21, window ~6500K key, warm share ~18%. 12-frame dissolve centred on f5760 into S078. Sync 237.54 (f5701) cap; 238.26 (f5718) her cup; 238.97 (f5735) his cup; 239.6 (f5750) heads turn.",
+   "match_to": "IN: T25 match from S076 (profile in the left third, light from screen-right). The refill motivates the steam of S079-S081 (F14). OUT: dissolve to S078 aligned on her profile (0.33,0.43)."
+  }
+ },
+ {
+  "id": "S078",
+  "prompt_en": "Medium close-up, 75mm anamorphic, locked, a museum gallery of an unspecified future in the last minutes before dawn, 24 fps; lowest contrast, slightly high-key, silver-white with a trace of warmth, no sci-fi teal. We look at the thin clean glass of a vitrine holding a folded brownish-grey wool coat, soft beyond the glass. In the glass, forming at 0.36 s, is the reflection of FUTURE - a stranger of no clear age or gender, short soft dark hair, seamless pale warm-grey high-collared knit garment - seen in profile facing screen-right in the left third of frame, the face defocused and attenuated, never resolved: only the soft line of brow, nose and chin against the light. They look toward screen-right, where tall arched openings hold the same not-yet-dawn sky, blue-grey #5B6F8A with the faintest peach at the horizon - the only directional light, from screen-right. Nothing moves but breath. It is only a reflection; nobody real stands on our side of the glass. Very fine grain, almost no halation. CT_FUTURE.",
+  "prompt_zh": "中近景，75mm 变形宽银幕镜头，锁定，一个不确定的未来里的博物馆展厅，黎明前最后几分钟，24 fps；反差最低、略高调，银白里带一丝暖，不用科幻青色。我们看着一只展柜薄而干净的玻璃，玻璃后虚焦的是一件叠好的偏褐灰呢外套。0.36 秒，玻璃里浮现未来观看者的倒影——一个看不出年龄与性别的陌生人，短而柔软的深色头发，浅暖灰无缝高领针织长衣——在画面左三分之一处侧脸朝向画右，脸处于焦外并被反射衰减，永远看不清：只有逆光里额、鼻、下巴柔和的轮廓线。他/她望向画右，那里高高的拱形开口里，是同样将亮未亮的天，蓝灰 #5B6F8A，地平线一丝极淡的桃色——这是唯一有方向的光，来自画右。除了呼吸，什么都不动。这只是倒影；玻璃靠我们这一侧没有任何真实的人。颗粒极细，几乎没有光晕。CT_FUTURE 调色。",
+  "negative": "sharp face, identifiable features, devices, sci-fi architecture, holograms, screens, text, a real person outside the reflection, strong reflection, ghost body in the room, sun, orange sky, teal, high contrast, camera movement",
+  "gen": {
+   "duration_s": 2.042,
+   "refs": [
+    "CHAR_FUTURE",
+    "PROP_COAT",
+    "LOC_GALLERY"
+   ],
+   "keyframe_en": "Frame 0 (dissolve B frame): the glass plane, the coat soft beyond at lower right; the reflection just beginning to form in the left third; pale window light from screen-right.",
+   "keyframe_zh": "第 0 帧（叠化的 B 帧）：玻璃平面，外套在画右下方的玻璃后虚焦；倒影刚刚在左三分之一处开始浮现；淡淡的窗光来自画右。",
+   "endframe_en": "t=2.04 s: the reflected profile's eye at (0.33,0.43) facing screen-right, soft and attenuated (~30%), window light on the profile edge; dissolve source for S079.",
+   "motion_en": "Locked, 24 fps. 0-0.36 s the reflection forms as the light on the viewer rises, then holds; only breathing. Must NOT: the face resolve; the camera move.",
+   "motion_zh": "锁定，24 fps。0–0.36 秒随着观看者身上的光变亮，倒影浮现，随后保持；只有呼吸。不得：脸变清晰；摄影机移动。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 2.042,
+     "note": "Single generation (f5760-f5809); request 2.5 s with 0.25 s handles (dissolves at both ends)."
+    }
+   ],
+   "plates": [
+    {
+     "name": "A",
+     "desc": "Future vitrine glass plate (side angle), the folded aged coat beyond, high-key."
+    },
+    {
+     "name": "B",
+     "desc": "Reflection plate: FUTURE in profile facing screen-right, side/back-lit from the right by pre-dawn sky, rendered as a true mirror image, defocused."
+    }
+   ],
+   "post": "Composite B at ~30% screen in mirror depth, face contrast below ~15%. Dissolve in: 12 frames centred on f5760 (from S077's profiles); dissolve out: 16 frames f5801-f5817 into S079. The bible gives the gallery no window of its own - the pre-dawn light is motivated by the arched doorways to the glazed corridor / the east end at screen-right (flagged). Grade CT_FUTURE, grain 0.7, halation 0.15.",
+   "match_to": "T25 echo lock (profile in the left third, light from the right). IN: dissolve from S077 (her profile at (0.33,0.43)). OUT: dissolve to S079 (window light to window light)."
+  }
+ },
+ {
+  "id": "S079",
+  "prompt_en": "Wide shot, 32mm anamorphic, from behind two people at eye level, a slow dolly pull-back of about 0.8 m over 4 s, the museum's three-sided bay window at daybreak, 24 fps, deep focus. On the teak window bench, seen from behind as near-silhouettes that keep their shadow detail: at screen-left RESTORER (~28-year-old East Asian conservator, charcoal wool coat, loose low ponytail with strands escaping at the right temple) and at screen-right, nearer the south-east pane, GUARD (~65-year-old East Asian night attendant, stooped upper back, navy attendant jacket, salt-and-pepper hair, reading-glasses cord at his neck), about 40 cm apart and still. Two small cups on the sill before them with thin steam. Beyond the old wavy glass: the harbour mouth, a breakwater light, and three or four lamps still lit on the sea (#E2A458). The deep blue gives way to soft morning light: the sky #5B6F8A warms toward a thin peach horizon #EBB894 from 1.5 s; daylight of about 5000K comes from the south-east pane at screen-right while the north-east pane at screen-left stays darker. The sun stays below the horizon. As the camera draws back, white-painted window frames and the edges of the bay enter. CT_DAWN, fine 35mm grain.",
+  "prompt_zh": "全景，32mm 变形宽银幕镜头，在两人身后平视，轨道车 4 秒内缓慢后拉约 0.8 米，拂晓时博物馆的三面窗湾，24 fps，深焦。柚木窗凳上，两人从背后看几乎是剪影，但暗部仍有层次：画左是修复师（约 28 岁东亚女性文物修复师，深灰呢外套，松松的低马尾、右侧太阳穴散出几缕碎发），画右靠东南窗是夜班工作人员（约 65 岁东亚男性，上背微驼，藏青值守夹克，花白短发，脖子上挂着老花镜的挂绳），相距约 40 厘米，一动不动。他们面前的窗台上两只小杯子，冒着细细的热气。老式波纹玻璃外：港口出海口，一盏防波堤灯，海面上还有三四盏没熄的灯（#E2A458）。深蓝渐渐变成柔和的晨光：1.5 秒起天色从 #5B6F8A 暖向一线细细的桃色地平线 #EBB894；约 5000K 的天光从画右的东南窗来，画左的东北窗仍较暗。太阳始终在地平线下。随着摄影机后拉，白漆窗框与窗湾的边缘进入画面。CT_DAWN 调色，细腻 35mm 颗粒。",
+  "negative": "sun disc, orange sky, streak flares, the sea lamps switched off, figures moving or turning, faces visible, him on screen-left, crushed black silhouettes, fog, camera shake, unrealistic bird flocks, text",
+  "gen": {
+   "duration_s": 4.0,
+   "refs": [
+    "CHAR_RESTORER",
+    "CHAR_GUARD",
+    "PROP_TEA",
+    "PROP_COAT",
+    "LOC_WINDOW"
+   ],
+   "keyframe_en": "Frame 0 (dissolve B frame): two backs at (0.42,0.58) and (0.58,0.57), heads just below the horizon line y~0.50; three panes - NE darker (0.0-0.30), E (0.30-0.70), SE brightening (0.70-1.0); three or four warm sea lamps across (0.40-0.75, 0.52); cups and thin steam on the sill at (0.50,0.62).",
+   "keyframe_zh": "第 0 帧（叠化的 B 帧）：两个背影在 (0.42,0.58) 与 (0.58,0.57)，头部略低于 y≈0.50 的地平线；三面窗——东北窗较暗（0.0–0.30）、东窗（0.30–0.70）、东南窗渐亮（0.70–1.0）；海面上三四盏暖灯分布在 (0.40–0.75, 0.52)；窗台上的杯子与细细的热气在 (0.50,0.62)。",
+   "endframe_en": "t=4.0 s: about 12% wider; window frames and the bay's edges at both sides; the peach horizon line stronger; sea lamps still lit; figures unchanged.",
+   "motion_en": "Dolly pull-back ~0.8 m over 4 s (12-frame ease-in), 24 fps, no pan or tilt. Figures still, breathing only. The sky warms gradually from 1.52 s; sea lamps twinkle softly; steam drifts up. Must NOT: the lamps go out; the sun appear; the figures turn.",
+   "motion_zh": "轨道车 4 秒内后拉约 0.8 米（12 帧缓入），24 fps，不摇不俯仰。人物静止，只有呼吸。1.52 秒起天空逐渐变暖；海面灯点轻轻闪烁；热气缓缓上升。不得：灯熄灭；太阳出现；人物转身。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 4.0,
+     "note": "Single generation (f5809-f5905); request 4.5 s with a 0.35 s head (dissolve overlap) and 0.2 s tail."
+    }
+   ],
+   "plates": [],
+   "post": "16-frame dissolve f5801-f5817 from S078 (window light to window light), complete on '叫' 242.36. Dawn table at 242 s: sky P20 -> P21, window ~5000K, warm share ~30%. Silhouettes keep detail above P28 #0A0F17. Tail swell begins 245.9 (f5902); cut to S080 at f5905.",
+   "match_to": "Bay seen from behind = S066's E-pane geometry (she left, he right). The still-lit sea lamps continue into S080 and S081."
+  }
+ },
+ {
+  "id": "S080",
+  "prompt_en": "Extreme wide shot, 40mm anamorphic, completely locked at 1.6 m on a harbour quay road looking east along the waterfront - the same camera as the film's harbour-across-eras frame - present day at dawn, 24 fps. Frame-left: the old customs house, now the museum - granite base, red brick partly lime-washed, a glazed upper arcaded verandah - and far along its upper floor at the east end, a bay window still holding one small warm light. At x 0.38 the gate with its granite threshold and iron edge strip (edge at frame height 0.66); the waiting spot before it at (0.38,0.70) stands empty. Frame-right: calm harbour water, a moored ferry, distant container cranes with tiny defocused warm obstruction lights, and three or four fishing lamps still lit on the sea (#E2A458). A few 4000K LED street lamps still on along the quay. The sun is below the horizon: only a thin peach line #EBB894 deep in frame right of centre, sky #5B6F8A. No flag on the bare flagpole. At 2.06 s a soft band of brighter skylight slides across the water and the quay and lights the empty waiting spot. No people. CT_DAWN, 250D-like grain.",
+  "prompt_zh": "大远景，40mm 变形宽银幕镜头，在码头路上 1.6 米高完全锁定，沿水岸向东看——与片中“港口时代更替”同一个机位——今天的黎明，24 fps。画左：旧海关大楼，如今是博物馆——花岗岩基座，红砖墙局部石灰抹面，二层封闭的拱券外廊——沿着它的二层一直到东端，那扇窗湾里还亮着一点小小的暖灯。画面 x 0.38 处是关口大门，花岗岩门槛外缘包着铁条（边线在画面高度 0.66）；门槛前那个等待者的位置 (0.38,0.70) 空着。画右：平静的港湾水面，一艘停泊的渡轮，远处集装箱起重机上极小、虚焦的暖色障碍灯，海面上三四盏渔灯还亮着（#E2A458）。码头沿线几盏 4000K LED 路灯还没关。太阳在海平线下：只有画面深处中偏右一线细细的桃色 #EBB894，天色 #5B6F8A。旗杆光秃秃的，没有旗。2.06 秒，一层更亮的天光柔和地掠过水面与码头，照亮那个空着的等待位置。没有人。CT_DAWN 调色，250D 感颗粒。",
+  "negative": "sun disc, flags or banners, readable signs, logos on cranes or the ferry, real landmarks, people at the threshold, cars, traffic signals with text, morphing, camera movement, drone feel, oversaturated sunrise, sea lamps off, HDR look",
+  "gen": {
+   "duration_s": 3.25,
+   "refs": [
+    "LOC_HARBOR"
+   ],
+   "keyframe_en": "Frame 0: identical composition to S046's E1-E4 slices (same motion-control / tripod data): the building frame-left, the gate and threshold at x 0.38, threshold edge at y 0.66, the waiting spot (0.38,0.70) empty; water and ships frame-right; the bare flagpole on the corner roof; the dawn peach line at (0.62-0.85, 0.47); the lit bay window as a tiny warm point far along the upper floor at (0.30,0.38).",
+   "keyframe_zh": "第 0 帧：与 S046 中 E1–E4 各时代切片完全相同的构图（同一运动控制 / 三脚架数据）：大楼在画左，大门与门槛在 x 0.38，门槛边线在 y 0.66，等待位置 (0.38,0.70) 空着；画右是水面与船；转角屋顶上光秃的旗杆；黎明的桃色线在 (0.62–0.85, 0.47)；二层远处那扇亮着的窗湾是 (0.30,0.38) 处一个极小的暖点。",
+   "endframe_en": "t=3.25 s: the skylight band has passed; the empty waiting spot softly lit; the sea lamps still on; light-continuity source for the dissolve into S081.",
+   "motion_en": "Locked, 24 fps. Only nature moves: water shimmer, a faint twinkle in the lamps, one gull crossing high right at ~1.0 s (optional), the skylight band sweeping right to left 2.06-2.9 s as a cloud edge thins on the horizon (no hard cloud-shadow wipe). Must NOT: camera move; eras change; any morph.",
+   "motion_zh": "锁定，24 fps。只有自然在动：水面微光、灯点轻轻闪烁、约 1.0 秒时一只海鸥从画右高处飞过（可选）、2.06–2.9 秒地平线上一道云边变薄，天光由右向左掠过（不做生硬的云影擦除）。不得：移动摄影机；时代变化；任何变形。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 3.25,
+     "note": "Single generation (f5905-f5983); request 3.6 s with a 0.2 s head and a 0.25 s tail (12-frame dissolve into S081 centred on f5983)."
+    }
+   ],
+   "plates": [
+    {
+     "name": "A",
+     "desc": "Locked E5 dawn plate on the S046 harbour camera data (40mm, 1.6 m, looking east)."
+    },
+    {
+     "name": "B",
+     "desc": "Optional sky/horizon element with a luma matte for a controlled warm ramp and the 2.06 s skylight band, applied in the grade."
+    }
+   ],
+   "post": "Same camera data as S046. The harbour's 'unified dusk light from behind camera' lock is deliberately not used here: dawn comes from ahead-right. Cut in on the tail swell at 246.0 (f5905); warm share ~35-40%; the sun never in frame (bible 2.3). Invented-flag rule satisfied by an empty flagpole (E5 = no flag). Dissolve 12 frames centred on f5983 into S081.",
+   "match_to": "Mirrors S046 (BR1 harbour eras; the waiting spot (0.38,0.70)). The lit bay window plants S081's location. OUT: light-continuity dissolve to S081."
+  }
+ },
+ {
+  "id": "S081",
+  "prompt_en": "Close-up, 75mm anamorphic, completely locked on a tripod with no digital push, at window-sill height about 30 degrees to the glass, the museum bay window in early morning, 24 fps (steam may be captured at 48 fps). Two handle-less porcelain cups, pale bluish-white glaze, each ringed by one thin complete cobalt line 6 mm below the rim, stand side by side on a deep white-painted timber sill about 6 cm apart: his, with a tiny chip at 2 o'clock on the rim, at screen-right nearer the window; hers, new, at screen-left. Freshly poured jasmine tea, an unfurled leaf in each. Slow steam rises, backlit by window light against a dark window muntin and the still-dim north-east pane. At screen-right the south-east pane glows with soft morning light, about 4300K, peach to cream (#EBB894 to #F5E4C8). In the old wavy glass at screen-left, through which the dawn harbour and three or four still-lit lamps on the sea show, float the soft reflections of two people sitting side by side - he at right, she at left, faces unresolved. At 3.26 s, with the final chord, a ray of morning light slips into the steam. Then nothing moves but the steam, to the very end. CT_DAWN, fine 35mm grain.",
+  "prompt_zh": "近景，75mm 变形宽银幕镜头，三脚架完全锁定，不做任何数字推进，窗台高度、与窗玻璃约成 30°，清晨的博物馆窗湾，24 fps（热气可用 48 fps 拍摄）。两只无柄瓷茶杯，青白釉，杯口下 6 毫米各一道完整的钴蓝细线，并排放在深深的白漆木窗台上，相距约 6 厘米：他那只口沿 2 点钟位置有个小磕口，在画右、靠窗；她那只是新的，在画左。刚续上的茉莉花茶，各漂着一片舒展的茶叶。热气缓缓升起，被窗光逆光照亮，衬着一根暗色窗棂与仍然发暗的东北窗。画右的东南窗亮着柔和的晨光，约 4300K，由桃色到奶白（#EBB894 到 #F5E4C8）。画左那块老式波纹玻璃里，透出黎明的港口和海面上三四盏还没熄的灯，也浮着并肩而坐的两个人柔和的倒影——他在右、她在左，脸看不清。3.26 秒，随着最后一个和弦，一缕晨光溜进热气里。此后除了热气，什么都不动，一直到最后。CT_DAWN 调色，细腻 35mm 颗粒。",
+  "negative": "camera movement, zoom, digital push, flicker, steam against bright sky, thick steam or smoke, cups with handles, logos, text, extra cups, cups touching, a chip on her cup, hands in frame, sun disc, orange wash, warm share over 50%, sea lamps off, sharp faces in the reflection, fade to black before the end, running condensation",
+  "gen": {
+   "duration_s": 7.542,
+   "refs": [
+    "PROP_TEA",
+    "CHAR_RESTORER",
+    "CHAR_GUARD",
+    "LOC_WINDOW"
+   ],
+   "keyframe_en": "Frame 0 (dissolve B frame): her cup at (0.38,0.63), his at (0.64,0.63), each ~32% of frame height; cobalt lines level; the chip at 2 o'clock on his rim visible; the SE pane glowing at upper right (0.78-1.0, 0.10-0.55); a dark muntin behind the two steam columns; the NE pane at upper left with faint reflections of two seated people - she at (0.18,0.30), he at (0.30,0.30) - and the through-glass harbour lamps at (0.10-0.35, 0.42); the sill edge across y 0.80.",
+   "keyframe_zh": "第 0 帧（叠化的 B 帧）：她的杯子在 (0.38,0.63)，他的在 (0.64,0.63)，各约占画面高 32%；两道钴蓝线水平；他杯口 2 点钟的磕口可见；画右上方的东南窗发亮（0.78–1.0, 0.10–0.55）；两柱热气后面是一根暗色窗棂；画左上方的东北窗里淡淡映着两个坐着的人——她在 (0.18,0.30)、他在 (0.30,0.30)——透过玻璃可见港口灯点 (0.10–0.35, 0.42)；窗台边沿横在 y 0.80。",
+   "endframe_en": "t=7.54 s (f6163): identical to frame 0 except the light - warmer (warm share ~45%, never above 50%), the steam lit through by the morning ray; the picture ends naturally on the last frame.",
+   "motion_en": "Camera absolutely locked, no push, 24 fps. Steam rises slowly and continuously from both cups (two independent plumes, gentle curls, never thick). Light: a smooth grade-driven warm ramp across the whole 7.54 s; at 3.26 s (252.55, final chord) a soft ray from screen-right enters the steam and stays. Must NOT move: cups, sill, window, reflections (a barely perceptible breath in the reflected figures at most), sea lamps (a faint twinkle only).",
+   "motion_zh": "摄影机绝对锁定，不推进，24 fps。两只杯子的热气缓慢、连续地上升（两股各自独立的热气，轻柔卷曲，绝不浓厚）。光：整整 7.54 秒由调色驱动的平滑变暖；3.26 秒（252.55，最后一个和弦）一缕柔和的光从画右进入热气并停留。不得移动：杯子、窗台、窗、倒影（倒影中的人最多只有几乎察觉不到的呼吸）、海面灯点（只许极轻微的闪烁）。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 7.542,
+     "note": "Preferred: plate A as a locked still (or a near-still I2V with zero drift) for the full duration plus steam elements B - no generative drift allowed on a locked frame. If generated as video: Seg 1 0-4.0 s and Seg 2 3.5-7.54 s from the same still, joined by a 12-frame crossfade at 3.6-4.1 s where only steam moves; 0.25 s head for the incoming dissolve."
+    }
+   ],
+   "plates": [
+    {
+     "name": "A",
+     "desc": "Locked still of cups, sill, window bay: two cups as specified, SE pane bright, NE pane dim with wavy old glass, through-glass dawn harbour with 3-4 lit sea lamps."
+    },
+    {
+     "name": "B",
+     "desc": "Steam elements: two independent slow plumes backlit by 4300K window light on black, 24 fps (or 48 fps slowed 50%), screen-comped above each cup."
+    },
+    {
+     "name": "C",
+     "desc": "Reflection element: two people seated side by side (GUARD at right, RESTORER at left as in S063, faces unresolved), soft, mapped into the NE pane at ~15-20% with the wavy-glass distortion."
+    },
+    {
+     "name": "D",
+     "desc": "Light-ray matte: a soft volumetric mask confined to the steam for the 3.26 s warm lift (no haze outside the steam)."
+    }
+   ],
+   "post": "12-frame dissolve centred on f5983 from S080 (same morning light). Grade CT_DAWN: from 249.3 (the soft tail) sky P21 -> P22, P22 highlights on the cup rims, warm share 40% -> 45% by f6163 (never above 50%); the 3.26 s ray is a luma-masked warm lift inside the steam only. Steam backlit against the dark muntin, never against the brightest sky (bible 3.4). Stabilise to zero motion (T26). The skeleton says the harbour and lamps are 'reflected' in the NE pane - physically they are seen through it, with the two people's reflection superimposed (flagged). No fade inside the shot: the picture holds to f6163; any fade is an editorial call after the sound has decayed (256.8). No titles in picture.",
+   "match_to": "Cup arrangement from S063 (his screen-right, hers screen-left, ~6 cm, his chip at 2 o'clock); reflected pair as in S063; the still-lit sea lamps continue from S079/S080 (brief chapter 11). Final frame of the film (T26)."
+  }
+ }
+]

@@ -11,11 +11,13 @@ export default async function create(ctx) {
   const key = new THREE.SpotLight(0xffffff, 60, 20, 0.5, 0.8, 2); key.position.set(3, 5, 5); key.castShadow = probe !== 'noshadow'; key.shadow.mapSize.set(2048, 2048); scene.add(key);
   scene.add(new THREE.HemisphereLight(0xffffff, 0x222222, 0.6));
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), new THREE.MeshStandardMaterial({ color: 0x555555 })); floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
-  await cast.preloadCharacters(['RESTORER']);
-  const f = cast.makeCharacter('RESTORER');
+  const lod = q.get('lod') || 'hi';
+  await cast.preloadCharacters(['RESTORER'], { lod });
+  const f = cast.makeCharacter('RESTORER', { lod });
+  if (q.get('n') === '0') f.root.visible = false;
   scene.add(f.root);
   const copies = +(q.get('n') || 1);
-  for (let i = 1; i < copies; i++) { const g = cast.makeCharacter('RESTORER'); g.root.position.x = (i % 2 ? 1 : -1) * Math.ceil(i / 2) * 0.6; g.pose('stand'); scene.add(g.root); if (probe === 'basic') g.root.traverse((m) => { if (m.isMesh) m.material = new THREE.MeshBasicMaterial({ color: 0x888888 }); }); }
+  for (let i = 1; i < copies; i++) { const g = cast.makeCharacter('RESTORER', { lod }); g.root.position.x = (i % 2 ? 1 : -1) * Math.ceil(i / 2) * 0.6; g.pose('stand'); scene.add(g.root); if (probe === 'basic') g.root.traverse((m) => { if (m.isMesh) m.material = new THREE.MeshBasicMaterial({ color: 0x888888 }); }); }
   if (probe === 'static') { const b = f.bake(); scene.remove(f.root); scene.add(b); }
   if (probe === 'basic') f.root.traverse((m) => { if (m.isMesh) m.material = new THREE.MeshBasicMaterial({ color: 0x888888 }); });
   if (probe === 'std') f.root.traverse((m) => { if (m.isMesh) m.material = new THREE.MeshStandardMaterial({ color: 0x888888 }); });

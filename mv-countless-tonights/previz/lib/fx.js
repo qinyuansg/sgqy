@@ -40,9 +40,14 @@ export function glow({ color = 0xffb060, size = 0.2, intensity = 1, falloff = 2.
 // ------------------------------------------------------------------ volumetric window shaft (oblique prism, ray-marched)
 // Window rectangle at `center` with half-extent vectors `right`, `up`; light travels along `dir` for `length` m.
 // cookie: texture over the window (mullions / stained glass colours). floorY clips the march at the floor.
+// penumbra: angular size of the source (rad; sun/moon ≈ 0.0093 + a little scatter) — the cookie (glazing bars, lead
+// lines) blurs with distance from the window instead of streaking down the whole beam as hard stripes.
 export function windowShaft({ center = [0, 2, 0], right = [0.6, 0, 0], up = [0, 0.9, 0], dir = [0.4, -0.6, 0.7], length = 6, color = 0xbcd0ff,
-  intensity = 0.35, cookie = null, floorY = -1e5, noise = 0.6, soft = 0.12, steps = 10, seed = 0 } = {}) {
+  intensity = 0.35, cookie = null, floorY = -1e5, noise = 0.6, soft = 0.12, steps = 10, seed = 0, penumbra = 0.014 } = {}) {
   const C = V3(center), R = V3(right), U = V3(up), D = V3(dir).normalize().multiplyScalar(length);
+  const ckRes = (cookie && cookie.image && cookie.image.width) || 512;
+  // cookie texels per metre of blur, along the window's smaller half-extent
+  const lodK = penumbra * length * ckRes / (2 * Math.min(R.length(), U.length()));
   const M = new THREE.Matrix4().makeBasis(R, U, D).setPosition(C);
   const inv = M.clone().invert();
   const geo = new THREE.BoxGeometry(2, 2, 1).translate(0, 0, 0.5);
@@ -52,10 +57,11 @@ export function windowShaft({ center = [0, 2, 0], right = [0.6, 0, 0], up = [0, 
     uniforms: {
       uInv: { value: inv }, uCol: { value: COL(color) }, uInt: { value: intensity }, uT: { value: 0 }, uNoiseAmt: { value: noise },
       uFloorY: { value: floorY }, uCookie: { value: cookie }, uHasCookie: { value: cookie ? 1 : 0 }, uSoft: { value: soft }, uNoise: { value: noiseTexture() }, uSeed: { value: seed },
+      uLodK: { value: lodK },
     },
     vertexShader: /* glsl */ `varying vec3 vWorld; void main(){ vec4 w = modelMatrix * vec4(position, 1.0); vWorld = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`,
     fragmentShader: IGN + /* glsl */ `
-      uniform mat4 uInv; uniform vec3 uCol; uniform float uInt, uT, uNoiseAmt, uFloorY, uHasCookie, uSoft, uSeed;
+      uniform mat4 uInv; uniform vec3 uCol; uniform float uInt, uT, uNoiseAmt, uFloorY, uHasCookie, uSoft, uSeed, uLodK;
       uniform sampler2D uCookie, uNoise; varying vec3 vWorld;
       void main(){
         vec3 ro = (uInv * vec4(cameraPosition, 1.0)).xyz;
@@ -72,17 +78,24 @@ export function windowShaft({ center = [0, 2, 0], right = [0.6, 0, 0], up = [0, 
         if (tf <= tn) discard;
         float dt = (tf - tn) / float(STEPS);
         float j = ign(gl_FragCoord.xy + uSeed * 17.0);
+        // drifting haze density: 3 fetches per pixel (near / mid / far along the ray), interpolated per step
+        vec3 wa = cameraPosition + rdW * mix(tn, tf, 0.15), wm = cameraPosition + rdW * mix(tn, tf, 0.5), wb = cameraPosition + rdW * mix(tn, tf, 0.85);
+        vec2 drift = vec2(uT * 0.006, uT * 0.004);
+        float na = texture2D(uNoise, wa.xz * 0.21 + vec2(wa.y * 0.13, 0.0) + drift).r;
+        float nm = texture2D(uNoise, wm.xz * 0.21 + vec2(wm.y * 0.13, 0.0) + drift).r;
+        float nb = texture2D(uNoise, wb.xz * 0.21 + vec2(wb.y * 0.13, 0.0) + drift).r;
         vec3 acc = vec3(0.0);
         for (int i = 0; i < STEPS; i++) {
-          float t = tn + (float(i) + j) * dt;
+          float f = (float(i) + j) / float(STEPS);
+          float t = tn + f * (tf - tn);
           vec3 lp = ro + rd * t;
           float d = clamp(lp.z, 0.0, 1.0);
           float sf = uSoft * (0.08 + d);
           float edge = smoothstep(1.0, 1.0 - sf, abs(lp.x)) * smoothstep(1.0, 1.0 - sf, abs(lp.y));
-          vec3 ck = uHasCookie > 0.5 ? texture2D(uCookie, lp.xy * 0.5 + 0.5).rgb : vec3(1.0);
+          vec3 ck = uHasCookie > 0.5 ? textureLod(uCookie, lp.xy * 0.5 + 0.5, log2(1.0 + d * uLodK)).rgb : vec3(1.0);
           float fall = smoothstep(0.0, 0.06, d) * pow(1.0 - d, 1.3);
-          vec3 wp = cameraPosition + rdW * t;
-          float n = mix(1.0, texture2D(uNoise, wp.xz * 0.21 + vec2(wp.y * 0.13 + uT * 0.006, uT * 0.004)).r * 1.8 - 0.1, uNoiseAmt);
+          float nr = f < 0.5 ? mix(na, nm, clamp((f - 0.15) / 0.35, 0.0, 1.0)) : mix(nm, nb, clamp((f - 0.5) / 0.35, 0.0, 1.0));
+          float n = mix(1.0, nr * 1.8 - 0.1, uNoiseAmt);
           acc += ck * (edge * fall * max(n, 0.0));
         }
         gl_FragColor = vec4(uCol * uInt * acc * dt, 1.0);
@@ -90,6 +103,15 @@ export function windowShaft({ center = [0, 2, 0], right = [0.6, 0, 0], up = [0, 
   });
   const mesh = new THREE.Mesh(geo, mat);
   mesh.matrixAutoUpdate = false; mesh.matrix.copy(M); mesh.renderOrder = 20; mesh.frustumCulled = false;
+  // rasterise only the faces the ray enters through: front faces from outside the prism, back faces from inside
+  // (halves the fragment work vs DoubleSide; the shader's inside test stays as a safety net)
+  const _cl = new THREE.Vector3();
+  mesh.onBeforeRender = (r, sc, camera) => {
+    _cl.setFromMatrixPosition(camera.matrixWorld).applyMatrix4(inv);
+    const inside = Math.abs(_cl.x) < 1.02 && Math.abs(_cl.y) < 1.02 && _cl.z > -0.02 && _cl.z < 1.02;
+    const side = inside ? THREE.BackSide : THREE.FrontSide;
+    if (mat.side !== side) mat.side = side;
+  };
   return { object3D: mesh, material: mat, matrix: M, inverse: inv, center: C, right: R, up: U, dir: D.clone().normalize(), length,
     update(T, o = {}) { mat.uniforms.uT.value = T; if (o.intensity !== undefined) mat.uniforms.uInt.value = o.intensity; } };
 }
@@ -102,8 +124,12 @@ export function windowShaft({ center = [0, 2, 0], right = [0.6, 0, 0], up = [0, 
 // Counts toward the ≤2 shadow-casting-lights budget.
 // colored: true → the cookie is projected as the light's colour map instead (stained glass petals of colour on the
 // floor), pre-warped so that it lands exactly on the oblique window for this light direction (exact for parallel light).
+// bounce: floor albedo for a soft first-bounce fill (default 0.3): an unshadowed PointLight just BELOW the floor pool, so
+// the floor itself is not lit by it but walls, pews, figures and ceiling get the upward glow a real sunlit/moonlit pool
+// throws back into the room (without it a bright pool sits in a black void). Tinted by the cookie's mean colour when
+// colored. floorY: height of the receiving floor (default 0). 0 disables it.
 export function windowLight({ center = [0, 2, 0], right = [0.6, 0, 0], up = [0, 0.9, 0], dir = [0.4, -0.6, 0.7], cookie = null, color = 0xbcd0ff,
-  intensity = 2, dist = 25, mapSize = 1024, blocker = 6, frameVisible = true, frameColor = 0x15110d, colored = false } = {}) {
+  intensity = 2, dist = 25, mapSize = 1024, blocker = 6, frameVisible = true, frameColor = 0x15110d, colored = false, bounce = 0.3, floorY = 0, bounceRange = 7 } = {}) {
   const C = V3(center), R = V3(right), U = V3(up), D = V3(dir).normalize();
   const grp = new THREE.Group(); grp.name = 'windowLight';
   const N = new THREE.Vector3().crossVectors(R, U).normalize();
@@ -125,7 +151,21 @@ export function windowLight({ center = [0, 2, 0], right = [0.6, 0, 0], up = [0, 
   light.shadow.camera.near = Math.max(0.5, dist - 3); light.shadow.camera.far = dist + 25;
   grp.add(light, light.target);
   if (cookie && colored) light.map = warpCookie(cookie, C, R, U, light, mapSize);
-  return { object3D: grp, light, target: light.target, lattice: grp.userData.lattice || null, update(T, o = {}) { if (o.intensity !== undefined) light.intensity = o.intensity * dist * dist; } };
+  // first-bounce fill from the floor pool
+  let bounceLight = null, bounceK = 0;
+  if (bounce > 0 && D.y < -0.05 && C.y > floorY) {
+    const t = (floorY - C.y) / D.y, pool = C.clone().addScaledVector(D, t);
+    const winArea = 4 * R.length() * U.length(), cosW = Math.abs(D.dot(N));
+    const poolArea = winArea * cosW / Math.abs(D.y);
+    const mean = cookieMean(cookie, colored);           // fraction of the window that passes light (and its tint)
+    // reflected flux Φ = ρ·E·A·(pass); a point source radiating Φ over the upper hemisphere → I ≈ Φ / 2π
+    bounceK = bounce * winArea * cosW * mean.pass / (2 * Math.PI); void poolArea;
+    bounceLight = new THREE.PointLight(COL(color).multiply(mean.tint), intensity * bounceK, bounceRange, 2);
+    bounceLight.position.copy(pool).add(new THREE.Vector3(0, -0.12, 0));
+    grp.add(bounceLight);
+  }
+  return { object3D: grp, light, target: light.target, lattice: grp.userData.lattice || null, bounce: bounceLight,
+    update(T, o = {}) { if (o.intensity !== undefined) { light.intensity = o.intensity * dist * dist; if (bounceLight) bounceLight.intensity = o.intensity * bounceK; } } };
 }
 // Draw the window cookie into the spot's square map so its corners land where the window corners project in the light's view.
 function warpCookie(tex, C, R, U, light, size) {
@@ -143,6 +183,22 @@ function warpCookie(tex, C, R, U, light, size) {
   return t;
 }
 export const cookieSpot = windowLight; // older name
+// mean transmitted fraction + normalised tint of a cookie texture (for bounce light); cached on the texture
+function cookieMean(tex, colored) {
+  const out = { pass: 0.75, tint: new THREE.Color(1, 1, 1) };
+  const img = tex && tex.image; if (!img || !img.getContext) return out;
+  if (tex.userData.mean) return tex.userData.mean;
+  const S = 32, c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d');
+  g.drawImage(img, 0, 0, S, S); const d = g.getImageData(0, 0, S, S).data;
+  let r = 0, gg = 0, b = 0; const lin = (v) => { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+  const srgb = tex.colorSpace === THREE.SRGBColorSpace;
+  for (let i = 0; i < d.length; i += 4) { const f = srgb ? lin : (v) => v / 255; r += f(d[i]); gg += f(d[i + 1]); b += f(d[i + 2]); }
+  const n = d.length / 4; r /= n; gg /= n; b /= n;
+  const m = Math.max(r, gg, b, 1e-4);
+  out.pass = (r + gg + b) / 3; out.tint = colored ? new THREE.Color(r / m, gg / m, b / m) : new THREE.Color(1, 1, 1);
+  tex.userData.mean = out;
+  return out;
+}
 function invertTex(t) {
   const img = t.image; if (!img || !img.getContext) return t;
   if (t.userData.inverted) return t.userData.inverted;
@@ -190,12 +246,13 @@ export function dustMotes({ count = 600, center = [0, 1.5, 0], size = [3, 2.5, 3
       uPx: { value: 1000 }, uFocus: { value: 2 }, uCocK: { value: 0 }, uCol: { value: COL(color) }, uInt: { value: intensity }, uAmb: { value: ambient },
       uBeam: { value: shaft ? 2 : cone ? 1 : 0 }, uInv: { value: shaft ? shaft.inverse : new THREE.Matrix4() },
       uCookie: { value: shaft && shaft.material.uniforms.uCookie.value }, uHasCookie: { value: shaft && shaft.material.uniforms.uCookie.value ? 1 : 0 },
+      uLodK: { value: shaft ? shaft.material.uniforms.uLodK.value : 0 },
       uConeO: { value: cone ? V3(cone.origin) : new THREE.Vector3() }, uConeD: { value: cone ? V3(cone.dir).normalize() : new THREE.Vector3(0, -1, 0) },
       uConeCos: { value: cone ? Math.cos(cone.angle) : 0.9 }, uConeLen: { value: cone ? cone.length : 5 },
     },
     vertexShader: /* glsl */ `
       attribute vec4 aSeed; uniform float uT, uDrift, uSize, uPx, uFocus, uCocK, uInt, uAmb; uniform vec3 uMin, uBox;
-      uniform int uBeam; uniform mat4 uInv; uniform sampler2D uCookie; uniform float uHasCookie; uniform vec3 uConeO, uConeD; uniform float uConeCos, uConeLen;
+      uniform int uBeam; uniform mat4 uInv; uniform sampler2D uCookie; uniform float uHasCookie, uLodK; uniform vec3 uConeO, uConeD; uniform float uConeCos, uConeLen;
       varying float vA; varying vec3 vTint;
       void main(){
         vec3 s = aSeed.xyz; float w = aSeed.w;
@@ -210,7 +267,7 @@ export function dustMotes({ count = 600, center = [0, 1.5, 0], size = [3, 2.5, 3
           inB = smoothstep(uConeCos - 0.01, uConeCos + 0.03, c) * smoothstep(0.0, 0.1, l) * smoothstep(uConeLen, uConeLen * 0.6, l); }
         else if (uBeam == 2) { vec3 lp = (uInv * vec4(p, 1.0)).xyz;
           inB = smoothstep(1.0, 0.9, abs(lp.x)) * smoothstep(1.0, 0.9, abs(lp.y)) * smoothstep(0.0, 0.05, lp.z) * smoothstep(1.0, 0.7, lp.z);
-          if (uHasCookie > 0.5) { vec3 ck = texture2D(uCookie, lp.xy * 0.5 + 0.5).rgb; vTint = ck; inB *= max(max(ck.r, ck.g), ck.b); } }
+          if (uHasCookie > 0.5) { vec3 ck = textureLod(uCookie, lp.xy * 0.5 + 0.5, log2(1.0 + clamp(lp.z, 0.0, 1.0) * uLodK)).rgb; vTint = ck; inB *= max(max(ck.r, ck.g), ck.b); } }
         float tw = 0.3 + 0.7 * pow(0.5 + 0.5 * sin(uT * (0.7 + w * 2.6) + s.x * 60.0), 4.0);
         vec4 mv = modelViewMatrix * vec4(p, 1.0); float z = max(-mv.z, 0.01);
         float px = uSize * uPx / z;

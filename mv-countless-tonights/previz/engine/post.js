@@ -1,4 +1,4 @@
-// Film post chain: scene (linear HDR, MSAA) -> depth of field -> bloom/halation -> ACES + grade + grain.
+// Film post chain: scene (linear HDR, MSAA) -> depth of field (half-res gather) -> bloom/halation -> ACES + grade + grain.
 // Each Chain renders one shot into its own display-referred RGBA8 target so the engine can dissolve two shots.
 import * as THREE from 'three';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
@@ -13,42 +13,96 @@ function fsQuad(material) {
   return { scene: s, mesh: m, cam: new THREE.Camera() };
 }
 
-const DOF_FRAG = /* glsl */ `
+// Depth of field, half resolution (≈5× cheaper than a full-res gather on SwiftShader, and smoother bokeh):
+//   1. COC_FRAG   full-res colour + depth → half-res RGBA16F (rgb = 2×2 box average, a = signed CoC in FULL-res px,
+//                 the largest |CoC| of the 4 texels so half-res texels straddling a sharp edge blur with their side)
+//   2. GATHER_FRAG half-res: own-CoC gather (background / own blur, skipped for in-focus pixels) + a wide ring that only
+//                 collects nearer, more-blurred samples (foreground spilling over sharper things, energy-normalised
+//                 coverage). Sample pattern rotated per pixel (interleaved gradient noise): no star / ring stamps on
+//                 small bright points (candle flames, dust motes, lamp glints).
+//   3. MERGE_FRAG full-res: mix(sharp, blurred, a) where a = max(own-blur ramp, foreground coverage).
+const DOF_COMMON = /* glsl */ `
+uniform float near, far, focusMM, focalMM, fstop, sensorW, width, maxCoc;
+float cocAt(float zmm){ // signed circle of confusion in full-res pixels (+ far, - near)
+  float A = focalMM / fstop;
+  float c = A * focalMM * (zmm - focusMM) / (zmm * max(focusMM - focalMM, 1.0));
+  return clamp(c / sensorW * width, -maxCoc, maxCoc);
+}`;
+const COC_FRAG = /* glsl */ `
 #include <packing>
 varying vec2 vUv;
-uniform sampler2D tColor; uniform sampler2D tDepth;
-uniform float near, far, focusMM, focalMM, fstop, sensorW, width, maxCoc;
-uniform vec2 texel; uniform float enabled;
+uniform sampler2D tColor; uniform sampler2D tDepth; uniform vec2 texel;
+` + DOF_COMMON + `
 float viewZmm(vec2 uv){ float d = texture2D(tDepth, uv).x; return -perspectiveDepthToViewZ(d, near, far) * 1000.0; }
-float coc(float z){ // signed circle of confusion in pixels (+ far, - near)
-  float A = focalMM / fstop;
-  float c = A * focalMM * (z - focusMM) / (z * max(focusMM - focalMM, 1.0));
-  return clamp(c / sensorW * width, -maxCoc, maxCoc);
-}
 void main(){
-  vec4 base = texture2D(tColor, vUv);
-  if (enabled < 0.5) { gl_FragColor = base; return; }
-  float c0 = coc(viewZmm(vUv));
-  float r0 = abs(c0);
-  vec3 acc = base.rgb; float wsum = 1.0;
-  const int N = 28; const float GA = 2.39996323;
-  float searchR = maxCoc;
-  for (int i = 0; i < N; i++) {
-    float fi = float(i) + 0.5;
-    float rr = sqrt(fi / float(N));
-    float th = fi * GA;
-    vec2 o = vec2(cos(th), sin(th)) * rr * searchR;
-    vec2 uv = vUv + o * texel;
-    float cs = coc(viewZmm(uv));
-    float d = length(o);
-    // nearer samples may spill their blur over us; farther samples only within our own CoC
-    float rEff = (cs < c0) ? abs(cs) : min(abs(cs), r0);
-    float w = smoothstep(d - 1.0, d + 0.5, rEff);
-    vec3 s = texture2D(tColor, uv).rgb;
-    acc += s * w; wsum += w;
-  }
-  gl_FragColor = vec4(acc / wsum, base.a);
+  vec3 c = texture2D(tColor, vUv).rgb;               // half-res pixel centre = corner of 4 full-res texels → box average
+  vec2 h = 0.5 * texel;
+  float c0 = cocAt(viewZmm(vUv + vec2(-h.x, -h.y))), c1 = cocAt(viewZmm(vUv + vec2(h.x, -h.y)));
+  float c2 = cocAt(viewZmm(vUv + vec2(-h.x, h.y))), c3 = cocAt(viewZmm(vUv + vec2(h.x, h.y)));
+  float a = abs(c0) > abs(c1) ? c0 : c1, b = abs(c2) > abs(c3) ? c2 : c3;
+  gl_FragColor = vec4(c, abs(a) > abs(b) ? a : b);  // max-|CoC| downsample: texels straddling a sharp edge count as blurred
 }`;
+const GATHER_FRAG = /* glsl */ `
+varying vec2 vUv;
+uniform sampler2D tHalf; uniform vec2 texelH; uniform float maxCoc;
+float ign(vec2 p){ return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715)))); }
+void main(){
+  vec4 b = texture2D(tHalf, vUv);
+  float c0 = b.a, r0 = abs(c0);
+  const float GA = 2.39996323;
+  float rot = ign(gl_FragCoord.xy) * 6.2831853;
+  vec2 pxUV = 0.5 * texelH;                          // one FULL-res pixel in half-res uv
+  // (1) own blur: samples spread over the pixel's own CoC
+  vec3 accB = b.rgb; float wB = 1.0;
+  if (r0 > 0.6) {
+    const int NA = 20;
+    for (int i = 0; i < NA; i++) {
+      float fi = float(i) + 0.5;
+      float th = fi * GA + rot;
+      vec2 o = vec2(cos(th), sin(th)) * sqrt(fi / float(NA)) * r0;
+      vec4 s = texture2D(tHalf, vUv + o * pxUV);
+      float rs = abs(s.a), d = length(o);
+      float rEff = (s.a < c0) ? rs : min(rs, r0);    // nearer samples may spill, farther only within our own CoC
+      float w = smoothstep(d - 1.0, d + 0.75, rEff);
+      accB += s.rgb * w; wB += w;
+    }
+  }
+  vec3 bg = accB / wB;
+  // (2) foreground spill: nearer & more blurred samples anywhere within maxCoc
+  const int NB = 16;
+  vec3 accF = vec3(0.0); float wF = 0.0, cov = 0.0;
+  float R2 = maxCoc * maxCoc;
+  for (int i = 0; i < NB; i++) {
+    float fi = float(i) + 0.5;
+    float th = fi * GA - rot * 1.618;
+    vec2 o = vec2(cos(th), sin(th)) * sqrt(fi / float(NB)) * maxCoc;
+    vec4 s = texture2D(tHalf, vUv + o * pxUV);
+    float rs = abs(s.a), d = length(o);
+    if (s.a < c0 - 1.0 && rs > r0 + 0.5) {
+      float w = smoothstep(d - 1.0, d + 0.75, rs);
+      accF += s.rgb * w; wF += w;
+      cov += w * min(R2 / max(rs * rs, 1.0), 12.0);  // each sample stands for R²/N px of a disc of area rs²
+    }
+  }
+  float fc = clamp(cov / float(NB), 0.0, 1.0);
+  vec3 col = wF > 0.0 ? mix(bg, accF / wF, fc) : bg;
+  gl_FragColor = vec4(col, fc);
+}`;
+// own-blur ramp from the FULL-res depth (no half-res stair-steps along in-focus silhouettes), foreground coverage from the gather
+const MERGE_FRAG = /* glsl */ `
+#include <packing>
+varying vec2 vUv; uniform sampler2D tColor, tBlur, tDepth; uniform vec2 texel;
+` + DOF_COMMON + `
+void main(){
+  vec3 s = texture2D(tColor, vUv).rgb;
+  // 4 bilinear taps 1 px apart on the half-res result ≈ 3×3 tent: removes the gather's per-pixel rotation noise
+  vec4 b = 0.25 * (texture2D(tBlur, vUv + vec2(-texel.x, -texel.y)) + texture2D(tBlur, vUv + vec2(texel.x, -texel.y))
+                 + texture2D(tBlur, vUv + vec2(-texel.x, texel.y)) + texture2D(tBlur, vUv + vec2(texel.x, texel.y)));
+  float z = -perspectiveDepthToViewZ(texture2D(tDepth, vUv).x, near, far) * 1000.0;
+  float a = max(smoothstep(0.6, 2.2, abs(cocAt(z))), b.a);
+  gl_FragColor = vec4(mix(s, b.rgb, a), 1.0);
+}`;
+const COPY_FRAG = /* glsl */ `varying vec2 vUv; uniform sampler2D tColor; void main(){ gl_FragColor = vec4(texture2D(tColor, vUv).rgb, 1.0); }`;
 
 const GRADE_FRAG = /* glsl */ `
 varying vec2 vUv;
@@ -107,23 +161,25 @@ export const DEFAULT_POST = {
 };
 
 export class Chain {
-  constructor(renderer, W, H) {
+  constructor(renderer, W, H, { samples = 4 } = {}) {
     this.renderer = renderer; this.W = W; this.H = H;
     const depthTexture = new THREE.DepthTexture(W, H);
     depthTexture.type = THREE.UnsignedIntType;
-    this.rtScene = new THREE.WebGLRenderTarget(W, H, { type: THREE.HalfFloatType, samples: 4, depthTexture, depthBuffer: true });
+    this.rtScene = new THREE.WebGLRenderTarget(W, H, { type: THREE.HalfFloatType, samples, depthTexture, depthBuffer: true });
     this.rtA = new THREE.WebGLRenderTarget(W, H, { type: THREE.HalfFloatType, depthBuffer: false });
     this.out = new THREE.WebGLRenderTarget(W, H, { type: THREE.UnsignedByteType, depthBuffer: false });
-    this.dofMat = new THREE.ShaderMaterial({
-      vertexShader: FS_VERT, fragmentShader: DOF_FRAG, depthTest: false, depthWrite: false,
-      uniforms: {
-        tColor: { value: this.rtScene.texture }, tDepth: { value: depthTexture },
-        near: { value: 0.1 }, far: { value: 100 }, focusMM: { value: 2000 }, focalMM: { value: 50 }, fstop: { value: 2.8 },
-        sensorW: { value: SENSOR_W }, width: { value: W }, maxCoc: { value: Math.max(6, W / 110) },
-        texel: { value: new THREE.Vector2(1 / W, 1 / H) }, enabled: { value: 0 },
-      },
-    });
-    this.dofQ = fsQuad(this.dofMat);
+    const Wh = Math.max(2, W >> 1), Hh = Math.max(2, H >> 1);
+    this.rtHalfA = new THREE.WebGLRenderTarget(Wh, Hh, { type: THREE.HalfFloatType, depthBuffer: false });
+    this.rtHalfB = new THREE.WebGLRenderTarget(Wh, Hh, { type: THREE.HalfFloatType, depthBuffer: false });
+    const lens = () => ({ near: { value: 0.1 }, far: { value: 100 }, focusMM: { value: 2000 }, focalMM: { value: 50 }, fstop: { value: 2.8 },
+      sensorW: { value: SENSOR_W }, width: { value: W }, maxCoc: { value: Math.max(6, W / 110) } });
+    const sm = (frag, uniforms) => new THREE.ShaderMaterial({ vertexShader: FS_VERT, fragmentShader: frag, depthTest: false, depthWrite: false, uniforms });
+    this.cocMat = sm(COC_FRAG, { tColor: { value: this.rtScene.texture }, tDepth: { value: depthTexture }, texel: { value: new THREE.Vector2(1 / W, 1 / H) }, ...lens() });
+    this.gatherMat = sm(GATHER_FRAG, { tHalf: { value: this.rtHalfA.texture }, texelH: { value: new THREE.Vector2(1 / Wh, 1 / Hh) }, maxCoc: { value: Math.max(6, W / 110) } });
+    this.mergeMat = sm(MERGE_FRAG, { tColor: { value: this.rtScene.texture }, tBlur: { value: this.rtHalfB.texture }, tDepth: { value: depthTexture }, texel: { value: new THREE.Vector2(1 / W, 1 / H) }, ...lens() });
+    this.copyMat = sm(COPY_FRAG, { tColor: { value: this.rtScene.texture } });
+    this.dofMat = this.cocMat; // (back-compat name: the lens uniforms live here)
+    this.cocQ = fsQuad(this.cocMat); this.gatherQ = fsQuad(this.gatherMat); this.mergeQ = fsQuad(this.mergeMat); this.copyQ = fsQuad(this.copyMat);
     this.bloom = new UnrealBloomPass(new THREE.Vector2(W, H), 0.4, 0.5, 0.85);
     this.gradeMat = new THREE.ShaderMaterial({
       vertexShader: FS_VERT, fragmentShader: GRADE_FRAG, depthTest: false, depthWrite: false,
@@ -145,17 +201,21 @@ export class Chain {
     r.clear(true, true, true);
     r.render(scene, camera);
 
-    const du = this.dofMat.uniforms;
-    du.enabled.value = p.dof ? 1 : 0;
     if (p.dof) {
+      const du = this.cocMat.uniforms;
       du.near.value = camera.near; du.far.value = camera.far;
       du.focusMM.value = Math.max(0.05, p.dof.focus) * 1000;
       du.focalMM.value = camera.userData.mm || 50;
       du.fstop.value = p.dof.fstop || 2.8;
-      du.maxCoc.value = (p.dof.maxCoc || 1) * Math.max(6, this.W / 110);
+      du.maxCoc.value = this.gatherMat.uniforms.maxCoc.value = (p.dof.maxCoc || 1) * Math.max(6, this.W / 110);
+      const mu = this.mergeMat.uniforms;
+      for (const k of ['near', 'far', 'focusMM', 'focalMM', 'fstop', 'maxCoc']) mu[k].value = du[k].value;
+      r.setRenderTarget(this.rtHalfA); r.render(this.cocQ.scene, this.cocQ.cam);
+      r.setRenderTarget(this.rtHalfB); r.render(this.gatherQ.scene, this.gatherQ.cam);
+      r.setRenderTarget(this.rtA); r.render(this.mergeQ.scene, this.mergeQ.cam);
+    } else {
+      r.setRenderTarget(this.rtA); r.render(this.copyQ.scene, this.copyQ.cam);
     }
-    r.setRenderTarget(this.rtA);
-    r.render(this.dofQ.scene, this.dofQ.cam);
 
     const b = p.bloom || {};
     if ((b.strength || 0) > 0.001) {

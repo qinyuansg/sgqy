@@ -635,3 +635,131 @@ export function vnoise3(x, y, z, seed = 0) {
   }
   return r * 2 - 1;
 }
+
+// ---------------------------------------------------------------------------------------------
+// QEM half-edge-collapse decimation. Keeps surviving vertices' attributes untouched (they are exact
+// SDF samples with true normals), never moves open-boundary vertices (hems / cuffs stay crisp).
+// m: {pos, nrm, idx, ...per-vertex arrays}; returns a new compacted record.
+// opts: maxError (m, geometric deviation bound), ratio (target face fraction), minNormalDot.
+// ---------------------------------------------------------------------------------------------
+export function decimate(m, { maxError = 0.0008, ratio = 0.3, minNormalDot = 0.35, attr = null, attrTol = null } = {}) {
+  const nv = m.pos.length / 3, nf0 = m.idx.length / 3;
+  if (nf0 < 200) return m;
+  const P = m.pos, F = new Int32Array(m.idx);
+  const Q = new Float64Array(nv * 10);
+  const vf = Array.from({ length: nv }, () => []);
+  for (let f = 0; f < nf0; f++) {
+    const a = F[f * 3], b = F[f * 3 + 1], c = F[f * 3 + 2];
+    vf[a].push(f); vf[b].push(f); vf[c].push(f);
+    const ax = P[a * 3], ay = P[a * 3 + 1], az = P[a * 3 + 2];
+    const ux = P[b * 3] - ax, uy = P[b * 3 + 1] - ay, uz = P[b * 3 + 2] - az;
+    const wx = P[c * 3] - ax, wy = P[c * 3 + 1] - ay, wz = P[c * 3 + 2] - az;
+    let nx = uy * wz - uz * wy, ny = uz * wx - ux * wz, nz = ux * wy - uy * wx;
+    const l = Math.hypot(nx, ny, nz); if (l < 1e-14) continue;
+    const area = l * 0.5; nx /= l; ny /= l; nz /= l;
+    const d = -(nx * ax + ny * ay + nz * az);
+    const q = [nx * nx, nx * ny, nx * nz, nx * d, ny * ny, ny * nz, ny * d, nz * nz, nz * d, d * d];
+    for (const v of [a, b, c]) for (let i = 0; i < 10; i++) Q[v * 10 + i] += q[i] * area;
+  }
+  // normalise quadrics by area so costs are squared distances
+  const areaSum = new Float64Array(nv);
+  for (let f = 0; f < nf0; f++) {
+    const a = F[f * 3], b = F[f * 3 + 1], c = F[f * 3 + 2];
+    const ux = P[b * 3] - P[a * 3], uy = P[b * 3 + 1] - P[a * 3 + 1], uz = P[b * 3 + 2] - P[a * 3 + 2];
+    const wx = P[c * 3] - P[a * 3], wy = P[c * 3 + 1] - P[a * 3 + 1], wz = P[c * 3 + 2] - P[a * 3 + 2];
+    const ar = 0.5 * Math.hypot(uy * wz - uz * wy, uz * wx - ux * wz, ux * wy - uy * wx);
+    areaSum[a] += ar; areaSum[b] += ar; areaSum[c] += ar;
+  }
+  for (let v = 0; v < nv; v++) if (areaSum[v] > 0) for (let i = 0; i < 10; i++) Q[v * 10 + i] /= areaSum[v] / Math.max(1, vf[v].length);
+  const locked = new Uint8Array(nv);
+  for (const [a, b] of boundaryEdges(m.idx)) { locked[a] = 1; locked[b] = 1; }
+  const alive = new Uint8Array(nf0).fill(1);
+  const removed = new Uint8Array(nv);
+  const stamp = new Uint32Array(nv);
+  const qerr = (q, x, y, z) => q[0] * x * x + 2 * q[1] * x * y + 2 * q[2] * x * z + 2 * q[3] * x + q[4] * y * y + 2 * q[5] * y * z + 2 * q[6] * y + q[7] * z * z + 2 * q[8] * z + q[9];
+  const tmp = new Float64Array(10);
+  const costUV = (u, v) => { for (let i = 0; i < 10; i++) tmp[i] = Q[u * 10 + i] + Q[v * 10 + i]; return qerr(tmp, P[v * 3], P[v * 3 + 1], P[v * 3 + 2]); };
+  // binary heap over entry slots (typed arrays): cost, u, v, stampU, stampV
+  let cap = 1 << 16, nE = 0;
+  let EC = new Float64Array(cap), EU = new Int32Array(cap), EV = new Int32Array(cap), ESU = new Uint32Array(cap), ESV = new Uint32Array(cap);
+  let HP = new Int32Array(cap); let hn = 0;
+  const grow = () => { cap *= 2; const r = (A, C) => { const b = new C(cap); b.set(A); return b; }; EC = r(EC, Float64Array); EU = r(EU, Int32Array); EV = r(EV, Int32Array); ESU = r(ESU, Uint32Array); ESV = r(ESV, Uint32Array); HP = r(HP, Int32Array); };
+  const free = [];
+  const push = (c, u, v, su, sv) => {
+    let e = free.length ? free.pop() : nE++;
+    if (e >= cap || hn >= cap) grow();
+    EC[e] = c; EU[e] = u; EV[e] = v; ESU[e] = su; ESV[e] = sv;
+    let i = hn++; HP[i] = e;
+    while (i > 0) { const p = (i - 1) >> 1; if (EC[HP[p]] <= EC[HP[i]]) break; const t = HP[p]; HP[p] = HP[i]; HP[i] = t; i = p; }
+  };
+  const pop = () => {
+    const top = HP[0]; HP[0] = HP[--hn];
+    let i = 0;
+    for (;;) { const l = 2 * i + 1, r = l + 1; let m2 = i; if (l < hn && EC[HP[l]] < EC[HP[m2]]) m2 = l; if (r < hn && EC[HP[r]] < EC[HP[m2]]) m2 = r; if (m2 === i) break; const t = HP[m2]; HP[m2] = HP[i]; HP[i] = t; i = m2; }
+    free.push(top);
+    return top;
+  };
+  const mark = new Int32Array(nv), mark2 = new Int32Array(nv);
+  let tick = 0;
+  const nbuf = [];
+  const neighbours = (u, buf) => { // unique 1-ring of u into buf (array)
+    tick++; buf.length = 0;
+    for (const f of vf[u]) if (alive[f]) for (let k = 0; k < 3; k++) { const w = F[f * 3 + k]; if (w !== u && mark[w] !== tick) { mark[w] = tick; buf.push(w); } }
+    return buf;
+  };
+  const consider = (u) => { if (removed[u] || locked[u]) return; for (const v of neighbours(u, nbuf)) push(costUV(u, v), u, v, stamp[u], stamp[v]); };
+  for (let u = 0; u < nv; u++) consider(u);
+  let nf = nf0;
+  const target = Math.floor(nf0 * ratio);
+  const maxE2 = maxError * maxError;
+  const nb2 = [];
+  while (hn > 0 && nf > target) {
+    const e = pop();
+    const cost = EC[e], u = EU[e], v = EV[e], su = ESU[e], sv = ESV[e];
+    if (cost > maxE2) break;
+    if (removed[u] || removed[v] || stamp[u] !== su || stamp[v] !== sv || locked[u]) continue;
+    if (attr) { let bad = false; for (let k = 0; k < attrTol.length; k++) if (Math.abs(attr[u * 4 + k] - attr[v * 4 + k]) > attrTol[k]) { bad = true; break; } if (bad) continue; }
+    // link condition: shared neighbours must be exactly the opposite vertices of the shared faces
+    neighbours(v, nb2); const tv = tick; for (const w of nb2) mark2[w] = tv;
+    neighbours(u, nbuf);
+    let common = 0; for (const w of nbuf) if (mark2[w] === tv) common++;
+    let shared = 0; for (const f of vf[u]) if (alive[f] && (F[f * 3] === v || F[f * 3 + 1] === v || F[f * 3 + 2] === v)) shared++;
+    if (common !== shared) continue;
+    // no flips / degenerate faces
+    const px = P[v * 3], py = P[v * 3 + 1], pz = P[v * 3 + 2];
+    let ok = true;
+    for (const f of vf[u]) {
+      if (!alive[f]) continue;
+      const i0 = F[f * 3], i1 = F[f * 3 + 1], i2 = F[f * 3 + 2];
+      if (i0 === v || i1 === v || i2 === v) continue;
+      const A = i0 * 3, B = i1 * 3, Cc = i2 * 3;
+      let ax = P[A], ay = P[A + 1], az = P[A + 2], bx = P[B], by = P[B + 1], bz = P[B + 2], cx = P[Cc], cy = P[Cc + 1], cz = P[Cc + 2];
+      const n0x = (by - ay) * (cz - az) - (bz - az) * (cy - ay), n0y = (bz - az) * (cx - ax) - (bx - ax) * (cz - az), n0z = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);
+      if (i0 === u) { ax = px; ay = py; az = pz; } else if (i1 === u) { bx = px; by = py; bz = pz; } else { cx = px; cy = py; cz = pz; }
+      const n1x = (by - ay) * (cz - az) - (bz - az) * (cy - ay), n1y = (bz - az) * (cx - ax) - (bx - ax) * (cz - az), n1z = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);
+      const l0 = Math.hypot(n0x, n0y, n0z), l1 = Math.hypot(n1x, n1y, n1z);
+      if (l1 < l0 * 0.02 || (n0x * n1x + n0y * n1y + n0z * n1z) < minNormalDot * l0 * l1) { ok = false; break; }
+    }
+    if (!ok) continue;
+    // collapse u -> v
+    for (const f of vf[u]) {
+      if (!alive[f]) continue;
+      if (F[f * 3] === v || F[f * 3 + 1] === v || F[f * 3 + 2] === v) { alive[f] = 0; nf--; continue; }
+      for (let k = 0; k < 3; k++) if (F[f * 3 + k] === u) F[f * 3 + k] = v;
+      vf[v].push(f);
+    }
+    vf[u] = [];
+    removed[u] = 1;
+    for (let i = 0; i < 10; i++) Q[v * 10 + i] += Q[u * 10 + i];
+    stamp[v]++;
+    // only edges touching v changed cost
+    if (vf[v].length > 64) vf[v] = vf[v].filter((f) => alive[f]);
+    for (const w of neighbours(v, nbuf).slice()) {
+      if (!locked[w] && !removed[w]) push(costUV(w, v), w, v, stamp[w], stamp[v]);
+      if (!locked[v]) push(costUV(v, w), v, w, stamp[v], stamp[w]);
+    }
+  }
+  const out = [];
+  for (let f = 0; f < nf0; f++) if (alive[f]) out.push(F[f * 3], F[f * 3 + 1], F[f * 3 + 2]);
+  return compact({ ...m, idx: new Uint32Array(out) });
+}

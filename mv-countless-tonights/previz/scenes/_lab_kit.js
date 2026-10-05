@@ -148,9 +148,13 @@ export default async function create(ctx) {
       scene.environmentIntensity = which === 'vit' ? 0.5 : which === 'candle' ? 0.6 : 0.55;
       scene.background = new THREE.Color(0x020305);
       if (which === 'vit') {
-        const tex = ctx.renderNested('_lab_kit_sea', 'reflection', tl, u, T, rt, RT_ASPECT);
-        V.setNested(tex, 0.9);
+        // perf probe: ?off=nested,shaft,dust,wl,vits,dof (lab only)
+        const off = new Set((new URLSearchParams(location.search).get('off') || '').split(','));
+        if (!off.has('nested')) { const tex = ctx.renderNested('_lab_kit_sea', 'reflection', tl, u, T, rt, RT_ASPECT); V.setNested(tex, 0.9); } else V.setNested(null);
+        shaft.object3D.visible = !off.has('shaft'); dust.object3D.visible = !off.has('dust');
+        groups.vit.traverse((o) => { if (o.name === 'windowLight') o.visible = !off.has('wl'); if (o.name === 'vitrine' && o !== V.object3D) o.visible = !off.has('vits'); });
         shaft.update(T); dust.update(T, { camera, focus: 2.15, fstop: 2.8 });
+        if (off.has('dof')) { const r = setups.K_VIT(tl, u, T); r.dof = null; return r; }
       }
       if (which === 'candle') { candle.update(T); steam1.update(T); }
       const r = (setups[shot.id] || setups.K_MAT)(tl, u, T);

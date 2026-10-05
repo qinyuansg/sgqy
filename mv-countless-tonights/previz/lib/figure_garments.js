@@ -17,7 +17,7 @@
 //     wide (trousers: extra radius at hem), rolled (trousers: rolled hem), print: {colors, leaf, count, scale},
 //     shoe: 'leather'|'cloth'|'boot'|'sandal'|'slipper', soleColor, faded, mottle, pockets }
 import * as THREE from 'three';
-import { Field, prim, Ribbon, meshField, filterFaces, compact, snapBoundary, addRim, toGeometry, boundaryEdges, vnoise3, smin, fieldBBox } from './figure_sdf.js';
+import { Field, prim, Ribbon, meshField, filterFaces, compact, snapBoundary, addRim, toGeometry, boundaryEdges, vnoise3, smin, smax, fieldBBox, decimate } from './figure_sdf.js';
 import { clothMaterial, hairMaterial, leatherMaterial, floralPrint } from './figure_mat.js';
 
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
@@ -139,7 +139,8 @@ function meshTrim(ctx, f, h, bbox0) {
   const bbox = bbox0 ? { min: fb.min.map((x, i) => Math.max(x, bbox0.min[i])), max: fb.max.map((x, i) => Math.min(x, bbox0.max[i])) } : fb;
   if (!(bbox.max[0] > bbox.min[0])) return { pos: new Float32Array(0), nrm: new Float32Array(0), idx: new Uint32Array(0) };
   f.accel(bbox, Math.max(0.02, h * 6));
-  const m = meshField((x, y, z) => f.eval(x, y, z), bbox, h, { project: 2 });
+  let m = meshField((x, y, z) => f.eval(x, y, z), bbox, h, { project: 2 });
+  if (ctx.lod.dec && m.idx.length) m = decimate(m, { maxError: ctx.lod.dec * 0.6, ratio: 0.25 });
   return m;
 }
 
@@ -193,6 +194,7 @@ function shellMesh(ctx, raw, rem, bbox, h, { rim = 0.004 } = {}) {
     const l = Math.hypot(gx, gy, gz) || 1;
     m.nrm[v * 3] = gx / l; m.nrm[v * 3 + 1] = gy / l; m.nrm[v * 3 + 2] = gz / l;
   }
+  if (ctx.lod.dec) m = decimate(m, { maxError: ctx.lod.dec, ratio: 0.25 });
   m.rest = m.pos.slice();
   if (rim > 0) {
     m.aux = new Float32Array(m.pos.length / 3 * 4);
@@ -486,6 +488,7 @@ function upperGarment(spec, ctx, index) {
   out.geo = toGeometry(m, { skin: m });
   out.cover = coverFn(raw0, rem, bbox);
   // ---- trims
+  if (ctx.lod.simple) return out;
   const trims = new Field();
   const trims2 = new Field(); // contrasting colour (binding)
   const trims3 = new Field(); // under-layer collar line
@@ -623,6 +626,7 @@ function upperGarment(spec, ctx, index) {
     if (cuffInfo.length) cuffAux(tm, cuffInfo);
     out.extras.push({ name: nameS, geo: toGeometry(tm, { skin: tm }), mat: trimMatFactory(color, spec, fabric) });
   };
+  if (ctx.lod.simple) { trims.items.length = 0; trims2.items.length = 0; trims3.items.length = 0; delete out._buttons; }
   extrasFromField(trims, 'trim', spec.color, spec.fabric);
   extrasFromField(trims2, 'binding', tc ?? spec.collarColor ?? spec.cuff?.color, spec.trimFabric);
   extrasFromField(trims3, 'undercollar', spec.underCollar, 'linen');
@@ -691,6 +695,7 @@ function trousers(spec, ctx, index) {
   out.geo = toGeometry(m, { skin: m });
   out.cover = coverFn(raw, rem, bbox);
   // waistband / rolled hems
+  if (ctx.lod.simple) return out;
   const trims = new Field();
   const surf = raw;
   const thT = 0.007 * s;
@@ -706,7 +711,7 @@ function trousers(spec, ctx, index) {
       pts.push(...ring);
     }
   }
-  if (trims.items.length) {
+  if (trims.items.length && !ctx.lod.simple) {
     const tm = meshTrim(ctx, trims, ctx.lod.detail, bboxOfPts(pts, 0.03 * s));
     if (tm.idx.length) {
       tm.rest = tm.pos.slice(); tm.restN = tm.nrm.slice();
@@ -746,10 +751,11 @@ function skirt(spec, ctx, index) {
   out.geo = toGeometry(m, { skin: m });
   out.cover = coverFn(raw, rem, bbox);
   // waistband
+  if (ctx.lod.simple) return out;
   const trims = new Field();
   const ring = ringOn(raw, new THREE.Vector3(0, yWaist - 0.014 * s, -0.012 * H), new THREE.Vector3(0, 1, 0), 40, 0.3 * H);
   sweptBand(trims, raw, ring, { width: 0.028 * s, th: 0.0068 * s, embed: 0.0035 * s, closed: true, normal: (p) => new THREE.Vector3(p.x, 0, p.z + 0.012 * H).normalize() });
-  const tm = meshTrim(ctx, trims, ctx.lod.detail, bboxOfPts(ring, 0.03 * s));
+  const tm = ctx.lod.simple ? { idx: [] } : meshTrim(ctx, trims, ctx.lod.detail, bboxOfPts(ring, 0.03 * s));
   if (tm.idx.length) {
     tm.rest = tm.pos.slice(); tm.restN = tm.nrm.slice();
     const w = clothWeights(ctx, tm.pos); tm.skinIndex = w.skinIndex; tm.skinWeight = w.skinWeight;
@@ -931,15 +937,15 @@ export function buildHair(spec, ctx) {
   const U = (v) => v.map((x) => x * hu);
   const local = (x, y, z) => L.set(x, y, z).applyMatrix4(inv);
   // hairline elevation threshold vs azimuth (0 = front, ±π/2 = ears, π = nape)
-  const front = spec.hairline ?? ({ short: 0.6, cropped: 0.62, thin: 0.7, topknot: 0.58 }[style] ?? 0.55);
+  const front = spec.hairline ?? ({ short: 0.62, cropped: 0.63, thin: 0.72, topknot: 0.62, ponytail: 0.66, low_bun: 0.66, bun: 0.66, braid: 0.64 }[style] ?? 0.6);
   const bangs = spec.bangs ?? 0;
-  const KN = [[0, front - bangs * 0.4], [0.5, front - 0.06 - bangs * 0.22], [0.92, 0.27], [1.3, 0.40], [1.72, 0.16], [2.3, -0.36], [Math.PI, spec.nape ?? (style === 'short' || style === 'cropped' || style === 'thin' ? -0.42 : -0.6)]];
+  const KN = [[0, front - bangs * 0.45], [0.45, front - 0.05 - bangs * 0.25], [0.92, 0.3], [1.3, 0.42], [1.72, 0.16], [2.3, -0.36], [Math.PI, spec.nape ?? (style === 'short' || style === 'cropped' || style === 'thin' ? -0.42 : -0.6)]];
   const eH = (phi) => {
     const a = Math.abs(phi);
     for (let i = 0; i < KN.length - 1; i++) if (a <= KN[i + 1][0]) { const t = (a - KN[i][0]) / (KN[i + 1][0] - KN[i][0]); return lerp(KN[i][1], KN[i + 1][1], t * t * (3 - 2 * t)); }
     return KN[KN.length - 1][1];
   };
-  const T0 = { short: 0.075, cropped: 0.04, thin: 0.026, topknot: 0.06, ponytail: 0.085, low_bun: 0.09, bun: 0.085, braid: 0.085, bob: 0.1, loose: 0.1, perm: 0.12 }[style] ?? 0.08;
+  const T0 = { short: 0.075, cropped: 0.04, thin: 0.026, topknot: 0.06, ponytail: 0.1, low_bun: 0.105, bun: 0.1, braid: 0.1, bob: 0.12, loose: 0.12, perm: 0.13 }[style] ?? 0.09;
   const thick = (spec.thickness ?? T0) * hu;
   const pulled = ['ponytail', 'low_bun', 'bun', 'braid', 'topknot'].includes(style); // hair drawn back: flatter on the sides
   const f = new Field();      // extra masses (head-local frames)
@@ -994,8 +1000,8 @@ export function buildHair(spec, ctx) {
       if (style === 'headcloth') tt += 0.012 * hu * Math.sin(phi * 3 + el * 9) * sstep(-0.02, 0.2, el - eh); // wrapped folds
     } else {
       eh = eH(phi);
-      tt = thick * sstep(-0.01, 0.42, el - eh) + 0.0004;
-      tt *= 0.8 + 0.25 * sstep(0.2, 1.2, el);                        // more volume on top
+      tt = thick * (0.32 + 0.68 * sstep(-0.01, 0.45, el - eh)) + 0.0004; // sculpted edge (a soft lip at the hairline)
+      tt *= 0.85 + 0.3 * sstep(0.2, 1.2, el);                        // more volume on top
       if (spec.part !== false && !['short', 'cropped', 'thin', 'perm'].includes(style)) { // soft centre / side part
         const px = p.x - (spec.partX ?? 0.06) * hu;
         tt *= 1 - 0.45 * Math.exp(-(px * px) / (0.022 * hu) ** 2) * sstep(0.6, 1.1, el) * sstep(-0.3, 0.4, p.z / hu);
@@ -1006,7 +1012,7 @@ export function buildHair(spec, ctx) {
       tt += (spec.volume ?? 0) * hu * sstep(0, 0.6, el);
     }
     const over = el - eh;
-    let d = Math.max(skull.eval(x, y, z) - Math.max(0.0004, tt), -over * r * 0.9);
+    let d = smax(skull.eval(x, y, z) - Math.max(0.0004, tt), -over * r * 0.9, cloth ? 0.002 : 0.005 * hu / 0.21);
     if (f.items.length) d = smin(d, f.eval(x, y, z), 0.04 * hu);
     if (style === 'cap') {
       const q = p;
@@ -1035,6 +1041,7 @@ export function buildHair(spec, ctx) {
       m = { pos, nrm, idx };
     }
   }
+  if (ctx.lod.dec) m = decimate(m, { maxError: ctx.lod.dec * 0.6, ratio: 0.25 });
   m.rest = m.pos.slice(); m.restN = m.nrm.slice();
   const n = m.pos.length / 3;
   m.skinIndex = new Uint16Array(n * 4).fill(bi.head); m.skinWeight = new Float32Array(n * 4); for (let v = 0; v < n; v++) m.skinWeight[v * 4] = 1;

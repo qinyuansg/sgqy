@@ -21,7 +21,7 @@
 //   leg*.foot : .x + point toes down
 //   hips.px/py/pz, root.px/py/pz : translations (m). handL / handR : hand preset name or channels.
 import * as THREE from 'three';
-import { Field, prim, meshField, filterFaces, compact, toGeometry, concat, vnoise3 } from './figure_sdf.js';
+import { Field, prim, meshField, filterFaces, compact, toGeometry, concat, vnoise3, decimate } from './figure_sdf.js';
 import { skinMaterial, hairMaterial, materialFromDesc } from './figure_mat.js';
 import { makeHand, handPose } from './hand.js';
 import { buildGarment, buildHair } from './figure_garments.js';
@@ -235,9 +235,9 @@ export function figureKey(o = {}) {
   return JSON.stringify({ v: FIGURE_LIB_VERSION, P, lod: o.lod || 'hi', costume: o.costume || [], hair: o.hair || null, mitten: !L.hand, barefoot: !!o.barefoot });
 }
 const LOD = {
-  hi: { body: 0.008, head: 0.0042, hair: 0.0045, cloth: 0.0085, detail: 0.0036, hand: 'figure' },
-  mid: { body: 0.012, head: 0.006, hair: 0.0065, cloth: 0.012, detail: 0.005, hand: 'crowd' },
-  lo: { body: 0.018, head: 0.011, hair: 0.012, cloth: 0.018, detail: 0.009, hand: null },
+  hi: { body: 0.008, head: 0.0042, hair: 0.0045, cloth: 0.0085, detail: 0.0036, hand: 'figure', dec: 0.0007 },
+  mid: { body: 0.012, head: 0.006, hair: 0.0065, cloth: 0.012, detail: 0.005, hand: 'crowd', dec: 0.0012 },
+  lo: { body: 0.018, head: 0.011, hair: 0.012, cloth: 0.018, detail: 0.009, hand: null, dec: 0.0025, simple: true },
 };
 
 export function makeFigure(o = {}) {
@@ -390,6 +390,7 @@ export class Figure {
       return true;
     });
     mb = compact(mb);
+    if (L.dec) mb = decimate(mb, { maxError: L.dec, ratio: 0.2 });
     const tauB = 0.010 * H / 1.7;
     const wb = field.weights(mb.pos, { tau: tauB, nBones: BONES.length });
     mb.skinIndex = wb.skinIndex; mb.skinWeight = wb.skinWeight;
@@ -404,6 +405,7 @@ export class Figure {
     let mh = meshField((x, y, z) => Math.max(bodyEval(x, y, z) - 0.0005, neckLow - y), bbH, L.head, { project: 2 });
     mh.idx = filterFaces(mh.pos, mh.idx, (x, y, z) => y > neckLow + L.head * 0.5 && !covers.some((cv) => cv(x, y, z) < -0.012));
     mh = compact(mh);
+    if (L.dec) mh = decimate(mh, { maxError: L.dec * 0.5, ratio: 0.25 });
     const wh = field.weights(mh.pos, { tau: tauB, nBones: BONES.length });
     mh.skinIndex = wh.skinIndex; mh.skinWeight = wh.skinWeight;
     mh.aux = new Float32Array(mh.pos.length / 3 * 4);

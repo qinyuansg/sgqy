@@ -140,7 +140,109 @@ export default async function create(ctx) {
     ];
     defs.forEach((d, i) => { const f = makeFigure({ ...d, lod: 'hi', costume: [] }); f.root.position.set((i - 2.5) * 0.55, 0, 0); f.pose('stand'); headGroup.add(f.root); heads.push(f); });
   };
+  // ---------------- reference renders ----------------
+  const refGroup = new THREE.Group(); refGroup.position.set(120, 0, 0); scene.add(refGroup);
+  const ref = {};
+  const buildRefCast = () => {
+    if (ref.cast || !cast) return; ref.cast = [];
+    const order = ['NAVIGATOR', 'COMPANION', 'WIFE', 'CHILD', 'MAPHAND', 'MIGRANT', 'TRAVELLER', 'MOTHER', 'LONELY', 'GUARD', 'RESTORER', 'FUTURE'];
+    order.forEach((code, i) => {
+      const f = cast.makeCharacter(code, { lod: 'hi' });
+      const x = (i - (order.length - 1) / 2) * 0.64;
+      f.root.position.set(x, 0, -Math.abs(x) * 0.08); f.root.rotation.y = -x * 0.05;
+      f.pose('stand', { weight: (i % 3 - 1) * 0.6 });
+      refGroup.add(f.root); ref.cast.push(f);
+    });
+  };
+  const buildRefHands = () => {
+    if (ref.hands || !cast) return; ref.hands = [];
+    const hg = new THREE.Group(); hg.position.set(0, 0, 30); refGroup.add(hg); ref.hg = hg;
+    const table = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.04, 1.2), new THREE.MeshStandardMaterial({ color: 0x3b3029, roughness: 0.6 })); table.position.set(0, -0.02, -0.1); table.receiveShadow = true; hg.add(table);
+    const V = (x, y, z) => new THREE.Vector3(x, y, z);
+    const add = (h, pos, fd, pn, pose, pp) => { if (pose) h.pose(pose, pp || {}); h.placeWrist(pos, fd, pn); hg.add(h.root); ref.hands.push(h); return h; };
+    const W = (h) => h.root.updateMatrixWorld(true);
+    const S = 0.31;
+    // 1 restorer: gloved right hand wiping a glass pane (palm on the glass, fingers together; smudged index/thumb)
+    const glass = new THREE.Mesh(new THREE.PlaneGeometry(0.28, 0.32), new THREE.MeshPhysicalMaterial({ color: 0xdfe8f0, roughness: 0.04, transparent: true, opacity: 0.14, side: THREE.DoubleSide })); glass.position.set(-2.5 * S, 0.17, -0.07); hg.add(glass);
+    add(cast.makeCharacterHand('RESTORER', 'R', { lod: 'close' }), [-2.5 * S + 0.02, 0.06, -0.035], [0.1, 1, 0.0], [0, 0, -1], 'wipe');
+    // 2 navigator: salt-crusted right hand palm up, cuff turned back showing the patch; left fingertips on it
+    add(cast.makeCharacterHand('NAVIGATOR', 'R', { lod: 'close', cuffTurned: true }), [-1.5 * S - 0.02, 0.06, -0.02], [0.25, 0.1, 0.96], [0, 1, 0], 'relaxed', { curl: 0.9 });
+    add(cast.makeCharacterHand('NAVIGATOR', 'L', { lod: 'close' }), [-1.5 * S + 0.11, 0.17, -0.1], [-0.55, -0.55, 0.62], [-0.2, -0.9, -0.3], 'touch');
+    // 3 two hands not letting go (migrant's right, family member's left)
+    const mA = add(cast.makeCharacterHand('MIGRANT', 'R', { lod: 'close' }), [-0.5 * S - 0.05, 0.1, -0.05], [0.35, -0.05, 0.94], [0, 0, 1].map((x, i) => [0.94, 0, -0.35][i]), null);
+    const mB = cast.makeCharacterHand('WIFE', 'L', { lod: 'close', noBangle: true }); hg.add(mB.root); ref.hands.push(mB);
+    pairHands(mA, mB, { mode: 'hold', t: 0.0 });
+    // 4 guard: old right hand round a teacup (cup vertical on the table)
+    const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.036, 0.031, 0.075, 40), new THREE.MeshPhysicalMaterial({ color: 0xedf1ef, roughness: 0.18, clearcoat: 0.6 })); cup.castShadow = cup.receiveShadow = true;
+    const g4 = add(cast.makeCharacterHand('GUARD', 'R', { lod: 'close' }), [0.5 * S + 0.06, 0.1, 0.03], [-0.2, 0, -0.98], [-0.98, 0, 0.2], 'hold_cup');
+    g4.hold(cup, 'cup'); W(g4);
+    { const cw = cup.getWorldPosition(new THREE.Vector3()); g4.root.position.y += (0.0375 + 0.001) - (cw.y - hg.position.y); W(g4); }
+    // 5 migrant: left hand gripping the rattan case handle (handle horizontal)
+    const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.15, 20), new THREE.MeshStandardMaterial({ color: 0x8a6034, roughness: 0.7 })); handle.castShadow = true;
+    const g5 = add(cast.makeCharacterHand('MIGRANT', 'L', { lod: 'close' }), [1.5 * S, 0.3, -0.03], [0, -1, 0.0], [0, 0, -1], 'rattan'); g5.hold(handle, 'grip');
+    const caseTop = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.12, 0.12), new THREE.MeshStandardMaterial({ color: 0xa8783f, roughness: 0.75 })); W(g5);
+    { const hw = handle.getWorldPosition(new THREE.Vector3()); caseTop.position.set(hw.x, hw.y - 0.12 - hg.position.y, hw.z - hg.position.z); caseTop.castShadow = caseTop.receiveShadow = true; hg.add(caseTop); }
+    // 6 map hand: drawing a line with a pen on the map
+    const paper = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.26), new THREE.MeshStandardMaterial({ color: 0xd6c6a2, roughness: 0.9 })); paper.rotation.x = -Math.PI / 2; paper.position.set(2.5 * S, 0.001, -0.02); paper.receiveShadow = true; hg.add(paper);
+    const pen = new THREE.Mesh(new THREE.CylinderGeometry(0.0045, 0.0032, 0.15, 12), new THREE.MeshStandardMaterial({ color: 0x15110e, roughness: 0.35, metalness: 0.2 })); pen.position.y = -0.035; pen.castShadow = true;
+    const g6 = add(cast.makeCharacterHand('MAPHAND', 'R', { lod: 'close' }), [2.5 * S + 0.07, 0.075, -0.07], [-0.45, -0.3, 0.84], [-0.25, -0.95, 0.1], 'write'); const pg = new THREE.Group(); pg.add(pen); g6.hold(pg, 'pen');
+  };
+  // six macro hand references, each in its own set (x = 200 + 10 i)
+  const H = {};
+  const buildRefH = (i) => {
+    if (H[i] || !cast) return H[i];
+    const g = new THREE.Group(); g.position.set(200 + 10 * i, 0, 0); scene.add(g);
+    const tbl = (c = 0x3a2f28) => { const t = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.04, 0.9), new THREE.MeshStandardMaterial({ color: c, roughness: 0.6 })); t.position.set(0, -0.02, 0); t.receiveShadow = true; g.add(t); return t; };
+    const glassPane = () => { const m = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.5), new THREE.MeshPhysicalMaterial({ color: 0xe6eef4, roughness: 0.03, metalness: 0, transparent: true, opacity: 0.12, side: THREE.DoubleSide, envMapIntensity: 1.5 })); m.position.set(0, 0.22, 0); g.add(m); return m; };
+    const o = { g };
+    if (i === 1) { // restorer's gloved hand wiping the vitrine glass, seen through the glass
+      tbl(0x22262c); glassPane();
+      o.h = cast.makeCharacterHand('RESTORER', 'R', { lod: 'close' }); o.h.pose('wipe'); o.h.placeWrist([0.03, 0.12, -0.012], [-0.25, 0.97, 0], [0, 0, 1]); g.add(o.h.root);
+      o.cam = { pos: [0.03, 0.2, 1.2], tgt: [0.0, 0.19, 0], mm: 70, f: 1.2, fs: 4 };
+    } else if (i === 2) { // salt-crusted navigator's left hand flat on the other side of the glass
+      tbl(0x22262c); glassPane();
+      o.h = cast.makeCharacterHand('NAVIGATOR', 'L', { lod: 'close' }); o.h.pose('flat_on_glass'); o.h.placeWrist([-0.02, 0.1, -0.056], [0.12, 0.99, 0], [0, 0, 1]); g.add(o.h.root);
+      o.cam = { pos: [0.03, 0.22, 0.74], tgt: [0.0, 0.19, 0], mm: 85, f: 0.74, fs: 4 };
+    } else if (i === 3) { // inside of the right cuff turned back: the patch; left fingertips rest on it
+      tbl();
+      o.h = cast.makeCharacterHand('NAVIGATOR', 'R', { lod: 'close', cuffTurned: true }); o.h.pose('relaxed', { curl: 0.8 }); o.h.placeWrist([0.02, 0.09, 0.0], [-0.35, 0.05, 0.94], [0, 1, 0]); g.add(o.h.root);
+      o.h2 = cast.makeCharacterHand('NAVIGATOR', 'L', { lod: 'close' }); o.h2.pose('touch'); o.h2.placeWrist([0.13, 0.155, -0.07], [-0.8, -0.35, 0.45], [-0.25, -0.95, 0.1]); g.add(o.h2.root);
+      // put the left index pad on the patch (palmar side of the turned-back right cuff)
+      g.updateMatrixWorld(true);
+      const D = o.h.dims, patch = o.h.root.localToWorld(new THREE.Vector3(-(0.05 * D.s + 0.007), 0.04 * D.s, 0.0));
+      const tip = o.h2.tip('index', new THREE.Vector3());
+      o.h2.root.position.add(patch.sub(tip).add(new THREE.Vector3(0, 0.004, 0)));
+      o.cam = { pos: [-0.16, 0.36, 0.4], tgt: [0.02, 0.1, -0.03], mm: 70, f: 0.5, fs: 4 };
+    } else if (i === 4) { // two hands not letting go
+      tbl(0x2a2522);
+      o.h = cast.makeCharacterHand('MIGRANT', 'R', { lod: 'close' }); o.h.placeWrist([-0.12, 0.2, 0.0], [1, -0.05, 0.02], [0, 0, -1]); g.add(o.h.root);
+      o.h2 = cast.makeCharacterHand('WIFE', 'L', { lod: 'close', noBangle: false }); g.add(o.h2.root);
+      pairHands(o.h, o.h2, { mode: 'hold', t: 0.0 });
+      o.cam = { pos: [-0.02, 0.26, 0.6], tgt: [0.0, 0.2, 0], mm: 85, f: 0.6, fs: 4 };
+    } else if (i === 5) { // old hands round a teacup
+      tbl(0x3a2f28);
+      const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.036, 0.031, 0.075, 48), new THREE.MeshPhysicalMaterial({ color: 0xedf1ef, roughness: 0.15, clearcoat: 0.7 })); cup.castShadow = cup.receiveShadow = true;
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.0352, 0.0012, 6, 48), new THREE.MeshStandardMaterial({ color: 0x2b4a8b, roughness: 0.3 })); ring.rotation.x = Math.PI / 2; ring.position.y = 0.03; cup.add(ring);
+      o.h = cast.makeCharacterHand('GUARD', 'R', { lod: 'close' }); o.h.pose('hold_cup'); o.h.placeWrist([0.09, 0.06, 0.06], [-0.6, 0.0, -0.8], [-0.8, 0, 0.6]); g.add(o.h.root);
+      o.h.hold(cup, 'cup'); o.h.root.updateMatrixWorld(true);
+      const cw = cup.getWorldPosition(new THREE.Vector3()); o.h.root.position.y += 0.0385 - cw.y;
+      o.h2 = cast.makeCharacterHand('GUARD', 'L', { lod: 'close' }); o.h2.pose('cupped'); o.h2.placeWrist([-0.1, 0.035, 0.1], [0.75, -0.25, -0.6], [0.0, 1, 0.1]); g.add(o.h2.root);
+      o.cam = { pos: [0.05, 0.25, 0.52], tgt: [0.0, 0.05, 0], mm: 85, f: 0.56, fs: 4 };
+    } else if (i === 6) { // map hand: ruling a line with a pen, left hand pressing the map
+      const t = tbl(0x2a211b);
+      const paper = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.5), new THREE.MeshStandardMaterial({ color: 0xd6c6a2, roughness: 0.9 })); paper.rotation.x = -Math.PI / 2; paper.position.set(0, 0.001, 0); paper.receiveShadow = true; g.add(paper);
+      const ruler = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.006, 0.03), new THREE.MeshStandardMaterial({ color: 0x1a120d, roughness: 0.4 })); ruler.position.set(-0.03, 0.004, 0.035); ruler.castShadow = true; g.add(ruler);
+      const pen = new THREE.Mesh(new THREE.CylinderGeometry(0.0042, 0.003, 0.15, 12), new THREE.MeshStandardMaterial({ color: 0x15110e, roughness: 0.35, metalness: 0.2 })); pen.position.y = 0.052; pen.castShadow = true;
+      o.h = cast.makeCharacterHand('MAPHAND', 'R', { lod: 'close' }); o.h.pose('write'); o.h.placeWrist([0.16, 0.075, -0.05], [-0.55, -0.45, 0.7], [-0.75, -0.6, 0.25]); g.add(o.h.root);
+      const pg = new THREE.Group(); pg.add(pen); o.h.hold(pg, 'pen');
+      o.h2 = cast.makeCharacterHand('MAPHAND', 'L', { lod: 'close' }); o.h2.pose('flat', { spread: 0.35 }); o.h2.placeWrist([-0.22, 0.03, -0.1], [0.45, -0.12, 0.88], [0, -1, 0]); g.add(o.h2.root);
+      o.cam = { pos: [0.05, 0.3, 0.55], tgt: [-0.01, 0.04, -0.0], mm: 55, f: 0.6, fs: 5.6 };
+    }
+    H[i] = o; return o;
+  };
   const views = {
+    REF_CAST: () => { buildRefCast(); cam.place(camera, [120, 1.12, 9.4], [120, 0.86, 0]); cam.lens(camera, 40); return { dof: null, vignette: 0.2, exposure: 0.86, contrast: 1.08 }; },
+    REF_HANDS: () => { buildRefHands(); cam.place(camera, [120, 0.62, 30 + 1.32], [120, 0.1, 30 - 0.02]); cam.lens(camera, 36); return { dof: { focus: 1.42, fstop: 8 }, vignette: 0.2, exposure: 0.95 }; },
     POSES2: (tl, u, T) => { poses2(T); cam.place(camera, [80.7, 1.25, 6.2], [80.7, 0.75, 0]); cam.lens(camera, 32); return { dof: null }; },
     BENCH: (tl, u, T) => { poses2(T); cam.place(camera, [80.3, 1.0, 2.6], [80.0, 0.8, 0]); cam.lens(camera, 40); return { dof: null }; },
     TEA: (tl, u, T) => { poses2(T); cam.place(camera, [82.1, 1.0, 1.9], [82.3, 0.85, 0]); cam.lens(camera, 45); return { dof: null }; },
@@ -159,11 +261,20 @@ export default async function create(ctx) {
     scene, camera, post: { exposure: 1.0, vignette: 0.22, grain: 0.02, saturation: 0.95 },
     setShot(shot, tl, u, T) {
       const id = shot.id;
-      rig.position.x = id === 'SIT' || id === 'POSES2' || id === 'BENCH' || id === 'TEA' || id === 'PATCH' ? 80.7 : id.startsWith('POSES') ? 20 : id.startsWith('HANDS') ? 40 : (id.startsWith('HEADS') || id === 'APOSE') ? 60 : 0;
+      if (id.startsWith('REF')) { rig.position.set(120, 0, id === 'REF_HANDS' ? 30 : 0); } else rig.position.z = 0;
+      rig.position.x = id.startsWith('REF') ? 120 : id === 'SIT' || id === 'POSES2' || id === 'BENCH' || id === 'TEA' || id === 'PATCH' ? 80.7 : id.startsWith('POSES') ? 20 : id.startsWith('HANDS') ? 40 : (id.startsWith('HEADS') || id === 'APOSE') ? 60 : 0;
       if (shot.id === 'POSES') buildPoses();
       const r = pFigs[2];
       if (r && shot.id === 'POSES') { r.pose('stand'); r.reach('R', r._reachTarget.clone().add(poseGroup.position), { palm: new THREE.Vector3(0.45, 0, 0.9), fingers: new THREE.Vector3(0, 1, 0) }); r.pose && 0; r.hands.R && r.hands.R.pose('flat_on_glass'); r.lookAt(r._reachTarget.clone().add(poseGroup.position)); }
-      let m = /^FIG(\d+)$/.exec(shot.id);
+      let m = /^REF_H(\d)$/.exec(shot.id);
+      if (m) {
+        const o = buildRefH(+m[1]); const c = o.cam, gx = o.g.position.x;
+        rig.position.set(gx, 0, 0);
+        cam.place(camera, [gx + c.pos[0], c.pos[1], c.pos[2]], [gx + c.tgt[0], c.tgt[1], c.tgt[2]]); cam.lens(camera, c.mm);
+        return { dof: { focus: c.f, fstop: c.fs }, vignette: 0.25, exposure: 0.92 };
+      }
+      if (shot.id === 'PENTEST') { const o = buildRefH(6); const gx = o.g.position.x; rig.position.set(gx, 0, 0); cam.place(camera, [gx + 0.75, 0.25, 0.45], [gx + 0.12, 0.05, -0.03]); cam.lens(camera, 50); return { dof: null }; }
+      m = /^FIG(\d+)$/.exec(shot.id);
       if (m) { const f = getFig(+m[1]); const p = f.root.position; cam.place(camera, [p.x + 0.6, 1.05, 5.0], [p.x, 0.86, 0]); cam.lens(camera, 40); return { dof: null }; }
       m = /^MID(\d+)$/.exec(shot.id);
       if (m) { const f = getFig(+m[1]); const p = f.root.position; const e = f.eye(); cam.place(camera, [p.x + 0.5, e.y - 0.02, 2.6], [p.x, e.y - 0.3, 0]); cam.lens(camera, 50); return { dof: null }; }

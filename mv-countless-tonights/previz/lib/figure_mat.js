@@ -83,7 +83,7 @@ export function clothMaterial(o = {}) {
   const mat = new THREE.MeshPhysicalMaterial({
     color: base, roughness: o.roughness ?? fab.rough, metalness: 0,
     sheen: o.sheen ?? fab.sheen, sheenRoughness: fab.sheenRough, sheenColor: sheenCol,
-    side: o.side ?? THREE.DoubleSide, vertexColors: !!o.vertexColors,
+    side: o.side ?? (o.patchInside || o.doubleSide ? THREE.DoubleSide : THREE.FrontSide), vertexColors: !!o.vertexColors,
     envMapIntensity: o.envMapIntensity ?? 0.6,
   });
   mat.name = 'cloth_' + (o.fabric || 'cotton');
@@ -224,14 +224,14 @@ export function skinMaterial(o = {}) {
   float saltA = 0.0, saltH = 0.0;
   if (uSalt > 0.01) { // dried salt: white patches (mid scale) + crystals (close)
     float saltM = clamp(vAux.y * uSalt, 0.0, 1.0);
-    float patchS = smoothstep(0.58, 0.78, fzNoise(rp * 150.0) * 0.5 + 0.5 + 0.18 * (saltM - 0.5)) * saltM;
+    float patchS = smoothstep(0.7, 0.86, fzNoise(rp * 260.0) * 0.5 + 0.5 + 0.12 * (saltM - 0.5)) * saltM;
     float speck = 0.0;
     if (fzFw < 0.0012) {
       vec3 g = rp * 900.0; vec3 c = floor(g); vec3 f = fract(g) - 0.5;
       float hsh = fzHash(c); vec3 o = vec3(fzHash(c + 17.3), fzHash(c + 41.9), fzHash(c + 7.1)) - 0.5;
       speck = step(0.45, hsh) * (1.0 - smoothstep(0.12, 0.32, length(f - o * 0.5))) * fzAA(0.0016, fzFw);
     }
-    saltA = clamp(patchS * 0.55 + speck * 0.9 * saltM, 0.0, 1.0);
+    saltA = clamp(patchS * 0.42 + speck * 0.85 * saltM, 0.0, 1.0);
     saltA = max(saltA, saltM * 0.08);
     diffuseColor.rgb = mix(diffuseColor.rgb, uSaltCol, saltA * 0.8);
     saltH = speck * 0.00008 * saltM + patchS * 0.00004 * fzAA(0.006, fzFw);

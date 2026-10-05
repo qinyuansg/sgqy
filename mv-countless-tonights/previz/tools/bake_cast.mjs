@@ -2,7 +2,8 @@
 // Bake every cast figure (and its hands, plus standard close-up hands) into previz/lib/cache/.
 //   node previz/tools/bake_cast.mjs                 # all characters, 4 parallel jobs
 //   node previz/tools/bake_cast.mjs RESTORER GUARD  # subset (merged into the existing cache)
-//   options: --jobs N   --lod=hi[,mid]   --no-hands
+//   options: --jobs N   --lod=hi[,mid]   --hands (also bake the standard close-up hands)
+//   codes: cast codes and EXTRA_<ERA> (crowd variants: MIGRANT NAVIGATOR HOME MODERN CHAPEL MAPHAND FUTURE)
 // Scenes then call  await loadCharacter(code)  /  await loadCharacterHand(code, side)  (cast.js),
 // which fetch the baked geometry instead of sculpting it at start-up. The cache is keyed to the
 // exact library sources; editing previz/lib/{figure,figure_garments,figure_sdf,hand,cast}.js makes
@@ -19,14 +20,15 @@ fs.mkdirSync(OUT, { recursive: true });
 const fc = await import(path.join(LIB, 'figure_cache.js'));
 const args = process.argv.slice(2);
 const opt = (n, d) => { const a = args.find((x) => x.startsWith(`--${n}=`)); if (a) return a.split('=')[1]; const i = args.indexOf(`--${n}`); return i >= 0 && args[i + 1] && !args[i + 1].startsWith('--') ? args[i + 1] : d; };
-const lods = String(opt('lod', 'hi')).split(',');
+const lods = String(opt('lod', 'hi,mid')).split(',');
 const src = fc.sourceHash(fc.SOURCE_FILES.map((f) => fs.readFileSync(path.join(LIB, f), 'utf8')));
 const idxPath = path.join(OUT, 'index.json');
-const ALL = ['RESTORER', 'GUARD', 'NAVIGATOR', 'WIFE', 'MIGRANT', 'MAPHAND', 'MOTHER', 'COMPANION', 'TRAVELLER', 'LONELY', 'FUTURE', 'CHILD'];
+const ALL = ['RESTORER', 'GUARD', 'NAVIGATOR', 'WIFE', 'MIGRANT', 'MAPHAND', 'MOTHER', 'COMPANION', 'TRAVELLER', 'LONELY', 'FUTURE', 'CHILD',
+  'EXTRA_MIGRANT', 'EXTRA_NAVIGATOR', 'EXTRA_HOME', 'EXTRA_MODERN', 'EXTRA_CHAPEL', 'EXTRA_MAPHAND', 'EXTRA_FUTURE'];
 
 if (!args.includes('--child')) {
   // ---------------- parent: reset stale cache, fan out, merge ----------------
-  const codes = args.filter((a) => /^[A-Z]+$/.test(a));
+  const codes = args.filter((a) => /^[A-Z_]+$/.test(a));
   const list = codes.length ? codes : ALL;
   let index = fs.existsSync(idxPath) ? JSON.parse(fs.readFileSync(idxPath, 'utf8')) : null;
   if (!index || index.src !== src) {
@@ -39,7 +41,7 @@ if (!args.includes('--child')) {
   list.forEach((c, i) => parts[i % jobs].push(c));
   const t0 = Date.now();
   await Promise.all(parts.map((p, i) => new Promise((res) => {
-    const ch = spawn(process.execPath, [path.join(HERE, 'bake_cast.mjs'), '--child', '--part', String(i), '--lod=' + lods.join(','), ...(args.includes('--no-hands') ? ['--no-hands'] : []), ...p], { stdio: ['ignore', 'pipe', 'pipe'] });
+    const ch = spawn(process.execPath, [path.join(HERE, 'bake_cast.mjs'), '--child', '--part', String(i), '--lod=' + lods.join(','), ...(args.includes('--hands') ? ['--hands'] : []), ...p], { stdio: ['ignore', 'pipe', 'pipe'] });
     ch.stdout.on('data', (d) => process.stdout.write(d));
     ch.stderr.on('data', (d) => { const s = String(d); if (!/MODULE_TYPELESS|Reparsing|trace-warnings|eliminate this/.test(s)) process.stderr.write(s); });
     ch.on('close', res);
@@ -62,7 +64,7 @@ if (!args.includes('--child')) {
   const { HAND_CACHE } = await import(path.join(LIB, 'hand.js'));
   try { cast.applyBible(JSON.parse(fs.readFileSync(path.join(ROOT, 'bible/bible.json'), 'utf8'))); } catch (e) { console.warn('bible not applied', e.message); }
   const part = opt('part', '0');
-  const list = args.filter((a) => /^[A-Z]+$/.test(a));
+  const list = args.filter((a) => /^[A-Z_]+$/.test(a));
   const index = { figures: {}, hands: {} };
   const writeHand = (key) => {
     const h = fc.hashKey(key);
@@ -74,7 +76,7 @@ if (!args.includes('--child')) {
     return h;
   };
   const variants = (code) => [{}, ...(code === 'RESTORER' ? [{ gloves: false }] : []), ...(code === 'NAVIGATOR' ? [{ cuffTurned: true }, { outerCoat: true }] : [])];
-  for (const code of list) for (const lod of lods) for (const vo of variants(code)) {
+  for (const code of list.filter((c) => !c.startsWith('EXTRA_'))) for (const lod of lods) for (const vo of variants(code)) {
     const t0 = Date.now();
     const fig = cast.makeCharacter(code, { lod, ...vo });
     const key = fig.cacheKey;
@@ -87,8 +89,21 @@ if (!args.includes('--child')) {
     index.figures[h] = { code, lod, opts: vo, file, hands: [...new Set([...(prev?.hands || []), ...hands])], tris: fig.G.tris };
     console.log(`  ${code} ${lod} ${JSON.stringify(vo)}  ${((Date.now() - t0) / 1000).toFixed(1)} s  ${(bytes / 1e6).toFixed(1)} MB`);
   }
-  if (!args.includes('--no-hands')) {
-    for (const code of list) for (const side of ['L', 'R']) for (const o of [{}, ...(code === 'NAVIGATOR' ? [{ cuffTurned: true }] : []), ...(code === 'RESTORER' ? [{ gloves: false }] : [])]) {
+  // crowd extras: default makeCrowd variants (seed 1, 6 variants) for each era
+  for (const era of list.filter((c) => c.startsWith('EXTRA_')).map((c) => c.slice(6).toLowerCase())) {
+    const t0 = Date.now();
+    for (let v = 0; v < 6; v++) {
+      const sd = 101 + v;
+      const fig = cast.makeExtra(era, sd, { lod: 'lo' });
+      const key = fig.cacheKey, h = fc.hashKey(key);
+      const file = `extra_${era}_${sd}_${h}.bin`;
+      if (!fs.existsSync(path.join(OUT, file))) fs.writeFileSync(path.join(OUT, file), Buffer.from(fc.serializeFigure(key, FIGURE_CACHE.get(key))));
+      index.figures[h] = { code: 'EXTRA', era, seed: sd, lod: 'lo', file, hands: [] };
+    }
+    console.log(`  extras ${era}  ${((Date.now() - t0) / 1000).toFixed(1)} s`);
+  }
+  if (args.includes('--hands')) {
+    for (const code of list.filter((c) => !c.startsWith('EXTRA_'))) for (const side of ['L', 'R']) for (const o of [{}, ...(code === 'NAVIGATOR' ? [{ cuffTurned: true }] : []), ...(code === 'RESTORER' ? [{ gloves: false }] : [])]) {
       const hd = cast.makeCharacterHand(code, side, { lod: 'close', ...o });
       writeHand(hd.cacheKey);
     }

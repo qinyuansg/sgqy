@@ -52,6 +52,7 @@ async function grab(f) {
 }
 
 const t0 = Date.now();
+const frameTimes = []; // seconds per grabbed frame (first one includes scene build)
 if (args.stills) {
   fs.mkdirSync(args.stills, { recursive: true });
   let jobs = [];
@@ -65,7 +66,9 @@ if (args.stills) {
   if (args['frame-list']) for (const f of String(args['frame-list']).split(',').map(Number)) jobs.push({ f, name: `f${String(f).padStart(5, '0')}.jpg` });
   if (args.every) { const step = +args.every; const [a, b] = String(args.range || `0:${info.TOTAL}`).split(':').map(Number); for (let f = a; f < b; f += step) jobs.push({ f, name: `f${String(f).padStart(5, '0')}.jpg` }); }
   for (const j of jobs) {
+    const tj = Date.now();
     const { meta, buf } = await grab(j.f);
+    frameTimes.push((Date.now() - tj) / 1000);
     const out = path.join(args.stills, j.name.startsWith('f') ? `${j.name.slice(0, -4)}_${meta.shot}.jpg` : j.name);
     fs.writeFileSync(out, buf);
     console.log('wrote', out);
@@ -76,7 +79,9 @@ if (args.stills) {
   const ff = spawn('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-f', 'image2pipe', '-framerate', '24', '-c:v', 'mjpeg', '-i', '-',
     '-c:v', 'libx264', '-preset', args.preset || 'medium', '-crf', String(args.crf || 16), '-tune', 'film', '-pix_fmt', 'yuv420p', '-r', '24', args.out], { stdio: ['pipe', 'inherit', 'inherit'] });
   for (let f = a; f < b; f++) {
+    const tf = Date.now();
     const { buf } = await grab(f);
+    frameTimes.push((Date.now() - tf) / 1000);
     if (!ff.stdin.write(buf)) await new Promise((r) => ff.stdin.once('drain', r));
     if ((f - a) % 48 === 47) { const el = (Date.now() - t0) / 1000; console.log(`frame ${f + 1}/${b}  ${((f - a + 1) / el).toFixed(2)} fps  eta ${((b - f - 1) / ((f - a + 1) / el) / 60).toFixed(1)} min`); }
   }
@@ -88,6 +93,10 @@ const errs = await page.evaluate(() => PREVIZ.errors());
 if (errs.length) { console.log('RENDER ERRORS:'); for (const e of [...new Set(errs)].slice(0, 40)) console.log('  ', e); }
 const bad = logs.filter((l) => /error|pageerror/i.test(l));
 if (bad.length) { console.log('CONSOLE ERRORS:'); for (const l of [...new Set(bad)].slice(0, 40)) console.log('  ', l.slice(0, 400)); }
+if (frameTimes.length > 1) {
+  const warm = frameTimes.slice(1), avg = warm.reduce((x, y) => x + y, 0) / warm.length;
+  console.log(`timing: first frame ${frameTimes[0].toFixed(2)} s (incl. scene build), then ${avg.toFixed(3)} s/frame = ${(1 / avg).toFixed(2)} fps over ${warm.length} frames (max ${Math.max(...warm).toFixed(2)} s)`);
+}
 console.log(`done in ${((Date.now() - t0) / 1000).toFixed(1)} s  (${info.W}x${info.H}, ${info.n} shots, ${info.TOTAL} frames)`);
 await browser.close();
 server.close();

@@ -141,7 +141,9 @@ export function vitrine(o = {}) {
     for (const y of [y0 + f / 2, y1 - f / 2]) { for (const sz of [-1, 1]) bar(p.w, f, f, 0, y, sz * (p.d / 2 - f / 2)); for (const sx of [-1, 1]) bar(f, f, p.d, sx * (p.w / 2 - f / 2), y, 0); }
   } else {
     // frameless hood: thin green-tinted glass edges (6 mm low-iron) + a dark seating channel on the plinth
-    const edgeM = new THREE.MeshStandardMaterial({ color: 0x6a8a7c, roughness: 0.05, metalness: 0.0, emissive: 0x5a8a76, emissiveIntensity: 0.08, envMapIntensity: 3.0, transparent: true, opacity: 0.7, depthWrite: false });
+    // (no emissive: a self-lit green edge reads as neon wire in a dark gallery; the edge is a dark green-black strip that
+    // only brightens where it catches a real reflection)
+    const edgeM = new THREE.MeshStandardMaterial({ color: 0x0c1412, roughness: 0.08, metalness: 0.0, envMapIntensity: 1.6, transparent: true, opacity: 0.55, depthWrite: false });
     const e = 0.005;
     for (const sx of [-1, 1]) for (const sz of [-1, 1]) { const b = new THREE.Mesh(new THREE.BoxGeometry(e, p.h, e), edgeM); b.position.set(sx * p.w / 2, (y0 + y1) / 2, sz * p.d / 2); grp.add(b); }
     for (const sz of [-1, 1]) { const b = new THREE.Mesh(new THREE.BoxGeometry(p.w, e, e), edgeM); b.position.set(0, y1, sz * p.d / 2); grp.add(b); }

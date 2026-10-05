@@ -9,11 +9,12 @@
 // palm faces −X (dorsal +X), thumb on the +Z side. RIGHT hands are the X-mirror (palm faces +X).
 // This equals the figure's neutral pose (arms hanging, palms toward the thighs, thumbs forward).
 import * as THREE from 'three';
-import { Field, prim, meshField, compact, toGeometry, mirrorX, vnoise3, filterFaces, boundaryEdges } from './figure_sdf.js';
+import { Field, prim, meshField, compact, toGeometry, mirrorX, vnoise3, filterFaces, boundaryEdges, decimate } from './figure_sdf.js';
 import { skinMaterial, clothMaterial } from './figure_mat.js';
 
 export const FINGERS = ['index', 'middle', 'ring', 'little'];
 const LOD_H = { macro: 0.00085, close: 0.0013, figure: 0.0026, crowd: 0.004 };
+const LOD_DEC = { macro: 0.00008, close: 0.00014, figure: 0.0003, crowd: 0.0005 };
 
 function dimsOf(o) {
   const male = o.sex === 'm';
@@ -279,7 +280,8 @@ export function makeHand(o = {}) {
       m = compact(m);
       return m;
     };
-    const ms = skinMesh(clipTop);
+    let ms = skinMesh(clipTop);
+    const decE = o.dec ?? (o.h ? 0 : LOD_DEC[lod] || 0);
     const nv = ms.pos.length / 3;
     const w = f.weights(ms.pos, { tau: 0.0022 * D.s, nBones: R.B.length, exclude: (e) => e.tag === 'vein' || e.tag === 'tendon' });
     // aux: nail mask, salt, joint coordinate, side
@@ -316,13 +318,14 @@ export function makeHand(o = {}) {
       let sm = 0;
       if (salt > 0) {
         const dors = Math.max(0, sideV);
-        sm = Math.min(1, 0.3 + 0.5 * dors + 0.3 * vnoise3(x * 120, y * 120, z * 120, 11) + 0.25 * (1 - Math.min(1, Math.abs(js) / 0.006)));
+        sm = Math.max(0, Math.min(1, 0.08 + 0.75 * dors + 0.3 * vnoise3(x * 120, y * 120, z * 120, 11) + 0.25 * (1 - Math.min(1, Math.abs(js) / 0.006)) - 0.25 * Math.max(0, -sideV)));
       }
       aux[v * 4] = nm; aux[v * 4 + 1] = sm; aux[v * 4 + 2] = 0; aux[v * 4 + 3] = sideV;
     }
     G.joints = JT.map((J) => ({ c: J.c.toArray(), ax: J.ax.toArray(), r: J.mcp ? -J.r : J.r }));
     ms.aux = aux;
     ms.skinIndex = w.skinIndex; ms.skinWeight = w.skinWeight;
+    if (decE) ms = decimate(ms, { maxError: decE, ratio: 0.25, attr: ms.aux, attrTol: [0.2, 2, 2, 0.45] });
     G.skin = ms;
     if (glove) {
       // cotton glove: grown, smoothed hand + cuff up the wrist
@@ -357,6 +360,7 @@ export function makeHand(o = {}) {
         for (const tp of smudgeTips) { const d2 = (x - tp.x) ** 2 + (y - tp.y) ** 2 + (z - tp.z) ** 2; gaux[v * 4] = Math.max(gaux[v * 4], 0.85 * Math.exp(-d2 / (0.0065 ** 2)) * (0.75 + 0.25 * vnoise3(x * 900, y * 900, z * 900, 2))); }
       }
       mg.aux = gaux; mg.skinIndex = gw.skinIndex; mg.skinWeight = gw.skinWeight;
+      if (decE) mg = decimate(mg, { maxError: decE * 1.2, ratio: 0.25, attr: mg.aux, attrTol: [0.15, 2, 0.35, 0.3] });
       G.glove = mg;
       // skin left visible above the glove cuff only
       const ks = { ...ms };
@@ -366,7 +370,8 @@ export function makeHand(o = {}) {
     // cuffs (sleeve stubs), rigid on the forearm bone
     G.cuffs = [];
     for (const c of o.cuffs || []) {
-      const m = buildCuff(D, c, Math.max(h, 0.0011));
+      let m = buildCuff(D, c, Math.max(h, 0.0011));
+      if (decE) m = decimate(m, { maxError: decE * 1.5, ratio: 0.25, attr: m.aux, attrTol: [0.15, 0.15, 2, 0.3] });
       const n = m.pos.length / 3;
       m.skinIndex = new Uint16Array(n * 4).fill(R.forearm);
       m.skinWeight = new Float32Array(n * 4); for (let i = 0; i < n; i++) m.skinWeight[i * 4] = 1;
@@ -509,7 +514,7 @@ class Hand {
     const a = this.tip('thumb', new THREE.Vector3()).applyMatrix4(wInv), b = this.tip('index', new THREE.Vector3()).applyMatrix4(wInv);
     S.pinch.position.copy(a).add(b).multiplyScalar(0.5);
     // pen axis: from pinch point toward the thumb web (index MCP area)
-    const web = new THREE.Vector3(0.002 * m, -0.07 * D.s, 0.03 * D.wf);
+    const web = new THREE.Vector3(0.03 * m * D.tf, -0.066 * D.s, 0.033 * D.wf);
     const dir = web.clone().sub(S.pinch.position).normalize();
     S.pen.position.copy(S.pinch.position);
     S.pen.quaternion.setFromUnitVectors(_Y, dir);
@@ -551,7 +556,7 @@ export function handPose(name, p = {}, D = dimsOf({})) {
     case 'flat': case 'flat_on_glass': {
       const sp = p.spread ?? (name === 'flat_on_glass' ? 0.6 : 0.2);
       const press = name === 'flat_on_glass' ? -0.06 : 0;
-      return { wrist: [press, 0], thumb: [-0.05, 0.15 - 0.55 * sp, 0.02, 0.05, 0], index: [press, 0.02, 0.0, 0.05 * sp], middle: [press, 0.02, 0.0, 0.0], ring: [press, 0.02, 0.0, -0.05 * sp], little: [press, 0.03, 0.02, -0.12 * sp] };
+      return { wrist: [press, 0], thumb: [name === 'flat_on_glass' ? -0.42 : -0.05, 0.15 - 0.55 * sp, -0.05, 0.02, 0.15], index: [press, 0.02, 0.0, 0.05 * sp], middle: [press, 0.02, 0.0, 0.0], ring: [press, 0.02, 0.0, -0.05 * sp], little: [press, 0.03, 0.02, -0.12 * sp] };
     }
     case 'wipe': // fingers together, slightly bent, thumb alongside the index
       return { wrist: [0.0, 0.0], thumb: [0.12, 0.42, 0.1, 0.12, 0.1], index: [0.12, 0.12, 0.05, -0.06], middle: [0.12, 0.12, 0.05, 0.0], ring: [0.13, 0.14, 0.06, 0.05], little: [0.15, 0.16, 0.08, 0.09] };
@@ -573,7 +578,7 @@ export function handPose(name, p = {}, D = dimsOf({})) {
     case 'pinch': // thumb pad meets index pad; other fingers gently curled
       return { wrist: [0.1, 0.05], thumb: [0.55, 0.42, 0.25, 0.25, 0.35], index: [0.62, 0.72, 0.32, 0.0], middle: [0.55, 0.85, 0.4, 0.0], ring: [0.6, 0.95, 0.45, -0.02], little: [0.68, 1.0, 0.5, -0.05] };
     case 'write': // pen grip (pen in the 'pen' socket)
-      return { wrist: [-0.1, 0.12], thumb: [0.5, 0.38, 0.3, 0.1, 0.35], index: [0.45, 0.55, 0.1, 0.02], middle: [0.62, 0.9, 0.45, 0.0], ring: [0.95, 1.25, 0.6, -0.02], little: [1.05, 1.3, 0.6, -0.05] };
+      return { wrist: [-0.15, 0.1], thumb: [0.45, 0.45, 0.22, 0.15, 0.3], index: [0.38, 0.38, 0.14, 0.02], middle: [0.48, 0.72, 0.36, 0.0], ring: [0.78, 1.1, 0.5, -0.02], little: [0.88, 1.15, 0.5, -0.05] };
     case 'point':
       return { wrist: [0, 0], thumb: [0.6, 0.15, 0.5, 0.3, 0.3], index: [0.0, 0.05, 0.02, 0.02], middle: [1.35, 1.55, 0.8, 0], ring: [1.4, 1.6, 0.85, 0], little: [1.45, 1.55, 0.8, 0] };
     case 'pray': // flat, fingers together (pair two hands palm-to-palm)

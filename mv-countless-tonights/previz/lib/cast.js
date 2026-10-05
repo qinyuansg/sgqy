@@ -389,6 +389,12 @@ const pick = (r, a) => a[Math.floor(r() * a.length) % a.length];
 
 // makeExtra(era, seed, opts) -> Figure at low LOD (mitten hands). Deterministic per seed.
 export function makeExtra(era = 'migrant', seed = 1, o = {}) {
+  const fig = makeFigure(extraSpec(era, seed, o));
+  fig.code = 'EXTRA';
+  return fig;
+}
+// figure options of an extra (no building) — used for cache keys
+export function extraSpec(era = 'migrant', seed = 1, o = {}) {
   const r = rng(seed * 7919 + 13);
   const pal = PAL[era] || PAL.migrant;
   const female = r() < 0.5;
@@ -426,9 +432,13 @@ export function makeExtra(era = 'migrant', seed = 1, o = {}) {
       else costume = [{ type: 'trousers', color: bot }, { type: r() < 0.4 ? 'side_jacket' : 'jacket', color: top, collar: r() < 0.5 ? 'mandarin' : 'lapel', buttons: 0, length: 'hip' }, { type: 'shoes', shoe: r() < 0.5 ? 'cloth' : 'leather', color: 0x201d1b }];
       hair = { style: female ? (r() < 0.5 ? 'braid' : 'low_bun') : (r() < 0.4 ? 'cap' : 'short'), color: r() < 0.4 && !female ? hex(pick(r, ['#4E4A44', '#3b3a38', '#5a5046'])) : hairC };
   }
-  const fig = makeFigure({ sex: female ? 'f' : 'm', height: (female ? 1.52 : 1.62) + r() * 0.14, build: 0.3 + r() * 0.5, age, skin, hair, costume, lod: o.lod || 'lo', name: `extra_${era}_${seed}` });
-  fig.code = 'EXTRA';
-  return fig;
+  return { sex: female ? 'f' : 'm', height: (female ? 1.52 : 1.62) + r() * 0.14, build: 0.3 + r() * 0.5, age, skin, hair, costume, lod: o.lod || 'lo', name: `extra_${era}_${seed}` };
+}
+export const EXTRA_ERAS = Object.keys(PAL);
+const crowdSeeds = (o) => Array.from({ length: o.variants || 6 }, (_, v) => (o.seed || 1) * 101 + v);
+// preload baked crowd variants (same defaults as makeCrowd)
+export async function preloadCrowd(era, o = {}) {
+  return preloadKeys({ figures: crowdSeeds(o).map((sd) => figureKey(extraSpec(era, sd, { lod: o.lod || 'lo' }))) });
 }
 
 // makeCrowd(era, people, opts) -> THREE.Group of InstancedMeshes (cheap). people = [{pos:[x,y,z], rotY, pose, phase, seed}]
@@ -437,7 +447,7 @@ export function makeCrowd(era, people, o = {}) {
   const nVar = o.variants || 6;
   const group = new THREE.Group(); group.name = 'crowd_' + era;
   const figs = [];
-  for (let v = 0; v < nVar; v++) figs.push(makeExtra(era, (o.seed || 1) * 101 + v, { lod: o.lod || 'lo' }));
+  for (const sd of crowdSeeds({ ...o, variants: nVar })) figs.push(makeExtra(era, sd, { lod: o.lod || 'lo' }));
   const buckets = new Map();
   const dummy = new THREE.Object3D();
   for (const [i, p] of people.entries()) {
@@ -477,6 +487,10 @@ export async function preloadCharacters(codes, opts = {}) {
 export async function loadCharacter(code, opts = {}) {
   await preloadCharacters([code], opts);
   return makeCharacter(code, opts);
+}
+export async function loadCrowd(era, people, o = {}) {
+  await preloadCrowd(era, o);
+  return makeCrowd(era, people, o);
 }
 export async function loadCharacterHand(code, side = 'R', opts = {}) {
   await preloadKeys({ hands: [handCacheKey(characterHandOptions(code, side, opts))] });
