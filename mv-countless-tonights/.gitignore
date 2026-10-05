@@ -1,0 +1,7 @@
+# large / derived media
+audio/
+previz/node_modules/
+previz/out/
+*.mp4
+!delivery/*.mp4
+previz/lib/cache/

@@ -1,0 +1,3 @@
+[{"id":"T001","in_frame":0,"out_frame":48,"scene":"_test","section":"INTRO","lyric":"","action":"test A","transition_in":{"type":"fade_in","frames":12}},
+ {"id":"T002","in_frame":48,"out_frame":96,"scene":"_test","section":"INTRO","lyric":"千年","action":"test B","transition_in":{"type":"dissolve","frames":12}},
+ {"id":"T003","in_frame":96,"out_frame":120,"scene":"missing_scene","section":"V1","lyric":"海图泛黄","action":"slate test 修复师戴着手套的手","transition_in":{"type":"cut"}}]

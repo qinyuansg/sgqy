@@ -1,0 +1,2782 @@
+{
+  "meta": {
+    "title_zh": "《无数个今晚》制作圣经",
+    "title_en": "Countless Tonights - Production Bible",
+    "version": "1.0",
+    "authority_order": [
+      "brief/treatment_zh.md",
+      "brief/directors_notes.md",
+      "bible/production_bible.md + bible/bible.json",
+      "shotlist/shots.json"
+    ],
+    "core_thesis_zh": "千年，不过是无数个普通人，舍不得结束的今晚。",
+    "core_thesis_en": "A thousand years is only countless ordinary people's tonights that they could not bear to end.",
+    "format": {
+      "aspect": "2.39:1 letterboxed in 1920x1080 (active 1920x804)",
+      "fps": 24,
+      "frames": 6164,
+      "duration_s": 256.824,
+      "on_screen_text": "none (titles/subtitles/credits added in post)"
+    },
+    "working_city_name": "澜港 (internal only, never on screen)",
+    "screen_direction": {
+      "left": "home / past / looking back",
+      "right": "the far / unknown / tomorrow; dawn arrives from screen-right",
+      "lateral_moves": "left to right by default",
+      "giving_gestures": "all giving / sitting-beside gestures move left to right (ch.8 tea scene and CH3 gestures)"
+    },
+    "era_codes": [
+      "modern",
+      "navigator",
+      "home",
+      "migrant",
+      "maphand",
+      "chapel",
+      "future",
+      "multi"
+    ]
+  },
+  "palette": [
+    {
+      "id": "P01",
+      "name_zh": "暮色深蓝·极深",
+      "hex": "#0E1B30",
+      "use": "night sky top, deep sea shadows, corridor shadows; darkest blue, never black"
+    },
+    {
+      "id": "P02",
+      "name_zh": "暮色深蓝",
+      "hex": "#1A2D4A",
+      "use": "film base colour: night air, vitrine interiors, main sea body"
+    },
+    {
+      "id": "P03",
+      "name_zh": "暮色深蓝·中",
+      "hex": "#2E4A6E",
+      "use": "lit sea surface, blue-hour sky, moonlit walls"
+    },
+    {
+      "id": "P04",
+      "name_zh": "月光银",
+      "hex": "#C8D2DB",
+      "use": "moonlight highlights, glass edge glints, wet deck; the same moon in every era"
+    },
+    {
+      "id": "P05",
+      "name_zh": "月光银·中",
+      "hex": "#8F9EAD",
+      "use": "moonlit midtones: floor light pools, sails, stone walls"
+    },
+    {
+      "id": "P06",
+      "name_zh": "青花白（釉白）",
+      "hex": "#EDF1EF",
+      "use": "porcelain glaze white; upper limit for paper highlights"
+    },
+    {
+      "id": "P07",
+      "name_zh": "青花蓝",
+      "hex": "#2B4A8B",
+      "use": "cobalt of the bowl, the teacups' rim line, reference for cobalt stained glass"
+    },
+    {
+      "id": "P08",
+      "name_zh": "青花蓝·积釉",
+      "hex": "#18294F",
+      "use": "heaped-and-piled cobalt spots, deepest blue points"
+    },
+    {
+      "id": "P09",
+      "name_zh": "低饱和铜金",
+      "hex": "#B08D57",
+      "use": "brass compass body, brass buckles, candlestick; the 'gold' of old things"
+    },
+    {
+      "id": "P10",
+      "name_zh": "铜金·暗",
+      "hex": "#6E5536",
+      "use": "brass patina, engraving shadows, dark rattan"
+    },
+    {
+      "id": "P11",
+      "name_zh": "铜金·亮",
+      "hex": "#D2B27E",
+      "use": "brass peak highlight (thumb-polished rim)"
+    },
+    {
+      "id": "P12",
+      "name_zh": "铜绿",
+      "hex": "#5E8C7E",
+      "use": "verdigris in compass grooves; accent <=1% of frame"
+    },
+    {
+      "id": "P13",
+      "name_zh": "烛火琥珀",
+      "hex": "#E2A458",
+      "use": "candle, ship lamp, door lamp, shore light: every light 'left for someone'"
+    },
+    {
+      "id": "P14",
+      "name_zh": "灯焰暖橙",
+      "hex": "#C67A35",
+      "use": "flame falloff on wood and skin shadows"
+    },
+    {
+      "id": "P15",
+      "name_zh": "旧纸",
+      "hex": "#D6C6A2",
+      "use": "chart, letter, ledger paper midtones"
+    },
+    {
+      "id": "P16",
+      "name_zh": "小红",
+      "hex": "#A33A2E",
+      "use": "tiny tenderness only: compass south-tip lacquer, sweets' red string; <=0.5% of frame"
+    },
+    {
+      "id": "P17",
+      "name_zh": "肤色参考·浅暖",
+      "hex": "#E3BFA0",
+      "use": "RESTORER / MIGRANT face midtone reference"
+    },
+    {
+      "id": "P18",
+      "name_zh": "肤色参考·中",
+      "hex": "#C99A78",
+      "use": "GUARD, MOTHER, faces in shadow"
+    },
+    {
+      "id": "P19",
+      "name_zh": "肤色参考·晒深",
+      "hex": "#A26F4C",
+      "use": "NAVIGATOR, COMPANION sun-weathered skin"
+    },
+    {
+      "id": "P20",
+      "name_zh": "黎明蓝灰",
+      "hex": "#5B6F8A",
+      "use": "sky and sea 20 min before dawn"
+    },
+    {
+      "id": "P21",
+      "name_zh": "晨光桃",
+      "hex": "#EBB894",
+      "use": "horizon glow at dawn, warm edge on glass"
+    },
+    {
+      "id": "P22",
+      "name_zh": "晨光奶白",
+      "hex": "#F5E4C8",
+      "use": "brightest dawn areas, backlit steam, window-frame highlights"
+    },
+    {
+      "id": "P23",
+      "name_zh": "彩窗·绛红（柔化）",
+      "hex": "#9A4545",
+      "use": "stained-glass light petals"
+    },
+    {
+      "id": "P24",
+      "name_zh": "彩窗·琥珀",
+      "hex": "#C9913F",
+      "use": "stained-glass light petals"
+    },
+    {
+      "id": "P25",
+      "name_zh": "彩窗·钴蓝",
+      "hex": "#34548F",
+      "use": "stained-glass light petals (rhymes with P07)"
+    },
+    {
+      "id": "P26",
+      "name_zh": "彩窗·海青",
+      "hex": "#4C7F68",
+      "use": "stained-glass light petals"
+    },
+    {
+      "id": "P27",
+      "name_zh": "彩窗·浅玫",
+      "hex": "#C98F8A",
+      "use": "stained-glass light petals"
+    },
+    {
+      "id": "P28",
+      "name_zh": "黑位底线",
+      "hex": "#0A0F17",
+      "use": "minimum black (~2-3% IRE); never crush to pure black"
+    },
+    {
+      "id": "P29",
+      "name_zh": "屏幕冷光",
+      "hex": "#C9D8E6",
+      "use": "phone screen light (~6500K) on GUARD's lower face and hands"
+    },
+    {
+      "id": "P30",
+      "name_zh": "茶汤",
+      "hex": "#C9A55A",
+      "use": "jasmine tea liquor"
+    }
+  ],
+  "skin_tone_protection": {
+    "face_mid_hsl_hue_deg": [
+      18,
+      32
+    ],
+    "face_mid_saturation_pct": [
+      25,
+      45
+    ],
+    "moonlight_min_saturation_pct": 18,
+    "hue_hard_limits_deg": [
+      15,
+      38
+    ],
+    "vectorscope": "within +/-5 deg of skin-tone line",
+    "rules": [
+      "cool grade applies to shadows and air only; faces always keep a trace of warmth",
+      "no skin smoothing, no whitening, no beauty filter; keep pores, fine lines, tired eyes, cracked hands",
+      "keep real differences in skin tone between characters",
+      "no yellow-green 'Asia filter', no overall sepia nostalgia"
+    ]
+  },
+  "dawn_transition": [
+    {
+      "t": 233.8,
+      "sky": "P02",
+      "sea": "P01 + scattered P13 lights",
+      "key_light": "teacups and phone afterglow",
+      "warm_share_pct": 10
+    },
+    {
+      "t": 238.0,
+      "sky": "P20 with a thin P21 horizon",
+      "sea": "P03",
+      "key_light": "window becomes key, ~6500K",
+      "warm_share_pct": 18
+    },
+    {
+      "t": 242.0,
+      "sky": "P20 -> P21 gradient",
+      "sea": "P20, lights still on",
+      "key_light": "window ~5000K soft",
+      "warm_share_pct": 30
+    },
+    {
+      "t": 249.3,
+      "sky": "P21 -> P22",
+      "sea": "P20 with peach reflections",
+      "key_light": "window ~4300K, P22 highlight on cup rims",
+      "warm_share_pct": 40
+    },
+    {
+      "t": 256.8,
+      "sky": "P22 with a trace of P20 at the top",
+      "sea": "2-3 lamps still lit (P13)",
+      "key_light": "4300K backlit steam",
+      "warm_share_pct": 45
+    }
+  ],
+  "palette_arc": [
+    {
+      "section": "INTRO",
+      "t": [
+        0.0,
+        28.9
+      ],
+      "dominant": [
+        "P02",
+        "P04"
+      ],
+      "accent": [
+        "P13",
+        "P09"
+      ],
+      "warm_share_pct": 8,
+      "note": "suspense: one warm point in cold glass"
+    },
+    {
+      "section": "V1",
+      "t": [
+        28.9,
+        53.0
+      ],
+      "dominant": [
+        "P01",
+        "P02",
+        "P03",
+        "P09",
+        "P13"
+      ],
+      "accent": [
+        "P16"
+      ],
+      "warm_share_pct": "cabin 40 / sea 5",
+      "note": "a person is small between sky and sea"
+    },
+    {
+      "section": "GAP1",
+      "t": [
+        53.0,
+        56.0
+      ],
+      "dominant": [
+        "P03"
+      ],
+      "accent": [
+        "P13"
+      ],
+      "warm_share_pct": 3,
+      "note": "a breath"
+    },
+    {
+      "section": "PRE1",
+      "t": [
+        56.0,
+        70.6
+      ],
+      "dominant": [
+        "P06",
+        "P07",
+        "P08",
+        "P13"
+      ],
+      "accent": [
+        "P05"
+      ],
+      "warm_share_pct": 30,
+      "note": "the most blue-and-white section"
+    },
+    {
+      "section": "CH1",
+      "t": [
+        70.6,
+        101.6
+      ],
+      "dominant": [
+        "P04",
+        "P02"
+      ],
+      "accent": [
+        "P13"
+      ],
+      "warm_share_pct": 15,
+      "note": "the world's scale opens"
+    },
+    {
+      "section": "INTERLUDE",
+      "t": [
+        101.6,
+        110.3
+      ],
+      "dominant": [
+        "P02",
+        "P05"
+      ],
+      "accent": [
+        "flashlight 4000K"
+      ],
+      "warm_share_pct": 10,
+      "note": "the modern world breathes"
+    },
+    {
+      "section": "V2",
+      "t": [
+        110.3,
+        135.4
+      ],
+      "dominant": [
+        "migrant faded warm"
+      ],
+      "accent": [
+        "P13",
+        "P16"
+      ],
+      "warm_share_pct": 35,
+      "note": "warmest before dawn: sweets, mending, door lamp"
+    },
+    {
+      "section": "CH2",
+      "t": [
+        135.4,
+        148.8
+      ],
+      "dominant": [
+        "P04",
+        "P02"
+      ],
+      "accent": [
+        "P13"
+      ],
+      "warm_share_pct": 20,
+      "note": "understanding deepens; +5% warmth vs CH1"
+    },
+    {
+      "section": "BR1a",
+      "t": [
+        148.8,
+        164.0
+      ],
+      "dominant": [
+        "desaturated greys"
+      ],
+      "accent": [
+        "iron-gall ink line"
+      ],
+      "warm_share_pct": 10,
+      "note": "cold of changing eras"
+    },
+    {
+      "section": "BR1b",
+      "t": [
+        164.0,
+        174.6
+      ],
+      "dominant": [
+        "P15"
+      ],
+      "accent": [
+        "pressed jasmine"
+      ],
+      "warm_share_pct": 35,
+      "note": "most private and quiet"
+    },
+    {
+      "section": "BR2a",
+      "t": [
+        174.6,
+        190.0
+      ],
+      "dominant": [
+        "P23",
+        "P24",
+        "P25",
+        "P26",
+        "P27"
+      ],
+      "accent": [
+        "restorer reflection"
+      ],
+      "warm_share_pct": 30,
+      "note": "richest colour"
+    },
+    {
+      "section": "BR2b",
+      "t": [
+        190.0,
+        204.0
+      ],
+      "dominant": [
+        "P29",
+        "P30"
+      ],
+      "accent": [
+        "steam"
+      ],
+      "warm_share_pct": "20 -> 30",
+      "note": "healing through company"
+    },
+    {
+      "section": "CH3",
+      "t": [
+        204.0,
+        216.6
+      ],
+      "dominant": [
+        "P04 light rhythm"
+      ],
+      "accent": [
+        "one warm point per pane"
+      ],
+      "warm_share_pct": 25,
+      "note": "visual climax"
+    },
+    {
+      "section": "CH4",
+      "t": [
+        216.6,
+        233.8
+      ],
+      "dominant": [
+        "future pale silver -> modern"
+      ],
+      "accent": [
+        "worn cuff"
+      ],
+      "warm_share_pct": "15 -> 25",
+      "note": "we too become the past"
+    },
+    {
+      "section": "OUTRO",
+      "t": [
+        233.8,
+        246.6
+      ],
+      "dominant": [
+        "P20",
+        "P21"
+      ],
+      "accent": [
+        "P13 sea lamps"
+      ],
+      "warm_share_pct": "18 -> 35",
+      "note": "calling the unknown tomorrow"
+    },
+    {
+      "section": "TAIL",
+      "t": [
+        246.6,
+        256.824
+      ],
+      "dominant": [
+        "P21",
+        "P22"
+      ],
+      "accent": [
+        "steam"
+      ],
+      "warm_share_pct": 45,
+      "note": "afterglow; never exceed 50% warm"
+    }
+  ],
+  "motifs": [
+    {
+      "id": "M1",
+      "name_zh": "隔着玻璃的手",
+      "rule": "palm to palm, almost overlapping (3-5 mm offset), always glass between; hands at frame (0.50,0.55)",
+      "arc": "ends with bare hands setting down tea and two cups side by side with no glass"
+    },
+    {
+      "id": "M2",
+      "name_zh": "玻璃里的另一个时代",
+      "rule": "physically correct reflections that appear and disappear with camera angle / focus",
+      "arc": "from an unreadable face to glass reflecting two people at dawn"
+    },
+    {
+      "id": "M3",
+      "name_zh": "穿过格栅/彩窗的光",
+      "rule": "cracked-ice lattice -> barred stern window -> louvre stripes -> steel window grid -> stained-glass petals -> corridor arch pools -> whole unfragmented dawn light",
+      "arc": "from broken and divided light to whole light"
+    },
+    {
+      "id": "M4",
+      "name_zh": "热气与呼吸",
+      "rule": "steam = someone beside you; cold rice has no steam; tea steam backlit at the end",
+      "arc": "cold rice -> rain -> steaming tea"
+    },
+    {
+      "id": "M5",
+      "name_zh": "青花纹样",
+      "rule": "one canonical bowl pattern; indigo resist-print case lining; teacups' single cobalt line; cobalt stained glass",
+      "arc": "broken shards -> one complete line on a cup"
+    },
+    {
+      "id": "M6",
+      "name_zh": "袖口的补丁/磨损",
+      "rule": "navigator's patch inside RIGHT cuff; shirt hem triangle in the letter; restorer's LEFT cuff wear; the same wear in the future vitrine",
+      "arc": "family marks on clothes -> her own mark -> read by someone later"
+    },
+    {
+      "id": "M7",
+      "name_zh": "为人留的一盏灯",
+      "rule": "every light left for someone is 1900K #E2A458, a small steady warm point",
+      "arc": "a far point -> a cup beside you"
+    },
+    {
+      "id": "M8",
+      "name_zh": "同一个月亮",
+      "rule": "the same ~90% waning gibbous in every era",
+      "arc": "different eras waiting under one moonlight"
+    }
+  ],
+  "characters": [
+    {
+      "id": "CHAR_RESTORER",
+      "code": "RESTORER",
+      "name_zh": "修复师",
+      "era": "modern",
+      "age": "约28岁 / ~28",
+      "look": "East Asian woman, ~165 cm, slim; soft oval face, straight natural brows, inner double eyelids, small straight nose, natural pale lips; light warm skin #E3BFA0 with real texture and faint tiredness under the eyes; tiny light-brown mole 1 cm below the outer corner of the LEFT eye; black-brown (#2A211C) straight hair just past the shoulders, tied in a loose low ponytail with a plain black elastic, two or three loose strands at the RIGHT temple; no make-up, no jewellery, no watch; leans toward objects, shoulders slightly raised in concentration",
+      "costume": [
+        {
+          "item": "深灰外套 dark-grey wool coat (PROP_COAT), single-breasted, notch lapel, mid-thigh, three dark horn buttons",
+          "colour_hex": "#3C4045",
+          "material": "wool melton; buttons horn #3A2C22"
+        },
+        {
+          "item": "worn spot on LEFT cuff (outer/little-finger side, ~1 cm above cuff edge, 18x8 mm)",
+          "colour_hex": "#5A5E62",
+          "material": "rubbed, pilled, slightly shiny wool"
+        },
+        {
+          "item": "crew-neck knit sweater",
+          "colour_hex": "#D8CDBB",
+          "material": "fine merino"
+        },
+        {
+          "item": "straight trousers",
+          "colour_hex": "#2B2D31",
+          "material": "wool blend"
+        },
+        {
+          "item": "soft-soled flat leather shoes",
+          "colour_hex": "#1D1D1F",
+          "material": "leather"
+        },
+        {
+          "item": "white cotton conservator gloves (PROP_GLOVES)",
+          "colour_hex": "#F1EFE8",
+          "material": "thin cotton knit with near-invisible white grip dots"
+        },
+        {
+          "item": "head-band magnifier / 10x loupe",
+          "colour_hex": "#1A1A1A",
+          "material": "matte black plastic, glass"
+        }
+      ],
+      "hands": "long slim fingers, short unpolished nails; small healed scalpel scar (6 mm) on the outer side of the RIGHT index finger, seen only after she removes the gloves in chapter 8",
+      "key_gesture": "glides a gloved fingertip along a porcelain crack; holds her breath aligning shards; ch.8 removes gloves (right first, pinched off by the left fingers, then left), folds them, carries tea bare-handed and sits beside the guard",
+      "withheld": "why she does not go home; who waits for her",
+      "continuity_locks": [
+        "worn spot on the LEFT coat cuff, outer (little-finger) side, ~1 cm above the edge, 18x8 mm, #5A5E62 - same position in every shot and in the future vitrine",
+        "tiny mole below the LEFT eye",
+        "low loose ponytail, loose strands at RIGHT temple; never re-tied during the night",
+        "gloves ON in every shot before chapter 8 (BR2 ~194.8 s); bare hands only after",
+        "coat worn all night with the middle button fastened; unbuttoned when she sits beside the guard",
+        "no watch, no jewellery"
+      ],
+      "ref_prompt_en": "Character reference: RESTORER, a ~28-year-old East Asian woman museum conservator, slim, 165 cm, soft oval face, straight natural brows, inner double eyelids, small straight nose, natural pale lips, light warm skin with real texture and faint tiredness under the eyes, a tiny light-brown mole 1 cm below the outer corner of her LEFT eye, black-brown straight hair just past the shoulders in a loose low ponytail with two loose strands at the right temple, no make-up, no jewellery, no watch. Wearing a charcoal dark-grey wool melton coat (#3C4045), single-breasted with three dark horn buttons, middle button fastened, over an oatmeal crew-neck knit and charcoal trousers, soft black flat shoes, thin white cotton conservator gloves. Detail inset: the LEFT coat cuff with a small 18x8 mm rubbed, pilled, lighter-grey worn spot on the outer little-finger side just above the cuff edge. Second inset: bare right hand with a small healed scar on the outer side of the index finger. Quiet, attentive expression. photoreal character reference sheet, same person in four full-body views (front, three-quarter, profile, back) plus close-up insets of face, both hands (palm and back) and key costume detail, neutral mid-grey seamless backdrop, soft even 5600K studio light, true-to-life skin texture with pores and fine lines, natural unretouched skin tone, consistent identity in every view, cinematic 35mm film look, fine grain, high detail, no text, no labels, no watermark",
+      "ref_prompt_zh": "人物参考：修复师，约28岁东亚女性文物修复师，身形偏瘦，165厘米；鹅蛋脸，自然平直的眉，内双眼皮，鼻梁平直，唇色自然偏淡；浅暖肤色，真实肤质，眼下有熬夜的淡青；左眼外眼角下方约1厘米处一颗极小的浅褐色痣；黑褐色直发过肩，松松扎成低马尾，右侧太阳穴落下两三缕碎发；不化妆、无首饰、无手表。穿深灰羊毛呢外套（#3C4045），单排三粒深褐牛角扣、扣着中间一粒，内搭燕麦白圆领针织衫、炭黑直筒裤、黑色软底平底鞋，戴白色薄棉修复手套。细节特写一：外套左袖口外侧（小指一侧）、距袖口边约1厘米处一块18×8毫米的起毛变浅的磨损。细节特写二：摘下手套的右手，食指外侧一道已愈合的小疤。神情安静专注。写实人物参考设定图：同一人物的四个全身视图（正面、四分之三侧、正侧、背面），附面部、双手（掌心与手背）与关键服装细节特写；中性中灰无缝背景，柔和均匀的 5600K 棚拍光；真实皮肤质感，保留毛孔与细纹，自然未修饰的肤色；所有视图中人物身份一致；电影感 35mm 胶片质感，细腻颗粒，高细节；无文字、无标注、无水印"
+    },
+    {
+      "id": "CHAR_GUARD",
+      "code": "GUARD",
+      "name_zh": "夜班工作人员",
+      "era": "modern",
+      "age": "约65岁 / mid-60s",
+      "look": "East Asian man, ~170 cm, slightly stooped upper back; square-round face, three forehead lines, gentle down-turned eyes, a pale-brown age spot on the RIGHT cheekbone, clean-shaven (faint grey stubble by dawn); short salt-and-pepper hair (#8E8C88), thinning crown, neatly combed; skin #C99A78; walks slowly, hands clasped behind his back on rounds; very small nods",
+      "costume": [
+        {
+          "item": "night-shift attendant jacket, slightly big at the shoulders, invented embroidered badge on left chest (silver-grey ring with three wave lines, no text)",
+          "colour_hex": "#23304A",
+          "material": "wool-poly blend; badge thread #A9B0B8"
+        },
+        {
+          "item": "jacket buttons",
+          "colour_hex": "#8F7A55",
+          "material": "dull old-brass tone metal"
+        },
+        {
+          "item": "shirt, top button open, collar slightly frayed",
+          "colour_hex": "#B9C3CC",
+          "material": "cotton"
+        },
+        {
+          "item": "trousers",
+          "colour_hex": "#1E2638",
+          "material": "navy twill"
+        },
+        {
+          "item": "soft black leather shoes with creased toes",
+          "colour_hex": "#1A1A1C",
+          "material": "leather"
+        },
+        {
+          "item": "reading glasses on a black cord, hanging on his chest",
+          "colour_hex": "#111111",
+          "material": "metal frame, cord"
+        },
+        {
+          "item": "flashlight on belt (PROP_FLASHLIGHT); old phone in RIGHT jacket pocket (PROP_PHONE)",
+          "colour_hex": "#1C1C1C",
+          "material": "aluminium"
+        }
+      ],
+      "hands": "broad, thick knuckles, age spots on the backs; NO ring; thumb hovers above the phone screen without touching",
+      "key_gesture": "INTERLUDE: small nod to the restorer; BR2: alone on the window bench, puts on reading glasses, looks at the phone, thumb hovers, lowers it; CH4: finally calls, waits, his brows slowly ease",
+      "withheld": "who he wants to call, why he hesitates; the name on screen is never readable; the call is never heard",
+      "continuity_locks": [
+        "slightly stooped upper back (more stooped when seated)",
+        "reading glasses on a black cord",
+        "age spot on the RIGHT cheekbone",
+        "no ring",
+        "phone lives in the RIGHT jacket pocket; screen text never readable",
+        "badge invented, no text",
+        "at the window he sits nearer the window (screen-right), the restorer on his screen-left"
+      ],
+      "ref_prompt_en": "Character reference: GUARD, a ~65-year-old East Asian museum night attendant, 170 cm, slightly stooped upper back, square-round face with three forehead lines, gentle down-turned eyes, a pale-brown age spot on his right cheekbone, clean-shaven, short salt-and-pepper hair thinning at the crown. Wearing a navy night-shift attendant jacket (#23304A) a little big at the shoulders with dull brass-tone buttons and a small invented embroidered badge on the left chest (silver-grey ring with three wave lines, absolutely no text), pale grey-blue shirt with the top button open, navy trousers, soft creased black shoes, reading glasses hanging on a black cord, a black aluminium flashlight on the belt, no ring. Inset: his broad age-spotted hand holding an old dark-grey phone in a worn navy flip case, thumb hovering above the dark screen. Kind, tired, hesitant expression. photoreal character reference sheet, same person in four full-body views (front, three-quarter, profile, back) plus close-up insets of face, both hands (palm and back) and key costume detail, neutral mid-grey seamless backdrop, soft even 5600K studio light, true-to-life skin texture with pores and fine lines, natural unretouched skin tone, consistent identity in every view, cinematic 35mm film look, fine grain, high detail, no text, no labels, no watermark",
+      "ref_prompt_zh": "人物参考：夜班工作人员，约65岁东亚男性博物馆夜班值守，170厘米，上背微驼；方中带圆的脸，额头三道横纹，眼角下垂、目光温和，右颧骨一块浅褐色老年斑，胡子刮净，短发灰多黑少、头顶略稀。穿藏青夜班值守夹克（#23304A），肩部略显宽大，旧铜色纽扣，左胸一枚虚构线绣徽章（银灰圆环内三道水波纹，绝无文字）；浅灰蓝衬衫最上一粒不扣，藏青长裤，鞋头有细纹的黑色软皮鞋；胸前挂黑绳老花镜，腰侧黑色铝手电，不戴戒指。细节特写：他宽厚有老年斑的手握着装在旧藏青翻盖套里的深灰旧手机，拇指悬在暗着的屏幕上方。神情温和、疲惫、犹豫。写实人物参考设定图：同一人物的四个全身视图（正面、四分之三侧、正侧、背面），附面部、双手（掌心与手背）与关键服装细节特写；中性中灰无缝背景，柔和均匀的 5600K 棚拍光；真实皮肤质感，保留毛孔与细纹，自然未修饰的肤色；所有视图中人物身份一致；电影感 35mm 胶片质感，细腻颗粒，高细节；无文字、无标注、无水印"
+    },
+    {
+      "id": "CHAR_NAVIGATOR",
+      "code": "NAVIGATOR",
+      "name_zh": "航海人（火长）",
+      "era": "navigator",
+      "age": "约35岁 / ~35",
+      "look": "compass-keeper of an ocean-going junk, early-to-mid 17th century; ~172 cm, lean and strong; long face, high cheekbones, slightly deep-set dark-brown eyes with deep sun creases; short neat beard and moustache, black with salt-and-sun-bleached brown; a 1.5 cm pale old scar at the tail of the LEFT eyebrow; deep sun-weathered skin #A26F4C with wind-reddened cheeks; hair in a topknot wrapped in an indigo head-cloth (NO Qing queue); steady but tired gaze; low centre of gravity on deck, must stoop in the cabin",
+      "costume": [
+        {
+          "item": "short indigo cotton jacket, right-over-left cross collar with cloth ties; faded at elbows and shoulders",
+          "colour_hex": "#2E3F5C",
+          "material": "coarse hand-woven cotton; worn areas #4A5F7E"
+        },
+        {
+          "item": "PATCH inside the RIGHT cuff (PROP_PATCH), pale blue cloth",
+          "colour_hex": "#7D9CBB",
+          "material": "hand-woven plain cotton, off-white running stitches #E9E4D6"
+        },
+        {
+          "item": "undyed hemp under-shirt (a line visible at the collar)",
+          "colour_hex": "#CFC3A8",
+          "material": "hemp"
+        },
+        {
+          "item": "wide dark trousers rolled to the calf",
+          "colour_hex": "#2C2622",
+          "material": "cotton"
+        },
+        {
+          "item": "hemp rope belt with small cloth pouch",
+          "colour_hex": "#A08E6E",
+          "material": "hemp"
+        },
+        {
+          "item": "indigo head-cloth",
+          "colour_hex": "#263650",
+          "material": "cotton"
+        },
+        {
+          "item": "brown padded outer coat for night watches (PROP_OUTERCOAT)",
+          "colour_hex": "#5B4634",
+          "material": "coarse padded cotton"
+        },
+        {
+          "item": "straw sandals in the cabin, barefoot on deck",
+          "colour_hex": "#B9A27A",
+          "material": "straw"
+        }
+      ],
+      "hands": "large, thick-knuckled, rope calluses on the palms, cracked dry fingertips with dark lines, short nails; fine white sea-salt crystals on the backs and between the fingers",
+      "key_gesture": "looks up through the cabin hatch; watches the compass needle settle; with his LEFT thumb and forefinger turns back his RIGHT cuff and rests his fingertips on the patch; looks screen-left to a warm shore light; CH3 drapes his padded coat over the sleeping young sailor, then touches the cuff again",
+      "withheld": "who waits for him at home; whether he gets back",
+      "continuity_locks": [
+        "patch is INSIDE the RIGHT cuff, visible only when the cuff is turned back; he turns it back with his LEFT hand",
+        "the hand in the INTRO glass is his LEFT hand (no patch visible)",
+        "pale scar at the tail of the LEFT eyebrow",
+        "indigo head-cloth over a topknot; no queue",
+        "shore light is always screen-left",
+        "CH2 order: touches patch FIRST, then looks at the shore light",
+        "after giving away the outer coat in CH3 he wears only the indigo jacket"
+      ],
+      "ref_prompt_en": "Character reference: NAVIGATOR, a ~35-year-old East Asian compass-keeper on an early-17th-century ocean-going Chinese junk, lean and strong, long face, high cheekbones, slightly deep-set dark-brown eyes with deep sun creases, short neat beard and moustache, a small pale old scar at the tail of his LEFT eyebrow, deep sun-weathered skin, hair in a topknot wrapped in an indigo cotton head-cloth (no queue). Wearing a faded coarse indigo cotton short jacket with right-over-left cross collar and cloth ties, undyed hemp under-shirt, wide dark trousers rolled to the calf, hemp rope belt with a small pouch, barefoot; a brown padded cotton outer coat shown separately. Inset 1: his RIGHT jacket cuff turned back by his LEFT fingers revealing a 4.5x6 cm patch of paler blue hand-woven cloth sewn inside with uneven off-white running stitches. Inset 2: his large calloused hands with cracked fingertips and fine white sea-salt crystals on the backs and between the fingers. Steady, tired, faraway gaze. photoreal character reference sheet, same person in four full-body views (front, three-quarter, profile, back) plus close-up insets of face, both hands (palm and back) and key costume detail, neutral mid-grey seamless backdrop, soft even 5600K studio light, true-to-life skin texture with pores and fine lines, natural unretouched skin tone, consistent identity in every view, cinematic 35mm film look, fine grain, high detail, no text, no labels, no watermark",
+      "ref_prompt_zh": "人物参考：航海人，约35岁东亚男性，17世纪上半叶远洋帆船上掌管罗盘的火长；精瘦结实，长脸，颧骨突出，眼窝略深，深褐眼睛，眼角深深的日晒纹，短而整齐的胡须与唇须，左眉尾一道浅白旧疤，长期日晒的深暖肤色；头发束髻，裹靛蓝粗布头巾（不剃发、不留辫）。穿洗旧的靛蓝粗棉右衽交领短褂（布带系结），本色麻布内衫，卷到小腿的深色宽裤，麻绳腰带挂小布袋，赤足；另附棕色夹棉外衣单独展示。细节特写一：他用左手手指翻开右袖口，袖口内侧缝着一块4.5×6厘米的浅蓝手织布补丁，本白棉线针脚略不齐。细节特写二：他粗大有茧的双手，指尖干裂，手背与指缝有细白的海盐结晶。目光稳定、疲惫、望向远方。写实人物参考设定图：同一人物的四个全身视图（正面、四分之三侧、正侧、背面），附面部、双手（掌心与手背）与关键服装细节特写；中性中灰无缝背景，柔和均匀的 5600K 棚拍光；真实皮肤质感，保留毛孔与细纹，自然未修饰的肤色；所有视图中人物身份一致；电影感 35mm 胶片质感，细腻颗粒，高细节；无文字、无标注、无水印"
+    },
+    {
+      "id": "CHAR_WIFE",
+      "code": "WIFE",
+      "name_zh": "等待的人",
+      "era": "home",
+      "age": "约30岁 / ~30",
+      "look": "woman of the navigator's era in a coastal stone house; slender, sits very upright; hidden face (for consistency only - never fully clear on screen): narrow melon-seed face, pointed chin, thin brows, long lashes when looking down, thin lips; skin #D8AE8C; black hair (#1E1A18) in a low bun with a plain wooden hairpin, a few loose strands behind the ears; plain silver bangle on the LEFT wrist",
+      "costume": [
+        {
+          "item": "pale blue short jacket, right-side opening with cloth buttons; SAME cloth as the navigator's cuff patch",
+          "colour_hex": "#7D9CBB",
+          "material": "coarse washed cotton"
+        },
+        {
+          "item": "dark indigo-black skirt (or trousers for work)",
+          "colour_hex": "#22283A",
+          "material": "cotton"
+        },
+        {
+          "item": "cloth shoes with mended stitches",
+          "colour_hex": "#2A2624",
+          "material": "cotton, layered sole"
+        },
+        {
+          "item": "plain wooden hairpin",
+          "colour_hex": "#8A6A48",
+          "material": "wood"
+        },
+        {
+          "item": "plain thin silver bangle on LEFT wrist, slightly tarnished",
+          "colour_hex": "#BFC2C2",
+          "material": "silver"
+        },
+        {
+          "item": "old brass thimble on left middle finger when mending",
+          "colour_hex": "#9A7D4E",
+          "material": "brass"
+        }
+      ],
+      "hands": "slender but working hands, tiny needle-prick marks on the fingertips; right hand holds the needle",
+      "key_gesture": "sets a bowl of rice before the empty seat and lets it go cold; places the empty bowl under the eaves to catch rain and looks up at the clouds; a shy smile while mending (head down, the corners of the mouth move first); lights the small lamp in the door niche, shielding the flame",
+      "withheld": "whom she waits for, how many years; whose child's feet appear beside her",
+      "continuity_locks": [
+        "face never fully clear: seen only in candle back-light, lattice shadow, glass reflection or out of focus",
+        "silver bangle on the LEFT wrist",
+        "she sits on the screen-left bench facing right; the screen-right seat is always empty",
+        "her jacket cloth = the navigator's patch cloth (#7D9CBB)",
+        "the same blue-and-white bowl (PROP_BOWL) for rice and for rain",
+        "cold rice shows NO steam"
+      ],
+      "ref_prompt_en": "Character reference: WIFE, a ~30-year-old East Asian woman of the early 17th century in a coastal stone house, slender, upright posture, narrow face with a pointed chin, thin brows, long lashes, thin lips, black hair in a low bun with a plain wooden hairpin and a few loose strands behind the ears. Wearing a washed pale blue (#7D9CBB) coarse cotton short jacket with right-side opening and cloth buttons, a dark indigo-black cotton skirt and mended cloth shoes, a plain thin slightly tarnished silver bangle on her LEFT wrist. Inset: her slender working hands mending a pale blue cloth patch with a needle, an old brass thimble on the left middle finger, the silver bangle visible. Quiet, patient, sleepless expression. (Reference for consistency; on screen her face is never fully clear.) photoreal character reference sheet, same person in four full-body views (front, three-quarter, profile, back) plus close-up insets of face, both hands (palm and back) and key costume detail, neutral mid-grey seamless backdrop, soft even 5600K studio light, true-to-life skin texture with pores and fine lines, natural unretouched skin tone, consistent identity in every view, cinematic 35mm film look, fine grain, high detail, no text, no labels, no watermark",
+      "ref_prompt_zh": "人物参考：等待的人，约30岁东亚女性，17世纪上半叶海边石屋中的妇人；清瘦，坐姿挺直，瓜子脸偏窄、下巴尖，眉细，睫毛长，唇薄；黑发挽低髻，插一支素面木簪，耳后几缕散发。穿洗旧的浅蓝粗棉大襟短袄（#7D9CBB，右衽布纽），深靛黑布裙，补过针脚的布鞋，左手腕一只微微氧化的素银细镯。细节特写：她纤细而劳作过的手正在用针缝一块浅蓝布补丁，左手中指戴旧铜顶针，银镯可见。神情安静、耐心、彻夜未眠。（此图仅用于一致性；成片中她的脸从不完全清晰。）写实人物参考设定图：同一人物的四个全身视图（正面、四分之三侧、正侧、背面），附面部、双手（掌心与手背）与关键服装细节特写；中性中灰无缝背景，柔和均匀的 5600K 棚拍光；真实皮肤质感，保留毛孔与细纹，自然未修饰的肤色；所有视图中人物身份一致；电影感 35mm 胶片质感，细腻颗粒，高细节；无文字、无标注、无水印"
+    },
+    {
+      "id": "CHAR_MIGRANT",
+      "code": "MIGRANT",
+      "name_zh": "迁徙女性",
+      "era": "migrant",
+      "age": "约20岁 / ~20",
+      "look": "young East Asian woman crossing the sea to Nanyang in the 1920s-30s; ~155 cm, small and sturdy; round-square face with full cheeks, large bright wide-set eyes, straight thick brows, a small mole above the RIGHT brow peak, slightly chapped lips, a small right canine shows when she smiles; skin #DDB392 with sun-pink cheekbones; black hair (#1C1816) in one long braid to mid-back tied with black thread, thin fringe; quick movements that pause half a beat; under stress she smooths fabric flat with her whole palm",
+      "costume": [
+        {
+          "item": "faded floral cotton blouse, right-side opening with five cloth knot buttons; small five-petal flowers ~2 cm",
+          "colour_hex": "#8FA1B3",
+          "material": "printed cotton; flowers #EDE6D8 and #C99A97"
+        },
+        {
+          "item": "wide dark indigo-black trousers",
+          "colour_hex": "#232633",
+          "material": "cotton"
+        },
+        {
+          "item": "black cloth shoes with white layered soles",
+          "colour_hex": "#1F1E1F",
+          "material": "cotton; soles #D9D2C3"
+        },
+        {
+          "item": "thin grey-blue cotton over-jacket for the night ship (on her arm or the case)",
+          "colour_hex": "#3E4A5A",
+          "material": "cotton"
+        },
+        {
+          "item": "rattan suitcase carried in her RIGHT hand (PROP_CASE)",
+          "colour_hex": "#A8783F",
+          "material": "split rattan over bamboo"
+        }
+      ],
+      "hands": "small and strong, nails cut very short, a small writing callus on the right middle finger; backs of the hands a little red from rubbing them together",
+      "key_gesture": "writes a letter and folds it back; folds the old shirt into the case, presses the corner flat with her palm, reopens it and lays the cloth-wrapped comb on top; looks back in the crowd and silently mouths a two-syllable family name; hands that will not let go; CH3 breaks a sweet in oil paper and gives it to a nervous boy",
+      "withheld": "who sees her off; where she is going; what happens after",
+      "continuity_locks": [
+        "single long braid",
+        "small mole above the RIGHT eyebrow peak",
+        "floral blouse pattern and colours exactly as specified",
+        "she carries the rattan case in her RIGHT hand",
+        "letter folded in thirds, then in half",
+        "family / town on screen-left, the steamer on screen-right"
+      ],
+      "ref_prompt_en": "Character reference: MIGRANT, a ~20-year-old East Asian young woman of the 1920s-30s about to sail to Southeast Asia, small and sturdy, round-square face with full cheeks, large bright wide-set eyes, straight thick brows, a small mole above the right eyebrow peak, slightly chapped lips, sun-pink cheekbones, black hair in one long braid to mid-back with a thin fringe. Wearing a faded grey-blue (#8FA1B3) cotton blouse with small white and faded-rose five-petal flowers and five cloth knot buttons on a right-side opening, wide dark indigo trousers, black cloth shoes with white layered soles; a thin grey-blue over-jacket over her arm; holding a honey-amber rattan suitcase in her RIGHT hand. Inset: her small strong hands pressing a folded shirt flat with the whole palm. Determined, nervous, tender expression. photoreal character reference sheet, same person in four full-body views (front, three-quarter, profile, back) plus close-up insets of face, both hands (palm and back) and key costume detail, neutral mid-grey seamless backdrop, soft even 5600K studio light, true-to-life skin texture with pores and fine lines, natural unretouched skin tone, consistent identity in every view, cinematic 35mm film look, fine grain, high detail, no text, no labels, no watermark",
+      "ref_prompt_zh": "人物参考：迁徙女性，约20岁东亚年轻女性，1920–30年代即将渡海下南洋；个子小而结实，圆中带方的脸、颊肉饱满，眼睛大而亮、两眼距离略宽，眉直而浓，右眉峰上方一颗小痣，嘴唇微干，颧骨有日晒的红；黑发编成一条垂到背中的长辫，额前稀薄刘海。穿褪色灰蓝底（#8FA1B3）白色与褪玫色小五瓣碎花棉布大襟衫，五粒布盘扣，深靛黑阔腿裤，白色千层底黑布鞋；手臂上搭一件灰蓝薄棉外褂；右手提蜂蜜琥珀色藤箱。细节特写：她小而有力的手用整个手掌把叠好的衣服压平。神情坚定、紧张、温柔。写实人物参考设定图：同一人物的四个全身视图（正面、四分之三侧、正侧、背面），附面部、双手（掌心与手背）与关键服装细节特写；中性中灰无缝背景，柔和均匀的 5600K 棚拍光；真实皮肤质感，保留毛孔与细纹，自然未修饰的肤色；所有视图中人物身份一致；电影感 35mm 胶片质感，细腻颗粒，高细节；无文字、无标注、无水印"
+    },
+    {
+      "id": "CHAR_MAPHAND",
+      "code": "MAPHAND",
+      "name_zh": "掌管地图的手",
+      "era": "maphand",
+      "age": "中年 / middle-aged (hands only)",
+      "look": "only hands, cuffs, ruler and pen are ever seen; a middle-aged man's well-kept hands, clean trimmed nails, no calluses, a writing bump on the right middle finger with a faint ink stain; skin tone deliberately ethnically ambiguous (#D6B59A); no ring, no crest",
+      "costume": [
+        {
+          "item": "dark charcoal-black wool frock-coat sleeve",
+          "colour_hex": "#22201E",
+          "material": "wool broadcloth"
+        },
+        {
+          "item": "starched white shirt cuff showing ~1.5 cm",
+          "colour_hex": "#ECE9E1",
+          "material": "starched linen"
+        },
+        {
+          "item": "plain brass oval cufflink, no engraving",
+          "colour_hex": "#A8894F",
+          "material": "brass"
+        }
+      ],
+      "hands": "right hand draws with a ruling pen along an ebony-and-brass ruler; left hand spread flat pressing the map, palm covering a stretch of land",
+      "key_gesture": "draws a straight line (CH1A 77-80 'to hold mountains and rivers in one's palm'); adds another line (BR1 151.6-152.8); lifts the ruler, the wet ink line shines",
+      "withheld": "who he is, whom he represents, what lies on the other side of the line",
+      "continuity_locks": [
+        "face and body never seen",
+        "right hand draws, left hand presses the map",
+        "ink line is iron-gall (blue-black wet, brown-black dry), NEVER red",
+        "cufflink plain, no insignia; no ring",
+        "the drawn line is horizontal at frame height 0.66 for the line-threshold-handle match"
+      ],
+      "ref_prompt_en": "Prop-character reference: MAPHAND, hands only - a middle-aged man's well-kept hands of the 1890s with clean trimmed nails, no calluses, a writing bump and faint ink stain on the right middle finger, ethnically ambiguous medium skin tone, no ring; dark charcoal wool frock-coat sleeves with 1.5 cm of starched white shirt cuff and a plain brass oval cufflink without any engraving. Views: right hand holding a steel ruling pen against an ebony ruler with brass edges; left hand spread flat on a linen-backed hand-drawn map; both hands from above, from the side and in close-up. No face, no body, no insignia. photoreal character reference sheet, hands and cuffs from four angles plus close-up insets, neutral mid-grey seamless backdrop, soft even 5600K studio light, true-to-life skin texture with pores and fine lines, natural unretouched skin tone, consistent identity in every view, cinematic 35mm film look, fine grain, high detail, no text, no labels, no watermark",
+      "ref_prompt_zh": "人物参考（仅手）：掌管地图的手——1890年代中年男性保养良好的手，指甲修剪干净，无老茧，右手中指有写字茧与淡淡墨渍，肤色为难以判定族裔的中间色，不戴戒指；深炭黑羊毛礼服袖，露出1.5厘米浆硬白衬衫袖口与一枚无刻花的素面黄铜椭圆袖扣。视图：右手持钢制直线笔靠着铜边乌木直尺；左手五指张开压在裱布手绘地图上；俯视、侧视与特写。不出现脸、身体与任何徽章。写实人物参考设定图：双手与袖口的四个角度视图及特写；中性中灰无缝背景，柔和均匀的 5600K 棚拍光；真实皮肤质感，保留毛孔与细纹，自然未修饰的肤色；所有视图中人物身份一致；电影感 35mm 胶片质感，细腻颗粒，高细节；无文字、无标注、无水印"
+    },
+    {
+      "id": "CHAR_MOTHER",
+      "code": "MOTHER",
+      "name_zh": "祈祷的母亲",
+      "era": "chapel",
+      "age": "约45岁 / ~45",
+      "look": "East Asian woman of the 1950s in a foreign port's chapel; oval face, fairly high cheekbones, faint nasolabial lines and fine lines at the eyes, very lightly groomed brows, pressed lips; skin #C99A78; black hair with a few grey strands at the temples in a low chignon held by black pins, a few strands stuck to her neck by tropical heat; sits at the front edge of the pew, back straight, shoulders drawn forward as if guarding the letter",
+      "costume": [
+        {
+          "item": "pale dove-grey short-sleeved qipao, knee length, stand collar, plain cloth frog buttons (light colour so stained-glass petals read on fabric and shoulders)",
+          "colour_hex": "#BDB6AB",
+          "material": "cotton-linen"
+        },
+        {
+          "item": "old pale-green jade bangle on LEFT wrist (heirloom)",
+          "colour_hex": "#9DB8A2",
+          "material": "jade"
+        },
+        {
+          "item": "black low-heeled cloth-faced shoes",
+          "colour_hex": "#1C1B1D",
+          "material": "cloth, leather sole"
+        },
+        {
+          "item": "small old brown leather handbag beside her on the pew",
+          "colour_hex": "#6A4A33",
+          "material": "leather"
+        },
+        {
+          "item": "folded pale-blue airmail letter (PROP_AIRLETTER)",
+          "colour_hex": "#C9D6E2",
+          "material": "onionskin paper"
+        }
+      ],
+      "hands": "long fingers with slightly thick joints, clean nails; both hands hold the folded letter to her chest, the thumb rubbing the folded edge",
+      "key_gesture": "does not know the local liturgy: no sign of the cross, no unfamiliar gestures - only holds the letter, closes her eyes, bows; shoulders tremble slightly in real time; CH3 rises and sits beside a lonely old man without a word",
+      "withheld": "what she prays for; who wrote the letter, good or bad news; whether she is connected to the migrant (only the fold rhymes)",
+      "continuity_locks": [
+        "pale dove-grey qipao",
+        "jade bangle on the LEFT wrist",
+        "never makes the sign of the cross or liturgical gestures",
+        "sits at the screen-left end of the 7th pew, south side, facing east; light comes from behind her (west windows)",
+        "shoulder tremble is real-time, never slow motion",
+        "letter folded in thirds then in half (same as PROP_LETTER)"
+      ],
+      "ref_prompt_en": "Character reference: MOTHER, a ~45-year-old East Asian woman of the 1950s, oval face with fairly high cheekbones, fine lines at the eyes, lightly groomed brows, pressed lips, black hair with a few grey strands at the temples in a low chignon held by black pins. Wearing a pale dove-grey (#BDB6AB) cotton-linen short-sleeved knee-length qipao with stand collar and plain cloth frog buttons, black low-heeled shoes, an old pale-green jade bangle on her LEFT wrist, a small worn brown leather handbag. Inset: both hands holding a folded pale-blue onionskin airmail letter to her chest, thumb on the soft worn fold. Restrained, anxious, prayerful expression, eyes closed in one view. photoreal character reference sheet, same person in four full-body views (front, three-quarter, profile, back) plus close-up insets of face, both hands (palm and back) and key costume detail, neutral mid-grey seamless backdrop, soft even 5600K studio light, true-to-life skin texture with pores and fine lines, natural unretouched skin tone, consistent identity in every view, cinematic 35mm film look, fine grain, high detail, no text, no labels, no watermark",
+      "ref_prompt_zh": "人物参考：祈祷的母亲，约45岁东亚女性，1950年代；椭圆脸、颧骨较高，眼角细纹，眉形很淡，嘴唇抿着；黑发夹着太阳穴处少量白发，在颈后盘成低髻、以黑色发夹固定。穿浅鸽灰（#BDB6AB）棉麻短袖及膝旗袍，立领、素面布盘扣，黑色低跟鞋，左腕一只旧的浅绿玉镯，一只磨旧的小号棕色皮手提包。细节特写：她双手把一封折叠的浅蓝葱皮纸航空信握在胸前，拇指压在被摩挲得发软的折边上。神情克制、不安、祈祷，其中一个视图闭着眼睛。写实人物参考设定图：同一人物的四个全身视图（正面、四分之三侧、正侧、背面），附面部、双手（掌心与手背）与关键服装细节特写；中性中灰无缝背景，柔和均匀的 5600K 棚拍光；真实皮肤质感，保留毛孔与细纹，自然未修饰的肤色；所有视图中人物身份一致；电影感 35mm 胶片质感，细腻颗粒，高细节；无文字、无标注、无水印"
+    },
+    {
+      "id": "CHAR_COMPANION",
+      "code": "COMPANION",
+      "name_zh": "年轻同伴",
+      "era": "navigator",
+      "age": "约17岁 / ~17",
+      "look": "young sailor of the navigator's era; narrow boyish face, no beard yet, lips pale with cold, peeling sunburn on the cheekbones; skin #B07A55; small topknot tied with a frayed undyed cloth band, many loose strands; thin",
+      "costume": [
+        {
+          "item": "undyed hemp short shirt, torn cuffs (his only layer at night)",
+          "colour_hex": "#CBBFA3",
+          "material": "hemp"
+        },
+        {
+          "item": "dark brown short trousers",
+          "colour_hex": "#3A2E24",
+          "material": "cotton"
+        },
+        {
+          "item": "barefoot",
+          "colour_hex": "#B07A55",
+          "material": "-"
+        }
+      ],
+      "hands": "thin, rope-burned palms, tucked under his arms for warmth",
+      "key_gesture": "curled asleep against a rope coil, shivering; when the navigator's coat falls over him he pulls it up to his chin in his sleep without waking",
+      "withheld": "his name, his family",
+      "continuity_locks": [
+        "sleeps against the rope coil on screen-RIGHT, head toward screen-right",
+        "the coat falls over him moving left to right"
+      ],
+      "ref_prompt_en": "Character reference: COMPANION, a ~17-year-old East Asian young sailor of the early 17th century, thin, narrow boyish face without beard, lips pale with cold, peeling sunburn on the cheekbones, small topknot tied with a frayed undyed cloth band and many loose strands; wearing a torn undyed hemp short shirt, dark brown short trousers, barefoot. Additional view: curled asleep on a ship's rope coil, shivering. photoreal character reference sheet, same person in four full-body views (front, three-quarter, profile, back) plus close-up insets of face, both hands (palm and back) and key costume detail, neutral mid-grey seamless backdrop, soft even 5600K studio light, true-to-life skin texture with pores and fine lines, natural unretouched skin tone, consistent identity in every view, cinematic 35mm film look, fine grain, high detail, no text, no labels, no watermark",
+      "ref_prompt_zh": "人物参考：年轻同伴，约17岁东亚少年水手，17世纪上半叶；瘦，窄而稚气的脸、没有胡须，嘴唇冻得发白，颧骨晒脱皮；短小的发髻用磨毛的本色布带扎着，碎发很多；穿袖口磨破的本色麻布短衫、深褐短裤，赤足。附加视图：蜷缩在甲板缆绳卷旁睡着、发抖。写实人物参考设定图：同一人物的四个全身视图（正面、四分之三侧、正侧、背面），附面部、双手（掌心与手背）与关键服装细节特写；中性中灰无缝背景，柔和均匀的 5600K 棚拍光；真实皮肤质感，保留毛孔与细纹，自然未修饰的肤色；所有视图中人物身份一致；电影感 35mm 胶片质感，细腻颗粒，高细节；无文字、无标注、无水印"
+    },
+    {
+      "id": "CHAR_TRAVELLER",
+      "code": "TRAVELLER",
+      "name_zh": "紧张的旅客",
+      "era": "migrant",
+      "age": "约14–15岁 / ~14-15",
+      "look": "a boy travelling alone in the 1920s-30s; thin, prominent ears, darting eyes, tightly pressed lips, close-cropped hair with a crown whorl; skin #D2A47F",
+      "costume": [
+        {
+          "item": "obviously oversized grey-brown adult's jacket, sleeves rolled twice",
+          "colour_hex": "#6B5E50",
+          "material": "wool-cotton"
+        },
+        {
+          "item": "washed-out blue cotton shirt",
+          "colour_hex": "#7F93A6",
+          "material": "cotton"
+        },
+        {
+          "item": "old cloth cap",
+          "colour_hex": "#4E4A44",
+          "material": "cotton"
+        },
+        {
+          "item": "old cloth shoes; cloth bundle hugged to his chest; ticket in his fist (unreadable)",
+          "colour_hex": "#2A2826",
+          "material": "cotton, paper"
+        }
+      ],
+      "hands": "boyish hands gripping the bundle and ticket, knuckles pale",
+      "key_gesture": "hesitates, accepts a piece of peanut brittle from the migrant, puts it in his mouth; half of his face slowly loosens into an incomplete smile",
+      "withheld": "where he is going, who sent him",
+      "continuity_locks": [
+        "sits on screen-RIGHT of the migrant on the waiting-hall bench",
+        "the sweet travels left to right"
+      ],
+      "ref_prompt_en": "Character reference: TRAVELLER, a ~14-year-old East Asian boy travelling alone in the 1920s-30s, thin, prominent ears, darting nervous eyes, tightly pressed lips, close-cropped hair; wearing an oversized grey-brown adult's jacket with sleeves rolled twice over a washed-out blue cotton shirt, an old cloth cap and old cloth shoes, hugging a cloth bundle and clutching a paper ticket with no readable text. photoreal character reference sheet, same person in four full-body views (front, three-quarter, profile, back) plus close-up insets of face, both hands (palm and back) and key costume detail, neutral mid-grey seamless backdrop, soft even 5600K studio light, true-to-life skin texture with pores and fine lines, natural unretouched skin tone, consistent identity in every view, cinematic 35mm film look, fine grain, high detail, no text, no labels, no watermark",
+      "ref_prompt_zh": "人物参考：紧张的旅客，约14岁东亚少年，1920–30年代独自出行；瘦，耳朵显大，眼神不停张望，嘴唇紧抿，短发；穿明显过大的灰褐色大人外套（袖子挽了两道），里面洗白的蓝布衫，旧布帽、旧布鞋；怀里紧抱布包袱，手里攥着无可读文字的船票。写实人物参考设定图：同一人物的四个全身视图（正面、四分之三侧、正侧、背面），附面部、双手（掌心与手背）与关键服装细节特写；中性中灰无缝背景，柔和均匀的 5600K 棚拍光；真实皮肤质感，保留毛孔与细纹，自然未修饰的肤色；所有视图中人物身份一致；电影感 35mm 胶片质感，细腻颗粒，高细节；无文字、无标注、无水印"
+    },
+    {
+      "id": "CHAR_LONELY",
+      "code": "LONELY",
+      "name_zh": "另一位孤单者",
+      "era": "chapel",
+      "age": "约75岁 / ~75",
+      "look": "an elderly local resident of the foreign port, of a different language and background from the mother (ethnicity deliberately not marked); thin, deep sun-darkened skin #8A5F44, sparse white hair, deeply lined face, eyes half closed",
+      "costume": [
+        {
+          "item": "thin, much-washed white cotton shirt",
+          "colour_hex": "#E6E1D6",
+          "material": "cotton"
+        },
+        {
+          "item": "grey trousers",
+          "colour_hex": "#6E6A64",
+          "material": "cotton"
+        },
+        {
+          "item": "old cloth cap held on his knees",
+          "colour_hex": "#5A544C",
+          "material": "cotton"
+        }
+      ],
+      "hands": "age-spotted, thin, folded over the cap on his knees",
+      "key_gesture": "when the mother sits beside him he does not turn; only his hands loosen a little on the cap; they both look ahead at the light",
+      "withheld": "who he has lost, why he is alone",
+      "continuity_locks": [
+        "sits at the screen-RIGHT end of the pew; the mother comes from screen-left",
+        "depicted with dignity, never as exotic decoration"
+      ],
+      "ref_prompt_en": "Character reference: LONELY, a ~75-year-old elderly man of a 1950s tropical port town, thin, deeply lined sun-darkened face, sparse white hair, eyes half closed, dignified; wearing a thin much-washed white cotton shirt and grey trousers, an old cloth cap held on his knees with age-spotted hands folded over it. Additional view: seated alone at the end of a teak pew. photoreal character reference sheet, same person in four full-body views (front, three-quarter, profile, back) plus close-up insets of face, both hands (palm and back) and key costume detail, neutral mid-grey seamless backdrop, soft even 5600K studio light, true-to-life skin texture with pores and fine lines, natural unretouched skin tone, consistent identity in every view, cinematic 35mm film look, fine grain, high detail, no text, no labels, no watermark",
+      "ref_prompt_zh": "人物参考：另一位孤单者，约75岁的老人，1950年代热带港口城市的本地居民；瘦削，深色日晒肤色，脸上深深的纹路，白发稀疏，眼睛半闭，有尊严；穿洗得很薄的白棉衬衫、灰色长裤，膝上放一顶旧布帽，长着老年斑的双手交叠压在帽子上。附加视图：独自坐在柚木长椅的一端。写实人物参考设定图：同一人物的四个全身视图（正面、四分之三侧、正侧、背面），附面部、双手（掌心与手背）与关键服装细节特写；中性中灰无缝背景，柔和均匀的 5600K 棚拍光；真实皮肤质感，保留毛孔与细纹，自然未修饰的肤色；所有视图中人物身份一致；电影感 35mm 胶片质感，细腻颗粒，高细节；无文字、无标注、无水印"
+    },
+    {
+      "id": "CHAR_FUTURE",
+      "code": "FUTURE",
+      "name_zh": "未来观看者",
+      "era": "future",
+      "age": "20–40岁之间，不确定 / indeterminate 20-40",
+      "look": "a stranger of an unspecified future, gender unspecified; short soft dark hair; face always defocused and attenuated in reflection; seen ONLY as a reflection in vitrine glass",
+      "costume": [
+        {
+          "item": "seamless pale warm-grey knit long garment, high collar, simple silhouette, no tech details, no visible devices",
+          "colour_hex": "#CFCAC2",
+          "material": "fine knit"
+        }
+      ],
+      "hands": "right hand raised, palm toward the glass, fingers relaxed",
+      "key_gesture": "stops before the vitrine holding the restorer's coat and gently raises the right hand to exactly where the two hands met in the opening (frame 0.50, 0.55)",
+      "withheld": "who they are; how far in the future",
+      "continuity_locks": [
+        "appears only as a reflection",
+        "face never sharp",
+        "hand at frame position (0.50, 0.55), identical to INTRO",
+        "camera position identical to INTRO (motion-control data reused)",
+        "no sci-fi costume or devices"
+      ],
+      "ref_prompt_en": "Character reference: FUTURE, a stranger of an unspecified near-timeless future, gender unspecified, 20-40 years old, short soft dark hair, gentle neutral expression, wearing a seamless pale warm-grey high-collared knit long garment with a simple silhouette and no technology or devices; one view raising the right hand palm-forward as if touching glass. Also render one view as a faint soft-focus reflection in museum glass. photoreal character reference sheet, same person in four full-body views (front, three-quarter, profile, back) plus close-up insets of face, both hands (palm and back) and key costume detail, neutral mid-grey seamless backdrop, soft even 5600K studio light, true-to-life skin texture with pores and fine lines, natural unretouched skin tone, consistent identity in every view, cinematic 35mm film look, fine grain, high detail, no text, no labels, no watermark",
+      "ref_prompt_zh": "人物参考：未来观看者，来自不确定的未来，性别不确定，20至40岁之间，短而柔软的深色头发，神情温和中性；穿浅暖灰无缝高领针织长衣，轮廓简单，无任何科技装饰与设备；其中一个视图抬起右手、掌心向前，像要触碰玻璃。另附一个视图：作为博物馆玻璃中淡淡的、焦外的倒影。写实人物参考设定图：同一人物的四个全身视图（正面、四分之三侧、正侧、背面），附面部、双手（掌心与手背）与关键服装细节特写；中性中灰无缝背景，柔和均匀的 5600K 棚拍光；真实皮肤质感，保留毛孔与细纹，自然未修饰的肤色；所有视图中人物身份一致；电影感 35mm 胶片质感，细腻颗粒，高细节；无文字、无标注、无水印"
+    }
+  ],
+  "props": [
+    {
+      "id": "PROP_CHART",
+      "code": "CHART",
+      "name_zh": "海图（针路图）",
+      "description": "Horizontal handscroll needle-route chart, 32 cm high x ~210 cm long (60 cm usually unrolled); a fictional coastline drawn in elevation view - islands as small mountain profiles, reefs as ink dots, water washed pale indigo, land pale ochre, a fine dotted route line with small brush annotations (never readable unless written by a calligrapher). The SAME fictional coastline as PROP_MAP. Then (cabin): paper #DCCDA6, softened by handling, corners curling, held by two small brass weights and a round stone, one candle-wax drip; a corner lifts in the wind (48 fps). Museum (G2 flat case): yellowed #CDB98C, brown foxing #A8875A, edge losses repaired with slightly lighter toned Japanese tissue, laid at 10 deg, held by two clear acrylic strips. Match-cut lock: acrylic strips in the same positions as the brass weights; both shot 90 deg top-down, same crop, a twin-peaked islet at frame (0.62, 0.40).",
+      "materials": [
+        "mulberry-bark paper",
+        "cotton backing paper",
+        "ink",
+        "indigo and ochre washes",
+        "brass weights (then)",
+        "acrylic strips (museum)"
+      ],
+      "colour_hex": [
+        "#DCCDA6",
+        "#CDB98C",
+        "#A8875A",
+        "#6E8AA0",
+        "#B49A6E",
+        "#1E1A17"
+      ],
+      "states": {
+        "then": "ship_cabin",
+        "museum": "museum_gallery G2"
+      },
+      "ref_prompt_en": "Prop reference: an early-17th-century Chinese needle-route sea chart on a horizontal paper handscroll, 32 cm high, a 60 cm section unrolled, a fictional coastline drawn as small mountain-profile islands and ink-dot reefs, pale indigo wash for water, pale ochre for land, a fine dotted sailing route, tiny brush annotations kept illegible and soft. Two states side by side: (1) in use - warm cream paper softened by handling, curled corners, two small brass weights and a round stone, a candle-wax drip; (2) museum - yellowed paper with brown foxing, edge losses repaired with toned Japanese tissue, held by two clear acrylic strips in the same positions as the weights. Include a macro of the paper fibres. photoreal prop reference sheet, the same object from several angles (top-down, three-quarter, side) plus a macro texture inset, on neutral dark-grey felt, soft raking light to reveal surface texture, accurate scale and proportions, true materials, cinematic 35mm film look, fine grain, no text, no labels, no watermark",
+      "ref_prompt_zh": "道具参考：17世纪上半叶的针路图，横向纸本长卷，高32厘米，展开60厘米一段；以山形立面画法描绘一段虚构海岸，岛屿为小山侧影，礁石为墨点，水面淡花青晕染，陆地淡赭，一条细墨点航路，小楷注记保持不可读、柔焦。两种状态并列：（1）使用中——暖米色纸被手翻软、四角卷起，两块小铜镇纸与一块圆石压着，一处烛泪；（2）博物馆——泛黄、布满褐色霉斑，边缘缺损以调色和纸修补，两条透明亚克力压条位置与铜镇纸相同。附纸张纤维微距。写实道具参考设定图：同一物件的多个角度（正俯视、四分之三、侧面）并附微距质感特写；中性深灰毛毡背景，柔和的低角度掠射光以显出表面质感；比例与尺寸准确，材质真实；电影感 35mm 胶片质感，细腻颗粒；无文字、无标注、无水印"
+    },
+    {
+      "id": "PROP_COMPASS",
+      "code": "COMPASS",
+      "name_zh": "黄铜罗盘",
+      "description": "Round brass mariner's compass, 15 cm diameter, 3.2 cm thick, seated in a 19x19x5 cm camphor-wood compass box. Central needle well 4.2 cm under a thin slightly golden mica cover. Blued-steel dry-pivot needle 3.6 cm on a fine brass pin; the SOUTH-pointing end carries a drop of vermilion lacquer (P16) and settles on 午. Rings from centre: (1) eight trigrams as engraved bars; (2) the 24 bearings clockwise from north: 子 癸 丑 艮 寅 甲 卯 乙 辰 巽 巳 丙 午 丁 未 坤 申 庚 酉 辛 戌 乾 亥 壬, small engraved regular script filled black (must be correct); (3) outer ring of 28 tiny drilled star points linked by hair-fine engraved lines into small asterisms, a larger silver-inlaid star above 子 (the pole star). Then: warm brass #B8925A, rim near 午 thumb-polished bright (P11), soot and grease in the grooves #4A3A28, white salt bloom at the box edge; mica intact. Museum (G1): stabilised matte, chocolate patina #6E5536 with honey high points P09, verdigris P12 in the deepest grooves and around the pin, mica CRACKED at the 乾 edge, needle slightly rusted, still pointing south; on a clear acrylic cradle tilted 15 deg over near-black navy velvet #101A2A.",
+      "materials": [
+        "cast and engraved brass",
+        "blued steel needle",
+        "brass pivot pin",
+        "mica cover",
+        "silver inlay",
+        "vermilion lacquer",
+        "camphor wood box"
+      ],
+      "colour_hex": [
+        "#B8925A",
+        "#B08D57",
+        "#D2B27E",
+        "#6E5536",
+        "#5E8C7E",
+        "#A33A2E",
+        "#4A3A28"
+      ],
+      "states": {
+        "then": "ship_cabin",
+        "museum": "museum_gallery G1"
+      },
+      "ref_prompt_en": "Prop reference: a 17th-century Chinese brass mariner's compass, 15 cm round, in a square camphor-wood box; central needle well under a thin golden mica cover with a blued-steel needle whose south end has a drop of red lacquer; concentric engraved rings: eight trigram bar symbols, then the 24 Chinese bearings in small engraved regular script filled black, then an outer ring of tiny drilled star points joined by hair-fine lines into small constellations with one silver-inlaid star at north. Two states: (1) in use - warm golden brass, rim thumb-polished bright, soot in the grooves, white sea-salt bloom at the box edge, candlelight glinting along the engravings; (2) museum - stabilised matte chocolate-brown patina with honey highlights, blue-green verdigris in the deepest grooves, a crack across one edge of the mica, on a clear acrylic cradle over near-black navy velvet. Macro inset: needle tip and engraved stars. photoreal prop reference sheet, the same object from several angles (top-down, three-quarter, side) plus a macro texture inset, on neutral dark-grey felt, soft raking light to reveal surface texture, accurate scale and proportions, true materials, cinematic 35mm film look, fine grain, no text, no labels, no watermark",
+      "ref_prompt_zh": "道具参考：17世纪中国航海黄铜罗盘，直径15厘米，嵌在方形樟木罗盘匣中；中央针池覆一片微带金色的薄云母，发蓝钢针的指南一端点一滴朱红漆；同心刻圈依次为：八卦卦象刻线、二十四向小楷阴刻填黑、最外圈由极细刻线连成小星组的二十八处钻孔星点，正北一颗嵌银大星。两种状态：（1）使用中——温暖的金色黄铜，口沿被拇指磨亮，刻槽积着烟灰，匣边有白色盐霜，烛光沿刻痕闪动；（2）博物馆——稳定化处理后的哑光巧克力褐包浆、高点蜂蜜色，最深刻槽里有蓝绿色铜绿，云母一侧边缘有裂纹，置于透明亚克力托架、近黑深蓝绒布上。微距特写：针尖与刻星。写实道具参考设定图：同一物件的多个角度（正俯视、四分之三、侧面）并附微距质感特写；中性深灰毛毡背景，柔和的低角度掠射光以显出表面质感；比例与尺寸准确，材质真实；电影感 35mm 胶片质感，细腻颗粒；无文字、无标注、无水印"
+    },
+    {
+      "id": "PROP_BOWL",
+      "code": "BOWL",
+      "name_zh": "青花碗（整碗）",
+      "description": "THE single canonical pattern for every era and every shard: folk-kiln blue-and-white flared-rim bowl, rim diameter 15.2 cm, height 6.6 cm, foot 6.0 cm; slightly bluish white glaze with tiny pinholes; quick loose cobalt brushwork with dark heaped iron spots; outer rim band 1 cm wide between thin double lines containing ONE continuous flowering plum branch with 16 five-petal blossoms alternating with buds; side A: a single-sail small boat with three batten lines on three rows of wave lines under a crescent moon at upper left; side B: a low fence, a plum branch and a square window filled with a cracked-ice lattice; large plain white space between sides A and B; inside: one fine line below the rim, and in the centre a double circle (4.5 cm) holding a single five-petal plum blossom; unglazed foot ring with orange-brown kiln flush, no reign mark. Then (old_home): intact, fresh glaze; holding cold white rice (top grains dry and translucent) with an untouched pair of bamboo chopsticks across the rim - NO steam ever. Same bowl, empty, set on the stone step under the eaves to catch rain; the centre blossom visible; in CH3 the first raindrop lands on the centre blossom (96 fps).",
+      "materials": [
+        "porcelain / porcellaneous stoneware",
+        "cobalt underglaze",
+        "transparent glaze",
+        "unglazed foot ring"
+      ],
+      "colour_hex": [
+        "#EDF1EF",
+        "#E3EAEC",
+        "#2B4A8B",
+        "#18294F",
+        "#B9784A"
+      ],
+      "states": {
+        "then": "old_home (table / eaves)",
+        "museum": "see PROP_SHARDS"
+      },
+      "ref_prompt_en": "Prop reference: folk-kiln blue-and-white flared-rim bowl, rim diameter 15.2 cm, height 6.6 cm, foot 6.0 cm; slightly bluish white glaze with tiny pinholes; quick loose cobalt brushwork with dark heaped iron spots; outer rim band 1 cm wide between thin double lines containing ONE continuous flowering plum branch with 16 five-petal blossoms alternating with buds; side A: a single-sail small boat with three batten lines on three rows of wave lines under a crescent moon at upper left; side B: a low fence, a plum branch and a square window filled with a cracked-ice lattice; large plain white space between sides A and B; inside: one fine line below the rim, and in the centre a double circle (4.5 cm) holding a single five-petal plum blossom; unglazed foot ring with orange-brown kiln flush, no reign mark. Views: exterior side A (boat and moon), exterior side B (window with cracked-ice lattice), top-down into the bowl showing the central plum blossom, and the unglazed foot. Additional state: the same bowl filled with cold white rice, top grains dry, a pair of bamboo chopsticks resting across the rim, absolutely no steam. photoreal prop reference sheet, the same object from several angles (top-down, three-quarter, side) plus a macro texture inset, on neutral dark-grey felt, soft raking light to reveal surface texture, accurate scale and proportions, true materials, cinematic 35mm film look, fine grain, no text, no labels, no watermark",
+      "ref_prompt_zh": "道具参考：南方民窑青花撇口碗，口径15.2厘米、高6.6厘米、圈足径6.0厘米；白中泛淡青的釉，有细小棕眼；钴料笔触快而不工整，堆积处有深色铁锈斑；外口沿下1厘米宽、上下各一道细弦线的纹带内，是一枝连绵不断的折枝梅，共16朵五瓣梅花与花苞交替；外壁A面：三行波浪线上一叶单帆小船（帆上三道横线），左上方一弯新月；外壁B面：一段矮篱笆、一枝梅与一扇方窗，窗内为冰裂纹格子；A、B两面之间大面积留白；内壁口沿下一道细弦线，碗心双圈（直径4.5厘米）内一朵五瓣梅花；圈足无釉，露胎处有橙褐色火石红，底部无款。视图：外壁A面（小船与新月）、外壁B面（冰裂纹窗）、正俯视碗心梅花、圈足。附加状态：同一只碗盛着凉了的白米饭，表面米粒发干，一双竹筷横放在碗口，绝无热气。写实道具参考设定图：同一物件的多个角度（正俯视、四分之三、侧面）并附微距质感特写；中性深灰毛毡背景，柔和的低角度掠射光以显出表面质感；比例与尺寸准确，材质真实；电影感 35mm 胶片质感，细腻颗粒；无文字、无标注、无水印"
+    },
+    {
+      "id": "PROP_SHARDS",
+      "code": "SHARDS",
+      "name_zh": "青花残片",
+      "description": "The same bowl (PROP_BOWL pattern) broken into 7 shards + 1 missing piece. A (largest): centre blossom and foot ring. B, C, D: the rim band split across three shards - cracks pass BETWEEN blossoms, never through one, so the aligned rim reads complete. E: side A boat and moon intact. F: side B window and cracked-ice lattice intact. G: small shard with part of the waves. MISSING: ~2.5x3 cm from the plain white zone between sides A and B (between 'departure' and 'home'), never found. Break edges show grey-white body, slightly worn and soiled. On the bench: on grey foam; joined sections standing in a fine-white-sand conservation tray while the adhesive cures.",
+      "materials": [
+        "porcelain shards",
+        "conservation sand tray",
+        "grey polyethylene foam",
+        "reversible adhesive (no brand)"
+      ],
+      "colour_hex": [
+        "#EDF1EF",
+        "#2B4A8B",
+        "#18294F",
+        "#C9C4BA",
+        "#B9784A"
+      ],
+      "states": {
+        "museum": "restoration_lab bench"
+      },
+      "ref_prompt_en": "Prop reference: seven shards of the canonical bowl - folk-kiln blue-and-white flared-rim bowl, rim diameter 15.2 cm, height 6.6 cm, foot 6.0 cm; slightly bluish white glaze with tiny pinholes; quick loose cobalt brushwork with dark heaped iron spots; outer rim band 1 cm wide between thin double lines containing ONE continuous flowering plum branch with 16 five-petal blossoms alternating with buds; side A: a single-sail small boat with three batten lines on three rows of wave lines under a crescent moon at upper left; side B: a low fence, a plum branch and a square window filled with a cracked-ice lattice; large plain white space between sides A and B; inside: one fine line below the rim, and in the centre a double circle (4.5 cm) holding a single five-petal plum blossom; unglazed foot ring with orange-brown kiln flush, no reign mark - laid out on grey conservation foam and partly aligned in a tray of fine white sand; the rim band of plum blossoms continues unbroken across three rim shards because the cracks run between blossoms; one shard with the central blossom and foot ring, one with the boat and crescent moon, one with the cracked-ice window; a visible gap where one piece of plain white body between the two scenes is missing; grey-white break edges. Include a top-down layout and a macro of a crack meeting the glaze. photoreal prop reference sheet, the same object from several angles (top-down, three-quarter, side) plus a macro texture inset, on neutral dark-grey felt, soft raking light to reveal surface texture, accurate scale and proportions, true materials, cinematic 35mm film look, fine grain, no text, no labels, no watermark",
+      "ref_prompt_zh": "道具参考：标准青花碗的七片残片——南方民窑青花撇口碗，口径15.2厘米、高6.6厘米、圈足径6.0厘米；白中泛淡青的釉，有细小棕眼；钴料笔触快而不工整，堆积处有深色铁锈斑；外口沿下1厘米宽、上下各一道细弦线的纹带内，是一枝连绵不断的折枝梅，共16朵五瓣梅花与花苞交替；外壁A面：三行波浪线上一叶单帆小船（帆上三道横线），左上方一弯新月；外壁B面：一段矮篱笆、一枝梅与一扇方窗，窗内为冰裂纹格子；A、B两面之间大面积留白；内壁口沿下一道细弦线，碗心双圈（直径4.5厘米）内一朵五瓣梅花；圈足无釉，露胎处有橙褐色火石红，底部无款——摆放在灰色修复海绵垫上，部分残片对齐插在细白沙盘中；口沿梅花纹带跨三片残片仍然连续，因为裂纹都从梅花之间穿过；一片带碗心梅花与圈足，一片带小船与新月，一片带冰裂纹窗；两幅画面之间的留白处缺失一块，留出空缺；断面为灰白胎。附俯视排布图与裂纹穿过釉面的微距。写实道具参考设定图：同一物件的多个角度（正俯视、四分之三、侧面）并附微距质感特写；中性深灰毛毡背景，柔和的低角度掠射光以显出表面质感；比例与尺寸准确，材质真实；电影感 35mm 胶片质感，细腻颗粒；无文字、无标注、无水印"
+    },
+    {
+      "id": "PROP_PATCH",
+      "code": "PATCH",
+      "name_zh": "袖口补丁",
+      "description": "Inside the RIGHT cuff of the navigator's indigo jacket (on the turned-back inner layer), visible only when the cuff is turned back. 4.5x6 cm rectangle of pale blue hand-woven plain cotton #7D9CBB - the same cloth as the wife's jacket - slightly heavier than the jacket cloth; off-white cotton thread #E9E4D6 in small ~3 mm running stitches, one corner noticeably uneven with a double knot. The centre rubbed fuzzy, shiny and paler by his fingertips.",
+      "materials": [
+        "hand-woven cotton",
+        "cotton thread"
+      ],
+      "colour_hex": [
+        "#7D9CBB",
+        "#E9E4D6",
+        "#2E3F5C"
+      ],
+      "states": {
+        "then": "navigator jacket; being sewn by WIFE (V2 insert)"
+      },
+      "ref_prompt_en": "Prop reference: the right cuff of a faded indigo coarse-cotton 17th-century jacket turned back to reveal a 4.5x6 cm patch of paler blue hand-woven cotton sewn on the inside with small uneven off-white running stitches and a double knot at one corner, the centre of the patch rubbed soft and slightly shiny by years of a thumb. Include a macro of the stitches and weave, and a view of the cuff folded normally with the patch hidden. photoreal prop reference sheet, the same object from several angles (top-down, three-quarter, side) plus a macro texture inset, on neutral dark-grey felt, soft raking light to reveal surface texture, accurate scale and proportions, true materials, cinematic 35mm film look, fine grain, no text, no labels, no watermark",
+      "ref_prompt_zh": "道具参考：一件洗旧的17世纪靛蓝粗棉短褂的右袖口被翻开，露出缝在内侧的一块4.5×6厘米浅蓝手织棉布补丁，本白棉线细密平针、略不整齐，一角打了两次结；补丁中间被拇指常年摩挲得起毛、微亮。附针脚与织纹微距，以及袖口正常放下、补丁不可见的视图。写实道具参考设定图：同一物件的多个角度（正俯视、四分之三、侧面）并附微距质感特写；中性深灰毛毡背景，柔和的低角度掠射光以显出表面质感；比例与尺寸准确，材质真实；电影感 35mm 胶片质感，细腻颗粒；无文字、无标注、无水印"
+    },
+    {
+      "id": "PROP_SHIRT",
+      "code": "SHIRT",
+      "name_zh": "旧衫",
+      "description": "A family member's old men's centre-opening short shirt (owner withheld), faded grey-blue cotton #6F7F8F, seven cloth buttons, collar mended with a slightly darker cloth #55667A, elbows worn thin. LOCK: a ~3x4 cm triangle cut from the lower right hem (the scrap travels inside PROP_LETTER). Fold (lock): sleeves back, body folded in half, then in three to a 30x22 cm block, corners pressed flat with the palm. Museum (G3c): folded inside the open case, paler #8392A0, fold lines whitened, the cut hem corner visible.",
+      "materials": [
+        "cotton",
+        "cloth knot buttons"
+      ],
+      "colour_hex": [
+        "#6F7F8F",
+        "#55667A",
+        "#8392A0"
+      ],
+      "states": {
+        "then": "pier_waiting / migrant's home",
+        "museum": "museum_gallery G3c"
+      },
+      "ref_prompt_en": "Prop reference: a 1920s Chinese men's centre-opening short shirt in faded grey-blue cotton with seven cloth knot buttons, collar mended with a slightly darker patch, elbows worn thin, a small triangle cut out of the lower right hem. Views: laid flat; folded into a neat 30x22 cm block; macro of the cotton creases and worn weave. photoreal prop reference sheet, the same object from several angles (top-down, three-quarter, side) plus a macro texture inset, on neutral dark-grey felt, soft raking light to reveal surface texture, accurate scale and proportions, true materials, cinematic 35mm film look, fine grain, no text, no labels, no watermark",
+      "ref_prompt_zh": "道具参考：一件1920年代男式对襟短衫，褪色灰蓝棉布，七粒布纽，领口用略深的布补过，肘部磨薄，右下衣摆被剪去一个小三角。视图：平铺；叠成30×22厘米的整齐方块；棉布折痕与磨薄织纹的微距。写实道具参考设定图：同一物件的多个角度（正俯视、四分之三、侧面）并附微距质感特写；中性深灰毛毡背景，柔和的低角度掠射光以显出表面质感；比例与尺寸准确，材质真实；电影感 35mm 胶片质感，细腻颗粒；无文字、无标注、无水印"
+    },
+    {
+      "id": "PROP_CASE",
+      "code": "CASE",
+      "name_zh": "藤箱",
+      "description": "1920s-30s rattan suitcase, 58x38x21 cm: woven split rattan over a bamboo frame, lid hinged with leather strips, two brown leather straps #6A4A30 with brass buckles #9A7D4E, leather-reinforced corners, rattan-wrapped handle. Honey amber #A8783F, darker where handled #7A5530. LOCK: lined inside with indigo resist-printed cloth (#3B5578 with small white flowers #E6E0D2) - the blue-and-white of cloth. Carried in her RIGHT hand. Museum (G3c, lid open): one corner's rattan broken and lifted, straps dried and cracked, buckles dull, handle wrap stained dark brown by sweat; holding the folded shirt and the unwrapped comb.",
+      "materials": [
+        "split rattan",
+        "bamboo frame",
+        "leather",
+        "brass buckles",
+        "indigo resist-printed cotton lining"
+      ],
+      "colour_hex": [
+        "#A8783F",
+        "#7A5530",
+        "#6A4A30",
+        "#9A7D4E",
+        "#3B5578",
+        "#E6E0D2"
+      ],
+      "states": {
+        "then": "pier_waiting",
+        "museum": "museum_gallery G3c"
+      },
+      "ref_prompt_en": "Prop reference: a 1920s-30s Chinese rattan suitcase, 58x38x21 cm, honey-amber woven split rattan over a bamboo frame, two brown leather straps with brass buckles, leather corners, a rattan-wrapped handle darkened by use, lid open showing an indigo-and-white resist-printed cotton lining. Two states: (1) in use, buckles bright; (2) museum, one corner's rattan broken, leather cracked, buckles dull, a folded grey-blue shirt and a boxwood comb inside. photoreal prop reference sheet, the same object from several angles (top-down, three-quarter, side) plus a macro texture inset, on neutral dark-grey felt, soft raking light to reveal surface texture, accurate scale and proportions, true materials, cinematic 35mm film look, fine grain, no text, no labels, no watermark",
+      "ref_prompt_zh": "道具参考：1920–30年代中国藤箱，58×38×21厘米，竹框外包蜂蜜琥珀色劈藤编织，两条棕色皮带配黄铜带扣，四角包皮，提手藤皮被手握得发深；箱盖打开，露出蓝白蓝印花布内衬。两种状态：（1）使用中，带扣明亮；（2）博物馆，一角藤条断裂翘起，皮带干裂，带扣发暗，箱内放着叠好的灰蓝旧衫与一把黄杨木梳。写实道具参考设定图：同一物件的多个角度（正俯视、四分之三、侧面）并附微距质感特写；中性深灰毛毡背景，柔和的低角度掠射光以显出表面质感；比例与尺寸准确，材质真实；电影感 35mm 胶片质感，细腻颗粒；无文字、无标注、无水印"
+    },
+    {
+      "id": "PROP_KEEPSAKE",
+      "code": "KEEPSAKE",
+      "name_zh": "家人小物（黄杨木梳）",
+      "description": "Boxwood comb 9.5x5 cm, 34 teeth, two teeth worn shorter; honey #C9A46A darkened and mellowed by hair oil; wrapped in a 15 cm square of faded red-brown cotton #8E4A3C. V2: laid wrapped on top of the folded shirt, pressed once with her palm. Museum: wrapping untied and laid flat, comb on top, crisp fold lines in the cloth.",
+      "materials": [
+        "boxwood",
+        "cotton cloth"
+      ],
+      "colour_hex": [
+        "#C9A46A",
+        "#8E4A3C"
+      ],
+      "states": {
+        "then": "in the case",
+        "museum": "museum_gallery G3c"
+      },
+      "ref_prompt_en": "Prop reference: an old boxwood comb, 9.5x5 cm with 34 teeth, two worn shorter, honey-coloured and mellowed by hair oil, shown wrapped in a small square of faded red-brown cotton and unwrapped lying on the cloth with its fold lines; macro of the wood grain. photoreal prop reference sheet, the same object from several angles (top-down, three-quarter, side) plus a macro texture inset, on neutral dark-grey felt, soft raking light to reveal surface texture, accurate scale and proportions, true materials, cinematic 35mm film look, fine grain, no text, no labels, no watermark",
+      "ref_prompt_zh": "道具参考：一把旧黄杨木梳，9.5×5厘米，34齿，其中两齿磨短，被头油浸得温润发深；展示用褪色红褐小方布包着的状态，以及解开后木梳放在带折痕的包布上的状态；附木纹微距。写实道具参考设定图：同一物件的多个角度（正俯视、四分之三、侧面）并附微距质感特写；中性深灰毛毡背景，柔和的低角度掠射光以显出表面质感；比例与尺寸准确，材质真实；电影感 35mm 胶片质感，细腻颗粒；无文字、无标注、无水印"
+    },
+    {
+      "id": "PROP_LETTER",
+      "code": "LETTER",
+      "name_zh": "信（迁徙女性）",
+      "description": "Eight-column letter paper: thin cream bamboo paper #E7DCC3 with eight faded vermilion vertical rules #B4533F, 25x17 cm, small brush script in black ink (never readable, or authored by a calligrapher). LOCK fold: in thirds, then in half, ~8.5x8.5 cm (the same fold as PROP_AIRLETTER). Then: written and refolded, creases softened, corners fuzzy; in CH2 a triangular scrap of the old shirt is tucked inside. Museum (archive, BR1 b): flattened in a clear polyester sleeve, fold lines as soft valleys, foxing; a pressed jasmine flower (browned #A88A5A, translucent petals) in the margin; the last column stops mid-character - an unfinished line.",
+      "materials": [
+        "bamboo paper",
+        "printed vermilion rules",
+        "ink",
+        "pressed jasmine",
+        "polyester sleeve (museum)"
+      ],
+      "colour_hex": [
+        "#E7DCC3",
+        "#B4533F",
+        "#1A1A1A",
+        "#A88A5A",
+        "#6F7F8F"
+      ],
+      "states": {
+        "then": "pier_waiting / migrant",
+        "museum": "restoration_lab archive"
+      },
+      "ref_prompt_en": "Prop reference: a 1920s Chinese letter on thin cream bamboo paper with eight faded vermilion vertical column rules, small brush-script writing kept soft and illegible; states: folded in thirds then in half with soft worn creases and a small triangle of faded grey-blue shirt cloth tucked inside; and flattened in a clear archival sleeve with soft fold valleys, foxing, a pressed browned jasmine flower in the margin, the last column ending mid-stroke. photoreal prop reference sheet, the same object from several angles (top-down, three-quarter, side) plus a macro texture inset, on neutral dark-grey felt, soft raking light to reveal surface texture, accurate scale and proportions, true materials, cinematic 35mm film look, fine grain, no text, no labels, no watermark",
+      "ref_prompt_zh": "道具参考：一封1920年代的信，写在印有八条褪色朱红竖格线的米色薄竹纸（八行笺）上，小楷字迹保持柔焦不可读；状态：先三折再对折、折痕被反复折叠得发软，里面夹着一小片三角形灰蓝旧衫布；以及展平夹在透明档案保护套中的状态——折痕成为柔软的凹谷，有霉斑，页边夹着一朵压扁变褐的茉莉花，最后一行写到一半停住。写实道具参考设定图：同一物件的多个角度（正俯视、四分之三、侧面）并附微距质感特写；中性深灰毛毡背景，柔和的低角度掠射光以显出表面质感；比例与尺寸准确，材质真实；电影感 35mm 胶片质感，细腻颗粒；无文字、无标注、无水印"
+    },
+    {
+      "id": "PROP_AIRLETTER",
+      "code": "AIRLETTER",
+      "name_zh": "航空信（母亲）",
+      "description": "1950s airmail letter: very thin pale-blue onionskin #C9D6E2, translucent - writing on the reverse faintly visible against light (never readable). LOCK: folded in thirds then in half like PROP_LETTER, ~8.5x9 cm, folded edges softened and fuzzy from the thumb. Stained-glass light glows faintly through it in BR2.",
+      "materials": [
+        "onionskin airmail paper",
+        "ink"
+      ],
+      "colour_hex": [
+        "#C9D6E2",
+        "#2A3550"
+      ],
+      "states": {
+        "then": "chapel"
+      },
+      "ref_prompt_en": "Prop reference: a folded 1950s pale-blue onionskin airmail letter, translucent with faint illegible handwriting showing through, folded in thirds then in half, edges softened and fuzzy from being rubbed by a thumb; one view with coloured stained-glass light glowing through it. photoreal prop reference sheet, the same object from several angles (top-down, three-quarter, side) plus a macro texture inset, on neutral dark-grey felt, soft raking light to reveal surface texture, accurate scale and proportions, true materials, cinematic 35mm film look, fine grain, no text, no labels, no watermark",
+      "ref_prompt_zh": "道具参考：一封折叠的1950年代浅蓝葱皮纸航空信，半透明，隐约透出不可读的字迹，先三折再对折，折边被拇指摩挲得发软起毛；其中一个视图有彩窗的彩光透过信纸。写实道具参考设定图：同一物件的多个角度（正俯视、四分之三、侧面）并附微距质感特写；中性深灰毛毡背景，柔和的低角度掠射光以显出表面质感；比例与尺寸准确，材质真实；电影感 35mm 胶片质感，细腻颗粒；无文字、无标注、无水印"
+    },
+    {
+      "id": "PROP_SWEETS",
+      "code": "SWEETS",
+      "name_zh": "油纸糖",
+      "description": "A 10x8 cm square packet of translucent honey tung-oil paper #D8B57A, glowing warmly when lamp light passes through, tied crosswise with a thin red cotton string (P16). Inside: peanut-sesame brittle pieces 2x3 cm #C8964F and a few candied winter-melon strips (sugar-frost white #EDE6D6). V2 insert: pressed into her hands at home; CH3: she breaks off a piece for the nervous boy.",
+      "materials": [
+        "tung-oil paper",
+        "cotton string",
+        "peanut-sesame brittle",
+        "candied winter melon"
+      ],
+      "colour_hex": [
+        "#D8B57A",
+        "#A33A2E",
+        "#C8964F",
+        "#EDE6D6"
+      ],
+      "states": {
+        "then": "migrant's home / pier_waiting"
+      },
+      "ref_prompt_en": "Prop reference: a small square packet of translucent honey-coloured oiled paper tied crosswise with thin red cotton string, shown closed with warm lamplight glowing through it, and opened revealing pieces of peanut-sesame brittle and sugar-frosted candied winter-melon strips; 1920s China. photoreal prop reference sheet, the same object from several angles (top-down, three-quarter, side) plus a macro texture inset, on neutral dark-grey felt, soft raking light to reveal surface texture, accurate scale and proportions, true materials, cinematic 35mm film look, fine grain, no text, no labels, no watermark",
+      "ref_prompt_zh": "道具参考：一个用细红棉绳十字系紧的半透明蜂蜜色桐油纸方包，闭合状态下暖色灯光透过油纸发光；打开后可见花生芝麻酥糖块与糖霜冬瓜条；1920年代中国。写实道具参考设定图：同一物件的多个角度（正俯视、四分之三、侧面）并附微距质感特写；中性深灰毛毡背景，柔和的低角度掠射光以显出表面质感；比例与尺寸准确，材质真实；电影感 35mm 胶片质感，细腻颗粒；无文字、无标注、无水印"
+    },
+    {
+      "id": "PROP_LAMP",
+      "code": "LAMP",
+      "name_zh": "门口小灯",
+      "description": "Small brown-glazed stoneware oil-lamp dish, 9 cm diameter on a short stand #6B4A2E, peanut oil, rush-pith wick, ~2 cm flame at 1900K (P13), in the stone wall niche left of the old home's door. LOCK: same colour temperature and apparent size as the 'warm shore light' the navigator sees at sea (motif M7).",
+      "materials": [
+        "glazed stoneware",
+        "peanut oil",
+        "rush-pith wick"
+      ],
+      "colour_hex": [
+        "#6B4A2E",
+        "#E2A458"
+      ],
+      "states": {
+        "then": "old_home door niche"
+      },
+      "ref_prompt_en": "Prop reference: a small 17th-century Chinese brown-glazed stoneware oil-lamp dish on a short stand with a rush-pith wick and a small steady 2 cm flame, set in a rough granite wall niche beside a wooden door at night; one view with a hand shielding the flame. photoreal prop reference sheet, the same object from several angles (top-down, three-quarter, side) plus a macro texture inset, on neutral dark-grey felt, soft raking light to reveal surface texture, accurate scale and proportions, true materials, cinematic 35mm film look, fine grain, no text, no labels, no watermark",
+      "ref_prompt_zh": "道具参考：一盏17世纪中国酱褐釉陶小油灯盏，带矮灯座，灯芯草芯，2厘米高的小而稳定的火焰，放在夜晚木门旁粗糙花岗岩墙的壁龛里；其中一个视图有一只手护着火焰。写实道具参考设定图：同一物件的多个角度（正俯视、四分之三、侧面）并附微距质感特写；中性深灰毛毡背景，柔和的低角度掠射光以显出表面质感；比例与尺寸准确，材质真实；电影感 35mm 胶片质感，细腻颗粒；无文字、无标注、无水印"
+    },
+    {
+      "id": "PROP_STAMP",
+      "code": "STAMP",
+      "name_zh": "旅行印章",
+      "description": "Hand stamp with a brass face (38 mm) and turned dark rosewood handle #4E2E22. Impression (lock): INVENTED design, NO readable text - a double ring enclosing a simplified steamer over three wave lines beneath a six-pointed star. Aniline violet ink #5B4A78 in a flat tin pad. V2 123.3-126.2: an official's hand (khaki-grey invented uniform cuff) behind the glass partition presses it down (96 fps); the violet mark half overlaps the document border.",
+      "materials": [
+        "brass",
+        "rosewood",
+        "aniline ink",
+        "tin ink pad"
+      ],
+      "colour_hex": [
+        "#9A7D4E",
+        "#4E2E22",
+        "#5B4A78"
+      ],
+      "states": {
+        "then": "pier_waiting stamp desk"
+      },
+      "ref_prompt_en": "Prop reference: a 1920s-30s hand stamp with a round brass face and a turned dark rosewood handle beside a flat tin ink pad of violet ink, and a crisp violet impression on cream paper showing an invented emblem - a double ring around a simple steamship over three waves under a six-pointed star - with no letters or words at all. photoreal prop reference sheet, the same object from several angles (top-down, three-quarter, side) plus a macro texture inset, on neutral dark-grey felt, soft raking light to reveal surface texture, accurate scale and proportions, true materials, cinematic 35mm film look, fine grain, no text, no labels, no watermark",
+      "ref_prompt_zh": "道具参考：一枚1920–30年代的手持印章，圆形黄铜印面、紫檀色车木柄，旁边是一只扁铁盒紫色印台；米色纸上一枚清晰的紫色印迹：双圈之内一艘简化的轮船、三道波浪与一颗六角星的虚构图案，完全没有任何文字。写实道具参考设定图：同一物件的多个角度（正俯视、四分之三、侧面）并附微距质感特写；中性深灰毛毡背景，柔和的低角度掠射光以显出表面质感；比例与尺寸准确，材质真实；电影感 35mm 胶片质感，细腻颗粒；无文字、无标注、无水印"
+    },
+    {
+      "id": "PROP_PASS",
+      "code": "PASS",
+      "name_zh": "通行纸（旅行证件）",
+      "description": "Folded card document, 24x18 cm open, cream laid paper #E4DAC2, fine grey-green guilloche border #7C8B7E, ruled form fields with handwritten entries - ALL unreadable; four photo corner-mounts at upper left. Then: a small photo is in place but never shown frontally. Museum (G3c): LOCK the photo has fallen away - only four empty corner-mounts remain ('I cannot recognise your face through the glass'); the violet stamp faded to grey-violet #7A6E8C.",
+      "materials": [
+        "laid paper",
+        "printed guilloche",
+        "ink",
+        "photo corner-mounts"
+      ],
+      "colour_hex": [
+        "#E4DAC2",
+        "#7C8B7E",
+        "#5B4A78",
+        "#7A6E8C"
+      ],
+      "states": {
+        "then": "pier_waiting",
+        "museum": "museum_gallery G3c"
+      },
+      "ref_prompt_en": "Prop reference: an invented 1920s-30s travel permit, a folded cream laid-paper card with a fine grey-green guilloche border and ruled form fields filled in faint unreadable handwriting, a violet circular stamp half over the border, and four small photo corner-mounts at upper left that are EMPTY (the photo is missing); aged museum state, no legible text anywhere. photoreal prop reference sheet, the same object from several angles (top-down, three-quarter, side) plus a macro texture inset, on neutral dark-grey felt, soft raking light to reveal surface texture, accurate scale and proportions, true materials, cinematic 35mm film look, fine grain, no text, no labels, no watermark",
+      "ref_prompt_zh": "道具参考：一张虚构的1920–30年代旅行通行纸，对折的米色仿古纹卡纸，细密的灰绿扭索纹边框，表格栏线内是淡淡的不可读手写字，一枚紫色圆形印迹半压在边框上，左上角四个小相角是空的（照片已脱落）；博物馆老化状态，任何地方都没有可读文字。写实道具参考设定图：同一物件的多个角度（正俯视、四分之三、侧面）并附微距质感特写；中性深灰毛毡背景，柔和的低角度掠射光以显出表面质感；比例与尺寸准确，材质真实；电影感 35mm 胶片质感，细腻颗粒；无文字、无标注、无水印"
+    },
+    {
+      "id": "PROP_CANDLE",
+      "code": "CANDLE",
+      "name_zh": "蜡烛",
+      "description": "Vegetable/insect-wax candle, ivory #E8DFC8, 2 cm diameter, in an old brass candlestick with drip pan #8C7350; flame 1850K. LOCK burn states: A 18 cm just lit (PRE1 58.6) -> B 11 cm one drip (PRE1 62-65) -> C 6 cm wax pooled in the pan (PRE1 65.8-69.6) -> D 2.5 cm stub (CH2, CH3, corridor pane P2). Museum: the brass candlestick with a stub in corridor pane P2.",
+      "materials": [
+        "plant / insect white wax",
+        "cotton wick",
+        "brass candlestick"
+      ],
+      "colour_hex": [
+        "#E8DFC8",
+        "#8C7350",
+        "#E2A458"
+      ],
+      "states": {
+        "then": "old_home table",
+        "museum": "corridor P2"
+      },
+      "ref_prompt_en": "Prop reference: an ivory plant-wax candle in an old brass candlestick with a drip pan, shown in four burn states side by side - 18 cm freshly lit, 11 cm with one wax drip, 6 cm with wax pooled in the pan, a 2.5 cm stub - each with a small calm 1850K flame; plus the museum state: the brass candlestick with a cold stub. photoreal prop reference sheet, the same object from several angles (top-down, three-quarter, side) plus a macro texture inset, on neutral dark-grey felt, soft raking light to reveal surface texture, accurate scale and proportions, true materials, cinematic 35mm film look, fine grain, no text, no labels, no watermark",
+      "ref_prompt_zh": "道具参考：插在带接蜡盘旧铜烛台上的象牙色植物蜡蜡烛，并列展示四个燃烧状态——18厘米刚点燃、11厘米一道蜡泪、6厘米蜡泪积在接蜡盘、2.5厘米残烛——每个都有小而安静的1850K火焰；另附博物馆状态：带一截冷残烛的铜烛台。写实道具参考设定图：同一物件的多个角度（正俯视、四分之三、侧面）并附微距质感特写；中性深灰毛毡背景，柔和的低角度掠射光以显出表面质感；比例与尺寸准确，材质真实；电影感 35mm 胶片质感，细腻颗粒；无文字、无标注、无水印"
+    },
+    {
+      "id": "PROP_SHIPLAMP",
+      "code": "SHIPLAMP",
+      "name_zh": "船灯",
+      "description": "Stern lantern: hexagonal bamboo-and-wood frame 55 cm tall with six panels of thin scraped horn (translucent cream-amber #E3C08A), iron hook, candle or oil inside, swinging with a 6-8 s period - the lamp in the INTRO reflection. Cabin variant: same construction, 25 cm hand lantern hanging from the cabin beam; its swing moves the light along the compass engravings. Museum (corridor P1): unlit, frame blackened, two horn panels cracked, one missing.",
+      "materials": [
+        "bamboo",
+        "hardwood",
+        "scraped horn panels",
+        "iron hook",
+        "candle / oil"
+      ],
+      "colour_hex": [
+        "#E3C08A",
+        "#3A2A1E",
+        "#E2A458"
+      ],
+      "states": {
+        "then": "sea_deck stern / ship_cabin beam",
+        "museum": "corridor P1"
+      },
+      "ref_prompt_en": "Prop reference: a 17th-century Chinese ship's stern lantern, hexagonal bamboo-and-wood frame 55 cm tall with translucent cream-amber scraped-horn panels and an iron hook, glowing warmly from a candle inside; a smaller 25 cm cabin version; and the museum state - unlit, blackened frame, two cracked horn panels and one missing. photoreal prop reference sheet, the same object from several angles (top-down, three-quarter, side) plus a macro texture inset, on neutral dark-grey felt, soft raking light to reveal surface texture, accurate scale and proportions, true materials, cinematic 35mm film look, fine grain, no text, no labels, no watermark",
+      "ref_prompt_zh": "道具参考：17世纪中国帆船艉灯，六角形竹木框，高55厘米，嵌半透明奶油琥珀色刮角片，铁钩悬挂，内燃蜡烛发出温暖的光；另附25厘米的小号舱灯；以及博物馆状态——不点亮，竹框发黑，两面角片开裂、一面缺失。写实道具参考设定图：同一物件的多个角度（正俯视、四分之三、侧面）并附微距质感特写；中性深灰毛毡背景，柔和的低角度掠射光以显出表面质感；比例与尺寸准确，材质真实；电影感 35mm 胶片质感，细腻颗粒；无文字、无标注、无水印"
+    },
+    {
+      "id": "PROP_GLOVES",
+      "code": "GLOVES",
+      "name_zh": "白手套",
+      "description": "Thin white cotton-knit conservator gloves #F1EFE8 (warm white, not optical white), ribbed wrist, near-invisible white grip dots on the palms. LOCK: a faint grey-brown smudge #B9AE9C on the RIGHT index fingertip and thumb tip (brass) all night. Chapter 8: removed right first, then left, folded and left on the corner of the window bench; never worn again.",
+      "materials": [
+        "cotton knit",
+        "silicone micro-dots"
+      ],
+      "colour_hex": [
+        "#F1EFE8",
+        "#B9AE9C"
+      ],
+      "states": {
+        "modern": "worn until BR2 ~194.8 s"
+      },
+      "ref_prompt_en": "Prop reference: a pair of thin warm-white cotton-knit museum conservator gloves with ribbed cuffs and near-invisible white grip dots on the palms, a faint grey-brown brass smudge on the right index fingertip and thumb tip; views worn on a woman's slim hands, and folded flat as a pair on a teak bench. photoreal prop reference sheet, the same object from several angles (top-down, three-quarter, side) plus a macro texture inset, on neutral dark-grey felt, soft raking light to reveal surface texture, accurate scale and proportions, true materials, cinematic 35mm film look, fine grain, no text, no labels, no watermark",
+      "ref_prompt_zh": "道具参考：一副暖白色薄棉针织文物修复手套，罗纹腕口，掌面有几乎看不见的白色防滑胶点，右手食指与拇指指尖各有一点浅灰褐的黄铜污迹；视图：戴在女性纤细的手上，以及成对叠好平放在柚木长凳上。写实道具参考设定图：同一物件的多个角度（正俯视、四分之三、侧面）并附微距质感特写；中性深灰毛毡背景，柔和的低角度掠射光以显出表面质感；比例与尺寸准确，材质真实；电影感 35mm 胶片质感，细腻颗粒；无文字、无标注、无水印"
+    },
+    {
+      "id": "PROP_TEA",
+      "code": "TEA",
+      "name_zh": "两杯热茶",
+      "description": "Two handle-less porcelain cups, 8.2 cm diameter x 6.8 cm, pale bluish-white glaze #E6ECEC, LOCK one complete thin cobalt line (P07) 6 mm below the rim. The guard's cup has a tiny chip at 2 o'clock on the rim; the restorer's is the same model, new. Jasmine green tea #C9A55A with one or two unfurled leaves. Steam always visible, rising slowly, shot against a dark background with backlight. Final frame: side by side on the window sill ~6 cm apart, his on screen-right (window side), hers on screen-left.",
+      "materials": [
+        "porcelain",
+        "cobalt underglaze line",
+        "jasmine tea"
+      ],
+      "colour_hex": [
+        "#E6ECEC",
+        "#2B4A8B",
+        "#C9A55A",
+        "#F5E4C8"
+      ],
+      "states": {
+        "modern": "night_window"
+      },
+      "ref_prompt_en": "Prop reference: two identical handle-less porcelain teacups with a pale bluish-white glaze and a single thin cobalt-blue line just below the rim, one with a tiny chip on the rim, filled with pale amber jasmine tea and a few unfurled leaves, gentle steam rising, backlit against a dark window; a view of the two cups side by side on a white-painted wooden window sill. photoreal prop reference sheet, the same object from several angles (top-down, three-quarter, side) plus a macro texture inset, on neutral dark-grey felt, soft raking light to reveal surface texture, accurate scale and proportions, true materials, cinematic 35mm film look, fine grain, no text, no labels, no watermark",
+      "ref_prompt_zh": "道具参考：两只同款无柄瓷茶杯，青白釉，口沿下一道钴蓝细线，其中一只口沿有极小的磕口；杯中是浅琥珀色的茉莉花茶与几片舒展的茶叶，热气缓缓升起，以暗色窗为背景逆光照亮；附两只杯子并排放在漆白木窗台上的视图。写实道具参考设定图：同一物件的多个角度（正俯视、四分之三、侧面）并附微距质感特写；中性深灰毛毡背景，柔和的低角度掠射光以显出表面质感；比例与尺寸准确，材质真实；电影感 35mm 胶片质感，细腻颗粒；无文字、无标注、无水印"
+    },
+    {
+      "id": "PROP_PHONE",
+      "code": "PHONE",
+      "name_zh": "手机",
+      "description": "An unbranded older smartphone, matte dark grey, in a worn navy faux-leather flip case cracked at one corner; a cracked corner on the screen protector; large-font setting, low brightness; invented minimal call UI. LOCK: no name or text ever readable (angle, defocus, finger). Screen light P29 ~6500K lights only his lower face and hands.",
+      "materials": [
+        "glass",
+        "aluminium",
+        "faux leather case"
+      ],
+      "colour_hex": [
+        "#3A3D42",
+        "#26324A",
+        "#C9D8E6"
+      ],
+      "states": {
+        "modern": "GUARD right jacket pocket / night_window"
+      },
+      "ref_prompt_en": "Prop reference: an unbranded older smartphone, matte dark grey, in a worn navy faux-leather flip case with a cracked corner and a cracked screen-protector corner, screen dimly glowing cool white with a soft out-of-focus generic interface and no readable text, no logos. photoreal prop reference sheet, the same object from several angles (top-down, three-quarter, side) plus a macro texture inset, on neutral dark-grey felt, soft raking light to reveal surface texture, accurate scale and proportions, true materials, cinematic 35mm film look, fine grain, no text, no labels, no watermark",
+      "ref_prompt_zh": "道具参考：一部无品牌的旧款智能手机，哑光深灰，装在磨旧、一角开裂的藏青仿皮翻盖套里，屏幕保护膜一角有裂纹；屏幕发出微弱的冷白光，界面为柔焦的通用样式，没有任何可读文字与标志。写实道具参考设定图：同一物件的多个角度（正俯视、四分之三、侧面）并附微距质感特写；中性深灰毛毡背景，柔和的低角度掠射光以显出表面质感；比例与尺寸准确，材质真实；电影感 35mm 胶片质感，细腻颗粒；无文字、无标注、无水印"
+    },
+    {
+      "id": "PROP_COAT",
+      "code": "COAT",
+      "name_zh": "深灰外套",
+      "description": "The restorer's charcoal wool melton coat #3C4045: single-breasted, notch lapel, mid-thigh, straight cut, three dark horn buttons #3A2C22. LOCK worn spot: LEFT cuff, outer little-finger side, ~1 cm above the edge, 18x8 mm, rubbed, pilled, lighter #5A5E62. FUTURE state (CH4 219.7-223.5, vitrine G1 - the same plinth as the opening compass vitrine): laid flat on a padded board tilted 12 deg covered in undyed linen #D8D1C2, sleeves arranged in a natural curve, LEFT cuff toward the glass with the worn spot facing up; wool faded to brownish grey #5B5853, slightly flattened and fuzzier, the worn spot brighter but identical in shape and position; horn buttons dull.",
+      "materials": [
+        "wool melton",
+        "horn buttons",
+        "viscose lining"
+      ],
+      "colour_hex": [
+        "#3C4045",
+        "#5A5E62",
+        "#3A2C22",
+        "#5B5853",
+        "#D8D1C2"
+      ],
+      "states": {
+        "modern": "worn by RESTORER",
+        "future": "museum_gallery G1 (future variant)"
+      },
+      "ref_prompt_en": "Prop reference: a woman's charcoal-grey wool melton coat, single-breasted with three dark horn buttons, notch lapel, mid-thigh straight cut, with a small 18x8 mm rubbed and pilled lighter-grey worn spot on the outer little-finger side of the LEFT cuff just above the edge (macro inset). Second state: the same coat aged by decades, faded to a brownish grey, lying flat on a linen-covered sloped museum display board inside a frameless glass vitrine, left cuff arranged toward the viewer with the same worn spot visible. photoreal prop reference sheet, the same object from several angles (top-down, three-quarter, side) plus a macro texture inset, on neutral dark-grey felt, soft raking light to reveal surface texture, accurate scale and proportions, true materials, cinematic 35mm film look, fine grain, no text, no labels, no watermark",
+      "ref_prompt_zh": "道具参考：一件女式深灰羊毛呢外套，单排三粒深褐牛角扣，平驳领，及大腿中部直身剪裁；左袖口外侧（小指一侧）、紧挨袖口边上方有一块18×8毫米的起毛变浅磨损（附微距特写）。第二状态：同一件外套经过数十年岁月，褪成偏褐的灰，平躺在无框玻璃展柜内包亚麻布的倾斜展板上，左袖口朝向观者，同一处磨损清晰可见。写实道具参考设定图：同一物件的多个角度（正俯视、四分之三、侧面）并附微距质感特写；中性深灰毛毡背景，柔和的低角度掠射光以显出表面质感；比例与尺寸准确，材质真实；电影感 35mm 胶片质感，细腻颗粒；无文字、无标注、无水印"
+    },
+    {
+      "id": "PROP_OUTERCOAT",
+      "code": "OUTERCOAT",
+      "name_zh": "航海人夹棉外衣",
+      "description": "Brown padded coarse-cotton outer coat #5B4634 for night watches: wide sleeves, knee length, right-over-left; shoulders paled by rope wear; undyed coarse lining. CH3: the navigator takes it off, shakes it open in the wind (48 fps) and lets it fall over the sleeping young sailor, moving left to right.",
+      "materials": [
+        "coarse cotton",
+        "cotton wadding",
+        "undyed lining"
+      ],
+      "colour_hex": [
+        "#5B4634",
+        "#8A7558",
+        "#CFC3A8"
+      ],
+      "states": {
+        "then": "sea_deck"
+      },
+      "ref_prompt_en": "Prop reference: a 17th-century Chinese sailor's brown padded coarse-cotton outer coat, knee length, wide sleeves, right-over-left closure, shoulders paled by rope wear, undyed lining; views laid flat, hanging, and draped over a sleeping figure on a ship's deck. photoreal prop reference sheet, the same object from several angles (top-down, three-quarter, side) plus a macro texture inset, on neutral dark-grey felt, soft raking light to reveal surface texture, accurate scale and proportions, true materials, cinematic 35mm film look, fine grain, no text, no labels, no watermark",
+      "ref_prompt_zh": "道具参考：17世纪中国水手的棕色粗棉夹棉外衣，及膝、宽袖、右衽，肩部被缆绳磨出浅色，本色里子；视图：平铺、悬挂、披在甲板上睡着的人身上。写实道具参考设定图：同一物件的多个角度（正俯视、四分之三、侧面）并附微距质感特写；中性深灰毛毡背景，柔和的低角度掠射光以显出表面质感；比例与尺寸准确，材质真实；电影感 35mm 胶片质感，细腻颗粒；无文字、无标注、无水印"
+    },
+    {
+      "id": "PROP_MAP",
+      "code": "MAP",
+      "name_zh": "地图（掌管地图的手）",
+      "description": "1890s hand-drawn administrative map on linen-backed heavy paper, 90x70 cm, paper #E2D6B8, brown ink coastline - the SAME fictional coastline as PROP_CHART (the same land drawn once as a way home, once as territory); hills in hachure; water left blank. Tools: ebony ruler with brass edges, steel ruling pen, glass inkwell, four brass weights. LOCK new line: iron-gall ink, blue-black #1E2230 and glistening when wet, brown-black when dry, NEVER red; horizontal at frame height 0.66 for the match to the threshold and case handle.",
+      "materials": [
+        "linen-backed paper",
+        "iron-gall ink",
+        "brown ink",
+        "ebony",
+        "brass",
+        "steel ruling pen"
+      ],
+      "colour_hex": [
+        "#E2D6B8",
+        "#1E2230",
+        "#5A4632",
+        "#1E1A17",
+        "#A8894F"
+      ],
+      "states": {
+        "then": "map_office"
+      },
+      "ref_prompt_en": "Prop reference: a large 1890s hand-drawn administrative coastal map on linen-backed paper with brown-ink coastline and hachured hills, water left blank, no legible place names; an ebony ruler with brass edges, a steel ruling pen, a glass inkwell and brass weights on it; a freshly drawn straight blue-black iron-gall ink line still wet and glistening in kerosene lamplight. photoreal prop reference sheet, the same object from several angles (top-down, three-quarter, side) plus a macro texture inset, on neutral dark-grey felt, soft raking light to reveal surface texture, accurate scale and proportions, true materials, cinematic 35mm film look, fine grain, no text, no labels, no watermark",
+      "ref_prompt_zh": "道具参考：一张1890年代裱布手绘沿海行政地图，褐色墨线海岸、晕滃线山地，水域留白，没有可读地名；图上放着铜边乌木直尺、钢制直线笔、玻璃墨水瓶与黄铜镇纸；一道刚画下的蓝黑色铁胆墨直线还湿着，在煤油灯下反光。写实道具参考设定图：同一物件的多个角度（正俯视、四分之三、侧面）并附微距质感特写；中性深灰毛毡背景，柔和的低角度掠射光以显出表面质感；比例与尺寸准确，材质真实；电影感 35mm 胶片质感，细腻颗粒；无文字、无标注、无水印"
+    },
+    {
+      "id": "PROP_LEDGER",
+      "code": "LEDGER",
+      "name_zh": "藏品登记簿",
+      "description": "The museum's old accession ledger: dark green buckram hardcover #2F4A3E with a rubbed-white spine, ruled ledger pages of handwritten numbers, dates and dimensions - only dates and numbers (unreadable), nothing about people. BR1 b: she finds the letter's entry - only a date - then opens the archive box and sees the jasmine and the unfinished line.",
+      "materials": [
+        "buckram cloth",
+        "board",
+        "ruled paper",
+        "ink"
+      ],
+      "colour_hex": [
+        "#2F4A3E",
+        "#E3DAC6",
+        "#3A3A3A"
+      ],
+      "states": {
+        "modern": "restoration_lab archive"
+      },
+      "ref_prompt_en": "Prop reference: an old museum accession ledger with a dark green buckram hardcover and rubbed spine, open to ruled pages of neat handwritten numbers and dates rendered soft and illegible, under a warm desk lamp. photoreal prop reference sheet, the same object from several angles (top-down, three-quarter, side) plus a macro texture inset, on neutral dark-grey felt, soft raking light to reveal surface texture, accurate scale and proportions, true materials, cinematic 35mm film look, fine grain, no text, no labels, no watermark",
+      "ref_prompt_zh": "道具参考：一本旧博物馆藏品登记簿，深绿布面硬壳、书脊磨白，翻开的横格账页上是整齐的手写编号与日期（柔焦不可读），在暖色台灯下。写实道具参考设定图：同一物件的多个角度（正俯视、四分之三、侧面）并附微距质感特写；中性深灰毛毡背景，柔和的低角度掠射光以显出表面质感；比例与尺寸准确，材质真实；电影感 35mm 胶片质感，细腻颗粒；无文字、无标注、无水印"
+    },
+    {
+      "id": "PROP_GLASSPANEL",
+      "code": "GLASSPANEL",
+      "name_zh": "彩窗残片",
+      "description": "A 60x90 cm leaded stained-glass panel salvaged from the chapel: invented NON-FIGURATIVE design of layered petal shapes ('light divided into ten thousand petals') in softened ruby, amber, cobalt, sea-green and pale rose (P23-P27) with a few clear quarries. LOCK: a 6x9 cm clear diamond quarry at lower left - the small glass in which the restorer's reflection flickers (BR2). Then: lowest tier of a south-aisle window beside the mother's pew, at seated eye level. Museum (corridor P4): faint soft backlight, lead oxidised grey, two cracked pieces.",
+      "materials": [
+        "antique coloured glass",
+        "lead cames",
+        "putty"
+      ],
+      "colour_hex": [
+        "#9A4545",
+        "#C9913F",
+        "#34548F",
+        "#4C7F68",
+        "#C98F8A",
+        "#8A8C8E"
+      ],
+      "states": {
+        "then": "chapel south aisle window",
+        "museum": "corridor P4"
+      },
+      "ref_prompt_en": "Prop reference: a 60x90 cm leaded stained-glass panel with an abstract non-figurative design of overlapping petal shapes in soft muted ruby, amber, cobalt blue, sea-green and pale rose, a few clear quarries including one small clear diamond pane at lower left; no human figures, no religious figures, no symbols; states: glowing in situ with low sunset light behind it, and as a museum object with oxidised grey lead and two cracked pieces on a dim lightbox. photoreal prop reference sheet, the same object from several angles (top-down, three-quarter, side) plus a macro texture inset, on neutral dark-grey felt, soft raking light to reveal surface texture, accurate scale and proportions, true materials, cinematic 35mm film look, fine grain, no text, no labels, no watermark",
+      "ref_prompt_zh": "道具参考：一块60×90厘米的铅条彩窗，非具象抽象图案，层层叠叠的花瓣形色块，柔和低饱和的绛红、琥珀、钴蓝、海青与浅玫，间有几块透明菱形小玻璃，其中左下角一块小小的透明菱形；没有人物、没有圣像、没有符号；状态：嵌在原处、背后是低角度夕阳而发光；以及作为博物馆藏品——铅条氧化发灰、两处玻璃开裂，放在昏暗的灯箱上。写实道具参考设定图：同一物件的多个角度（正俯视、四分之三、侧面）并附微距质感特写；中性深灰毛毡背景，柔和的低角度掠射光以显出表面质感；比例与尺寸准确，材质真实；电影感 35mm 胶片质感，细腻颗粒；无文字、无标注、无水印"
+    },
+    {
+      "id": "PROP_FLASHLIGHT",
+      "code": "FLASHLIGHT",
+      "name_zh": "手电筒",
+      "description": "Black aluminium flashlight, 3.5 cm head, 4000K narrow beam; sweeps once across the far background in the INTRO (plants the guard); pointed down as he passes in the INTERLUDE.",
+      "materials": [
+        "anodised aluminium",
+        "LED"
+      ],
+      "colour_hex": [
+        "#1C1C1C",
+        "#E9ECEE"
+      ],
+      "states": {
+        "modern": "GUARD belt"
+      },
+      "ref_prompt_en": "Prop reference: a plain black anodised aluminium flashlight with a 3.5 cm head, no logo, shown off and on with a narrow neutral 4000K beam crossing a dark museum floor. photoreal prop reference sheet, the same object from several angles (top-down, three-quarter, side) plus a macro texture inset, on neutral dark-grey felt, soft raking light to reveal surface texture, accurate scale and proportions, true materials, cinematic 35mm film look, fine grain, no text, no labels, no watermark",
+      "ref_prompt_zh": "道具参考：一支无标志的黑色阳极氧化铝手电筒，头部直径3.5厘米；展示关闭状态与打开状态——一束窄窄的中性4000K光束划过昏暗的博物馆地面。写实道具参考设定图：同一物件的多个角度（正俯视、四分之三、侧面）并附微距质感特写；中性深灰毛毡背景，柔和的低角度掠射光以显出表面质感；比例与尺寸准确，材质真实；电影感 35mm 胶片质感，细腻颗粒；无文字、无标注、无水印"
+    }
+  ],
+  "locations": [
+    {
+      "id": "LOC_GALLERY",
+      "scene_key": "museum_gallery",
+      "name_zh": "博物馆夜间展厅",
+      "era": "modern",
+      "description": "Upper-floor main gallery of a converted 1880s-90s harbour customs house / godown in a fictional South China Sea port. 30x14 m, 6 m high; two rows of six slender cast-iron columns (dark grey-green #3B4540) at 4.5 m; waxed teak floor #5E4430; red brick #7A4B3A partly lime-washed #A9A296; five arched doorways on the south side open to the glazed verandah corridor. G1 compass vitrine: free-standing, 95 cm dark plinth + frameless low-iron glass hood 60x60x50 cm, compass on a 15 deg acrylic cradle at ~1.10 m over near-black navy velvet #101A2A, one 3000K pin spot (future variant: the same plinth holds the aged coat). G2 chart flat case 1.5 m east of G1. G3 three tall wall vitrines on the north wall, west->east: G3a navigation, G3b household ceramics with an EMPTY mount awaiting the restored bowl, G3c migration (open rattan case, folded shirt, comb, travel permit). Night mode: vitrine LEDs dimmed (metal <=300 lux, paper/textile <=50 lux), track lights off, 4000K floor guide lights very low, moonlight entering in shafts through the south doorways. Opening camera lock: in front of G1's south glass face, lens height 1.18 m, 100 mm macro start, slow pull-back (motion-control data reused in CH4).",
+      "light_sources": [
+        "vitrine LED 3000K (dimmed)",
+        "moonlight ~7000-8000K through south doorways (from the corridor arches)",
+        "floor guide lights 4000K very low",
+        "guard's flashlight 4000K (one sweep in INTRO)"
+      ],
+      "palette_ids": [
+        "P01",
+        "P02",
+        "P04",
+        "P05",
+        "P09",
+        "P10",
+        "P12",
+        "P13"
+      ],
+      "geography": {
+        "north_wall": "G3 triple vitrines",
+        "south_wall": "5 arched doorways to the corridor (moonlight source)",
+        "G1": "centre-south, facing doorway 3",
+        "G2": "1.5 m east of G1",
+        "screen_direction": "lateral moves past G3 run screen-left (west, older) to screen-right (east)"
+      },
+      "sound_mood": "air-conditioning hum, distant sea, an occasional floorboard tick, far-off footsteps of the night guard",
+      "ref_prompt_en": "Location reference: a museum gallery at night inside a converted 19th-century harbour customs-house warehouse, rows of slender dark grey-green cast-iron columns, waxed teak floorboards, old red brick walls partly lime-washed, a single free-standing frameless glass vitrine on a dark plinth holding an aged brass compass lit by one small warm 3000K pin spot, a low flat chart case beside it, three tall dark wall vitrines along the back wall glowing faintly, cool silver moonlight falling in long arched shafts through doorways onto the floor, deep blue air, quiet and empty. 40mm lens, eye-level. photoreal cinematic location reference, anamorphic 2.39:1 widescreen, 35mm film look with fine organic grain and subtle halation around practical lights, motivated light only, deep shadows that keep detail (never crushed black), natural colour, no people unless stated, no text, no signage, no logos, no watermark",
+      "ref_prompt_zh": "场景参考：由19世纪港口海关旧仓库改建的博物馆夜间展厅，成排纤细的深灰绿铸铁柱，打蜡柚木地板，局部石灰粉刷的旧红砖墙；一个深色台座上的无框玻璃独立展柜，内有一枚老黄铜罗盘，被一盏3000K小射灯照亮；旁边一只低矮的海图平柜；后墙三面高大的暗色立柜微微发亮；冷银色月光从拱形门洞斜射进来，在地板上落下长长的拱形光斑，空气是深蓝色，安静无人。40毫米镜头，平视。写实电影感场景参考，2.39:1 变形宽银幕，35mm 胶片质感，细腻有机的颗粒，实景光源周围有轻微光晕；只用有来源的光；暗部深而保留细节（不死黑）；自然色彩；除注明外无人物；无文字、无招牌、无标志、无水印"
+    },
+    {
+      "id": "LOC_LAB",
+      "scene_key": "restoration_lab",
+      "name_zh": "文物修复室",
+      "era": "modern",
+      "description": "Ground-floor south-east corner room, 9x7 m, 4.2 m high - the SAME room as the 1890s map office. South wall: one round-arched timber window 2.4 m wide x 3.2 m high, six-over-six sashes with a semicircular fanlight, sill 0.9 m (LOCK: identical in map_office); outside: quay lamps, harbour water, anchored ships' lights, far shore. Oak-topped steel workbench 3.0x0.9 m along the window (restorer faces the window: window screen-right, room screen-left); articulated 3500K high-CRI lamp at the bench's left end; grey foam with shards, fine-white-sand conservation tray, bamboo spatulas, scalpels, soft brushes, cotton swabs, unlabelled adhesive tubes, Japanese tissue, head magnifier, glove box; west wall: dark grey steel flat archive cabinets #4A4E52 and the ledger shelf with a small 2700K lamp. Lime-white walls #D9D4CA, old-white window joinery #E3DED3, terrazzo floor #9A958C.",
+      "light_sources": [
+        "articulated bench lamp 3500K CRI>=97 (from upper screen-left, 45 deg)",
+        "harbour night lights and moonlight through the arched window",
+        "shelf lamp 2700K (distant warm point)"
+      ],
+      "palette_ids": [
+        "P02",
+        "P03",
+        "P06",
+        "P07",
+        "P08",
+        "P13",
+        "P15"
+      ],
+      "geography": {
+        "window": "south wall, screen-right when facing the bench",
+        "lamp": "bench left end",
+        "archive": "west wall"
+      },
+      "sound_mood": "faint transformer hum of the lamp, sand grains sliding in the tray, mooring ropes and buoys knocking outside",
+      "ref_prompt_en": "Location reference: a museum ceramics conservation studio at night in an old harbour building, a large round-arched white-painted timber sash window with a semicircular fanlight looking out over a dark harbour with scattered ship lights, an oak workbench beneath it with an articulated lamp casting a warm pool of light on blue-and-white porcelain shards on grey foam and a tray of fine white sand, fine tools, soft brushes, Japanese tissue, steel archive cabinets in shadow, lime-white walls, terrazzo floor. 40mm lens. photoreal cinematic location reference, anamorphic 2.39:1 widescreen, 35mm film look with fine organic grain and subtle halation around practical lights, motivated light only, deep shadows that keep detail (never crushed black), natural colour, no people unless stated, no text, no signage, no logos, no watermark",
+      "ref_prompt_zh": "场景参考：老港口建筑中的博物馆陶瓷修复室，夜晚；一扇带半圆扇形亮子的漆白圆拱木竖拉窗，窗外是黑暗的港湾与零星船灯；窗下橡木工作台，可调臂台灯在灰色海绵垫上的青花残片与一盘细白沙上投下一圈暖光，精细工具、软毛刷、日本和纸，阴影里的钢制档案柜，石灰白墙，水磨石地面。40毫米镜头。写实电影感场景参考，2.39:1 变形宽银幕，35mm 胶片质感，细腻有机的颗粒，实景光源周围有轻微光晕；只用有来源的光；暗部深而保留细节（不死黑）；自然色彩；除注明外无人物；无文字、无招牌、无标志、无水印"
+    },
+    {
+      "id": "LOC_CABIN",
+      "scene_key": "ship_cabin",
+      "name_zh": "航海人船舱（针房）",
+      "era": "navigator",
+      "description": "Compass-keeper's cabin at the stern of an early-17th-century ocean-going junk, under the helm deck: 2.4 m wide x 2.0 m deep x only 1.65 m headroom (he must stoop). Fir and camphor planking blackened by smoke #3A2A1E, two low beams #2A1E15; LOCK a 70x70 cm square hatch overhead opening to sail and sky (the camera rises through it in V1). Stern wall: a 55x40 cm window with vertical wooden bars and a sliding board, dusk blue entering; beneath it a fold-down chart table 90x60 cm with the compass box set into its left side; the small horn cabin lantern hangs from the central beam, swinging with the ship (~7 s period); water jar, rolled straw mat, rope coils, a rack of scroll charts.",
+      "light_sources": [
+        "horn-panel cabin lantern with candle 1950K, swinging",
+        "dusk blue (P03) through the barred stern window",
+        "sky through the overhead hatch"
+      ],
+      "palette_ids": [
+        "P01",
+        "P03",
+        "P09",
+        "P10",
+        "P11",
+        "P13",
+        "P14",
+        "P15"
+      ],
+      "geography": {
+        "stern_window": "behind the chart table",
+        "hatch": "overhead above the table",
+        "compass": "left side of the chart table"
+      },
+      "sound_mood": "creaking timber, ropes straining, water against the hull, the dull boom of wind filling the sail",
+      "ref_prompt_en": "Location reference: the cramped compass cabin at the stern of a 17th-century Chinese ocean-going junk, low smoke-blackened wooden beams and plank walls, a small barred stern window letting in deep blue dusk light, a fold-down chart table with a paper sea-chart scroll held by brass weights and a brass compass set in a wooden box, a small horn-paned lantern hanging from the beam casting warm swinging candlelight, an open square hatch overhead showing the edge of a huge battened sail against the sky. 32mm lens. photoreal cinematic location reference, anamorphic 2.39:1 widescreen, 35mm film look with fine organic grain and subtle halation around practical lights, motivated light only, deep shadows that keep detail (never crushed black), natural colour, no people unless stated, no text, no signage, no logos, no watermark",
+      "ref_prompt_zh": "场景参考：17世纪中国远洋帆船船尾狭小的针房，低矮被烟熏黑的木梁与板壁，一扇带直棂的小艉窗透入深蓝暮色；一张翻折海图桌，上面是被铜镇纸压住的纸本海图长卷与嵌在木匣里的黄铜罗盘；横梁上挂着一盏角片小灯，摇曳的暖色烛光；头顶一个打开的方形舱口，露出巨大竹篾硬帆的一角与天空。32毫米镜头。写实电影感场景参考，2.39:1 变形宽银幕，35mm 胶片质感，细腻有机的颗粒，实景光源周围有轻微光晕；只用有来源的光；暗部深而保留细节（不死黑）；自然色彩；除注明外无人物；无文字、无招牌、无标志、无水印"
+    },
+    {
+      "id": "LOC_DECK",
+      "scene_key": "sea_deck",
+      "name_zh": "甲板与大海",
+      "era": "navigator",
+      "description": "Three-masted ocean-going junk ~32 m long, 8 m beam; battened lug sails of woven matting / coarse cotton in rust-ochre #8A5A3A with darker bamboo battens #4E3624, mainsail ~22 m high, bellied in segments; high stern castle with painted (text-free) decoration; oculi painted on the bow; wide deck planks, rope coils, barrels, water jars; stern lantern. Sea: long 2-3 m swell, P02/P03 with P04 crests, real weight and spray. Sky (V1): dusk after sunset, zenith P01, a faint warm line at the horizon, towering cumulus with last light on their tops; night: moon upper screen-right (rarely in frame) laying a silver road on the sea. LOCK distant shore: low black coastline on screen-LEFT with one to three warm points P13. Scale rule: in extreme wides the figure is <=2% of frame, standing in lamp light on the stern castle.",
+      "light_sources": [
+        "dusk sky (V1) / moonlight from upper screen-right (night)",
+        "stern lantern 1950K",
+        "distant shore lights 1900K (screen-left)"
+      ],
+      "palette_ids": [
+        "P01",
+        "P02",
+        "P03",
+        "P04",
+        "P05",
+        "P13",
+        "P21"
+      ],
+      "geography": {
+        "shore": "screen-left",
+        "moon": "upper screen-right",
+        "ship_heading": "screen-right (outward)"
+      },
+      "sound_mood": "wind roaring low in the sail, heavy slap of swell, salt spray, groaning wood and rope",
+      "ref_prompt_en": "Location reference: extreme wide shot of a 17th-century three-masted Chinese ocean-going junk on a vast deep-blue South China Sea at dusk, huge rust-ochre battened sails, painted eyes on the bow, a high stern castle with a single warm lantern, a long heavy swell with silver crests and spray, towering cumulus clouds catching the last light, a faint warm line on the horizon, a low dark coastline on the far left with one tiny warm light; a single tiny human figure on the stern. 28mm lens, slow and majestic scale. photoreal cinematic location reference, anamorphic 2.39:1 widescreen, 35mm film look with fine organic grain and subtle halation around practical lights, motivated light only, deep shadows that keep detail (never crushed black), natural colour, no people unless stated, no text, no signage, no logos, no watermark",
+      "ref_prompt_zh": "场景参考：极远景，暮色中辽阔深蓝的南海上一艘17世纪中国三桅远洋帆船，巨大的锈赭色竹篾硬帆，船首画着船眼，高高的艉楼上一盏温暖的灯；长而沉重的涌浪，浪尖银色、溅起盐雾；高耸的积云顶部还留着最后的余晖，地平线一线极淡的暖色；画面最左远处一道低矮的黑色海岸线，上面一点微小的暖灯；艉楼上一个极小的人影。28毫米镜头，缓慢而宏大的尺度。写实电影感场景参考，2.39:1 变形宽银幕，35mm 胶片质感，细腻有机的颗粒，实景光源周围有轻微光晕；只用有来源的光；暗部深而保留细节（不死黑）；自然色彩；除注明外无人物；无文字、无招牌、无标志、无水印"
+    },
+    {
+      "id": "LOC_HOME",
+      "scene_key": "old_home",
+      "name_zh": "旧日家中（海边石屋）",
+      "era": "home",
+      "description": "Coastal granite house of the navigator's era: rough-dressed granite block walls with lime pointing, grey tiled roof on exposed purlins, square clay-tile floor #8C6F5A. Main room 5x4 m, 3.2 m to the purlins. Centre: dark camphor square table #3E2B1F with two long benches - LOCK she sits on the screen-LEFT bench facing right; the screen-right bench is always empty. On the table: candlestick and candle (burn states A-D), the blue-and-white bowl of cold rice, untouched chopsticks. LOCK screen-right wall: a cracked-ice lattice window 80x100 cm (dark wood #3A2A1E) through which moonlight casts crack-like shadows over table, wall and her shoulder. Under it a low stool and sewing basket. Door in the screen-left wall onto one granite step; a small wall niche left of the door holds the oil lamp; eaves overhang ~1 m with no gutter so rain drips beyond the step; the empty bowl sits on the step to catch rain; stone yard, low wall, the sea beyond. Weather states: PRE1 still, humid, clear moon; CH1 dry, clouds gathering; CH2 heavier cloud, humid, child's bare feet beside her; CH3 rain finally falls, the first drop lands on the bowl's centre blossom.",
+      "light_sources": [
+        "table candle 1850K (low, from below)",
+        "moonlight through the cracked-ice lattice (screen-right)",
+        "door-niche oil lamp 1900K (exterior)",
+        "rain visible only against lamp / moon backlight (CH3)"
+      ],
+      "palette_ids": [
+        "P02",
+        "P03",
+        "P05",
+        "P06",
+        "P07",
+        "P13",
+        "P14"
+      ],
+      "geography": {
+        "table": "centre",
+        "wife": "screen-left bench",
+        "empty_seat": "screen-right bench",
+        "lattice_window": "screen-right wall",
+        "door_and_niche": "screen-left wall"
+      },
+      "sound_mood": "occasional crackle of the wick, distant surf, crickets; in CH3 rain hissing on the roof tiles",
+      "ref_prompt_en": "Location reference: interior of a 17th-century coastal Chinese granite stone house at night, rough granite block walls, exposed roof purlins, square clay-tile floor, a dark wooden square table with two long benches, one bench empty, a single candle in a brass candlestick and a blue-and-white bowl of cold rice with chopsticks on the table, a dark wooden cracked-ice lattice window on the right wall casting fractured moonlight shadows across the table and wall, a doorway on the left with a small oil lamp in a stone wall niche. Second view: exterior under the eaves at night, a blue-and-white bowl on a granite step, a small lamp glowing in the niche, the dark sea beyond a low wall. 32mm lens. photoreal cinematic location reference, anamorphic 2.39:1 widescreen, 35mm film look with fine organic grain and subtle halation around practical lights, motivated light only, deep shadows that keep detail (never crushed black), natural colour, no people unless stated, no text, no signage, no logos, no watermark",
+      "ref_prompt_zh": "场景参考：17世纪中国海边花岗岩石屋内景，夜晚；粗凿条石墙、露明檩条、方砖地；一张深色木方桌配两条长凳，其中一条空着；桌上一支插在铜烛台上的蜡烛与一碗凉饭、一双筷子，碗为青花；右墙一扇深色冰裂纹木窗格，把碎裂的月光影投在桌面与墙上；左侧门洞旁石墙壁龛里一盏小油灯。第二视图：夜晚屋檐下的外景，花岗岩石阶上放着一只青花碗，壁龛里小灯发光，矮墙外是黑色的海。32毫米镜头。写实电影感场景参考，2.39:1 变形宽银幕，35mm 胶片质感，细腻有机的颗粒，实景光源周围有轻微光晕；只用有来源的光；暗部深而保留细节（不死黑）；自然色彩；除注明外无人物；无文字、无招牌、无标志、无水印"
+    },
+    {
+      "id": "LOC_PIER",
+      "scene_key": "pier_waiting",
+      "name_zh": "候船处（码头与候船棚）",
+      "era": "migrant",
+      "description": "1920s-30s stone pier with a timber-and-steel waiting shed 40x14 m: corrugated-iron roof on cast-iron columns every 5 m; seaward side open to the berthed steamer; landward side a solid wall with the stamp desk - high timber counter, brass rail, three glass partition windows. Enamel-shaded incandescent bulbs every 5 m (2400K) make discrete light pools. LOCK the steamer is screen-RIGHT: ~90 m passenger-cargo ship, black hull #1C1C1E, white superstructure #D9D6CC, one tall funnel in INVENTED colours (ochre #B58B4A with a slate band #4E6273, black top), a row of lit portholes, gangway. Crowd of 60-120 flows screen-left (town, home) to screen-right (ship): families, porters with carrying poles, students, elders; rattan cases, bamboo baskets, cloth bundles, oil-paper umbrellas, wooden trunks. Weather: just after evening rain, humid, puddles reflecting bulbs; blue hour into night. The migrant sits on her case under the third lamp; those seeing her off on screen-left; gangway far screen-right.",
+      "light_sources": [
+        "enamel-shaded incandescent bulbs 2400K",
+        "blue-hour / night sky over the sea",
+        "steamer portholes (warm points)",
+        "bulb reflections in wet planks"
+      ],
+      "palette_ids": [
+        "P02",
+        "P03",
+        "P13",
+        "P14",
+        "P15",
+        "P22"
+      ],
+      "geography": {
+        "steamer": "screen-right",
+        "town_and_family": "screen-left",
+        "stamp_desk": "landward wall",
+        "migrant": "under the third lamp"
+      },
+      "sound_mood": "a hubbub with fragments of dialect, a low ship's whistle, wooden gangway knocks, eaves still dripping after rain",
+      "ref_prompt_en": "Location reference: a 1920s-30s Southeast-Asian-bound passenger pier at blue hour after rain, a long timber-and-steel waiting shed with a corrugated-iron roof on cast-iron columns, a row of enamel-shaded incandescent bulbs making warm pools of light over wet reflecting planks, a high wooden stamp counter with brass rail and glass partitions, a black-hulled steamer with white superstructure and an ochre funnel with a grey band moored on the right with glowing portholes, rattan suitcases and bundles; a crowd of travellers and families in period clothes. 40mm lens. photoreal cinematic location reference, anamorphic 2.39:1 widescreen, 35mm film look with fine organic grain and subtle halation around practical lights, motivated light only, deep shadows that keep detail (never crushed black), natural colour, no text, no signage, no logos, no watermark",
+      "ref_prompt_zh": "场景参考：雨后蓝调时刻的1920–30年代下南洋客运码头，一座长长的木钢结构候船棚，铸铁柱托着波纹铁皮屋顶，一排搪瓷灯罩白炽灯在湿漉漉反光的木板上投下暖色光池；高木柜台配黄铜扶手与玻璃隔窗；右侧停泊着一艘黑色船壳、白色上层建筑、赭黄烟囱带一道灰带的轮船，舷窗亮着；藤箱与布包袱，穿着时代服装的旅客与送行家人。40毫米镜头。写实电影感场景参考，2.39:1 变形宽银幕，35mm 胶片质感，细腻有机的颗粒，实景光源周围有轻微光晕；只用有来源的光；暗部深而保留细节（不死黑）；自然色彩；无文字、无招牌、无标志、无水印"
+    },
+    {
+      "id": "LOC_HARBOR",
+      "scene_key": "harbor_eras",
+      "name_zh": "港口时代更替（固定机位）",
+      "era": "multi",
+      "description": "LOCKED frame on the quay road west of the customs house, lens height 1.6 m, 40 mm, looking east along the waterfront; identical camera data for every era (motion control / locked tripod). Frame-left: the customs house west and south facades (E1: timber godown and granite landing steps). Frame x=0.38: the gate and its threshold where a waiting person stands at the same spot (0.38, 0.70). Frame-right: harbour water and ships. A flagpole on the building's corner roof. LOCK unified light: the same dusk moment in every era - the sun just set behind camera (west), last warm-pink on the facades, eastern sky deep blue P02-P03. Eras: E1 c.1630s (junks with text-free long pennants, torches/lanterns, a woman with a basket); E2 c.1890s (new customs house, invented flag F-B, white drill stand-collar uniforms without badges, kerosene street lamps, a porter with a carrying pole); E3 c.1930s (awning added, invented flag F-C, khaki-grey tunics with invented ring-and-wave cap badge, single-funnel steamer, incandescent street lamps, the MIGRANT holding her case in her right hand); E4 c.1950s-60s (repainted facade, iron window grilles, invented flag F-D, pale grey shirt-uniforms with plain shoulder loops, freighters and barges, desaturated sodium-yellow lamps, a father holding a child's hand); E5 present (museum, glazed verandah, no flag, no uniform, distant container cranes and a ferry, 4000K LED, a passer-by waiting at a text-free crossing signal). Era changes by hard cut on the beat or by a light wipe (a passing cloud or ship shadow) - never a morph. Threshold: granite sill 2.4 m wide with an iron edge strip, its edge at frame height 0.66.",
+      "light_sources": [
+        "unified dusk sky light from behind camera (west)",
+        "E1 torches/lanterns",
+        "E2 kerosene street lamps",
+        "E3 incandescent street lamps",
+        "E4 sodium lamps (desaturated)",
+        "E5 LED 4000K"
+      ],
+      "palette_ids": [
+        "P02",
+        "P03",
+        "P05",
+        "P13",
+        "P15",
+        "P21"
+      ],
+      "invented_flags": {
+        "E1": "long tapered text-free pennants on junks, faded madder #9A5A44 and indigo #2E3F5C",
+        "F-B (E2)": "2:3 rectangle, slate grey-blue field #4E6273, one off-white horizontal wave line with three crests across the middle, small ochre disc #B48A45 in the upper hoist",
+        "F-C (E3)": "2:3 rectangle, dark oxide-brown field #6E4A3A, a cream ring outline centred, a narrow cream border on the fly edge only",
+        "F-D (E4)": "1:2 rectangle, sand field #C2B08C, thin slate bands #4E6273 along top and bottom edges, a small slate eight-pointed star centred",
+        "E5": "no flag",
+        "clearance": "before final, compare every invented flag against current and historical national, regional, party, military and shipping-line flags; always distant, limp or partly hidden; never a close-up subject"
+      },
+      "geography": {
+        "building": "frame-left",
+        "gate_threshold": "frame x=0.38",
+        "water_and_ships": "frame-right",
+        "waiting_person": "(0.38, 0.70)"
+      },
+      "sound_mood": "harbour wind, gulls, era-specific distant sounds (oars and calls / steam whistles / engines / ferry horn)",
+      "ref_prompt_en": "Location reference series, identical locked camera for all images: dusk on a fictional South China Sea harbour quay looking east along the waterfront, a colonial-era customs-house facade with arcaded verandah on the left, a gate with a granite threshold at left-centre where one person waits, harbour water and ships on the right, a flagpole on the building's corner; the last warm-pink light on the facade from behind camera and a deep blue eastern sky; render five eras with the same composition and light: c.1630s timber godown and junks; c.1890s new customs house with kerosene lamps; c.1930s steamer and incandescent lamps; c.1950s freighters and sodium lamps; present-day museum with distant container cranes. All flags invented and abstract, no real flags, no insignia, no text. 40mm lens. photoreal cinematic location reference, anamorphic 2.39:1 widescreen, 35mm film look with fine organic grain and subtle halation around practical lights, motivated light only, deep shadows that keep detail (never crushed black), natural colour, no text, no signage, no logos, no watermark",
+      "ref_prompt_zh": "场景参考组图，所有图像机位完全相同：黄昏，虚构南海港口的码头，沿水岸向东看；画左是带拱廊外廊的殖民时期海关立面，画面中偏左是带花岗岩门槛的关口大门，门槛前站着一个等待的人；画右是港湾水面与船只，建筑转角屋顶上一根旗杆；最后的暖粉色光从摄影机身后照在立面上，东边天空深蓝；以同一构图与光线渲染五个时代：约1630年代木构货栈与帆船；约1890年代新建海关与煤油路灯；约1930年代轮船与白炽路灯；约1950年代货轮与钠灯；当下的博物馆与远处的集装箱起重机。所有旗帜为虚构抽象图案，无真实旗帜、无徽章、无文字。40毫米镜头。写实电影感场景参考，2.39:1 变形宽银幕，35mm 胶片质感，细腻有机的颗粒，实景光源周围有轻微光晕；只用有来源的光；暗部深而保留细节（不死黑）；自然色彩；无文字、无招牌、无标志、无水印"
+    },
+    {
+      "id": "LOC_MAPOFFICE",
+      "scene_key": "map_office",
+      "name_zh": "地图办公室与关口门槛",
+      "era": "maphand",
+      "description": "c.1890s; LOCK the SAME room as today's restoration lab (ground-floor south-east corner) with the same round-arched window, here fitted inside with full-height timber louvred shutters half closed so moonlight falls in parallel stripes across the map and hands. Large teak drafting table #5A3A26 with the map and four brass weights; brass-based kerosene lamp with glass chimney (2200K) on the table's screen-right; lime-white walls #D9D2C2 with a dark green dado #3E4A40; a wall of flat map drawers; a still cloth punkah fan overhead; two or three moths at the lamp. Only hands, cuffs, ruler, pen, map and striped light are ever framed. Sub-set THRESHOLD: the ground-floor inspection hall doorway to the quay - granite sill with an iron edge strip, a queue of waiting people beyond (out of focus).",
+      "light_sources": [
+        "kerosene lamp 2200K (screen-right on the desk)",
+        "moonlight striped by half-closed louvres",
+        "doorway dusk/night light at the threshold"
+      ],
+      "palette_ids": [
+        "P02",
+        "P05",
+        "P10",
+        "P13",
+        "P15",
+        "P28"
+      ],
+      "geography": {
+        "window": "same arched window as LOC_LAB, louvred",
+        "lamp": "desk screen-right",
+        "threshold": "ground-floor inspection hall doorway"
+      },
+      "sound_mood": "the ruling pen's whisper on paper, a pendulum clock, distant harbour, moths ticking against the lamp glass",
+      "ref_prompt_en": "Location reference: an 1890s colonial harbour-office map room at night, a large teak drafting table with a linen-backed hand-drawn coastal map held by brass weights, an ebony ruler and a ruling pen, a brass kerosene lamp with glass chimney giving warm hard light, tall timber louvred shutters inside a round-arched window cutting cold moonlight into parallel stripes across the map, lime-white walls with a dark green dado, map drawers, a still cloth punkah fan, moths at the lamp; austere, controlled, high contrast. Second view: a granite doorway threshold with an iron edge strip, waiting people blurred beyond. 40mm lens. photoreal cinematic location reference, anamorphic 2.39:1 widescreen, 35mm film look with fine organic grain and subtle halation around practical lights, motivated light only, deep shadows that keep detail (never crushed black), natural colour, no people unless stated, no text, no signage, no logos, no watermark",
+      "ref_prompt_zh": "场景参考：1890年代殖民港务机构的地图室，夜晚；一张大柚木制图桌，铺着被黄铜镇纸压住的裱布手绘沿海地图、乌木直尺与直线笔；黄铜底座玻璃灯罩的煤油灯发出温暖的硬光；圆拱窗内的通高木百叶板把冷月光切成平行条纹落在地图上；石灰白墙配深绿墙裙，地图抽屉柜，静止的布质手拉风扇，飞蛾绕灯；冷峻、秩序、反差强烈。第二视图：外缘包铁条的花岗岩门槛，门外排队等候的人群虚化。40毫米镜头。写实电影感场景参考，2.39:1 变形宽银幕，35mm 胶片质感，细腻有机的颗粒，实景光源周围有轻微光晕；只用有来源的光；暗部深而保留细节（不死黑）；自然色彩；除注明外无人物；无文字、无招牌、无标志、无水印"
+    },
+    {
+      "id": "LOC_CHAPEL",
+      "scene_key": "chapel",
+      "name_zh": "异国礼拜堂",
+      "era": "chapel",
+      "description": "1950s old chapel in a fictional Nanyang port city (unnamed, not based on any real church). Nave 32 m long x 14 m wide, 15 m to the ridge - grand and quiet; a timber choir loft high at the west end (the crane descent starts at ~9 m). Lime-white plaster walls #E4DED2, timber vault painted pale grey, teak pews #5A3E2A, terracotta tile floor #A8654A that takes coloured light warmly, still ceiling fans, side louvres. Stained glass: three tall west lancets (1.6x7 m each) are the key light windows; a lower row of south-aisle windows whose bottom tier sits at seated eye level - the GLASSPANEL is in the one beside the mother's pew. All glass INVENTED and NON-FIGURATIVE (layered petals, waves, stars); no human or holy figures. Time: BR2 opens in the last 15 minutes before sunset - low sun through the west lancets lays 'ten thousand petals' of soft colour over floor, pews, the mother's pale dress and shoulders (strongest 177.6-180.6 s); then blue hour: petals fade, interior turns cool blue with a few candle points on a side table. LOCK: the mother sits at the screen-left end of the 7th pew on the south side, facing east (altar end kept deep, soft, never featured); light from behind her; LONELY at the screen-right end of the same or the next pew.",
+      "light_sources": [
+        "low sunset sun ~3200K through west stained-glass lancets",
+        "glow of south-aisle stained glass",
+        "blue-hour skylight",
+        "a few side-table candles 1850K"
+      ],
+      "palette_ids": [
+        "P02",
+        "P03",
+        "P13",
+        "P23",
+        "P24",
+        "P25",
+        "P26",
+        "P27"
+      ],
+      "geography": {
+        "west_lancets": "behind the mother (key light)",
+        "altar": "east, deep background, soft",
+        "mother": "7th pew south side, screen-left end",
+        "lonely": "same/next pew, screen-right end",
+        "glasspanel": "south-aisle window beside her pew, lowest tier"
+      },
+      "sound_mood": "a vast hushed reverb, still fans, tropical dusk birds outside, a distant harbour whistle",
+      "ref_prompt_en": "Location reference: the nave of a large quiet 1950s chapel in a tropical port, lime-white walls, a pale grey timber vault 15 m high, rows of teak pews, a warm terracotta tile floor, still ceiling fans, low sunset light streaming through tall lancet windows of abstract non-figurative stained glass (layered petals in soft muted ruby, amber, cobalt, sea-green and pale rose) and scattering countless soft coloured petals of light across the floor and pews; faint dust visible only in the light paths; altar end deep in soft shadow, no religious figures in focus. Seen from a high choir loft. 32mm lens. photoreal cinematic location reference, anamorphic 2.39:1 widescreen, 35mm film look with fine organic grain and subtle halation around practical lights, motivated light only, deep shadows that keep detail (never crushed black), natural colour, no people unless stated, no text, no signage, no logos, no watermark",
+      "ref_prompt_zh": "场景参考：热带港口一座宏大而安静的1950年代礼拜堂中殿，石灰白墙，15米高的浅灰木构拱顶，成排柚木长椅，温暖的赤陶方砖地，静止的吊扇；低角度的夕阳穿过高高的尖拱彩窗（非具象抽象图案：柔和低饱和的绛红、琥珀、钴蓝、海青与浅玫花瓣色块），在地面与长椅上洒下无数柔和的彩色光瓣；尘埃只在光路里隐约可见；祭台一端沉在柔和的阴影中，没有清晰的宗教形象。从高处唱诗廊俯视。32毫米镜头。写实电影感场景参考，2.39:1 变形宽银幕，35mm 胶片质感，细腻有机的颗粒，实景光源周围有轻微光晕；只用有来源的光；暗部深而保留细节（不死黑）；自然色彩；除注明外无人物；无文字、无招牌、无标志、无水印"
+    },
+    {
+      "id": "LOC_WINDOW",
+      "scene_key": "night_window",
+      "name_zh": "窗边（东端窗湾）",
+      "era": "modern",
+      "description": "Three-sided bay window at the east end of the upper corridor, projecting 1.6 m, 4.2 m wide, facing E / SE / NE over the harbour mouth. Old-white painted timber frames #E3DED3; upper lights of slightly wavy old cylinder glass (gently distorted reflections - the texture of the final 'glass reflecting two people'), clear lower lights; built-in teak window bench #6A4A32 with a thin grey cushion; 24 cm deep sill where the cups sit; a 2700K reading lamp in the corner. Outside: water, breakwater light, anchored ships, distant container cranes (their obstruction lights rendered as tiny defocused warm points); dawn arrives here, screen-right; a few lamps still lit on the sea at the end. LOCK: the guard sits nearer the SE window (screen-right), the restorer on his screen-left, ~40 cm apart; seen from the corridor (west) they are two backs. Steam must be backlit and set against dark parts of the frame.",
+      "light_sources": [
+        "phone screen 6500K (GUARD's lower face)",
+        "corner reading lamp 2700K",
+        "harbour lights through the bay",
+        "dawn skylight 7000K -> 4300K (OUTRO/TAIL)"
+      ],
+      "palette_ids": [
+        "P02",
+        "P13",
+        "P20",
+        "P21",
+        "P22",
+        "P29",
+        "P30",
+        "P07"
+      ],
+      "geography": {
+        "bay_faces": "E/SE/NE, dawn from screen-right",
+        "guard": "screen-right, nearer the window",
+        "restorer": "screen-left of the guard",
+        "cups": "on the sill, his screen-right, hers screen-left"
+      },
+      "sound_mood": "near silence; one or two distant ship horns; the kettle ticking as it cools; the first sea birds at dawn",
+      "ref_prompt_en": "Location reference: a three-sided bay window at the end of an old harbour building's upper gallery, white-painted timber frames with slightly wavy antique glass in the upper panes, a built-in teak window bench with a thin grey cushion, a deep sill, a small warm reading lamp in the corner, the harbour mouth outside at deep blue night with scattered ship lights and distant cranes; second view the same window at first dawn, soft peach light on the horizon, a few lamps still lit on the sea, two porcelain teacups steaming on the sill. 50mm lens. photoreal cinematic location reference, anamorphic 2.39:1 widescreen, 35mm film look with fine organic grain and subtle halation around practical lights, motivated light only, deep shadows that keep detail (never crushed black), natural colour, no people unless stated, no text, no signage, no logos, no watermark",
+      "ref_prompt_zh": "场景参考：老港口建筑二层长廊尽头的三面窗湾，漆白木窗框，上部窗格是略带波纹的老玻璃，嵌入式柚木窗凳铺着薄灰坐垫，深窗台，角落一盏小小的暖色阅读灯；窗外是深蓝夜色中的港口出海口，零星船灯与远处起重机；第二视图：同一扇窗的黎明初光，地平线柔和的桃色，海面上还有几盏未熄的灯，两只瓷茶杯在窗台上冒着热气。50毫米镜头。写实电影感场景参考，2.39:1 变形宽银幕，35mm 胶片质感，细腻有机的颗粒，实景光源周围有轻微光晕；只用有来源的光；暗部深而保留细节（不死黑）；自然色彩；除注明外无人物；无文字、无招牌、无标志、无水印"
+    },
+    {
+      "id": "LOC_CORRIDOR",
+      "scene_key": "corridor",
+      "name_zh": "月光长廊（全片标志性画面）",
+      "era": "multi",
+      "description": "The glazed upper south verandah of the customs house. Coordinates: x along the axis, east-end glass screen x=0, west negative; camera travels EAST (toward the window bay and dawn). Left = north inner wall, right = south arches and sea. Length 44 m (x=-44..0), width 5.4 m, height 5.2 m (timber coffered ceiling); long teak boards laid lengthwise, waxed, holding moon pools. South wall: 11 arched windows centred at x=-2,-6,...,-42 (4 m pitch), 2.0x4.0 m, sill 0.6 m, slim steel glazing bars; piers centred at x=-4,-8,-12... North wall: rendered brick #8E8A84 with shallow niches; a small door at x=-2 to the staff pantry (kettle, tea). LOCK moonlight at 04:30: moon SW at ~42 deg, entering from behind-right of the eastbound camera; each arch lays an elongated arch-shaped silver pool on the floor slanting forward-left, one every 4 m - the light beat. FIVE HERO PANES (free-standing frameless low-iron vitrines 1.1x0.6x2.3 m on 0.4 m dark plinths, near-black navy velvet #0E1622 inside, each toed 20 deg toward the approaching camera): P1 x=-10 LEFT - museum object: unlit old stern lantern; night in the glass: deep-blue sea with the swinging ship lamp, edge of a sail, swell (1950K + moon). P2 x=-8 RIGHT (in front of the pier) - brass candlestick with a stub; night: the old home table, stub candle (state D), cracked-ice lattice shadow, empty seat, RAIN falling outside the door into the bowl (1850K + moon). P3 x=-6 LEFT - an old enamel lamp shade from the waiting shed; night: the waiting-hall crowd under bulb pools, the migrant on her case, wet floor (2400K). P4 x=-4 RIGHT (in front of the pier) - the GLASSPANEL on a dim lightbox; night: the mother's back and shoulders, last stained-glass colour at blue hour, candle points. E x=0 AHEAD - the timber glazed screen with double glass doors (wavy upper glass, clear lower): NOT a reflection but the real present seen through clear glass - the two backs on the bay bench, two cups steaming, the harbour night beyond (2700K + harbour lights). 'COUNTLESS' minor panes: ~14 small wall vitrines (0.6x0.9 m) between and west of the hero panes (x=-44..-12) holding only warm glows that NEVER resolve (a fisher's lamp, a stove, a lighthouse sweep, a night-market window...). HERO MOVE: dolly + stabilised remote head on repeatable motion control, lens height 1.45 m, 40 mm anamorphic (alt 32 mm), centre line; start x=-13 at 204.0 s, ~1.3 m/s constant, passing P1 ~206.3, P2 ~207.9, P3 ~209.4, P4 ~210.9, easing to stop at x=-1.5 by ~212.8 s on the two backs; focus racks into each pane's reflected space. Optional establishing: from x=-44 on 135 mm looking east, all panes glowing at once, moon pools stepping to the end, the two people at the far window.",
+      "light_sources": [
+        "moonlight through 11 south arches (behind-right of the camera), silver pools every 4 m",
+        "each pane keeps its own era light (ship lamp / candle / bulbs / stained glass / reading lamp)",
+        "minor panes: unresolved warm glows",
+        "corridor base light 4000K very low"
+      ],
+      "palette_ids": [
+        "P01",
+        "P02",
+        "P04",
+        "P05",
+        "P13",
+        "P23",
+        "P25",
+        "P07"
+      ],
+      "layout": [
+        {
+          "pane": "P1",
+          "x_m": -10,
+          "side": "left/north",
+          "object": "PROP_SHIPLAMP (museum state)",
+          "era_night": "navigator: ship lamp on the deep-blue sea",
+          "light": "1950K + moon",
+          "suggested_lyric": "L077 204.67-206.75"
+        },
+        {
+          "pane": "P2",
+          "x_m": -8,
+          "side": "right/south",
+          "object": "PROP_CANDLE holder with stub",
+          "era_night": "home: candle, lattice shadow, empty seat, rain into the bowl",
+          "light": "1850K + moon",
+          "suggested_lyric": "L078 206.77-208.01"
+        },
+        {
+          "pane": "P3",
+          "x_m": -6,
+          "side": "left/north",
+          "object": "enamel lamp shade from the waiting shed",
+          "era_night": "migrant: waiting-hall crowd under bulbs",
+          "light": "2400K",
+          "suggested_lyric": "L079 208.03-209.71"
+        },
+        {
+          "pane": "P4",
+          "x_m": -4,
+          "side": "right/south",
+          "object": "PROP_GLASSPANEL",
+          "era_night": "chapel: the mother's back under fading stained-glass light",
+          "light": "stained glass afterglow + candles",
+          "suggested_lyric": "L080 210.48-211.90"
+        },
+        {
+          "pane": "E",
+          "x_m": 0,
+          "side": "ahead",
+          "object": "glazed timber screen and double doors",
+          "era_night": "modern: the two people at the window, seen through clear glass (real, not reflected)",
+          "light": "2700K + harbour lights",
+          "suggested_lyric": "L081 211.92-213.16 (camera settles)"
+        }
+      ],
+      "sound_mood": "almost only the song; the air of a long room - distant sea, floor echo",
+      "ref_prompt_en": "Location reference: a long moonlit museum corridor - the glazed upper verandah of a 19th-century harbour customs house - 44 m long, 5.4 m wide, a timber coffered ceiling, long waxed teak floorboards, a row of tall arched windows on the right letting silver moonlight fall in arch-shaped pools on the floor every four metres, rendered brick wall on the left; tall frameless glass vitrines stand alternately left and right, angled toward the viewer, dark inside, and in each glass a different era's night appears in its own deep space: a swinging ship lamp over a deep blue sea, a candle-lit old home with a lattice shadow and rain outside, a crowd under warm bulbs in a 1920s waiting hall, a woman's shoulders under fading stained-glass colour; small wall vitrines hold soft unfocused warm glows; at the far end a glazed timber screen through which two people sit with their backs to us at a window with steaming teacups. Camera on the centre line at 1.45 m, 40mm anamorphic, symmetrical depth. photoreal cinematic location reference, anamorphic 2.39:1 widescreen, 35mm film look with fine organic grain and subtle halation around practical lights, motivated light only, deep shadows that keep detail (never crushed black), natural colour, no text, no signage, no logos, no watermark",
+      "ref_prompt_zh": "场景参考：一条月光下的博物馆长廊——19世纪港口海关的二层封闭外廊——长44米、宽5.4米，木格天花，打蜡的柚木长条地板；右侧一排高大的拱窗，冷银月光每隔四米在地板上落下一个拱形光斑；左侧是抹灰砖墙；高大的无框玻璃展柜左右交替排列、微微转向观者，柜内是暗的，每一面玻璃里都在自己的深远空间中映出另一个时代的夜晚：深蓝海面上摇晃的船灯、窗格影与门外雨声中的烛光旧屋、1920年代候船厅暖灯下的人群、彩窗余光里一个女人的双肩；墙上的小展柜只有柔焦的暖色光斑；长廊尽头一道木框玻璃隔断，透过它能看到两个人背对我们坐在窗边，茶杯冒着热气。摄影机在中轴线上，高1.45米，40毫米变形镜头，对称纵深。写实电影感场景参考，2.39:1 变形宽银幕，35mm 胶片质感，细腻有机的颗粒，实景光源周围有轻微光晕；只用有来源的光；暗部深而保留细节（不死黑）；自然色彩；无文字、无招牌、无标志、无水印"
+    }
+  ],
+  "lenses": [
+    {
+      "id": "LENS_32A",
+      "focal_mm": 32,
+      "type": "2x anamorphic prime",
+      "use": "space and scale: corridor depth, chapel from height, cramped cabin wides, old home interior wides"
+    },
+    {
+      "id": "LENS_40A",
+      "focal_mm": 40,
+      "type": "2x anamorphic prime",
+      "use": "standard 'walking' lens: CH3 corridor hero move, pier crowd, harbour locked frame, gallery mids"
+    },
+    {
+      "id": "LENS_50A",
+      "focal_mm": 50,
+      "type": "2x anamorphic prime",
+      "use": "two-shot medium at the window (chapter 8), relationship mids"
+    },
+    {
+      "id": "LENS_75A",
+      "focal_mm": 75,
+      "type": "2x anamorphic prime",
+      "use": "MCU/CU, faces through glass, back-to-back match (mother / guard)"
+    },
+    {
+      "id": "LENS_100A",
+      "focal_mm": 100,
+      "type": "2x anamorphic prime",
+      "use": "close-ups of faces, hands, eyes (navigator's eyes, hands parting)"
+    },
+    {
+      "id": "LENS_135A",
+      "focal_mm": 135,
+      "type": "2x anamorphic prime",
+      "use": "long-lens compression: sails on the horizon, one face in a crowd, corridor establishing from the west end"
+    },
+    {
+      "id": "LENS_180A",
+      "focal_mm": 180,
+      "type": "2x anamorphic prime",
+      "use": "extreme compression: shore light behind the navigator, crowd looking back"
+    },
+    {
+      "id": "LENS_100M",
+      "focal_mm": 100,
+      "type": "spherical macro 1:1 (cropped to 2.39)",
+      "use": "macro textures: compass needle, engravings, glaze, paper fibre, sea salt, cotton creases, raindrops, steam; T5.6-T8, focus-stack if needed"
+    },
+    {
+      "id": "LENS_24P",
+      "focal_mm": 24,
+      "type": "probe lens",
+      "use": "inside objects: bowl centre under rain, inside the rattan case, between compass grooves, ground level under the eaves"
+    },
+    {
+      "id": "LENS_28S",
+      "focal_mm": 28,
+      "type": "spherical wide (aerial / crane top)",
+      "use": "extreme wides of sea and harbour; slow, high, stable only"
+    }
+  ],
+  "camera_rules": {
+    "support": {
+      "dolly_track_remote_head": "stable lateral tracks, corridor hero move, vitrine tracks; constant speed with 12-24 frame ease in/out",
+      "slider": "very slow macro/CU pushes or slides (<=2 cm/s) with focus pulls",
+      "crane_technocrane": "navigator's eyeline rising out of the cabin to the sea; chapel descent from ~9 m to 1.2 m over >=6 s",
+      "aerial": "only slow, high, stable moves for sea and harbour; no swooping 'drone' moves",
+      "motion_control": "harbour_eras locked frame, corridor hero move (repeatable for pane composites), INTRO = CH4 future camera position",
+      "locked_tripod": "harbour eras, final teacup shot (no digital push)",
+      "handheld": "ONLY pier crowd and farewell (V2), deck in wind (V1 partial), the coat-draping moment (CH3); breathing, small, never shaky"
+    },
+    "movement_vocabulary": [
+      "slow push-in (barely perceptible, e.g. 30 cm in 5 s)",
+      "stable lateral track (default screen-left to screen-right)",
+      "focus pull (>=1 beat, 0.79 s; glass surface -> reflected space; hand -> face; cup -> window)",
+      "limited natural handheld",
+      "meaningful slow motion"
+    ],
+    "slow_motion_whitelist": [
+      {
+        "event": "wind lifts the chart corner",
+        "fps": 48,
+        "section": "V1"
+      },
+      {
+        "event": "old shirt shaken open and laid into the case",
+        "fps": 48,
+        "section": "V2"
+      },
+      {
+        "event": "the stamp comes down",
+        "fps": 96,
+        "section": "V2 123.3-126.2"
+      },
+      {
+        "event": "two hands part, one stays",
+        "fps": 48,
+        "section": "V2 130.4-135.4"
+      },
+      {
+        "event": "first raindrop into the bowl's centre blossom",
+        "fps": 96,
+        "section": "CH3"
+      },
+      {
+        "event": "navigator's coat falls over the companion",
+        "fps": 48,
+        "section": "CH3"
+      },
+      {
+        "event": "teacup steam (optional)",
+        "fps": 48,
+        "section": "TAIL"
+      }
+    ],
+    "slow_motion_forbidden": "never on faces or emotional performance: trembling shoulders, easing brows, nods stay real-time",
+    "aspect": "2.39:1 (2x anamorphic on 4:3 sensor area); deliver 1920x1080 with 1920x804 active",
+    "flare": "only short, warm, low-intensity horizontal flares from ship lamp, candles, dawn horizon; NO blue streak flares",
+    "film_texture": "35mm negative look: 500T-like grain for night interiors, 250D-like for sunset/dawn exteriors; organic grain heavier in shadows; subtle red-orange halation (radius ~0.15% frame width) on strong point sources; soft highlight roll-off; blacks lifted 2-3% (P28); no over-sharpening",
+    "macro_rules": [
+      "only the brief's textures: brass oxidation, glaze, paper fibre, sea salt, cotton creases, raindrops, glass reflections, steam",
+      "always motivated by a look or a touch",
+      "keep one recognisable edge (rim, cuff line) in frame",
+      "T5.6-T8, focus stacking allowed; no plastic hyper-sharp AI macro",
+      "compass needle wobbles 2-3 times and settles exactly on '认得南' (49.11-49.99 s)"
+    ],
+    "composition": {
+      "match_cut_tolerance": "+/-3% of frame in position and size (0-1 coordinates of the 2.39 active frame)",
+      "extreme_wide_figure_max_area_pct": 2,
+      "two_shot_rule": "guard nearer the window (screen-right), restorer on his left"
+    },
+    "prompt_order": "shot size -> focal length & lens type -> camera height & angle -> movement (one of five, with speed) -> focus -> light (source + K + direction) -> palette ids -> texture -> fps if slow motion; reference CHAR_/PROP_/LOC_ images instead of re-describing looks"
+  },
+  "lighting": {
+    "principle": "motivated sources only; fill disguised as bounce from paper, wood, walls, floor, cloth",
+    "colour_temperatures_K": {
+      "candle": 1850,
+      "oil_lamp_door_and_shore": 1900,
+      "ship_lamp_horn": 1950,
+      "kerosene": 2200,
+      "bulb_1920s30s": 2400,
+      "vitrine_LED": 3000,
+      "bench_lamp": 3500,
+      "corridor_base": 4000,
+      "flashlight": 4000,
+      "moonlight_perceived": "7000-8000 (5600 + 1/4 CTB feel)",
+      "phone": 6500,
+      "chapel_sunset": 3200,
+      "dawn": "7000 -> 4300",
+      "reading_lamp": 2700
+    },
+    "contrast_ratios": {
+      "museum_gallery_corridor": "6:1-8:1",
+      "restoration_bench": "4:1",
+      "ship_cabin": "8:1-12:1",
+      "sea_deck": "sky vs figure ~3 stops",
+      "old_home": "10:1",
+      "pier_waiting": "5:1",
+      "map_office": "10:1 hard",
+      "chapel": "4:1 (floor bounce)",
+      "night_window": "5:1 -> 2:1 at dawn"
+    },
+    "night_timeline": [
+      {
+        "section": "INTRO",
+        "story_time": "00:40",
+        "moon": "SE ~40 deg"
+      },
+      {
+        "section": "PRE1",
+        "story_time": "01:30",
+        "moon": "S-SE ~55 deg"
+      },
+      {
+        "section": "CH1B",
+        "story_time": "02:10",
+        "moon": "S ~60 deg"
+      },
+      {
+        "section": "INTERLUDE/V2",
+        "story_time": "02:30-02:50",
+        "moon": "S"
+      },
+      {
+        "section": "BR1b",
+        "story_time": "03:20",
+        "moon": "S-SW ~55 deg"
+      },
+      {
+        "section": "BR2",
+        "story_time": "04:00-04:20",
+        "moon": "SW ~45 deg"
+      },
+      {
+        "section": "CH3",
+        "story_time": "04:30",
+        "moon": "SW ~42 deg"
+      },
+      {
+        "section": "OUTRO/TAIL",
+        "story_time": "05:40-06:00",
+        "moon": "WSW ~25 deg fading; dawn in the SE (screen-right)"
+      }
+    ],
+    "moon_lock": "the same waning gibbous (~90% lit) moon in every era, same texture, apparent size and cool silver P04; rarely seen directly",
+    "light_transitions": [
+      "point to point (shore light -> glaze highlight)",
+      "lattice shadow -> porcelain crack",
+      "sweeping light (flashlight -> swinging ship lamp)",
+      "light wipe (cloud / ship shadow changes the era in the locked harbour frame)",
+      "stained-glass petals fade -> phone glow",
+      "moonlight beat in the corridor (one pool every 4 m)",
+      "night to dawn on the same window without a cut"
+    ]
+  },
+  "looks": [
+    {
+      "era": "modern",
+      "lut": "CT_MODERN",
+      "grade": "neutral-cool; shadows P02 never cyan; highlights P04 silver; small 3000K vitrine warm points stay warm; skin protected",
+      "grain": 1.0,
+      "halation": 0.3,
+      "notes": "clean, quiet, a little empty; the cold of glass and air-conditioning, not of sadness"
+    },
+    {
+      "era": "navigator",
+      "lut": "CT_NAV",
+      "grade": "strongest warm/cool split: sea and sky P01-P03 vs cabin candle P13; greens -20%",
+      "grain": 1.15,
+      "halation": 0.5,
+      "notes": "the sea is real and heavy: layered deep-blue shadows, wave highlights P04 not pure white"
+    },
+    {
+      "era": "home",
+      "lut": "CT_HOME",
+      "grade": "candle-dominant warm interior + cool moon through lattice; blacks +1%",
+      "grain": 1.15,
+      "halation": 0.5,
+      "notes": "the face never fully clear"
+    },
+    {
+      "era": "migrant",
+      "lut": "CT_MIG",
+      "grade": "saturation -15%, faintly creamy highlights toward P22, 2400K bulbs; NOT sepia",
+      "grain": 1.25,
+      "halation": 0.6,
+      "notes": "softness of a faded family photograph with living skin"
+    },
+    {
+      "era": "maphand",
+      "lut": "CT_MAP",
+      "grade": "the only hard-cold era: highest contrast, saturation -25%, 2200K lamp with surroundings pulled to cold grey-green",
+      "grain": 1.2,
+      "halation": 0.3,
+      "notes": "order and division: louvre stripes, ruler, ink line"
+    },
+    {
+      "era": "chapel",
+      "lut": "CT_CHAPEL",
+      "grade": "richest colour of the film but all stained-glass hues softened 30% (P23-P27); sunset slant -> blue hour",
+      "grain": 1.1,
+      "halation": 0.5,
+      "notes": "colour on cloth and shoulders, soft and rich, never neon"
+    },
+    {
+      "era": "future",
+      "lut": "CT_FUTURE",
+      "grade": "lowest contrast, slightly high-key, palest colour (silver-white + a trace of warmth); no sci-fi teal",
+      "grain": 0.7,
+      "halation": 0.15,
+      "notes": "only 'further time', not science fiction"
+    },
+    {
+      "era": "multi",
+      "lut": "CT_BASE + per-pane era LUTs",
+      "grade": "corridor body in CT_MODERN; each pane keeps its own era LUT attenuated by glass reflectance",
+      "grain": "per era",
+      "halation": "per era",
+      "notes": "unity comes from one camera move and one moonlight rhythm, not from one colour"
+    },
+    {
+      "era": "dawn",
+      "lut": "CT_DAWN",
+      "grade": "graded from CT_MODERN: perceived 7000K -> 4300K, blacks rise with the skylight; final warm share <=50%",
+      "grain": 1.0,
+      "halation": "0.3 -> 0.5 (backlit steam)",
+      "notes": "light simply comes up; it does not turn orange; the sun itself is never in frame"
+    }
+  ],
+  "transition_rules": [
+    {
+      "id": "TR_GESTURE",
+      "type": "match_cut",
+      "rule_en": "the action starts in shot A and completes in shot B; cut in the middle of the action; hand position, direction and speed match within +/-3% of frame",
+      "rule_zh": "动作在A镜头开始、在B镜头完成；剪辑点在动作中段；手的位置、方向、速度一致（容差±3%画面）"
+    },
+    {
+      "id": "TR_REFLECTION",
+      "type": "reflection",
+      "rule_en": "another era appears in glass, revealed by camera angle or a focus pull; obeys reflection physics (dark behind the glass, bright reflected space, mirrored image, angle-dependent strength); no unmotivated ghost overlays",
+      "rule_zh": "另一个时代出现在玻璃中，由摄影机角度或焦点转移带出；遵守反射物理（玻璃后暗、被反射空间亮、镜像、强度随角度变化）；禁止无来源的鬼影叠加"
+    },
+    {
+      "id": "TR_LIGHT",
+      "type": "light",
+      "rule_en": "point-to-point light, lattice shadow to crack, or a light wipe; colour temperature bridged in the grade over 12-24 frames",
+      "rule_zh": "光点接光点、格栅影接裂纹或光影擦除；色温在12–24帧内经调色过渡"
+    },
+    {
+      "id": "TR_FABRIC",
+      "type": "match_cut",
+      "rule_en": "cloth unfolding, falling or being pressed flat carries across the cut in the same direction; 48 fps allowed",
+      "rule_zh": "布料展开、落下、被压平的运动跨越剪辑点，方向一致；可用48 fps"
+    },
+    {
+      "id": "TR_COMPOSITION",
+      "type": "match_cut",
+      "rule_en": "same shape, position and size (bowl rim circle, map line, threshold edge, handle bar); record coordinates in the match-cut registry",
+      "rule_zh": "主体形状、位置、大小相同（碗沿的圆、地图的线、门槛边线、提手横杆）；在匹配剪辑登记中记录坐标"
+    },
+    {
+      "id": "TR_DISSOLVE_LIMIT",
+      "type": "dissolve",
+      "rule_en": "dissolves only as support for the five media above, 12-36 frames, motivated by light or reflection",
+      "rule_zh": "叠化只作为以上五种的辅助，12–36帧，必须由光线或反射驱动"
+    },
+    {
+      "id": "TR_FORBIDDEN",
+      "type": "none",
+      "rule_en": "no AI morphing, melting faces, objects growing into other objects, flash/whip/spin/zoom transitions, translucent ghosts standing in the present, or changes to faces/patterns/light direction for the sake of a transition",
+      "rule_zh": "禁止AI变形、人脸融化、物体长成另一物体、闪白/甩/旋转/缩放转场、站在当下空间里的半透明鬼魂，禁止为了转场改变人物面貌、纹样或光源方向"
+    },
+    {
+      "id": "TR_DIRECTION",
+      "type": "rule",
+      "rule_en": "screen-left = home/past, screen-right = far/tomorrow; lateral moves left->right; all giving / sitting-beside gestures left->right; dawn from screen-right",
+      "rule_zh": "画左=家/过去，画右=远方/明天；横移从左到右；所有给予/坐到身旁的动作从左到右；黎明从画右来"
+    },
+    {
+      "id": "TR_BREATH",
+      "type": "rule",
+      "rule_en": "hold or slow the picture at the song's breaths: GAP1 53-56, CH1 full-band stop 95.95-96.85, BR1 drop from 162.75 (near-silent 164.25-165.6), CH4 full-band stop 229.1-230.5 (measured; INTERLUDE 102-103.4 and CH4 232-233.4 are not silences); important looks/actions last >=2 beats (~1.6 s)",
+      "rule_zh": "在歌曲的呼吸处让画面停住或放慢：GAP1 53–56、CH1 末全乐队骤停95.95–96.85、BR1 162.75起的回落（164.25–165.6近乎无声）、CH4 全乐队骤停229.1–230.5（实测；间奏102–103.4与CH4 232–233.4并非静默）；重要的眼神与动作至少保留2拍（约1.6秒）"
+    }
+  ],
+  "planned_transitions": [
+    {
+      "id": "T01",
+      "t": [
+        0.0,
+        16.6
+      ],
+      "from": "restorer's gloved RIGHT hand wipes G1 glass (optional breath fog)",
+      "to": "navigator's salt-crusted LEFT hand palm-to-palm behind the glass, 3-5 mm offset",
+      "medium": [
+        "gesture",
+        "reflection"
+      ],
+      "notes": "hands centre (0.50,0.55), hand width 45% of frame height; closest on '千年' 15.14 s"
+    },
+    {
+      "id": "T02",
+      "t": [
+        15.0,
+        24.2
+      ],
+      "from": "ship lamp on deep-blue sea in the glass",
+      "to": "camera pulls back and arcs ~15 deg right; reflection fades by angle; compass alone",
+      "medium": [
+        "reflection"
+      ],
+      "notes": "pull-back from '有多远' 21.58 s"
+    },
+    {
+      "id": "T03",
+      "t": [
+        28.0,
+        30.0
+      ],
+      "from": "yellowed chart in G2 (90 deg top-down)",
+      "to": "same chart on the cabin table (90 deg top-down)",
+      "medium": [
+        "composition"
+      ],
+      "notes": "twin-peaked islet at (0.62,0.40); acrylic strips = brass weights; cut on '海图泛黄' 28.9"
+    },
+    {
+      "id": "T04",
+      "t": [
+        41.8,
+        47.8
+      ],
+      "from": "navigator looks up in the cabin",
+      "to": "camera rises through the hatch past the sail to the vast sea",
+      "medium": [
+        "eyeline",
+        "camera move"
+      ],
+      "notes": "hatch frame hides the crane-to-aerial handover"
+    },
+    {
+      "id": "T05",
+      "t": [
+        48.75,
+        50.7
+      ],
+      "from": "compass needle macro settling",
+      "to": "navigator's eyes (100 mm)",
+      "medium": [
+        "composition"
+      ],
+      "notes": "pivot = pupil at (0.46,0.50)"
+    },
+    {
+      "id": "T06",
+      "t": [
+        53.0,
+        56.1
+      ],
+      "from": "distant warm shore light (screen-left third)",
+      "to": "bench-lamp highlight on a shard's glaze",
+      "medium": [
+        "light"
+      ],
+      "notes": "(0.33,0.48), 1900K -> 3500K over 18 frames"
+    },
+    {
+      "id": "T07",
+      "t": [
+        56.1,
+        60.8
+      ],
+      "from": "aligned shards top-down, rim band continuous",
+      "to": "the whole bowl with cold rice at the old home, top-down",
+      "medium": [
+        "composition",
+        "pattern"
+      ],
+      "notes": "side-A boat at 12 o'clock; bowl centre (0.50,0.52)"
+    },
+    {
+      "id": "T08",
+      "t": [
+        62.0,
+        66.0
+      ],
+      "from": "cracked-ice lattice shadow moving on the wife's table",
+      "to": "restorer's fingertip tracing a shard crack",
+      "medium": [
+        "light",
+        "graphic"
+      ],
+      "notes": "lines run upper-right to lower-left"
+    },
+    {
+      "id": "T09",
+      "t": [
+        65.8,
+        70.6
+      ],
+      "from": "restorer's face reflected in G3b glass",
+      "to": "the old home in the glass: stub candle, empty seat, sleepless night",
+      "medium": [
+        "reflection"
+      ],
+      "notes": "her reflection darker than the candlelight; rack >=1 beat"
+    },
+    {
+      "id": "T10",
+      "t": [
+        73.8,
+        83.6
+      ],
+      "from": "rain bowl (circle)",
+      "to": "letter crease (line) -> map ink line (line) -> shore light (point)",
+      "medium": [
+        "composition",
+        "graphic rhythm"
+      ],
+      "notes": "cut at each lyric phrase; each group wide -> close"
+    },
+    {
+      "id": "T11",
+      "t": [
+        86.9,
+        89.9
+      ],
+      "from": "lateral track past G3 a/b/c",
+      "to": "reflections of cabin, old home, waiting hall",
+      "medium": [
+        "reflection",
+        "depth"
+      ],
+      "notes": "moonlight direction unified upper-right -> lower-left"
+    },
+    {
+      "id": "T12",
+      "t": [
+        90.1,
+        94.4
+      ],
+      "from": "restorer's gloved hand resting on glass",
+      "to": "an old-era hand answers inside the glass; the face never resolves",
+      "medium": [
+        "gesture",
+        "reflection"
+      ],
+      "notes": "face out of focus, hand in focus"
+    },
+    {
+      "id": "T13",
+      "t": [
+        103.5,
+        111.9
+      ],
+      "from": "restorer looks at the folded shirt in G3c",
+      "to": "the migrant folds the shirt into the case and presses it flat",
+      "medium": [
+        "fabric"
+      ],
+      "notes": "same fold; cut mid-press; 48 fps optional"
+    },
+    {
+      "id": "T14",
+      "t": [
+        116.7,
+        123.3
+      ],
+      "from": "glowing oil-paper sweets",
+      "to": "shy smile while mending -> lighting the door lamp",
+      "medium": [
+        "light"
+      ],
+      "notes": "all three inserts share P13 warmth; one action each"
+    },
+    {
+      "id": "T15",
+      "t": [
+        130.4,
+        135.4
+      ],
+      "from": "two hands part; the family hand stays (screen-left, 48 fps)",
+      "to": "restorer's hand stopped before the glass",
+      "medium": [
+        "gesture",
+        "composition"
+      ],
+      "notes": "remaining hand at (0.36,0.56), palm forward, fingers slightly curled"
+    },
+    {
+      "id": "T16",
+      "t": [
+        148.9,
+        152.8
+      ],
+      "from": "harbour locked frame E1",
+      "to": "E2 -> E3 -> E4 -> E5",
+      "medium": [
+        "composition",
+        "light wipe"
+      ],
+      "notes": "motion-control identical frame; waiting person at (0.38,0.70)"
+    },
+    {
+      "id": "T17",
+      "t": [
+        151.6,
+        154.8
+      ],
+      "from": "new ink line on the map (horizontal, y 0.66)",
+      "to": "threshold edge (same height) -> hand gripping the case handle (handle bar same height)",
+      "medium": [
+        "composition"
+      ],
+      "notes": "lines read left -> right"
+    },
+    {
+      "id": "T18",
+      "t": [
+        174.8,
+        182.8
+      ],
+      "from": "restorer before GLASSPANEL in corridor P4, her reflection in the clear diamond quarry",
+      "to": "the same panel in situ in the chapel, her reflection flickering in the small glass",
+      "medium": [
+        "reflection",
+        "composition"
+      ],
+      "notes": "quarry at (0.70,0.45)"
+    },
+    {
+      "id": "T19",
+      "t": [
+        183.0,
+        191.0
+      ],
+      "from": "mother's trembling shoulders from behind (75 mm MCU)",
+      "to": "guard's slightly bent back (same size, same position)",
+      "medium": [
+        "composition",
+        "posture"
+      ],
+      "notes": "subject at right third, back to camera, each facing their own light; petals fade -> phone glow"
+    },
+    {
+      "id": "T20",
+      "t": [
+        204.0,
+        212.8
+      ],
+      "from": "corridor hero move",
+      "to": "five era panes + the real present at the end",
+      "medium": [
+        "reflection",
+        "camera move",
+        "moonlight beat"
+      ],
+      "notes": "see LOC_CORRIDOR layout"
+    },
+    {
+      "id": "T21",
+      "t": [
+        212.8,
+        219.7
+      ],
+      "from": "navigator's coat falls over the companion",
+      "to": "migrant hands a sweet to the boy -> mother sits beside the old man",
+      "medium": [
+        "fabric",
+        "gesture"
+      ],
+      "notes": "all giving/sitting move screen-left -> right and downward; cut mid-action"
+    },
+    {
+      "id": "T22",
+      "t": [
+        219.7,
+        223.5
+      ],
+      "from": "aged coat lying in the future vitrine (left cuff wear up)",
+      "to": "(same camera position as INTRO)",
+      "medium": [
+        "composition"
+      ],
+      "notes": "reuse T01/T02 motion-control data"
+    },
+    {
+      "id": "T23",
+      "t": [
+        223.5,
+        226.3
+      ],
+      "from": "the future viewer's raised right hand in the reflection",
+      "to": "stops where the two hands met in the opening (0.50,0.55)",
+      "medium": [
+        "gesture",
+        "reflection"
+      ],
+      "notes": "third hand; face never sharp"
+    },
+    {
+      "id": "T24",
+      "t": [
+        226.3,
+        227.5
+      ],
+      "from": "macro of the worn cuff in the vitrine",
+      "to": "the same cuff and wear on the restorer at the window, now",
+      "medium": [
+        "fabric",
+        "composition"
+      ],
+      "notes": "'我也曾像你'; identical position and shape"
+    },
+    {
+      "id": "T25",
+      "t": [
+        234.0,
+        246.6
+      ],
+      "from": "echo group: navigator at the rail, migrant on the ship, mother leaving the chapel, future viewer, the two at the window",
+      "to": "(brief, sequential)",
+      "medium": [
+        "composition"
+      ],
+      "notes": "figure screen-left, glass/window/sea screen-right, light from screen-right"
+    },
+    {
+      "id": "T26",
+      "t": [
+        246.6,
+        256.824
+      ],
+      "from": "two teacups side by side on the sill, steam rising, glass reflecting two people and the morning",
+      "to": "hold until the final note fully decays",
+      "medium": [
+        "none"
+      ],
+      "notes": "locked tripod, no digital push"
+    }
+  ],
+  "continuity_master": {
+    "RESTORER": "LEFT cuff outer wear 18x8 mm ~1 cm above edge; mole under LEFT eye; low ponytail + right-temple strands; gloves on until ch.8; right index scar seen only after; coat on all night, middle button done, undone when she sits",
+    "GUARD": "stooped; glasses on cord; age spot right cheekbone; no ring; phone right pocket; screen unreadable; callee never revealed",
+    "NAVIGATOR": "patch inside RIGHT cuff opened with LEFT hand; INTRO hand is LEFT; left-brow scar; indigo head-cloth; CH2 patch then shore light; shore screen-left",
+    "WIFE": "face never clear; silver bangle LEFT wrist; sits screen-left, empty seat screen-right; jacket cloth = patch cloth",
+    "MIGRANT": "braid; mole above right brow; blouse pattern; case in RIGHT hand; letter fold thirds-then-half; family screen-left, ship screen-right",
+    "MAPHAND": "hands only; right draws, left presses; ink never red; plain cufflink",
+    "MOTHER": "dove-grey qipao; jade bangle LEFT wrist; no sign of the cross; 7th pew south side screen-left end; real-time trembling",
+    "FUTURE": "reflection only; face never sharp; hand at (0.50,0.55); INTRO camera position",
+    "BOWL_SHARDS": "canonical pattern; cracks never through a rim blossom; 7 shards + 1 missing between side A and B; cold rice no steam",
+    "COMPASS": "24 bearings order; vermilion south tip; museum mica cracked at 乾",
+    "CANDLE": "A 18 -> B 11 -> C 6 -> D 2.5 cm",
+    "PASS": "photo present then (never frontal); museum: four empty corner-mounts",
+    "TEA": "single cobalt line below rim; his cup chipped at 2 o'clock; final: his screen-right, hers screen-left",
+    "HOME_WEATHER": "PRE1 clear/humid -> CH1 clouds gather -> CH2 heavier, child's feet -> CH3 rain falls"
+  },
+  "negative_prompt_global_en": "text, letters, words, subtitles, captions, watermark, logo, brand names, signage text, gibberish characters, fake Chinese characters, real national flags, real emblems or insignia, military insignia, cartoon, anime, illustration, painting, 3D render, CGI look, video-game look, plastic skin, airbrushed skin, beauty filter, skin whitening, over-smoothed faces, doll face, oversaturated colours, teal-and-orange grade, cyan shadows, yellow-green 'Asia' filter, sepia wash, HDR halos, crushed pure black shadows, blown-out highlights, over-sharpening, digital noise, blue streak lens flares, anamorphic flare overload, fog-machine haze, glowing magic light, unmotivated rim light, extra fingers, missing fingers, fused fingers, deformed hands, extra limbs, distorted anatomy, warped faces, asymmetrical eyes, face morphing, melting objects, morph transition, translucent ghosts standing in the room, double exposure ghosting, floating objects, wrong reflections, non-mirrored reflections, impossible perspective, anachronisms (wristwatch, plastic, zippers, LED light or electric light in pre-1890s scenes, modern clothing in historical scenes), Qing queue hairstyle on the navigator, Orientalist clichés (random red lanterns, dragons, gongs, incense smoke clouds), religious figures or icons in focus, exaggerated crying, melodrama, horror mood, cluttered composition, tilted horizon, shaky camera, motion blur smear, flicker, frame jitter, low resolution, jpeg artifacts",
+  "negative_prompt_global_zh": "文字、字母、单词、字幕、说明文字、水印、标志、品牌名、招牌文字、乱码字符、伪汉字、真实国旗、真实国徽或徽章、军事徽记、卡通、动漫、插画、绘画、3D渲染、CG感、游戏画面感、塑料皮肤、喷枪磨皮、美颜滤镜、美白、过度平滑的脸、娃娃脸、过度饱和、青橙调色、青色阴影、亚洲题材黄绿滤镜、棕褐怀旧滤镜、HDR光晕、死黑阴影、高光溢出、过度锐化、数字噪点、蓝色长条镜头光晕、过量变形光晕、烟雾机浓雾、魔法发光、无来源轮廓光、多余手指、缺失手指、粘连手指、畸形的手、多余肢体、扭曲的解剖结构、变形的脸、不对称的眼睛、人脸变形、物体融化、变形转场、站在房间里的半透明鬼魂、双重曝光鬼影、漂浮物体、错误的反射、未镜像的反射、不可能的透视、时代错误（手表、塑料、拉链、1890年代以前场景中的LED或电灯、历史场景中的现代服装）、航海人的清代辫发、东方主义陈词（随意的红灯笼、龙、锣、香火烟雾）、清晰对焦的宗教人物或圣像、夸张的哭泣、煽情、恐怖氛围、杂乱构图、倾斜的地平线、晃动的镜头、运动模糊拖影、闪烁、画面抖动、低分辨率、JPEG压缩痕迹"
+}

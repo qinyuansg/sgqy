@@ -1,0 +1,5608 @@
+[
+ {
+  "id": "S001",
+  "in_frame": 0,
+  "out_frame": 318,
+  "section": "INTRO",
+  "treatment_ref": "一",
+  "lyric_ids": [],
+  "lyric": "",
+  "sync_points": [
+   {
+    "t": 1.23,
+    "event": "第一声乐器起音：指尖触到玻璃"
+   },
+   {
+    "t": 3.0,
+    "event": "擦开的清洁带里闪过几粒盐晶"
+   },
+   {
+    "t": 4.5,
+    "event": "清洁带完整，指尖放慢、停住"
+   },
+   {
+    "t": 6.6,
+    "event": "人声铺底进入：焦点开始穿过玻璃"
+   },
+   {
+    "t": 11.0,
+    "event": "航海人的左手掌心朝向玻璃，停在她的手前约一指"
+   }
+  ],
+  "era": "multi",
+  "scene": "museum_gallery",
+  "location": "博物馆夜间展厅·G1 罗盘柜南侧玻璃面（玻璃另一侧浮现旧时代）",
+  "characters": [
+   "RESTORER",
+   "NAVIGATOR"
+  ],
+  "props": [
+   "GLOVES"
+  ],
+  "extras": [],
+  "shot_size": "ECU",
+  "angle": "正面平视，镜头轴线垂直于 G1 南侧玻璃，镜头高 1.18 m，与手齐平",
+  "lens_mm": 100,
+  "camera_move": "运动控制，全程极缓慢微推（约 2%），不停顿、不剪（开场机位数据保存，S071 复用）",
+  "speed": "24",
+  "focus": "起幅焦平面在玻璃表面与手套指尖；6.6 s 起焦点以 ≥1 拍的速度缓缓穿过玻璃移入约 30 cm 深处，盐手由虚变实",
+  "lighting": "黑暗展厅；G1 顶部 3000K 窄角射灯（冷玻璃里的一点暖），玻璃上的薄尘在侧光下发亮；柜内近黑深蓝绒布让玻璃另一侧可被看见（圣经 §8.3）",
+  "action": "黑场淡入。修复师戴白棉手套的右手指尖从画右入画，贴着 G1 罗盘柜玻璃轻轻向左擦过一道弧线，薄尘被抹开，留下一条更透亮的清洁带——主要擦拭在前三秒内完成。约 3 秒时，擦开处玻璃的另一侧闪过几粒白色盐晶：另一只手的第一道痕迹。指尖在弧线尽头放慢、停住。人声铺底进入时，焦点缓缓穿过玻璃：深处浮现另一只手——航海人的左手，粗糙、指节有裂口，手背与指缝结着白色细盐。它从暗处缓缓抬起，掌心朝向玻璃，停在她的右手前方约一指，尚未重合。",
+  "emotion": "安静、专注、亲密；悬念从一块玻璃开始——玻璃另一侧还有一个人。",
+  "transition_in": {
+   "type": "fade_in",
+   "frames": 12,
+   "on": "由黑场淡入；前三秒内手已在画面中擦拭"
+  },
+  "continuity": "修复师右手（白手套，食指与拇指指尖一点黄铜污迹 #B9AE9C，圣经 §6.15）；航海人是左手（掌心相对，因此看不到右袖口补丁，圣经 §5.3）；盐手只存在于玻璃另一侧，不投射真实阴影；擦拭方向画右→画左。原 S001/S002 合并为一个镜头，消除同轴同景别跳切。",
+  "refs": [
+   "CHAR_RESTORER",
+   "CHAR_NAVIGATOR",
+   "PROP_GLOVES",
+   "LOC_GALLERY",
+   "LOC_DECK"
+  ],
+  "previz_notes": "单镜头一气呵成。若生成长度受限，可在 f156（6.5 s）设隐藏接缝：前后同一运动控制路径、焦点已在行进，不得出现可见跳切。",
+  "revision": {
+   "findings": [
+    "E6",
+    "V11",
+    "V20",
+    "V14",
+    "V19"
+   ],
+   "from_v1": [
+    "S001",
+    "S002"
+   ]
+  }
+ },
+ {
+  "id": "S002",
+  "in_frame": 318,
+  "out_frame": 507,
+  "section": "INTRO",
+  "treatment_ref": "一",
+  "lyric_ids": [
+   "L000"
+  ],
+  "lyric": "千年",
+  "sync_points": [
+   {
+    "t": 13.25,
+    "event": "接缝后推近余势：两手继续靠近"
+   },
+   {
+    "t": 15.14,
+    "event": "“千”：两只手掌隔着玻璃几乎完全重合"
+   },
+   {
+    "t": 15.56,
+    "event": "“年”：修复师指尖轻颤，盐手不动"
+   },
+   {
+    "t": 16.7,
+    "event": "“年”尾音后：推进转为缓慢后退"
+   },
+   {
+    "t": 17.49,
+    "event": "强拍：焦点交给镜像深处，盐手退进反射，夜海与船灯展开"
+   },
+   {
+    "t": 19.5,
+    "event": "远处手电光束由画右向画左扫过一次"
+   }
+  ],
+  "era": "multi",
+  "scene": "museum_gallery",
+  "location": "博物馆夜间展厅·G1 罗盘柜前（由玻璃特写退到中近景）",
+  "characters": [
+   "RESTORER",
+   "NAVIGATOR",
+   "GUARD"
+  ],
+  "props": [
+   "GLOVES",
+   "SHIPLAMP",
+   "FLASHLIGHT",
+   "COMPASS"
+  ],
+  "extras": [],
+  "shot_size": "ECU",
+  "angle": "同 S001 机位轴线；后退中保持正对玻璃",
+  "lens_mm": 100,
+  "camera_move": "运动控制同一路径：微推余势到达 T01 构图 → “年”字后以 12–24 帧缓入转为极缓慢后退（约 1.2 m），由微距一路退到中近景范围，不剪",
+  "speed": "24",
+  "focus": "两手同在焦内 → 17.49 起焦点用 ≥1 拍从玻璃表面交给镜像深处（对焦距离 = 到玻璃距离 + 反射物深度）；退到中景时玻璃反射与展厅纵深同时可读",
+  "lighting": "G1 3000K 窄光；反射中是深蓝夜海（P02）与一盏 1950K 角片船灯（P13），随船摆动 6–8 s 一周期；玻璃之外是冷清的现代展厅；远处一道 4000K 手电光束扫过一次",
+  "action": "两只手隔着玻璃继续靠近，在“千”字唱出时几乎完全重合——白手套的织纹与带盐的掌纹只隔一层玻璃（错位 3–5 mm）。“年”字上，修复师的指尖下意识轻轻一颤；那只盐手不动。随后摄影机从这个特写开始缓慢后退：盐手并不消失，而是退进玻璃的反射深处，反射随之展开成一片深蓝夜海，一盏船灯在浪上摇晃；透过玻璃看到的，仍是安静的现代展厅，修复师的侧影淡淡浮在玻璃上。远处深景里，夜班工作人员的手电光束从展厅尽头扫过一次，随即消失。",
+  "emotion": "隔着玻璃与岁月的几乎触碰；随后空间豁然展开——玻璃里是海，玻璃外是今天。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "隐藏接缝：与 S001 同一运动控制路径、构图与焦点连续，观众不可见（取代原 S003→S004 由特写跳到中景起点的剪辑）"
+  },
+  "continuity": "【匹配锁 T01】两手重合中心 (0.50,0.55)，手宽占画面高 45%（S071 未来观看者的右手停在同一点）；船灯位于反射画左上三分之一；手电光束由画右向画左；夜班工作人员只以光与模糊身影出现（埋人物）。",
+  "refs": [
+   "CHAR_RESTORER",
+   "CHAR_NAVIGATOR",
+   "CHAR_GUARD",
+   "PROP_GLOVES",
+   "PROP_SHIPLAMP",
+   "PROP_FLASHLIGHT",
+   "PROP_COMPASS",
+   "LOC_GALLERY",
+   "LOC_DECK"
+  ],
+  "previz_notes": "后退段落保留反射层的镜像深度；手电光束只在背景出现一次。",
+  "revision": {
+   "findings": [
+    "F10",
+    "V20",
+    "V11",
+    "E6"
+   ],
+   "from_v1": [
+    "S003",
+    "S004"
+   ]
+  }
+ },
+ {
+  "id": "S003",
+  "in_frame": 507,
+  "out_frame": 682,
+  "section": "INTRO",
+  "treatment_ref": "一",
+  "lyric_ids": [
+   "L001"
+  ],
+  "lyric": "有多远",
+  "sync_points": [
+   {
+    "t": 21.58,
+    "event": "“有”：弧移开始，反射海面开始滑走"
+   },
+   {
+    "t": 22.9,
+    "event": "“远”：海面完全隐去，只剩罗盘"
+   },
+   {
+    "t": 24.0,
+    "event": "罗盘独立成画"
+   },
+   {
+    "t": 26.0,
+    "event": "镜头停稳，静观罗盘"
+   }
+  ],
+  "era": "modern",
+  "scene": "museum_gallery",
+  "location": "夜间展厅·G1 罗盘柜",
+  "characters": [],
+  "props": [
+   "COMPASS"
+  ],
+  "extras": [],
+  "shot_size": "CU",
+  "angle": "由正面绕至右前约 15°，略俯",
+  "lens_mm": 75,
+  "camera_move": "后退余势转为绕展柜向右缓慢弧移约 15° 并微推向罗盘（圣经 T02）；剪点藏在玻璃罩立边的高光扫过画面时",
+  "speed": "24",
+  "focus": "焦点由玻璃反射移到罗盘盘面",
+  "lighting": "反射随入射角变化消失后，只剩 G1 顶部一束 3000K 窄光照在罗盘上，铜绿与刻字发亮；柜内近黑深蓝绒布",
+  "action": "“有多远”唱出时，摄影机开始绕展柜改变角度：随着入射角变化，反射里的夜海与船灯一点点滑出玻璃、隐去——不是淡出，是角度。最后只剩展柜里一枚黄铜罗盘，倾斜 15° 静静躺在深蓝绒布上：巧克力褐的包浆、刻槽里的铜绿、云母片在“乾”位的一道裂纹、针的红端仍指着南。画面在罗盘上停很久。",
+  "emotion": "悬念成形：这件东西曾经属于谁？",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "运动接续的隐形剪辑：S002 后退的余势接本镜弧移"
+  },
+  "continuity": "罗盘博物馆状态（圣经 §6.2）：二十四向、外圈二十八星点、北辰嵌银、云母“乾”位裂纹、针南端朱红漆；展柜中“南”朝向画左下。与 S006/S009 船上同一件（今旧/昔新）。",
+  "refs": [
+   "PROP_COMPASS",
+   "LOC_GALLERY"
+  ],
+  "revision": {
+   "findings": [
+    "V20",
+    "F10"
+   ],
+   "from_v1": [
+    "S005"
+   ]
+  }
+ },
+ {
+  "id": "S004",
+  "in_frame": 682,
+  "out_frame": 760,
+  "section": "V1",
+  "treatment_ref": "二",
+  "lyric_ids": [
+   "L002"
+  ],
+  "lyric": "海图泛黄",
+  "sync_points": [
+   {
+    "t": 28.9,
+    "event": "“海图泛黄”起唱：海图已完整呈现"
+   },
+   {
+    "t": 29.52,
+    "event": "“黄”：手套指尖退出画面"
+   }
+  ],
+  "era": "modern",
+  "scene": "museum_gallery",
+  "location": "夜间展厅·G2 海图平柜（G1 东侧 1.5 m，玻璃面水平）",
+  "characters": [
+   "RESTORER"
+  ],
+  "props": [
+   "CHART",
+   "GLOVES"
+  ],
+  "extras": [],
+  "shot_size": "INSERT",
+  "angle": "90° 正俯拍，透过 G2 水平玻璃面（偏振镜消除顶反光）",
+  "lens_mm": 50,
+  "camera_move": "顶拍锁定，极慢下降推进",
+  "speed": "24",
+  "focus": "全幅清晰，纸纤维、霉斑与补纸边缘可见",
+  "lighting": "G2 平柜内 3000K 调暗（纸 ≤ 50 lux），南侧门洞斜入的月光落在玻璃边缘一线",
+  "action": "正俯拍穿过平柜玻璃：一张泛黄的针路图平放在倾斜 10° 的无酸卡板上——褐色霉斑、颜色略浅的补纸、折痕与纸纤维清晰；两条透明亚克力压条压住纸边。山形立面画法的海岸线，一座双峰小岛位于画面 (0.62,0.40)。修复师戴手套的指尖在画面边缘轻触一下玻璃，退出画面，只留下一点很淡的反光。",
+  "emotion": "旧物在今天的灯下：纸是黄的，时间可以被看见。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "同一展厅：G1 罗盘 → 1.5 m 外的 G2 海图平柜（同一个航海人的两件旧物）"
+  },
+  "continuity": "【匹配锁 T03】亚克力压条位置 = S005 铜镇纸位置；双峰小岛 (0.62,0.40)；针路图不画欧式罗盘玫瑰；注记不可读。海图在展厅 G2，不在修复台上。",
+  "refs": [
+   "CHAR_RESTORER",
+   "PROP_CHART",
+   "PROP_GLOVES",
+   "LOC_GALLERY"
+  ],
+  "revision": {
+   "findings": [
+    "V24",
+    "V12"
+   ],
+   "from_v1": [
+    "S006"
+   ]
+  }
+ },
+ {
+  "id": "S005",
+  "in_frame": 760,
+  "out_frame": 828,
+  "section": "V1",
+  "treatment_ref": "二",
+  "lyric_ids": [
+   "L003"
+  ],
+  "lyric": "暮色深蓝",
+  "sync_points": [
+   {
+    "t": 32.05,
+    "event": "“暮色深蓝”起唱"
+   },
+   {
+    "t": 32.77,
+    "event": "“蓝”：风掀起纸角（48 fps）"
+   }
+  ],
+  "era": "navigator",
+  "scene": "ship_cabin",
+  "location": "远洋帆船火长针房·海图桌",
+  "characters": [],
+  "props": [
+   "CHART",
+   "SHIPLAMP"
+  ],
+  "extras": [],
+  "shot_size": "INSERT",
+  "angle": "90° 正俯拍，同 S004",
+  "lens_mm": 50,
+  "camera_move": "顶拍，随船体约 7 s 一周期的起伏轻微晃动",
+  "speed": "48 (50% slow motion)",
+  "focus": "全幅清晰",
+  "lighting": "横梁上的角片舱灯（1950K）为唯一主光，随船摆动 6–8 s 一周期，光在纸面上来回移过；艉墙直棂小窗透进暮色深蓝（P03）竖条",
+  "action": "匹配剪辑：同样构图的海图，此刻崭新、墨色清楚，被两块小铜镇纸与一块圆石压在船舱的海图桌上，纸面一处烛泪；舱灯摆动，暖光在纸面上来回移过。“蓝”字时，一阵风从艉窗灌入，掀起海图右下角又落下（48 fps，圣经允许的慢动作）。",
+  "emotion": "同一张图回到它被使用的那个黄昏，时间倒流得很安静。",
+  "transition_in": {
+   "type": "match_cut",
+   "frames": 0,
+   "on": "相似构图：同一段海岸线、双峰小岛同在 (0.62,0.40)、同比例 90° 正俯拍；亚克力压条 → 铜镇纸同位置；3000K → 1950K（T03；跨时代）",
+   "register": {
+    "a": "S004",
+    "b": "S005",
+    "subject": "海图双峰小岛与压条/镇纸",
+    "pos": [
+     0.62,
+     0.4
+    ],
+    "size": "海图展开宽度约占画面宽 90%",
+    "direction": "静止；风从画右",
+    "phase": "剪点在 S004 指尖退出之后"
+   }
+  },
+  "continuity": "风从画右（艉窗）进入，被掀起的是画右下纸角；舱灯摆动方向画左↔画右；全片船舱内不出现“舷窗”，只有艉墙直棂小窗。",
+  "refs": [
+   "PROP_CHART",
+   "PROP_SHIPLAMP",
+   "LOC_CABIN"
+  ],
+  "revision": {
+   "findings": [
+    "V14",
+    "V19",
+    "V21"
+   ],
+   "from_v1": [
+    "S007"
+   ]
+  }
+ },
+ {
+  "id": "S006",
+  "in_frame": 828,
+  "out_frame": 964,
+  "section": "V1",
+  "treatment_ref": "二",
+  "lyric_ids": [
+   "L004",
+   "L005"
+  ],
+  "lyric": "有人把星辰／刻进黄铜的圆盘",
+  "sync_points": [
+   {
+    "t": 36.21,
+    "event": "“星辰”：光掠过星点"
+   },
+   {
+    "t": 36.99,
+    "event": "“刻”：拇指入画沿口沿抹过"
+   },
+   {
+    "t": 39.21,
+    "event": "“盘”：光走完半圈，停在“午”（南）"
+   }
+  ],
+  "era": "navigator",
+  "scene": "ship_cabin",
+  "location": "火长针房·罗盘匣",
+  "characters": [
+   "NAVIGATOR"
+  ],
+  "props": [
+   "COMPASS",
+   "SHIPLAMP"
+  ],
+  "extras": [],
+  "shot_size": "ECU",
+  "angle": "略俯，贴近铜面",
+  "lens_mm": 100,
+  "camera_move": "锁定（只随船体极轻起伏）；光的移动由舱灯摆动产生，不由摄影机产生",
+  "speed": "24",
+  "focus": "微距，焦点在刻字面，T5.6–T8",
+  "lighting": "舱灯 1950K 摆动：一点暖光沿二十四向刻字与星点依次移动；罗盘口沿是画面最亮的线（P11）",
+  "action": "微距：黄铜罗盘上，随着舱灯的摆动，一点暖光沿二十四向刻字和外圈二十八处星点缓缓移动，像有人用光把星辰一颗颗刻进铜里。航海人粗糙的右手拇指入画，沿“午”位口沿轻轻抹去一层盐霜。",
+  "emotion": "工艺与天文的浪漫：人把方向刻进铜里。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "同一盏摆动的舱灯，光由纸面移到铜面（光线接续）"
+  },
+  "continuity": "罗盘当年状态（圣经 §6.2）：铜色温暖 #B8925A、“午”位口沿被拇指磨亮、刻槽积烟灰、铰合处盐霜、云母完整、无铜绿——与 S003 博物馆状态对照。拇指为右手。",
+  "refs": [
+   "CHAR_NAVIGATOR",
+   "PROP_COMPASS",
+   "PROP_SHIPLAMP",
+   "LOC_CABIN"
+  ],
+  "revision": {
+   "findings": [
+    "V14"
+   ],
+   "from_v1": [
+    "S008"
+   ]
+  }
+ },
+ {
+  "id": "S007",
+  "in_frame": 964,
+  "out_frame": 1075,
+  "section": "V1",
+  "treatment_ref": "二",
+  "lyric_ids": [
+   "L006",
+   "L007"
+  ],
+  "lyric": "你把半生／交给一张帆",
+  "sync_points": [
+   {
+    "t": 41.78,
+    "event": "“你把半生”：航海人抬头"
+   },
+   {
+    "t": 43.94,
+    "event": "“帆”：穿出舱口，巨帆填满画面"
+   }
+  ],
+  "era": "navigator",
+  "scene": "ship_cabin",
+  "location": "火长针房 → 头顶方形舱口 → 帆与天",
+  "characters": [
+   "NAVIGATOR"
+  ],
+  "props": [
+   "SHIPLAMP"
+  ],
+  "extras": [],
+  "shot_size": "MCU",
+  "angle": "由平视转为仰视",
+  "lens_mm": 32,
+  "camera_move": "从航海人脸部开始，沿其视线竖直升起，穿过低横梁与 70×70 cm 方形舱口（伸缩摇臂 → 航拍接力，舱口边框作隐藏剪辑点，T04）",
+  "speed": "24",
+  "focus": "跟焦：脸 → 舱梁 → 帆面",
+  "lighting": "舱灯 1950K 暖橙 → 舱口外暮色深蓝逆光",
+  "action": "航海人（约35岁，靛蓝粗布短褂、靛蓝头巾、左眉尾一道浅白旧疤、脸上风吹日晒的纹理）弯着腰抬起头，望向头顶的舱口。“你把半生”时摄影机离开他的脸，顺着他的视线升起，穿过低矮的舱梁与舱口；“帆”字唱出时，巨大的竹篾横撑硬帆在头顶展开，填满画面。",
+  "emotion": "从狭小到辽阔的第一次呼吸；把半生交给一张帆的分量。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "由物及人：罗盘上的拇指 → 拇指的主人抬头"
+  },
+  "continuity": "舱顶净高 1.65 m，他必须低头；视线向上；帆为锈赭编织席面、竹篾更深；运动方向向上/向外，接 S008。",
+  "refs": [
+   "CHAR_NAVIGATOR",
+   "PROP_SHIPLAMP",
+   "LOC_CABIN"
+  ],
+  "revision": {
+   "findings": [
+    "V14"
+   ],
+   "from_v1": [
+    "S009"
+   ]
+  }
+ },
+ {
+  "id": "S008",
+  "in_frame": 1075,
+  "out_frame": 1159,
+  "section": "V1",
+  "treatment_ref": "二",
+  "lyric_ids": [
+   "L008",
+   "L009"
+  ],
+  "lyric": "去问天地／何处是心安",
+  "sync_points": [
+   {
+    "t": 44.9,
+    "event": "“去问天地”：拉开至极远景"
+   },
+   {
+    "t": 47.18,
+    "event": "“心”：画左远岸的灯闪了一下"
+   }
+  ],
+  "era": "navigator",
+  "scene": "sea_deck",
+  "location": "暮色大海·远洋帆船",
+  "characters": [],
+  "props": [
+   "SHIPLAMP"
+  ],
+  "extras": [],
+  "shot_size": "EWS",
+  "angle": "高空俯视转平",
+  "lens_mm": 28,
+  "camera_move": "高空缓慢后拉上升（重载航拍，禁止快速掠过），地平线保持水平",
+  "speed": "24",
+  "focus": "全景深",
+  "lighting": "暮色：天顶 P01，地平线一线极淡残暖，积云顶部最后的余晖；艉灯 1950K 一点暖；画左远岸 1900K 一点",
+  "action": "极远景：远洋帆船在暮色深蓝的大海上显得极小——竹篾硬帆的巨大帆影、层层积云、真实而沉重的长涌浪，船首切开的白沫与盐雾；船首朝画右。画左地平线上，低矮的黑色海岸线上一点极微弱的暖灯。甲板上没有清晰的人影：唯一的人的痕迹，是方形舱口透出的一格琥珀色光——他就在下面；艉楼上艉灯已亮，掌舵的人只是一个小点。",
+  "emotion": "人在天地间很小，海洋真实而有重量；“何处是心安”没有答案。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "运动方向接续（上升/向外）"
+  },
+  "continuity": "船首朝画右（远方）；远岸与岸灯【锁】在画左（家的方向，圣经 §4.5/§7.4），与 S010、S022、S045 一致；人物面积 ≤ 2% 且处在灯光中。",
+  "refs": [
+   "PROP_SHIPLAMP",
+   "LOC_DECK"
+  ],
+  "revision": {
+   "findings": [
+    "F9",
+    "V5",
+    "V21"
+   ],
+   "from_v1": [
+    "S010"
+   ]
+  }
+ },
+ {
+  "id": "S009",
+  "in_frame": 1159,
+  "out_frame": 1200,
+  "section": "V1",
+  "treatment_ref": "二",
+  "lyric_ids": [
+   "L010",
+   "L011"
+  ],
+  "lyric": "那根针／认得南",
+  "sync_points": [
+   {
+    "t": 48.75,
+    "event": "“根针”：针仍在微摆"
+   },
+   {
+    "t": 49.77,
+    "event": "“南”：针完全静止"
+   }
+  ],
+  "era": "navigator",
+  "scene": "ship_cabin",
+  "location": "火长针房·海图桌左侧的罗盘匣",
+  "characters": [],
+  "props": [
+   "COMPASS"
+  ],
+  "extras": [],
+  "shot_size": "ECU",
+  "angle": "正俯",
+  "lens_mm": 100,
+  "camera_move": "镜头随船体轻晃，针相对稳定",
+  "speed": "24",
+  "focus": "微距，焦点在针尖",
+  "lighting": "舱灯 1950K 摆动 + 艉窗暮色冷蓝，针面一线高光",
+  "action": "微距：罗盘上的发蓝钢针在起伏的船舱里摆动两三次，越摆越小，在“认得南”时稳稳停住——针南端那一滴朱红漆对准“午”位。",
+  "emotion": "方向是明确的。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "尺度对切：极远 → 极近"
+  },
+  "continuity": "针红端指“午”，在画面中指向画左下（与 S003 展柜中“南”的朝向一致）；【匹配锁 T05】针轴位置 (0.46,0.50) = S010 瞳孔位置。罗盘在船舱针房（不在甲板）。",
+  "refs": [
+   "PROP_COMPASS",
+   "LOC_CABIN"
+  ],
+  "revision": {
+   "findings": [
+    "V24",
+    "V19",
+    "E10",
+    "V21"
+   ],
+   "from_v1": [
+    "S011"
+   ]
+  }
+ },
+ {
+  "id": "S010",
+  "in_frame": 1200,
+  "out_frame": 1266,
+  "section": "V1",
+  "treatment_ref": "二",
+  "lyric_ids": [
+   "L012",
+   "L013"
+  ],
+  "lyric": "可认得／你想回的岸",
+  "sync_points": [
+   {
+    "t": 50.01,
+    "event": "“可认得”：切到眼睛"
+   },
+   {
+    "t": 51.39,
+    "event": "“回”：他眨了一下眼"
+   }
+  ],
+  "era": "navigator",
+  "scene": "ship_cabin",
+  "location": "火长针房·艉墙直棂小窗前",
+  "characters": [
+   "NAVIGATOR"
+  ],
+  "props": [],
+  "extras": [],
+  "shot_size": "CU",
+  "angle": "平视略侧；他在画右，面朝画左",
+  "lens_mm": 100,
+  "camera_move": "极缓慢推进",
+  "speed": "24",
+  "focus": "焦点在双眼",
+  "lighting": "舱灯暖光在脸侧摆动；艉窗透进的暮色冷蓝勾出眼眶",
+  "action": "航海人眼睛的特写：他望向艉窗外看不见的海岸——家的方向，眼神迷茫、微微失焦；艉窗直棂间吹进来的风，拨动他头巾边被压住的碎发。",
+  "emotion": "针认得南，他却不认得回去的岸。",
+  "transition_in": {
+   "type": "match_cut",
+   "frames": 0,
+   "on": "相似构图：针轴 → 瞳孔同一画面位置 (0.46,0.50)；针的“确定” → 眼神的“不确定”（T05）",
+   "register": {
+    "a": "S009",
+    "b": "S010",
+    "subject": "针轴/瞳孔",
+    "pos": [
+     0.46,
+     0.5
+    ],
+    "size": "针长约占画面高 60% / 眼睛约 25%",
+    "direction": "静止",
+    "phase": "针完全静止之后"
+   }
+  },
+  "continuity": "视线向画左（家/过去），与 S008 远岸方位一致；左眉尾旧疤可见；“舷窗”一律改为艉窗直棂小窗。",
+  "refs": [
+   "CHAR_NAVIGATOR",
+   "LOC_CABIN"
+  ],
+  "revision": {
+   "findings": [
+    "F9",
+    "V5",
+    "V21",
+    "V24"
+   ],
+   "from_v1": [
+    "S012"
+   ]
+  }
+ },
+ {
+  "id": "S011",
+  "in_frame": 1266,
+  "out_frame": 1344,
+  "section": "GAP1",
+  "treatment_ref": "二",
+  "lyric_ids": [
+   "L013"
+  ],
+  "lyric": "你想回的岸",
+  "sync_points": [
+   {
+    "t": 52.75,
+    "event": "“岸”尾音：左手翻开袖口"
+   },
+   {
+    "t": 53.0,
+    "event": "人声收束：指腹停在补丁上"
+   },
+   {
+    "t": 55.5,
+    "event": "空拍中画面保持"
+   }
+  ],
+  "era": "navigator",
+  "scene": "ship_cabin",
+  "location": "火长针房·他的右袖口",
+  "characters": [
+   "NAVIGATOR"
+  ],
+  "props": [
+   "PATCH"
+  ],
+  "extras": [],
+  "shot_size": "INSERT",
+  "angle": "略俯",
+  "lens_mm": 100,
+  "camera_move": "锁定，带轻微自然呼吸感",
+  "speed": "24",
+  "focus": "焦点在袖口内侧补丁",
+  "lighting": "舱灯 1950K 摆动的暖光一下一下落在补丁上",
+  "action": "他的左手拇指与食指翻开右袖口的折边，露出里层一块颜色不同的浅蓝布补丁——针脚细密，一角有个打了两次的小结，是家里人补的；右手腕微微内翻，让补丁朝向镜头。左手指腹停在补丁上，不动。乐句收束后的空拍里，画面就停在这只手上。",
+  "emotion": "回家的答案不在罗盘里，在袖口里。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "眼神 → 手（他想到的东西）"
+  },
+  "continuity": "补丁【锁】：右袖口内侧，4.5×6 cm 浅蓝手织布 #7D9CBB（= 等待的人短袄的布），本白棉线平针、一角双结，中间被摩挲得起毛发亮（圣经 §6.4）；左手翻开（圣经 §5.3）；由 WIFE 在 S035 缝制，S045、S067 再现。",
+  "refs": [
+   "CHAR_NAVIGATOR",
+   "PROP_PATCH",
+   "LOC_CABIN"
+  ],
+  "revision": {
+   "findings": [
+    "V21",
+    "V19",
+    "E10"
+   ],
+   "from_v1": [
+    "S013"
+   ]
+  }
+ },
+ {
+  "id": "S012",
+  "in_frame": 1344,
+  "out_frame": 1402,
+  "section": "PRE1",
+  "treatment_ref": "三",
+  "lyric_ids": [
+   "L014"
+  ],
+  "lyric": "青花碎了",
+  "sync_points": [
+   {
+    "t": 57.2,
+    "event": "“碎”：两片残片咬合"
+   }
+  ],
+  "era": "modern",
+  "scene": "restoration_lab",
+  "location": "修复室工作台（一层东南角，面朝南拱窗）",
+  "characters": [
+   "RESTORER"
+  ],
+  "props": [
+   "SHARDS",
+   "GLOVES",
+   "COAT"
+  ],
+  "extras": [],
+  "shot_size": "CU",
+  "angle": "45° 俯拍",
+  "lens_mm": 75,
+  "camera_move": "缓慢俯拍推进",
+  "speed": "24",
+  "focus": "焦点在两片残片的断口",
+  "lighting": "可调臂台灯 3500K 从画左上 45°，瓷釉上一点镜面高光；窗外港口夜灯冷蓝",
+  "action": "修复师戴手套的指尖捏起一片青花口沿残片，对准另一片的断口，屏住呼吸，轻轻合上；“碎”字时两片咬合——一道细裂纹从两朵梅花之间穿过，没有一朵梅花被裂开。她的左前臂压在工作台边缘，右手工作。",
+  "emotion": "精确、耐心：破碎是可以被对齐的。",
+  "transition_in": {
+   "type": "match_cut",
+   "frames": 0,
+   "on": "手势：航海人停在补丁上的指尖 → 修复师捏住残片的指尖（指尖手势匹配；跨时代）"
+  },
+  "continuity": "口沿纹带为一枝连绵不断的折枝梅（16 朵五瓣梅，圣经 §6.3 唯一纹样），裂纹只从花与花之间穿过；她右手持片、左前臂压在台沿——这就是外套左袖口外侧（小指一侧）那块磨损的来历，磨损在台沿处可见；袖口不挽起；外套中间一粒扣扣着；台灯在画左上。",
+  "refs": [
+   "CHAR_RESTORER",
+   "PROP_SHARDS",
+   "PROP_GLOVES",
+   "PROP_COAT",
+   "LOC_LAB"
+  ],
+  "revision": {
+   "findings": [
+    "V4",
+    "V10"
+   ],
+   "from_v1": [
+    "S014"
+   ]
+  }
+ },
+ {
+  "id": "S013",
+  "in_frame": 1402,
+  "out_frame": 1470,
+  "section": "PRE1",
+  "treatment_ref": "三",
+  "lyric_ids": [
+   "L015"
+  ],
+  "lyric": "春色还留在碗沿",
+  "sync_points": [
+   {
+    "t": 58.64,
+    "event": "“春色”：焦点到达梅花纹带"
+   },
+   {
+    "t": 60.26,
+    "event": "“沿”：停在完整的碗沿"
+   }
+  ],
+  "era": "modern",
+  "scene": "restoration_lab",
+  "location": "修复室工作台·残片口沿",
+  "characters": [],
+  "props": [
+   "SHARDS"
+  ],
+  "extras": [],
+  "shot_size": "ECU",
+  "angle": "低角度贴近釉面",
+  "lens_mm": 100,
+  "camera_move": "滑轨沿裂纹缓慢横移至碗沿（≤ 2 cm/s），焦点随行",
+  "speed": "24",
+  "focus": "微距跟焦，沿裂纹移动",
+  "lighting": "台灯 3500K 掠射，釉光、棕眼与钴料晕散清晰",
+  "action": "微距：焦点沿着裂纹在釉面上延伸，掠过钴料的晕散、铁锈色的积料斑点与细小的棕眼，最后停在碗沿——一枝连绵的折枝梅在釉光里完好无损，像刚画上去。",
+  "emotion": "碎了的，仍留着春天。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "同一物件推近"
+  },
+  "continuity": "碗沿折枝梅为全片青花母题：S016 旧日整碗、S019/S041 雨碗、S026 筷旁的碗、S066 长廊 P2 为同一纹样（圣经 §6.3）。",
+  "refs": [
+   "PROP_SHARDS",
+   "LOC_LAB"
+  ],
+  "revision": {
+   "findings": [
+    "V4"
+   ],
+   "from_v1": [
+    "S015"
+   ]
+  }
+ },
+ {
+  "id": "S014",
+  "in_frame": 1470,
+  "out_frame": 1537,
+  "section": "PRE1",
+  "treatment_ref": "三",
+  "lyric_ids": [
+   "L016"
+  ],
+  "lyric": "我读懂了年代",
+  "sync_points": [
+   {
+    "t": 62.28,
+    "event": "“读懂”：她翻过残片看圈足"
+   },
+   {
+    "t": 62.82,
+    "event": "“年代”：笔落在登记簿上"
+   }
+  ],
+  "era": "modern",
+  "scene": "restoration_lab",
+  "location": "修复室工作台",
+  "characters": [
+   "RESTORER"
+  ],
+  "props": [
+   "SHARDS",
+   "LEDGER",
+   "GLOVES"
+  ],
+  "extras": [],
+  "shot_size": "MCU",
+  "angle": "平视略侧",
+  "lens_mm": 75,
+  "camera_move": "锁定，轻微推进",
+  "speed": "24",
+  "focus": "焦点在她的眼睛与头戴放大镜；登记簿字迹出焦",
+  "lighting": "台灯 3500K 侧光；窗外港口夜色冷蓝；书架 2700K 小灯一点远暖",
+  "action": "修复师（约28岁，低马尾，右侧太阳穴落下两三缕碎发，头戴放大镜，左眼下一颗小痣）把已粘合的残片翻过来凑近放大镜：圈足露胎处的火石红、粘着的窑砂、釉面的针孔——几乎不假思索，她就认出了年代，在藏品登记簿那一栏写下日期，笔尖利落，嘴角有一点职业性的笃定。",
+  "emotion": "她读得懂年代——这是她的专长。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "由物到人"
+  },
+  "continuity": "碗底无款（圣经 §6.3）——她靠胎、釉、火石红断代；登记簿只见日期与数字形状，不可读（圣经 §6.21）；她面朝窗（画右为窗、画左为房间，圣经 §7.2）；低马尾、右侧碎发、左眼下小痣。",
+  "refs": [
+   "CHAR_RESTORER",
+   "PROP_SHARDS",
+   "PROP_LEDGER",
+   "PROP_GLOVES",
+   "LOC_LAB"
+  ],
+  "revision": {
+   "findings": [
+    "F3",
+    "V4",
+    "V10",
+    "V17"
+   ],
+   "from_v1": [
+    "S016"
+   ]
+  }
+ },
+ {
+  "id": "S015",
+  "in_frame": 1537,
+  "out_frame": 1566,
+  "section": "PRE1",
+  "treatment_ref": "三",
+  "lyric_ids": [
+   "L016"
+  ],
+  "lyric": "我读懂了年代",
+  "sync_points": [
+   {
+    "t": 64.43,
+    "event": "“代”长音中：口沿圆弧居中、静止"
+   }
+  ],
+  "era": "modern",
+  "scene": "restoration_lab",
+  "location": "修复室工作台·修复沙盘",
+  "characters": [],
+  "props": [
+   "SHARDS"
+  ],
+  "extras": [],
+  "shot_size": "INSERT",
+  "angle": "90° 正俯拍",
+  "lens_mm": 100,
+  "camera_move": "锁定",
+  "speed": "24",
+  "focus": "微距，口沿圆弧全在焦内",
+  "lighting": "台灯 3500K 斜上方，釉面一点高光，沙粒纹理",
+  "action": "90° 正俯拍：台灯下，修复沙盘里已经粘合大半的碗——碗心双圈里的五瓣梅位于画面 (0.50,0.52)，口沿那一圈折枝梅连续完整，A 面小船朝画面 12 点方向；A、B 两面之间那块缺失处空着。圆弧的位置、比例、曲率，与下一镜首帧完全一致。",
+  "emotion": "碎了的碗，在今天又成了一个圆。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "她的目光 → 她手下的碗（由人到物，在“代”的长音里）"
+  },
+  "continuity": "【匹配锁 T07】碗心 (0.50,0.52)，A 面小船 12 点方向，口沿圆直径约占画面高 80%——S016 匹配剪辑的 A 帧；缺失处在 A、B 两面之间的留白区（圣经 §6.3）。新增插入镜头：让“碗沿 → 碗沿”的匹配剪辑真正相邻。",
+  "refs": [
+   "PROP_SHARDS",
+   "LOC_LAB"
+  ],
+  "revision": {
+   "findings": [
+    "F3",
+    "V4"
+   ],
+   "from_v1": [
+    "S016"
+   ]
+  }
+ },
+ {
+  "id": "S016",
+  "in_frame": 1566,
+  "out_frame": 1608,
+  "section": "PRE1",
+  "treatment_ref": "三",
+  "lyric_ids": [
+   "L016",
+   "L017",
+   "L018"
+  ],
+  "lyric": "我读懂了年代／却读不懂／你的失眠",
+  "sync_points": [
+   {
+    "t": 65.36,
+    "event": "“却读不懂”：碗沿完成匹配"
+   },
+   {
+    "t": 66.32,
+    "event": "“失”：后拉露出空着的长凳"
+   }
+  ],
+  "era": "home",
+  "scene": "old_home",
+  "location": "旧日海边石屋·方桌",
+  "characters": [
+   "WIFE"
+  ],
+  "props": [
+   "BOWL",
+   "CANDLE"
+  ],
+  "extras": [],
+  "shot_size": "CU",
+  "angle": "90° 正俯拍起幅（同 S015）→ 升起成 45° 俯",
+  "lens_mm": 50,
+  "camera_move": "从碗沿特写缓慢升起后拉",
+  "speed": "24",
+  "focus": "由碗沿到空长凳的焦点后移",
+  "lighting": "单支白蜡烛 1850K 低位暖光；冰裂纹窗格的月光冷蓝从画右斜入",
+  "action": "匹配剪辑：同一圈折枝梅，碗却是完整的——盛着一碗早已凉透的白饭，没有一丝热气，饭粒表面发干、半透明，一双竹筷横放在碗口未动。镜头升起后拉：这碗饭放在画右那条空着的长凳前；烛台（蜡烛 11 cm，一道蜡泪）在桌子中间；画左边缘，是她叠放在桌沿的双手，左腕一只素银细镯。她盛的这碗饭，没有人吃。",
+  "emotion": "她读得懂年代，却读不懂这碗凉掉的饭里有多长的夜。",
+  "transition_in": {
+   "type": "match_cut",
+   "frames": 0,
+   "on": "相似构图 + 纹样：修复后的口沿圆弧 → 旧日完整的口沿（同纹样、同画面位置、同比例、同曲率；跨时代，T07）",
+   "register": {
+    "a": "S015",
+    "b": "S016",
+    "subject": "碗口沿折枝梅圆弧/碗心",
+    "pos": [
+     0.5,
+     0.52
+    ],
+    "size": "口沿圆直径约占画面高 80%",
+    "direction": "A 面小船朝 12 点",
+    "phase": "剪点在“却”之前的拍点"
+   }
+  },
+  "continuity": "【锁】她坐画左长凳、面向画右；对面画右长凳始终空着；碗与未动的竹筷在空座前（圣经 §5.4、§6.3）；蜡烛状态 B（11 cm）；凉饭无热气（M4）；PRE1 天气：无风闷热、月光清楚。",
+  "refs": [
+   "CHAR_WIFE",
+   "PROP_BOWL",
+   "PROP_CANDLE",
+   "LOC_HOME"
+  ],
+  "revision": {
+   "findings": [
+    "F3",
+    "F6",
+    "V4",
+    "E9"
+   ],
+   "from_v1": [
+    "S017"
+   ]
+  }
+ },
+ {
+  "id": "S017",
+  "in_frame": 1608,
+  "out_frame": 1693,
+  "section": "PRE1",
+  "treatment_ref": "三",
+  "lyric_ids": [
+   "L018"
+  ],
+  "lyric": "你的失眠",
+  "sync_points": [
+   {
+    "t": 67.0,
+    "event": "起幅：玻璃上修复师低头的淡倒影"
+   },
+   {
+    "t": 67.8,
+    "event": "焦点转移完成：反射深处的旧日家中"
+   },
+   {
+    "t": 68.5,
+    "event": "24 帧叠化中点（68.0–69.0）：蜡烛 B→C，窗格影移过一格"
+   },
+   {
+    "t": 69.6,
+    "event": "人声收束：她的肩轻轻起伏"
+   }
+  ],
+  "era": "multi",
+  "scene": "old_home",
+  "location": "修复室南拱窗的深色玻璃（反射深处：旧日家中）",
+  "characters": [
+   "WIFE",
+   "RESTORER"
+  ],
+  "props": [
+   "CANDLE",
+   "BOWL"
+  ],
+  "extras": [],
+  "shot_size": "MS",
+  "angle": "平视，正对修复室拱窗玻璃（六格对六格）",
+  "lens_mm": 75,
+  "camera_move": "锁定；镜内一次 24 帧柔和叠化表现时间流逝",
+  "speed": "24",
+  "focus": "起幅在玻璃上修复师的淡倒影 → ≥1 拍焦点转移进入反射深处的旧日家中；人物脸部始终微虚",
+  "lighting": "修复室台灯 3500K 在画外左上，把她的倒影淡淡印在玻璃上（暗于烛火）；窗外是夜，玻璃成为镜面；反射中：蜡烛 1850K + 冰裂纹窗格月光",
+  "action": "修复室那扇拱窗的玻璃上，淡淡映着修复师低头工作的轮廓。焦点慢慢穿过她的倒影：玻璃深处是旧日家中——一个女人坐在画左长凳上，烛火在她身旁，画右的长凳空着；她的脸被烛光侧逆和冰裂纹窗格的影子切碎，始终看不清。一次轻柔的叠化：蜡烛从 11 cm 烧到 6 cm，蜡泪堆在接蜡盘里，窗格的影子在桌面上移过一格，碗里的饭始终没动。她的肩轻轻起伏——一夜未眠。修复师的倒影一直淡淡地留在玻璃上：是她在看，也是她读不懂。",
+  "emotion": "漫长的等待：看不清的脸，看得见的失眠；“我”就在玻璃上。",
+  "transition_in": {
+   "type": "reflection",
+   "frames": 0,
+   "on": "同一个家：由直接所见 → 修复室窗玻璃里的倒影（她在今天望着它；T09）"
+  },
+  "continuity": "蜡烛状态 B（11 cm）→ C（6 cm）（圣经 §6.13）；等待的人面部永不完全清晰；修复师倒影暗于烛火（§8.3-6）；修复室南拱窗与 S018 外景是同一扇窗；不使用 17 世纪石屋里的“窗玻璃”。",
+  "refs": [
+   "CHAR_WIFE",
+   "CHAR_RESTORER",
+   "PROP_CANDLE",
+   "PROP_BOWL",
+   "LOC_HOME",
+   "LOC_LAB"
+  ],
+  "previz_notes": "前景为 restoration_lab 拱窗窗框与她的淡倒影；反射层内合成 old_home 内景；叠化是镜内状态叠化，不是转场。",
+  "revision": {
+   "findings": [
+    "F6",
+    "E9",
+    "V22"
+   ],
+   "from_v1": [
+    "S018"
+   ]
+  }
+ },
+ {
+  "id": "S018",
+  "in_frame": 1693,
+  "out_frame": 1763,
+  "section": "CH1",
+  "treatment_ref": "四",
+  "lyric_ids": [
+   "L019",
+   "L020"
+  ],
+  "lyric": "千年啊／不过无数个今晚",
+  "sync_points": [
+   {
+    "t": 70.7,
+    "event": "“千年啊”：上升开始"
+   },
+   {
+    "t": 73.1,
+    "event": "“今”：港城灯火铺满画面"
+   },
+   {
+    "t": 73.35,
+    "event": "月亮与聚拢的云入画（接 S019 的天空）"
+   }
+  ],
+  "era": "modern",
+  "scene": "harbor_eras",
+  "location": "修复室南拱窗外 → 旧海关大楼南立面 → 港城夜空（当下 E5 状态）",
+  "characters": [
+   "RESTORER"
+  ],
+  "props": [],
+  "extras": [],
+  "shot_size": "EWS",
+  "angle": "由平视升为高空俯视，最后仰向天空",
+  "lens_mm": 28,
+  "camera_move": "从修复室亮着台灯的拱窗外开始，大幅度升降上升并后拉（重载航拍，缓慢、稳）",
+  "speed": "24",
+  "focus": "全景深",
+  "lighting": "港城窗光暖黄（压低饱和），月光与海面冷银（P04）；云层开始聚拢，月亮时隐时现",
+  "action": "世界的尺度第一次打开：镜头从修复室那扇亮着台灯的圆拱窗外开始——修复师小小的身影仍俯在桌前——一路升起、后退：旧海关大楼的南立面、码头、整座港城无数扇亮着的窗，直到月光下的海。最后镜头停在天上：一轮被薄云时遮时露的月亮。她那扇窗，成了无数灯火中的一盏。",
+  "emotion": "千年不过无数个今晚：每一扇亮着的窗都是一个人的今晚。",
+  "transition_in": {
+   "type": "light",
+   "frames": 0,
+   "on": "S017 玻璃里的烛光 → 修复室窗中的台灯光（同一扇窗：由室内看玻璃 → 由室外看窗；暗处一点亮窗的相似构图）"
+  },
+  "continuity": "月亮在画右上；港城虚构，无可辨识的真实地标与文字；结束于月亮与正在聚拢的云，S019 以同一片天开场。",
+  "refs": [
+   "CHAR_RESTORER",
+   "LOC_HARBOR"
+  ],
+  "previz_notes": "harbor_eras 模块的 E5 当下状态：摄影机从关栈南立面一层东端（修复室）拱窗外起，升降 + 后拉到高空；天空层加月亮与聚云。",
+  "revision": {
+   "findings": [
+    "E7",
+    "E11",
+    "V6",
+    "V24"
+   ],
+   "from_v1": [
+    "S019"
+   ]
+  }
+ },
+ {
+  "id": "S019",
+  "in_frame": 1763,
+  "out_frame": 1801,
+  "section": "CH1",
+  "treatment_ref": "四",
+  "lyric_ids": [
+   "L020",
+   "L021"
+  ],
+  "lyric": "不过无数个今晚／有人等一场雨",
+  "sync_points": [
+   {
+    "t": 74.18,
+    "event": "“等”：碗底落在石阶上"
+   },
+   {
+    "t": 74.6,
+    "event": "“场雨”：掌心离开碗沿"
+   }
+  ],
+  "era": "home",
+  "scene": "old_home",
+  "location": "旧日石屋·屋檐下石阶",
+  "characters": [
+   "WIFE"
+  ],
+  "props": [
+   "BOWL"
+  ],
+  "extras": [],
+  "shot_size": "WS",
+  "angle": "平视；天空占画面上三分之一",
+  "lens_mm": 32,
+  "camera_move": "锁定（不再由天空下摇）",
+  "speed": "24",
+  "focus": "全景深",
+  "lighting": "冷银月光被聚拢的云时遮时露；檐下暗处",
+  "action": "旧日屋檐下。天上的云正在聚拢，月亮时隐时现。等待的人已经弯下腰，把一只空的青花碗放到檐下的石阶上——“等”字时碗底碰到石阶。她的掌心离开碗沿，停了一停。",
+  "emotion": "最朴素的等待：等一场雨。",
+  "transition_in": {
+   "type": "match_cut",
+   "frames": 0,
+   "on": "相似构图：S018 结尾的月亮与聚云 → 本镜画面上三分之一同一片天（天空位置一致；跨时代）"
+  },
+  "continuity": "一个镜头只做一个动作（简报 §四）：碗落在石阶上。天气【锁】CH1：干，云开始聚，月光时有时无（圣经 §7.5）；同一只青花碗，碗心梅花朝天；石阶在画左下，门在画左；左腕银镯；本机位在 S041（CH2）原样复用。",
+  "refs": [
+   "CHAR_WIFE",
+   "PROP_BOWL",
+   "LOC_HOME"
+  ],
+  "revision": {
+   "findings": [
+    "F11",
+    "E7",
+    "V6",
+    "V12"
+   ],
+   "from_v1": [
+    "S020"
+   ]
+  }
+ },
+ {
+  "id": "S020",
+  "in_frame": 1801,
+  "out_frame": 1849,
+  "section": "CH1",
+  "treatment_ref": "四",
+  "lyric_ids": [
+   "L021",
+   "L022"
+  ],
+  "lyric": "有人等一场雨／有人等沉默被听见",
+  "sync_points": [
+   {
+    "t": 75.44,
+    "event": "“等”：开始沿旧折痕折回"
+   },
+   {
+    "t": 76.22,
+    "event": "“被听见”：折好"
+   },
+   {
+    "t": 76.6,
+    "event": "整个手掌压平信"
+   }
+  ],
+  "era": "migrant",
+  "scene": "pier_waiting",
+  "location": "1920–30 年代候船棚·第三盏灯下·夜",
+  "characters": [
+   "MIGRANT"
+  ],
+  "props": [
+   "LETTER",
+   "CASE"
+  ],
+  "extras": [],
+  "shot_size": "MCU",
+  "angle": "平视略俯",
+  "lens_mm": 75,
+  "camera_move": "缓慢推进，止于她压平信的手",
+  "speed": "24",
+  "focus": "焦点在她的手与信",
+  "lighting": "搪瓷灯罩白炽灯 2400K 自上而下的光池；棚外蓝黑的夜海",
+  "action": "候船棚第三盏灯下，迁徙女性（约20岁，长辫，褪色碎花布衫）坐在一只倒扣的木箱上，藤箱横在膝上当桌，信已经摊开在箱盖上。她沿着原来的折痕把它重新折回去——先三折，再对折——“被听见”时折好，用整个手掌把它压平；折好的信边在画面中是一条水平的线。始终没有封口。",
+  "emotion": "写给谁的？没说出口的话，比写下的更多。",
+  "transition_in": {
+   "type": "match_cut",
+   "frames": 0,
+   "on": "手势：S019 掌心离开碗沿的上抬 → 本镜她的右手落向摊开的信（同一只右手、画面中下同一区域；跨时代）"
+  },
+  "continuity": "一个镜头只做一个动作：沿旧折痕折回。她坐画左、灯在画右上；信为八行笺，三折后对折（圣经 §6.8）；手掌压平是她的性格签名；【匹配锁 T10】折好的信边水平、位于 y=0.66，为 S021 墨线的 A 帧；本机位在 S043（CH2）原样复用。",
+  "refs": [
+   "CHAR_MIGRANT",
+   "PROP_LETTER",
+   "PROP_CASE",
+   "LOC_PIER"
+  ],
+  "revision": {
+   "findings": [
+    "F11",
+    "V12",
+    "V13",
+    "V17"
+   ],
+   "from_v1": [
+    "S021"
+   ]
+  }
+ },
+ {
+  "id": "S021",
+  "in_frame": 1849,
+  "out_frame": 1927,
+  "section": "CH1",
+  "treatment_ref": "四",
+  "lyric_ids": [
+   "L023",
+   "L024"
+  ],
+  "lyric": "有人要把山河／握在掌间",
+  "sync_points": [
+   {
+    "t": 78.32,
+    "event": "“山河”：墨线划过海岸"
+   },
+   {
+    "t": 79.64,
+    "event": "“掌”：左手掌压住陆地"
+   }
+  ],
+  "era": "maphand",
+  "scene": "map_office",
+  "location": "1890s 港务测绘办公室（即今日修复室）·制图桌",
+  "characters": [
+   "MAPHAND"
+  ],
+  "props": [
+   "MAP"
+  ],
+  "extras": [],
+  "shot_size": "INSERT",
+  "angle": "90° 正顶拍",
+  "lens_mm": 50,
+  "camera_move": "顶拍锁定 → 微推",
+  "speed": "24",
+  "focus": "全幅清晰，墨线锐利",
+  "lighting": "桌面画右一盏黄铜底座煤油灯 2200K（玻璃灯罩）；半闭的木百叶把月光切成平行条纹落在地图与手上——全片反差最高的光",
+  "action": "正顶拍：一张 1890s 手绘海岸地图（与海图是同一段海岸）。起幅就是乌木铜边直尺下一条水平的线位。一只穿深炭黑礼服袖、露出浆白衬衫袖口的右手持直线笔，沿尺从画左向画右划下一条笔直的铁胆墨线——湿时蓝黑、在灯下反光——从海上一直切进陆地。“掌”字时，左手五指张开，整个按在地图上，掌心盖住一片陆地。",
+  "emotion": "权力的手势：一条线就能改变很多人的路。冷静，没有表情。",
+  "transition_in": {
+   "type": "match_cut",
+   "frames": 0,
+   "on": "相似构图：S020 折好的信边（水平，y=0.66）→ 直尺下的墨线（同高度、同方向；跨时代）",
+   "register": {
+    "a": "S020",
+    "b": "S021",
+    "subject": "信边/墨线",
+    "pos": [
+     0.5,
+     0.66
+    ],
+    "size": "水平线贯穿画面宽约 60%",
+    "direction": "画左→画右",
+    "phase": "信压平完成 → 线开始划"
+   }
+  },
+  "continuity": "只见手、袖口与文具（直尺、直线笔为 PROP_MAP 的工具）；素面黄铜椭圆袖扣无纹样；手的肤色为难以判定族裔的中间色（圣经 §5.6）；墨线【锁】不用红色；地图无可读文字；墨线水平、y=0.66、画左→画右（与 S020 信边、S047 墨线、S048 门槛与提手一致）。",
+  "refs": [
+   "CHAR_MAPHAND",
+   "PROP_MAP",
+   "LOC_MAPOFFICE"
+  ],
+  "revision": {
+   "findings": [
+    "V12",
+    "V14",
+    "V17"
+   ],
+   "from_v1": [
+    "S022"
+   ]
+  }
+ },
+ {
+  "id": "S022",
+  "in_frame": 1927,
+  "out_frame": 2005,
+  "section": "CH1",
+  "treatment_ref": "四",
+  "lyric_ids": [
+   "L025",
+   "L026"
+  ],
+  "lyric": "有人只想再见／某个人一面",
+  "sync_points": [
+   {
+    "t": 80.3,
+    "event": "“有人只想再见”：起幅焦点在远岸"
+   },
+   {
+    "t": 81.62,
+    "event": "“某个人一面”：焦点到达他的眼睛"
+   },
+   {
+    "t": 82.64,
+    "event": "“一”：他轻轻吸一口气"
+   }
+  ],
+  "era": "navigator",
+  "scene": "sea_deck",
+  "location": "夜·甲板·艉楼船舷",
+  "characters": [
+   "NAVIGATOR"
+  ],
+  "props": [
+   "SHIPLAMP"
+  ],
+  "extras": [],
+  "shot_size": "CU",
+  "angle": "平视，越过他的侧脸看向画左远岸",
+  "lens_mm": 135,
+  "camera_move": "锁定 + 极缓慢推进；焦点转移 ≥1 拍（远岸 → 眼睛）",
+  "speed": "24",
+  "focus": "起幅焦点在画左远岸的一点灯 → 转到前景他的眼睛",
+  "lighting": "月光从画右上（硬、单向）；艉灯 1950K 从低位打在他脸侧；画左远岸一点 1900K（M7）",
+  "action": "长焦起幅：黑暗里一条低矮的海岸线横在画左，岸上只有一点温暖的灯——它在画面中的位置，正是上一镜地图上那段海岸的位置；前景画右，是航海人虚焦的侧脸。焦点缓缓转到他的眼睛：他倚着船舷，望向画左那一点灯，灯光在他眼里映成一个小小的亮点。",
+  "emotion": "宏大的世界收回到一个人只想再见一面的心愿。",
+  "transition_in": {
+   "type": "match_cut",
+   "frames": 0,
+   "on": "相似构图：地图上被墨线切过的海岸线 → 真实夜色中同一段黑暗海岸线（海岸线与岸灯位置一致；跨时代）"
+  },
+  "continuity": "岸灯【锁】在画左，他望向画左（家）；与 S008、S045 同方位；他在画右、面朝画左；每组镜头“从远景走向近景”在本镜内完成（远岸 → 眼睛）。",
+  "refs": [
+   "CHAR_NAVIGATOR",
+   "PROP_SHIPLAMP",
+   "LOC_DECK"
+  ],
+  "revision": {
+   "findings": [
+    "F9",
+    "V5",
+    "V12"
+   ],
+   "from_v1": [
+    "S023"
+   ]
+  }
+ },
+ {
+  "id": "S023",
+  "in_frame": 2005,
+  "out_frame": 2083,
+  "section": "CH1",
+  "treatment_ref": "四",
+  "lyric_ids": [
+   "L026",
+   "L027",
+   "L028"
+  ],
+  "lyric": "某个人一面／千年啊／不过无数个今晚",
+  "sync_points": [
+   {
+    "t": 83.66,
+    "event": "“千年啊”：玻璃里的月亮"
+   },
+   {
+    "t": 86.06,
+    "event": "“今”：下摇到三面展柜"
+   }
+  ],
+  "era": "modern",
+  "scene": "museum_gallery",
+  "location": "二层主展厅·北墙 G3 三联立柜（月光经南侧门洞斜入）",
+  "characters": [
+   "RESTORER"
+  ],
+  "props": [
+   "CASE",
+   "SHIRT",
+   "KEEPSAKE",
+   "PASS"
+  ],
+  "extras": [],
+  "shot_size": "WS",
+  "angle": "面向北墙，由仰视下摇至平视",
+  "lens_mm": 32,
+  "camera_move": "从 G3 立柜高处玻璃里映着的月亮缓慢下摇，沿越过摄影机肩头的月光光柱进入展厅",
+  "speed": "24",
+  "focus": "全景深（起幅焦点在玻璃中的月亮，≥1 拍转到展柜与人）",
+  "lighting": "月光冷银（P04）从南侧门洞成束斜入，在柚木地板上形成拱形光斑；展柜 3000K 调暗；地脚 4000K 极暗",
+  "action": "同一轮月亮——映在北墙 G3 立柜高处的玻璃上（真正的月亮在摄影机身后，长廊拱窗与门洞之外）。镜头从玻璃里这轮月亮缓慢下摇：月光从南侧门洞成束斜入，越过摄影机肩头落进黑暗的展厅，三联立柜 G3a、G3b、G3c 排成一列，月光恰好落在它们的玻璃上。修复师从画左走进这道月光里——她没有提灯，月光就是她的主光。",
+  "emotion": "千年来照着所有人的，是同一轮月亮。",
+  "transition_in": {
+   "type": "light",
+   "frames": 0,
+   "on": "航海人眼中映着的岸灯 → 展柜玻璃里映着的同一轮月亮（同一画面位置的光点接光点；跨时代）"
+  },
+  "continuity": "三联柜由画左到画右【锁】：G3a 航海（针路簿、测深铅锤）／G3b 家用器（一个空着的托架——留给正在修复的青花碗——与其他残瓷）／G3c 迁徙（打开的藤箱、叠好的旧衫、解开包布的木梳、通行纸）（圣经 §7.1）；修复师由画左入画向右走；不带工作灯，避免她自己的倒影盖过玻璃里的时代（§8.3）；月亮本体不直接入画，只在玻璃里（M8）。",
+  "refs": [
+   "CHAR_RESTORER",
+   "PROP_CASE",
+   "PROP_SHIRT",
+   "PROP_KEEPSAKE",
+   "PROP_PASS",
+   "LOC_GALLERY"
+  ],
+  "revision": {
+   "findings": [
+    "V7",
+    "F4",
+    "E11"
+   ],
+   "from_v1": [
+    "S024"
+   ]
+  }
+ },
+ {
+  "id": "S024",
+  "in_frame": 2083,
+  "out_frame": 2161,
+  "section": "CH1",
+  "treatment_ref": "四",
+  "lyric_ids": [
+   "L028",
+   "L029",
+   "L030"
+  ],
+  "lyric": "不过无数个今晚／多少不敢说的爱／借月色流传",
+  "sync_points": [
+   {
+    "t": 86.9,
+    "event": "“多少”：G3a（船舱）入画"
+   },
+   {
+    "t": 88.28,
+    "event": "“借月色”：G3b（家中）居中"
+   },
+   {
+    "t": 89.36,
+    "event": "“流传”：G3c（候船处）居中"
+   }
+  ],
+  "era": "multi",
+  "scene": "museum_gallery",
+  "location": "展厅·G3 三联立柜（玻璃中三个时代的夜）",
+  "characters": [
+   "NAVIGATOR",
+   "WIFE",
+   "MIGRANT",
+   "RESTORER"
+  ],
+  "props": [
+   "COMPASS",
+   "SHIPLAMP",
+   "CANDLE",
+   "BOWL",
+   "CASE"
+  ],
+  "extras": [],
+  "shot_size": "MS",
+  "angle": "平视，与展柜平行",
+  "lens_mm": 40,
+  "camera_move": "稳定横移（轨道车，由画左向画右匀速），平行经过三面立柜",
+  "speed": "24",
+  "focus": "焦点落在每面玻璃反射的纵深里，依次转移",
+  "lighting": "三面玻璃中的月光方向统一（画右上 → 画左下）；反射源是摄影机身后被月光照亮的门洞",
+  "action": "镜头横移经过三联柜。每面玻璃里各映着一个时代的夜：G3a，船舱里伏在罗盘前的航海人与摆动的舱灯；G3b，旧日家中烛火旁等待的人（脸不清）；G3c，候船棚灯下坐在木箱上、膝上横着藤箱的迁徙女性。三个人在同一片月光下各自等待；玻璃外的现代展厅安静无声，修复师的倒影淡淡地、暗暗地跟着走。",
+  "emotion": "不同时代的人在同一片月光下等待——这些夜晚短暂地相邻。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "同一空间内接续（由下摇转横移）"
+  },
+  "continuity": "横移方向画左→画右（T11）；每面反射保留各自的空间纵深，互不穿插；修复师倒影暗于玻璃中的时代；这是 CH3 长廊（S066）的横向预告。",
+  "refs": [
+   "CHAR_NAVIGATOR",
+   "CHAR_WIFE",
+   "CHAR_MIGRANT",
+   "CHAR_RESTORER",
+   "PROP_COMPASS",
+   "PROP_SHIPLAMP",
+   "PROP_CANDLE",
+   "PROP_BOWL",
+   "PROP_CASE",
+   "LOC_GALLERY",
+   "LOC_CABIN",
+   "LOC_HOME",
+   "LOC_PIER"
+  ],
+  "revision": {
+   "findings": [
+    "V7"
+   ],
+   "from_v1": [
+    "S025"
+   ]
+  }
+ },
+ {
+  "id": "S025",
+  "in_frame": 2161,
+  "out_frame": 2238,
+  "section": "CH1",
+  "treatment_ref": "gap",
+  "lyric_ids": [
+   "L031",
+   "L032"
+  ],
+  "lyric": "我隔着玻璃／认不出你的脸",
+  "sync_points": [
+   {
+    "t": 90.14,
+    "event": "“我隔着玻璃”：她凑近"
+   },
+   {
+    "t": 92.66,
+    "event": "“脸”：焦点最接近，仍不清晰"
+   }
+  ],
+  "era": "multi",
+  "scene": "museum_gallery",
+  "location": "展厅·G3b 立柜前",
+  "characters": [
+   "RESTORER",
+   "WIFE"
+  ],
+  "props": [
+   "CANDLE",
+   "GLOVES"
+  ],
+  "extras": [],
+  "shot_size": "MCU",
+  "angle": "过肩 → 正侧",
+  "lens_mm": 75,
+  "camera_move": "缓慢推进；焦点在她的倒影与玻璃深处之间反复寻找",
+  "speed": "24",
+  "focus": "焦点始终落不实在那张旧日的脸上",
+  "lighting": "月光是她的主光（冷边缘 + 柚木地板的暖反射补光）；玻璃深处是 1850K 烛光",
+  "action": "修复师在 G3b 前停下，凑近玻璃。玻璃里，她自己的倒影（较暗、焦外）恰好落在那个空着的托架上——那里本该放着她正在修复的碗；更深处，是旧日家中烛火旁的一张脸。她调整角度、眯起眼，焦点在两张脸之间反复寻找，却始终落不实，那张旧日的脸总差一点点就能看清。",
+  "emotion": "她认不出你的脸——年代可以辨认，人不能。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "横移停在 G3b → 修复师走到它面前"
+  },
+  "continuity": "修复师面朝画右，玻璃在画右；等待的人的脸只以失焦光斑与轮廓存在（圣经锁）；她的倒影暗于玻璃里的烛火；G3b 空托架。",
+  "refs": [
+   "CHAR_RESTORER",
+   "CHAR_WIFE",
+   "PROP_CANDLE",
+   "PROP_GLOVES",
+   "LOC_GALLERY",
+   "LOC_HOME"
+  ],
+  "revision": {
+   "findings": [
+    "V7",
+    "E11"
+   ],
+   "from_v1": [
+    "S026"
+   ]
+  }
+ },
+ {
+  "id": "S026",
+  "in_frame": 2238,
+  "out_frame": 2326,
+  "section": "CH1",
+  "treatment_ref": "gap",
+  "lyric_ids": [
+   "L033",
+   "L034"
+  ],
+  "lyric": "却认得你／舍不得的人间",
+  "sync_points": [
+   {
+    "t": 93.32,
+    "event": "“却认得你”：焦点转到手上"
+   },
+   {
+    "t": 94.46,
+    "event": "“舍不得”：手把筷子挪齐"
+   },
+   {
+    "t": 95.95,
+    "event": "全乐队骤停（“舍不得”与“的人间”之间）：手停住"
+   }
+  ],
+  "era": "multi",
+  "scene": "museum_gallery",
+  "location": "G3b 玻璃深处（旧日饭桌）",
+  "characters": [
+   "RESTORER",
+   "WIFE"
+  ],
+  "props": [
+   "BOWL",
+   "GLOVES"
+  ],
+  "extras": [],
+  "shot_size": "INSERT",
+  "angle": "平视，透过玻璃",
+  "lens_mm": 100,
+  "camera_move": "锁定；焦点由脸转移到手",
+  "speed": "24",
+  "focus": "焦点转移：模糊的脸 → 清晰的手",
+  "lighting": "烛光 1850K；玻璃表面映着月光下她手套指尖的一点倒影",
+  "action": "脸仍然模糊，玻璃深处的一只手却忽然清晰了：等待的人的左手——腕上一只素银细镯——把一双竹筷在对面空座前摆正，停了停，又轻轻挪齐一点点。修复师戴手套的指尖的淡淡倒影靠近玻璃，却没有接触。“舍不得”唱完、全乐队骤停的那一秒里，那只手也停住，搁在筷子上不动。",
+  "emotion": "认不出脸，却认得这份舍不得。",
+  "transition_in": {
+   "type": "reflection",
+   "frames": 0,
+   "on": "同一块玻璃内焦点由脸转移到手（倒影内转场，T12）"
+  },
+  "continuity": "竹筷与碗在空座前（画右）；银镯在左腕——脸不清时靠手腕认出她；修复师手套指尖的倒影靠近但不接触（M1）；全乐队骤停在“舍不得”与“的人间”之间（95.95–96.85）。",
+  "refs": [
+   "CHAR_RESTORER",
+   "CHAR_WIFE",
+   "PROP_BOWL",
+   "PROP_GLOVES",
+   "LOC_GALLERY",
+   "LOC_HOME"
+  ],
+  "revision": {
+   "findings": [
+    "V19",
+    "E10",
+    "E8",
+    "V17"
+   ],
+   "from_v1": [
+    "S027"
+   ]
+  }
+ },
+ {
+  "id": "S027",
+  "in_frame": 2326,
+  "out_frame": 2443,
+  "section": "CH1",
+  "treatment_ref": "gap",
+  "lyric_ids": [
+   "L034"
+  ],
+  "lyric": "舍不得的人间",
+  "sync_points": [
+   {
+    "t": 96.92,
+    "event": "全乐队重新进入：切长廊"
+   },
+   {
+    "t": 97.62,
+    "event": "重拍：极缓慢推进开始"
+   },
+   {
+    "t": 99.5,
+    "event": "门洞深处她的剪影走向 G3c"
+   },
+   {
+    "t": 101.5,
+    "event": "“人间”长音结束"
+   }
+  ],
+  "era": "modern",
+  "scene": "corridor",
+  "location": "二层月光长廊·自西端（x≈−44）向东压缩",
+  "characters": [
+   "RESTORER"
+  ],
+  "props": [],
+  "extras": [],
+  "shot_size": "WS",
+  "angle": "平视，中轴，镜头高 1.45 m",
+  "lens_mm": 135,
+  "camera_move": "运动控制，极缓慢推进（几乎察觉不到）",
+  "speed": "24",
+  "focus": "长焦深焦（T8）：月光斑节拍与尽头空长凳同时可读；小壁柜光斑永远焦外",
+  "lighting": "02:10 月亮正南约 60°，从画右南侧拱窗斜入，每 4 m 一个拱形冷银光斑；小壁柜 3000K 暖点焦外；尽头窗湾外港口灯点",
+  "action": "全乐队重新进入，切到长廊：从西端用长焦向东压缩——一格一格的月光斑沿柚木地板排到尽头，五个主展柜的玻璃暗暗地接着月光，两侧墙上十几个小壁柜里只有永远不对焦的暖色光斑。左侧一个通往展厅的门洞透出一点暖光，门洞深处，修复师小小的剪影从 G3b 走向 G3c。长廊尽头，东端窗湾的长凳在港口灯点前空着。",
+  "emotion": "人间就在窗外，也在玻璃里；尽头那张长凳空着，像在等两个人。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "全乐队重新进入（96.85）时切长廊（同一夜、同一层楼）"
+  },
+  "continuity": "首次建立长廊与窗湾地理（圣经 §7.11 可选建立镜头）：东端隔断 x=0，五个主展柜此刻只是暗玻璃、尚未映出时代——留给 S066 兑现；尽头窗湾长凳空着（S059 起他坐在这里）；她留在展厅（经门洞可见），接 S028 的 G3c。",
+  "refs": [
+   "CHAR_RESTORER",
+   "LOC_CORRIDOR",
+   "LOC_GALLERY",
+   "LOC_WINDOW"
+  ],
+  "previz_notes": "corridor 模块：135 mm 等效压缩、月光斑每 4 m 一个、14 个小壁柜焦外暖斑；左墙一个门洞透出展厅暖光。",
+  "revision": {
+   "findings": [
+    "F1",
+    "V3",
+    "V7",
+    "V24"
+   ],
+   "from_v1": [
+    "S028"
+   ]
+  }
+ },
+ {
+  "id": "S028",
+  "in_frame": 2443,
+  "out_frame": 2511,
+  "section": "INTERLUDE",
+  "treatment_ref": "gap",
+  "lyric_ids": [],
+  "lyric": "",
+  "sync_points": [
+   {
+    "t": 102.17,
+    "event": "他从铸铁柱之间出现"
+   },
+   {
+    "t": 103.37,
+    "event": "人声进入的重音上：他点头"
+   }
+  ],
+  "era": "modern",
+  "scene": "museum_gallery",
+  "location": "展厅·G3c 立柜前（柜门打开做状况检查）",
+  "characters": [
+   "GUARD",
+   "RESTORER"
+  ],
+  "props": [
+   "FLASHLIGHT",
+   "PHONE",
+   "CASE"
+  ],
+  "extras": [],
+  "shot_size": "MS",
+  "angle": "平视",
+  "lens_mm": 50,
+  "camera_move": "锁定，焦点由前景她的肩背缓缓移到他",
+  "speed": "24",
+  "focus": "焦点由前景她移到立柱间的他",
+  "lighting": "月光从门洞成束斜入；G3c 柜内 3000K + 她一盏压低、加了遮光罩的 3500K 小检查灯；他的 4000K 手电光束朝地",
+  "action": "间奏，人声安静下来。G3c 的玻璃柜门打开着，修复师在柜前做状况检查，小检查灯只照着柜内。夜班工作人员（约65岁，藏青值守夹克，老花镜挂在胸前，背微驼，一只手背在身后）巡夜从画右的铸铁柱之间走来，手电光束朝着地面。他在几步外停下，看了看她，轻轻点了一下头。",
+  "emotion": "一个温和的、几乎没人注意的问候。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "长廊 → 同一层的展厅（她刚走回 G3c）"
+  },
+  "continuity": "他从画右进入；手电在右手；旧手机在夹克右侧口袋（圣经 §5.2，为 S060 埋道具）；点头幅度很小、真实速度。间奏不是真正的静默（102–103.4 只是一个小凹陷），点头落在 103.37 人声进入的重音上。",
+  "refs": [
+   "CHAR_GUARD",
+   "CHAR_RESTORER",
+   "PROP_FLASHLIGHT",
+   "PROP_PHONE",
+   "PROP_CASE",
+   "LOC_GALLERY"
+  ],
+  "revision": {
+   "findings": [
+    "E4",
+    "V7",
+    "V23",
+    "E8"
+   ],
+   "from_v1": [
+    "S029"
+   ]
+  }
+ },
+ {
+  "id": "S029",
+  "in_frame": 2511,
+  "out_frame": 2589,
+  "section": "INTERLUDE",
+  "treatment_ref": "gap",
+  "lyric_ids": [],
+  "lyric": "",
+  "sync_points": [
+   {
+    "t": 104.99,
+    "event": "她抬眼"
+   },
+   {
+    "t": 105.3,
+    "event": "她短暂点头"
+   },
+   {
+    "t": 105.5,
+    "event": "目光落回柜内"
+   },
+   {
+    "t": 105.6,
+    "event": "焦点开始移向背景的他（至 106.4）"
+   },
+   {
+    "t": 106.9,
+    "event": "他转身"
+   },
+   {
+    "t": 107.8,
+    "event": "手电光束远去"
+   }
+  ],
+  "era": "modern",
+  "scene": "museum_gallery",
+  "location": "展厅·G3c 立柜前",
+  "characters": [
+   "RESTORER",
+   "GUARD"
+  ],
+  "props": [
+   "FLASHLIGHT",
+   "GLOVES"
+  ],
+  "extras": [],
+  "shot_size": "MCU",
+  "angle": "平视",
+  "lens_mm": 75,
+  "camera_move": "锁定；焦点由她拉到背景的他",
+  "speed": "24",
+  "focus": "焦点转移：她 → 背景的他（≥1 拍）",
+  "lighting": "检查灯暖光照着她的下半张脸；背景手电光渐远",
+  "action": "修复师抬了一下眼，匆匆点头回应，半秒后目光就落回柜内。焦点移到背景：他在原地多停了半秒，转身离开，手电光束沿着地板慢慢远去。",
+  "emotion": "她忙着；他有一点被留在原地的孤单，轻得几乎看不见。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "正反打：他点头 → 她回应"
+  },
+  "continuity": "她面朝画左（柜内），他在画右背景；必须让观众记住这一点头——S065 回收（他抬头、她点头的反转）。",
+  "refs": [
+   "CHAR_RESTORER",
+   "CHAR_GUARD",
+   "PROP_FLASHLIGHT",
+   "PROP_GLOVES",
+   "LOC_GALLERY"
+  ],
+  "revision": {
+   "findings": [
+    "E4",
+    "V7"
+   ],
+   "from_v1": [
+    "S030"
+   ]
+  }
+ },
+ {
+  "id": "S030",
+  "in_frame": 2589,
+  "out_frame": 2637,
+  "section": "INTERLUDE",
+  "treatment_ref": "gap",
+  "lyric_ids": [],
+  "lyric": "",
+  "sync_points": [
+   {
+    "t": 108.67,
+    "event": "检查灯照进箱内"
+   },
+   {
+    "t": 109.5,
+    "event": "手套抚过衣领折痕"
+   }
+  ],
+  "era": "modern",
+  "scene": "museum_gallery",
+  "location": "G3c 柜内·打开的旧藤箱",
+  "characters": [
+   "RESTORER"
+  ],
+  "props": [
+   "CASE",
+   "SHIRT",
+   "KEEPSAKE",
+   "PASS",
+   "GLOVES"
+  ],
+  "extras": [],
+  "shot_size": "INSERT",
+  "angle": "俯拍",
+  "lens_mm": 75,
+  "camera_move": "俯拍缓慢推进",
+  "speed": "24",
+  "focus": "焦点在衣领折痕",
+  "lighting": "检查灯 3500K 掠射棉布折痕；柜内 3000K 暗",
+  "action": "G3c 柜内，打开的旧藤箱，蓝印花布内衬：里面叠着一件褪色的灰蓝旧衫，衣角压得平平整整，衣摆右下角缺了一个三角。一把黄杨木梳平放在解开的红褐包布上，压在旧衫最上面一角；箱旁立着摊开的通行纸，四个空的相角。她戴手套的手抚过衣领的折痕。",
+  "emotion": "好奇被重新勾起：谁把它叠得这么平？",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "她回到工作 → 她在看的东西"
+  },
+  "continuity": "博物馆状态（圣经 §6.5–6.7、§6.12）：旧衫褪成 #8392A0、折痕发白、衣摆缺角朝上（与 S043 信中布片暗线对应，不强调）；木梳包布解开平铺；通行纸照片已脱落、只剩四个相角，紫色印迹褪成灰紫；藤箱提手在画下方；与 S031 同一构图。",
+  "refs": [
+   "CHAR_RESTORER",
+   "PROP_CASE",
+   "PROP_SHIRT",
+   "PROP_KEEPSAKE",
+   "PROP_PASS",
+   "PROP_GLOVES",
+   "LOC_GALLERY"
+  ],
+  "revision": {
+   "findings": [
+    "V7",
+    "F4",
+    "V27",
+    "V17"
+   ],
+   "from_v1": [
+    "S031"
+   ]
+  }
+ },
+ {
+  "id": "S031",
+  "in_frame": 2637,
+  "out_frame": 2686,
+  "section": "V2",
+  "treatment_ref": "五",
+  "lyric_ids": [
+   "L035",
+   "L036"
+  ],
+  "lyric": "旧衫叠进藤箱／乡音留在唇边",
+  "sync_points": [
+   {
+    "t": 110.35,
+    "event": "“叠进”：衣衫落入箱中"
+   },
+   {
+    "t": 110.95,
+    "event": "“箱”：手掌压平衣角"
+   }
+  ],
+  "era": "migrant",
+  "scene": "pier_waiting",
+  "location": "候船棚长凳·藤箱摊在膝上",
+  "characters": [
+   "MIGRANT"
+  ],
+  "props": [
+   "SHIRT",
+   "CASE"
+  ],
+  "extras": [],
+  "shot_size": "INSERT",
+  "angle": "俯拍，同 S030",
+  "lens_mm": 75,
+  "camera_move": "俯拍锁定",
+  "speed": "48 (50% slow motion)",
+  "focus": "焦点在衣领与手",
+  "lighting": "候船棚 2400K 灯泡 + 棚外蓝调时刻的天光（傍晚刚下过雨）",
+  "action": "衣料匹配：同一件旧衫，此刻还新——褪色的灰蓝。迁徙女性的双手把它的衣身对折、再三折，放进藤箱，用整个手掌压平衣角，又压一次。衣摆右下角那个剪去的三角，在她的掌心下一闪而过。",
+  "emotion": "把家人的旧衫带走，是把一点家带走。",
+  "transition_in": {
+   "type": "match_cut",
+   "frames": 0,
+   "on": "衣料运动：S030 手套抚过衣领折痕 → 她的手掌压平同一处衣领与衣角（同一衣物、同一构图；剪点在压平动作中段；T13）"
+  },
+  "continuity": "构图与 S030 一致（提手在画下方）；旧衫当年状态 #6F7F8F，折法：袖子后折、衣身对折、再三折成 30×22 cm（圣经 §6.5）；蓝印花布内衬；她指甲短、右手中指有握笔小茧。",
+  "refs": [
+   "CHAR_MIGRANT",
+   "PROP_SHIRT",
+   "PROP_CASE",
+   "LOC_PIER"
+  ],
+  "revision": {
+   "findings": [
+    "V27",
+    "V19"
+   ],
+   "from_v1": [
+    "S032"
+   ]
+  }
+ },
+ {
+  "id": "S032",
+  "in_frame": 2686,
+  "out_frame": 2749,
+  "section": "V2",
+  "treatment_ref": "五",
+  "lyric_ids": [
+   "L036",
+   "L037"
+  ],
+  "lyric": "乡音留在唇边／你想被世界看见",
+  "sync_points": [
+   {
+    "t": 111.92,
+    "event": "“乡音”：她回头"
+   },
+   {
+    "t": 112.33,
+    "event": "“唇边”：嘴唇无声地动"
+   },
+   {
+    "t": 114.13,
+    "event": "“看见”：她仍望着"
+   }
+  ],
+  "era": "migrant",
+  "scene": "pier_waiting",
+  "location": "候船棚·人群中",
+  "characters": [
+   "MIGRANT"
+  ],
+  "props": [
+   "CASE"
+  ],
+  "extras": [
+   "送行者（焦外，画左栏杆外；圣经 §5.5a，无代号）",
+   "候船人群群演（圣经 §7.6）"
+  ],
+  "shot_size": "MCU",
+  "angle": "平视",
+  "lens_mm": 100,
+  "camera_move": "少量自然手持，跟随她回头",
+  "speed": "24",
+  "focus": "浅景深：她清晰，人群与送行者虚化",
+  "lighting": "2400K 灯泡光池；棚外蓝调天光，湿木板反光",
+  "action": "候船棚里，人群在她身后从画左向画右流动、模糊。她回头，越过人群望向画左栏杆外送行的人，嘴唇轻轻动了一下，像在无声地重复一个熟悉的称呼——一个双音节，没有声音。",
+  "emotion": "离开之前，一个称呼在唇边。想被世界看见，也想被一颗心挂念。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "由手到人"
+  },
+  "continuity": "她回头望向画左（家）；人群由画左流向画右（船）；唇形不可读；长辫、右眉峰小痣。",
+  "refs": [
+   "CHAR_MIGRANT",
+   "PROP_CASE",
+   "LOC_PIER"
+  ],
+  "revision": {
+   "findings": [
+    "V27",
+    "V17"
+   ],
+   "from_v1": [
+    "S033"
+   ]
+  }
+ },
+ {
+  "id": "S033",
+  "in_frame": 2749,
+  "out_frame": 2800,
+  "section": "V2",
+  "treatment_ref": "五",
+  "lyric_ids": [
+   "L038"
+  ],
+  "lyric": "还是被一颗心挂念",
+  "sync_points": [
+   {
+    "t": 115.33,
+    "event": "“一颗心”：箱盖重新打开"
+   },
+   {
+    "t": 116.29,
+    "event": "“念”：木梳放在最上面并按一下"
+   }
+  ],
+  "era": "migrant",
+  "scene": "pier_waiting",
+  "location": "候船棚长凳",
+  "characters": [
+   "MIGRANT"
+  ],
+  "props": [
+   "CASE",
+   "SHIRT",
+   "KEEPSAKE"
+  ],
+  "extras": [],
+  "shot_size": "CU",
+  "angle": "俯拍",
+  "lens_mm": 75,
+  "camera_move": "锁定",
+  "speed": "24",
+  "focus": "焦点在箱内最上层",
+  "lighting": "2400K 灯泡",
+  "action": "她把已经合上的藤箱重新打开，从衣襟里取出一把用褪色红褐棉布包着的黄杨木梳——家人的小物件——轻轻放在旧衫最上面，用手掌按了一下，再合上箱盖。",
+  "emotion": "她的选择：被一颗心挂念。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "回头望见家人 → 因此重新打开箱子（因果剪辑）"
+  },
+  "continuity": "包布 #8E4A3C（小红家族，圣经 §2.6、§6.7）；木梳 34 齿、两齿磨短；箱扣为黄铜扣。",
+  "refs": [
+   "CHAR_MIGRANT",
+   "PROP_CASE",
+   "PROP_SHIRT",
+   "PROP_KEEPSAKE",
+   "LOC_PIER"
+  ],
+  "revision": {
+   "findings": [
+    "V27"
+   ],
+   "from_v1": [
+    "S034"
+   ]
+  }
+ },
+ {
+  "id": "S034",
+  "in_frame": 2800,
+  "out_frame": 2840,
+  "section": "V2",
+  "treatment_ref": "五",
+  "lyric_ids": [
+   "L038",
+   "L039",
+   "L040"
+  ],
+  "lyric": "还是被一颗心挂念／你爱哪味甜／为谁红过脸",
+  "sync_points": [
+   {
+    "t": 117.25,
+    "event": "“哪味甜”：油纸包被塞进她手里"
+   },
+   {
+    "t": 117.91,
+    "event": "“甜”：年长的手把她的手指合拢"
+   }
+  ],
+  "era": "migrant",
+  "scene": "pier_waiting",
+  "location": "候船棚长凳",
+  "characters": [
+   "MIGRANT"
+  ],
+  "props": [
+   "SWEETS"
+  ],
+  "extras": [
+   "送行者的手（年长女性，指节粗；圣经 §5.5a，无代号）"
+  ],
+  "shot_size": "INSERT",
+  "angle": "平视近摄",
+  "lens_mm": 100,
+  "camera_move": "锁定微推",
+  "speed": "24",
+  "focus": "焦点在油纸包与两双手",
+  "lighting": "2400K 灯泡从油纸后透过，桐油纸发出蜂蜜色的光",
+  "action": "温暖的生活片段：一只年长的手把一个用细红棉绳十字系着的油纸包塞进她的手里，又把她的手指合拢——两双手之间，半透明的桐油纸被灯泡透亮，隐约看得见里面的花生芝麻酥和冬瓜糖。",
+  "emotion": "有人记得她爱哪味甜。历史里的人也有甜。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "同一人物，暖光插入组之一（T14）"
+  },
+  "continuity": "糖包 10×8 cm，红绳十字（P16），油纸透光是本插入的暖光来源；年长的手为送行者（深蓝布袖口 #2E3A52）；此糖包在 S068 再现——她把别人给她的甜分出去。",
+  "refs": [
+   "CHAR_MIGRANT",
+   "PROP_SWEETS",
+   "LOC_PIER"
+  ],
+  "revision": {
+   "findings": [
+    "V27",
+    "E10",
+    "V19"
+   ],
+   "from_v1": [
+    "S035"
+   ]
+  }
+ },
+ {
+  "id": "S035",
+  "in_frame": 2840,
+  "out_frame": 2910,
+  "section": "V2",
+  "treatment_ref": "五",
+  "lyric_ids": [
+   "L040",
+   "L041"
+  ],
+  "lyric": "为谁红过脸／恨过谁的欺瞒",
+  "sync_points": [
+   {
+    "t": 118.87,
+    "event": "“红”：她咬断线头，笑意出现"
+   },
+   {
+    "t": 119.5,
+    "event": "她望向画左门口"
+   },
+   {
+    "t": 119.8,
+    "event": "焦点开始转向壁龛小灯"
+   },
+   {
+    "t": 120.31,
+    "event": "“谁的”：小灯清晰"
+   }
+  ],
+  "era": "home",
+  "scene": "old_home",
+  "location": "旧日石屋·画右冰裂纹窗下的矮凳 → 画左门边壁龛",
+  "characters": [
+   "WIFE"
+  ],
+  "props": [
+   "PATCH",
+   "CANDLE",
+   "LAMP"
+  ],
+  "extras": [],
+  "shot_size": "CU",
+  "angle": "平视略俯",
+  "lens_mm": 75,
+  "camera_move": "锁定；焦点转移 ≥0.8 s 到门边壁龛",
+  "speed": "24",
+  "focus": "焦点在针线与嘴角 → 门边壁龛的小灯",
+  "lighting": "烛光 1850K 侧逆，半张脸在阴影里；壁龛小油灯 1900K（M7）",
+  "action": "旧日家中，窗下的矮凳边，等待的人低头在一件靛蓝短褂的右袖口内侧缝一块浅蓝布补丁——正是航海人袖口里那块。左手中指戴着旧铜顶针，腕上银镯；她咬断线头，脸半隐在烛光与阴影里，只看得见嘴角一个羞涩的笑。笑意还没散，她朝画左敞开的门口看了一眼——焦点随之转到门边石墙的小壁龛：她刚点亮的那盏小油灯，火苗约两厘米，稳稳地亮着。",
+  "emotion": "为谁红过脸——一针一线都是喜欢；门口那盏灯，是替家人留的。",
+  "transition_in": {
+   "type": "match_cut",
+   "frames": 0,
+   "on": "手势：S034 被合拢的手指 → 捏针引线的手指（手势相似；跨时代）"
+  },
+  "continuity": "原 S036（补衣）与 S037（门口小灯）合并为一个可读的镜头。补丁布与 S011 完全一致（一角双结——她补的时候笑了一下、手抖了）；只露下半张脸或侧影；门在画左墙、壁龛在门左侧；小灯的色温与大小与航海人望见的岸灯一致（圣经 §6.11）。",
+  "refs": [
+   "CHAR_WIFE",
+   "PROP_PATCH",
+   "PROP_CANDLE",
+   "PROP_LAMP",
+   "LOC_HOME"
+  ],
+  "revision": {
+   "findings": [
+    "E7"
+   ],
+   "from_v1": [
+    "S036",
+    "S037"
+   ]
+  }
+ },
+ {
+  "id": "S036",
+  "in_frame": 2910,
+  "out_frame": 2959,
+  "section": "V2",
+  "treatment_ref": "五",
+  "lyric_ids": [
+   "L041",
+   "L042",
+   "L043"
+  ],
+  "lyric": "恨过谁的欺瞒／又替谁／求来年平安",
+  "sync_points": [
+   {
+    "t": 121.41,
+    "event": "“替谁”：前景双手入焦"
+   },
+   {
+    "t": 122.65,
+    "event": "“平安”：亲人的拇指轻轻摩挲她的手背"
+   }
+  ],
+  "era": "migrant",
+  "scene": "pier_waiting",
+  "location": "候船棚尽头·栏杆与敞开的大门",
+  "characters": [
+   "MIGRANT"
+  ],
+  "props": [
+   "CASE"
+  ],
+  "extras": [
+   "送行者的手（圣经 §5.5a）",
+   "候船人群群演"
+  ],
+  "shot_size": "WS",
+  "angle": "平视，前景近、远景深",
+  "lens_mm": 32,
+  "camera_move": "锁定，深焦（前景双手、远景大海）",
+  "speed": "24",
+  "focus": "深焦：前景两只手与远景轮船同时清晰",
+  "lighting": "大门外蓝调时刻的灰蓝海天，轮船一排暖色舷窗；前景 2400K 室内光",
+  "action": "候船棚尽头敞开的大门外，是灰蓝色的海和停泊在画右的轮船——远方未知。前景栏杆边，两只手紧紧握在一起：她的左手，和画左送行亲人那只年长的手，迟迟不松开。她的右手提着藤箱。",
+  "emotion": "远方未知，近处不舍。",
+  "transition_in": {
+   "type": "light",
+   "frames": 0,
+   "on": "门边小油灯的暖光 → 门外轮船舷窗的一排暖点（光线接续；跨时代）"
+  },
+  "continuity": "送行者在画左、轮船在画右（圣经 §5.5、§7.6）；她右手提箱【锁】；亲人的手年长、手背皮肤松软、深蓝布袖口。",
+  "refs": [
+   "CHAR_MIGRANT",
+   "PROP_CASE",
+   "LOC_PIER"
+  ],
+  "revision": {
+   "findings": [
+    "V8",
+    "V17"
+   ],
+   "from_v1": [
+    "S038"
+   ]
+  }
+ },
+ {
+  "id": "S037",
+  "in_frame": 2959,
+  "out_frame": 3027,
+  "section": "V2",
+  "treatment_ref": "五",
+  "lyric_ids": [
+   "L044"
+  ],
+  "lyric": "一枚印章",
+  "sync_points": [
+   {
+    "t": 124.03,
+    "event": "“印”：印章举到最高点"
+   },
+   {
+    "t": 124.58,
+    "event": "“章”：印章落下压实（96 fps）"
+   },
+   {
+    "t": 125.6,
+    "event": "印章抬起，留下紫色印迹"
+   }
+  ],
+  "era": "migrant",
+  "scene": "pier_waiting",
+  "location": "候船处·盖章柜台（隔着玻璃隔窗）",
+  "characters": [
+   "MIGRANT"
+  ],
+  "props": [
+   "STAMP",
+   "PASS"
+  ],
+  "extras": [
+   "盖章办事员的手与卡其灰虚构制服袖口（圣经 §6.12，无代号）"
+  ],
+  "shot_size": "INSERT",
+  "angle": "45° 俯，隔着柜台的玻璃隔窗",
+  "lens_mm": 75,
+  "camera_move": "锁定",
+  "speed": "48 (升格；落章瞬间实拍 96 fps＝25% 速度，圣经 §4.4)",
+  "focus": "焦点在通行纸纸面",
+  "lighting": "柜台后搪瓷灯罩白炽灯 2400K，灯泡映在玻璃隔窗上",
+  "action": "隔着柜台的玻璃隔窗：她的通行纸摊开在台面上；一只卡其灰制服袖口的手举起黄铜印面、紫檀色木柄的印章，在“章”字上落下——沉沉一下，苯胺紫的印泥压进纸纤维，印迹半压在灰绿扭索纹边框上。画面边缘，她的左臂仍伸向画左身后，被人握着。",
+  "emotion": "一枚印章允许她去下一站——许可来得很轻，又很重。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "远方 → 去往远方的手续"
+  },
+  "continuity": "印文为虚构图案（双圈、简化轮船、三道波浪、六角星），无任何文字；印泥苯胺紫 #5B4A78（不是红色）；照片在相角里但永不正面入画；【登记】印迹位于画面 (0.60,0.50)——S040 中 G3c 的褪色印迹在同一位置呼应；送行者在画左。",
+  "refs": [
+   "CHAR_MIGRANT",
+   "PROP_STAMP",
+   "PROP_PASS",
+   "LOC_PIER"
+  ],
+  "revision": {
+   "findings": [
+    "V8",
+    "V14",
+    "V19",
+    "V17",
+    "F4"
+   ],
+   "from_v1": [
+    "S039"
+   ]
+  }
+ },
+ {
+  "id": "S038",
+  "in_frame": 3027,
+  "out_frame": 3114,
+  "section": "V2",
+  "treatment_ref": "五",
+  "lyric_ids": [
+   "L044",
+   "L045"
+  ],
+  "lyric": "一枚印章／许你到下一站",
+  "sync_points": [
+   {
+    "t": 126.19,
+    "event": "“许你”：闸口打开"
+   },
+   {
+    "t": 128.23,
+    "event": "“一站”：两人的手臂被拉直"
+   }
+  ],
+  "era": "migrant",
+  "scene": "pier_waiting",
+  "location": "候船处闸口",
+  "characters": [
+   "MIGRANT"
+  ],
+  "props": [
+   "CASE",
+   "PASS"
+  ],
+  "extras": [
+   "送行者（圣经 §5.5a）",
+   "候船人群群演"
+  ],
+  "shot_size": "MS",
+  "angle": "平视",
+  "lens_mm": 40,
+  "camera_move": "缓慢横向跟移（向画右，轮船方向），少量自然手持",
+  "speed": "24",
+  "focus": "跟焦在她身上",
+  "lighting": "蓝调时刻的天光，闸口外更亮；2400K 灯泡光池；湿木板反光",
+  "action": "闸口打开，人群向画右的轮船涌去。她右手提起藤箱往前走，左臂被身后那只手拉长；她回头，两只手在栏杆上方连着，越拉越直。",
+  "emotion": "被允许离开，却还没被允许放手。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "印章落下 → 闸口打开（动作因果）"
+  },
+  "continuity": "运动方向画左→画右；她右手提箱、左手被画左的送行者握着（圣经锁）。",
+  "refs": [
+   "CHAR_MIGRANT",
+   "PROP_CASE",
+   "PROP_PASS",
+   "LOC_PIER"
+  ],
+  "revision": {
+   "findings": [
+    "V8"
+   ],
+   "from_v1": [
+    "S040"
+   ]
+  }
+ },
+ {
+  "id": "S039",
+  "in_frame": 3114,
+  "out_frame": 3211,
+  "section": "V2",
+  "treatment_ref": "五",
+  "lyric_ids": [
+   "L046",
+   "L047"
+  ],
+  "lyric": "谁许你／回到离别前",
+  "sync_points": [
+   {
+    "t": 130.38,
+    "event": "“许你”：掌心开始滑开"
+   },
+   {
+    "t": 132.72,
+    "event": "“离”：只剩指尖相触"
+   },
+   {
+    "t": 132.96,
+    "event": "“别”：指尖分开"
+   },
+   {
+    "t": 133.79,
+    "event": "悬着的手已独自停留约 20 帧"
+   }
+  ],
+  "era": "migrant",
+  "scene": "pier_waiting",
+  "location": "闸口栏杆上方",
+  "characters": [
+   "MIGRANT"
+  ],
+  "props": [],
+  "extras": [
+   "送行者的手（圣经 §5.5a）"
+  ],
+  "shot_size": "ECU",
+  "angle": "平视",
+  "lens_mm": 100,
+  "camera_move": "锁定",
+  "speed": "48 (50% slow motion)",
+  "focus": "焦点在指尖",
+  "lighting": "逆光，指缝间透出棚外蓝调天光",
+  "action": "特写：两只手一点点滑开——掌心、指节、指尖。“离别”时，终于分开。她的手往画右滑出画外，朝着船的方向；送行者的那只手却仍停在原来的位置，掌心向前、四指微弯，悬在半空，没有收回——独自停留整整一拍。",
+  "emotion": "谁也不能许她回到离别之前。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "由中景到手的特写"
+  },
+  "continuity": "【匹配锁 T15】停留之手位于 (0.36,0.56)，掌心向前、四指微弯，手宽约占画面高 40%——S040 同位置、同形状；两手分开为圣经慢动作清单中的瞬间（48 fps）。",
+  "refs": [
+   "CHAR_MIGRANT",
+   "LOC_PIER"
+  ],
+  "revision": {
+   "findings": [
+    "E3",
+    "V8"
+   ],
+   "from_v1": [
+    "S041"
+   ]
+  }
+ },
+ {
+  "id": "S040",
+  "in_frame": 3211,
+  "out_frame": 3250,
+  "section": "V2",
+  "treatment_ref": "五",
+  "lyric_ids": [
+   "L047"
+  ],
+  "lyric": "回到离别前",
+  "sync_points": [
+   {
+    "t": 133.8,
+    "event": "“前”长音中：切入现代的手"
+   },
+   {
+    "t": 134.6,
+    "event": "焦点微微呼吸，褪色印迹在焦外浮现"
+   }
+  ],
+  "era": "modern",
+  "scene": "museum_gallery",
+  "location": "展厅·G3c 立柜玻璃前",
+  "characters": [
+   "RESTORER"
+  ],
+  "props": [
+   "GLOVES",
+   "PASS",
+   "CASE"
+  ],
+  "extras": [],
+  "shot_size": "ECU",
+  "angle": "平视",
+  "lens_mm": 100,
+  "camera_move": "锁定，极缓慢后拉",
+  "speed": "24",
+  "focus": "焦点在手套指尖与玻璃之间的一指宽距离；柜内印迹焦外浮现",
+  "lighting": "月光冷银；柜内 3000K 一点暖",
+  "action": "匹配剪辑：修复师戴手套的右手停在 G3c 的玻璃前，位置与形状和那只悬着的手完全一样——掌心朝向玻璃、四指微弯，离玻璃一指宽，没有碰上。玻璃后面的焦外，摊开的通行纸上那枚印迹已褪成灰紫，正落在 S037 新印的同一画面位置；四个空相角里没有照片。",
+  "emotion": "她在今天，替那只手停在了原地。",
+  "transition_in": {
+   "type": "match_cut",
+   "frames": 0,
+   "on": "手势 + 相似构图：送行者悬在半空的手 → 修复师停在玻璃前的手（同位置、同形状、掌心朝向一致；跨时代，T15）",
+   "register": {
+    "a": "S039",
+    "b": "S040",
+    "subject": "停留之手",
+    "pos": [
+     0.36,
+     0.56
+    ],
+    "size": "手宽约占画面高 40%",
+    "direction": "掌心向前、四指微弯",
+    "phase": "分开后独自停留一拍"
+   }
+  },
+  "continuity": "呼应 S001/S002 的隔玻璃之手（M1）；G3c 内藤箱、旧衫、木梳、通行纸（同 S030）；印迹灰紫 #7A6E8C 位于 (0.60,0.50)——旅行印章作为博物馆里的“入口”；藤箱此时仍在 G3c，S041 之后由她带到修复室。",
+  "refs": [
+   "CHAR_RESTORER",
+   "PROP_GLOVES",
+   "PROP_PASS",
+   "PROP_CASE",
+   "LOC_GALLERY"
+  ],
+  "revision": {
+   "findings": [
+    "E3",
+    "V8",
+    "F4"
+   ],
+   "from_v1": [
+    "S042"
+   ]
+  }
+ },
+ {
+  "id": "S041",
+  "in_frame": 3250,
+  "out_frame": 3316,
+  "section": "CH2",
+  "treatment_ref": "六",
+  "lyric_ids": [
+   "L048",
+   "L049"
+  ],
+  "lyric": "千年啊／不过无数个今晚",
+  "sync_points": [
+   {
+    "t": 135.48,
+    "event": "“千年啊”：反射中屋檐成形"
+   },
+   {
+    "t": 137.04,
+    "event": "“无数”：焦点完全进入反射，画面锁定"
+   }
+  ],
+  "era": "home",
+  "scene": "old_home",
+  "location": "旧日屋檐下·石阶（自 G3c 玻璃反射进入；与 S019 同一机位）",
+  "characters": [
+   "WIFE"
+  ],
+  "props": [
+   "BOWL",
+   "LAMP"
+  ],
+  "extras": [],
+  "shot_size": "WS",
+  "angle": "平视；天空占画面上三分之一（同 S019）",
+  "lens_mm": 32,
+  "camera_move": "由玻璃反射推入后锁定",
+  "speed": "24",
+  "focus": "焦点由玻璃表面穿入反射深处",
+  "lighting": "被厚云柔化的月光（月亮只是云后的一团光晕）+ 门边壁龛小油灯 1900K",
+  "action": "修复师面前 G3c 的玻璃里，焦点穿过她手套的倒影进入反射深处：旧日屋檐下，与 S019 同一个机位——云更厚、更低，空气潮湿，石阶泛着湿气，月亮只是云后的一团光晕。等待的人独自坐在石阶上，身旁那只空碗仍朝着天；门边壁龛里的小灯亮着。",
+  "emotion": "同一个等待，又过了许多个夜。",
+  "transition_in": {
+   "type": "reflection",
+   "frames": 0,
+   "on": "S040 的 G3c 玻璃 → 焦点穿过玻璃进入旧日屋檐（跨时代）"
+  },
+  "continuity": "构图与 S019 完全一致（碗在画左石阶、她面朝画右）；天气【锁】CH2：更厚的云、潮湿（圣经 §7.5）；不出现孩子的身影——孩子只以 S042 的一双小脚出现；小灯仍亮（S035 点亮）。",
+  "refs": [
+   "CHAR_WIFE",
+   "PROP_BOWL",
+   "PROP_LAMP",
+   "LOC_HOME",
+   "LOC_GALLERY"
+  ],
+  "revision": {
+   "findings": [
+    "F12",
+    "V6",
+    "E7"
+   ],
+   "from_v1": [
+    "S043"
+   ]
+  }
+ },
+ {
+  "id": "S042",
+  "in_frame": 3316,
+  "out_frame": 3357,
+  "section": "CH2",
+  "treatment_ref": "六",
+  "lyric_ids": [
+   "L049",
+   "L050"
+  ],
+  "lyric": "不过无数个今晚／有人等一场雨",
+  "sync_points": [
+   {
+    "t": 139.02,
+    "event": "“等”：小脚入画"
+   },
+   {
+    "t": 139.68,
+    "event": "“雨”：脚趾动了动"
+   }
+  ],
+  "era": "home",
+  "scene": "old_home",
+  "location": "旧日屋檐下·石阶贴地",
+  "characters": [
+   "WIFE"
+  ],
+  "props": [
+   "BOWL"
+  ],
+  "extras": [
+   "孩子的一双小脚（圣经 §5.4，无代号；未成年人拍摄规定 §10-8）"
+  ],
+  "shot_size": "INSERT",
+  "angle": "低角度贴地",
+  "lens_mm": 24,
+  "camera_move": "锁定（24 mm 探针镜头贴着石阶）",
+  "speed": "24",
+  "focus": "焦点在碗沿与小脚之间",
+  "lighting": "云后柔化的月光；石面潮湿反光",
+  "action": "贴地的探针镜头：前景是檐下那只空碗的碗沿，旁边是她打过补丁的布鞋鞋面。“等”字时，画面里走进一双孩子光着的小脚，停在碗与她的鞋之间，脚趾蜷在凉凉的石头上；“雨”字时，脚趾不安分地动了动。",
+  "emotion": "新细节：等待里多了一个孩子——时间过去了。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "全景切入细节"
+  },
+  "continuity": "孩子只出现一双小脚（圣经 §5.4、§10-8）；约四岁，赤足；碗心朝天，仍空。",
+  "refs": [
+   "CHAR_WIFE",
+   "PROP_BOWL",
+   "LOC_HOME"
+  ],
+  "revision": {
+   "findings": [
+    "F12",
+    "E7",
+    "V19",
+    "E10"
+   ],
+   "from_v1": [
+    "S044"
+   ]
+  }
+ },
+ {
+  "id": "S043",
+  "in_frame": 3357,
+  "out_frame": 3413,
+  "section": "CH2",
+  "treatment_ref": "六",
+  "lyric_ids": [
+   "L050",
+   "L051"
+  ],
+  "lyric": "有人等一场雨／有人等沉默被听见",
+  "sync_points": [
+   {
+    "t": 140.22,
+    "event": "“等沉默”：信打开，布片露出"
+   },
+   {
+    "t": 141.18,
+    "event": "“听见”：拇指摸布片"
+   },
+   {
+    "t": 141.8,
+    "event": "手掌压平"
+   }
+  ],
+  "era": "migrant",
+  "scene": "pier_waiting",
+  "location": "候船棚·第三盏灯下（与 S020 同一机位）",
+  "characters": [
+   "MIGRANT"
+  ],
+  "props": [
+   "LETTER",
+   "SHIRT",
+   "CASE"
+  ],
+  "extras": [],
+  "shot_size": "MCU",
+  "angle": "平视略俯（同 S020）",
+  "lens_mm": 75,
+  "camera_move": "缓慢推进（同 S020）",
+  "speed": "24",
+  "focus": "焦点在信的折缝与布片",
+  "lighting": "2400K 灯泡光池（同 S020）",
+  "action": "与 S020 同一个机位、同一盏灯：她又一次打开那封反复折起的信——这一次，信的折缝里夹着一小片三角形的灰蓝旧布，正是藤箱里那件旧衫衣摆剪去的那一角。她用拇指摸了摸那片布，又沿旧折痕把信折回去，用手掌压平。",
+  "emotion": "没说出的话，藏在一片布里。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "直接切回同一个人（与 S020 同机位的重复）"
+  },
+  "continuity": "唯一的新细节是布片：约 3×4 cm 三角，#6F7F8F，与 S030/S031 旧衫衣摆缺角同料；折法三折后对折；不移到轮船铺位（保持 CH2“回到此前的人物”的重复）。",
+  "refs": [
+   "CHAR_MIGRANT",
+   "PROP_LETTER",
+   "PROP_SHIRT",
+   "PROP_CASE",
+   "LOC_PIER"
+  ],
+  "revision": {
+   "findings": [
+    "V13",
+    "V17",
+    "V24"
+   ],
+   "from_v1": [
+    "S045"
+   ]
+  }
+ },
+ {
+  "id": "S044",
+  "in_frame": 3413,
+  "out_frame": 3482,
+  "section": "CH2",
+  "treatment_ref": "六",
+  "lyric_ids": [
+   "L052",
+   "L053"
+  ],
+  "lyric": "有人要把山河／握在掌间",
+  "sync_points": [
+   {
+    "t": 142.92,
+    "event": "“山河”：笔尖接近渔村"
+   },
+   {
+    "t": 144.48,
+    "event": "“掌”：左手掌压平地图"
+   }
+  ],
+  "era": "maphand",
+  "scene": "map_office",
+  "location": "1890s 港务测绘办公室·制图桌",
+  "characters": [
+   "MAPHAND"
+  ],
+  "props": [
+   "MAP"
+  ],
+  "extras": [],
+  "shot_size": "INSERT",
+  "angle": "90° 正顶拍，比 S021 更近",
+  "lens_mm": 75,
+  "camera_move": "顶拍缓慢推进，止于张开压平的左手",
+  "speed": "24",
+  "focus": "焦点在笔尖与细笔画的房屋",
+  "lighting": "煤油灯 2200K 在画右；百叶切成的月光条纹落在纸与手上",
+  "action": "地图上，那只手再一次按住直尺。这一次镜头更近：墨线正要划过的，是地图上用细笔画出的一小片渔村房屋和港口小船。直线笔没有犹豫，线水平地、从画左到画右穿过它们；“掌”字时，左手五指张开，把地图压平——掌心盖住那片渔村。",
+  "emotion": "新细节：线下面是人家。",
+  "transition_in": {
+   "type": "match_cut",
+   "frames": 0,
+   "on": "相似构图：S043 信的折缝（水平）→ 直尺墨线（与 S020→S021 相同的线条匹配，重复中递进）"
+  },
+  "continuity": "同一张地图、墨线水平 y=0.66、画左→画右；左手掌在画面中的位置为 S045 的匹配 A 帧；地图无可读文字；墨线不用红色。",
+  "refs": [
+   "CHAR_MAPHAND",
+   "PROP_MAP",
+   "LOC_MAPOFFICE"
+  ],
+  "revision": {
+   "findings": [
+    "V12",
+    "V14"
+   ],
+   "from_v1": [
+    "S046"
+   ]
+  }
+ },
+ {
+  "id": "S045",
+  "in_frame": 3482,
+  "out_frame": 3568,
+  "section": "CH2",
+  "treatment_ref": "六",
+  "lyric_ids": [
+   "L053",
+   "L054",
+   "L055"
+  ],
+  "lyric": "握在掌间／有人只想再见／某个人一面",
+  "sync_points": [
+   {
+    "t": 145.14,
+    "event": "“有人只想”：左手翻开袖口、指腹停在补丁上"
+   },
+   {
+    "t": 146.7,
+    "event": "“某个”：抬眼"
+   },
+   {
+    "t": 147.54,
+    "event": "“一面”：岸灯映在眼中"
+   }
+  ],
+  "era": "navigator",
+  "scene": "sea_deck",
+  "location": "夜·甲板·艉楼船舷",
+  "characters": [
+   "NAVIGATOR"
+  ],
+  "props": [
+   "PATCH",
+   "SHIPLAMP"
+  ],
+  "extras": [],
+  "shot_size": "CU",
+  "angle": "由俯拍袖口上摇到平视；他在画右、面朝画左",
+  "lens_mm": 100,
+  "camera_move": "缓慢上摇并推进（从袖口到眼睛）",
+  "speed": "24",
+  "focus": "跟焦：补丁 → 眼睛",
+  "lighting": "月光从画右上；艉灯 1950K 低位暖光；画左远岸一点 1900K",
+  "action": "匹配剪辑：起幅是他的左手——在上一镜压平地图那只手的同一画面位置——手指翻开右袖口的折边，指腹停在那块浅蓝补丁上。这一次他先摸补丁，然后镜头随他慢慢抬起的视线上摇：他抬眼望向画左，岸上那一点温暖的灯映进眼里。",
+  "emotion": "新细节：他想见的那个人，就在这块补丁里。",
+  "transition_in": {
+   "type": "match_cut",
+   "frames": 0,
+   "on": "手势 + 相似构图：S044 张开压平地图的左手掌 → 航海人翻开袖口的左手（同一画面位置；跨时代）",
+   "register": {
+    "a": "S044",
+    "b": "S045",
+    "subject": "左手",
+    "pos": [
+     0.45,
+     0.6
+    ],
+    "size": "手宽约占画面高 35%",
+    "direction": "手掌朝下 → 手指翻开袖口",
+    "phase": "压平完成 → 翻开开始"
+   }
+  },
+  "continuity": "补丁在右袖口内侧、由左手翻开（圣经锁）；岸灯在画左（与 S008、S022 一致）；CH2 顺序锁：先摸补丁、再看岸灯。",
+  "refs": [
+   "CHAR_NAVIGATOR",
+   "PROP_PATCH",
+   "PROP_SHIPLAMP",
+   "LOC_DECK"
+  ],
+  "revision": {
+   "findings": [
+    "F9",
+    "V5",
+    "V12"
+   ],
+   "from_v1": [
+    "S047"
+   ]
+  }
+ },
+ {
+  "id": "S046",
+  "in_frame": 3568,
+  "out_frame": 3639,
+  "section": "BR1",
+  "treatment_ref": "六",
+  "lyric_ids": [
+   "L056",
+   "L057"
+  ],
+  "lyric": "换旗换誓言／旧梦换了衣冠",
+  "sync_points": [
+   {
+    "t": 148.88,
+    "event": "“换旗”：E1 在画面中"
+   },
+   {
+    "t": 149.21,
+    "event": "“换（誓言）”：切 E2"
+   },
+   {
+    "t": 150.42,
+    "event": "“换（了）”：切 E3"
+   },
+   {
+    "t": 150.84,
+    "event": "“衣冠”：切 E4"
+   }
+  ],
+  "era": "multi",
+  "scene": "harbor_eras",
+  "location": "港口关口与关栈立面（码头路上、关栈西侧，向东沿水岸看）",
+  "characters": [
+   "MIGRANT"
+  ],
+  "props": [
+   "CASE"
+  ],
+  "extras": [
+   "各时代等待者：挎竹篮的妇人（E1）、挑担的脚夫（E2）、牵孩子的父亲（E4）（圣经 §7.7）"
+  ],
+  "shot_size": "WS",
+  "angle": "平视，镜头高 1.6 m，完全锁定",
+  "lens_mm": 40,
+  "camera_move": "完全锁定（运动控制/固定三脚架，各时代同一机位数据）；时代切片硬切在节拍上",
+  "speed": "24",
+  "focus": "全景深",
+  "lighting": "统一暮色【锁】：落日在摄影机身后（西）刚落，最后的暖粉色照在立面上，东边天空深蓝 P02–P03；只有人工光随时代变化：灯笼火把 → 煤油路灯 → 白炽路灯 → 低饱和钠灯",
+  "action": "固定构图：同一处港口关口。所有时代都是同一个暮色时刻，光从同一个方向来；变的只有建筑、旗帜、制服与船——E1 约1630s：木构货栈、花岗岩登岸石阶、木栅门，一个挎竹篮的妇人站在门前；“换”字一切，E2 约1890s：关栈新建，屋顶旗杆上一面陌生的旗，白色立领制服；“换”字再切，E3 约1930s：加了雨棚与电线，旗换了，卡其灰大檐帽，门前站着右手提着藤箱的迁徙女性；“衣”字再切，E4 约1950s–60s：重新粉刷、加装铁窗，旗又换了，浅灰衬衫式制服，门前是一个牵着孩子的父亲。等待通行的人始终站在门槛前同一个位置。",
+  "emotion": "时代换了一层又一层，等待的人总站在同一个地方。",
+  "transition_in": {
+   "type": "light",
+   "frames": 0,
+   "on": "S045 眼中的岸灯 → 固定机位里关口同一画面位置的一盏灯笼（E1；光点接光点；跨时代）"
+  },
+  "continuity": "机位锁（40 mm、1.6 m、向东）；等待者位于 (0.38,0.70)（T16）；所有旗帜、徽章、制服为虚构中性设计（F-B/F-C/F-D）并须相似性审查，旗帜永远远景、半垂或部分遮挡；更替为硬切或光影擦除，禁止变形；此机位在 S080 以今日黎明（E5）复用。",
+  "refs": [
+   "CHAR_MIGRANT",
+   "PROP_CASE",
+   "LOC_HARBOR"
+  ],
+  "revision": {
+   "findings": [
+    "V14",
+    "V24"
+   ],
+   "from_v1": [
+    "S048"
+   ]
+  }
+ },
+ {
+  "id": "S047",
+  "in_frame": 3639,
+  "out_frame": 3668,
+  "section": "BR1",
+  "treatment_ref": "六",
+  "lyric_ids": [
+   "L058"
+  ],
+  "lyric": "地图添一道线",
+  "sync_points": [
+   {
+    "t": 151.64,
+    "event": "“地图”：笔尖落下"
+   },
+   {
+    "t": 152.6,
+    "event": "“线”：线划完，笔尖离纸"
+   }
+  ],
+  "era": "maphand",
+  "scene": "map_office",
+  "location": "1890s 港务测绘办公室·地图",
+  "characters": [
+   "MAPHAND"
+  ],
+  "props": [
+   "MAP"
+  ],
+  "extras": [],
+  "shot_size": "INSERT",
+  "angle": "正顶拍",
+  "lens_mm": 100,
+  "camera_move": "锁定",
+  "speed": "24",
+  "focus": "微距，焦点在笔尖与洇开的墨",
+  "lighting": "煤油灯 2200K；百叶月光条纹",
+  "action": "地图上，直线笔又添了一道水平的线，铁胆墨在纸纤维里洇开、在煤油灯下反光。",
+  "emotion": "一笔之轻。",
+  "transition_in": {
+   "type": "match_cut",
+   "frames": 0,
+   "on": "相似构图：E4 切片中门槛与码头边缘的水平线 → 地图上的新墨线（同高度 y=0.66）"
+  },
+  "continuity": "【T17 登记】墨线水平、y=0.66、画左→画右，与 S048 门槛铁条、提手横杆同高。",
+  "refs": [
+   "CHAR_MAPHAND",
+   "PROP_MAP",
+   "LOC_MAPOFFICE"
+  ],
+  "revision": {
+   "findings": [
+    "V15",
+    "V14",
+    "V19",
+    "E10"
+   ],
+   "from_v1": [
+    "S049"
+   ]
+  }
+ },
+ {
+  "id": "S048",
+  "in_frame": 3668,
+  "out_frame": 3726,
+  "section": "BR1",
+  "treatment_ref": "六",
+  "lyric_ids": [
+   "L059"
+  ],
+  "lyric": "谁就多一道关",
+  "sync_points": [
+   {
+    "t": 152.84,
+    "event": "切入：门槛铁条在 y=0.66（保持 ≥12 帧）"
+   },
+   {
+    "t": 153.4,
+    "event": "上摇开始"
+   },
+   {
+    "t": 153.86,
+    "event": "“一道”：上摇到手"
+   },
+   {
+    "t": 154.4,
+    "event": "“关”：手攥紧提手"
+   }
+  ],
+  "era": "migrant",
+  "scene": "map_office",
+  "location": "关口门洞·花岗岩门槛（外缘铁条）·约1930s",
+  "characters": [
+   "MIGRANT"
+  ],
+  "props": [
+   "CASE"
+  ],
+  "extras": [],
+  "shot_size": "CU",
+  "angle": "低角度贴地 → 上摇",
+  "lens_mm": 50,
+  "camera_move": "先在门槛线上停 ≥12 帧，再缓慢上摇至手",
+  "speed": "24",
+  "focus": "跟焦：门槛 → 布鞋 → 攥紧的手",
+  "lighting": "关口顶部搪瓷灯罩白炽灯 2400K；门外一线蓝调天光",
+  "action": "匹配剪辑：墨线变成花岗岩门槛外缘那条铁条的直线，在同一高度停住半拍。一双黑布鞋停在门槛前。镜头沿她的身侧缓慢上摇，停在她右手攥紧的藤箱提手上——指节发白，“关”字时攥得更紧；提手的横杆停在画面同一高度。",
+  "emotion": "地图上的一道线，落在一个人身上，就是一道关。",
+  "transition_in": {
+   "type": "match_cut",
+   "frames": 0,
+   "on": "相似构图：地图墨线 → 门槛铁条直线（同方向、同画面高度 y=0.66；跨时代：maphand → migrant）",
+   "register": {
+    "a": "S047",
+    "b": "S048",
+    "subject": "墨线/门槛铁条",
+    "pos": [
+     0.5,
+     0.66
+    ],
+    "size": "水平线贯穿画面",
+    "direction": "画左→画右",
+    "phase": "线划完 → 门槛静止"
+   }
+  },
+  "continuity": "【T17 三镜登记】门槛铁条与提手横杆均在 y=0.66；右手提箱【锁】；提手为新藤皮；门槛为花岗岩外包铁条（不是木门槛）。",
+  "refs": [
+   "CHAR_MIGRANT",
+   "PROP_CASE",
+   "LOC_MAPOFFICE"
+  ],
+  "revision": {
+   "findings": [
+    "V15",
+    "V14"
+   ],
+   "from_v1": [
+    "S050"
+   ]
+  }
+ },
+ {
+  "id": "S049",
+  "in_frame": 3726,
+  "out_frame": 3792,
+  "section": "BR1",
+  "treatment_ref": "gap",
+  "lyric_ids": [
+   "L060",
+   "L061"
+  ],
+  "lyric": "你的明天／已是我的从前",
+  "sync_points": [
+   {
+    "t": 155.34,
+    "event": "“你的明天”：老提手入画"
+   },
+   {
+    "t": 157.02,
+    "event": "“我的从前”：取出保护套中的旧信"
+   }
+  ],
+  "era": "modern",
+  "scene": "restoration_lab",
+  "location": "修复室工作台·藤箱",
+  "characters": [
+   "RESTORER"
+  ],
+  "props": [
+   "CASE",
+   "KEEPSAKE",
+   "SHIRT",
+   "LETTER",
+   "GLOVES"
+  ],
+  "extras": [],
+  "shot_size": "INSERT",
+  "angle": "俯拍 → 上摇",
+  "lens_mm": 75,
+  "camera_move": "锁定 → 缓慢上摇",
+  "speed": "24",
+  "focus": "焦点在提手 → 保护套中的信",
+  "lighting": "台灯 3500K 暖光",
+  "action": "匹配剪辑：同一只藤箱提手，同一画面高度，已经老旧——藤皮被手汗浸成深褐、磨出毛边。修复师戴手套的手轻轻握住它，打开箱子：蓝印花布内衬里，木梳仍平放在解开的红褐包布上，压在旧衫最上面；她把它们轻轻移开，从旧衫下面取出一只透明聚酯保护套——里面是一封展平的旧信，三折后对折的折痕已成柔软的凹谷。",
+  "emotion": "你的明天，已是我的从前。",
+  "transition_in": {
+   "type": "match_cut",
+   "frames": 0,
+   "on": "相似构图：迁徙女性攥紧的新提手 → 修复师手中同一提手的老旧状态（同一物、同位置 y=0.66；跨时代）",
+   "register": {
+    "a": "S048",
+    "b": "S049",
+    "subject": "藤箱提手横杆",
+    "pos": [
+     0.5,
+     0.66
+    ],
+    "size": "提手约占画面宽 45%",
+    "direction": "水平",
+    "phase": "攥紧 → 轻握"
+   }
+  },
+  "continuity": "藤箱在 S041 之后由她从展厅 G3c 带到修复室处理（同一夜；此后 G3c 中不再出现藤箱）；木梳位置同 S030；信的博物馆状态：展平、聚酯保护套、折痕凹谷、霉斑（圣经 §6.8）。",
+  "refs": [
+   "CHAR_RESTORER",
+   "PROP_CASE",
+   "PROP_KEEPSAKE",
+   "PROP_SHIRT",
+   "PROP_LETTER",
+   "PROP_GLOVES",
+   "LOC_LAB"
+  ],
+  "revision": {
+   "findings": [
+    "V15",
+    "V7",
+    "F4",
+    "V17"
+   ],
+   "from_v1": [
+    "S051"
+   ]
+  }
+ },
+ {
+  "id": "S050",
+  "in_frame": 3792,
+  "out_frame": 3902,
+  "section": "BR1",
+  "treatment_ref": "gap",
+  "lyric_ids": [
+   "L061",
+   "L062",
+   "L063"
+  ],
+  "lyric": "已是我的从前／可我读过年月／不等于把你看穿",
+  "sync_points": [
+   {
+    "t": 158.52,
+    "event": "“读过年月”：铅笔打勾"
+   },
+   {
+    "t": 159.96,
+    "event": "“把你”：笔停住"
+   },
+   {
+    "t": 160.5,
+    "event": "背景门玻璃里手电光扫过"
+   },
+   {
+    "t": 160.92,
+    "event": "“看穿”：她抬眼，若有所思"
+   }
+  ],
+  "era": "modern",
+  "scene": "restoration_lab",
+  "location": "修复室工作台",
+  "characters": [
+   "RESTORER",
+   "GUARD"
+  ],
+  "props": [
+   "LETTER",
+   "LEDGER",
+   "FLASHLIGHT"
+  ],
+  "extras": [],
+  "shot_size": "MCU",
+  "angle": "平视略侧",
+  "lens_mm": 75,
+  "camera_move": "极缓慢推进",
+  "speed": "24",
+  "focus": "焦点在她的眼睛；信纸与登记簿字迹出焦",
+  "lighting": "台灯 3500K 侧光；背景门玻璃里一道 4000K 手电光",
+  "action": "台灯下，她把信从保护套里轻轻取出，先看信头的日期，翻开藏品登记簿找到这一条——那一行只有日期与编号——用铅笔在年份旁打了个勾。接着往下读，笔尖慢下来，停在半空。她又读一遍，眉头微微收紧——字都认得，却读不出写信的人。她身后修复室门上的玻璃里，夜班工作人员的手电光束无声地扫过一次；她没有抬头。",
+  "emotion": "读过年月，不等于把你看穿。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "物 → 人"
+  },
+  "continuity": "信上字迹与登记簿不可读（出焦）；登记簿只记日期与数字（圣经 §6.21）；她不抬头——“她忙着工作”的第二次，为 S061 的“终于注意到”铺垫；夜班工作人员只以手电光出现。",
+  "refs": [
+   "CHAR_RESTORER",
+   "CHAR_GUARD",
+   "PROP_LETTER",
+   "PROP_LEDGER",
+   "PROP_FLASHLIGHT",
+   "LOC_LAB"
+  ],
+  "revision": {
+   "findings": [
+    "V23",
+    "V17"
+   ],
+   "from_v1": [
+    "S052"
+   ]
+  }
+ },
+ {
+  "id": "S051",
+  "in_frame": 3902,
+  "out_frame": 3979,
+  "section": "BR1",
+  "treatment_ref": "gap",
+  "lyric_ids": [
+   "L063",
+   "L064"
+  ],
+  "lyric": "不等于把你看穿／若后来的人",
+  "sync_points": [
+   {
+    "t": 162.75,
+    "event": "音乐回落：沿最后一行移动"
+   },
+   {
+    "t": 163.02,
+    "event": "“若后来的人”"
+   },
+   {
+    "t": 164.3,
+    "event": "近乎无声：停在断掉的那一笔"
+   }
+  ],
+  "era": "modern",
+  "scene": "restoration_lab",
+  "location": "修复室工作台·信纸",
+  "characters": [],
+  "props": [
+   "LETTER"
+  ],
+  "extras": [],
+  "shot_size": "ECU",
+  "angle": "低角度贴近纸面",
+  "lens_mm": 100,
+  "camera_move": "滑轨沿纸面缓慢横移",
+  "speed": "24",
+  "focus": "微距，焦点随最后一行字移动",
+  "lighting": "她把台灯拉低，光圈只剩信纸大小；3500K 掠射，纸纤维像细小的河流",
+  "action": "她把台灯拉低，光圈缩到只剩信纸大小。微距：信纸纤维在灯下像细小的河流。镜头沿着最后一行字缓缓移动——那行字写到一半就断了，最后一笔停在半空，墨迹拖出一道细细的尾巴。音乐退下去，画面只剩纸与光。",
+  "emotion": "没写完的一句话，比写完的更重。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "她的目光 → 她在看的地方"
+  },
+  "continuity": "断笔位置在画面中心偏右；墨色褐黑；字迹不可读。音乐 162.75 回落，164.25–165.6 近乎无声，165.75 一记重音切下一镜。",
+  "refs": [
+   "PROP_LETTER",
+   "LOC_LAB"
+  ],
+  "revision": {
+   "findings": [
+    "E8"
+   ],
+   "from_v1": [
+    "S053"
+   ]
+  }
+ },
+ {
+  "id": "S052",
+  "in_frame": 3979,
+  "out_frame": 4046,
+  "section": "BR1",
+  "treatment_ref": "gap",
+  "lyric_ids": [
+   "L065"
+  ],
+  "lyric": "翻到我这段",
+  "sync_points": [
+   {
+    "t": 166.0,
+    "event": "“翻”：信纸翻过来"
+   },
+   {
+    "t": 167.2,
+    "event": "“这段”：露出茉莉"
+   }
+  ],
+  "era": "modern",
+  "scene": "restoration_lab",
+  "location": "修复室工作台",
+  "characters": [
+   "RESTORER"
+  ],
+  "props": [
+   "LETTER",
+   "GLOVES"
+  ],
+  "extras": [],
+  "shot_size": "CU",
+  "angle": "俯拍",
+  "lens_mm": 75,
+  "camera_move": "锁定",
+  "speed": "24",
+  "focus": "焦点在信纸背面的页边折缝",
+  "lighting": "拉低的台灯 3500K",
+  "action": "她用竹镊把信纸轻轻翻到背面。页边折缝里，夹着一朵压扁的茉莉花，已褪成褐色，花瓣薄得半透明。",
+  "emotion": "翻到我这段——原来还有这个。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "静默后的第一个动作（165.75 重音）"
+  },
+  "continuity": "茉莉为 PROP_LETTER 博物馆状态的一部分（页边压花 #A88A5A，与结尾的茉莉花茶暗中呼应，不强调）；镊子在右手（戴手套）。",
+  "refs": [
+   "CHAR_RESTORER",
+   "PROP_LETTER",
+   "PROP_GLOVES",
+   "LOC_LAB"
+  ],
+  "revision": {
+   "findings": [
+    "V17",
+    "V19",
+    "E10"
+   ],
+   "from_v1": [
+    "S054"
+   ]
+  }
+ },
+ {
+  "id": "S053",
+  "in_frame": 4046,
+  "out_frame": 4085,
+  "section": "BR1",
+  "treatment_ref": "gap",
+  "lyric_ids": [
+   "L066"
+  ],
+  "lyric": "别只读年份",
+  "sync_points": [
+   {
+    "t": 168.72,
+    "event": "“别只读”：铅笔放下"
+   },
+   {
+    "t": 169.38,
+    "event": "“年份”：笔停在年份旁"
+   }
+  ],
+  "era": "modern",
+  "scene": "restoration_lab",
+  "location": "修复室工作台·登记簿",
+  "characters": [
+   "RESTORER"
+  ],
+  "props": [
+   "LEDGER"
+  ],
+  "extras": [],
+  "shot_size": "INSERT",
+  "angle": "俯拍",
+  "lens_mm": 75,
+  "camera_move": "锁定",
+  "speed": "24",
+  "focus": "焦点在笔尖与年份那一栏",
+  "lighting": "台灯 3500K",
+  "action": "她把铅笔轻轻放在登记簿那一行的年份旁边，不再写下去。",
+  "emotion": "她第一次放下了“年代”。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "茉莉 → 她的反应（以手代脸）"
+  },
+  "continuity": "笔尖朝画右上；登记簿在画左；文字不可读。",
+  "refs": [
+   "CHAR_RESTORER",
+   "PROP_LEDGER",
+   "LOC_LAB"
+  ],
+  "revision": {
+   "findings": [
+    "V17"
+   ],
+   "from_v1": [
+    "S055"
+   ]
+  }
+ },
+ {
+  "id": "S054",
+  "in_frame": 4085,
+  "out_frame": 4190,
+  "section": "BR1",
+  "treatment_ref": "gap",
+  "lyric_ids": [
+   "L067"
+  ],
+  "lyric": "也读我没说完的喜欢",
+  "sync_points": [
+   {
+    "t": 170.82,
+    "event": "“没说完”：放大镜移近茉莉"
+   },
+   {
+    "t": 172.14,
+    "event": "焦点开始由花移向她的眼睛"
+   },
+   {
+    "t": 172.92,
+    "event": "“欢”：焦点落在她的眼睛上"
+   },
+   {
+    "t": 174.3,
+    "event": "镜片折出彩色光晕"
+   }
+  ],
+  "era": "modern",
+  "scene": "restoration_lab",
+  "location": "修复室工作台",
+  "characters": [
+   "RESTORER"
+  ],
+  "props": [
+   "LETTER",
+   "GLOVES"
+  ],
+  "extras": [],
+  "shot_size": "ECU",
+  "angle": "平视，透过放大镜",
+  "lens_mm": 100,
+  "camera_move": "极缓慢推进；焦点由茉莉转移到她的眼睛",
+  "speed": "24",
+  "focus": "焦点转移：茉莉 → 她的眼睛（≥1 拍）",
+  "lighting": "拉低的台灯光在放大镜边缘折出淡淡的彩色光晕",
+  "action": "她俯身，用放大镜看那朵茉莉和旁边那半句没写完的话。戴手套的指尖悬在纸面上方，没有碰。焦点从花慢慢移到她的眼睛——她第一次不是在辨认，而是在读。最后，她把放大镜转过一个角度，台灯的光在镜片边缘折出一圈淡淡的彩色光晕，落在信纸上。",
+  "emotion": "也读我没说完的喜欢——她开始读人了。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "由手到眼"
+  },
+  "continuity": "彩色光晕在画右上，接 S055 彩窗（光线接续）；她接下来离开修复室上到二层长廊（S061 时她已在 P4 彩窗残片前）。",
+  "refs": [
+   "CHAR_RESTORER",
+   "PROP_LETTER",
+   "PROP_GLOVES",
+   "LOC_LAB"
+  ],
+  "revision": {
+   "findings": [
+    "E11",
+    "V17"
+   ],
+   "from_v1": [
+    "S056"
+   ]
+  }
+ },
+ {
+  "id": "S055",
+  "in_frame": 4190,
+  "out_frame": 4258,
+  "section": "BR2",
+  "treatment_ref": "七",
+  "lyric_ids": [
+   "L068"
+  ],
+  "lyric": "彩窗下",
+  "sync_points": [
+   {
+    "t": 174.76,
+    "event": "“彩窗下”：彩色光柱"
+   },
+   {
+    "t": 175.36,
+    "event": "“下”：下降开始"
+   }
+  ],
+  "era": "chapel",
+  "scene": "chapel",
+  "location": "1950s 南洋虚构港口城市的旧礼拜堂·西墙尖拱彩窗高处（唱诗廊高度）",
+  "characters": [],
+  "props": [],
+  "extras": [],
+  "shot_size": "WS",
+  "angle": "由拱顶高度仰视彩窗",
+  "lens_mm": 32,
+  "camera_move": "伸缩摇臂从唱诗廊高度（约 9 m）开始缓慢下降（S055–S056 为一次完整运动，全程 ≥6 s）",
+  "speed": "24",
+  "focus": "全景深",
+  "lighting": "日落前最后 15 分钟：约 3200K 的低角度斜阳穿过西窗彩玻璃，空气中切出彩色光柱，尘只在光路里看得见",
+  "action": "高处：礼拜堂巨大的彩色玻璃窗。日落前最后一道低角度的阳光穿过它，在空气里切出一束束彩色光柱。摄影机从拱顶的高度开始缓缓下降。",
+  "emotion": "宏大而安静。",
+  "transition_in": {
+   "type": "light",
+   "frames": 0,
+   "on": "放大镜镜片里的彩色光晕 → 彩窗透进的彩色光（光线接续；跨时代）"
+  },
+  "continuity": "彩窗为虚构非具象图案（层叠花瓣色块、海浪与星形），不含任何人物、圣像或文字（圣经 §7.9、§10-5）；彩光色相柔化 30%（P23–P27）；礼拜堂时间线：此处日落，S069 入夜（蓝调）。",
+  "refs": [
+   "LOC_CHAPEL"
+  ],
+  "revision": {
+   "findings": [
+    "E2"
+   ],
+   "from_v1": [
+    "S057"
+   ]
+  }
+ },
+ {
+  "id": "S056",
+  "in_frame": 4258,
+  "out_frame": 4342,
+  "section": "BR2",
+  "treatment_ref": "七",
+  "lyric_ids": [
+   "L069"
+  ],
+  "lyric": "光分成千万瓣",
+  "sync_points": [
+   {
+    "t": 177.82,
+    "event": "“分成”：光斑铺满地面"
+   },
+   {
+    "t": 178.42,
+    "event": "“千万瓣”：越过长椅"
+   },
+   {
+    "t": 179.4,
+    "event": "前一排画右端独坐的老人掠过"
+   },
+   {
+    "t": 180.3,
+    "event": "接近母亲背影"
+   }
+  ],
+  "era": "chapel",
+  "scene": "chapel",
+  "location": "礼拜堂·中殿长椅之间",
+  "characters": [
+   "MOTHER",
+   "LONELY"
+  ],
+  "props": [
+   "AIRLETTER"
+  ],
+  "extras": [],
+  "shot_size": "WS",
+  "angle": "由高处降至坐姿高度",
+  "lens_mm": 32,
+  "camera_move": "摇臂继续缓慢下降并前推，越过一排排长椅",
+  "speed": "24",
+  "focus": "跟焦至母亲背影",
+  "lighting": "彩色光瓣落在赤陶方砖地、柚木长椅和衣料上；彩光从她身后（西）来",
+  "action": "光在赤陶方砖地、柚木长椅和人的衣料上分成千万瓣柔和的彩色光斑，灰尘只在光路里看得见。镜头降到坐姿高度，越过一排排长椅：前一排的画右端，一位老人独自坐着，小小的，落在一池彩光里；镜头继续向前，靠近南侧第七排画左端一个独自坐着的女人的背影——浅鸽灰旗袍，双手握着一封折起来的浅蓝航空信。",
+  "emotion": "光很美，人很小，也很孤单。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "下降运动接续"
+  },
+  "continuity": "母亲坐南侧第七排长椅画左端、面向东（圣经 §7.9）；LONELY 在前一排画右端——S069 她坐到他身旁的伏笔；航空信 PROP_AIRLETTER 三折后对折，与迁徙女性的信只以折法押韵（是否同一人保持留白）。",
+  "refs": [
+   "CHAR_MOTHER",
+   "CHAR_LONELY",
+   "PROP_AIRLETTER",
+   "LOC_CHAPEL"
+  ],
+  "revision": {
+   "findings": [
+    "V17",
+    "V23"
+   ],
+   "from_v1": [
+    "S058"
+   ]
+  }
+ },
+ {
+  "id": "S057",
+  "in_frame": 4342,
+  "out_frame": 4390,
+  "section": "BR2",
+  "treatment_ref": "七",
+  "lyric_ids": [
+   "L070"
+  ],
+  "lyric": "我听不懂你的祈祷",
+  "sync_points": [
+   {
+    "t": 180.94,
+    "event": "“我听不懂”：菱形小玻璃里修复师的倒影显现"
+   },
+   {
+    "t": 182.44,
+    "event": "“祷”：母亲嘴唇微动"
+   }
+  ],
+  "era": "chapel",
+  "scene": "chapel",
+  "location": "礼拜堂·母亲侧面与座位旁的矮彩窗",
+  "characters": [
+   "MOTHER",
+   "RESTORER"
+  ],
+  "props": [
+   "AIRLETTER",
+   "GLASSPANEL"
+  ],
+  "extras": [],
+  "shot_size": "CU",
+  "angle": "正侧面；母亲在画左三分之一、面朝画右",
+  "lens_mm": 100,
+  "camera_move": "锁定",
+  "speed": "24",
+  "focus": "焦点在母亲侧脸；画右前景菱形小玻璃中的倒影半虚",
+  "lighting": "西窗彩光 + 侧桌蜡烛暖点；菱形小玻璃清透",
+  "action": "侧脸特写：母亲（约45岁，太阳穴处几缕白发）闭着眼，嘴唇轻轻地动，在一段不属于她的语言与仪式里祈祷——她不划十字，只是双手握着信。画右前景，她座位旁那扇矮彩窗的最下层，一块透明的菱形小玻璃里，修复师的脸若隐若现——像从今天望进来。",
+  "emotion": "听不懂祈祷的内容；祈祷的内容保持未知。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "背影 → 侧脸"
+  },
+  "continuity": "【T18】菱形小玻璃 = PROP_GLASSPANEL 左下方 6×9 cm 透明菱形的当年状态，原位嵌在母亲座位旁的矮彩窗里，位于画面 (0.70,0.45)——S061 中同一块玻璃在长廊 P4，跨越七十年；左腕浅绿玉镯；修复师倒影只占一小块、半透明；不再使用无来历的烛罩玻璃。",
+  "refs": [
+   "CHAR_MOTHER",
+   "CHAR_RESTORER",
+   "PROP_AIRLETTER",
+   "PROP_GLASSPANEL",
+   "LOC_CHAPEL",
+   "LOC_CORRIDOR"
+  ],
+  "revision": {
+   "findings": [
+    "F7",
+    "V1",
+    "V17",
+    "E11"
+   ],
+   "from_v1": [
+    "S059"
+   ]
+  }
+ },
+ {
+  "id": "S058",
+  "in_frame": 4390,
+  "out_frame": 4466,
+  "section": "BR2",
+  "treatment_ref": "七",
+  "lyric_ids": [
+   "L071"
+  ],
+  "lyric": "却懂你颤抖的双肩",
+  "sync_points": [
+   {
+    "t": 183.76,
+    "event": "“颤抖”：肩膀开始颤抖"
+   },
+   {
+    "t": 185.14,
+    "event": "“肩”：颤抖最明显"
+   },
+   {
+    "t": 185.8,
+    "event": "彩光褪去"
+   }
+  ],
+  "era": "chapel",
+  "scene": "chapel",
+  "location": "礼拜堂·母亲右后方",
+  "characters": [
+   "MOTHER"
+  ],
+  "props": [
+   "AIRLETTER"
+  ],
+  "extras": [],
+  "shot_size": "MCU",
+  "angle": "右后方 45°，略高",
+  "lens_mm": 75,
+  "camera_move": "极缓慢推进（足够近）",
+  "speed": "24",
+  "focus": "焦点在肩与握信的手指",
+  "lighting": "彩色光瓣落在肩上，随后褪去，蓝调时刻的冷蓝进来",
+  "action": "从她右后方斜侧靠近：彩色光瓣落在她的肩上。她的肩膀轻轻地、压抑地颤抖起来——真实速度，幅度很小——握信的手指收紧，拇指在信的折边上来回摩挲。光瓣渐渐褪去，蓝调时刻来了。",
+  "emotion": "不懂她的祈祷，却懂她颤抖的双肩。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "侧脸 → 肩"
+  },
+  "continuity": "【匹配锁 T19】背对镜头，主体在画右三分之一，肩线高度、角度与位置登记，与 S059 一致；颤抖必须真实速度（圣经 §4.4、§5.7——原 48 fps 取消）；彩光褪去 → S059 手机冷光。",
+  "refs": [
+   "CHAR_MOTHER",
+   "PROP_AIRLETTER",
+   "LOC_CHAPEL"
+  ],
+  "revision": {
+   "findings": [
+    "V18",
+    "E10",
+    "V19"
+   ],
+   "from_v1": [
+    "S060"
+   ]
+  }
+ },
+ {
+  "id": "S059",
+  "in_frame": 4466,
+  "out_frame": 4517,
+  "section": "BR2",
+  "treatment_ref": "八",
+  "lyric_ids": [
+   "L071"
+  ],
+  "lyric": "却懂你颤抖的双肩",
+  "sync_points": [
+   {
+    "t": 186.09,
+    "event": "强起音上切入他的背"
+   },
+   {
+    "t": 187.3,
+    "event": "手机冷光亮起"
+   }
+  ],
+  "era": "modern",
+  "scene": "night_window",
+  "location": "二层长廊东端窗湾·窗凳（自西南侧后方）",
+  "characters": [
+   "GUARD"
+  ],
+  "props": [
+   "PHONE",
+   "FLASHLIGHT"
+  ],
+  "extras": [],
+  "shot_size": "MCU",
+  "angle": "右后方 45°，略高（同 S058）",
+  "lens_mm": 75,
+  "camera_move": "锁定（与上镜同构图）",
+  "speed": "24",
+  "focus": "焦点在他的背与肩",
+  "lighting": "手机屏幕 6500K（P29）只照亮他的下半张脸与手；窗湾角落 2700K 阅读灯；窗外港口灯点；月亮在西南，不从东窗进来",
+  "action": "匹配剪辑：同样的角度、同样的肩线——今天博物馆东端的窗湾里，夜班工作人员微微弯着的背。他独自坐在窗凳靠东南窗的一侧，戴上了老花镜，膝上一点手机屏幕的冷光；窗外是港口的夜，防波堤灯与锚泊船的灯点。身旁窗凳上放着他那只旧保温壶。",
+  "emotion": "原来孤单也在今天，就在身边。",
+  "transition_in": {
+   "type": "match_cut",
+   "frames": 0,
+   "on": "相似构图 + 姿态：母亲颤抖的双肩 → 夜班工作人员弯着的背（同角度、同肩线、同画面位置；彩光褪去 → 手机冷光；跨时代，T19）",
+   "register": {
+    "a": "S058",
+    "b": "S059",
+    "subject": "背与肩线",
+    "pos": [
+     0.66,
+     0.5
+    ],
+    "size": "肩宽约占画面宽 30%",
+    "direction": "背对镜头",
+    "phase": "彩光褪尽 → 冷光亮起"
+   }
+  },
+  "continuity": "他坐在窗湾画右靠窗一侧（圣经 §4.5、§7.10 双人站位锁）；手电挂在腰侧；保温壶为 S077 续茶埋下的道具（圣经未登记的小道具，见修订记录）；窗湾在 S027 已建立。",
+  "refs": [
+   "CHAR_GUARD",
+   "PROP_PHONE",
+   "PROP_FLASHLIGHT",
+   "LOC_WINDOW"
+  ],
+  "revision": {
+   "findings": [
+    "E10",
+    "V14",
+    "V2",
+    "F14",
+    "V18"
+   ],
+   "from_v1": [
+    "S061"
+   ]
+  }
+ },
+ {
+  "id": "S060",
+  "in_frame": 4517,
+  "out_frame": 4583,
+  "section": "BR2",
+  "treatment_ref": "八",
+  "lyric_ids": [
+   "L071",
+   "L072"
+  ],
+  "lyric": "却懂你颤抖的双肩／若天上的回答",
+  "sync_points": [
+   {
+    "t": 188.71,
+    "event": "“天上的”：拇指悬在拨号键上"
+   },
+   {
+    "t": 190.03,
+    "event": "“回答”：拇指收回"
+   },
+   {
+    "t": 190.6,
+    "event": "手机扣在膝上，冷光熄灭"
+   }
+  ],
+  "era": "modern",
+  "scene": "night_window",
+  "location": "窗湾·窗凳",
+  "characters": [
+   "GUARD"
+  ],
+  "props": [
+   "PHONE"
+  ],
+  "extras": [],
+  "shot_size": "CU",
+  "angle": "过肩俯拍",
+  "lens_mm": 100,
+  "camera_move": "缓慢推过他的肩到手机",
+  "speed": "24",
+  "focus": "焦点在拇指；屏幕内容出焦不可读",
+  "lighting": "手机 6500K 冷光照亮他的手 → 熄灭后只剩 2700K 阅读灯与港口灯点",
+  "action": "他手里握着那部装在磨旧藏青翻盖套里的旧手机，屏幕内容不可读。拇指移到拨号键上方，停住，悬了很久，最后慢慢收回。他把手机扣在膝盖上——屏幕的冷光熄灭了。",
+  "emotion": "想拨出去的电话，犹豫了。对方是谁，留白。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "背 → 他手里的东西"
+  },
+  "continuity": "右手持机；屏幕名字与任何文字永不可读（圣经 §6.17）；手机扣下 = 光的消失（S061 她看见的正是这一下）。",
+  "refs": [
+   "CHAR_GUARD",
+   "PROP_PHONE",
+   "LOC_WINDOW"
+  ],
+  "revision": {
+   "findings": [
+    "E5",
+    "V1"
+   ],
+   "from_v1": [
+    "S062"
+   ]
+  }
+ },
+ {
+  "id": "S061",
+  "in_frame": 4583,
+  "out_frame": 4680,
+  "section": "BR2",
+  "treatment_ref": "八",
+  "lyric_ids": [
+   "L073",
+   "L074"
+  ],
+  "lyric": "还在风里辗转／愿我伸出的手",
+  "sync_points": [
+   {
+    "t": 191.88,
+    "event": "“还”：她抬眼"
+   },
+   {
+    "t": 192.2,
+    "event": "焦点转到远处窗湾的背影"
+   },
+   {
+    "t": 192.7,
+    "event": "开始摘右手手套"
+   },
+   {
+    "t": 193.9,
+    "event": "摘左手手套"
+   },
+   {
+    "t": 194.6,
+    "event": "两只手套叠好"
+   },
+   {
+    "t": 194.97,
+    "event": "重音：她攥住手套，转身"
+   }
+  ],
+  "era": "modern",
+  "scene": "corridor",
+  "location": "二层长廊·主展柜 P4（x=−4，彩窗残片）前；东边 4 m 外隔断玻璃后是窗湾",
+  "characters": [
+   "RESTORER",
+   "GUARD"
+  ],
+  "props": [
+   "GLASSPANEL",
+   "GLOVES",
+   "PHONE"
+  ],
+  "extras": [],
+  "shot_size": "CU",
+  "angle": "平视，斜对 P4 玻璃",
+  "lens_mm": 100,
+  "camera_move": "锁定；焦点由菱形小玻璃中的倒影 → 远处窗湾的背影 → 前景她的手",
+  "speed": "24",
+  "focus": "焦点转移：倒影 → 远处他的背影（≥1 拍）→ 她的手",
+  "lighting": "P4 背后一盏极暗的柔光灯箱让彩窗残片微微发光；04:00 月光（西南约 45°）从画右后方的拱窗落下；远处窗湾 2700K 阅读灯一点",
+  "action": "长廊 P4 展柜里那块彩窗残片：左下方透明的菱形小玻璃里，映着修复师的脸——近到足以看清她的不安。她刚从修复室上来，正在看这块玻璃。“还在”时她抬起眼，焦点穿过菱形小玻璃，转向东边 4 米外隔断玻璃后的窗湾：刚才还亮着的一点手机冷光，刚刚熄灭了，只剩一个弯着的背影。她看了很久。然后焦点回到她的手：她低下头，一根手指一根手指地摘下右手手套，再摘左手——右手食指第二指节那道细小的旧疤第一次露出来——把两只叠好，攥在手心。",
+  "emotion": "她终于注意到他。摘下手套，从修复师变回一个人。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "他的手机冷光熄灭 → 远处看见这一下熄灭的她（视线连接；她在长廊 P4，窗湾在其东 4 m）"
+  },
+  "continuity": "【T18】菱形小玻璃 (0.70,0.45) 与 S057 为同一块玻璃；地理【锁】：P4 与窗湾同在二层长廊（不再从一层修复室“看见”二层的他）；手套摘下顺序先右后左（圣经锁）；右手食指疤自此可见；她此后不再戴手套，叠好的手套被带到窗湾，S063 坐下时放在长凳角上。",
+  "refs": [
+   "CHAR_RESTORER",
+   "CHAR_GUARD",
+   "PROP_GLASSPANEL",
+   "PROP_GLOVES",
+   "PROP_PHONE",
+   "LOC_CORRIDOR",
+   "LOC_WINDOW"
+  ],
+  "previz_notes": "corridor 模块，摄影机停在 P4 前；P4 玻璃中只有她自己的倒影（此时不映其他时代）；远景窗湾为 night_window 背景层。",
+  "revision": {
+   "findings": [
+    "V1",
+    "E5",
+    "F7",
+    "V10",
+    "V24"
+   ],
+   "from_v1": [
+    "S063"
+   ]
+  }
+ },
+ {
+  "id": "S062",
+  "in_frame": 4680,
+  "out_frame": 4738,
+  "section": "BR2",
+  "treatment_ref": "八",
+  "lyric_ids": [
+   "L074"
+  ],
+  "lyric": "愿我伸出的手",
+  "sync_points": [
+   {
+    "t": 195.57,
+    "event": "“伸出”：右手伸向窗台"
+   },
+   {
+    "t": 197.15,
+    "event": "“手”：杯底落在窗台上"
+   }
+  ],
+  "era": "modern",
+  "scene": "night_window",
+  "location": "窗湾（自南侧侧拍，东窗在画右；画左是通向长廊的玻璃门）",
+  "characters": [
+   "RESTORER",
+   "GUARD"
+  ],
+  "props": [
+   "TEA",
+   "GLOVES",
+   "COAT"
+  ],
+  "extras": [],
+  "shot_size": "MS",
+  "angle": "平视，侧拍",
+  "lens_mm": 50,
+  "camera_move": "稳定横移，跟随她最后两步（画左 → 画右）",
+  "speed": "24",
+  "focus": "跟焦在她和茶杯上",
+  "lighting": "2700K 阅读灯为主光；茶的热气以暗窗框为背景、被阅读灯逆光照亮；窗外港口灯点；月光只从身后长廊拱窗留一线冷边",
+  "action": "窗湾里，侧面看过去：他坐在画右靠窗的一侧。她从画左的玻璃门进来——刚从长廊北墙的员工茶水间出来——双手各端着一只青白釉茶杯，叠好的手套压在左手拇指下。“伸出”时，她没戴手套的右手伸过去；“手”字时，把他的那只杯子轻轻放在他身旁靠窗的窗台上，热气在阅读灯的暖光里升起。",
+  "emotion": "愿我伸出的手。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "她转身 → 她已端着茶走进窗湾（省略茶水间）"
+  },
+  "continuity": "【站位锁】他在画右靠东南窗、她从画左进入（所有给予动作画左→画右，圣经 §4.5）；茶杯（圣经 §6.16）：青白釉，口沿下 6 mm 一道完整的钴蓝细线；他的杯子口沿 2 点钟位置一个小磕口；她右手食指的旧疤可见；左手托杯时左袖口磨损可见。",
+  "refs": [
+   "CHAR_RESTORER",
+   "CHAR_GUARD",
+   "PROP_TEA",
+   "PROP_GLOVES",
+   "PROP_COAT",
+   "LOC_WINDOW"
+  ],
+  "revision": {
+   "findings": [
+    "V2",
+    "V16",
+    "E5",
+    "F1",
+    "V10"
+   ],
+   "from_v1": [
+    "S064"
+   ]
+  }
+ },
+ {
+  "id": "S063",
+  "in_frame": 4738,
+  "out_frame": 4816,
+  "section": "BR2",
+  "treatment_ref": "八",
+  "lyric_ids": [
+   "L074",
+   "L075"
+  ],
+  "lyric": "愿我伸出的手／先抵达你的孤单",
+  "sync_points": [
+   {
+    "t": 197.45,
+    "event": "“先抵达”：她放下自己的杯子"
+   },
+   {
+    "t": 198.22,
+    "event": "全乐队进入（“你”）：她坐定"
+   },
+   {
+    "t": 199.3,
+    "event": "她解开外套中间那粒扣子"
+   },
+   {
+    "t": 200.15,
+    "event": "“孤”：两人的肩同时松下来"
+   }
+  ],
+  "era": "modern",
+  "scene": "night_window",
+  "location": "窗湾·窗凳（同 S062 侧拍机位）",
+  "characters": [
+   "RESTORER",
+   "GUARD"
+  ],
+  "props": [
+   "TEA",
+   "GLOVES",
+   "COAT"
+  ],
+  "extras": [],
+  "shot_size": "MS",
+  "angle": "平视，侧拍，窗与东方在画右",
+  "lens_mm": 50,
+  "camera_move": "锁定（几乎不动）",
+  "speed": "24",
+  "focus": "两人同在焦内",
+  "lighting": "阅读灯 2700K 主光；热气以暗窗框为背景",
+  "action": "安静的双人中景：她把自己的那只杯子放在他那只的左边，相距约六厘米；把叠好的手套搁在长凳角上，在他身旁坐下——在全乐队进入的那一拍坐定。她不说话。坐定后，她解开了外套中间那粒扣子——一整夜，她的肩膀第一次落下来。他看了看那杯茶。窗外是港口的夜。两个人都没有动，只有茶的热气在两人之间缓缓升起。",
+  "emotion": "一个人终于坐到了另一个人身旁。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "跟拍的最后一步 → 静止的双人构图"
+  },
+  "continuity": "他在画右（靠窗）、她在画左，相距约 40 cm（圣经 §7.10 锁）；窗台上两只杯子：他的在画右、她的在画左、相距约 6 cm（尾镜的排列在此诞生）；手套叠好在长凳画左端角上；外套中间那粒扣子解开（此后保持解开）；此双人构图在 S066 长廊尽头、S072、S074、S077 重复；全段无对白。",
+  "refs": [
+   "CHAR_RESTORER",
+   "CHAR_GUARD",
+   "PROP_TEA",
+   "PROP_GLOVES",
+   "PROP_COAT",
+   "LOC_WINDOW"
+  ],
+  "revision": {
+   "findings": [
+    "F2",
+    "E11",
+    "V2",
+    "V10",
+    "V16"
+   ],
+   "from_v1": [
+    "S065"
+   ]
+  }
+ },
+ {
+  "id": "S064",
+  "in_frame": 4816,
+  "out_frame": 4865,
+  "section": "BR2",
+  "treatment_ref": "八",
+  "lyric_ids": [
+   "L075"
+  ],
+  "lyric": "先抵达你的孤单",
+  "sync_points": [
+   {
+    "t": 200.67,
+    "event": "他的手合拢在杯子上"
+   },
+   {
+    "t": 201.6,
+    "event": "磨损处在焦点中央"
+   },
+   {
+    "t": 202.29,
+    "event": "热气升过画面上缘"
+   }
+  ],
+  "era": "modern",
+  "scene": "night_window",
+  "location": "窗湾·两双手与茶杯",
+  "characters": [
+   "RESTORER",
+   "GUARD"
+  ],
+  "props": [
+   "TEA",
+   "COAT"
+  ],
+  "extras": [],
+  "shot_size": "INSERT",
+  "angle": "略俯，前景茶杯与手，背景暗窗框",
+  "lens_mm": 100,
+  "camera_move": "锁定",
+  "speed": "24",
+  "focus": "焦点在两双手与杯子；袖口磨损清晰在焦内",
+  "lighting": "热气被 2700K 阅读灯逆光照亮，衬着暗色窗框",
+  "action": "手与茶杯的特写：他布满皱纹的双手慢慢把窗台上那只带磕口的杯子捧起来，捧在膝上；旁边，她没戴手套的左手轻轻搭在长凳上——外套左袖口外侧那块小小的磨损清晰在焦内。热气在暗窗框前缓缓升起。",
+  "emotion": "治愈来自热气与陪伴。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "双人中景 → 手与茶杯特写（简报：“再给手与茶杯的特写”）"
+  },
+  "continuity": "【锁】磨损：左袖口外侧、小指一侧、距袖口边约 1 cm、18×8 mm、#5A5E62——全片对磨损最清楚的一次植入（取代原 S071）；【登记】磨损在画面中的位置 (0.42,0.62)，S069 衣袖与 S070 未来展柜的外套袖口按同一位置匹配；钴蓝细线与 2 点钟磕口可见。",
+  "refs": [
+   "CHAR_RESTORER",
+   "CHAR_GUARD",
+   "PROP_TEA",
+   "PROP_COAT",
+   "LOC_WINDOW"
+  ],
+  "revision": {
+   "findings": [
+    "F2",
+    "F1",
+    "E1",
+    "V10",
+    "V16"
+   ],
+   "from_v1": [
+    "S066"
+   ]
+  }
+ },
+ {
+  "id": "S065",
+  "in_frame": 4865,
+  "out_frame": 4912,
+  "section": "BR2",
+  "treatment_ref": "八",
+  "lyric_ids": [
+   "L075",
+   "L076"
+  ],
+  "lyric": "先抵达你的孤单／千年啊",
+  "sync_points": [
+   {
+    "t": 202.9,
+    "event": "他抬头看她"
+   },
+   {
+    "t": 203.5,
+    "event": "拍点：她轻轻点头"
+   },
+   {
+    "t": 203.9,
+    "event": "两人同时呼气"
+   },
+   {
+    "t": 204.07,
+    "event": "“千年啊”：画面保持"
+   }
+  ],
+  "era": "modern",
+  "scene": "night_window",
+  "location": "窗湾·两人（中间没有玻璃）",
+  "characters": [
+   "RESTORER",
+   "GUARD"
+  ],
+  "props": [
+   "TEA"
+  ],
+  "extras": [],
+  "shot_size": "MCU",
+  "angle": "平视，侧拍双人近景",
+  "lens_mm": 75,
+  "camera_move": "锁定",
+  "speed": "24",
+  "focus": "两张脸同在焦内",
+  "lighting": "阅读灯 2700K 暖侧光；窗外港口灯点焦外",
+  "action": "干净、直接的双人近景，中间没有任何玻璃：他从茶杯上抬起头，看向她；她轻轻点了一下头——像间奏里他朝她点的那一下，只是这一次，点头的人是她。两个人同时呼出一口气。画面停在这里，越过“千年啊”。",
+  "emotion": "一个眼神，一次点头：治愈来自看见彼此。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "手与茶杯 → 两张脸（简报：“他抬头，她轻轻点头，两个人的呼吸渐渐放松”）"
+  },
+  "continuity": "新增镜头：情感高点不再放在窗玻璃的虚焦倒影里——无玻璃、无倒影（主角弧线终点，圣经 §1.1-4）；他在画右、她在画左；点头真实速度，回收 S028/S029 的间奏点头。",
+  "refs": [
+   "CHAR_RESTORER",
+   "CHAR_GUARD",
+   "PROP_TEA",
+   "LOC_WINDOW"
+  ],
+  "revision": {
+   "findings": [
+    "F2",
+    "V3"
+   ],
+   "from_v1": [
+    "S066"
+   ]
+  }
+ },
+ {
+  "id": "S066",
+  "in_frame": 4912,
+  "out_frame": 5117,
+  "section": "CH3",
+  "treatment_ref": "九",
+  "lyric_ids": [
+   "L077",
+   "L078",
+   "L079",
+   "L080",
+   "L081",
+   "L082"
+  ],
+  "lyric": "不过无数个今晚／有人等一场雨／有人等沉默被听见／有人要把山河／握在掌间／有人只想再见",
+  "sync_points": [
+   {
+    "t": 204.67,
+    "event": "“不过无数个今晚”：前推开始（x≈−12.5）"
+   },
+   {
+    "t": 205.52,
+    "event": "重音：P1 船灯最亮"
+   },
+   {
+    "t": 206.77,
+    "event": "“有人等一场雨”：P2 浮现"
+   },
+   {
+    "t": 207.07,
+    "event": "雨滴落进碗心（焦点进入反射，约 1 s 内雨滴可辨）"
+   },
+   {
+    "t": 208.57,
+    "event": "“沉默”：P3 候船处居中"
+   },
+   {
+    "t": 210.38,
+    "event": "重音：P4 母亲的肩居中"
+   },
+   {
+    "t": 211.92,
+    "event": "“握在掌间”：开始缓停"
+   },
+   {
+    "t": 212.79,
+    "event": "重音：停稳在尽头两人的背影上（停留约 10 帧）"
+   }
+  ],
+  "era": "multi",
+  "scene": "corridor",
+  "location": "月光长廊（二层南侧封闭外廊）·中轴向东；两侧五面“时代之窗”与十四个小壁柜",
+  "characters": [
+   "NAVIGATOR",
+   "WIFE",
+   "MIGRANT",
+   "MOTHER",
+   "RESTORER",
+   "GUARD"
+  ],
+  "props": [
+   "SHIPLAMP",
+   "CANDLE",
+   "BOWL",
+   "LAMP",
+   "CASE",
+   "GLASSPANEL",
+   "TEA"
+  ],
+  "extras": [],
+  "shot_size": "WS",
+  "angle": "一点透视、中轴对称，镜头高 1.45 m，向东",
+  "lens_mm": 40,
+  "camera_move": "运动控制轨道车 + 稳定遥控头：从 x≈−12.5 起以约 1.3 m/s 匀速向东中轴推进，依次经过 P1–P4，在 x≈−1.5 以 12–24 帧缓停，全程不剪",
+  "speed": "24 (长廊主运动实时；P2 玻璃内雨滴落碗的素材以 96 fps 拍摄后合成，圣经 §4.4)",
+  "focus": "焦点依次转入每面主展柜的镜像空间（对焦距离 = 玻璃距离 + 被反射空间深度）；每面玻璃在摄影机接近时浮现、经过时最清楚、离开时退去；小壁柜光斑永远焦外",
+  "lighting": "04:30 月亮在西南约 42°，从摄影机右后方经南侧拱窗射入，每 4 m 一个拱形冷银光斑，约每小节一个光斑穿过画面（光的节拍）；每面玻璃内保留各自时代的光与 LUT；尽头 E 为 2700K 阅读灯与港口灯",
+  "action": "全片的视觉奇观：摄影机缓缓走过月光下的长廊。两侧的玻璃在各自明确的空间里映出不同时代的夜；在它们之间和更远处，十几个小壁柜里只有永远不对焦的暖色光斑——一盏渔灯、一个灶火、一座灯塔的扫光、一扇夜市的窗——无数个今晚，只有五个被看清。左侧 P1：深蓝海上摆动的船灯、帆的一角、长涌浪，晴而风大。右侧 P2：家中的残烛与空座——门外的雨终于落下来了：焦点追进反射，一颗颗雨滴在门边小灯的逆光里落进檐下那只碗，碗心的梅花开始被水淹没；她只是把手心伸到檐外接了一下。左侧 P3：候船棚的灯泡光池、潮湿的地面与流动的人群，她坐在藤箱上。右侧 P4：彩窗残片后，母亲的背与肩在蓝调时刻残留的彩光里轻轻颤抖。最后，尽头那扇隔断的清玻璃里——不是反射，是真实的当下——窗湾里并肩坐着的两个人的背影，两杯茶的热气，窗外港口的夜。摄影机在“握在掌间”上缓缓停住。",
+  "emotion": "无数个今晚在同一条长廊里短暂相逢——辽阔而亲密；雨终于来了，是一份小小的恩典，不是答案。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "“不过”起唱时切入长廊：上一镜两人并肩的正面 → 长廊尽头同一对人的背影（同一时刻的反打；玻璃母题重新打开）"
+  },
+  "continuity": "坐标与布局按圣经 §7.11：P1 x=−10 左（北）、P2 −8 右、P3 −6 左、P4 −4 右、E x=0 正前方；各时代空间互不穿插，各保留自己的建筑、天气与 LUT，长廊本体 CT_MODERN；反射为镜像（合成时做镜像处理）；P2 天气【锁】CH3：雨（“等一场雨”的第三次递进，圣经 §7.5）；E 为透过清玻璃所见的真实当下（他在画右、她在画左）；14 个小壁柜永远焦外。时长由 5.75 s 延长到 8.54 s，与 CH3 回落的编曲匹配。",
+  "refs": [
+   "CHAR_NAVIGATOR",
+   "CHAR_WIFE",
+   "CHAR_MIGRANT",
+   "CHAR_MOTHER",
+   "CHAR_RESTORER",
+   "CHAR_GUARD",
+   "PROP_SHIPLAMP",
+   "PROP_CANDLE",
+   "PROP_BOWL",
+   "PROP_LAMP",
+   "PROP_CASE",
+   "PROP_GLASSPANEL",
+   "PROP_TEA",
+   "LOC_CORRIDOR",
+   "LOC_DECK",
+   "LOC_HOME",
+   "LOC_PIER",
+   "LOC_CHAPEL",
+   "LOC_WINDOW"
+  ],
+  "previz_notes": "corridor 模块：运动控制路径 x=−12.5 → −1.5，镜头高 1.45 m；用每面玻璃的镜像深度做焦点动画；P2 反射层加雨；14 个小壁柜为焦外暖斑；E 为真实背景层（非反射）。",
+  "revision": {
+   "findings": [
+    "F1",
+    "E1",
+    "V3",
+    "F5",
+    "V6"
+   ],
+   "from_v1": [
+    "S067"
+   ]
+  }
+ },
+ {
+  "id": "S067",
+  "in_frame": 5117,
+  "out_frame": 5176,
+  "section": "CH3",
+  "treatment_ref": "九",
+  "lyric_ids": [
+   "L082",
+   "L083"
+  ],
+  "lyric": "有人只想再见／某个人一面",
+  "sync_points": [
+   {
+    "t": 213.6,
+    "event": "外衣抖开"
+   },
+   {
+    "t": 214.25,
+    "event": "全乐队涌起：外衣落定在少年身上"
+   },
+   {
+    "t": 214.9,
+    "event": "少年拉了拉衣领"
+   },
+   {
+    "t": 215.3,
+    "event": "左手指停在右袖口补丁上"
+   }
+  ],
+  "era": "navigator",
+  "scene": "sea_deck",
+  "location": "夜·甲板·缆绳卷旁",
+  "characters": [
+   "NAVIGATOR",
+   "COMPANION"
+  ],
+  "props": [
+   "OUTERCOAT",
+   "PATCH",
+   "SHIPLAMP"
+  ],
+  "extras": [],
+  "shot_size": "MS",
+  "angle": "平视略俯",
+  "lens_mm": 50,
+  "camera_move": "少量自然手持（圣经 §4.3 允许：CH3 披衣瞬间）",
+  "speed": "48 (50% slow motion)",
+  "focus": "焦点在外衣与少年",
+  "lighting": "艉灯 1950K 低位暖光；夜海冷蓝；月光从画右上",
+  "action": "夜甲板上，年轻的同伴（约17岁，只穿一件磨破袖口的麻布短衫）蜷在画右的缆绳卷旁睡着了，冻得发抖。航海人解下自己那件棕色夹棉外衣，抖开——衣料在风里展开——从画左向画右披落到少年身上，在全乐队涌起的那一拍落定；少年在梦里把衣领往下巴拉了拉，没醒。航海人身上留着那件靛蓝短褂；他的左手手指下意识地探进自己的右袖口，停在补丁上——一拍。",
+  "emotion": "他也曾在没有答案的夜里，把一点温暖留给别人——自己留下的，是袖口里的家。",
+  "transition_in": {
+   "type": "light",
+   "frames": 0,
+   "on": "长廊尽头窗湾阅读灯的暖点 → 同画面位置的艉灯暖光（光点接光点；跨时代）"
+  },
+  "continuity": "外衣 PROP_OUTERCOAT #5B4634 由画左落向画右（T21 给予方向锁）；同伴睡在画右缆绳卷旁、头朝画右；航海人保留靛蓝短褂（补丁仍在他自己袖口里，S075 仍穿短褂）；外衣落下为圣经慢动作清单中的瞬间（48 fps）。",
+  "refs": [
+   "CHAR_NAVIGATOR",
+   "CHAR_COMPANION",
+   "PROP_OUTERCOAT",
+   "PROP_PATCH",
+   "PROP_SHIPLAMP",
+   "LOC_DECK"
+  ],
+  "revision": {
+   "findings": [
+    "F13",
+    "V9",
+    "E1",
+    "V2"
+   ],
+   "from_v1": [
+    "S068"
+   ]
+  }
+ },
+ {
+  "id": "S068",
+  "in_frame": 5176,
+  "out_frame": 5225,
+  "section": "CH4",
+  "treatment_ref": "九",
+  "lyric_ids": [
+   "L083",
+   "L084",
+   "L085"
+  ],
+  "lyric": "某个人一面／千年啊／不过无数个今晚",
+  "sync_points": [
+   {
+    "t": 215.94,
+    "event": "“面”：糖落进他的掌心"
+   },
+   {
+    "t": 216.6,
+    "event": "“千”：她的笑跨过最后副歌的第一拍"
+   },
+   {
+    "t": 217.2,
+    "event": "他半边脸松开"
+   }
+  ],
+  "era": "migrant",
+  "scene": "pier_waiting",
+  "location": "候船棚长凳·灯泡下",
+  "characters": [
+   "MIGRANT",
+   "TRAVELLER"
+  ],
+  "props": [
+   "SWEETS"
+  ],
+  "extras": [],
+  "shot_size": "MS",
+  "angle": "平视",
+  "lens_mm": 50,
+  "camera_move": "锁定",
+  "speed": "24",
+  "focus": "焦点在递糖的手与对方掌心",
+  "lighting": "2400K 灯泡光池；油纸透光",
+  "action": "手势接续：她的手已经在递出——候船棚的长凳上，迁徙女性解开红绳，从那包油纸糖里掰下一块花生芝麻酥，从画左递向画右，放进身旁那个紧张少年的掌心。少年穿着过大的灰褐旧外套，怀里紧抱布包袱，手里攥着船票。他犹豫了一下，握住了。她冲他笑了一下，右边那颗虎牙微露；他半边脸慢慢松开。",
+  "emotion": "把别人给她的甜，分给另一个人。",
+  "transition_in": {
+   "type": "match_cut",
+   "frames": 0,
+   "on": "手势：S067 外衣由画左落向画右 → 糖由画左递向画右（给予的手势与方向一致；剪点在动作中段；T21）"
+  },
+  "continuity": "糖包与 S034 一致（红绳、油纸、花生芝麻酥）；少年坐在她画右（T21 方向锁）；船票票面不可读。",
+  "refs": [
+   "CHAR_MIGRANT",
+   "CHAR_TRAVELLER",
+   "PROP_SWEETS",
+   "LOC_PIER"
+  ],
+  "revision": {
+   "findings": [
+    "E1",
+    "V2",
+    "V17"
+   ],
+   "from_v1": [
+    "S069"
+   ]
+  }
+ },
+ {
+  "id": "S069",
+  "in_frame": 5225,
+  "out_frame": 5273,
+  "section": "CH4",
+  "treatment_ref": "九",
+  "lyric_ids": [
+   "L085"
+  ],
+  "lyric": "不过无数个今晚",
+  "sync_points": [
+   {
+    "t": 217.72,
+    "event": "“不过”：她起身走过来"
+   },
+   {
+    "t": 218.52,
+    "event": "“数”：她坐下"
+   },
+   {
+    "t": 219.24,
+    "event": "“晚”：画面停在两只并排的衣袖上"
+   }
+  ],
+  "era": "chapel",
+  "scene": "chapel",
+  "location": "礼拜堂·入夜·长椅",
+  "characters": [
+   "MOTHER",
+   "LONELY"
+  ],
+  "props": [
+   "AIRLETTER"
+  ],
+  "extras": [],
+  "shot_size": "MS",
+  "angle": "平视",
+  "lens_mm": 50,
+  "camera_move": "锁定，极缓慢推进",
+  "speed": "24",
+  "focus": "两人同在焦内",
+  "lighting": "蓝调时刻的冷蓝（P03）+ 侧桌几支蜡烛的暖点；彩光已褪",
+  "action": "礼拜堂已入夜，彩窗暗了，只剩侧桌几支蜡烛的暖点。母亲握着信起身，从画左沿长椅走过去，在“不过无数个今晚”里，坐到长椅画右端那位独自坐着的老人身旁。她什么也没说。他没有转头，只是交叠在旧布帽上的双手松开了一点。镜头停在两只并排的衣袖上——浅鸽灰的短袖，和洗薄的白棉袖。",
+  "emotion": "坐到另一个孤单的人身旁——与修复师所做的一样。",
+  "transition_in": {
+   "type": "match_cut",
+   "frames": 0,
+   "on": "手势：糖落进掌心的下行动作 → 母亲落座的下行动作（给予/坐到身旁，画左→画右；跨时代）"
+  },
+  "continuity": "LONELY 在长椅画右端，母亲从画左坐过去（T21 方向锁）；并坐构图与 S063 呼应（她在画左、对方在画右）；【登记】结尾两只衣袖相依处位于 (0.42,0.62)，为 S070 叠化的 A 帧。",
+  "refs": [
+   "CHAR_MOTHER",
+   "CHAR_LONELY",
+   "PROP_AIRLETTER",
+   "LOC_CHAPEL"
+  ],
+  "revision": {
+   "findings": [
+    "E1",
+    "F1",
+    "V2",
+    "V17"
+   ],
+   "from_v1": [
+    "S070"
+   ]
+  }
+ },
+ {
+  "id": "S070",
+  "in_frame": 5273,
+  "out_frame": 5361,
+  "section": "CH4",
+  "treatment_ref": "十",
+  "lyric_ids": [
+   "L086",
+   "L087"
+  ],
+  "lyric": "等我们也成了／被轻轻翻过的一段",
+  "sync_points": [
+   {
+    "t": 219.72,
+    "event": "“等我们”：叠化完成，衣料已老"
+   },
+   {
+    "t": 221.4,
+    "event": "“翻”：后拉露出展柜"
+   },
+   {
+    "t": 222.42,
+    "event": "“段”：展柜完整入画"
+   }
+  ],
+  "era": "future",
+  "scene": "museum_gallery",
+  "location": "未来的同一展厅·G1 展台与同一只玻璃罩",
+  "characters": [],
+  "props": [
+   "COAT"
+  ],
+  "extras": [],
+  "shot_size": "INSERT",
+  "angle": "由近摄后拉至正面平视",
+  "lens_mm": 100,
+  "camera_move": "从袖口特写缓慢后拉，露出展柜（在全曲最响的几小节里打开尺度）",
+  "speed": "24",
+  "focus": "焦点由袖口到整件外套",
+  "lighting": "未来展厅：反差最低、略高调、银白带一丝暖（CT_FUTURE，不用科幻青色）",
+  "action": "衣料叠化：两只并排的衣袖化进同一画面位置的一只袖口——深灰呢外套的左袖口，同一块磨损，衣料已经过岁月：呢面更灰、偏褐，起毛更明显，磨损处更亮，形状与位置完全一致。镜头缓慢后拉：修复师今天穿着的这件外套，叠好平放在开场那个展台、那只玻璃罩里——左袖口在最上面，磨损朝上、朝向玻璃；罗盘已不在这里。旁边一张空白的小展签。",
+  "emotion": "等我们也成了被轻轻翻过的一段。",
+  "transition_in": {
+   "type": "dissolve",
+   "frames": 12,
+   "on": "衣料/相似构图驱动的叠化：S069 两只并排的衣袖 → 同画面位置 (0.42,0.62) 的外套左袖口磨损（与 S064 植入时的画面位置一致；跨时代：1950s → 未来）",
+   "register": {
+    "a": "S069",
+    "b": "S070",
+    "subject": "衣袖/外套左袖口磨损",
+    "pos": [
+     0.42,
+     0.62
+    ],
+    "size": "袖口宽约占画面高 30%",
+    "direction": "静止",
+    "phase": "落座完成 → 叠化"
+   }
+  },
+  "continuity": "同一旧海关大楼展厅、同一 G1 展台与 60×60×50 cm 玻璃罩（玻璃面不变，保证 S071 运动控制复用）；外套折叠约 50×40 cm，牛角扣失去光泽；展签空白无字；罗盘不在（圣经 §7.1 未来变体：罗盘换成外套）。剪点落在“等”，不再把“翻过的｜一段”切开。",
+  "refs": [
+   "PROP_COAT",
+   "LOC_GALLERY"
+  ],
+  "revision": {
+   "findings": [
+    "E1",
+    "F1",
+    "V25",
+    "V10",
+    "V19"
+   ],
+   "from_v1": [
+    "S072"
+   ]
+  }
+ },
+ {
+  "id": "S071",
+  "in_frame": 5361,
+  "out_frame": 5431,
+  "section": "CH4",
+  "treatment_ref": "十",
+  "lyric_ids": [
+   "L087",
+   "L088",
+   "L089"
+  ],
+  "lyric": "被轻轻翻过的一段／愿你隔着岁月／仍听得见",
+  "sync_points": [
+   {
+    "t": 223.5,
+    "event": "“愿你”：倒影出现"
+   },
+   {
+    "t": 224.16,
+    "event": "“岁”：手抬起"
+   },
+   {
+    "t": 225.66,
+    "event": "“见”：手停在 (0.50,0.55)"
+   }
+  ],
+  "era": "future",
+  "scene": "museum_gallery",
+  "location": "未来展厅·G1 玻璃罩（开场机位）",
+  "characters": [
+   "FUTURE"
+  ],
+  "props": [
+   "COAT"
+  ],
+  "extras": [],
+  "shot_size": "ECU",
+  "angle": "正面平视（与 S001 完全相同的机位、高度、焦平面）",
+  "lens_mm": 100,
+  "camera_move": "锁定（运动控制复用开场数据）",
+  "speed": "24",
+  "focus": "焦平面在玻璃表面（同 S001）",
+  "lighting": "未来展厅冷柔光，玻璃里一层淡淡的倒影",
+  "action": "机位与开场完全相同：展柜玻璃特写。玻璃里出现一个陌生观看者的倒影——浅暖灰的长衣，看不清面目，看不出年代——轻轻抬起右手，掌心朝向玻璃，停在开场那两只手重合的同一个位置，就像开场时那样，试图理解一个已经成为过去的人。",
+  "emotion": "我们也会被后来的人隔着玻璃观看。愿你仍听得见。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "后拉的展柜 → 回到开场机位（形式呼应，T22）",
+   "register": {
+    "a": "S002",
+    "b": "S071",
+    "subject": "隔玻璃的手",
+    "pos": [
+     0.5,
+     0.55
+    ],
+    "size": "手宽约占画面高 45%",
+    "direction": "掌心朝玻璃",
+    "phase": "手停住"
+   }
+  },
+  "continuity": "【T22/T23】运动控制复用 S001/S002 机位数据（镜头高 1.18 m、100 mm 微距、焦平面在玻璃表面）；未来观看者只在倒影中、脸永不清晰（圣经锁，不加前景实手）；右手停在 (0.50,0.55)。",
+  "refs": [
+   "CHAR_FUTURE",
+   "PROP_COAT",
+   "LOC_GALLERY"
+  ],
+  "revision": {
+   "findings": [
+    "V11",
+    "E11",
+    "V19",
+    "E10",
+    "E1"
+   ],
+   "from_v1": [
+    "S073"
+   ]
+  }
+ },
+ {
+  "id": "S072",
+  "in_frame": 5431,
+  "out_frame": 5497,
+  "section": "CH4",
+  "treatment_ref": "十",
+  "lyric_ids": [
+   "L089",
+   "L090",
+   "L091"
+  ],
+  "lyric": "仍听得见／我也曾像你／舍不得这人间",
+  "sync_points": [
+   {
+    "t": 226.32,
+    "event": "“我也曾像你”：手机抬起"
+   },
+   {
+    "t": 226.98,
+    "event": "“像你”：按下拨号"
+   },
+   {
+    "t": 227.46,
+    "event": "“舍不得”：贴到耳边"
+   }
+  ],
+  "era": "modern",
+  "scene": "night_window",
+  "location": "窗湾·窗凳",
+  "characters": [
+   "GUARD",
+   "RESTORER"
+  ],
+  "props": [
+   "PHONE",
+   "TEA"
+  ],
+  "extras": [],
+  "shot_size": "MCU",
+  "angle": "平视略侧",
+  "lens_mm": 75,
+  "camera_move": "锁定，轻微推进",
+  "speed": "24",
+  "focus": "焦点在他；她在画左虚焦",
+  "lighting": "2700K 阅读灯；手机屏幕一点冷光；窗外天色开始有一点点变淡",
+  "action": "回到当下：窗湾里，夜班工作人员重新拿起手机，深吸一口气，按下拨号，把手机贴到右耳边。她在画左焦外，安静地看着窗外。",
+  "emotion": "他终于拨出了那个电话。",
+  "transition_in": {
+   "type": "match_cut",
+   "frames": 0,
+   "on": "手势：未来观看者抬起的手 → 夜班工作人员抬起手机的手（抬手手势；跨时代回到当下）"
+  },
+  "continuity": "他在画右、她在画左虚焦（站位锁）；右手持机贴右耳；屏幕不可读。",
+  "refs": [
+   "CHAR_GUARD",
+   "CHAR_RESTORER",
+   "PROP_PHONE",
+   "PROP_TEA",
+   "LOC_WINDOW"
+  ],
+  "revision": {
+   "findings": [
+    "V2"
+   ],
+   "from_v1": [
+    "S074"
+   ]
+  }
+ },
+ {
+  "id": "S073",
+  "in_frame": 5497,
+  "out_frame": 5535,
+  "section": "CH4",
+  "treatment_ref": "十",
+  "lyric_ids": [
+   "L091"
+  ],
+  "lyric": "舍不得这人间",
+  "sync_points": [
+   {
+    "t": 229.1,
+    "event": "全乐队骤停：切入"
+   },
+   {
+    "t": 229.82,
+    "event": "他屏住的气息"
+   }
+  ],
+  "era": "modern",
+  "scene": "night_window",
+  "location": "窗湾·窗凳",
+  "characters": [
+   "GUARD"
+  ],
+  "props": [
+   "PHONE"
+  ],
+  "extras": [],
+  "shot_size": "CU",
+  "angle": "平视",
+  "lens_mm": 100,
+  "camera_move": "锁定",
+  "speed": "24",
+  "focus": "焦点在眼睛",
+  "lighting": "阅读灯；背景港口灯光虚焦",
+  "action": "全乐队骤停的静默里：他的眼睛，在等待。电话那头还没有声音。他屏住呼吸。",
+  "emotion": "等待的这一秒，比千年还长。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "全乐队骤停的瞬间切入（229.1）"
+  },
+  "continuity": "视线向画左下；静默中画面也几乎静止。骤停在“舍不得”与“这人间”之间（229.1–230.5）。",
+  "refs": [
+   "CHAR_GUARD",
+   "PROP_PHONE",
+   "LOC_WINDOW"
+  ],
+  "revision": {
+   "findings": [
+    "E8"
+   ],
+   "from_v1": [
+    "S075"
+   ]
+  }
+ },
+ {
+  "id": "S074",
+  "in_frame": 5535,
+  "out_frame": 5614,
+  "section": "CH4",
+  "treatment_ref": "十",
+  "lyric_ids": [
+   "L091"
+  ],
+  "lyric": "舍不得这人间",
+  "sync_points": [
+   {
+    "t": 230.63,
+    "event": "“这人间”随全乐队重新进入：电话接通，眉眼开始舒展"
+   },
+   {
+    "t": 232.27,
+    "event": "重音：她微笑"
+   },
+   {
+    "t": 233.07,
+    "event": "最强重音：她把目光移向窗外"
+   }
+  ],
+  "era": "modern",
+  "scene": "night_window",
+  "location": "窗湾·窗凳（同 S063 侧拍机位）",
+  "characters": [
+   "GUARD",
+   "RESTORER"
+  ],
+  "props": [
+   "PHONE",
+   "TEA",
+   "GLOVES"
+  ],
+  "extras": [],
+  "shot_size": "MCU",
+  "angle": "平视，侧拍双人",
+  "lens_mm": 50,
+  "camera_move": "锁定，极缓慢推进",
+  "speed": "24",
+  "focus": "两人同在焦内",
+  "lighting": "阅读灯 2700K；窗外天色开始由 P02 变淡（约 05:40）",
+  "action": "全乐队重新涌起，“这人间”唱出时，电话那头有人接了——我们听不到声音。他的眉眼慢慢舒展开来，嘴角松开，低声说了句什么。她在一旁安静地微笑，把目光移向窗外，把这一刻留给他。",
+  "emotion": "我也曾像你，舍不得这人间。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "全乐队重新进入（230.6）时切双人"
+  },
+  "continuity": "双人构图与 S063 一致（他在画右靠窗、她在画左）；只见嘴形、不可读唇，无对白可听；长凳角上那副叠好的手套。",
+  "refs": [
+   "CHAR_GUARD",
+   "CHAR_RESTORER",
+   "PROP_PHONE",
+   "PROP_TEA",
+   "PROP_GLOVES",
+   "LOC_WINDOW"
+  ],
+  "revision": {
+   "findings": [
+    "E8",
+    "V2"
+   ],
+   "from_v1": [
+    "S076"
+   ]
+  }
+ },
+ {
+  "id": "S075",
+  "in_frame": 5614,
+  "out_frame": 5653,
+  "section": "OUTRO",
+  "treatment_ref": "十一",
+  "lyric_ids": [
+   "L092"
+  ],
+  "lyric": "那时的你",
+  "sync_points": [
+   {
+    "t": 234.09,
+    "event": "“那时的你”"
+   },
+   {
+    "t": 235.0,
+    "event": "他把脸转向画右的微光"
+   }
+  ],
+  "era": "navigator",
+  "scene": "sea_deck",
+  "location": "黎明前·艉楼船舷",
+  "characters": [
+   "NAVIGATOR"
+  ],
+  "props": [],
+  "extras": [],
+  "shot_size": "MCU",
+  "angle": "侧面平视（呼应构图）",
+  "lens_mm": 100,
+  "camera_move": "锁定",
+  "speed": "24",
+  "focus": "焦点在侧脸",
+  "lighting": "天边第一缕微光从画右来（P20 → P21），海面仍深蓝",
+  "action": "相似构图·呼应：黎明前，航海人立在艉楼船舷边，穿着那件靛蓝短褂。他原本望着画左——家的方向——在“你”字上，慢慢把脸转向画右：天边第一缕微光照在他脸上。",
+  "emotion": "那时的你，把未知叫作明天。",
+  "transition_in": {
+   "type": "light",
+   "frames": 0,
+   "on": "现代窗外渐亮的天色 → 海上天边第一缕微光（同方向光源、相似侧脸构图；跨时代）"
+  },
+  "continuity": "呼应组统一构图（T25 锁）：人物在画左三分之一、侧脸、视线略高于水平、光从画右来；他的视线由画左（家）转向画右（明天）——全片他第一次望向画右；靛蓝短褂（外衣已给了同伴）。",
+  "refs": [
+   "CHAR_NAVIGATOR",
+   "LOC_DECK"
+  ],
+  "revision": {
+   "findings": [
+    "E2",
+    "F9",
+    "V5",
+    "V9"
+   ],
+   "from_v1": [
+    "S077"
+   ]
+  }
+ },
+ {
+  "id": "S076",
+  "in_frame": 5653,
+  "out_frame": 5690,
+  "section": "OUTRO",
+  "treatment_ref": "十一",
+  "lyric_ids": [
+   "L092"
+  ],
+  "lyric": "那时的你",
+  "sync_points": [
+   {
+    "t": 235.6,
+    "event": "叠化完成：她的侧脸在微光里成形"
+   },
+   {
+    "t": 236.4,
+    "event": "新的海岸在晨雾里显出轮廓"
+   }
+  ],
+  "era": "migrant",
+  "scene": "pier_waiting",
+  "location": "黎明·客货轮船舷",
+  "characters": [
+   "MIGRANT"
+  ],
+  "props": [
+   "CASE"
+  ],
+  "extras": [],
+  "shot_size": "MCU",
+  "angle": "侧面平视（呼应构图）",
+  "lens_mm": 100,
+  "camera_move": "锁定",
+  "speed": "24",
+  "focus": "焦点在侧脸",
+  "lighting": "晨雾中冷暖交界的光从画右来",
+  "action": "相似构图：迁徙女性在轮船的船舷边，侧脸望向画右；晨雾里，一道新的海岸线慢慢显出轮廓。",
+  "emotion": "那时的你。",
+  "transition_in": {
+   "type": "dissolve",
+   "frames": 12,
+   "on": "光线驱动的叠化（居中于剪点，5647–5659）：两张侧脸的位置与光向一致（跨时代）"
+  },
+  "continuity": "构图同 S075；长辫、右眉峰小痣；藤箱在她右手边。原 S079（母亲清晨）删除：母亲的线索已在 S069 完成，避免 1 秒以下的呼应镜头。",
+  "refs": [
+   "CHAR_MIGRANT",
+   "PROP_CASE",
+   "LOC_PIER"
+  ],
+  "previz_notes": "场景键 pier_waiting 为近似：需在码头模块外加轮船船舷与晨雾海面（或改为跳板上的回望）。",
+  "revision": {
+   "findings": [
+    "E2",
+    "F15",
+    "V19",
+    "V24"
+   ],
+   "from_v1": [
+    "S078"
+   ]
+  }
+ },
+ {
+  "id": "S077",
+  "in_frame": 5690,
+  "out_frame": 5760,
+  "section": "OUTRO",
+  "treatment_ref": "十一",
+  "lyric_ids": [
+   "L093"
+  ],
+  "lyric": "此刻的我",
+  "sync_points": [
+   {
+    "t": 237.09,
+    "event": "重音：切到现代两人"
+   },
+   {
+    "t": 237.54,
+    "event": "“此刻”：他拧开保温壶"
+   },
+   {
+    "t": 238.26,
+    "event": "“的”：茶续进她的杯子"
+   },
+   {
+    "t": 238.97,
+    "event": "“我”尾音后：续进自己的杯子"
+   },
+   {
+    "t": 239.6,
+    "event": "两人望向画右"
+   }
+  ],
+  "era": "modern",
+  "scene": "night_window",
+  "location": "拂晓·窗湾·窗凳",
+  "characters": [
+   "RESTORER",
+   "GUARD"
+  ],
+  "props": [
+   "TEA"
+  ],
+  "extras": [],
+  "shot_size": "MS",
+  "angle": "侧面平视（呼应构图）",
+  "lens_mm": 50,
+  "camera_move": "极缓慢推进",
+  "speed": "24",
+  "focus": "两人侧脸同在焦内",
+  "lighting": "窗光开始成为主光（约 6500K，P20，地平线极细 P21）；阅读灯 2700K 仍亮",
+  "action": "相似构图：现代窗湾，两个人并肩坐着。“此刻”时，他拧开身边那只旧保温壶，把热茶先续进她的杯子，再续进自己那只带磕口的杯子——新的热气升起来；她没有说话，只是看着。然后两人的侧脸一起望向画右的窗外，天色由深蓝开始转淡。",
+  "emotion": "此刻的我——他把她给的温暖，悄悄还了回来。",
+  "transition_in": {
+   "type": "match_cut",
+   "frames": 0,
+   "on": "呼应链的相似构图：侧脸朝画右、光从画右来；剪点落在 237.0 重音上（跨时代回到现代）"
+  },
+  "continuity": "他在画右靠窗、她在画左（站位锁）；续茶是尾镜热气的来源（茶杯热气在黎明仍在）；两人侧脸朝画右，与呼应镜头方向一致；无对白。",
+  "refs": [
+   "CHAR_RESTORER",
+   "CHAR_GUARD",
+   "PROP_TEA",
+   "LOC_WINDOW"
+  ],
+  "revision": {
+   "findings": [
+    "F14",
+    "V16",
+    "E2",
+    "V2"
+   ],
+   "from_v1": [
+    "S080"
+   ]
+  }
+ },
+ {
+  "id": "S078",
+  "in_frame": 5760,
+  "out_frame": 5809,
+  "section": "OUTRO",
+  "treatment_ref": "十一",
+  "lyric_ids": [
+   "L094"
+  ],
+  "lyric": "都把未知",
+  "sync_points": [
+   {
+    "t": 240.36,
+    "event": "器乐重音：倒影成形"
+   },
+   {
+    "t": 240.8,
+    "event": "“都把未知”"
+   }
+  ],
+  "era": "future",
+  "scene": "museum_gallery",
+  "location": "未来展厅·展柜玻璃倒影",
+  "characters": [
+   "FUTURE"
+  ],
+  "props": [
+   "COAT"
+  ],
+  "extras": [],
+  "shot_size": "MCU",
+  "angle": "侧面（玻璃倒影中）",
+  "lens_mm": 75,
+  "camera_move": "锁定",
+  "speed": "24",
+  "focus": "焦点在玻璃中的倒影",
+  "lighting": "未来展厅窗外同样将亮未亮的天，光从画右来",
+  "action": "相似构图：未来观看者在展柜玻璃里的倒影，侧脸朝画右，望向展厅的窗——那里也是一片将亮未亮的天。",
+  "emotion": "后来的人，也把未知叫作明天。",
+  "transition_in": {
+   "type": "dissolve",
+   "frames": 12,
+   "on": "窗光驱动的叠化：两人望向窗外的侧脸 → 倒影中的侧脸（相似构图）"
+  },
+  "continuity": "未来观看者仍不出清晰面目；构图同呼应组（人物在画左、光从画右）。",
+  "refs": [
+   "CHAR_FUTURE",
+   "PROP_COAT",
+   "LOC_GALLERY"
+  ],
+  "revision": {
+   "findings": [
+    "E2",
+    "E11",
+    "V19"
+   ],
+   "from_v1": [
+    "S081"
+   ]
+  }
+ },
+ {
+  "id": "S079",
+  "in_frame": 5809,
+  "out_frame": 5905,
+  "section": "OUTRO",
+  "treatment_ref": "十一",
+  "lyric_ids": [
+   "L095"
+  ],
+  "lyric": "叫作明天",
+  "sync_points": [
+   {
+    "t": 242.36,
+    "event": "“叫”：叠化完成"
+   },
+   {
+    "t": 243.56,
+    "event": "“明天”：天色开始转暖"
+   },
+   {
+    "t": 245.9,
+    "event": "尾奏涌起"
+   }
+  ],
+  "era": "modern",
+  "scene": "night_window",
+  "location": "拂晓·窗湾（自两人身后）",
+  "characters": [
+   "RESTORER",
+   "GUARD"
+  ],
+  "props": [
+   "TEA"
+  ],
+  "extras": [],
+  "shot_size": "WS",
+  "angle": "两人身后，平视",
+  "lens_mm": 32,
+  "camera_move": "缓慢后拉",
+  "speed": "24",
+  "focus": "深焦：两人剪影与窗外海面同时清晰",
+  "lighting": "黎明天光约 5000K 由画右（东南窗）来，柔、大面积；剪影保留暗部层次；海面 3–4 盏未熄的灯（P13）",
+  "action": "回到当下，留在当下：从两人身后看出去，窗外的深蓝逐渐变成柔和的晨光，地平线一线晨光桃色；远处海面上还有几盏没熄的灯。两个人的剪影一动不动。",
+  "emotion": "那时的你，此刻的我，都把未知叫作明天。",
+  "transition_in": {
+   "type": "dissolve",
+   "frames": 16,
+   "on": "光线驱动的叠化（5801–5817，完成于“叫”）：未来窗外将亮未亮的天 → 当下窗外的天（同一方位；跨时代回到当下）"
+  },
+  "continuity": "此后全部为当下；太阳不入画（日出前，只有地平线的暖，圣经 §2.3）；3–4 盏远灯保持亮着，进入 S080、S081。",
+  "refs": [
+   "CHAR_RESTORER",
+   "CHAR_GUARD",
+   "PROP_TEA",
+   "LOC_WINDOW"
+  ],
+  "revision": {
+   "findings": [
+    "E2",
+    "F8",
+    "V19"
+   ],
+   "from_v1": [
+    "S082"
+   ]
+  }
+ },
+ {
+  "id": "S080",
+  "in_frame": 5905,
+  "out_frame": 5983,
+  "section": "TAIL",
+  "treatment_ref": "十一",
+  "lyric_ids": [
+   "L095"
+  ],
+  "lyric": "叫作明天",
+  "sync_points": [
+   {
+    "t": 246.06,
+    "event": "尾奏涌起（245.9–249.3 全曲最响）：切入"
+   },
+   {
+    "t": 248.1,
+    "event": "第一层天光掠过码头与空着的位置"
+   }
+  ],
+  "era": "modern",
+  "scene": "harbor_eras",
+  "location": "今日黎明·港口关口与旧海关大楼（与 S046 同一固定机位，E5）",
+  "characters": [],
+  "props": [],
+  "extras": [],
+  "shot_size": "EWS",
+  "angle": "同 S046：镜头高 1.6 m，向东沿水岸",
+  "lens_mm": 40,
+  "camera_move": "完全锁定（与 S046 同一机位数据）",
+  "speed": "24",
+  "focus": "全景深",
+  "lighting": "黎明天光从东边地平线（画面深处偏右）来，地平线一线 P21；画左立面受天光；E5 的 4000K LED 路灯还亮着几盏",
+  "action": "与“时代更替”同一个固定机位：今天的港口在黎明里。旧海关大楼如今是博物馆，二楼东端那扇窗湾还亮着一点灯；太阳还在海平线下，只有一线晨光桃色，第一层天光落在水面和码头上——关口门槛前那个“等待者的位置”空着，被天光照亮。远处海面上，三四盏渔灯还亮着，没有熄。",
+  "emotion": "人间醒来了，而有几盏灯，还舍不得熄。",
+  "transition_in": {
+   "type": "cut",
+   "frames": 0,
+   "on": "尾奏涌起（246.0，全曲最响的一段）时切到外景"
+  },
+  "continuity": "机位与 S046 完全一致（40 mm、1.6 m、向东）；空着的等待位置 (0.38,0.70)；窗湾的灯在大楼东端二楼；太阳不入画（圣经 §2.3）；远灯不熄（简报 §十一“远处海面上还有几盏未熄的灯”）。",
+  "refs": [
+   "LOC_HARBOR"
+  ],
+  "revision": {
+   "findings": [
+    "F8",
+    "V26",
+    "E8"
+   ],
+   "from_v1": [
+    "S083"
+   ]
+  }
+ },
+ {
+  "id": "S081",
+  "in_frame": 5983,
+  "out_frame": 6164,
+  "section": "TAIL",
+  "treatment_ref": "十一",
+  "lyric_ids": [],
+  "lyric": "",
+  "sync_points": [
+   {
+    "t": 249.3,
+    "event": "尾奏安静段：画面锁定"
+   },
+   {
+    "t": 252.55,
+    "event": "最后一个和弦：晨光照进热气"
+   },
+   {
+    "t": 256.0,
+    "event": "尾音几近消失，画面仍保持"
+   },
+   {
+    "t": 256.8,
+    "event": "声音消散，自然结束"
+   }
+  ],
+  "era": "modern",
+  "scene": "night_window",
+  "location": "清晨·窗湾窗台",
+  "characters": [
+   "RESTORER",
+   "GUARD"
+  ],
+  "props": [
+   "TEA"
+  ],
+  "extras": [],
+  "shot_size": "CU",
+  "angle": "窗台高度，与窗玻璃约成 30°",
+  "lens_mm": 75,
+  "camera_move": "三脚架完全锁定，不做任何数字推进（T26）",
+  "speed": "24",
+  "focus": "焦点在两只茶杯；窗玻璃中两人的倒影柔和可读",
+  "lighting": "东南窗晨光约 4300K 在画右发亮；热气以暗窗棂与尚暗的东北窗为背景、被窗光逆光照亮（不衬在最亮的天上）",
+  "action": "最后的画面：两只青白釉茶杯并排放在窗台上，相距约六厘米——他那只带磕口的在画右，她那只在画左，杯口下各一道完整的钴蓝细线。新续的茶，热气缓缓升起，衬着暗色的窗棂。画右的东南窗已经亮了；画左尚暗的那扇窗玻璃里，映着两个人，也映着清晨的人间——港口、海面，和远处三四盏还没熄的灯。最后一个和弦落下时，一缕晨光正好照进热气里。画面保持，直到尾音完全消散，再自然结束。",
+  "emotion": "余韵：今晚还舍不得结束，明天已经来了。",
+  "transition_in": {
+   "type": "dissolve",
+   "frames": 12,
+   "on": "同一束晨光由港口外景过渡到窗台（光线接续）"
+  },
+  "continuity": "茶杯排列与 S063 一致（他的在画右、她的在画左、相距约 6 cm、磕口在 2 点钟）；倒影中两人位置与 S063 一致；远灯与 S079、S080 一致；调色：尾奏“极轻”从本镜（f5983，249.3）起（圣经 §2.3 黎明表已同步）；不加片尾字幕；声音完全消散前不得切黑。",
+  "refs": [
+   "CHAR_RESTORER",
+   "CHAR_GUARD",
+   "PROP_TEA",
+   "LOC_WINDOW"
+  ],
+  "revision": {
+   "findings": [
+    "F14",
+    "F8",
+    "V16",
+    "E8"
+   ],
+   "from_v1": [
+    "S084"
+   ]
+  }
+ }
+]
