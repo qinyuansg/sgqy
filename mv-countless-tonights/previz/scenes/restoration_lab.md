@@ -2,7 +2,10 @@
 
 Module: `scenes/restoration_lab.js`. Shots: **S012 S013 S014 S015** (PRE1, ~0:57–1:05) and **S049 S050 S051 S052 S053 S054** (BR1, ~2:35–2:55). There are no named views.
 
-Contact sheet (all shots at u=0.5): `out/check/restoration_lab/sheet.jpg`.
+> **Review pass (art director + DP, 2026-10-05):** several shots were restaged after this was written. Where the per-shot
+> notes below conflict with the **Review** section at the end of this file, the Review section is current.
+
+Contact sheet (all ten shots at u 0.05 / 0.5 / 0.95, one row per shot): `out/check/restoration_lab/sheet.jpg`.
 
 Other check frames:
 - Stills at u 0.05/0.5/0.95: `out/check/restoration_lab/S0xx_u*.jpg`
@@ -255,3 +258,129 @@ Raw renders on this box at load 9–10 run 3.5–5 s/frame, because the box is s
 - **Library issues** are logged in `lib/ISSUES.md`:
   - The `bowlShards` default layout violates the PROP_SHARDS locks, so a custom layout is used.
   - Benchmarking on a shared machine needs the ratio method.
+
+---
+
+## Review — art director + DP pass (2026-10-05)
+
+**Method.** Every shot re-rendered at u 0.05 / 0.5 / 0.95 plus every sync-point frame, the four cut pairs with the
+neighbouring modules (S011→S012, S015→S016, S048→S049, S054→S055), six consecutive frames for flicker, and the module code
+read end to end. The figure library had been re-baked (`fig-2`) after this module was finished, so all hand/prop contacts
+were re-checked. Review renders: `out/check/restoration_lab/review/` (`r0` = state found, `r1…r10` = iterations,
+`consec/`, `order/`, `zoom/`). Final stills: `out/check/restoration_lab/S0xx_u*.jpg`, `sync/`, `match/` (+ `match/pairs.jpg`),
+contact sheet `out/check/restoration_lab/sheet.jpg`.
+
+### What was wrong (state found)
+| shot | problem |
+|---|---|
+| S012 | the coat-sleeve tube ended in frame as an **open pipe** (upper right); gloves over the bloom threshold → white halos everywhere; flat grey shadow side |
+| S013 | opening frame: a hot point glint dead-centre on the **crescent-moon motif read as an eye**; end band too high (lip ≈0.2), lower 70 % plain glaze |
+| S014 | camera faced a blank stretch of wall → **black void**; face rim-lit into a mask; shard read black |
+| S015 | the **glue tube in frame** (negative: "tools in frame"); MISSING read as a 3 mm sliver (cell was a 1.5 cm-high strip); flat high-key sand |
+| S049 | match-cut frame: a glove "blob" already on the bar (the matched element half hidden); mid-shot the sleeve filled half the frame; end: the letter lifted into the lens, **black holes at the "fingertips"** (open sleeve ends seen end-on); the sleeve poked through the case front wall (white strip); comb cloth saturated red over ~25 % of frame (P16 ≤ 0.5 %) |
+| S050 | black void; the door was off the left edge, so **the torch sweep (160.5 s) was never seen** |
+| S051 | the 300 px/cm macro patch started 1.6 cm **beyond the page edge** (paper rectangle hanging over the blotter), flat cream exposure |
+| S052 | the **ledger filled the right half** of the CU; the tweezers lifted the wrong (east) edge and the hand hovered over the sheet; jasmine a 4 % star at the sheet edge |
+| S053 | the foam cradle (an upright box) **swallowed the near half of the tilted ledger**; hand came from the left and never left frame; pencil hidden in the fist |
+| S054 | unreadable: a giant soft mannequin face lying sideways from a paper-level lens, magnified *nose* in the glass, no jasmine, halo invisible |
+| all | letter "writing" = free cursive squiggles (read as birds / AI pseudo-script); PRE1 shots never reset the moon direction that BR1 shots set (impure: frame order changed the light) |
+
+### What was changed (all in `scenes/restoration_lab.js`)
+- **Set:** east-wall door moved to z −0.86 (behind her in the profile MCUs; S050 pane registers at (0.146, 0.33) ≈ (0.15, 0.38));
+  corridor beyond gets the bible's floor-level 4000 K night base light, so the pane reads before the torch passes; shelving +
+  2700 K lamp moved next to it; a second harbour backdrop panel for the oblique views through the window's east half; a cool
+  unshadowed `wallWash` (moonlit bay bouncing onto the SE corner) for S014/S050.
+- **Hands:** `placeArm()` — close-up hands are oriented from her (seated) shoulders, so forearms enter from her side; sleeves
+  0.36 m, tapered and **capped**; gloves toned ×0.74 (close-up) / ×0.72 (figure), once per material.
+- **Letter:** glyphs rebuilt as small-regular-script structures (1–2 components of 2–4 brush strokes, still abstract);
+  jasmine redrawn (two whorls of thin browned translucent petals, calyx, stem), 3.4 cm card, nudged off the edge; macro patch
+  clamped inside the sheet, follows the fold relief, gains a fibre normal map.
+- **Purity:** `state()` now resets every shared prop each frame (ledger + cradle, shirt, comb, letterInner offset/rotation,
+  curl, moon direction, hemi, lamp shadow, shard env), so no shot depends on what rendered before it.
+- **S012:** cool fill on the shadow side, lamp −15 %. Registration unchanged: pinch (0.501, 0.521).
+- **S013:** band framed at y ≈ 0.42 under the lip at ≈ 0.33 (three whole blossoms across, end); the moon spot (a point source
+  glinting on the moon disc) replaced by an equal cool hemisphere fill (diffuse only), env reflection on the two shards
+  lowered, bench-bounce glint off; the raking lamp offset up-left in the start camera's frame → the glaze glint sits at
+  frame upper left at the end and travels during the move. Lamp shadow, bench-bounce light and the DOF pass off (perf, below; at
+  f/14 the DOF gave ≤ 1 px of blur).
+- **S014 / S050:** camera yaw 8° / 4° → **18°** toward the SE corner (door + wall wash at left, the window's east jamb with
+  harbour glints at the right edge); her body yawed −26° toward the ledger/lamp so the 18° camera sees a true profile (at the
+  first try the "dark eye" was her ear: we were behind her profile); S014 key moved to her front-left at 1.2 m (frame upper
+  left, 4:1, even across face / shard / glove). Torch peak now reads in the pane (sweep 2.5–2.9 s, peak f3857).
+- **S015:** tube hidden, pool tightened (0.55 → 0.30 rad) so the sand falls off into the dark bench, exposure 0.84, sand
+  relief ×1.9, cool fill; **MISSING weight −0.002 → −0.0015** (CPU replica of the weighted Voronoi: hole ≈ 2.4 cm along the wall,
+  still ≥ 1.6 cm below the rim band; reads as a dark gap at 3 o'clock).
+- **S049:** frame 0 = bar alone at y 0.66, x 0.28–0.72 (measured) with the open glove only entering lower right; closes
+  0.09–0.45 s; tilt-up carries a slight crane back (0.71 → 0.95 m, a cheat) so the open case, lining, comb-on-cloth and shirt
+  read; the sleeve sits inside the case (no wall poke-through), slides out from under the lifting shirt edge and is visibly
+  coming out on 157.02; ends at (0.58, 0.45) at a modest height, not in the lens; lamp eased as the pale sheet rises; sleeve
+  glint softened; cloth desaturated toward P16's muted family; bar albedo ×1.45 so the sweat-dark wrap reads.
+- **S051:** lamp cone 0.30 → 0.15 rad (pool edge visible at the top), exposure 0.74 → 0.70, contrast 1.16, vignette.
+- **S052:** POV high angle 16° off vertical at 0.66 m, ledger out of frame; the tweezer tips are solved onto the **west** edge
+  and follow it up to ~70°, then withdraw to the right edge; the sheet rolls over its low edge (it used to rotate about its
+  centre line, half of it through the table); left fingertips wait on the blotter beside the east edge (an arm to the far
+  edge lay across the whole sheet); jasmine lands at (0.58, 0.46).
+- **S053:** her POV (she is at the bottom); for this insert the ledger has been slid to her left, so the shot-list layout holds
+  (ledger frame left, letter frame right, hand from lower right, tip to upper right); the cradle is a tilted slab under the
+  book; the pencil is held near its top so the tip shows; the hand leaves frame by 1.45 s.
+- **S054 — restaged.** The written frame (paper-plane lens, jasmine soft at the bottom *and* her eye through the glass in one
+  100 mm 2.39:1 ECU) cannot exist: VFOV is 8.6°, so a flat flower and an eye 15–20 cm above it only share a frame from ≥ 1.4 m,
+  and a paper-level lens then sees the sheet as a line. Now: CU from her front-right (WSW, 17° up, 2.0 → 1.95 m push), her
+  bowed face upper centre-right facing frame right (as S014/S050); the magnifier in her LEFT hand (the right hand crossed the
+  lens) tilted toward us between eye and flower; the glass shows **the magnified jasmine and the faint broken line** (a layer-2
+  render from a virtual eye between glass and face; the real flower sits behind the glass); 0.3–0.6 it settles (170.82),
+  rack flower-in-glass → her eye 1.93–2.71 (172.92); at 4.09 she tilts it 15° and the lamp focuses through it into a warm core
+  with a soft prismatic fringe **on the sheet** ("落在信纸上") plus a small rim glint — the warm light event sits right of centre
+  for the light-to-light cut onto S055's lancet (frame right).
+
+### Checks after the fixes
+- **Sync points:** all land — 57.20 joint closes; 58.64 band in focus / 60.26 settled on the rim; 62.28 foot ring turned to
+  the loupe / 62.82 pencil down; 64.43 still; 155.34 open hand entering on the bar / 157.02 sleeve coming out; 158.52 tick /
+  159.96 pencil stops / 160.5–160.9 torch across the pane (peak f3857) / 160.92 eyes start to lift; 162.75–164.30 slide
+  settles on the broken stroke; 166.0 lift starts / 167.2 jasmine revealed; 168.72 pencil down / 169.38 fingers open;
+  170.82 glass settles / 172.14–172.92 rack / 174.3 caustic + glint.
+- **Cut pairs (single frames, `match/`):** S011→S012 gesture match holds (contact (0.50, 0.52), hand from upper right);
+  S015→S016 rim centred (0.50, 0.51), Ø ≈ 77–78 % on both sides; S048→S049 bar centre y ≈ 0.65 / 0.66, x 0.27–0.73 / 0.28–0.72;
+  S054→S055 warm light event right of centre → lancet at frame right (not the exact (0.72, 0.30) — see weaknesses).
+- **Determinism / flicker:** S054 f4128–4133 consecutive: frame-to-frame RMSE 1.3–1.5 % (grain + rack), mean luminance
+  monotonic; probe positions identical across runs and render orders (`review/order/`).
+
+### Performance (idle-equivalent s/frame, `out/check/rl_bench3.mjs`, interleaved against the EMPTY engine frame, 3 rounds)
+The box was shared (load 8–14 on 4 cores during this pass), so three measurements are given. **A/B** = interleaved
+timing of the original module (git HEAD copy under a temporary scene key) against this one on the same frames, alternating
+frame by frame (`review/ab.mjs`, 3–5 rounds, medians) — load cancels. **≈ idle** = the original module's idle-calibrated
+figure (table above) × the A/B ratio. **raw** = median wall time per frame at load ≈ 9.5 (`review/perf2.log`). Geometry is
+unchanged (S050: 235 → 251 draw calls, 225.1k → 225.4k tris).
+
+| shot | raw @ load 9.5 | A/B new/orig | ≈ idle s/frame | note |
+|---|---|---|---|---|
+| S012 | 1.3–1.4 | 1.04 | ≈ 1.6 | cool fill added |
+| S013 | 2.3–2.5 → trimmed | 1.10 → **0.51–0.92** | ≈ 1.2–2.1 | lamp shadow, bench-bounce light and the f/14 DOF pass removed (the full-screen glaze × soft-shadow taps dominated) |
+| S014 | 2.0 | 1.10 | ≈ 1.45 | wall wash + lit background |
+| S015 | 1.7–1.8 | 0.76 | ≈ 1.2–1.8 | tighter pool |
+| S049 | 1.7–1.9 | 0.87 | ≈ 1.9 | |
+| S050 | 1.5–1.8 | 1.09–1.31 | ≈ 1.9–2.25 | wall wash + door/corridor/window jamb now lit in frame |
+| S051 | 1.2 | 0.91 | ≈ 1.1 | |
+| S052 | 1.1 | 0.84 | ≈ 1.15 | |
+| S053 | 0.8–1.1 | 0.92 | ≈ 1.2 | |
+| S054 | 1.4–1.7 | 0.72 | ≈ 1.7 | the glass view renders layer 2 only (sheet, flower, lights) at 512² instead of a zoomed full-scene pass |
+
+`render.mjs --range` (24 frames, incl. JPEG + ffmpeg): S013 2.07 s/frame at load 8–9 (before the final trim), S014
+3.08 s/frame while the load rose 9 → 14. Nothing is over the 2.5 s worst case; S049, S050 and S054 stay above the 1.5 s
+typical target (one close hi figure + shadowed key + DOF, or the second glass pass).
+
+### Remaining weaknesses
+- **S054** is a CU, not the written ECU, and the glass shows the *flower* (what she reads), not her magnified eye — a
+  faceless head magnified only showed a nose. The halo is a caustic on the sheet right of centre, not a ring at (0.72, 0.30).
+- **Faceless figure:** S014/S050/S054 performances (certainty at the mouth, the inward lift of the eyes, "she reads") are
+  carried by head angle and timing only.
+- **S014/S050 backgrounds** are deliberately dark (P02 air): door + pane at left, the window's east jamb and harbour glints at
+  the right edge; the window itself is never more than a sliver from these profile angles (the bench faces it).
+- **S049** keeps a heavy POV forearm during the comb lift (honest to the action) and uses a small crane-back cheat.
+- **S051** fibre relief is subtle at the f/5.6 macro DOF; the read is light and the broken stroke, not paper texture.
+- **S052/S053** hand entries follow the set geography (her POV); S053's ledger is slid to her left for this insert only.
+- **S012** still omits her left forearm on the bench edge (it would sit at the far top of this framing, out of the CU).
+- Lamp positions are per-shot cheats of the articulated arm (it is never in frame in BR1 / S012–S015).
+- **Neighbours (not edited):** map_office's S048 end bar sits ≈ 0.65 (fine); no open issues found on the S011, S016 or
+  S055 side of the cuts. Note for whoever reviews cut pairs: judge positions on single frames — `montage` tiles misled this
+  review twice (apparent off-centre bowl in S016, apparent "jumping" glass in S054; both were fine on the frames).

@@ -144,7 +144,9 @@ vec3 fxaaAt(vec2 uv){
 }
 vec3 aces(vec3 x){ const float a=2.51,b=0.03,c=2.43,d=0.59,e=0.14; return clamp((x*(a*x+b))/(x*(c*x+d)+e),0.0,1.0); }
 vec3 toSRGB(vec3 c){ return mix(c*12.92, 1.055*pow(c, vec3(1.0/2.4))-0.055, step(0.0031308, c)); }
-float hash(vec2 p){ p = fract(p*vec2(443.897,441.423)); p += dot(p, p.yx+19.19); return fract((p.x+p.y)*p.x); }
+// integer PCG hash: exact at any frame number (the old float hash banded into stripes past ~f2100)
+uint pcg(uint v){ uint s = v * 747796405u + 2891336453u; uint w = ((s >> ((s >> 28u) + 4u)) ^ s) * 277803737u; return (w >> 22u) ^ w; }
+float rnd3(uvec3 p){ return float(pcg(p.x + pcg(p.y + pcg(p.z)))) * (1.0 / 4294967295.0); }
 void main(){
   vec2 uv = vUv;
   vec2 dc = (uv - 0.5);
@@ -178,7 +180,8 @@ void main(){
   float v = 1.0 - vignette * smoothstep(0.25, 0.95, length(dc * vec2(1.0, 0.75)) * 1.25);
   col *= v;
   // film grain, luminance-weighted, new pattern every frame
-  float g = hash(uv * res + frame * 17.13) + hash(uv * res * 1.7 - frame * 3.7) - 1.0;
+  uvec2 pix = uvec2(gl_FragCoord.xy); uint fr = uint(frame);
+  float g = rnd3(uvec3(pix, fr)) + rnd3(uvec3(pix, fr + 104729u)) - 1.0;
   float lw = 4.0 * l * (1.0 - l) + 0.25;
   col += g * grain * lw;
   // fade to black (for fade in / out)

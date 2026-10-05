@@ -15,6 +15,8 @@ import * as FX from '../lib/fx.js';
 import * as TX from '../lib/textures.js';
 import { applyEnv } from '../lib/env.js';
 import { loadCharacter, loadCharacterHand, loadCrowd } from '../lib/cast.js';
+import { LOWRES_LAYER } from '../engine/post.js';
+import { simulateCoat } from './_sea_deck_coat.js';
 
 // ------------------------------------------------------------------------------------------ palette (bible.json)
 const P = {
@@ -81,19 +83,19 @@ function cumulusTex(rng, { lit = -1, tower = 1, w = 512, h = 384 } = {}) {
   return canvasTex(w, h, (g, W, H) => {
     g.clearRect(0, 0, W, H);
     const base = H * 0.84, puffs = [];
-    for (let i = 0; i < 130; i++) {
+    for (let i = 0; i < 190; i++) {
       const t = Math.pow(rng(), 0.85), spread = (1 - 0.6 * t) * (0.8 + 0.2 * rng());
       const x = W / 2 + (rng() * 2 - 1) * W * 0.36 * spread + Math.sin(t * 4 + 1) * W * 0.05;
       const r = (H * 0.05 + H * 0.07 * rng()) * (1 - 0.3 * t);
       puffs.push([x, Math.min(base - t * H * 0.66 * tower, base - r * 0.5), r, t]);
     }
     // 1) alpha mass (blurred union of puffs)
-    g.filter = 'blur(9px)'; g.fillStyle = '#fff';
+    g.filter = 'blur(4px)'; g.fillStyle = '#fff';                 // (review) crisper billows: the 9 px blur read as out-of-focus smudges
     for (const [x, y, r] of puffs) { g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill(); }
     g.filter = 'none';
     // 2) colour inside the mass: shadowed blue-grey base -> lit warm crown on the light side
     g.globalCompositeOperation = 'source-in';
-    const vg = g.createLinearGradient(0, base, 0, H * 0.08); vg.addColorStop(0, '#3a4562'); vg.addColorStop(0.5, '#6a6e88'); vg.addColorStop(1, '#b8979a');
+    const vg = g.createLinearGradient(0, base, 0, H * 0.08); vg.addColorStop(0, '#2c3552'); vg.addColorStop(0.5, '#5e6684'); vg.addColorStop(1, '#b89aa0');
     g.fillStyle = vg; g.fillRect(0, 0, W, H);
     g.globalCompositeOperation = 'source-atop';
     const hg = g.createLinearGradient(lit < 0 ? 0 : W, 0, lit < 0 ? W : 0, 0); hg.addColorStop(0, 'rgba(232,170,130,0.42)'); hg.addColorStop(0.5, 'rgba(160,130,130,0.1)'); hg.addColorStop(1, 'rgba(20,26,44,0.35)');
@@ -102,7 +104,7 @@ function cumulusTex(rng, { lit = -1, tower = 1, w = 512, h = 384 } = {}) {
     const cg = g.createLinearGradient(0, H * 0.05, 0, H * 0.55); cg.addColorStop(0, 'rgba(240,176,140,0.85)'); cg.addColorStop(0.45, 'rgba(214,150,130,0.35)'); cg.addColorStop(1, 'rgba(200,140,130,0)');
     g.fillStyle = cg; g.fillRect(0, 0, W, H);
     // billow shading: soft darker undersides of each puff
-    g.filter = 'blur(7px)';
+    g.filter = 'blur(4px)';
     for (const [x, y, r, t] of puffs) { const gr = g.createRadialGradient(x, y + r * 0.55, r * 0.1, x, y + r * 0.4, r * 0.9); gr.addColorStop(0, `rgba(24,30,50,${0.08 + 0.06 * (1 - t)})`); gr.addColorStop(1, 'rgba(24,30,50,0)'); g.fillStyle = gr; g.fillRect(x - r, y - r, 2 * r, 2 * r); }
     g.filter = 'none';
     // flat base fade
@@ -197,8 +199,9 @@ function buildJunk(ctx) {
   const ship = new THREE.Group(); ship.name = 'junk';
   const parts = {};
   // materials
-  const hullM = TX.mat('wood_ship', { tex: { salt: 0.3, planks: 6, seed: 41, wear: 0.7 }, color: new THREE.Color(0.52, 0.47, 0.42), side: THREE.DoubleSide });
-  const deckM = TX.mat('wood_ship', { tex: { salt: 0.45, planks: 6, seed: 43, wear: 0.6 }, color: new THREE.Color(0.86, 0.82, 0.76) });
+  // (review) plank scale: ~0.25 m strakes / deck planks (the texture tile was 0.4 m planks with metre-wide grain swirls)
+  const hullM = TX.mat('wood_ship', { repeat: [1.5, 2.0], tex: { salt: 0.3, planks: 6, seed: 41, wear: 0.7 }, color: new THREE.Color(0.52, 0.47, 0.42), side: THREE.DoubleSide });
+  const deckM = TX.mat('wood_ship', { repeat: [1.6, 1.3], tex: { salt: 0.45, planks: 6, seed: 43, wear: 0.6 }, color: new THREE.Color(0.86, 0.82, 0.76) });
   const darkM = TX.mat('wood_smoke', { tex: { planks: 4, seed: 44 } });
   const beamM = TX.mat('wood_beam', { tex: { seed: 45 } });
   const ironM = new THREE.MeshStandardMaterial({ color: 0x1b1a1a, roughness: 0.62, metalness: 0.7 });
@@ -377,37 +380,23 @@ function shoreLight() {
 // ------------------------------------------------------------------------------------------ the coat (S067): shader-blended cloth keyframes
 // Coat domain: cu ∈ [-1, 1] across (sleeves beyond |cu| > 0.42 only near the collar), cv ∈ [0, 1] collar → hem.
 const COAT_NU = 30, COAT_NV = 26, COAT_W = 1.42, COAT_H = 1.02;
-function coatMaterial(TXc) {
+function coatMaterial() {
+  // (review) PROP_OUTERCOAT #5B4634 coarse padded cotton; positions come from the build-time cloth sim (per-frame attribute
+  // lerp). The sleeve region outside the coat outline is discarded; the back faces show the undyed lining #CFC3A8.
   const tx = TX.cotton({ tone: [91, 70, 52], threads: 70, creases: 0.75, slub: 0.7, fade: 0.5, seed: 77 });
-  const m = new THREE.MeshStandardMaterial({ map: tx.map, normalMap: tx.normalMap, normalScale: new THREE.Vector2(0.9, 0.9), roughness: 0.93, side: THREE.DoubleSide });
-  const U = { uP: { value: 0 }, uT: { value: 0 }, uFlut: { value: 1 }, uPull: { value: 0 }, uPullDir: { value: new THREE.Vector3() }, uLift: { value: 0.3 } };
+  const m = new THREE.MeshStandardMaterial({ map: tx.map, normalMap: tx.normalMap, normalScale: new THREE.Vector2(0.9, 0.9), roughness: 0.93, side: THREE.DoubleSide, color: new THREE.Color(0.72, 0.66, 0.62) }); // #5B4634 even under the hatch spill
   m.onBeforeCompile = (sh) => {
-    Object.assign(sh.uniforms, U);
-    sh.vertexShader = `attribute vec3 aPA, aPB, aPC, aNA, aNB, aNC; attribute vec4 aCl; uniform float uP, uT, uFlut, uPull, uLift; uniform vec3 uPullDir; varying vec2 vCl;\n` + sh.vertexShader
-      .replace('#include <beginnormal_vertex>', `
-        float pv = clamp((uP - aCl.z * 0.3) / 0.7, 0.0, 1.0);
-        float kb = smoothstep(0.0, 0.42, pv), kc = smoothstep(0.42, 1.0, pv);
-        vec3 Pc = aPC + vec3(0.0, uLift * (1.0 - kc) * (1.0 - kc), 0.0);
-        vec3 P = mix(mix(aPA, aPB, kb), Pc, kc);
-        vec3 N = normalize(mix(mix(aNA, aNB, kb), aNC, kc) + vec3(1e-4));
-        float air = sin(3.14159 * clamp(pv * 1.08, 0.0, 1.0));
-        float fl = sin(aCl.x * 5.0 + aCl.y * 9.0 - uT * 13.0) * 0.06 + sin(aCl.y * 15.0 + aCl.x * 3.0 - uT * 9.0) * 0.03;
-        P += N * air * uFlut * fl * (0.3 + aCl.y);
-        P += uPullDir * uPull * aCl.w;
-        vCl = aCl.xy;
-        vec3 objectNormal = N;
-        #ifdef USE_TANGENT
-          vec3 objectTangent = vec3( tangent.xyz );
-        #endif`)
-      .replace('#include <begin_vertex>', 'vec3 transformed = P;');
+    sh.vertexShader = 'attribute vec4 aCl; varying vec2 vCl;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vCl = aCl.xy;');
     sh.fragmentShader = 'varying vec2 vCl;\n' + sh.fragmentShader
       .replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
         if (abs(vCl.x) > 0.44 && (vCl.y > 0.36 || abs(vCl.x) > 0.98)) discard;`)
       .replace('#include <color_fragment>', `#include <color_fragment>
-        if (!gl_FrontFacing) diffuseColor.rgb *= vec3(3.0, 3.25, 3.1);`);
+        if (gl_FrontFacing) diffuseColor.rgb = COAT_LINING;`);  // lining: the side that faced him (it lands on the boy)
   };
-  m.customProgramCacheKey = () => 'coat_cloth';
-  return { material: m, U };
+  const dbgLining = new URLSearchParams(location.search).get('sdcoat') === 'dbg';
+  m.defines = { COAT_LINING: dbgLining ? 'vec3(0.0, 1.0, 0.0)' : 'mix(diffuseColor.rgb, vec3(0.5, 0.46, 0.38), 0.7)' };
+  m.customProgramCacheKey = () => 'coat_cloth2' + (dbgLining ? 'dbg' : '');
+  return { material: m };
 }
 
 // ------------------------------------------------------------------------------------------ camera helpers
@@ -453,6 +442,38 @@ export default async function create(ctx) {
   camera.userData.H = ctx.H;
   scene.fog = new THREE.FogExp2(0x1a2438, 0.0);
 
+  // ---- film grain, module-side (review). engine/post.js hashes `uv*res + frame*17.13`: past f ≈ 1000 float32 runs out of
+  // fractional bits and its grain turns into regular stripes (S008 sky, S075's right edge; lib/ISSUES.md [sea_deck]). The
+  // engine grain is set to 0 and an equivalent grain is drawn in the engine's half-res additive layer instead (merged AFTER
+  // the depth of field, so bokeh keeps its grain; half-float, signed values), weighted by the luminance of the main scene
+  // target (captured by a tiny probe mesh in the main pass), integer hash of the pixel + a wrapped frame seed. Same method
+  // as pier_waiting's review fix.
+  const grainSrc = { tex: null };
+  const grainMat = new THREE.ShaderMaterial({
+    uniforms: { tScene: { value: null }, uSeed: { value: 0 }, uAmt: { value: 0.0 }, uExp: { value: 1 } },
+    vertexShader: /* glsl */ `varying vec2 vUv; void main(){ vUv = position.xy * 0.5 + 0.5; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
+    fragmentShader: /* glsl */ `varying vec2 vUv; uniform sampler2D tScene; uniform float uSeed, uAmt, uExp;
+      uint hh(uint x){ x ^= x >> 16; x *= 0x7feb352du; x ^= x >> 15; x *= 0x846ca68bu; x ^= x >> 16; return x; }
+      void main(){
+        uvec2 p = uvec2(gl_FragCoord.xy); uint h1 = hh(p.x + hh(p.y + hh(uint(uSeed) + 7u))); uint h2 = hh(h1 ^ 0x9e3779b9u);
+        float g = float(h1 & 0xffffu) / 65535.0 + float(h2 & 0xffffu) / 65535.0 - 1.0;
+        vec3 c = texture2D(tScene, vUv).rgb * uExp;
+        float L = max(dot(c, vec3(0.2126, 0.7152, 0.0722)), 0.0);
+        float w = pow(L + 0.0015, 0.55) * (1.0 - 0.5 * smoothstep(0.6, 2.5, L));
+        gl_FragColor = vec4(vec3(g * uAmt * w), 1.0);
+      }`,
+    transparent: true, depthTest: false, depthWrite: false, fog: false,
+    blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor,
+  });
+  const grainQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), grainMat);
+  grainQuad.frustumCulled = false; grainQuad.renderOrder = 1e9; grainQuad.layers.set(LOWRES_LAYER);
+  grainQuad.onBeforeRender = () => { grainMat.uniforms.tScene.value = grainSrc.tex; };
+  const grainProbe = new THREE.Mesh(new THREE.PlaneGeometry(1e-4, 1e-4), new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false, depthTest: false }));
+  grainProbe.frustumCulled = false; grainProbe.renderOrder = -1e9;
+  grainProbe.onBeforeRender = (r) => { const rt = r.getRenderTarget(); grainSrc.tex = rt ? rt.texture : null; };
+  scene.add(grainQuad, grainProbe);
+  const GRAIN = 0.042;                                       // CT_NAV grain 1.15 (relative), as the engine display-space amount
+
   // ---- sky, sea (hero + cheap background instance), coasts, shore lights, cumulus cards
   const sky = createSky({ preset: 'night' });
   const sea = createSea({ sky, swell: 'heavy', windDir: 38, seed: 3, foam: 0.6, spread: 2.1 });
@@ -462,8 +483,8 @@ export default async function create(ctx) {
   // so pixels hidden behind the ship / figures are rejected by the depth test instead of running the sea & sky shaders
   sea.object3D.renderOrder = seaLo.object3D.renderOrder = 50; sky.object3D.renderOrder = 100;
   const W0 = sea.waves.map((w) => ({ A: w.A, Q: w.Q }));
-  function setSwell(k = 1) { // scale the swell height (steepness kept) on both instances + the CPU wave set
-    for (const s of [sea, seaLo]) s.waves.forEach((w, i) => { w.A = W0[i].A * k; w.Q = W0[i].Q / k; s.uniforms.uW.value[i].w = w.A; s.uniforms.uW2.value[i].x = w.Q; });
+  function setSwell(k = 1, kShort = 1) { // scale the swell height (steepness kept) on both instances + the CPU wave set; kShort scales the per-pixel short waves (6..11)
+    for (const s of [sea, seaLo]) s.waves.forEach((w, i) => { const kk = i >= 6 ? k * kShort : k; w.A = W0[i].A * kk; w.Q = W0[i].Q / kk; s.uniforms.uW.value[i].w = w.A; s.uniforms.uW2.value[i].x = w.Q; });
   }
   const coast8 = createCoast({ sky, az0: -20, az1: 0, distance: 4300, height: 62, lights: 0, seed: 5, haze: 0.22 });
   const coastT = createCoast({ sky, az0: -14, az1: 2, distance: 4300, height: 48, lights: 0, seed: 9, haze: 0.16 });
@@ -497,6 +518,15 @@ export default async function create(ctx) {
   // ---- the junk
   const { ship, parts } = buildJunk(ctx);
   scene.add(ship);
+  // (review, perf) cheap Lambert stand-ins for the junk's standard materials, used where the deck / bulwark is only a
+  // deeply defocused background (S045's hands phase: the planks behind his hands cost ~1 s/frame in full PBR shading)
+  const junkCheap = [];
+  ship.traverse((o) => { const m = o.material; if (!o.isMesh || !m || !m.isMeshStandardMaterial || m.onBeforeCompile !== THREE.Material.prototype.onBeforeCompile && m.customProgramCacheKey !== THREE.Material.prototype.customProgramCacheKey) return;
+    if (m.transparent) return;
+    const c = new THREE.MeshLambertMaterial({ map: m.map, color: m.color.clone().multiplyScalar(0.85), side: m.side });
+    junkCheap.push({ o, std: m, cheap: c }); });
+  let junkIsCheap = false;
+  const setJunkCheap = (on) => { if (on === junkIsCheap) return; junkIsCheap = on; for (const j of junkCheap) j.o.material = on ? j.cheap : j.std; };
   hatchLight.position.copy(parts.hatchC).setY(POOP_Y + 0.08); ship.add(hatchLight);
   const lamp = FX.lantern({ style: 'horn', size: 1, intensity: 4, seed: 4, period: 7, pendulum: 0.06 });
   lamp.object3D.position.copy(parts.lampHook); ship.add(lamp.object3D);
@@ -520,8 +550,39 @@ export default async function create(ctx) {
   const handR = await loadCharacterHand('NAVIGATOR', 'R', { cuffTurned: true, lod: 'close' });
   const handL = await loadCharacterHand('NAVIGATOR', 'L', { lod: 'close' });
   for (const f of [navC, navJ]) ship.add(f.root);
-  ship.add(handR.root, handL.root);
-  for (const h of [handR, handL]) for (const m of h.cuffMats) { m.color.multiplyScalar(0.62); if ('sheen' in m) m.sheen = Math.min(m.sheen, 0.25); } // faded indigo, not lit-plastic under the moon
+  scene.add(handR.root, handL.root); // (review) world-space placeWrist (S045 is solved in world space)
+  // (review) close-up hands as ship_cabin S011: the salt crust reads as fine crystals in the creases (not rust-brown
+  // blotches under the moon), short work-darkened nails (no manicure-white plates)
+  for (const h of [handR, handL]) {
+    const mat = h.skinMat, U = mat && mat.userData.fzUniforms;
+    if (!U) continue;
+    if (U.uSalt) U.uSalt.value = 0.45;
+    if (U.uNail) U.uNail.value.set(P.P19).lerp(new THREE.Color(0x7a6858), 0.45);
+    const ob = mat.onBeforeCompile;
+    if (ob && !mat.userData.sdNail) {
+      mat.userData.sdNail = true;
+      mat.onBeforeCompile = (sh, r) => { ob(sh, r); sh.fragmentShader = sh.fragmentShader
+        .replace('mix(uNail, vec3(0.97, 0.92, 0.88), 0.55)', 'mix(uNail, vec3(0.97, 0.92, 0.88), 0.15)')
+        .replace('vec3(0.94, 0.9, 0.86), smoothstep(0.8, 0.93, nt)', 'uNail * vec3(1.1, 1.05, 1.0), smoothstep(0.8, 0.93, nt)'); };
+      mat.customProgramCacheKey = () => 'skin2_deck_nail'; mat.needsUpdate = true;
+    }
+  }
+  for (const h of [handR, handL]) for (const m of h.cuffMats) { m.color.multiplyScalar(0.62); if ('sheen' in m) m.sheen = Math.min(m.sheen, 0.25); } // faded indigo #2E3F5C under a hard moon (S011's cuff is lit by a 1950 K lamp)
+  // (review) jacket sleeves continuing the close-up cuffs up the forearms (same cloth / build as ship_cabin S011) and the
+  // padded coat sleeve pushed up and bunched below the elbow (S045: "the wide sleeve of his night coat pushed up")
+  const mJSleeve = TX.mat('indigo', { repeat: [6, 3.5], tex: { salt: 0.2, seed: 12 }, side: THREE.DoubleSide, color: 0x7d8597 });
+  const sleeveFor = (h, len, r0, r1, y0, seed) => {
+    const g = new THREE.CylinderGeometry(r1, r0, len, 40, 20, true); g.translate(0, len / 2 + y0, 0);
+    const pp = g.attributes.position, sr = util.rng(seed * 31 + 7), ph = [sr() * 6.3, sr() * 6.3, sr() * 6.3];
+    for (let i = 0; i < pp.count; i++) {
+      const x = pp.getX(i), y = pp.getY(i), z = pp.getZ(i), a = Math.atan2(z, x), t = (y - y0) / len;
+      const k = 1 + 0.045 * Math.sin(a * 3 + y * 42 + ph[0]) * sstep(0.0, 0.25, t) + 0.03 * Math.sin(a * 5 - y * 77 + ph[1]) + 0.02 * Math.sin(y * 130 + a * 2 + ph[2]);
+      pp.setXYZ(i, x * k, y, z * k - 0.006 * sstep(0.1, 1, t) * (0.5 + 0.5 * Math.cos(a - Math.PI / 2)));
+    }
+    g.computeVertexNormals();
+    const m = new THREE.Mesh(g, mJSleeve); m.castShadow = m.receiveShadow = true; m.scale.set(0.86, 1, 1); h.byName.forearm.add(m); return m;
+  };
+  sleeveFor(handR, 0.2, 0.051, 0.057, 0.11, 1); sleeveFor(handL, 0.2, 0.05, 0.056, 0.11, 2);
   const helm = await loadCrowd('navigator', [{ pos: [XS + 3.1, POOP_Y, -0.35], rotY: Math.PI / 2 + 0.3, pose: 'stand', seed: 2 }], { castShadow: false });
   ship.add(helm);
   // S045: the sleeves are "pushed up" — the figure's sleeve ends (coat, jacket, forearm) are discarded in an 11 cm capsule around
@@ -545,157 +606,259 @@ export default async function create(ctx) {
   // own forearm sleeves for S045: the padded coat sleeve bunched from the elbow to mid-forearm (tapered tube, open at the wrist end)
   const sleeveTex = TX.cotton({ tone: [91, 70, 52], threads: 70, creases: 0.9, slub: 0.7, fade: 0.5, seed: 78 });
   const sleeveM = new THREE.MeshStandardMaterial({ map: sleeveTex.map, normalMap: sleeveTex.normalMap, normalScale: new THREE.Vector2(1, 1), roughness: 0.93, side: THREE.DoubleSide });
-  const sleeveGeo = (() => { const pts = []; for (let i = 0; i <= 12; i++) { const t = i / 12; pts.push(new THREE.Vector2(0.083 + 0.012 * Math.sin(t * Math.PI * 3) * (1 - t) + 0.01 * (1 - t), t)); } return new THREE.LatheGeometry(pts, 20); })();
+  const sleeveGeo = (() => { // unit length along +Y (wrist end at 0): rolled-in edge, three bunched folds, widening to the elbow
+    const pts = [new THREE.Vector2(0.056, -0.004), new THREE.Vector2(0.064, 0.0)];
+    for (let i = 1; i <= 24; i++) { const t = i / 24; pts.push(new THREE.Vector2(0.066 + 0.016 * t + 0.009 * Math.pow(Math.sin(t * Math.PI * 3.2), 2) * (1 - 0.4 * t), t)); }
+    const g = new THREE.LatheGeometry(pts, 28); const pp = g.attributes.position;
+    for (let i = 0; i < pp.count; i++) { const x = pp.getX(i), y = pp.getY(i), z = pp.getZ(i), a = Math.atan2(z, x); const k = 1 + 0.05 * Math.sin(a * 2 + y * 9) + 0.035 * Math.sin(a * 5 - y * 17); pp.setXYZ(i, x * k, y, z * k * 0.9); }
+    g.computeVertexNormals(); return g; })();
   const sleeves = [new THREE.Mesh(sleeveGeo, sleeveM), new THREE.Mesh(sleeveGeo, sleeveM)];
   for (const m of sleeves) { m.castShadow = m.receiveShadow = true; m.visible = false; }
-  const setSleeveClip = (f, on) => {
+  const setSleeveClip = (f, on, wrists = null) => {
     sleeveU.uClipOn.value = on ? 1 : 0; for (const m of sleeves) m.visible = on; if (!on) return;
-    ['R', 'L'].forEach((sd, i) => { const w = f.worldPos(`arm${sd}.hand`), e = f.worldPos(`arm${sd}.lower`); const d = w.clone().sub(e).normalize();
+    ['R', 'L'].forEach((sd, i) => { const w = wrists ? wrists[i].clone() : f.worldPos(`arm${sd}.hand`), e = f.worldPos(`arm${sd}.lower`); const d = w.clone().sub(e).normalize();
       sleeveU.uClipA.value[i].copy(w).addScaledVector(d, 0.06); sleeveU.uClipB.value[i].copy(e).addScaledVector(d, 0.02);
-      // tube from 0.115 m short of the wrist (open end over the close-up jacket cuff) back to the elbow
-      const m = sleeves[i], a = w.clone().addScaledVector(d, -0.115), b = e.clone().addScaledVector(d, -0.03);
+      // bunched coat sleeve from 0.17 m up the forearm (over the jacket sleeve) to just past the elbow
+      const m = sleeves[i], a = w.clone().addScaledVector(d, -0.17), b = e.clone().addScaledVector(d, -0.04);
       m.position.copy(a); m.quaternion.setFromUnitVectors(V3(0, 1, 0), b.clone().sub(a).normalize()); m.scale.set(1, a.distanceTo(b), 1); m.updateMatrixWorld(true); });
   };
   scene.add(...sleeves);
   const catch1 = FX.glow({ color: P.P13, size: 0.008, intensity: 0, falloff: 3 }); scene.add(catch1.object3D);
-  // patch centre on the turned-back right cuff, in hand-root space (from the cuff's aux.y mask)
-  const patchLocal = (() => {
-    const acc = new THREE.Vector3(); let n = 0;
-    for (const m of handR.meshes.cuffs) { const a = m.geometry.attributes.aux, p = m.geometry.attributes.position; if (!a) continue; for (let i = 0; i < a.count; i++) if (a.getY(i) > 0.5) { acc.x += p.getX(i); acc.y += p.getY(i); acc.z += p.getZ(i); n++; } }
-    return n ? acc.multiplyScalar(1 / n) : V3(0.055, 0.03, 0);
-  })();
-
-  // ------------------------------------------------------------------------------------------ S067 staging, solved from the camera rig
-  // camera (ship-local): poop deck forward-port, 2.0 m above the planks, looking aft-starboard 10° down, 50 mm.
-  const S67 = { C: V3(-10.35, POOP_Y + 1.9, -2.95), F: V3(0, 0, 1), pitch: THREE.MathUtils.degToRad(-9) };
+  // (review) patch on the turned-back right cuff: only the OUTER (visible) cloth around the mask's centroid (the mask also
+  // covers the inner wall of the rolled band), and the PROP_PATCH hero decal — both ported from ship_cabin S011 so the
+  // patch reads the same in S011 / S045 (hand-woven #7D9CBB, off-white running stitches, one uneven corner, double knot)
+  const patchIdx = [];
   {
-    // camera at the port rail of the poop looking straight across to the starboard rail (rail parallel to frame), 50 mm, 9° down.
-    // Both figures ~4.7 m away, the lantern on its hook just inboard of the starboard rail at 5.9 m.
-    // (The shot list's (0.70, 0.66) for a boy lying at deck level is unreachable at 50 mm with the navigator's chest at (0.26, 0.50):
-    //  the boy sits lower, at y ≈ 0.74, on a raised hatch cover.)
+    const g = handR.meshes.cuffs[0].geometry, aux = g.attributes.aux, PP = g.attributes.position;
+    const all = []; for (let i = 0; i < aux.count; i++) if (aux.getY(i) > 0.6) all.push(i);
+    const ang = (i) => Math.atan2(PP.getZ(i), PP.getX(i) / 0.86), rad = (i) => Math.hypot(PP.getX(i) / 0.86, PP.getZ(i));
+    let sx = 0, sz = 0, sy = 0; for (const i of all) { const a = ang(i); sx += Math.cos(a); sz += Math.sin(a); sy += PP.getY(i); }
+    const a0 = Math.atan2(sz, sx), y0 = sy / Math.max(1, all.length);
+    const near = all.filter((i) => Math.abs(Math.atan2(Math.sin(ang(i) - a0), Math.cos(ang(i) - a0))) < 0.14 && Math.abs(PP.getY(i) - y0) < 0.005);
+    const rMax = Math.max(...near.map(rad));
+    for (const i of near) if (rad(i) > rMax - 0.0009) patchIdx.push(i);
+    if (!patchIdx.length) patchIdx.push(...all);
+  }
+  {
+    const src = handR.meshes.cuffs[0], g = src.geometry, PP = g.attributes.position, Nn = g.attributes.normal, aux = g.attributes.aux;
+    const idx = g.index ? g.index.array : null;
+    const pa = [], pyv = []; for (let i = 0; i < aux.count; i++) if (aux.getY(i) > 0.5) { pa.push(Math.atan2(PP.getZ(i), PP.getX(i) / 0.86)); pyv.push(PP.getY(i)); }
+    let sx = 0, sz = 0; for (const a of pa) { sx += Math.cos(a); sz += Math.sin(a); }
+    const a0 = Math.atan2(sz, sx), ya = Math.min(...pyv), yb = Math.max(...pyv), Rr = 0.058, halfW = Math.max(...pa.map((a) => Math.abs(Math.atan2(Math.sin(a - a0), Math.cos(a - a0))))) * Rr;
+    const da = (i) => Math.atan2(Math.sin(Math.atan2(PP.getZ(i), PP.getX(i) / 0.86) - a0), Math.cos(Math.atan2(PP.getZ(i), PP.getX(i) / 0.86) - a0));
+    const ok = (i) => { const x = PP.getX(i) / 0.86, z = PP.getZ(i), l = Math.hypot(x, z); const out = (Nn.getX(i) * x + Nn.getZ(i) * z) / l > 0.3;
+      return out && Math.abs(da(i)) * Rr < halfW + 0.003 && PP.getY(i) > ya - 0.003 && PP.getY(i) < yb + 0.003; };
+    const map = new Map(), pos = [], nrm = [], uvs = [], si = [], sw = [], tri = [];
+    const SI = g.attributes.skinIndex, SW = g.attributes.skinWeight;
+    const vid = (i) => { if (map.has(i)) return map.get(i); const k = map.size; map.set(i, k);
+      pos.push(PP.getX(i) + Nn.getX(i) * 0.0004, PP.getY(i) + Nn.getY(i) * 0.0004, PP.getZ(i) + Nn.getZ(i) * 0.0004); nrm.push(Nn.getX(i), Nn.getY(i), Nn.getZ(i));
+      uvs.push(0.5 + da(i) * Rr / (2 * halfW + 0.006) * (handR.mir < 0 ? -1 : 1), (PP.getY(i) - (ya - 0.003)) / (yb - ya + 0.006));
+      for (let c = 0; c < 4; c++) { si.push(SI ? SI.getComponent(i, c) : 0); sw.push(SW ? SW.getComponent(i, c) : c === 0 ? 1 : 0); }
+      return k; };
+    const nTri = idx ? idx.length / 3 : PP.count / 3;
+    for (let t = 0; t < nTri; t++) { const a = idx ? idx[t * 3] : t * 3, b = idx ? idx[t * 3 + 1] : t * 3 + 1, c = idx ? idx[t * 3 + 2] : t * 3 + 2; if (ok(a) && ok(b) && ok(c)) tri.push(vid(a), vid(b), vid(c)); }
+    if (tri.length && src.isSkinnedMesh) {
+      const dg = new THREE.BufferGeometry();
+      dg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); dg.setAttribute('normal', new THREE.Float32BufferAttribute(nrm, 3));
+      dg.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2)); dg.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(si, 4));
+      dg.setAttribute('skinWeight', new THREE.Float32BufferAttribute(sw, 4)); dg.setIndex(tri);
+      const c = document.createElement('canvas'); c.width = c.height = 256; const q = c.getContext('2d'); const r = util.rng(808);
+      const Wm = 2 * halfW + 0.006, Hm = yb - ya + 0.006, mx = 0.003 / Wm * 256, my = 0.003 / Hm * 256, pw = 256 - 2 * mx, ph = 256 - 2 * my;
+      q.clearRect(0, 0, 256, 256);
+      q.save(); q.beginPath();
+      for (let k = 0; k <= 64; k++) { const t = k / 64; let x, y; if (t < 0.25) { x = mx + pw * t * 4; y = my; } else if (t < 0.5) { x = mx + pw; y = my + ph * (t - 0.25) * 4; } else if (t < 0.75) { x = mx + pw * (1 - (t - 0.5) * 4); y = my + ph; } else { x = mx; y = my + ph * (1 - (t - 0.75) * 4); }
+        x += (r() - 0.5) * 2.2; y += (r() - 0.5) * 2.2; k ? q.lineTo(x, y) : q.moveTo(x, y); }
+      q.closePath(); q.clip();
+      q.fillStyle = '#7D9CBB'; q.fillRect(0, 0, 256, 256);
+      for (let y = 0; y < 256; y += 3) { q.fillStyle = `rgba(40,60,90,${0.10 + r() * 0.08})`; q.fillRect(0, y, 256, 1); }
+      for (let x = 0; x < 256; x += 3) { q.fillStyle = `rgba(230,238,245,${0.05 + r() * 0.06})`; q.fillRect(x, 0, 1, 256); }
+      for (let k = 0; k < 40; k++) { q.fillStyle = `rgba(${r() < 0.5 ? '60,80,110' : '170,190,210'},0.08)`; q.fillRect(r() * 256, 0, 1 + r() * 2, 256); }
+      const rg = q.createRadialGradient(128, 136, 8, 128, 136, 92); rg.addColorStop(0, 'rgba(205,218,228,0.55)'); rg.addColorStop(0.6, 'rgba(190,205,220,0.18)'); rg.addColorStop(1, 'rgba(190,205,220,0)');
+      q.fillStyle = rg; q.fillRect(0, 0, 256, 256);
+      q.strokeStyle = 'rgba(40,52,70,0.55)'; q.lineWidth = 3; q.strokeRect(mx + 1, my + 1, pw - 2, ph - 2);
+      q.restore();
+      const st = 0.0025 / Wm * 256, sl = 0.003 / Wm * 256;
+      q.strokeStyle = '#E9E4D6'; q.lineCap = 'round'; q.lineWidth = 2.2;
+      const run = (x0, y0, x1, y1, uneven) => { const L = Math.hypot(x1 - x0, y1 - y0), n = Math.floor(L / (sl * 1.8)), nx = -(y1 - y0) / L, ny = (x1 - x0) / L;
+        for (let k = 0; k < n; k++) { const bad = uneven && k > n - 4, t0 = (k + 0.1 + (r() - 0.5) * 0.25) / n, t1 = t0 + (sl / L) * (bad ? 0.5 + r() * 1.1 : 0.8 + r() * 0.4);
+          const j0 = (r() - 0.5) * (bad ? 5 : 1.6), j1 = (r() - 0.5) * (bad ? 5 : 1.6);
+          q.beginPath(); q.moveTo(x0 + (x1 - x0) * t0 + nx * j0, y0 + (y1 - y0) * t0 + ny * j0); q.lineTo(x0 + (x1 - x0) * Math.min(t1, 1) + nx * j1, y0 + (y1 - y0) * Math.min(t1, 1) + ny * j1); q.stroke(); } };
+      const X0 = mx + st, X1 = 256 - mx - st, Y0 = my + st, Y1 = 256 - my - st;
+      run(X0, Y0, X1, Y0, true); run(X1, Y1, X1, Y0, true); run(X1, Y1, X0, Y1, false); run(X0, Y1, X0, Y0, false);
+      q.fillStyle = '#EDE8DA'; q.strokeStyle = 'rgba(120,110,95,0.6)'; q.lineWidth = 0.8;
+      for (const [dx, dy, rr] of [[-5, 6, 4.0], [-1, 2, 3.4]]) { q.beginPath(); q.arc(X1 + dx, Y0 + dy, rr, 0, Math.PI * 2); q.fill(); q.stroke(); }
+      q.strokeStyle = 'rgba(233,228,214,0.9)'; q.lineWidth = 1.4; q.beginPath(); q.moveTo(X1 - 3, Y0 + 6); q.quadraticCurveTo(X1 + 6, Y0 + 12, X1 + 4, Y0 + 20); q.stroke();
+      const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
+      const dm = new THREE.MeshStandardMaterial({ map: tex, transparent: true, alphaTest: 0.4, roughness: 0.82, metalness: 0, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+      const decal = new THREE.SkinnedMesh(dg, dm); decal.name = 'patch_decal'; decal.castShadow = false; decal.receiveShadow = true;
+      decal.bind(src.skeleton, src.bindMatrix.clone()); decal.boundingSphere = src.boundingSphere ? src.boundingSphere.clone() : null; decal.frustumCulled = false;
+      src.parent.add(decal);
+      const CU = handR.cuffMats[0] && handR.cuffMats[0].userData.fzUniforms;
+      if (CU && CU.uPatchColor) { CU.uPatchColor.value.copy(handR.cuffMats[0].color); if (CU.uStitchColor) CU.uStitchColor.value.copy(handR.cuffMats[0].color); }
+    }
+  }
+  const _pv = new THREE.Vector3();
+  const patchWorld = () => { const m = handR.meshes.cuffs[0]; m.updateMatrixWorld(true); m.skeleton.update(); const c = new THREE.Vector3();
+    for (const i of patchIdx) { m.getVertexPosition(i, _pv); c.add(_pv.applyMatrix4(m.matrixWorld)); } return c.multiplyScalar(1 / patchIdx.length); };
+
+  // ------------------------------------------------------------------------------------------ S067 staging (review: rebuilt)
+  // camera (ship-local): at the port rail of the poop, 1.75 m above the planks, looking straight across to starboard, 7.5° down,
+  // 50 mm — a sliver of night sky and horizon at the top of frame. Navigator 4.9 m, the boy curled on a low hatch cover 5.0 m,
+  // the lantern on a post just inboard of the starboard rail 5.95 m, its cage at (0.38, 0.36) on frame 0 (the light match
+  // from S066's reading lamp). (The shot list's (0.70, 0.66) for a boy at deck level is out of reach at 50 mm with the
+  // lantern / navigator registrations: he lies on the hatch cover at y ≈ 0.78.)
+  const S67 = { C: V3(-10.35, POOP_Y + 1.75, -2.95), F: V3(0, 0, 1), pitch: THREE.MathUtils.degToRad(-7.5) };
+  {
     const tc = new THREE.PerspectiveCamera(30, ctx.aspect, 0.05, 100); cam.lens(tc, 50);
     tc.position.copy(S67.C); tc.rotation.order = 'YXZ'; tc.rotation.set(S67.pitch, yawOf(S67.F), 0); tc.updateMatrixWorld(true);
     const ray = (sx, sy) => V3(2 * sx - 1, 1 - 2 * sy, 0.5).unproject(tc).sub(tc.position).normalize();
     const atDepth = (sx, sy, d) => { const r = ray(sx, sy); return S67.C.clone().addScaledVector(r, d / r.dot(S67.F)); };
     S67.R = V3(-S67.F.z, 0, S67.F.x);
-    const chest = atDepth(0.225, 0.40, 4.55);
+    const chest = atDepth(0.235, 0.42, 4.9);
     S67.nav = V3(chest.x, POOP_Y, chest.z);
-    S67.boyC = atDepth(0.70, 0.74, 4.85);
-    S67.plat = clamp(S67.boyC.y - POOP_Y - 0.2, 0.3, 0.7);
+    S67.boyC = atDepth(0.69, 0.78, 5.0);                     // same depth as the navigator: the throw runs along his body axis
     S67.flame = atDepth(0.38, 0.36, 5.95);
-    S67.hook = S67.flame.clone().add(V3(0, 0.34, 0));
+    S67.hook = S67.flame.clone().add(V3(0, 0.32, 0));
     S67.navChest = chest;
   }
-  // the low hatch cover the boy sleeps on + the coil at his back
-  const platM = TX.mat('wood_ship', { tex: { salt: 0.4, planks: 4, seed: 61 }, color: new THREE.Color(0.7, 0.66, 0.6) });
-  const plat = new THREE.Mesh(new THREE.BoxGeometry(2.0, S67.plat, 1.1), platM); plat.castShadow = plat.receiveShadow = true;
-  plat.position.set(S67.boyC.x, POOP_Y + S67.plat / 2, S67.boyC.z).addScaledVector(S67.F, 0.22); plat.rotation.y = yawOf(S67.F) + Math.PI / 2 - Math.PI / 2; ship.add(plat);
-  { const a = Math.atan2(S67.R.x, S67.R.z); plat.rotation.y = a - Math.PI / 2; }
-  const coil67 = new THREE.Mesh(ropeCoil(0.34, 5, 0.022, 9), new THREE.MeshStandardMaterial({ map: (() => { const t = ropeTex(); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(30, 1); return t; })(), roughness: 0.92 }));
-  coil67.position.copy(S67.boyC).setY(POOP_Y + S67.plat).addScaledVector(S67.F, 0.62).addScaledVector(S67.R, 0.35); coil67.castShadow = coil67.receiveShadow = true; ship.add(coil67);
-
-  // companion: lying on his left side, facing the camera, head toward screen-right (+R)
+  // the boy: curled asleep on his LEFT side, rolled a little back (chest toward the lens), head screen-right, knees drawn
+  // up, the lower arm folded under his cheek, the upper hand at his chin (it pulls the collar); shivering until the coat lands
   const boyRig = new THREE.Group(); ship.add(boyRig); boyRig.add(comp.root);
-  boyRig.rotation.y = Math.atan2(-S67.F.x, -S67.F.z) - Math.PI / 2 + Math.PI / 2; // rig +Z -> -F
-  { // rig +X must map to +R: solve the yaw directly
-    const th = Math.atan2(-S67.F.x, -S67.F.z); // maps +Z to -F
-    boyRig.rotation.y = th;
-  }
-  comp.root.rotation.set(0, 0, -Math.PI / 2);
+  boyRig.rotation.y = Math.atan2(-S67.F.x, -S67.F.z);           // rig +Z → toward the lens, rig +X → screen-right
+  comp.root.rotation.set(-0.55, 0, -Math.PI / 2);                 // rolled ~30° back: the drawn-up knees read from the low lens
   const boyPose = (T, pull = 0, shiver = 1) => {
     comp.pose({
-      'legL.upper.x': 1.35, 'legR.upper.x': 1.2, 'legL.lower.x': 1.9, 'legR.lower.x': 1.75, 'legL.upper.z': 0.06, 'legR.upper.z': -0.04,
-      'legL.foot.x': 0.45, 'legR.foot.x': 0.4,
-      'hips.x': 0.08, 'spine.x': 0.28, 'chest.x': 0.3, 'neck.x': 0.32, 'head.x': 0.16, 'head.z': -0.14,
-      'armL.upper.x': 1.0, 'armL.upper.z': 0.08, 'armL.lower.x': 1.95, 'armL.upper.y': 0.3,
-      'armR.upper.x': 0.85 + 0.3 * pull, 'armR.upper.z': 0.04, 'armR.lower.x': 2.0 + 0.25 * pull, 'armR.upper.y': 0.4, 'armR.hand.x': 0.3,
-      'armL.clav.z': 0.08, 'armR.clav.z': 0.08,
-      handL: ['relaxed', { curl: 0.85 }], handR: ['relaxed', { curl: 0.9 }],
+      'hips.x': 0.05, 'spine.x': 0.22, 'chest.x': 0.2, 'neck.x': 0.3, 'head.x': 0.12, 'head.z': -0.06,
+      'legL.upper.x': 1.6, 'legR.upper.x': 1.4, 'legL.lower.x': 2.0, 'legR.lower.x': 1.8, 'legL.upper.z': 0.04, 'legR.upper.z': -0.06,
+      'legL.foot.x': 0.4, 'legR.foot.x': 0.3,
+      'armL.upper.x': 1.4, 'armL.upper.z': 0.02, 'armL.upper.y': 0.1, 'armL.lower.x': 2.0, 'armL.hand.x': 0.25, 'armL.clav.z': 0.05,
+      'armR.upper.x': 0.95 + 0.22 * pull, 'armR.upper.y': 0.35, 'armR.upper.z': 0.04, 'armR.lower.x': 2.05 + 0.18 * pull, 'armR.hand.x': 0.35, 'armR.clav.z': 0.1,
+      handL: ['relaxed', { curl: 0.8 }], handR: ['relaxed', { curl: 0.92 }],
     });
     comp.tremble(T, shiver);
     comp.breathe(T, 0.8, 0.28);
   };
   boyPose(0);
   ship.updateMatrixWorld(true);
-  { // settle on the platform and centre on the solved point; then build the coat keyframes on top of him
-    const bakeBB = () => { const b = comp.bake(); const M = comp.root.matrixWorld, t = new THREE.Vector3(), bb = new THREE.Box3(); for (const m of b.children) { const p = m.geometry.attributes.position; for (let i = 0; i < p.count; i += 2) bb.expandByPoint(t.fromBufferAttribute(p, i).applyMatrix4(M)); } return { b, bb }; };
-    let { bb } = bakeBB();
-    const c = bb.getCenter(new THREE.Vector3());
-    boyRig.position.add(V3(S67.boyC.x - c.x, POOP_Y + S67.plat + 0.01 - bb.min.y, S67.boyC.z - c.z));
-    ship.updateMatrixWorld(true);
-    const r2 = bakeBB();
-    buildCoatShapes(r2.b, comp.root.matrixWorld, r2.bb);
+  // contact: his lowest torso point (the left shoulder / hip side) rests on the boards, ~1 cm into the cloth
+  const boyGeo = () => { const b = comp.bake(); const M = comp.root.matrixWorld, t = new THREE.Vector3(), pts = []; for (const m of b.children) { const pa = m.geometry.attributes.position; for (let i = 0; i < pa.count; i += 3) pts.push(t.fromBufferAttribute(pa, i).applyMatrix4(M).clone()); } return pts; };
+  let platH;
+  {
+    let pts = boyGeo(); const bb = new THREE.Box3().setFromPoints(pts), c = bb.getCenter(new THREE.Vector3());
+    boyRig.position.add(V3(S67.boyC.x - c.x, 0, S67.boyC.z - c.z)); ship.updateMatrixWorld(true);
+    pts = boyGeo();
+    const h = comp.worldPos('hips'), nk = comp.worldPos('neck'), seg = new THREE.Line3(h, nk), q = new THREE.Vector3();
+    let torsoMin = 1e9, allMin = 1e9; for (const p of pts) { allMin = Math.min(allMin, p.y); seg.closestPointToPoint(p, true, q); if (q.distanceTo(p) < 0.24) torsoMin = Math.min(torsoMin, p.y); }
+    const half = (bb.max.y - bb.min.y) / 2;
+    platH = clamp(S67.boyC.y - POOP_Y - half, 0.22, 0.6);
+    boyRig.position.y += POOP_Y + platH - 0.01 - torsoMin; ship.updateMatrixWorld(true);
+    S67.boyLog = { torsoMin: torsoMin - POOP_Y, allMin: allMin - POOP_Y, platH, half };
   }
+  S67.plat = platH;
+  const platM = TX.mat('wood_ship', { repeat: [2.6, 1], tex: { salt: 0.4, planks: 4, seed: 61 }, color: new THREE.Color(0.66, 0.62, 0.57) });
+  const plat = new THREE.Mesh(new THREE.BoxGeometry(1.9, platH, 0.9), platM); plat.castShadow = plat.receiveShadow = true;
+  plat.position.set(S67.boyC.x, POOP_Y + platH / 2, S67.boyC.z).addScaledVector(S67.F, 0.1);
+  plat.rotation.y = Math.atan2(S67.R.x, S67.R.z) - Math.PI / 2; ship.add(plat);
+  const coil67 = new THREE.Mesh(ropeCoil(0.3, 5, 0.022, 9), new THREE.MeshStandardMaterial({ map: (() => { const t = ropeTex(); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(30, 1); return t; })(), roughness: 0.92 }));
+  coil67.position.copy(S67.boyC).setY(POOP_Y + platH).addScaledVector(S67.F, 0.36).addScaledVector(S67.R, 0.12); coil67.castShadow = coil67.receiveShadow = true; ship.add(coil67);
 
-  // ---- the coat (S067): keyframes A (gathered in his hands) · B (flung, spreading in the wind) · C (draped over the boy)
-  const coatM = coatMaterial();
-  const coatGeo = S67.coatGeo;
-  const coat = new THREE.Mesh(coatGeo, coatM.material); coat.frustumCulled = false; coat.castShadow = false; coat.receiveShadow = true; ship.add(coat);
-
-  function buildCoatShapes(baked, M, bb) {
-    const tmp = new THREE.Vector3(); const verts = [];
-    for (const m of baked.children) { const p = m.geometry.attributes.position; for (let i = 0; i < p.count; i++) { tmp.fromBufferAttribute(p, i).applyMatrix4(M); verts.push(tmp.x, tmp.y, tmp.z); } }
-    const base = POOP_Y + S67.plat + 0.01;
-    const N = 80, cx = (bb.min.x + bb.max.x) / 2, cz = (bb.min.z + bb.max.z) / 2, half = 1.25, cell = 2 * half / N;
-    const Hf = new Float32Array(N * N).fill(base);
-    // off the platform the cloth falls to the deck
-    const platInv = new THREE.Matrix4(); plat.updateMatrixWorld(true); platInv.copy(plat.matrixWorld).invert();
-    for (let gz = 0; gz < N; gz++) for (let gx = 0; gx < N; gx++) { const x = cx - half + (gx + 0.5) * cell, z = cz - half + (gz + 0.5) * cell; const lp = V3(x, POOP_Y + 0.2, z).applyMatrix4(platInv); const o = Math.max(Math.abs(lp.x) - 1.0, Math.abs(lp.z) - 0.55); if (o > 0) Hf[gz * N + gx] = base - Math.min(0.32, o * 2.2); }
-    for (let i = 0; i < verts.length; i += 3) { const gx = Math.floor((verts[i] - cx + half) / cell), gz = Math.floor((verts[i + 2] - cz + half) / cell); if (gx < 0 || gz < 0 || gx >= N || gz >= N) continue; const k = gz * N + gx; if (verts[i + 1] > Hf[k]) Hf[k] = verts[i + 1]; }
-    const cc = coil67.position; for (let gz = 0; gz < N; gz++) for (let gx = 0; gx < N; gx++) { const x = cx - half + (gx + 0.5) * cell, z = cz - half + (gz + 0.5) * cell; const r = Math.hypot(x - cc.x, z - cc.z); if (r < 0.38) Hf[gz * N + gx] = Math.max(Hf[gz * N + gx], base + 0.24 * (1 - sstep(0.28, 0.38, r))); }
-    const dil = new Float32Array(N * N), RR = 3;
-    for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) { let m = -1e9; for (let dz = -RR; dz <= RR; dz++) for (let dx = -RR; dx <= RR; dx++) { if (dx * dx + dz * dz > RR * RR) continue; const xx = clamp(x + dx, 0, N - 1), zz = clamp(z + dz, 0, N - 1); m = Math.max(m, Hf[zz * N + xx] - 0.02 * Math.hypot(dx, dz)); } dil[z * N + x] = m; }
-    let cur = dil;
-    for (let it = 0; it < 3; it++) { const nx = new Float32Array(N * N); for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) { let s = 0, w = 0; for (let dz = -2; dz <= 2; dz++) for (let dx = -2; dx <= 2; dx++) { const xx = clamp(x + dx, 0, N - 1), zz = clamp(z + dz, 0, N - 1); const ww = 1 / (1 + dx * dx + dz * dz); s += cur[zz * N + xx] * ww; w += ww; } nx[z * N + x] = Math.max(POOP_Y + 0.015, s / w); } cur = nx; }
-    const hAt = (x, z) => { const fx = (x - cx + half) / cell - 0.5, fz = (z - cz + half) / cell - 0.5; const x0 = clamp(Math.floor(fx), 0, N - 2), z0 = clamp(Math.floor(fz), 0, N - 2); const tx = clamp(fx - x0), tz = clamp(fz - z0);
-      return lerp(lerp(cur[z0 * N + x0], cur[z0 * N + x0 + 1], tx), lerp(cur[(z0 + 1) * N + x0], cur[(z0 + 1) * N + x0 + 1], tx), tz); };
-    const head = comp.worldPos('head'), hips = comp.worldPos('hips'), neck = comp.worldPos('neck');
-    const along = head.clone().sub(hips).setY(0).normalize();
-    let across = V3(-along.z, 0, along.x);
+  // ---- the coat (S067): a deterministic Verlet cloth simulated once here (scenes/_sea_deck_coat.js). The navigator holds it
+  // gathered at the chest, shakes it open (tl 0.39 s), flings it; the heavy collar is carried along an art-directed arc to
+  // the boy's shoulders (lands tl 1.04 s, the 214.25 surge) while the body and hem fly free with air drag and settle over
+  // him; the boy then pulls the collar to his chin (tl 1.55–1.85 s). Per frame only the recorded 48 fps states are lerped.
+  const coatGeo = new THREE.BufferGeometry();
+  {
+    const head = comp.worldPos('head'), hips = comp.worldPos('hips'), neck = comp.worldPos('neck'), chestB = comp.worldPos('chest');
+    const along = head.clone().sub(hips).setY(0).normalize();                     // body axis, toward his head (screen-right)
+    let acrossL = V3(-along.z, 0, along.x); if (acrossL.dot(S67.F) < 0) acrossL.negate(); // horizontal, toward his back (away from the lens)
     const navF = S67.boyC.clone().sub(S67.nav).setY(0).normalize(), navL = V3(navF.z, 0, -navF.x);
-    if (across.dot(navL) < 0) across.negate();
-    const backSign = across.dot(S67.F) > 0 ? 1 : -1; // +across toward his back (away from camera)?
     S67.navYaw = Math.atan2(navF.x, navF.z); S67.navF = navF; S67.navL = navL; S67.head = head; S67.along = along;
-    const collarC = neck.clone().addScaledVector(along, -0.06);
-    const hA = S67.nav.clone().add(V3(0, 1.26, 0)).addScaledVector(navF, 0.3);
-    const toBoy = collarC.clone().sub(hA).setY(0); const dB = toBoy.length(); toBoy.normalize();
-    const nu = COAT_NU, nv = COAT_NV, n = (nu + 1) * (nv + 1);
-    const A = new Float32Array(n * 3), B = new Float32Array(n * 3), Cc = new Float32Array(n * 3), cl = new Float32Array(n * 4);
-    let k = 0;
-    for (let j = 0; j <= nv; j++) for (let i = 0; i <= nu; i++, k++) {
-      const cu = i / nu * 2 - 1, cv = j / nv, x = cu * COAT_W / 2, y = cv * COAT_H;
-      // A: hanging from both hands, collar between them, accordion folds
-      const inBody = Math.abs(cu) <= 0.44;
-      const pa = hA.clone().addScaledVector(navL, inBody ? 0.17 * cu / 0.44 : Math.sign(cu) * (0.17 + (Math.abs(cu) - 0.44) * 0.18))
-        .add(V3(0, -y * 0.8 - (inBody ? 0 : (Math.abs(cu) - 0.44) * 0.3), 0))
-        .addScaledVector(navF, 0.04 + 0.07 * Math.sin(cu * 11) * sstep(0.05, 0.45, cv) + 0.1 * cv);
-      // B: flung — collar leading toward the boy, sheet spread wide, rising behind in the wind
-      const mid = hA.clone().addScaledVector(toBoy, dB * 0.58).add(V3(0, -0.06, 0));
-      const pb = mid.clone().addScaledVector(across, x * 1.08).addScaledVector(toBoy, -y * 0.82)
-        .add(V3(0, y * 0.16 - 0.08 * y * y + 0.14 * Math.sin(Math.PI * cv) * Math.cos(cu * 1.3) + 0.05 * Math.abs(cu), 0));
-      // C: draped — collar across his shoulders, length along his body toward the feet
-      const xs = x * 0.82 + 0.16 * COAT_W / 2 * backSign; // shifted toward his back (the coil side) so the front edge just tucks over him
-      const px = collarC.x + across.x * xs - along.x * y * 0.93, pz = collarC.z + across.z * xs - along.z * y * 0.93;
-      const wr = 0.016 * Math.sin(cu * 13 + 2 * Math.sin(cv * 5)) * sstep(0.05, 0.3, cv) + 0.01 * Math.sin(cv * 17 + cu * 4);
-      const pc = V3(px, hAt(px, pz) + 0.022 + wr, pz);
-      A.set([pa.x, pa.y, pa.z], k * 3); B.set([pb.x, pb.y, pb.z], k * 3); Cc.set([pc.x, pc.y, pc.z], k * 3);
-      cl.set([cu, cv, 1 - cv, clamp(1 - cv / 0.25) * clamp(1 - Math.abs(cu) * 0.9)], k * 4); // aCl.z: lag (hem lags, collar leads)
+    // collision proxies from his bones (generous radii: the cloth rests ~1–2 cm over the sculpt)
+    const B = (nm) => comp.worldPos(nm), A = (v) => [v.x, v.y, v.z];
+    const hb = comp.bone('head'); hb.updateWorldMatrix(true, false);
+    const headC = V3(0, 0.45 * comp.P.hu, 0.08 * comp.P.hu).applyMatrix4(hb.matrixWorld);
+    const caps = [
+      { a: headC, b: headC, r: 0.115 }, { a: neck, b: chestB, r: 0.1 }, { a: chestB, b: B('spine'), r: 0.16 }, { a: B('spine'), b: hips, r: 0.15 },
+      { a: chestB, b: B('armL.upper'), r: 0.08 }, { a: chestB, b: B('armR.upper'), r: 0.08 },
+      { a: B('armL.upper'), b: B('armL.lower'), r: 0.06 }, { a: B('armL.lower'), b: B('armL.hand'), r: 0.05 },
+      { a: B('armR.upper'), b: B('armR.lower'), r: 0.06 }, { a: B('armR.lower'), b: B('armR.hand'), r: 0.05 },
+      { a: B('legL.upper'), b: B('legL.lower'), r: 0.085 }, { a: B('legL.lower'), b: B('legL.foot'), r: 0.06 },
+      { a: B('legR.upper'), b: B('legR.lower'), r: 0.085 }, { a: B('legR.lower'), b: B('legR.foot'), r: 0.06 },
+    ].map((c) => ({ a: A(c.a), b: A(c.b), r: c.r }));
+    // the navigator's legs and torso while he holds the coat (it hangs in front of him before the throw)
+    const N0 = S67.nav.clone().addScaledVector(navF, 0.08);
+    caps.push({ a: A(N0.clone().add(V3(0, 0.95, 0))), b: A(N0.clone().add(V3(0, 1.45, 0))), r: 0.17 });
+    for (const sg of [-1, 1]) caps.push({ a: A(N0.clone().addScaledVector(navL, 0.1 * sg).add(V3(0, 0.1, 0))), b: A(N0.clone().addScaledVector(navL, 0.1 * sg).add(V3(0, 0.9, 0))), r: 0.09 });
+    const boxes = [{ c: A(plat.position), h: [0.95, platH / 2, 0.45], yaw: plat.rotation.y }, { c: A(coil67.position.clone().add(V3(0, 0.12, 0))), h: [0.3, 0.12, 0.3], yaw: 0 }];
+    // collar landing: across his neck / top shoulder, centred a little toward his back
+    const Lc = neck.clone().addScaledVector(along, -0.12).addScaledVector(acrossL, -0.09); Lc.y = chestB.y + 0.17;
+    const sL = 0.22;
+    const UP = V3(0, 1, 0);
+    const stepOf = (te) => 0.15 * sstep(0.06, 0.3, te);
+    const holdAx = UP.clone().cross(navF.clone().addScaledVector(S67.F, 0.8).normalize()).normalize(); // (the lining faces the boy: it lands on him)
+    // the two hands' grip points (collar) through hold → shake → fling (ship-local)
+    const handPath = (te) => {
+      const Nn = S67.nav.clone().addScaledVector(navF, stepOf(te));
+      const c0 = Nn.clone().addScaledVector(navF, 0.3).addScaledVector(UP, 1.28), c1 = Nn.clone().addScaledVector(navF, 0.32).addScaledVector(UP, 1.48), c2 = Nn.clone().addScaledVector(navF, 0.48).addScaledVector(UP, 1.1);
+      const k1 = sstep(0.08, 0.17, te), k2 = sstep(0.16, 0.23, te);
+      const c = c0.clone().lerp(c1, k1).lerp(c2, k2);
+      const sp = lerp(lerp(0.12, 0.21, k1), 0.26, k2);
+      // while he holds it the coat's outer side is turned ~40° toward the lens (it reads as the brown coat, not its
+      // pale lining edge-on); the fling squares it to the throw
+      const ax = holdAx.clone().lerp(navL, k2).normalize();
+      return { c, sp, ax, N: Nn };
+    };
+    const REL = 0.23, LAND = 0.45;                                                    // release / collar landing (real time)
+    const rel = handPath(REL);
+    const driveAt = (te) => {
+      // the collar keeps its speed to the landing (the body and hem, slowed by the air, trail behind it toward his feet),
+      // then holds 50 ms so it comes to rest before it is released onto his shoulder
+      const t = clamp((te - REL) / (LAND - REL)), e = t * (0.85 + 0.15 * t);
+      const c = rel.c.clone().lerp(Lc, e); c.y += 0.08 * Math.sin(Math.PI * t);
+      const ax = navL.clone().lerp(acrossL, sstep(0, 0.8, t)).normalize(), sp = lerp(rel.sp, sL, e);
+      return { c, ax, sp };
+    };
+    S67.handPath = handPath; S67.driveAt = driveAt; S67.Lc = Lc; S67.stepOf = stepOf; S67.REL = REL;
+    const nu = COAT_NU, nv = COAT_NV;
+    // simulated lazily on S067's first frame (≈ 4 s; processes that never render S067 — e.g. a nested view — skip it)
+    S67.runSim = () => simulateCoat({
+      nu, nv, W: COAT_W, H: COAT_H, pinCu: 1 / 3,
+      init: (cu, cv) => { const h = handPath(0); const x = cu * COAT_W / 2 * 0.62, y = cv * COAT_H; const p = h.c.clone().addScaledVector(h.ax, x).add(V3(0, -y * 0.97, 0)).addScaledVector(navF, 0.03 + 0.04 * Math.sin(cu * 9)); return [p.x, p.y, p.z]; },
+      pins: (te) => { if (te >= REL) return null; const h = handPath(te); const l = h.c.clone().addScaledVector(h.ax, h.sp), r = h.c.clone().addScaledVector(h.ax, -h.sp); return [[r.x, r.y, r.z], [l.x, l.y, l.z]]; },
+      drive: (te) => { if (te < REL || te > 0.8) return null; const d = driveAt(te); const l = d.c.clone().addScaledVector(d.ax, d.sp), r = d.c.clone().addScaledVector(d.ax, -d.sp); return { L: [l.x, l.y, l.z], R: [r.x, r.y, r.z] }; },
+      capsules: caps, boxes, floorY: POOP_Y, wind: A(S67.R.clone().multiplyScalar(-0.8).add(V3(0, 0.15, 0))),
+      t0: -0.8, t1: 1.9, fps: 48, dt: 1 / 480, iters: 8, bend: 0.25, dragN: 2.6, dragT: 0.25,
+    });
+    S67.sim = null; S67.simMs = 0;
+    const n = (nu + 1) * (nv + 1);
+    const pos = new Float32Array(n * 3), nrm = new Float32Array(n * 3), uv = new Float32Array(n * 2), cl = new Float32Array(n * 4);
+    for (let j = 0, k = 0; j <= nv; j++) for (let i = 0; i <= nu; i++, k++) {
+      const cu = i / nu * 2 - 1, cv = j / nv;
+      uv[k * 2] = i / nu * 2.2; uv[k * 2 + 1] = j / nv * 1.6;
+      // aCl.w: collar-pull weight (collar rows, on the front side where his hand is)
+      cl.set([cu, cv, 0, clamp(1 - cv / 0.24) * clamp(0.55 - cu * 0.9)], k * 4);
     }
-    const idx = [];
-    for (let j = 0; j < nv; j++) for (let i = 0; i < nu; i++) { const a = j * (nu + 1) + i, b = a + 1, c = a + nu + 1, d = c + 1; idx.push(a, c, b, b, c, d); }
-    const nrm = (arr) => { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(arr, 3)); g.setIndex(idx); g.computeVertexNormals(); return g.attributes.normal.array; };
-    const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.BufferAttribute(Cc.slice(), 3)); g.setAttribute('normal', new THREE.BufferAttribute(nrm(Cc).slice(), 3));
-    const uv = new Float32Array(n * 2); for (let j = 0, kk = 0; j <= nv; j++) for (let i = 0; i <= nu; i++, kk++) { uv[kk * 2] = i / nu * 2.2; uv[kk * 2 + 1] = j / nv * 1.6; }
-    g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
-    g.setAttribute('aPA', new THREE.BufferAttribute(A, 3)); g.setAttribute('aPB', new THREE.BufferAttribute(B, 3)); g.setAttribute('aPC', new THREE.BufferAttribute(Cc, 3));
-    g.setAttribute('aNA', new THREE.BufferAttribute(nrm(A), 3)); g.setAttribute('aNB', new THREE.BufferAttribute(nrm(B), 3)); g.setAttribute('aNC', new THREE.BufferAttribute(nrm(Cc), 3));
-    g.setAttribute('aCl', new THREE.BufferAttribute(cl, 4)); g.setIndex(idx);
-    S67.coatGeo = g;
-    const corner = (cu) => { const i = Math.round((cu + 1) / 2 * nu); return { A: V3(A[i * 3], A[i * 3 + 1], A[i * 3 + 2]), B: V3(B[i * 3], B[i * 3 + 1], B[i * 3 + 2]) }; };
-    S67.cornerL = corner(0.44); S67.cornerR = corner(-0.44); // +cu is on the navigator's left
-    S67.collarC = collarC; S67.pullDir = along.clone().multiplyScalar(0.07).add(V3(0, 0.035, 0));
+    const idx = []; for (let j = 0; j < nv; j++) for (let i = 0; i < nu; i++) { const a0 = j * (nu + 1) + i, b0 = a0 + 1, c0 = a0 + nu + 1, d0 = c0 + 1; idx.push(a0, c0, b0, b0, c0, d0); }
+    coatGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); coatGeo.setAttribute('normal', new THREE.BufferAttribute(nrm, 3));
+    coatGeo.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); coatGeo.setAttribute('aCl', new THREE.BufferAttribute(cl, 4)); coatGeo.setIndex(idx);
+    S67.pullDir = along.clone().multiplyScalar(0.065).add(V3(0, 0.03, 0)).addScaledVector(acrossL, -0.02);
+    S67.collarC = Lc;
   }
+  // per frame: the recorded state at real time te (lerp between the 48 fps samples) + the collar pull
+  function coatAt(te, pull) {
+    if (!S67.sim) { const t0 = performance.now(); S67.sim = S67.runSim(); S67.simMs = performance.now() - t0; }
+    const sim = S67.sim, f = clamp(te, 0, (sim.frames.length - 1) / sim.fps) * sim.fps, i0 = Math.min(sim.frames.length - 2, Math.floor(f)), t = f - i0;
+    const A0 = sim.frames[i0], A1 = sim.frames[i0 + 1], N0 = sim.normals[i0], N1 = sim.normals[i0 + 1];
+    const pa = coatGeo.attributes.position.array, na = coatGeo.attributes.normal.array, cl = coatGeo.attributes.aCl.array, pd = S67.pullDir;
+    for (let k = 0, m = pa.length / 3; k < m; k++) {
+      const w = cl[k * 4 + 3] * pull;
+      pa[k * 3] = A0[k * 3] + (A1[k * 3] - A0[k * 3]) * t + pd.x * w; pa[k * 3 + 1] = A0[k * 3 + 1] + (A1[k * 3 + 1] - A0[k * 3 + 1]) * t + pd.y * w; pa[k * 3 + 2] = A0[k * 3 + 2] + (A1[k * 3 + 2] - A0[k * 3 + 2]) * t + pd.z * w;
+      na[k * 3] = N0[k * 3] + (N1[k * 3] - N0[k * 3]) * t; na[k * 3 + 1] = N0[k * 3 + 1] + (N1[k * 3 + 1] - N0[k * 3 + 1]) * t; na[k * 3 + 2] = N0[k * 3 + 2] + (N1[k * 3 + 2] - N0[k * 3 + 2]) * t;
+    }
+    coatGeo.attributes.position.needsUpdate = true; coatGeo.attributes.normal.needsUpdate = true;
+  }
+  const coatM = coatMaterial();
+  const coat = new THREE.Mesh(coatGeo, coatM.material); coat.frustumCulled = false; coat.castShadow = false; coat.receiveShadow = true; ship.add(coat);
 
   // ------------------------------------------------------------------------------------------ per-frame world state
   function poseShip(T, k = 1) {
@@ -738,11 +901,11 @@ export default async function create(ctx) {
   function reset() {
     for (const o of optional) o.visible = false;
     for (const f of [navC, navJ]) { f.hands.L.root.visible = true; f.hands.R.root.visible = true; }
-    lamp.object3D.visible = true; lamp.object3D.position.copy(parts.lampHook); for (const a of parts.lampArm) a.visible = true;
+    lamp.object3D.visible = true; lamp.object3D.position.copy(parts.lampHook); for (const a of parts.lampArm) a.visible = true; lamp.body.userData.shellBase = 0.9;
     parts.hatchHalo.set(0); parts.hatchGlowM.color.set(P.P13).multiplyScalar(2.2);
     glowLight.intensity = 0; hatchLight.intensity = 0; hemi.intensity = 0.6; hemi.color.set(0x2a3a58); hemi.groundColor.set(0x0b0e14); scene.fog.density = 0;
     sea.object3D.visible = !OFF.has('sea'); sky.object3D.visible = true; sleeveU.uClipOn.value = 0; for (const m of sleeves) m.visible = false;
-    setSwell(1); camera.userData.H = ctx.H;
+    setSwell(1); camera.userData.H = ctx.H; sky.uniforms.uSkyExposure.value = 1; moon.color.set(0xdde5ee); setJunkCheap(false);
     for (const s of parts.sails) s.material.emissive.setRGB(0, 0, 0);
   }
   // the hero sea or the cheap one (defocused backgrounds)
@@ -758,9 +921,20 @@ export default async function create(ctx) {
     parts.sailU.uBreath.value = 0.6 + 0.4 * Math.sin(Te * 0.9) * Math.sin(Te * 0.37 + 1.0);
   }
   // debug: pull back along the view to see the staging (render with ?sddbg=1)
+  let dbgPivot = null; // subject point of the current setup (debug orbit: ?sddbg=orb:<deg>:<dist>[:<elev deg>])
   function debugCam() {
     if (!DBG || DBG === 'flat') return;
     const f = new THREE.Vector3(); camera.getWorldDirection(f);
+    if (DBG.startsWith('orb')) {
+      const [, a = '90', d = '3', e = '10'] = DBG.split(':');
+      const piv = dbgPivot ? dbgPivot.clone() : camera.position.clone().addScaledVector(f, 3);
+      const h = V3(-f.x, 0, -f.z).normalize().applyAxisAngle(V3(0, 1, 0), THREE.MathUtils.degToRad(+a));
+      const el = THREE.MathUtils.degToRad(+e);
+      camera.position.copy(piv).addScaledVector(h, +d * Math.cos(el)).add(V3(0, +d * Math.sin(el), 0));
+      camera.up.set(0, 1, 0); camera.lookAt(piv); cam.lens(camera, 35); camera.updateMatrixWorld(true);
+      if (sea.object3D.visible) sea.update(sea.uniforms.uT.value, camera); if (seaLo.object3D.visible) seaLo.update(seaLo.uniforms.uT.value, camera);
+      return;
+    }
     if (DBG === 'side' || DBG === 'side2') { // orbit 70° around the point 1.8 m ahead, keep it framed
       const piv = camera.position.clone().addScaledVector(f, 1.8), off = camera.position.clone().sub(piv).applyAxisAngle(V3(0, 1, 0), DBG === 'side' ? 1.2 : -1.2).multiplyScalar(1.6);
       camera.position.copy(piv).add(off); camera.lookAt(piv); cam.lens(camera, 35);
@@ -780,7 +954,9 @@ export default async function create(ctx) {
     // ---------------------------------------------------------------- S008 EWS dusk — tiny junk, vast heavy sea, shore light far left
     S008(tl, u, T) {
       reset();
-      setSwell(1.35);
+      // (review) the per-pixel short wind waves at full height read as regular corduroy from 30–40 m up (parallel crests
+      // in perspective); at 35 % they only roughen the long swell, which carries the weight
+      setSwell(1.35, +(Q.get('sd8k') || 0.22));
       const pose = poseShip(T, 1);
       sky.set({ preset: 'dusk', sunAz: -46, sunElev: -2.5, cloudCover: 0.42, cloudScale: 0.07, cloudDensity: 0.8, moonAz: 120, moonElev: 14, stars: 0.18 });
       cam.lens(camera, 28);
@@ -835,7 +1011,7 @@ export default async function create(ctx) {
       const F = dirW(V3(-0.966, 0, 0.259)).setY(0).normalize();
       const pitch = pitchForHorizon(camera, 0.58);
       const yaw = yawOf(F);
-      frameAt(camera, eyeL(f), 0.70, 0.40 + 0.004 * Math.sin(T * 2 * Math.PI / 7.2), 1.95, yaw, pitch);
+      frameAt(camera, eyeS(f), 0.70, 0.40 + 0.004 * Math.sin(T * 2 * Math.PI / 7.2), 1.95, yaw, pitch);
       cam.handheld(camera, T, 0.1, 22);
       const camAz = azOf(F);
       for (const a of parts.lampArm) a.visible = false;
@@ -844,11 +1020,14 @@ export default async function create(ctx) {
       placeCoast(coastT, azOf(rayDir(camera, 0.48, 0.58)) - 2.0, 1.0);
       placeShoreLight(shore, azOf(rayDir(camera, 0.30, 0.58)), 4, 11, 14);
       // light: hard moon from upper right (behind him, in depth) rims the head; the stern lantern low right warms his cheek
-      setMoon(camAz + 38, 26, eye, 1.5, 1.2);
-      lamp.object3D.position.copy(ship.worldToLocal(eye.clone().addScaledVector(R, 0.62).addScaledVector(F, -0.85).add(V3(0, -0.12, 0))));
-      catch1.object3D.visible = true; catch1.object3D.position.copy(eyeL(f)); catch1.set(0.9 * sstep(1.1, 1.5, tl));
-      debugCam();
-      envUpdate(T, T, { lampI: 0.55, seaLamp: 3, pose, swing: 0.6 });
+      // (review) the moon comes from upper right, a little behind the lens: a hard silver kicker that draws his cheekbone,
+      // ear, jaw and the head-cloth's folds (the profile front stays in shadow, sky 3 stops over him); the stern lantern
+      // sits low and screen-right, a weak warm glow under the jaw and on the cheek
+      setMoon(camAz + 118, 30, eye, 1.6, 1.2); moon.color.set(0xcfdcf0);
+      lamp.object3D.position.copy(ship.worldToLocal(eye.clone().addScaledVector(R, 0.75).addScaledVector(F, -0.55).add(V3(0, -0.55, 0))));
+      catch1.object3D.visible = true; catch1.object3D.position.copy(eyeS(f)); catch1.set(1.1 * sstep(1.1, 1.5, tl));
+      dbgPivot = eye; debugCam();
+      envUpdate(T, T, { lampI: 0.28, seaLamp: 3, pose, swing: 0.6 });
       // focus: the shore (∞) until 0.3 s, rack to the eye by 1.33 s (81.62 '某个人一面'), ≥ 1 beat
       const rk = ease.inOutSine(clamp((tl - 0.3) / 1.03));
       const focus = 1 / lerp(1 / 4000, 1 / depthOf(camera, eye), rk);
@@ -862,34 +1041,47 @@ export default async function create(ctx) {
       sky.set({ preset: 'night', cloudCover: 0.34, stars: 0.8 });
       cam.lens(camera, 100);
       const f = navC; f.root.visible = true;
-      // at the starboard rail of the poop, facing forward along it; camera at his front-left looks aft-starboard (the shore, as S022)
+      // at the starboard rail of the poop, facing forward along it
       f.root.position.set(-11.0, POOP_Y, innerBeam(-11.0, POOP_Y) - 0.45); f.root.rotation.set(0, Math.PI / 2, 0);
-      const lookUp = ease.inOutSine(clamp((tl - 1.6) / 0.85));
-      navPatch(f, T, tl, lookUp);
       ship.updateMatrixWorld(true);
-      if (OFF.has('coat')) f.setLayerVisible('outercoat', false);
-      const eye = f.eye(), handC = handL.root.localToWorld(V3(0, -0.06, 0.0)).lerp(handR.root.localToWorld(patchLocal.clone()), 0.72);
-      // start nearly frontal (15° to his left: the crossing left sleeve stays at the side), arc to the 50° three-quarter as it tilts up
+      const lookUp = ease.inOutSine(clamp((tl - 1.6) / 0.85));
       const tx = clamp((tl - 1.6) / 1.4), tilt = (1 - Math.pow(1 - tx, 3)) * sstep(0, 0.12, tx); // soft start, eased out by 3.0 s: eye in frame by 2.4 s
+      // start high (31° down) nearly frontal (15° to his left), arc to the 50° left-facing three-quarter (looking aft-starboard:
+      // the shore, as S022) while it tilts up. (Review: a side-on start was tried so the left fingers would point up-frame like
+      // S044's palm, but his left forearm then fills the foreground; the frontal start keeps the hands clean.)
       const Fs = dirW(V3(-0.966, 0, 0.259)).setY(0).normalize(), Fe = dirW(V3(-0.643, 0, 0.766)).setY(0).normalize();
       const F = Fs.clone().lerp(Fe, tilt).normalize();
       const pS = THREE.MathUtils.degToRad(-31), pE = pitchForHorizon(camera, 0.465);
-      const tgt = handC.clone().lerp(eyeL(f), tilt);
-      frameAt(camera, tgt, lerp(0.45, 0.60, tilt), lerp(0.60, 0.44, tilt), lerp(1.8, 1.62, tilt), yawOf(F), lerp(pS, pE, tilt));
+      const vS = Fs.clone().multiplyScalar(Math.cos(pS)).add(V3(0, Math.sin(pS), 0)).normalize();
+      const H = navPatch(f, T, tl, lookUp, vS);
+      setJunkCheap(!Q.get('sdstd'));                                    // the defocused deck behind the hands / sea behind the face
+      ship.updateMatrixWorld(true);
+      if (OFF.has('coat')) f.setLayerVisible('outercoat', false);
+      if (OFF.has('fig')) for (const k of Object.keys(f.layers)) f.setLayerVisible(k, false);
+      if (OFF.has('hands')) handR.root.visible = handL.root.visible = false;
+      if (OFF.has('sleeves')) for (const m of sleeves) m.visible = false;
+      if (OFF.has('ship')) for (const c of ship.children) if (c !== f.root && c.isMesh) c.visible = false;
+      if (OFF.has('sea')) { sea.object3D.visible = seaLo.object3D.visible = false; }
+      if (OFF.has('lamp')) lamp.light.visible = false;
+      const eye = f.eye(), handC = H.leftC.clone().lerp(H.patch, 0.6); // registered (0.45, 0.60): the left fingers on the patch
+      const tgt = handC.clone().lerp(eyeS(f), tilt);
+      frameAt(camera, tgt, lerp(0.45, 0.60, tilt), lerp(0.60, 0.44, tilt), lerp(1.75, 1.6, tilt), yawOf(F), lerp(pS, pE, tilt));
       cam.handheld(camera, T, 0.1, 45);
-      if (Q.get('sdlog')) { const pr = (v) => { const p = v.clone().project(camera); return [(p.x * 0.5 + 0.5).toFixed(3), (0.5 - p.y * 0.5).toFixed(3)]; }; console.log('S045 patch', pr(handR.root.localToWorld(patchLocal.clone())), 'tipL', pr(handL.tip('index', new THREE.Vector3())), 'thumbL', pr(handL.tip('thumb', new THREE.Vector3())), 'handL', pr(handL.root.localToWorld(V3(0, -0.06, 0))), 'wristR', pr(handR.root.getWorldPosition(V3(0,0,0))), 'elbowR', pr(f.worldPos('armR.lower')), 'elbowL', pr(f.worldPos('armL.lower'))); }
-      const camAz = azOf(F), R = V3(-F.z, 0, F.x);
+      if (Q.get('sdlog')) { const pr = (v) => { const p = v.clone().project(camera); return [(p.x * 0.5 + 0.5).toFixed(3), (0.5 - p.y * 0.5).toFixed(3)]; }; console.log('S045', tl.toFixed(2), 'patch', pr(H.patch), 'tipL', pr(handL.tip('index', new THREE.Vector3())), 'handL', pr(handC), 'wristR', pr(handR.root.position), 'elbowR', pr(f.worldPos('armR.lower')), 'elbowL', pr(f.worldPos('armL.lower')), 'reachR', f.worldPos('armR.hand').distanceTo(handR.root.position).toFixed(3), 'reachL', f.worldPos('armL.hand').distanceTo(handL.root.position).toFixed(3)); }
       for (const a of parts.lampArm) a.visible = false;
       placeShoreLight(shore, azOf(rayDir(camera, 0.40, 0.46)), 4, 11, 14);
       placeCoast(coastT, azOf(rayDir(camera, 0.33, 0.46)), 0.8);
-      setMoon(azOf(Fs) + 112, 46, handC.clone().lerp(eye, 0.5), 1.25, 1.3); // hard moon from upper right, on the camera side: keys the hands' tops + the patch
-      { const fw = fwdOf(f), lf = V3(fw.z, 0, -fw.x); lamp.object3D.position.copy(f.root.position.clone().addScaledVector(lf, 0.85).addScaledVector(fw, 0.38).setY(POOP_Y + 1.62)); } // hook: flame ≈ 1.3 m, at his left-front (frame right)
-      catch1.object3D.visible = true; catch1.object3D.position.copy(eyeL(f)); catch1.set(0.9 * sstep(2.3, 2.5, tl));
-      debugCam();
-      envUpdate(T, T, { lampI: 1.3, seaLamp: 3, pose, swing: 0.6 });
+      // hard moon from upper right, fixed in the ship: behind the lens on the right while on the hands (keys the salt and
+      // the patch), a side kicker on cheek / ear / head-cloth at the end; the stern lantern on its hook aft-port of him, low
+      // and frame right: the warm side of the hands, a low warm fill under the face at the end
+      setMoon(azOf(Fs) + 100, 42, handC.clone().lerp(eye, 0.5), 1.25, 1.3); moon.color.set(0xcfdcf0);
+      lamp.object3D.position.copy(f.root.position.clone().add(V3(-0.37, 1.37, -0.96)));
+      catch1.object3D.visible = true; catch1.object3D.position.copy(eyeS(f)); catch1.set(1.1 * sstep(2.3, 2.5, tl));
+      dbgPivot = Q.get("sdpiv") === "patch" ? H.patch : tgt; debugCam();
+      envUpdate(T, T, { lampI: 0.45, seaLamp: 3, pose, swing: 0.6 });
       const rk = ease.inOutSine(clamp((tl - 1.6) / 0.8));
-      const focus = lerp(depthOf(camera, handC), depthOf(camera, eye), rk);
-      return post({ dof: { focus, fstop: 2.2, maxCoc: 1.5 }, exposure: 1.4, temp: -0.06, contrast: 1.06, bloom: { strength: 0.55, radius: 0.6, threshold: 0.55 }, vignette: 0.42, grain: 0.04 });
+      const focus = lerp(depthOf(camera, H.patch), depthOf(camera, eyeS(f)), rk);
+      return post({ dof: { focus, fstop: 2.2, maxCoc: 1.5 }, exposure: 1.4, temp: -0.07, saturation: lerp(0.9, 0.8, tilt), contrast: 1.06, bloom: { strength: 0.5, radius: 0.6, threshold: 0.6 }, vignette: 0.42, grain: 0.042 });
     },
 
     // ---------------------------------------------------------------- S067 MS 50 mm handheld: the coat unfurls over the boy (48→24 fps at 1.3 s)
@@ -902,33 +1094,35 @@ export default async function create(ctx) {
       const pose = poseShip(Te, 0.4);
       sky.set({ preset: 'night', cloudCover: 0.32, stars: 0.9 });
       cam.lens(camera, 50);
-      // coat progress (screen time): shaken open 0.39 s, settles 1.04 s (214.25 surge)
-      const pc = clamp((tl - 0.39) / 0.65);
-      coat.visible = true; coatM.U.uP.value = pc; coatM.U.uT.value = Te; coatM.U.uFlut.value = 1.0; coatM.U.uLift.value = 0.14;
+      // the boy pulls the collar to his chin (tl 1.55–1.85 s) — the coat settles on the surge at tl 1.04 s (sim)
       const pull = ease.inOutSine(clamp((tl - 1.55) / 0.3));
-      coatM.U.uPull.value = pull; coatM.U.uPullDir.value.copy(S67.pullDir);
-      comp.root.visible = true; plat.visible = true; coil67.visible = true; boyPose(Te, pull, lerp(1.0, 0.2, sstep(1.0, 1.6, tl)));
-      navJ.root.visible = true; navThrow(navJ, Te, tl);
+      coat.visible = true; coatAt(te, pull);
+      comp.root.visible = true; plat.visible = true; coil67.visible = true; boyPose(Te, pull, lerp(1.0, 0.15, sstep(0.95, 1.35, tl)));
+      navJ.root.visible = true; navThrow(navJ, Te, te, tl);
       ship.updateMatrixWorld(true);
-      // camera: handheld, slightly high; the lantern registers at (0.38, 0.36) on frame 0
+      // camera: handheld shoulder rig, slightly high; the operator frames on the lantern (world-level, no roll) so its cage
+      // centre sits at (0.38, 0.36) — the light match from S066
       const pos = stabPos(S67.C, 0.6);
-      // the operator frames on the lantern (world-level, no roll): its cage centre sits at (0.38, 0.36) — the light match from S066
       lamp.object3D.position.copy(S67.hook); ship.updateMatrixWorld(true);
       aimAt(camera, pos, WL(S67.hook.clone().add(V3(0, -0.28, 0))), 0.38, 0.36);
       cam.handheld(camera, Te, 0.9, 67);
       const camAz = azOf(dirW(S67.F));
-      setMoon(camAz + 128, 38, WL(S67.boyC).lerp(WL(S67.nav), 0.5), 0.52, 2.8);
+      // moon key from upper right, behind the lens' right shoulder: silver on the coat's folds, the boy's face and the
+      // navigator's back; the lantern warms the bulwark and his profile; amber spill from the open hatch as low fill
+      // moon key from upper right, behind the lens' right shoulder (a moon in front would only rim them: its road on the
+      // swell falls below the bulwark from this height): silver on the coat's folds, the boy's face, the navigator's back
+      setMoon(camAz + 128, 38, WL(S67.boyC).lerp(WL(S67.nav), 0.5), 0.6, 2.8);
       for (const a of parts.lampArm) a.visible = false;
       lamp.object3D.position.copy(S67.hook); railHook.visible = true; railHook.position.copy(S67.hook); railHook.rotation.y = yawOf(S67.F); railHook.userData.post.scale.y = S67.hook.y - POOP_Y + 0.04;
-      hatchLight.intensity = OFF.has('hatch') ? 0 : 0.9;
+      lamp.body.userData.shellBase = 0.2;                                      // horn panes glow soft amber, not white
+      hatchLight.intensity = OFF.has('hatch') ? 0 : 0.5;
       mist.object3D.visible = true; const mw = WL(S67.boyC).add(V3(0, 1, 0)); mist.material.uniforms.uMin.value.set(mw.x - 6, mw.y - 1.5, mw.z - 6); mist.update(Te);
-      debugCam();
-      envUpdate(T, Te, { lampI: 3.2, seaLamp: 9, pose });
-      if (Q.get('sdlog')) { camera.updateMatrixWorld(true); const p = lamp.flameWorld().project(camera); console.log('after env lamp', (p.x*0.5+0.5).toFixed(3), (0.5-p.y*0.5).toFixed(3), lamp.flameWorld().toArray().map((x)=>x.toFixed(2)), WL(S67.hook).toArray().map((x)=>x.toFixed(2))); }
+      dbgPivot = WL(S67.boyC); debugCam();
+      envUpdate(T, Te, { lampI: 2.4, seaLamp: 9, pose });
       if (Q.get('sdlog')) { const pr = (v) => { const p = v.clone().project(camera); return [(p.x * 0.5 + 0.5).toFixed(3), (0.5 - p.y * 0.5).toFixed(3)]; };
-        console.log('S067 lamp', pr(lamp.flameWorld()), 'navChest', pr(WL(S67.navChest)), 'boy', pr(WL(S67.boyC)), 'cam', camera.position.toArray().map((x) => x.toFixed(2)), 'rot', camera.rotation.toArray().slice(0, 3).map((x) => (+x).toFixed(3)), 'fov', camera.fov.toFixed(2), camera.aspect.toFixed(3)); }
+        console.log('S067', tl.toFixed(2), 'te', te.toFixed(3), 'lamp', pr(lamp.flameWorld()), 'navChest', pr(navJ.worldPos('chest')), 'boy', pr(WL(S67.boyC)), 'collar', pr(WL(S67.Lc)), 'boyLog', JSON.stringify(S67.boyLog), 'simMs', S67.simMs.toFixed(0)); }
       const focus = depthOf(camera, WL(S67.boyC).lerp(WL(S67.nav).add(V3(0, 1.2, 0)), 0.3));
-      return post({ dof: { focus, fstop: 2.8, maxCoc: 1.2 }, exposure: 1.4, temp: -0.04, contrast: 1.05, bloom: { strength: 0.55, radius: 0.6, threshold: 0.6 }, vignette: 0.4, grain: 0.04 });
+      return post({ dof: { focus, fstop: 2.8, maxCoc: 1.2 }, exposure: 1.4, temp: -0.04, contrast: 1.05, bloom: { strength: 0.5, radius: 0.6, threshold: 0.65 }, vignette: 0.4, grain: 0.042 });
     },
 
     // ---------------------------------------------------------------- S075 MCU 100 mm locked: pre-dawn, he turns to the first light (screen-right)
@@ -949,18 +1143,24 @@ export default async function create(ctx) {
       ship.updateMatrixWorld(true);
       const neck = f.worldPos('neck').add(V3(0, 0.12, 0));
       const camAz = azOf(F);
-      const sAz = camAz + 34;
-      sky.set({ preset: 'predawn', sunAz: sAz, sunElev: -4.5, moonAz: camAz - 150, moonElev: 12, cloudCover: 0.3, stars: 0.2 });
+      // (review) the first light sits at the RIGHT horizon (the warm band just past frame right), the sky above still night
+      // blue; the moon is behind the camera, low
+      const sAz = camAz + 9;                                   // the warm band just inside frame right
+      const skyA = { preset: 'night', sunAz: sAz, sunElev: -2.5, sunGlowWidth: 8, sunSharp: 70, moonAz: camAz - 150, moonElev: 12, cloudCover: 0.26, stars: 0.35 };
+      const skyB = { preset: 'predawn', sunAz: sAz, sunElev: -2.5, sunGlowWidth: 8, sunSharp: 70, sunGlow: 1.6, moonAz: camAz - 150, moonElev: 12, cloudCover: 0.26, stars: 0.15 };
+      sky.set(skyB);
       setMoon(camAz - 150, 12, neck, 0.0, 1.5);
-      sky.blend({ preset: 'night', sunAz: sAz, moonAz: camAz - 150, moonElev: 12, cloudCover: 0.3 }, { preset: 'predawn', sunAz: sAz, sunElev: -4.5, moonAz: camAz - 150, moonElev: 12, cloudCover: 0.3 }, 0.82 + 0.1 * clamp(u));
+      sky.blend(skyA, skyB, 0.62 + 0.1 * clamp(u)); sky.uniforms.uSkyExposure.value = 0.62;   // 234–235.6 s: between P02 and P20 (bible §2.3)
       lamp.object3D.visible = false; for (const a of parts.lampArm) a.visible = false;
-      const kd = dirFromAz(camAz + 122, 11);
-      glowLight.color.set(0xe0bcaa); glowLight.position.copy(neck).addScaledVector(kd, 30); glowLight.target.position.copy(neck); glowLight.target.updateMatrixWorld();
-      glowLight.intensity = 1.0 + 1.8 * turn;
-      hemi.color.set(0x5a6e90); hemi.groundColor.set(0x141a26); hemi.intensity = 0.8;
-      debugCam();
+      // the first light: low, from the right horizon in front of him once he has turned (rakes the front of his profile;
+      // the cheek toward the lens stays in the blue sky fill)
+      const kd = dirFromAz(camAz + 64, 7);
+      glowLight.color.set(0xdcb4a0); glowLight.position.copy(neck).addScaledVector(kd, 30); glowLight.target.position.copy(neck); glowLight.target.updateMatrixWorld();
+      glowLight.intensity = 1.4 + 3.8 * turn;
+      hemi.color.set(0x4a5f86); hemi.groundColor.set(0x10151f); hemi.intensity = 0.75;
+      dbgPivot = neck; debugCam();
       envUpdate(T, T, { lampI: 0, seaLamp: 0, pose });
-      return post({ dof: { focus: depthOf(camera, neck), fstop: 2.0, maxCoc: 1.4 }, exposure: 1.45, temp: 0.03, contrast: 1.03, bloom: { strength: 0.45, radius: 0.6, threshold: 0.7 }, vignette: 0.34, grain: 0.036 });
+      return post({ dof: { focus: depthOf(camera, neck), fstop: 2.0, maxCoc: 1.4 }, exposure: 1.2, temp: -0.07, contrast: 1.05, saturation: 0.88, bloom: { strength: 0.4, radius: 0.6, threshold: 0.75 }, vignette: 0.34, grain: 0.04 });
     },
 
     // ---------------------------------------------------------------- named nested view: the swinging horn stern lamp over the night sea
@@ -989,8 +1189,25 @@ export default async function create(ctx) {
   const dirFromAz = (az, el) => { const a = THREE.MathUtils.degToRad(az), e = THREE.MathUtils.degToRad(el); return V3(Math.sin(a) * Math.cos(e), Math.sin(e), -Math.cos(a) * Math.cos(e)); };
 
   // ------------------------------------------------------------------------------------------ figure performances
-  // the figure's LEFT eye (camera side in the left-profile shots): head-bone space, left = +X
-  const eyeL = (f) => { const b = f.bone('head'); b.updateWorldMatrix(true, false); const hu = f.P.hu; return V3(0.17 * hu, 0.33 * hu, 0.40 * hu).applyMatrix4(b.matrixWorld); };
+  // the figure's LEFT eye (camera side in the left-profile shots)
+  // (review) the catchlight / focus point ON the left eye: the most forward head-surface point over the left eye centre,
+  // measured once in head-bone space from the skinned head mesh (the old eyeL point floated ~1 cm in front of the
+  // fig-2 face, so the glint hung in the air beside the profile)
+  const eyeSurfLocal = new Map();
+  for (const f of [navC, navJ]) {
+    const m = f.layers.head; if (!m) continue;
+    f.pose('stand'); f.root.updateMatrixWorld(true); m.skeleton.update();
+    const hb = f.bone('head'); hb.updateWorldMatrix(true, false);
+    const inv = hb.matrixWorld.clone().invert(), hu = f.P.hu, pa = m.geometry.attributes.position, v = new THREE.Vector3();
+    let best = null;
+    for (let i = 0; i < pa.count; i++) {
+      m.getVertexPosition(i, v); v.applyMatrix4(m.matrixWorld).applyMatrix4(inv);
+      if (v.x < 0.115 * hu || v.x > 0.165 * hu || Math.abs(v.y - 0.33 * hu) > 0.025 * hu) continue;
+      if (!best || v.z > best.z) best = v.clone();
+    }
+    eyeSurfLocal.set(f, best ? best.add(V3(0, 0, 0.0015)) : V3(0.14 * hu, 0.33 * hu, 0.39 * hu));
+  }
+  const eyeS = (f) => { const b = f.bone('head'); b.updateWorldMatrix(true, false); return eyeSurfLocal.get(f).clone().applyMatrix4(b.matrixWorld); };
   const fwdOf = (f) => V3(Math.sin(f.root.rotation.y), 0, Math.cos(f.root.rotation.y));          // ship-local facing
   const toW = (f, dx, y, dz) => { const fw = fwdOf(f), lf = V3(fw.z, 0, -fw.x); return WL(f.root.position.clone().addScaledVector(lf, dx).addScaledVector(fw, dz).setY(POOP_Y + y)); };
   // standing at the rail, forearms on the cap, looking out (S022 / view)
@@ -1007,77 +1224,116 @@ export default async function create(ctx) {
     f.hands.L.pose('relaxed', { curl: 0.5 }); f.hands.R.pose('relaxed', { curl: 0.6 });
     f.breathe(T, 0.8 + 0.6 * sstep(2.2, 2.45, tl) * (1 - sstep(2.6, 3.1, tl)), 0.22);
   }
-  // the patch (S045): right forearm palm-up across the front of the waist, the rolled cuff shows the patch on top;
-  // the left hand comes from his body side, palm down, fingertips resting on the patch (bible lock: LEFT fingers on the RIGHT cuff)
-  function navPatch(f, T, tl, lookUp) {
+  // the patch (S045, review): close-up hands solved first, the figure's arms reach them. The right forearm lies across the
+  // front of his waist (the frame's horizontal band, as in S011), the wrist rolled until the turned cuff's patch faces the
+  // lens (bible: 右手腕微微内翻); the LEFT hand comes from his left (upper frame right) with the fingers pointing down-left
+  // onto the cuff, index + middle pads resting on the patch's upper half (the S011 solve, pads on the cloth ≤ 1 mm); one
+  // small rub at 0.8 s.
+  function navPatch(f, T, tl, lookUp, vS) {
     f.pose('stand', { weight: 0.2 });
-    f.pose({ 'chest.x': 0.08, 'neck.x': lerp(0.48, 0.02, lookUp), 'head.x': lerp(0.36, -0.08, lookUp), 'head.y': lerp(0.05, -0.32, lookUp), 'neck.y': lerp(0, -0.12, lookUp) }, { add: true });
+    f.pose({ 'chest.x': 0.1, 'neck.x': lerp(0.5, 0.02, lookUp), 'head.x': lerp(0.38, -0.08, lookUp), 'head.y': lerp(0.1, -0.32, lookUp), 'neck.y': lerp(0, -0.12, lookUp) }, { add: true });
     f.root.updateMatrixWorld(true);
     const fw = fwdOf(f), lf = V3(fw.z, 0, -fw.x), up = V3(0, 1, 0), dn = V3(0, -1, 0);
-    f.reach('R', toW(f, -0.03, 1.12, 0.35), { pole: dirW(dn.clone().addScaledVector(lf, -0.8).addScaledVector(fw, -0.3).normalize()), palm: dirW(up.clone().multiplyScalar(0.6).addScaledVector(fw, 0.55).addScaledVector(lf, 0.25).normalize()), fingers: dirW(lf.clone().multiplyScalar(0.72).addScaledVector(fw, 0.45).addScaledVector(up, 0.4).normalize()) });
-    f.hands.R.root.visible = false; f.hands.L.root.visible = false;
-    attachHand(handR, f, 'R', 0.0);
-    handR.pose('relaxed', { curl: 0.72 });
-    handR.root.updateMatrixWorld(true);
-    const rub = 0.008 * Math.sin(Math.PI * clamp((tl - 0.6) / 0.45));
-    const patchC = handR.root.localToWorld(patchLocal.clone());
-    const patch = handR.root.localToWorld(patchLocal.clone().add(V3(0.004, rub, 0)));
-    // the left hand comes from his body side (behind the right forearm as seen from camera), fingers forward-down onto the cuff's far edge
-    const wT = patch.clone().add(vecW(fw.clone().multiplyScalar(-0.115).addScaledVector(up, 0.07).addScaledVector(lf, 0.04)));
-    for (let it = 0; it < 4; it++) {
-      f.reach('L', wT, { pole: dirW(dn.clone().addScaledVector(lf, 0.9).addScaledVector(fw, -0.2).normalize()), palm: dirW(dn.clone().multiplyScalar(0.9).addScaledVector(fw, -0.25).normalize()), fingers: dirW(fw.clone().multiplyScalar(0.75).addScaledVector(dn, 0.55).addScaledVector(lf, -0.25).normalize()) });
-      attachHand(handL, f, 'L', 0.0);
-      handL.pose('touch');
-      handL.root.updateMatrixWorld(true);
-      const tip = handL.tip('index', new THREE.Vector3());
-      wT.add(patch.clone().add(vecW(up.clone().multiplyScalar(0.007))).sub(tip));
+    const upW = dirW(up);
+    const settle = ease.outCubic(clamp(tl / 0.15));
+    const W_R = toW(f, 0.13, 1.1, 0.27);
+    // wrist → elbow across his waist: square to the lens (screen-left) so the cuff band reads side-on, as in S011
+    const Rv0 = vS.clone().cross(V3(0, 1, 0)).normalize();
+    const aR = Rv0.clone().negate().addScaledVector(dirW(fw), -0.08).addScaledVector(dirW(up), -0.1).normalize();
+    const fdR = aR.clone().negate().addScaledVector(upW, 0.05).normalize();
+    const n0 = upW.clone().addScaledVector(aR, -upW.dot(aR)).normalize();
+    handR.pose('relaxed', { curl: 0.55 });
+    const placeR = (phi) => { const pn = n0.clone().applyAxisAngle(aR, phi); handR.placeWrist(W_R, fdR, pn); handR.root.updateMatrixWorld(true); return pn; };
+    placeR(0);
+    const axis = () => V3(0, 1, 0).applyQuaternion(handR.root.quaternion);
+    const radial = (p) => { const r = p.clone().sub(handR.root.position), ax = axis(); return r.addScaledVector(ax, -r.dot(ax)); };
+    const r0 = radial(patchWorld()).normalize();
+    const want = vS.clone().negate().addScaledVector(upW, 0.25).normalize(); want.addScaledVector(aR, -want.dot(aR)).normalize();
+    const phi = Math.atan2(aR.dot(r0.clone().cross(want)), r0.dot(want)) + lerp(-0.28, 0, settle);  // the last of the inward roll as the shot opens
+    const pnR = placeR(phi);
+    const patch = patchWorld(), nP = radial(patch).normalize(), Rout = radial(patch).length(), ax = axis();
+    // left hand (S011 solve): finger axis = a screen direction (down-left) + a component along the view ray so it rises off the cuff
+    const Rv = vS.clone().cross(V3(0, 1, 0)).normalize(), Uv = Rv.clone().cross(vS).normalize();
+    const sd = Rv.clone().multiplyScalar(-Math.cos(0.62)).addScaledVector(Uv, -Math.sin(0.62));
+    const kV = (0.22 - sd.dot(nP)) / Math.min(-0.2, vS.dot(nP));
+    const lfd = sd.clone().addScaledVector(vS, kV).normalize();
+    const lpn = nP.clone().negate().addScaledVector(lfd, nP.dot(lfd)).normalize();
+    handL.setChannels({ wrist: [0.06, 0.0], thumb: [0.3, 0.35, 0.2, 0.25, 0.1], index: [0.16, 0.24, 0.16, 0.04], middle: [0.14, 0.26, 0.16, -0.01], ring: [0.42, 0.72, 0.42, -0.05], little: [0.55, 0.85, 0.5, -0.1] });
+    const rub = 0.005 * Math.sin(Math.PI * clamp((tl - 0.6) / 0.45));
+    const target = patch.clone().addScaledVector(ax, -0.012 + rub).addScaledVector(Rv, 0.004).addScaledVector(Uv, 0.013); // pads on the upper-right corner: the patch shows below-left of the fingertips
+    handL.placeWrist(target.clone().addScaledVector(lfd, -0.16).addScaledVector(nP, 0.03), lfd, lpn);
+    const pads = () => { handL.root.updateMatrixWorld(true); return [handL.tip('index', new THREE.Vector3()), handL.tip('middle', new THREE.Vector3())]; };
+    const gap = (q) => radial(q).length() - Rout;
+    const PAD = 0.003;
+    for (let it = 0; it < 3; it++) {
+      let [pi, pm] = pads();
+      const mid = pi.clone().add(pm).multiplyScalar(0.5), sep = pi.distanceTo(pm), e = gap(pi) - gap(pm);
+      if (Math.abs(e) > 0.0003 && sep > 0.005) {
+        const ang = Math.atan2(e, sep);
+        for (const sgn of [1, -1]) {
+          const q = new THREE.Quaternion().setFromAxisAngle(lfd, sgn * ang), save = [handL.root.position.clone(), handL.root.quaternion.clone()];
+          handL.root.position.sub(mid).applyQuaternion(q).add(mid); handL.root.quaternion.premultiply(q);
+          [pi, pm] = pads();
+          if (Math.abs(gap(pi) - gap(pm)) < Math.abs(e)) break;
+          handL.root.position.copy(save[0]); handL.root.quaternion.copy(save[1]); [pi, pm] = pads();
+        }
+      }
+      const m2 = pi.clone().add(pm).multiplyScalar(0.5);
+      const tg = target.clone().addScaledVector(nP, PAD - gap(target));
+      handL.root.position.add(tg.sub(m2));
     }
+    { const [pi, pm] = pads(); handL.root.position.addScaledVector(nP, PAD - 0.5 * (gap(pi) + gap(pm))); }
+    handL.root.position.addScaledVector(nP, 0.012 * (1 - settle)).addScaledVector(lfd, -0.01 * (1 - settle)); handL.root.updateMatrixWorld(true);
+    // the figure's arms reach the close-up wrists (its own hands hidden, forearms trimmed: see setSleeveClip)
+    f.reach('R', handR.root.position.clone(), { pole: dirW(dn.clone().addScaledVector(lf, -0.7).addScaledVector(fw, -0.4).normalize()), palm: pnR, fingers: fdR });
+    f.reach('L', handL.root.position.clone(), { pole: dirW(dn.clone().addScaledVector(lf, 0.9).addScaledVector(fw, -0.3).normalize()), palm: lpn, fingers: lfd });
+    f.hands.R.root.visible = false; f.hands.L.root.visible = false;
     handR.root.visible = handL.root.visible = true;
     f.breathe(T, 0.9, 0.22);
-    setSleeveClip(f, true);
+    setSleeveClip(f, true, [handR.root.position, handL.root.position]);
+    if (Q.get('sdlog')) console.log('S045 roll', 'phi', phi.toFixed(2), 'pn.up', pnR.dot(upW).toFixed(2), 'nP.want', nP.dot(want).toFixed(2), 'gap', pads().map((q) => (gap(q) * 1000).toFixed(1)).join('/'));
+    return { patch, nP, leftC: handL.root.position.clone().lerp(handL.tip('middle', new THREE.Vector3()), 0.5) };
   }
-  function attachHand(h, f, side, distal) {
-    const fh = f.hands[side];
-    fh.root.updateMatrixWorld(true);
-    const p = new THREE.Vector3(), qq = new THREE.Quaternion(), s = new THREE.Vector3(); fh.root.matrixWorld.decompose(p, qq, s);
-    p.addScaledVector(V3(0, -1, 0).applyQuaternion(qq), distal);
-    h.root.parent.updateMatrixWorld(true);
-    const lm = new THREE.Matrix4().compose(p, qq, V3(1, 1, 1)).premultiply(h.root.parent.matrixWorld.clone().invert());
-    lm.decompose(h.root.position, h.root.quaternion, h.root.scale);
-    h.root.updateMatrixWorld(true);
-  }
-  // the coat: gathered at the chest → shaken open and flung (0.39 s) → released → hands settle → left fingers to the right cuff (S067)
-  function navThrow(f, Te, tl) {
-    const step = sstep(0.3, 0.75, tl) * 0.32 * (1 - 0.4 * sstep(1.3, 2.0, tl));
-    f.root.position.copy(S67.nav).addScaledVector(S67.navF, step); f.root.rotation.set(0, S67.navYaw, 0);
-    const lean = sstep(0.25, 0.6, tl) * (1 - sstep(1.15, 1.9, tl));
-    f.pose('stand', { weight: 0.5 * lean });
-    f.pose({ 'spine.x': 0.12 * lean, 'chest.x': 0.18 * lean, 'neck.x': 0.2, 'head.x': 0.14, 'hips.x': 0.04 * lean }, { add: true });
+  // the coat (S067, review): his hands carry the sim's collar pins (hold → shake → fling, release at te 0.25 s), follow
+  // through toward the boy, come back to rest; then his left fingers go to his right cuff (tl 1.88–2.1 s)
+  function navThrow(f, Te, te, tl) {
+    const H = S67.handPath(Math.min(te, S67.REL));
+    const Nn = S67.nav.clone().addScaledVector(S67.navF, S67.stepOf(te));
+    f.root.position.copy(Nn); f.root.rotation.set(0, S67.navYaw, 0);
+    const lean = sstep(0.12, 0.3, te) * (1 - sstep(0.5, 1.1, te));
+    f.pose('stand', { weight: 0.45 * sstep(0.06, 0.3, te) });
+    f.pose({ 'spine.x': 0.1 * lean, 'chest.x': 0.16 * lean, 'neck.x': 0.18, 'head.x': 0.12, 'hips.x': 0.04 * lean }, { add: true });
     f.root.updateMatrixWorld(true);
-    const fwL = S67.navF, lfL = S67.navL;
-    const at = (dx, y, dz) => WL(f.root.position.clone().addScaledVector(lfL, dx).addScaledVector(fwL, dz).setY(POOP_Y + y));
-    const A_L = WL(S67.cornerL.A), A_R = WL(S67.cornerR.A);
-    const ph1 = sstep(0.3, 0.6, tl), ph2 = sstep(0.6, 1.0, tl), ph3 = sstep(1.1, 1.8, tl);
-    const chest = at(0, 1.26, 0.3), fling = at(0, 1.55, 0.6), follow = at(0, 1.05, 0.58), rest = at(0, 0.98, 0.12);
-    const centre = chest.clone().lerp(fling, ph1).lerp(follow, ph2).lerp(rest, ph3);
-    const spread = lerp(0.17, 0.28, ph1) * (1 - 0.45 * ph3);
-    const lfW = dirW(lfL);
-    let hl = centre.clone().addScaledVector(lfW, spread), hr = centre.clone().addScaledVector(lfW, -spread);
-    if (tl < 0.32) { hl = A_L.clone(); hr = A_R.clone(); }
-    const cuff = sstep(1.88, 2.1, tl);
-    f.reach('R', hr.lerp(at(-0.05, 1.03, 0.3), cuff), { pole: dirW(V3(0, -1, 0).addScaledVector(lfL, -0.7)) });
-    f.reach('L', hl.lerp(at(-0.09, 1.05, 0.33), cuff), { pole: dirW(V3(0, -1, 0).addScaledVector(lfL, 0.7)) });
-    f.hands.L.pose(tl < 0.62 ? 'grip' : cuff > 0.4 ? 'touch' : 'relaxed', { radius: 0.02, curl: 0.4 }); f.hands.R.pose(tl < 0.62 ? 'grip' : 'relaxed', { radius: 0.02, curl: 0.5 });
-    const lookP = tl < 1.75 ? WL(S67.collarC).lerp(WL(S67.head), sstep(0.6, 1.3, tl)) : at(-0.06, 1.0, 0.33);
+    const fwL = S67.navF, lfL = S67.navL, UP = V3(0, 1, 0);
+    const at = (dx, y, dz) => Nn.clone().addScaledVector(lfL, dx).addScaledVector(fwL, dz).setY(POOP_Y + y);
+    // grip points: the pins while holding; after release they follow through low toward the boy, then settle at rest
+    let c = H.c.clone(), sp = H.sp, ax = H.ax.clone();
+    if (te > S67.REL) {
+      const k1 = sstep(S67.REL, 0.4, te), k2 = sstep(0.5, 1.05, te);
+      c = c.lerp(at(0, 1.05, 0.36), k1).lerp(at(0, 0.98, 0.2), k2);
+      sp = lerp(lerp(sp, 0.24, k1), 0.16, k2);
+      ax = lfL.clone();
+    }
+    // grip point → wrist: the wrist sits a little above and behind the cloth in his fist
+    const wrist = (side) => c.clone().addScaledVector(ax, side * sp).addScaledVector(UP, 0.035).addScaledVector(fwL, -0.055);
+    const cuff = sstep(1.18, 1.4, te);
+    const wR = wrist(-1).lerp(at(-0.04, 1.03, 0.3), cuff), wL = wrist(1).lerp(at(-0.08, 1.06, 0.33), cuff);
+    f.reach('R', WL(wR), { pole: dirW(V3(0, -1, 0).addScaledVector(lfL, -0.7).addScaledVector(fwL, -0.2)) });
+    f.reach('L', WL(wL), { pole: dirW(V3(0, -1, 0).addScaledVector(lfL, 0.7).addScaledVector(fwL, -0.2)) });
+    f.hands.L.pose(te < S67.REL + 0.02 ? 'grip' : cuff > 0.4 ? 'touch' : 'relaxed', { radius: 0.018, curl: 0.45 }); f.hands.R.pose(te < S67.REL + 0.02 ? 'grip' : 'relaxed', { radius: 0.018, curl: 0.5 });
+    const lookP = te < 1.1 ? WL(S67.Lc).lerp(WL(S67.head), sstep(0.35, 0.75, te)) : WL(at(-0.06, 1.0, 0.33));
     f.lookAt(lookP, 0.85);
     f.breathe(Te, 1.0, 0.25);
   }
   // pre-dawn: from looking home (screen-left) to the first light (screen-right) (S075)
   function navTurn(f, T, turn) {
-    // turns to his own LEFT (through the camera side): from his left profile (home, screen-left) to a right three-quarter (first light)
-    f.root.rotation.y = -Math.PI / 2 + 0.55 * turn;
+    // (review) turns to his own LEFT through the camera side, ~150°: from a left profile (home, screen-left) to a right
+    // profile turned a little toward the lens (the first light, screen-right) — the T25 echo / S076 dissolve pose.
+    // The feet pivot ~60°, the shoulders and head follow (no strained neck-only turn).
+    f.root.rotation.y = -Math.PI / 2 + 1.05 * turn;
     f.pose('stand', { weight: lerp(-0.25, 0.2, turn) });
-    f.pose({ 'chest.y': lerp(0.0, 0.3, turn), 'spine.y': lerp(0.0, 0.12, turn), 'neck.y': lerp(0.1, 0.45, turn), 'head.y': lerp(0.28, 0.72, turn), 'head.x': lerp(-0.06, -0.1, turn), 'neck.x': -0.03 }, { add: true });
+    f.pose({ 'spine.y': lerp(0.0, 0.18, turn), 'chest.y': lerp(0.0, 0.38, turn), 'neck.y': lerp(0.05, 0.5, turn), 'head.y': lerp(0.12, 0.7, turn),
+      'head.x': lerp(-0.06, -0.1, turn), 'neck.x': -0.03, 'head.z': 0.03 * Math.sin(Math.PI * turn) }, { add: true });
     f.breathe(T, 0.8, 0.2);
   }
 
@@ -1087,7 +1343,16 @@ export default async function create(ctx) {
     post: { exposure: 1.2, contrast: 1.05, saturation: 0.9, vignette: 0.38, grain: 0.04, shadowTint: [0.45, 0.5, 0.6], highTint: [0.57, 0.52, 0.46], bloom: { strength: 0.45, radius: 0.55, threshold: 0.75 } },
     setShot(shot, tl, u, T) {
       const fn = setups[shot.id] || setups.default;
+      const tS = performance.now();
       const r = fn(tl, u, T, shot) || {};
+      if (Q.get('sdtime')) console.log('setShot', shot.id, (performance.now() - tS).toFixed(1), 'ms');
+      { // module grain (see grainMat): replaces the engine grain; nested views (no post chain) get none
+        const g = shot.nested || DBG ? 0 : (r.grain ?? GRAIN);
+        grainQuad.visible = grainProbe.visible = g > 0;
+        grainMat.uniforms.uAmt.value = g; grainMat.uniforms.uExp.value = r.exposure ?? 1.2;
+        grainMat.uniforms.uSeed.value = Math.round(T * 24) % 977;
+        r.grain = 0;
+      }
       // lights that contribute nothing are switched off (an unlit shadow-casting moon would still render its shadow map)
       for (const l of [moon, glowLight, hatchLight, hemi]) l.visible = l.intensity > 1e-3;
       clipDefine(sleeveU.uClipOn.value > 0.5); // flips only at S045's boundaries (no per-frame recompiles)

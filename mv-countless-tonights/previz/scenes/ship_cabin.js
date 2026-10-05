@@ -9,17 +9,19 @@
 // Exports `needleChart(state)` (the T03 chart card, 'then' | 'museum') and `T03` (its frame registration) so the gallery
 // module can draw the identical chart in S004 for the match cut.
 import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import * as TX from '../lib/textures.js';
 import * as FX from '../lib/fx.js';
 import { createSky } from '../lib/sky.js';
 import { envTexture } from '../lib/env.js';
+import { LOWRES_LAYER } from '../engine/post.js';
 import { loadCharacter, loadCharacterHand } from '../lib/cast.js';
 import { rng, clamp, lerp, smoothstep, ease, keys, noise1, fbm1, flicker } from '../engine/util.js';
 
 // ------------------------------------------------------------------ palette (bible.json P01–P30)
 const PAL = {
   P01: '#0E1B30', P02: '#1A2D4A', P03: '#2E4A6E', P04: '#C8D2DB', P05: '#8F9EAD', P09: '#B08D57', P10: '#6E5536', P11: '#D2B27E',
-  P13: '#E2A458', P14: '#C67A35', P15: '#D6C6A2', P16: '#A33A2E', P28: '#0A0F17',
+  P13: '#E2A458', P14: '#C67A35', P15: '#D6C6A2', P16: '#A33A2E', P19: '#A26F4C', P28: '#0A0F17',
   smoke: '#3A2A1E', beam: '#2A1E15', sail: '#8A5A3A', batten: '#4E3624', wax: '#E8DFC8', chartThen: '#DCCDA6', chartMuseum: '#CDB98C',
 };
 const col = (h, k = 1) => new THREE.Color(h).multiplyScalar(k);
@@ -180,6 +182,16 @@ const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const box = (w, h, d, m, x, y, z, { cast = true, recv = true } = {}) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); o.castShadow = cast; o.receiveShadow = recv; return o; };
 // camera with an explicit up vector (top-down shots)
 function placeUp(camera, pos, target, up) { camera.position.copy(pos); camera.up.copy(up).normalize(); camera.lookAt(target); camera.up.set(0, 1, 0); }
+// box-projected UVs in metres / tile (no stretched texture on long thin props)
+function boxUV(geo, tile = 0.25) {
+  const p = geo.attributes.position, n = geo.attributes.normal, uv = geo.attributes.uv;
+  for (let i = 0; i < p.count; i++) {
+    const ax = Math.abs(n.getX(i)), ay = Math.abs(n.getY(i)), az = Math.abs(n.getZ(i));
+    const [a, b] = ay >= ax && ay >= az ? [p.getX(i), p.getZ(i)] : ax >= az ? [p.getZ(i), p.getY(i)] : [p.getX(i), p.getY(i)];
+    uv.setXY(i, a / tile + 0.37, b / tile + 0.61);
+  }
+  uv.needsUpdate = true; return geo;
+}
 // ship motion (period ≈ 7 s): roll (about z, rad), pitch (about x)
 const roll = (T) => 0.035 * Math.sin(T * 2 * Math.PI / 7.0) + 0.01 * Math.sin(T * 2 * Math.PI / 4.3 + 1.1);
 const pitch = (T) => 0.012 * Math.sin(T * 2 * Math.PI / 7.0 + 1.4);
@@ -196,6 +208,37 @@ export default async function create(ctx) {
   const envCabin = envTexture(ctx.renderer, 'candle_interior', { warmth: 1.0, moon: 1.6 });
   scene.environment = envCabin; scene.environmentIntensity = 0.55;
 
+  // ---------------------------------------------------------------- film grain, module-side (review fix)
+  // engine/post.js hashes `uv*res + frame*17.13`, which at f ≈ 760–1344 has already lost its fractional bits: the grain
+  // printed as regular horizontal scan-lines over S007's sky and S005's paper (lib/ISSUES.md [sea_deck]). Engine grain is
+  // set to 0 and the pier_waiting recipe is used: an integer-hash grain drawn in the engine's half-res additive layer
+  // (merged after the DOF, half-float), weighted by the scene luminance sampled from the main target (probe mesh).
+  const grainSrc = { tex: null };
+  const grainMat = new THREE.ShaderMaterial({
+    uniforms: { tScene: { value: null }, uSeed: { value: 0 }, uAmt: { value: 0.0 }, uExp: { value: 1 } },
+    vertexShader: /* glsl */ `varying vec2 vUv; void main(){ vUv = position.xy * 0.5 + 0.5; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
+    fragmentShader: /* glsl */ `varying vec2 vUv; uniform sampler2D tScene; uniform float uSeed, uAmt, uExp;
+      uint hh(uint x){ x ^= x >> 16; x *= 0x7feb352du; x ^= x >> 15; x *= 0x846ca68bu; x ^= x >> 16; return x; }
+      void main(){
+        uvec2 p = uvec2(gl_FragCoord.xy); uint h1 = hh(p.x + hh(p.y + hh(uint(uSeed) + 7u))); uint h2 = hh(h1 ^ 0x9e3779b9u);
+        float g = float(h1 & 0xffffu) / 65535.0 + float(h2 & 0xffffu) / 65535.0 - 1.0;
+        vec3 c = texture2D(tScene, vUv).rgb * uExp;
+        float L = max(dot(c, vec3(0.2126, 0.7152, 0.0722)), 0.0);
+        float w = pow(L + 0.0015, 0.55) * (1.0 - 0.5 * smoothstep(0.6, 2.5, L));
+        gl_FragColor = vec4(vec3(g * uAmt * w), 1.0);
+      }`,
+    transparent: true, depthTest: false, depthWrite: false, fog: false,
+    blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor,
+  });
+  const grainQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), grainMat);
+  grainQuad.frustumCulled = false; grainQuad.renderOrder = 1e9; grainQuad.layers.set(LOWRES_LAYER);
+  grainQuad.onBeforeRender = () => { grainMat.uniforms.tScene.value = grainSrc.tex; };
+  const grainProbe = new THREE.Mesh(new THREE.PlaneGeometry(1e-4, 1e-4), new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false, depthTest: false }));
+  grainProbe.frustumCulled = false; grainProbe.renderOrder = -1e9;
+  grainProbe.onBeforeRender = (r) => { const rt = r.getRenderTarget(); grainSrc.tex = rt ? rt.texture : null; };
+  scene.add(grainQuad, grainProbe);
+  const GRAIN = 0.04;   // CT_NAV (bible ×1.15 of the base), as the engine's display-space amount
+
   const cabin = new THREE.Group(); cabin.name = 'cabin'; scene.add(cabin);
   const ext = new THREE.Group(); ext.name = 'exterior'; scene.add(ext);
 
@@ -203,12 +246,12 @@ export default async function create(ctx) {
   const mWall = TX.mat('wood_smoke', { repeat: [1.6, 0.9], tex: { planks: 7, seed: 3, wear: 0.6 } });
   const mWall2 = TX.mat('wood_smoke', { repeat: [1.2, 0.8], tex: { planks: 6, seed: 5, wear: 0.7 } });
   const mFloor = TX.mat('wood_smoke', { repeat: [1.4, 1.4], tex: { planks: 6, seed: 7, wear: 0.9, salt: 0.15 } });
-  const mCeil = TX.mat('wood_smoke', { repeat: [1.3, 1.3], tex: { planks: 6, seed: 9, wear: 0.4 }, color: 0xb0a090 });
+  const mCeil = TX.mat('wood_smoke', { repeat: [1.3, 1.3], tex: { planks: 6, seed: 9, wear: 0.4 } });   // (review) untinted: the tint made the deck-head a dead black field during the S007 tilt
   const mBeam = TX.mat('wood_beam', { repeat: [1.2, 0.3], tex: { seed: 4 } });
   const mTable = TX.mat('wood_smoke', { repeat: [0.7, 0.9], tex: { planks: 4, seed: 11, wear: 1.0, joints: 0 }, color: 0xd8c8b4 });
   const mBox = TX.mat('camphor', { repeat: [0.35, 0.35], tex: { seed: 6 } });
   const mBrass = TX.mat('brass', { repeat: [0.6, 0.6], tex: { tone: 'then', patina: 0.06, polish: 0.75, scratches: 0.35, seed: 8 }, envMapIntensity: 1.3 });
-  const mBrassBar = TX.mat('brass', { repeat: [0.35, 0.35], tex: { tone: 'then', patina: 0.12, polish: 0.5, seed: 12 }, envMapIntensity: 1.0, metalness: 0.72, roughness: 1.9 });
+  const mBrassBar = TX.mat('brass', { repeat: [1, 1], tex: { tone: 'then', patina: 0.1, polish: 0.55, seed: 12 }, envMapIntensity: 1.5, metalness: 0.85, roughness: 1.35 });
   const mDeck = TX.mat('wood_ship', { repeat: [2.5, 2.5], tex: { salt: 0.35, seed: 14 } });
   const mDark = new THREE.MeshStandardMaterial({ color: 0x1b140e, roughness: 0.85 });
   const mRope = new THREE.MeshStandardMaterial({ color: 0x6a5a44, roughness: 0.95 });
@@ -311,6 +354,7 @@ export default async function create(ctx) {
   const chartGrp = new THREE.Group(); chartGrp.position.set(CH.x0, CH.y, CH.z0); chartGrp.rotation.y = Math.PI / 2; cabin.add(chartGrp);
   const NX = 72, NZ = 40;
   const chartGeo = new THREE.PlaneGeometry(CH.L, CH.Wd, NX, NZ);
+  const chartRoll = [];
   {
     // re-lay the plane: local X = u·L, local Z = v·Wd (v from the top edge), y up
     const p = chartGeo.attributes.position, uvA = chartGeo.attributes.uv;
@@ -320,17 +364,29 @@ export default async function create(ctx) {
   }
   const ct = needleChart('then');
   const mChart = new THREE.MeshStandardMaterial({ map: ct.map, normalMap: ct.normalMap, normalScale: new THREE.Vector2(0.5, 0.5), roughness: 0.86, metalness: 0, side: THREE.DoubleSide, envMapIntensity: 0.25 });
+  mChart.onBeforeCompile = (sh) => { sh.fragmentShader = sh.fragmentShader.replace('#include <map_fragment>', '#include <map_fragment>\n if (!gl_FrontFacing) diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.78, 0.72, 0.58), 0.82);'); };
+  mChart.customProgramCacheKey = () => 'cabin_chart_back';
   const chartMesh = new THREE.Mesh(chartGeo, mChart); chartMesh.castShadow = true; chartMesh.receiveShadow = true; chartGrp.add(chartMesh);
   {
     const roll = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, CH.Wd + 0.004, 32), new THREE.MeshStandardMaterial({ color: 0xcdbb94, roughness: 0.85 }));
-    roll.rotation.x = Math.PI / 2; roll.position.set(-0.012, 0.014, CH.Wd / 2); roll.castShadow = roll.receiveShadow = true; chartGrp.add(roll);
-    for (const zz of [-0.012, CH.Wd + 0.012]) { const knob = new THREE.Mesh(new THREE.CylinderGeometry(0.009, 0.009, 0.02, 20), mDark); knob.rotation.x = Math.PI / 2; knob.position.set(-0.012, 0.014, zz); knob.castShadow = true; chartGrp.add(knob); }
-    const bar = (len, u, v, alongX) => { const g = new THREE.BoxGeometry(alongX ? len : 0.022, 0.012, alongX ? 0.022 : len); const m = new THREE.Mesh(g, mBrassBar); m.position.set(u * CH.L, 0.006, v * CH.Wd); m.castShadow = m.receiveShadow = true; chartGrp.add(m);
-      const top = new THREE.Mesh(new THREE.BoxGeometry(alongX ? len * 0.94 : 0.014, 0.003, alongX ? 0.014 : len * 0.94), mBrassBar); top.position.set(u * CH.L, 0.0132, v * CH.Wd); top.castShadow = true; chartGrp.add(top); return m; };
+    roll.rotation.x = Math.PI / 2; roll.position.set(-0.012, 0.014, CH.Wd / 2); roll.castShadow = roll.receiveShadow = true; chartGrp.add(roll); chartRoll.push(roll);
+    for (const zz of [-0.012, CH.Wd + 0.012]) { const knob = new THREE.Mesh(new THREE.CylinderGeometry(0.009, 0.009, 0.02, 20), mDark); knob.rotation.x = Math.PI / 2; knob.position.set(-0.012, 0.014, zz); knob.castShadow = true; chartGrp.add(knob); chartRoll.push(knob); }
+    // (review) the 镇纸 are cast brass bars with eased edges (the edges catch the lamp, so they read as metal from above);
+    // UVs box-projected in metres (the stretched texture drew copper-pipe streaks); a raised spine along the top
+    const bar = (len, u, v, alongX) => { const g = boxUV(new RoundedBoxGeometry(alongX ? len : 0.022, 0.012, alongX ? 0.022 : len, 3, 0.0028), 0.12); const m = new THREE.Mesh(g, mBrassBar); m.position.set(u * CH.L, 0.006, v * CH.Wd); m.castShadow = m.receiveShadow = true; chartGrp.add(m);
+      const top = new THREE.Mesh(boxUV(new RoundedBoxGeometry(alongX ? len * 0.9 : 0.009, 0.006, alongX ? 0.009 : len * 0.9, 2, 0.0025), 0.12), mBrassBar); top.position.set(u * CH.L, 0.0125, v * CH.Wd); top.castShadow = true; chartGrp.add(top); return m; };
     const [b1u, b1v] = frameToUV(T03.bar1[0], T03.bar1[1]); bar(0.2, b1u, b1v, false);
     const [b2u, b2v] = frameToUV(0.75, T03.bar2[1]); bar(0.27, 0.775, b2v, true); void b2u;
     const [su, sv] = frameToUV(T03.stone[0], T03.stone[1]);
-    const stone = new THREE.Mesh(new THREE.SphereGeometry(0.03, 40, 24), TX.mat('granite', { repeat: [0.18, 0.18], tex: { seed: 3 }, color: 0xa8a49c }));
+    // (review) a sea-worn pebble: displaced icosphere with box-projected UVs (the UV sphere showed a pale wedge at its seam)
+    const sGeo = new THREE.IcosahedronGeometry(0.03, 5); { const pp = sGeo.attributes.position, sn = TX.makeNoise(41);
+      for (let i = 0; i < pp.count; i++) { const v3 = V(pp.getX(i), pp.getY(i), pp.getZ(i)); const k = 1 + 0.06 * sn.n(v3.x * 60 + 7, v3.z * 60 + 9 + v3.y * 30, 512, 512) + 0.03 * sn.n(v3.y * 140 + 3, v3.x * 140 + 1, 512, 512); v3.multiplyScalar(k); pp.setXYZ(i, v3.x, v3.y, v3.z); }
+      sGeo.computeVertexNormals();
+      const cc = []; for (let i = 0; i < pp.count; i++) { const m = 0.5 + 0.5 * sn.n(pp.getX(i) * 300 + 11, pp.getZ(i) * 300 + pp.getY(i) * 200 + 5, 1024, 1024), f = 0.5 + 0.5 * sn.n(pp.getX(i) * 1500 + 3, pp.getZ(i) * 1500 + 7, 1024, 1024);
+        const k = 0.78 + 0.22 * m + 0.1 * (f > 0.82 ? 1 : 0); cc.push(0.25 * k, 0.245 * k, 0.235 * k); }
+      sGeo.setAttribute('color', new THREE.Float32BufferAttribute(cc, 3)); }
+    // the pointed-block 'granite' set read as a wicker ball here: a smooth grey sea pebble, faintly speckled
+    const stone = new THREE.Mesh(sGeo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.62, metalness: 0, envMapIntensity: 0.5 }));
     stone.scale.set(1.05, 0.55, 0.9); stone.position.set(su * CH.L, 0.014, sv * CH.Wd); stone.rotation.y = 0.6; stone.castShadow = stone.receiveShadow = true; chartGrp.add(stone);
     const [wu, wv] = frameToUV(T03.wax[0], T03.wax[1]);
     const wax = new THREE.Mesh(new THREE.SphereGeometry(0.0085, 20, 10), new THREE.MeshPhysicalMaterial({ color: PAL.wax, roughness: 0.35, transmission: 0, clearcoat: 0.4, sheen: 0.3 }));
@@ -341,23 +397,39 @@ export default async function create(ctx) {
   }
   const chartRest = chartGeo.userData.rest;
   let chartKey = null;
-  const setChartLift = (lift, flutter, Tq) => {
-    const key = lift === 0 ? 'rest' : lift.toFixed(5) + ':' + flutter.toFixed(4) + ':' + Tq.toFixed(4);
+  // (review) the gust is a real page curl: the free lower-right corner rolls up toward the lens around a fold line
+  // across the corner (paper wrapped on a cylinder, then straight), so from straight above it visibly folds back,
+  // shows its pale underside and throws a moving shadow; g 0…1 = gust envelope, Tq drives the flutter
+  const setChartLift = (g, Tq) => {
+    const key = g === 0 ? 'rest' : g.toFixed(5) + ':' + Tq.toFixed(4);
     if (key === chartKey) return; chartKey = key;
     const p = chartGeo.attributes.position;
+    const dx = CH.L, dz = CH.Wd, dl = Math.SQRT1_2;                     // fold axis normal: 45° toward the corner (metric)
+    const fold = 0.105 * Math.pow(g, 0.8);                               // fold line distance from the corner
+    const Rc = lerp(0.16, 0.03, g), thMax = 2.1 * g + 0.25 * g * g * Math.sin(Tq * 26.0);
     for (let i = 0; i < p.count; i++) {
       const x = chartRest[i * 3], z = chartRest[i * 3 + 2], u = x / CH.L, v = z / CH.Wd;
-      // corner curl: free lower-right (u=1, v=1) and a little upper-right
+      // corner curl at rest (handled paper)
       const dc = Math.hypot((1 - u) * CH.L, (1 - v) * CH.Wd), wC = Math.max(0, 1 - dc / 0.16);
       const dU = Math.hypot((1 - u) * CH.L, v * CH.Wd), wU = Math.max(0, 1 - dU / 0.05);
-      const curl = 0.004 * wC * wC + 0.002 * wU * wU;
-      const L = lift * Math.pow(wC, 1.6) * (1 + flutter * 0.25 * Math.sin(dc * 70 - Tq * 26));
-      p.setY(i, curl + L + 0.0006 * (N1(u * 7, v * 5)));
+      let X = x, Z = z, Y = 0.004 * wC * wC + 0.002 * wU * wU + 0.0006 * N1(u * 7, v * 5);
+      if (g > 0) {
+        const a = ((x - dx) + (z - dz)) * dl + fold;                    // > 0 on the corner side of the fold line
+        if (a > 0) {
+          const ripple = 0.004 * g * Math.sin(a * 90 - Tq * 24) * smoothstep(0, 0.06, a);
+          const th = Math.min(a / Rc, thMax);
+          let along = Rc * Math.sin(th), up = Rc * (1 - Math.cos(th));
+          const rest = a - Rc * th;
+          if (rest > 0) { along += rest * Math.cos(thMax); up += rest * Math.sin(thMax); }
+          X += (along - a) * dl; Z += (along - a) * dl; Y += up + ripple;
+        }
+      }
+      p.setXYZ(i, X, Y, Z);
     }
     p.needsUpdate = true; chartGeo.computeVertexNormals();
   };
   const N1 = (a, b) => Math.sin(a * 2.1 + b * 1.3) * Math.sin(b * 2.7 - a * 0.7);
-  setChartLift(0, 0, 0);
+  setChartLift(0, 0);
 
   // ---- props round the cabin: scroll rack, water jar, straw mat, rope coils, sea chest
   {
@@ -382,6 +454,9 @@ export default async function create(ctx) {
   lamp.object3D.position.copy(LAMP_HOOK); cabin.add(lamp.object3D);
   const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.003, 0.003, 0.06, 6), mRope); cord.position.y = 0.03; lamp.object3D.add(cord);
   const flameLocal = lamp.light.position.clone();
+  const LAMP_COL = lamp.light.color.clone();
+  // (review) close-ups of skin are balanced for the practical (camera ≈ 2700 K): the lamp reads amber, skin stays brown
+  const LAMP_SKIN = 0xffd7ad, LAMP_SKIN_PT = new THREE.Color(0xffdcb4);
   const LAMP_I = 0.75, LAMP_PT = 0.22;
   const lampSpot = new THREE.SpotLight(0xffc48a, LAMP_I, 0, 0.95, 1.0, 2);
   lampSpot.position.copy(flameLocal); lampSpot.target.position.copy(flameLocal).add(V(0, -1, 0));
@@ -394,7 +469,7 @@ export default async function create(ctx) {
   const winDir = V(0.04, -0.82, 0.57).normalize();
   const winC = V(WIN.cx, WIN.cy, CAB.z0 - 0.012);
   const WIN_I = 0.42;
-  const winLight = FX.windowLight({ center: winC, right: [WIN.w / 2, 0, 0], up: [0, WIN.h / 2, 0], dir: winDir, cookie: winCookie.map, color: 0x2448b0, intensity: WIN_I, mapSize: 1024, bounce: 0, frameColor: 0x22180f });
+  const winLight = FX.windowLight({ center: winC, right: [WIN.w / 2, 0, 0], up: [0, WIN.h / 2, 0], dir: winDir, cookie: winCookie.map, color: 0x2f62b4, intensity: WIN_I, mapSize: 1024, bounce: 0, frameColor: 0x22180f });
   cabin.add(winLight.object3D);
   const shaft = FX.windowShaft({ center: winC, right: [WIN.w / 2, 0, 0], up: [0, WIN.h / 2, 0], dir: winDir, length: 1.2, cookie: winCookie.map, color: 0x7d96c8, intensity: 0.05, floorY: TABLE.y, noise: 0.7, soft: 0.1, penumbra: 0.03 });
   cabin.add(shaft.object3D);
@@ -428,7 +503,9 @@ export default async function create(ctx) {
     dk(HATCH.x1 - HATCH.x0, HATCH.z0 + 1.5, (HATCH.x0 + HATCH.x1) / 2, (HATCH.z0 - 1.5) / 2); dk(HATCH.x1 - HATCH.x0, 4.5 - HATCH.z1, (HATCH.x0 + HATCH.x1) / 2, (HATCH.z1 + 4.5) / 2);
     const ch = 0.12, ct2 = 0.05;
     for (const [w, d, x, z] of [[ct2, 0.8, HATCH.x0 - ct2 / 2, -0.6], [ct2, 0.8, HATCH.x1 + ct2 / 2, -0.6], [0.8, ct2, 0.1, HATCH.z0 - ct2 / 2], [0.8, ct2, 0.1, HATCH.z1 + ct2 / 2]]) ext.add(box(w, ch + DECK_T, d, mBeam, x, DECK_Y + ch / 2 - DECK_T / 2, z));
-    const lid = box(0.78, 0.04, 0.78, mDeck, 0.1, DECK_Y + 0.12, 0.3); lid.rotation.x = -0.35; ext.add(lid);
+    // (review) the lid is hinged on the AFT coaming and stands open leaning aft, so the rise (looking forward-up) sees the
+    // forward coaming edge against the sky and the sail straight away instead of the lid's black underside
+    const lid = box(0.78, 0.04, 0.78, mDeck, 0.1, DECK_Y + 0.12 + 0.37, HATCH.z0 - 0.05 - 0.13); lid.rotation.x = 1.22; ext.add(lid);
     // bulwark aft and to the sides (seen as the camera clears the hatch)
     ext.add(box(6, 0.7, 0.08, mDeck, 0, DECK_Y + 0.35, -1.45));
     for (const x of [-2.6, 2.6]) ext.add(box(0.08, 0.7, 6, mDeck, x, DECK_Y + 0.35, 1.5));
@@ -452,6 +529,12 @@ export default async function create(ctx) {
     }
     for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) { const a = j * (cols + 1) + i, b = a + 1, c2 = a + cols + 1, d2 = c2 + 1; sidx.push(a, c2, b, b, c2, d2); }
     const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3)); sg.setAttribute('uv', new THREE.Float32BufferAttribute(suv, 2)); sg.setIndex(sidx); sg.computeVertexNormals();
+    // (review) the sail is not a flat card: the head still catches the last warm afterglow, the foot sinks into the cool
+    // dusk, and each panel darkens toward its batten (shadowed by the bamboo, cloth pulled taut there)
+    { const cA = []; for (let j = 0; j <= rows; j++) { const t = j / rows, pan = (j % rowsPer) / rowsPer, edge = 0.82 + 0.18 * Math.sin(pan * Math.PI);
+        for (let i = 0; i <= cols; i++) { const sI = i / cols, k = lerp(0.7, 1.12, smoothstep(0.0, 1.0, t)) * edge * (0.94 + 0.06 * Math.sin(sI * Math.PI));
+          cA.push(k * lerp(0.92, 1.08, t), k, k * lerp(1.08, 0.9, t)); } }
+      sg.setAttribute('color', new THREE.Float32BufferAttribute(cA, 3)); }
     const cot = TX.cotton({ tone: [152, 108, 64], threads: 48, creases: 0.8, slub: 0.9, fade: 0.6, seed: 17 });
     const scv = document.createElement('canvas'); scv.width = scv.height = 512; const sgc = scv.getContext('2d');
     sgc.drawImage(cot.map.image, 0, 0, 512, 512);
@@ -460,7 +543,7 @@ export default async function create(ctx) {
     sgc.fillStyle = 'rgba(40,22,12,0.35)'; for (const xq of [170, 341]) sgc.fillRect(xq - 2, 0, 4, 512);
     const sr2 = rng(91); for (let q = 0; q < 6; q++) { sgc.fillStyle = `rgba(${90 + sr2() * 40},${60 + sr2() * 20},${40},0.35)`; sgc.fillRect(sr2() * 460, sr2() * 400 + 40, 30 + sr2() * 40, 25 + sr2() * 50); }
     const sTex = new THREE.CanvasTexture(scv); sTex.colorSpace = THREE.SRGBColorSpace; sTex.wrapS = sTex.wrapT = THREE.RepeatWrapping; sTex.anisotropy = 8;
-    const sailMat = new THREE.MeshStandardMaterial({ map: sTex, normalMap: cot.normalMap, normalScale: new THREE.Vector2(0.8, 0.8), roughness: 0.95, side: THREE.DoubleSide, emissive: col('#c8914e', 1), emissiveMap: sTex, emissiveIntensity: 0.24 });
+    const sailMat = new THREE.MeshStandardMaterial({ map: sTex, normalMap: cot.normalMap, normalScale: new THREE.Vector2(0.8, 0.8), roughness: 0.95, side: THREE.DoubleSide, emissive: col('#c8914e', 1), emissiveMap: sTex, emissiveIntensity: 0.24, vertexColors: true });
     const sail = new THREE.Mesh(sg, sailMat); ext.add(sail); sailParts.sail = sail; sailParts.mat = sailMat;
     // battens (bamboo) + sheets fanning down to a block aft of the hatch
     const batM = new THREE.MeshStandardMaterial({ color: 0x6a4a30, roughness: 0.55, emissive: col('#4E3624', 1), emissiveIntensity: 0.15 });
@@ -494,9 +577,36 @@ export default async function create(ctx) {
   const cuffL = await loadCharacterHand('NAVIGATOR', 'L', { lod: 'close' });
   cuffR.root.visible = cuffL.root.visible = false; scene.add(cuffR.root, cuffL.root);
   // sleeves continuing the cuff stubs up the forearms (S011 / S006): tapered tubes in the cuff's own cloth
-  const mSleeve = TX.mat('indigo', { repeat: [2.5, 1.5], tex: { salt: 0.15, seed: 12 }, side: THREE.DoubleSide, color: 0xc8d0e0 });
-  const sleeveFor = (h, len = 0.24, r0 = 0.05, r1 = 0.062, y0 = 0.11) => { const g = new THREE.CylinderGeometry(r1, r0, len, 28, 1, true); g.translate(0, len / 2 + y0, 0); const m = new THREE.Mesh(g, mSleeve); m.castShadow = m.receiveShadow = true; m.scale.set(0.86, 1, 1); h.byName.forearm.add(m); return m; };
-  sleeveFor(cuffR, 0.26, 0.052, 0.064); sleeveFor(cuffL, 0.26, 0.05, 0.062); sleeveFor(thumbHand, 0.2, 0.05, 0.06);
+  const mSleeve = TX.mat('indigo', { repeat: [6, 3.5], tex: { salt: 0.15, seed: 12 }, side: THREE.DoubleSide, color: 0xc8d0e0 });
+  // (review) the sleeve is a soft cloth tube, not a stovepipe: folds ringing the forearm, a little sag, taper to the cuff
+  const sleeveFor = (h, len = 0.24, r0 = 0.05, r1 = 0.062, y0 = 0.11, seed = 1) => {
+    const g = new THREE.CylinderGeometry(r1, r0, len, 48, 24, true); g.translate(0, len / 2 + y0, 0);
+    const p = g.attributes.position, sr = rng(seed * 31 + 7), ph = [sr() * 6.3, sr() * 6.3, sr() * 6.3];
+    for (let i = 0; i < p.count; i++) {
+      const x = p.getX(i), y = p.getY(i), z = p.getZ(i), a = Math.atan2(z, x), t = (y - y0) / len;
+      const k = 1 + 0.045 * Math.sin(a * 3 + y * 42 + ph[0]) * smoothstep(0.0, 0.25, t) + 0.03 * Math.sin(a * 5 - y * 77 + ph[1]) + 0.02 * Math.sin(y * 130 + a * 2 + ph[2]);
+      p.setXYZ(i, x * k, y, z * k - 0.006 * smoothstep(0.1, 1, t) * (0.5 + 0.5 * Math.cos(a - Math.PI / 2)));
+    }
+    g.computeVertexNormals();
+    const m = new THREE.Mesh(g, mSleeve); m.castShadow = m.receiveShadow = true; m.scale.set(0.86, 1, 1); h.byName.forearm.add(m); return m;
+  };
+  sleeveFor(cuffR, 0.26, 0.051, 0.058, 0.11, 1); sleeveFor(cuffL, 0.26, 0.05, 0.057, 0.11, 2); sleeveFor(thumbHand, 0.2, 0.05, 0.056, 0.11, 3);
+  // (review) close-up hands: the salt crust reads as fine crystals in the creases, not white blotches; short work-darkened
+  // nails (no manicure-white plates)
+  for (const h of [cuffR, cuffL, thumbHand]) {
+    const mat = h.skinMat, U = mat && mat.userData.fzUniforms;
+    if (!U) continue;
+    if (U.uSalt) U.uSalt.value = 0.45;
+    if (U.uNail) U.uNail.value.set(PAL.P19).lerp(new THREE.Color(0x7a6858), 0.45);
+    // the library whitens the nail's free edge and lunula (a clean hand); a seaman's nail edge is the nail's own dull colour
+    const ob = mat.onBeforeCompile;
+    if (ob) {
+      mat.onBeforeCompile = (sh, r) => { ob(sh, r); sh.fragmentShader = sh.fragmentShader
+        .replace('mix(uNail, vec3(0.97, 0.92, 0.88), 0.55)', 'mix(uNail, vec3(0.97, 0.92, 0.88), 0.15)')
+        .replace('vec3(0.94, 0.9, 0.86), smoothstep(0.8, 0.93, nt)', 'uNail * vec3(1.1, 1.05, 1.0), smoothstep(0.8, 0.93, nt)'); };
+      mat.customProgramCacheKey = () => 'skin2_cabin_nail'; mat.needsUpdate = true;
+    }
+  }
   // a few loose strands of hair at the head-cloth edge (S010, wind through the bars) — parented to the head bone
   const strands = new THREE.Group(); nav.bone('head').add(strands);
   {
@@ -512,6 +622,11 @@ export default async function create(ctx) {
   strands.visible = false;
 
   // ================================================================ per-frame common animation
+  const THUMB_CH = (new URLSearchParams(location.search).get('thch') || '0.1,-0.75,0.05,0.12,0.3').split(',').map(Number);
+  // (review) a horn lantern's candle breathes, it does not strobe: half the library flicker depth (frame-to-frame swings
+  // of ±5 % read as flicker on the macro inserts)
+  const flk = (T) => 0.954 + 0.5 * (flicker(T, 4) - 0.92);
+  const S006_MC = +(new URLSearchParams(location.search).get('mc') || 1);
   const SHOT_T0 = {}; for (const id of ['S005', 'S006', 'S007', 'S009', 'S010', 'S011']) { const s = ctx.shotById(id); if (s) SHOT_T0[id] = s.in_frame / 24; }
   // lamp swing (pendulum relative to the rolling cabin): [rotZ, rotX] radians, ≈7 s
   const lampSwing = (T) => [-roll(T) * 2.4 + 0.11 * Math.sin(T * 2 * Math.PI / 7.0 + 0.4), -pitch(T) * 2.0 + 0.04 * Math.sin(T * 2 * Math.PI / 5.3 + 1.0)];
@@ -529,15 +644,18 @@ export default async function create(ctx) {
     for (const f of [nav, navMid]) for (const h of Object.values(f.hands)) h.root.visible = true;
     lamp.object3D.position.copy(LAMP_HOOK); lamp.object3D.visible = true; setLampGlow(1); lampSpot.castShadow = true;
     lamp.update(T, { swing: lampSwing(T) });
-    lampSpot.intensity = LAMP_I * flicker(T, 4); lamp.light.intensity = LAMP_PT * flicker(T, 4);
+    lampSpot.intensity = LAMP_I * flk(T); lamp.light.intensity = LAMP_PT * flk(T);
     winLight.object3D.visible = true; winLight.update(T, { intensity: WIN_I });
     winFill.intensity = 0; winFill.angle = 0.55; winFill.color.setHex(0x7a96d0); winFill.position.set(WIN.cx, WIN.cy + 0.02, CAB.z0 - 0.1); winFill.target.position.set(WIN.cx, TABLE.y, -0.5);
     hatchSky.visible = false; hatchSky.intensity = 0; shaft.object3D.visible = false; dust.object3D.visible = false;
-    hemi.intensity = 0.05; bounce.position.set(0.1, 0.95, -0.55); bounce.intensity = 0.05 * flicker(T, 4);
+    hemi.intensity = 0.05; hemi.color.setHex(0x33405e); bounce.position.set(0.1, 0.95, -0.55); bounce.intensity = 0.05 * flk(T);
     scene.environment = envCabin; scene.environmentIntensity = 0.55;
     needle.rotation.y = 0; needleShadow.rotation.z = 0; saltMask.offset.x = 0.53; salt.visible = true; glint.object3D.visible = false;
-    setChartLift(0, 0, 0);
+    setChartLift(0, 0);
     bounce.visible = false;
+    for (const o of chartRoll) o.visible = true;
+    lampSpot.color.setHex(0xffc48a); lamp.light.color.copy(LAMP_COL); lampSpot.angle = 0.95; lampSpot.penumbra = 1.0;
+    lampSpot.target.position.copy(flameLocal).add(V(0, -1, 0));
   }
   // standing navigator stooped under the low beam over the table (root on the floor, facing aft −z)
   const NAV_ROOT = V(0.0, 0, 0.2);
@@ -560,15 +678,92 @@ export default async function create(ctx) {
   }
   // patch centre on the turned-back right cuff (from the cuff geometry's patch mask), world space
   const patchIdx = []; {
-    const g = cuffR.meshes.cuffs[0].geometry, aux = g.attributes.aux;
-    for (let i = 0; i < aux.count; i++) if (aux.getY(i) > 0.6) patchIdx.push(i);
+    // (review) the patch mask covers both walls of the rolled band and the tube under it; keep only the OUTER (visible)
+    // cloth around the patch's centroid (in angle / along-arm), so contact lands on the visible patch centre
+    const g = cuffR.meshes.cuffs[0].geometry, aux = g.attributes.aux, P = g.attributes.position;
+    const all = []; for (let i = 0; i < aux.count; i++) if (aux.getY(i) > 0.6) all.push(i);
+    const ang = (i) => Math.atan2(P.getZ(i), P.getX(i) / 0.86), rad = (i) => Math.hypot(P.getX(i) / 0.86, P.getZ(i));
+    let sx = 0, sz = 0, sy = 0; for (const i of all) { const a = ang(i); sx += Math.cos(a); sz += Math.sin(a); sy += P.getY(i); }
+    const a0 = Math.atan2(sz, sx), y0 = sy / Math.max(1, all.length);
+    const near = all.filter((i) => Math.abs(Math.atan2(Math.sin(ang(i) - a0), Math.cos(ang(i) - a0))) < 0.14 && Math.abs(P.getY(i) - y0) < 0.005);
+    const rMax = Math.max(...near.map(rad));
+    for (const i of near) if (rad(i) > rMax - 0.0009) patchIdx.push(i);
+    if (!patchIdx.length) patchIdx.push(...all);
+  }
+  // (review) PROP_PATCH hero decal on the turned cuff (S011): the library draws a flat pale square; the shot needs the
+  // hand-woven plain weave #7D9CBB, off-white 3 mm running stitches, one uneven corner with a double knot and a centre
+  // rubbed soft and shiny (bible §6.4). Same place and size as the library patch (continuity with S035/S045/S067):
+  // a skinned copy of the cuff's outward-facing cloth in the patch window, 0.4 mm proud of it.
+  {
+    const src = cuffR.meshes.cuffs[0], g = src.geometry, P = g.attributes.position, Nn = g.attributes.normal, aux = g.attributes.aux;
+    const idx = g.index ? g.index.array : null;
+    const pa = [], pyv = []; for (let i = 0; i < aux.count; i++) if (aux.getY(i) > 0.5) { pa.push(Math.atan2(P.getZ(i), P.getX(i) / 0.86)); pyv.push(P.getY(i)); }
+    let sx = 0, sz = 0; for (const a of pa) { sx += Math.cos(a); sz += Math.sin(a); }
+    const a0 = Math.atan2(sz, sx), ya = Math.min(...pyv), yb = Math.max(...pyv), Rr = 0.058, halfW = Math.max(...pa.map((a) => Math.abs(Math.atan2(Math.sin(a - a0), Math.cos(a - a0))))) * Rr;
+    const da = (i) => Math.atan2(Math.sin(Math.atan2(P.getZ(i), P.getX(i) / 0.86) - a0), Math.cos(Math.atan2(P.getZ(i), P.getX(i) / 0.86) - a0));
+    const ok = (i) => { const x = P.getX(i) / 0.86, z = P.getZ(i), l = Math.hypot(x, z); const out = (Nn.getX(i) * x + Nn.getZ(i) * z) / l > 0.3;
+      return out && Math.abs(da(i)) * Rr < halfW + 0.003 && P.getY(i) > ya - 0.003 && P.getY(i) < yb + 0.003; };
+    const map = new Map(), pos = [], nrm = [], uvs = [], si = [], sw = [], tri = [];
+    const SI = g.attributes.skinIndex, SW = g.attributes.skinWeight;
+    const vid = (i) => { if (map.has(i)) return map.get(i); const k = map.size; map.set(i, k);
+      pos.push(P.getX(i) + Nn.getX(i) * 0.0004, P.getY(i) + Nn.getY(i) * 0.0004, P.getZ(i) + Nn.getZ(i) * 0.0004); nrm.push(Nn.getX(i), Nn.getY(i), Nn.getZ(i));
+      uvs.push(0.5 + da(i) * Rr / (2 * halfW + 0.006) * (src.parent && cuffR.mir < 0 ? -1 : 1), (P.getY(i) - (ya - 0.003)) / (yb - ya + 0.006));
+      for (let c = 0; c < 4; c++) { si.push(SI ? SI.getComponent(i, c) : 0); sw.push(SW ? SW.getComponent(i, c) : c === 0 ? 1 : 0); }
+      return k; };
+    const nTri = idx ? idx.length / 3 : P.count / 3;
+    for (let t = 0; t < nTri; t++) { const a = idx ? idx[t * 3] : t * 3, b = idx ? idx[t * 3 + 1] : t * 3 + 1, c = idx ? idx[t * 3 + 2] : t * 3 + 2; if (ok(a) && ok(b) && ok(c)) tri.push(vid(a), vid(b), vid(c)); }
+    if (tri.length) {
+      const dg = new THREE.BufferGeometry();
+      dg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); dg.setAttribute('normal', new THREE.Float32BufferAttribute(nrm, 3));
+      dg.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2)); dg.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(si, 4));
+      dg.setAttribute('skinWeight', new THREE.Float32BufferAttribute(sw, 4)); dg.setIndex(tri);
+      // texture: 256 px over (2·halfW + 6 mm) × (yb − ya + 6 mm); patch inset 3 mm on every side
+      const c = document.createElement('canvas'); c.width = c.height = 256; const q = c.getContext('2d'); const r = rng(808);
+      const Wm = 2 * halfW + 0.006, Hm = yb - ya + 0.006, mx = 0.003 / Wm * 256, my = 0.003 / Hm * 256, pw = 256 - 2 * mx, ph = 256 - 2 * my;
+      q.clearRect(0, 0, 256, 256);
+      q.save(); q.beginPath();                                                   // frayed, hand-cut outline
+      for (let k = 0; k <= 64; k++) { const t = k / 64; let x, y; if (t < 0.25) { x = mx + pw * t * 4; y = my; } else if (t < 0.5) { x = mx + pw; y = my + ph * (t - 0.25) * 4; } else if (t < 0.75) { x = mx + pw * (1 - (t - 0.5) * 4); y = my + ph; } else { x = mx; y = my + ph * (1 - (t - 0.75) * 4); }
+        x += (r() - 0.5) * 2.2; y += (r() - 0.5) * 2.2; k ? q.lineTo(x, y) : q.moveTo(x, y); }
+      q.closePath(); q.clip();
+      q.fillStyle = '#7D9CBB'; q.fillRect(0, 0, 256, 256);
+      for (let y = 0; y < 256; y += 3) { q.fillStyle = `rgba(40,60,90,${0.10 + r() * 0.08})`; q.fillRect(0, y, 256, 1); }   // plain weave
+      for (let x = 0; x < 256; x += 3) { q.fillStyle = `rgba(230,238,245,${0.05 + r() * 0.06})`; q.fillRect(x, 0, 1, 256); }
+      for (let k = 0; k < 40; k++) { q.fillStyle = `rgba(${r() < 0.5 ? '60,80,110' : '170,190,210'},0.08)`; q.fillRect(r() * 256, 0, 1 + r() * 2, 256); }   // slubs
+      const rg = q.createRadialGradient(128, 136, 8, 128, 136, 92); rg.addColorStop(0, 'rgba(205,218,228,0.55)'); rg.addColorStop(0.6, 'rgba(190,205,220,0.18)'); rg.addColorStop(1, 'rgba(190,205,220,0)');
+      q.fillStyle = rg; q.fillRect(0, 0, 256, 256);                               // centre rubbed soft and pale
+      q.strokeStyle = 'rgba(40,52,70,0.55)'; q.lineWidth = 3; q.strokeRect(mx + 1, my + 1, pw - 2, ph - 2);  // turned-under edge
+      q.restore();
+      // running stitches, ~3 mm, 2.5 mm in from the edge; the upper-right corner uneven, with a double knot
+      const st = 0.0025 / Wm * 256, sl = 0.003 / Wm * 256;
+      q.strokeStyle = '#E9E4D6'; q.lineCap = 'round'; q.lineWidth = 2.2;
+      // hand stitching: every stitch a little different in length, spacing and angle; the last few before the knot uneven
+      const run = (x0, y0, x1, y1, uneven) => { const L = Math.hypot(x1 - x0, y1 - y0), n = Math.floor(L / (sl * 1.8)), nx = -(y1 - y0) / L, ny = (x1 - x0) / L;
+        for (let k = 0; k < n; k++) { const bad = uneven && k > n - 4, t0 = (k + 0.1 + (r() - 0.5) * 0.25) / n, t1 = t0 + (sl / L) * (bad ? 0.5 + r() * 1.1 : 0.8 + r() * 0.4);
+          const j0 = (r() - 0.5) * (bad ? 5 : 1.6), j1 = (r() - 0.5) * (bad ? 5 : 1.6);
+          q.beginPath(); q.moveTo(x0 + (x1 - x0) * t0 + nx * j0, y0 + (y1 - y0) * t0 + ny * j0); q.lineTo(x0 + (x1 - x0) * Math.min(t1, 1) + nx * j1, y0 + (y1 - y0) * Math.min(t1, 1) + ny * j1); q.stroke(); } };
+      const X0 = mx + st, X1 = 256 - mx - st, Y0 = my + st, Y1 = 256 - my - st;
+      run(X0, Y0, X1, Y0, true); run(X1, Y1, X1, Y0, true); run(X1, Y1, X0, Y1, false); run(X0, Y1, X0, Y0, false);
+      q.fillStyle = '#EDE8DA'; q.strokeStyle = 'rgba(120,110,95,0.6)'; q.lineWidth = 0.8;
+      for (const [dx, dy, rr] of [[-5, 6, 4.0], [-1, 2, 3.4]]) { q.beginPath(); q.arc(X1 + dx, Y0 + dy, rr, 0, Math.PI * 2); q.fill(); q.stroke(); }
+      q.strokeStyle = '#E9E4D6'; q.lineWidth = 2.2;
+      q.strokeStyle = 'rgba(233,228,214,0.9)'; q.lineWidth = 1.4; q.beginPath(); q.moveTo(X1 - 3, Y0 + 6); q.quadraticCurveTo(X1 + 6, Y0 + 12, X1 + 4, Y0 + 20); q.stroke();  // thread tail
+      const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
+      const dm = new THREE.MeshStandardMaterial({ map: tex, transparent: true, alphaTest: 0.4, roughness: 0.82, metalness: 0, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+      const decal = new THREE.SkinnedMesh(dg, dm); decal.name = 'patch_decal'; decal.castShadow = false; decal.receiveShadow = true;
+      decal.bind(src.skeleton, src.bindMatrix.clone()); decal.boundingSphere = src.boundingSphere ? src.boundingSphere.clone() : null; decal.frustumCulled = false;
+      src.parent.add(decal);
+      // the library's own flat patch under the decal: paint it over in the cuff cloth so no stitch peeks at the edges
+      const CU = cuffR.cuffMats[0] && cuffR.cuffMats[0].userData.fzUniforms;
+      if (CU && CU.uPatchColor) { CU.uPatchColor.value.copy(cuffR.cuffMats[0].color); if (CU.uStitchColor) CU.uStitchColor.value.copy(cuffR.cuffMats[0].color); }
+      dbg('patch decal tris', tri.length / 3, 'halfW', halfW.toFixed(4), 'ya', ya.toFixed(4), 'yb', yb.toFixed(4));
+    }
   }
   const _pv = new THREE.Vector3();
   const patchWorld = () => {
     const m = cuffR.meshes.cuffs[0]; m.updateMatrixWorld(true); m.skeleton.update();
-    const c = new THREE.Vector3(); const step = Math.max(1, Math.floor(patchIdx.length / 40)); let n = 0;
-    for (let k = 0; k < patchIdx.length; k += step) { m.getVertexPosition(patchIdx[k], _pv); c.add(_pv.applyMatrix4(m.matrixWorld)); n++; }
-    return n ? c.multiplyScalar(1 / n) : cuffR.root.position.clone();
+    const c = new THREE.Vector3();
+    for (const i of patchIdx) { m.getVertexPosition(i, _pv); c.add(_pv.applyMatrix4(m.matrixWorld)); }
+    return c.multiplyScalar(1 / patchIdx.length);
   };
 
   // ================================================================ shots
@@ -577,11 +772,14 @@ export default async function create(ctx) {
     S005(tl, u, T) {
       const Tq = SHOT_T0.S005 + tl * 0.5; // 50 % slow motion: everything that moves runs at half speed
       lamp.update(Tq, { swing: lampSwing(Tq) });
-      lampSpot.intensity = LAMP_I * flicker(Tq, 4); lamp.light.intensity = LAMP_PT * flicker(Tq, 4);
+      // (review) the lamp pool is kept to the left two-thirds so the window stripe on the right reads as dusk blue (P03)
+      // rather than lavender (warm spill + blue on cream paper)
+      lampSpot.angle = 0.66; lampSpot.intensity = LAMP_I * 1.1 * flk(Tq); lamp.light.intensity = LAMP_PT * 0.6 * flk(Tq);
+      winLight.update(Tq, { intensity: WIN_I * 1.25 });
       shaft.object3D.visible = true; shaft.update(Tq);
       // gust from the stern window (frame right) at tl 1.10: free lower-right corner lifts ~6 cm, flutters, settles by 2.6 s
       const g = tl < 1.1 ? 0 : tl < 1.62 ? ease.outCubic((tl - 1.1) / 0.52) : tl < 2.6 ? 1 - ease.inOutSine((tl - 1.62) / 0.98) : 0;
-      setChartLift(0.06 * g, g, Tq);
+      setChartLift(g, Tq);
       // camera: frame centre over the registered chart; up = frame-up (world −x); sway ≤ 1 % of frame
       const cx = CH.x0 + (1 - (0.88 - 0.5) * FRAME_H / CH.Wd) * CH.Wd, cz = CH.z0 - 0.5 * CH.L;
       const dist = FRAME_W * 50 / 36;
@@ -589,7 +787,7 @@ export default async function create(ctx) {
       cam.lens(camera, 50);
       placeUp(camera, V(cx + sw2, CH.y + dist, cz + sw), V(cx + sw2, CH.y, cz + sw), V(-1, 0, 0.0));
       camera.rotateZ(roll(Tq) * 0.04);
-      return { dof: { focus: dist, fstop: 5.6 }, exposure: 1.0 };
+      return { dof: null, exposure: 1.0 };   // (review) shot list: 全幅清晰 — the whole sheet sharp (and one pass cheaper)
     },
     // ---------------------------------------------------------- S006 — macro on the star ring: lamp glint travels E→S; right thumb wipes the salt
     S006(tl, u, T) {
@@ -609,74 +807,112 @@ export default async function create(ctx) {
       const Lh = V(P.x + (P.x - C.x) * hL / hC, DIAL_Y + hL, P.z + (P.z - C.z) * hL / hC);
       lamp.update(T, { swing: [0, 0] });
       lamp.object3D.position.copy(Lh).sub(flameLocal);
-      lampSpot.intensity = LAMP_I * 0.55 * flicker(T, 4); lamp.light.intensity = LAMP_PT * 0.5 * flicker(T, 4);
-      // thumb: enters lower right 2.5 s, wipes along the rim at the south mark (~1 s), withdraws by 4.0 s
+      lampSpot.intensity = LAMP_I * 0.55 * flk(T); lamp.light.intensity = LAMP_PT * 0.5 * flk(T);
+      // thumb (review restage): the right hand rests OUTSIDE the dial beyond its south-west rim (screen left, at the
+      // dial's own focus distance), fingers hooked over the box edge; the extended thumb lies along the rim with its pad on
+      // the salt at 午 and drags one slow stroke E → W toward the palm, then the hand lifts away to the left. The earlier
+      // staging (hand between lens and dial) put a defocused dark shape over half the frame.
       const th = thumbHand;
+      const L0 = comp.localToWorld(V(0, 0, 0)), dL = (x, y, z) => comp.localToWorld(V(x, y, z)).sub(L0).normalize();
+      const Ed = dL(1, 0, 0), Sd = dL(0, 0, 1), Upd = V(0, 1, 0);
       const rimS = comp.localToWorld(V(0, RIM_Y + 0.003, COMP_R - 0.0028));            // south rim (local +Z)
-      const tangent = comp.localToWorld(V(1, 0, 0)).sub(comp.localToWorld(V(0, 0, 0))).normalize(); // local +x (E) in world
+      const tangent = Ed;
       const enter = clamp((tl - 2.45) / 0.5), wipe = clamp((tl - 2.95) / 0.85), leave = clamp((tl - 3.75) / 0.35);
-      const Fc = tgt.clone().sub(C).normalize(), Rs = Fc.clone().cross(V(0, 1, 0)).normalize(), Uc = Rs.clone().cross(Fc).normalize();
-      const away = Rs.clone().multiplyScalar(0.06).addScaledVector(Fc, -0.05).addScaledVector(Uc, -0.025);   // out of frame lower right
-      const along = lerp(0.009, -0.011, ease.inOutSine(wipe));                                                   // short push stroke E → W across 午
-      const pad = rimS.clone().addScaledVector(tangent, along).addScaledVector(away, (1 - ease.outCubic(enter)) + ease.inCubic(leave));
-      // right hand palm-down over the dial's near-right quarter, fingers curled forward, thumb laid left along the rim;
-      // the forearm runs back to the lower right past the lens (it enters from lower right)
-      th.setChannels({ wrist: [0.05, 0.0], thumb: [-0.15, -0.55, 0.0, 0.08, 0.35], index: [0.75, 0.95, 0.5, 0.02], middle: [0.85, 1.05, 0.55, 0], ring: [0.95, 1.1, 0.6, -0.02], little: [1.05, 1.1, 0.6, -0.05] });
-      const Fch = Fc.clone().setY(0).normalize();
-      const Fh = Fch.clone().multiplyScalar(0.6).addScaledVector(Rs, -0.55).add(V(0, 0.12, 0)).normalize();
-      const Nh = V(0, -1, 0); Nh.addScaledVector(Fh, -Nh.dot(Fh)).normalize();
-      th.placeWrist(pad.clone().addScaledVector(Rs, 0.07).addScaledVector(Fch, -0.06).add(V(0, 0.01, 0)), Fh, Nh);
+      const along = lerp(0.011, -0.009, ease.inOutSine(wipe));                                                   // drag E → W across 午
+      const away = Ed.clone().multiplyScalar(-0.55).addScaledVector(Sd, 0.35).addScaledVector(Upd, 0.75).normalize().multiplyScalar(0.06);
+      const padT = comp.localToWorld(V(along, RIM_Y + 0.0034, COMP_R - 0.0032));
+      const pad = padT.clone().addScaledVector(away, (1 - ease.outCubic(enter)) + ease.inCubic(leave));
+      th.setChannels({ wrist: [0.15, 0.15], thumb: [THUMB_CH[0], THUMB_CH[1], THUMB_CH[2], THUMB_CH[3], THUMB_CH[4]], index: [0.95, 1.15, 0.7, 0.02], middle: [1.0, 1.2, 0.7, 0], ring: [1.05, 1.2, 0.7, -0.02], little: [1.1, 1.2, 0.7, -0.05] });
+      const Fh = Sd.clone().multiplyScalar(0.7).addScaledVector(Upd, -0.55).addScaledVector(Ed, -0.25).normalize();
+      const Nh = Upd.clone().negate().addScaledVector(Sd, 0.25); Nh.addScaledVector(Fh, -Nh.dot(Fh)).normalize();
+      th.placeWrist(pad.clone().addScaledVector(Ed, -0.075).addScaledVector(Sd, 0.03).addScaledVector(Upd, 0.03), Fh, Nh);
       th.root.updateMatrixWorld(true);
-      const tip = th.tip('thumb', new THREE.Vector3()); th.root.position.add(pad.clone().sub(tip));
-      th.root.visible = tl > 2.35 && tl < 4.15;
+      // swing the whole hand about the thumb pad so the distal thumb lies along the rim (E, dipping 10°): the thumb then
+      // stays in the dial's focal plane instead of rising toward the lens
+      { const tp = th.tip('thumb', new THREE.Vector3()), tb = th.fingerBones.thumb[1].getWorldPosition(new THREE.Vector3());
+        const want = Ed.clone().addScaledVector(Upd, -0.18).addScaledVector(Sd, -0.12).normalize();
+        const q = new THREE.Quaternion().setFromUnitVectors(tp.clone().sub(tb).normalize(), want);
+        th.root.position.sub(tp).applyQuaternion(q).add(tp); th.root.quaternion.premultiply(q); th.root.updateMatrixWorld(true); }
+      const tip = th.tip('thumb', new THREE.Vector3()); th.root.position.add(pad.clone().sub(tip)); th.root.updateMatrixWorld(true);
+      th.root.visible = tl > 2.35 && tl < 4.2;
+      lampSpot.castShadow = th.root.visible;   // only the thumb casts a shadow worth a pass here (needle shadow = decal)
+      if (DBG) { const pr = (v) => { camera.updateMatrixWorld(); const q = v.clone().project(camera); return [(q.x * 0.5 + 0.5).toFixed(2), (0.5 - q.y * 0.5).toFixed(2)]; };
+        const tdir = th.tip('thumb', new THREE.Vector3()).sub(th.fingerBones.thumb[1].getWorldPosition(new THREE.Vector3())).normalize();
+        dbg('S006', tl.toFixed(2), 'pad', pr(pad), 'wrist', pr(th.root.position), 'rimS', pr(rimS), 'glint', pr(P), 'thumbDir·E', tdir.dot(Ed).toFixed(2), '·S', tdir.dot(Sd).toFixed(2), '·Up', tdir.dot(Upd).toFixed(2)); }
+      if (DBG && new URLSearchParams(location.search).get('far')) { cam.lens(camera, 30); }
       // salt wiped where the thumb has passed (mask offset along the arc)
       saltMask.offset.x = 0.53 - 1.06 * ease.inOutSine(wipe);
       glint.object3D.visible = true; glint.object3D.position.copy(P).add(V(0, 0.0008, 0));
-      bounce.visible = true; bounce.position.copy(C).add(V(0, 0.04, 0)); bounce.intensity = 0.025 * flicker(T, 4);
-      glint.set(1.1 * (0.7 + 0.3 * Math.abs(Math.sin(aLoc * 28))) * flicker(T, 4));
-      { const pr = (v) => { const q = v.clone().project(camera); return [(q.x * 0.5 + 0.5).toFixed(2), (0.5 - q.y * 0.5).toFixed(2)]; }; dbg('S006', tl.toFixed(2), 'pad', pr(pad), 'wrist', pr(th.root.position), 'rimS', pr(rimS), 'glint', pr(P)); }
-      return { dof: { focus: cam.distTo(camera, comp.localToWorld(V(0.03, DIAL_Y, 0.03))), fstop: 5.6 }, exposure: 0.85, saturation: 0.8, temp: -0.06 };
+      bounce.visible = true; bounce.position.copy(C).add(V(0, 0.04, 0)); bounce.intensity = (0.025 + 0.03 * (th.root.visible ? 1 : 0)) * flk(T);
+      // the stern window is behind the lens: a cool twilight fill models the thumb's near side (warm lamp rim beyond it)
+      if (th.root.visible) { winFill.intensity = 0.75; winFill.angle = 0.13; winFill.penumbra = 0.9; winFill.color.setHex(0x7d98cc); winFill.position.set(WIN.cx - 0.1, WIN.cy, CAB.z0 + 0.05); winFill.target.position.copy(pad); }
+      glint.set(1.1 * (0.7 + 0.3 * Math.abs(Math.sin(aLoc * 28))) * flk(T));
+      // focus: the star ring; a gentle rack to the thumb (its nail plane, ~1.5 cm above the dial) while it works, back to the
+      // ring for the glint coming to rest on 午 (4.7 s); T8 (shot: T5.6–T8)
+      const fRing = cam.distTo(camera, comp.localToWorld(V(0.03, DIAL_Y, 0.03)));
+      const fThumb = cam.distTo(camera, pad.clone().addScaledVector(Upd, 0.011));
+      const wF = smoothstep(2.55, 3.05, tl) * (1 - smoothstep(3.75, 4.3, tl));
+      return { dof: { focus: lerp(fRing, fThumb, wF), fstop: 8, maxCoc: S006_MC }, exposure: 0.85, saturation: 0.8, temp: -0.06 };
     },
     // ---------------------------------------------------------- S007 — he looks up; the camera rises along his eyeline through the hatch to the sail
     S007(tl, u, T) {
       nav.root.visible = true; ext.visible = true; sky.object3D.visible = true; backdrop.visible = false;
       winLight.object3D.visible = false;
-      lamp.object3D.position.set(0.62, LAMP_HOOK.y, LAMP_HOOK.z); setLampGlow(0.5);   // practical cheated to starboard (out of frame left)
-      lampSpot.intensity = LAMP_I * 2.1 * flicker(T, 4); lamp.light.intensity = LAMP_PT * 2.2 * flicker(T, 4);
+      // practical cheated to starboard along beam A, just out of frame left (0.53 m: it now also lights the deck-head the
+      // camera tilts up past; the lib's sheen fix removed the need for the old ≥ 40 cm-from-cloth rule)
+      lamp.object3D.position.set(0.53, LAMP_HOOK.y, LAMP_HOOK.z); setLampGlow(0.5);
+      lampSpot.color.setHex(LAMP_SKIN); lamp.light.color.copy(LAMP_SKIN_PT);
+      lampSpot.intensity = LAMP_I * 1.45 * flk(T); lamp.light.intensity = LAMP_PT * 2.0 * flk(T);
       const up = smoothstep(1.55, 2.35, tl);
       const hatchC = V(0.1, DECK_Y + 0.5, -0.6);
       poseStoop(nav, T, { lift: up });
       if (up > 0) nav.lookAt(hatchC, up);
       const eye = nav.eye();
       hatchSky.visible = true; hatchSky.intensity = 1.6;
-      const k = [
-        [0.0, { p: [-0.02, 1.30, -0.68], t: [eye.x + 0.055, eye.y + 0.045, eye.z] }],
-        [1.6, { p: [-0.02, 1.315, -0.68], t: [eye.x + 0.055, eye.y + 0.055, eye.z] }],
-        [2.3, { p: [0.07, 1.5, -0.6], t: [0.06, 2.2, -0.32] }],
-        [3.0, { p: [0.09, 1.76, -0.52], t: [0.08, 3.4, 0.2] }],
-        [3.77, { p: [0.1, 2.1, -0.47], t: [0.3, 6.6, 2.1] }],
-        [4.7, { p: [0.11, 2.48, -0.45], t: [0.45, 9.2, 2.5] }],
+      // (review) the open hatch: a soft cool top light (sky) on the head-cloth, brow and shoulders against the warm lantern
+      // from frame left (a hemisphere term: a spot here drew a visible pool on the deck-head)
+      hemi.intensity = 0.22; hemi.color.setHex(0x5a74a8);
+      // the lamp-lit chart below him bounces a soft warm fill up into the face (softens the hard split down the nose)
+      bounce.visible = true; bounce.position.set(0.04, TABLE.y + 0.08, -0.22); bounce.intensity = 0.1 * flk(T);
+      // (review) camera path re-timed so the passage reads: hold on the face; 1.6 s rise + tilt (to ~45°) past beam A, the
+      // hatch's forward coaming sweeping down through frame as a dark band with the sail and sky beyond (≈2.2–2.8 s);
+      // rising through the opening at ~56° the coaming slides down out of the bottom of frame (2.8–3.3 s, the dark-wood
+      // 'hidden seam'); tilt on up as the sail fills the frame at 3.77 s; still rising at the cut.
+      // Time-parameterised Hermite (no velocity jumps at the knots), zero velocity where the move starts.
+      const K = [
+        [0.0, [-0.02, 1.30, -0.68], [eye.x + 0.055, eye.y + 0.022, eye.z]],
+        [1.6, [-0.02, 1.315, -0.68], [eye.x + 0.055, eye.y + 0.036, eye.z]],
+        [2.3, [0.0, 1.36, -0.65], [0.02, 2.2, 0.19]],
+        [2.85, [0.03, 1.52, -0.61], [0.08, 2.76, 0.23]],
+        [3.3, [0.06, 1.86, -0.57], [0.16, 3.2, 0.26]],
+        [3.77, [0.1, 2.12, -0.53], [0.3, 6.6, 2.1]],
+        [4.7, [0.11, 2.48, -0.49], [0.45, 9.2, 2.5]],
       ];
-      const kt = k.map((q) => q[0]);
-      let j = 0; while (j < kt.length - 2 && tl > kt[j + 1]) j++;
-      const fj = clamp((tl - kt[j]) / (kt[j + 1] - kt[j]));
-      const sIdx = j + (j === 1 ? ease.inSine(fj) : fj);
-      const s = sIdx / (k.length - 1);
-      const pc = new THREE.CatmullRomCurve3(k.map((q) => V(...q[1].p)), false, 'centripetal'), tc = new THREE.CatmullRomCurve3(k.map((q) => V(...q[1].t)), false, 'centripetal');
+      const herm = (idx, t) => {
+        const n = K.length, P = (k) => V(...K[k][idx]), tk = (k) => K[k][0];
+        const tan = (k) => (k <= 1 ? V(0, 0, 0) : P(Math.min(n - 1, k + 1)).sub(P(k - 1)).divideScalar(tk(Math.min(n - 1, k + 1)) - tk(k - 1)));
+        if (t <= tk(0)) return P(0);
+        if (t >= tk(n - 1)) return P(n - 1).addScaledVector(tan(n - 1), t - tk(n - 1));
+        let i = 0; while (t > tk(i + 1)) i++;
+        const h = tk(i + 1) - tk(i), x = (t - tk(i)) / h, x2 = x * x, x3 = x2 * x;
+        return P(i).multiplyScalar(2 * x3 - 3 * x2 + 1).addScaledVector(tan(i), h * (x3 - 2 * x2 + x)).addScaledVector(P(i + 1), -2 * x3 + 3 * x2).addScaledVector(tan(i + 1), h * (x3 - x2));
+      };
       cam.lens(camera, DBG && new URLSearchParams(location.search).get('wide') ? 14 : 32);
-      cam.place(camera, pc.getPoint(s), tc.getPoint(s));
+      cam.place(camera, herm(1, tl), herm(2, tl));
       cam.handheld(camera, T, 0.25, 7);
       dbg('S007', tl.toFixed(2), 'eye', eye, 'cam', camera.position);
-      const fFace = cam.distTo(camera, eye), fSail = 8;
-      const focus = tl < 1.7 ? fFace : tl < 2.9 ? lerp(fFace, 0.55, smoothstep(1.7, 2.5, tl)) : lerp(0.55, fSail, smoothstep(2.9, 3.6, tl));
+      // focus: face → beam / hatch edge (≈0.45 m) → sail; T4 so the near wood and the sky both hold some shape
+      const fFace = cam.distTo(camera, eye), fSail = 9;
+      const fNear = 0.45;
+      const focus = tl < 1.7 ? fFace : tl < 2.9 ? lerp(fFace, fNear, smoothstep(1.7, 2.3, tl)) : lerp(fNear, fSail, smoothstep(2.9, 3.5, tl));
       const outK = smoothstep(2.6, 3.4, tl);
       sailParts.hemi.intensity = 2.6; sailParts.glow.intensity = 1.6;
       sky.update(T);
-      return { dof: { focus, fstop: 2.8 }, exposure: lerp(1.0, 1.9, outK), temp: lerp(0.0, -0.12, outK) };
+      return { dof: { focus, fstop: 4 }, exposure: lerp(1.05, 1.9, outK), temp: lerp(0.0, -0.08, outK), saturation: lerp(0.88, 0.8, outK) };
     },
     // ---------------------------------------------------------- S009 — needle settles on 午 exactly at 49.77 (tl 1.48); pivot at (0.46,0.50)
     S009(tl, u, T) {
-      winLight.object3D.visible = false; winFill.intensity = 0.5; winFill.target.position.copy(comp.localToWorld(V(0, DIAL_Y, 0)));
+      winLight.object3D.visible = false;
       lampSpot.castShadow = false;   // top-down macro: needle contact shadow is the decal
       const tS = 1.455;  // 49.77 s '南' = frame 1194 (tl 1.458): at rest on that frame
       // damped oscillation about south: ±8° → ±4° (0.6 s) → ±1° (1.1 s) → dead stop at 1.48 s
@@ -694,24 +930,63 @@ export default async function create(ctx) {
       cam.lens(camera, 100);
       // a 4° tilt about the screen-vertical axis puts the frame's left/right edges out of the focal plane (bearing glyphs soft)
       placeUp(camera, piv.clone().add(off).add(V(sway, dist, 0)).addScaledVector(R, dist * Math.tan(0.07)), piv.clone().add(off).add(V(sway, 0, 0)), Up);
-      return { dof: { focus: dist - 0.001, fstop: 2.8 }, exposure: 1.15 };
+      // (review) in-use brass must read warm gold (#B8925A), not the museum's chocolate: the lantern is hung where its
+      // reflection lands just beyond the frame's upper-left corner, so a warm sheen grades across the dial from upper left
+      // (sliding a little with the swing); the env reflections are lifted for the polished metal.
+      const Cxz = camera.position.clone(), hC = Cxz.y - DIAL_Y, hL = 0.5;
+      const sw7 = Math.sin(T * 2 * Math.PI / 7);
+      const Pm = piv.clone().add(off).addScaledVector(R, -0.115 + 0.008 * sw7).addScaledVector(Up, 0.05);
+      const Lw = Pm.clone().multiplyScalar((hC + hL) / hC).addScaledVector(Cxz, -hL / hC); Lw.y = DIAL_Y + hL;
+      lamp.update(T, { swing: [0, 0] }); lamp.object3D.position.copy(Lw).sub(flameLocal);
+      lampSpot.intensity = LAMP_I * 0.3 * flk(T); lamp.light.intensity = LAMP_PT * 0.6 * flk(T);
+      scene.environmentIntensity = 0.8;
+      // a cool line along the needle (bible: '针面一线高光'): the window cheated to the spot whose mirror image in the
+      // needle's sloped top facet reaches the lens when the needle is at rest
+      { needle.updateMatrixWorld(true);
+        const q0 = comp.getWorldQuaternion(new THREE.Quaternion());
+        const nF = V(0.0007, 0.0021, 0).normalize().applyQuaternion(q0);        // +x top facet of the diamond section (needle at rest)
+        const Pf = comp.localToWorld(V(0.0007, DIAL_Y - 0.0012, -0.008));        // on the north half of the needle
+        const cv = camera.position.clone().sub(Pf).normalize();
+        const lv = nF.clone().multiplyScalar(2 * nF.dot(cv)).sub(cv).normalize();
+        winFill.intensity = 0.007; winFill.angle = 0.06; winFill.penumbra = 0.8; winFill.color.setHex(0x8eb0e6);
+        winFill.position.copy(Pf).addScaledVector(lv, 0.45); winFill.target.position.copy(Pf); }
+      return { dof: { focus: dist - 0.001, fstop: 2.8 }, exposure: 1.1 };
     },
     // ---------------------------------------------------------- S010 — eye CU, his near (left) eye at (0.46,0.50), gaze to frame left; blink at 51.39
     S010(tl, u, T) {
       nav.root.visible = true; strands.visible = false;
       winLight.object3D.visible = false;
-      lamp.object3D.position.set(-0.36, LAMP_HOOK.y, LAMP_HOOK.z + 0.1); setLampGlow(0.25);   // practical cheated to his left (scar side)
-      lampSpot.intensity = LAMP_I * 0.9 * flicker(T, 4); lamp.light.intensity = LAMP_PT * 2.2 * flicker(T, 4);
       poseSeated(nav, T, { lean: 0.18 });
       const gazeAt = V(WIN.cx + 0.06, 1.12, CAB.z0 - 2.5);
       nav.lookAt(gazeAt, 1.0);
       nav.breathe(T, 0.5);
+      // '回' 51.39 (tl 1.39): the faceless head cannot blink — the beat is a tiny settle of the head (≈0.7°, 5 frames)
+      const bl = Math.exp(-Math.pow((tl - 1.43) / 0.07, 2));
+      nav.pose({ 'head.x': 0.012 * bl }, { add: true });
       const hb = nav.bone('head'); hb.updateWorldMatrix(true, false);
       const hu = nav.P.hu;
-      const eyeL = V(0.026, 0.325 * hu, 0.43 * hu).applyMatrix4(hb.matrixWorld);
-      winFill.intensity = 3.2; winFill.angle = 0.22; winFill.color.setHex(0x5a7fd8); winFill.position.set(WIN.cx - 0.12, WIN.cy + 0.1, CAB.z0 + 0.02); winFill.target.position.copy(eyeL);
       const fwd = V(0, 0, 1).transformDirection(hb.matrixWorld).setY(0).normalize();
       const left = V(1, 0, 0).transformDirection(hb.matrixWorld).setY(0).normalize();
+      // near (left) eye from the figure's own eye() (fig-2 head proportions), 3.1 cm to his left, on the lid surface
+      const eyeL = nav.eye().addScaledVector(V(1, 0, 0).transformDirection(hb.matrixWorld), 0.031).addScaledVector(V(0, 0, 1).transformDirection(hb.matrixWorld), 0.004);
+      // (review) chiaroscuro instead of a flat orange mask: the stern window (where he looks, frame left) is the cool key on
+      // the front planes — brow, nose bridge, the rim of the eye socket; the lantern, cheated behind his left shoulder,
+      // rakes warm across the near cheek, jaw and ear. The eye socket itself stays in shadow (留白).
+      // the kicker is the lamp's SHADOWED spot re-aimed at the head (the unshadowed point light lit the inside of the
+      // nostril through the head like an ember); the point light only keeps a little ambient warmth
+      setLampGlow(0.25);
+      lamp.object3D.position.copy(eyeL).addScaledVector(left, 0.16).addScaledVector(fwd, -0.52).setY(Math.min(CEIL - 0.16, eyeL.y + 0.26));
+      lamp.object3D.updateMatrixWorld(true);
+      lampSpot.color.setHex(LAMP_SKIN); lampSpot.castShadow = true; lampSpot.angle = 0.45; lampSpot.penumbra = 0.8;
+      lampSpot.target.position.copy(lamp.body.worldToLocal(eyeL.clone().add(V(0, -0.04, 0))));
+      lampSpot.intensity = 0.55 * flk(T) * (0.85 + 0.15 * Math.sin(T * 2 * Math.PI / 7));
+      lamp.light.color.copy(LAMP_SKIN_PT);
+      lamp.light.intensity = 0.05 * flk(T);
+      winFill.intensity = 3.4; winFill.angle = 0.12; winFill.penumbra = 1.0; winFill.color.setHex(0x7aa2da);
+      winFill.position.set(WIN.cx + 0.05, WIN.cy + 0.02, CAB.z0 + 0.02); winFill.target.position.copy(eyeL).add(V(0, -0.06, 0));
+      // warm bounce off the chart paper below the face: keeps a trace of warmth in the cool side (bible §2.2)
+      // (kept wide and off-axis: a close bounce under the nose lit the nostril like an ember)
+      bounce.visible = true; bounce.position.copy(eyeL).addScaledVector(fwd, 0.55).addScaledVector(left, 0.3).add(V(0, -0.42, 0)); bounce.intensity = 0.1 * flk(T);
       const dir = fwd.clone().multiplyScalar(Math.cos(0.95)).addScaledVector(left, Math.sin(0.95)).normalize();
       const push = lerp(0.98, 0.96, ease.inOutSine(clamp(u)));
       const C = eyeL.clone().addScaledVector(dir, push).add(V(0, -0.015, 0));
@@ -722,47 +997,84 @@ export default async function create(ctx) {
       cam.place(camera, C, eyeL.clone().addScaledVector(Rv, 0.04 * fw));
       cam.handheld(camera, T, 0.12, 10);
       for (const m of strands.children) { const kq = m.userData.k; m.rotation.z = 0.3 * fbm1(T * 1.7 + kq, 9); m.rotation.x = 0.18 * noise1(T * 2.3 + kq * 3, 4); }
-      dbg('S010', 'eyeL', eyeL, 'C', C);
-      return { dof: { focus: push, fstop: 5.6 }, exposure: 0.95, saturation: 0.82, temp: -0.04 };
+      if (DBG) { camera.updateMatrixWorld(); const q = eyeL.clone().project(camera); dbg('S010', 'eyeL', eyeL, 'C', C, 'screen', ((q.x * 0.5 + 0.5)).toFixed(3), (0.5 - q.y * 0.5).toFixed(3)); }
+      return { dof: { focus: cam.distTo(camera, eyeL), fstop: 4 }, exposure: 1.1, saturation: 0.86, temp: 0.0, contrast: 1.08 };
     },
     // ---------------------------------------------------------- S011 — left fingers turn back the RIGHT cuff; pads settle on the patch (53.0) and hold
     S011(tl, u, T) {
       cuffR.root.visible = cuffL.root.visible = true;
-      winLight.object3D.visible = false; winFill.intensity = 0.25;
+      winLight.object3D.visible = false;
       setLampGlow(0.4);
+      for (const o of chartRoll) o.visible = false;   // the cream roller end sat right behind the cuff as the brightest blob in frame
+      lampSpot.color.setHex(LAMP_SKIN); lamp.light.color.copy(LAMP_SKIN_PT);
       const settle = ease.outCubic(clamp(tl / 0.25));
-      // right forearm resting on the table, pointing aft (screen right), palm up so the turned cuff shows the patch
-      const W_R = V(0.13, TABLE.y + 0.032, -0.34);
+      // right forearm resting on the chart table, pointing aft (screen right), wrist rolled inward so the turned cuff
+      // presents the patch to the lens; the palm lies open, fingers loosely curled
+      const W_R = V(0.13, TABLE.y + 0.04, -0.34);
       const rollIn = lerp(-0.22, 0, settle);
-      const fd = V(-0.12, -0.03, -1).normalize();
-      const pn = V(0.32 + rollIn, 0.95, 0.0).normalize();
-      cuffR.pose('relaxed', { curl: 0.7 });
+      const fd = V(-0.12, -0.05, -1).normalize();
+      const pn = V(0.34 + rollIn, 0.94, 0.0).normalize();
+      cuffR.pose('relaxed', { curl: 0.62 });
       cuffR.placeWrist(W_R, fd, pn);
       cuffR.root.updateMatrixWorld(true);
       const patch = patchWorld();
-      winFill.target.position.copy(patch);
-      // left hand from upper right (his left, far side), fingers to lower left, index+middle pads on the patch
-      cuffL.setChannels({ wrist: [0.12, 0.0], thumb: [0.25, 0.25, 0.15, 0.2, 0.15], index: [0.18, 0.22, 0.12, 0.03], middle: [0.2, 0.26, 0.14, 0.0], ring: [0.5, 0.7, 0.35, -0.03], little: [0.62, 0.8, 0.4, -0.06] });
-      const lfd = V(0.2, -0.3, 1).normalize(), lpn = V(-0.15, -0.96, 0.25).normalize();
-      cuffL.placeWrist(patch.clone().addScaledVector(lfd, -0.16).add(V(0, 0.035, 0)), lfd, lpn);
-      cuffL.root.updateMatrixWorld(true);
-      const tipC = cuffL.tip('index', new THREE.Vector3()).add(cuffL.tip('middle', new THREE.Vector3())).multiplyScalar(0.5);
-      const approach = V(-0.012, 0.008, -0.01).multiplyScalar(1 - settle);
-      cuffL.root.position.add(patch.clone().add(V(-0.014, 0.004, -0.004)).sub(tipC).add(approach));
-      // camera: slight high angle from starboard, looking to port over the table; contact point at (0.50,0.52)
-      const C = patch.clone().add(V(0.6, 0.42, 0.05));
+      const ax = V(0, 1, 0).applyQuaternion(cuffR.root.quaternion);                     // forearm axis (toward the elbow)
+      const radial = (p) => { const r = p.clone().sub(cuffR.root.position); return r.addScaledVector(ax, -r.dot(ax)); };
+      const nP = radial(patch).normalize(), Rout = radial(patch).length();
+      // camera: slight high angle from starboard, ~0.9 m (fingertip ≈ 12 % of frame height); contact at (0.50,0.52)
+      const C = patch.clone().addScaledVector(V(0.6, 0.42, 0.06).normalize(), 0.9);
       const viewDir = patch.clone().sub(C).normalize();
       const Rv = viewDir.clone().cross(V(0, 1, 0)).normalize(), Uv = Rv.clone().cross(viewDir).normalize();
-      const dist = C.distanceTo(patch), fw = dist * 36 / 100, fh = fw / 2.39;
+      const dist = C.distanceTo(patch), fh = dist * 36 / 100 / 2.39;
       cam.lens(camera, 100);
       cam.place(camera, C, patch.clone().addScaledVector(Uv, 0.02 * fh));
       cam.handheld(camera, T, 0.2, 11);
       if (DBG && new URLSearchParams(location.search).get('far')) { cam.lens(camera, 35); }
+      // left hand from the upper right: fingers point to screen lower-left ~30° below horizontal (→ S012), index + middle
+      // pads resting on the patch (solved: both pads on the cuff surface, ≤ 1 mm)
+      // finger axis = screen direction + a component along the view ray (invisible on screen) chosen so the axis rises
+      // slightly off the cuff (the curled fingers bring the pads down onto it)
+      const sd = Rv.clone().multiplyScalar(-Math.cos(0.52)).addScaledVector(Uv, -Math.sin(0.52));
+      const kV = (0.22 - sd.dot(nP)) / Math.min(-0.2, viewDir.dot(nP));
+      const lfd = sd.clone().addScaledVector(viewDir, kV).normalize();
+      const lpn = nP.clone().negate().addScaledVector(lfd, nP.dot(lfd)).normalize();
+      cuffL.setChannels({ wrist: [0.06, 0.0], thumb: [0.3, 0.35, 0.2, 0.25, 0.1], index: [0.16, 0.24, 0.16, 0.04], middle: [0.14, 0.26, 0.16, -0.01], ring: [0.42, 0.72, 0.42, -0.05], little: [0.55, 0.85, 0.5, -0.1] });
+      cuffL.placeWrist(patch.clone().addScaledVector(lfd, -0.16).addScaledVector(nP, 0.03), lfd, lpn);
+      const pads = () => { cuffL.root.updateMatrixWorld(true); return [cuffL.tip('index', new THREE.Vector3()), cuffL.tip('middle', new THREE.Vector3())]; };
+      const gap = (p) => radial(p).length() - Rout;                                             // pad point above the cloth
+      const PAD = 0.0030;                                                                        // tip() pad point sits ~0.4 r inside the finger
+      const target = patch.clone().addScaledVector(ax, -0.007).addScaledVector(Rv, 0.002);
+      for (let it = 0; it < 3; it++) {
+        let [pi, pm] = pads();
+        // roll the hand about the finger axis so both pads sit at the same height above the cuff
+        const mid = pi.clone().add(pm).multiplyScalar(0.5), sep = pi.distanceTo(pm);
+        const e = gap(pi) - gap(pm);
+        if (Math.abs(e) > 0.0003 && sep > 0.005) {
+          const ang = Math.atan2(e, sep);
+          for (const sgn of [1, -1]) {
+            const q = new THREE.Quaternion().setFromAxisAngle(lfd, sgn * ang);
+            const save = [cuffL.root.position.clone(), cuffL.root.quaternion.clone()];
+            cuffL.root.position.sub(mid).applyQuaternion(q).add(mid); cuffL.root.quaternion.premultiply(q);
+            [pi, pm] = pads();
+            if (Math.abs(gap(pi) - gap(pm)) < Math.abs(e)) break;
+            cuffL.root.position.copy(save[0]); cuffL.root.quaternion.copy(save[1]); [pi, pm] = pads();
+          }
+        }
+        // translate: pads' midpoint onto the patch, at pad height above the cloth
+        const m2 = pi.clone().add(pm).multiplyScalar(0.5);
+        const tgt = target.clone().addScaledVector(nP, PAD - (gap(target)));
+        cuffL.root.position.add(tgt.sub(m2));
+      }
+      { const [pi, pm] = pads(); cuffL.root.position.addScaledVector(nP, PAD - 0.5 * (gap(pi) + gap(pm))); }
+      const approach = nP.clone().multiplyScalar(0.012).addScaledVector(lfd, -0.01).multiplyScalar(1 - settle);
+      cuffL.root.position.add(approach); cuffL.root.updateMatrixWorld(true);
+      winFill.intensity = 0.35; winFill.target.position.copy(patch);
+      if (DBG && new URLSearchParams(location.search).get('nolh')) cuffL.root.visible = false;
       // lantern light passes over the patch: brighter 1.0–2.5 s
       const kL = smoothstep(0.7, 1.4, tl) * (1 - smoothstep(2.4, 3.1, tl));
-      lampSpot.intensity = LAMP_I * (0.75 + 0.45 * kL) * flicker(T, 4);
-      dbg('S011', 'patch', patch, 'n', patchIdx.length, 'C', C);
-      return { dof: { focus: dist, fstop: 5.6 }, exposure: 1.05, bloom: { strength: 0 } };   // no practical in frame: skip bloom (perf)
+      lampSpot.intensity = LAMP_I * (0.75 + 0.45 * kL) * flk(T);
+      if (DBG) { const [pi, pm] = pads(); const pr = (v) => { const q = v.clone().project(camera); return [(q.x * 0.5 + 0.5).toFixed(3), (0.5 - q.y * 0.5).toFixed(3)]; }; dbg('S011', tl.toFixed(2), 'gapI', (gap(pi) * 1000).toFixed(2), 'gapM', (gap(pm) * 1000).toFixed(2), 'padI', pr(pi), 'padM', pr(pm), 'patch', pr(patch), 'Rout', Rout.toFixed(4)); }
+      return { dof: { focus: dist, fstop: 5.6 }, exposure: 1.0, temp: -0.07, saturation: 0.8, bloom: { strength: 0 } };   // no practical in frame: skip bloom (perf)
     },
     // ---------------------------------------------------------- nested: the navigator bent over the compass under the swinging lamp (gallery G3a)
     view_cabin(tl, u, T) {
@@ -774,13 +1086,15 @@ export default async function create(ctx) {
       navMid.reach('L', V(-0.27, TABLE.y + 0.04, -0.6), { palm: V(0, -1, 0), fingers: V(1, -0.2, -0.1).normalize() });
       navMid.reach('R', V(-0.26, TABLE.y + 0.07, -0.3), { palm: V(0, -1, 0.2), fingers: V(1, -0.35, 0.0).normalize() });
       navMid.lookAt(V(CP.x, DIAL_Y, CP.z), 0.95); navMid.breathe(T, 0.8);
-      lamp.object3D.position.set(-0.1, CEIL - 0.07, HATCH.z1 + 0.04); setLampGlow(0.8);
+      // (review) hung further starboard along the trimmer: 45 cm clear of his head-cloth (it overlapped his head from
+      // this angle), still over the compass box / chart, lighting his profile from the front
+      lamp.object3D.position.set(0.13, CEIL - 0.07, HATCH.z1 + 0.04); setLampGlow(0.8);
       lamp.update(T, { swing: lampSwing(T).map((x) => x * 1.3) });
-      lampSpot.intensity = LAMP_I * 1.2 * flicker(T, 4); lamp.light.intensity = LAMP_PT * 1.6 * flicker(T, 4);
+      lampSpot.angle = 1.15; lampSpot.intensity = LAMP_I * 1.2 * flk(T); lamp.light.intensity = LAMP_PT * 2.6 * flk(T);
       // camera forward-starboard of him looking aft; slow truck screen-right for parallax in the gallery glass
       const truck = lerp(-0.07, 0.07, clamp(u));
       const port = camera.aspect < 1.2;
-      const C = V(0.06 + truck, port ? 1.22 : 1.34, 0.9), tg = V(-0.3 + truck * 0.5, port ? 0.98 : 1.1, -0.46);
+      const C = V(0.06 + truck, port ? 1.22 : 1.34, 0.9), tg = V((port ? -0.17 : -0.3) + truck * 0.5, port ? 0.98 : 1.1, -0.46);
       cam.place(camera, C, tg);
       if (port) { camera.fov = 60; camera.userData.mm = 26; } else cam.lens(camera, 22);
       winLight.update(T, { intensity: WIN_I * 1.2 });
@@ -792,13 +1106,20 @@ export default async function create(ctx) {
 
   return {
     scene, camera,
-    post: { exposure: 1.0, contrast: 1.07, saturation: 0.88, temp: -0.04, shadowTint: [0.43, 0.49, 0.62], highTint: [0.56, 0.52, 0.47], grain: 0.04, vignette: 0.38,
+    post: { exposure: 1.0, contrast: 1.07, saturation: 0.88, temp: -0.04, shadowTint: [0.43, 0.49, 0.62], highTint: [0.56, 0.52, 0.47], grain: 0, vignette: 0.38,
       bloom: { strength: 0.4, radius: 0.6, threshold: 0.85 }, lift: [0.01, 0.012, 0.02] },
     setShot(shot, tl, u, T) {
       resetCommon(T);
       const fn = setups[shot.id] || setups.default;
       const r = fn(tl, u, T, shot) || {};
       winFill.visible = winFill.intensity > 0;
+      { // module grain (see grainMat): replaces the engine grain; nested views (no post chain) get none
+        const g = shot.nested ? 0 : (r.grain ?? GRAIN);
+        grainQuad.visible = grainProbe.visible = g > 0 && !OFF.has('grain');
+        grainMat.uniforms.uAmt.value = g; grainMat.uniforms.uExp.value = r.exposure ?? 1;
+        grainMat.uniforms.uSeed.value = Math.round(T * 24) % 977;
+        r.grain = 0;
+      }
       if (OFF.size) { // perf probes (?off=lampShadow,winShadow,win,shaft,dof,bloom,fill,env,fig)
         lampSpot.castShadow = !OFF.has('lampShadow'); winLight.light.castShadow = !OFF.has('winShadow');
         if (OFF.has('win')) winLight.object3D.visible = false; if (OFF.has('shaft')) shaft.object3D.visible = false;

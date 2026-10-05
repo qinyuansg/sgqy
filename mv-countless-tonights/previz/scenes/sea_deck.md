@@ -24,20 +24,24 @@ Stills / sync frames / contact sheet: `out/check/sea_deck/` (`sheet.jpg` = all s
   that survives the engine DOF as a round bokeh.
 * **Figures** (baked cache variants): NAVIGATOR `outerCoat` (night watch: S022, S045, view), NAVIGATOR plain (S067 after the coat
   is off, S075), COMPANION `lod:'mid'` (S067), close-up hands NAVIGATOR R `cuffTurned` + L (S045), one crowd-extra helmsman (S008).
-* **Coat cloth (S067)**: a 30×26 sheet whose vertex shader blends three precomputed keyframes — A gathered in his hands,
-  B flung and spread, C draped over the boy (C is a height field rasterised from the boy's baked pose + the coil + the hatch cover,
-  dilated and blurred so the cloth bridges, with folds) — plus flutter in the air, hem lagging the collar, a collar-pull offset.
-  Undyed lining on the back faces. Per frame only uniforms change.
+* **Coat cloth (S067, review)**: a 31×27-particle deterministic Verlet cloth (`scenes/_sea_deck_coat.js`, pure JS, node
+  self-test) simulated once in `create()` (≈ 4 s): pinned in his hands (hold → shake → fling), the collar carried on an
+  art-directed arc to the boy's shoulder, free body + hem with air drag, collisions with capsules from the boy's bones, his
+  own legs/torso, the hatch cover, the coil and the deck; 48 fps states recorded and lerped per frame (position + normal
+  attributes), collar pull added on the CPU. Undyed lining on the front faces (it lands on the boy), sleeves outside the coat
+  outline discarded.
+* **Film grain (review)**: drawn by the module in the engine's half-res additive layer (after DOF), engine grain 0.
+* **Cheap background (review)**: Lambert stand-ins for the junk's standard materials, swapped in for S045 only.
 
 ## Shots
 
 | shot | what is implemented | sync (abs s → local) |
 |---|---|---|
 | **S008** EWS 28 mm dusk | heavy-lift aerial, slow constant pull-back (292→352 m) and rise (30→41 m), horizon level; ship at (0.55, 0.64) on frame 0, bow screen-right, hull ≈ 9 % → 7.5 % of frame width; dusk sky (zenith P01, faint warm line left), cumulus cards with last light; heavy swell, bow wave/wake/spray; lit stern lantern + amber hatch square (+ halo) + a tiny helmsman under the lantern are the only human traces; low coast far left ending x ≈ 0.24, shore light at (0.10, 0.44) + a fainter second light; afterglow transmitted through the matting sails | 44.9 pull-out under way · **47.18 (f1132)** the shore light dips once (~6 frames) |
-| **S022** CU 135 mm night | stabilised head: world-level horizon at y 0.58, his (left, catchlight) eye locked at (0.70, 0.40) with a 7 s heave of ±0.4 %, 135→139 mm (≈ 3 % push); navigator in the brown night coat leaning on the starboard poop rail, left profile, looking screen-left; camera looks aft-starboard (shore astern, as S008); low coast across x 0–0.48 at y 0.58, shore light at **(0.30, 0.58)** = S021's village mark; moon upper right behind him, lantern low right warms his cheek; catchlight glow on his eye from 1.1 s | 80.3 focus on the shore · **81.62 (tl 1.33)** rack ∞ → eye complete (starts 0.3 s, > 1 beat) · 82.64 small inhale (breath amplitude swell) |
-| **S045** CU 100 mm night | 0–1.6 s high (31° down) on the hands at chest height: right forearm palm-up, rolled jacket cuff with the pale-blue patch, left (salt-crusted) fingertips folded onto it, one thumb rub at 0.8 s; coat sleeves "pushed up" (see below); 1.6–3.0 s tilt up + 15 cm push to his face, ease-out so the eye is in frame by 2.4 s; follow focus patch → eye (done 2.4 s); end: left-facing three-quarter, eye at **(0.60, 0.44)**, shore light bokeh at **(0.40, 0.46)** (S046 anchor), catchlight; moon from upper right on the camera side keys the salt on the knuckles, lantern low frame-right | **145.14** fingertips on the patch (frame 1) · **146.7 (tl 1.62)** eyes lift / head turns slightly screen-left · **147.54 (tl 2.46)** catchlight appears |
-| **S067** MS 50 mm handheld | across the poop to the starboard rail, 9° down, breathing handheld; **48→24 fps ramp**: 0–1.3 s at 50 % (sea, lantern, wind, handheld, breathing all on the remapped clock), ramp to real time by 1.5 s; the operator frames on the lantern (world-level, no roll), so its cage centre is at **(0.38, 0.36)** on frame 0 (light match from S066's reading lamp); navigator (indigo jacket only) screen-left in profile holding the gathered coat, steps in and flings it left → right; the coat spreads and settles over the companion (curled on his left side on a hatch cover against a coil, head screen-right, shivering until the coat lands); the boy pulls the collar; the navigator's left fingers go to his right cuff; lantern on its hook at the rail, warm spill from the open hatch as low fill, moon key from upper right | **213.6 (tl 0.39)** coat shaken open · **214.25 (tl 1.04)** coat settles on the surge · **214.9 (tl 1.69)** collar pull (1.55–1.85) · **215.3 (tl 2.09)** left fingers on the right cuff (1.88–2.1) |
-| **S075** MCU 100 mm locked, pre-dawn | at the port poop rail facing aft (home = screen-left), camera on the poop looking to port: rail strip across the bottom, open deep-blue sea in the right half; sky night→predawn (P20 blue-grey, faint warm band low at screen-right); no lantern; he turns to his own left through the camera side (~120°, shoulders follow) to a right three-quarter and the first light from screen-right catches his face; camera solved from the end pose so the eye is at **(0.33, 0.40)** through the 12-frame dissolve into S076 (u > 1 held) | 234.09 still, looking home · **235.0 (tl 1.08)** the turn (1.0–1.55 s) |
+| **S022** CU 135 mm night | stabilised head: world-level horizon at y 0.58, his (left) eye locked at (0.70, 0.40) with a 7 s heave of ±0.4 %, 135→139 mm (≈ 3 % push); navigator in the brown night coat leaning on the starboard poop rail, left profile, looking screen-left; camera looks aft-starboard (shore astern, as S008); low coast across x 0–0.48 at y 0.58, shore light at **(0.30, 0.58)** = S021's village mark; **(review)** the moon is a hard silver kicker from upper right just behind the lens (cheekbone, ear, jaw, head-cloth), the stern lantern a weak warm glow low right; the catchlight sits ON the eye surface (measured from the head mesh) from 1.1 s | 80.3 focus on the shore · **81.62 (tl 1.33)** rack ∞ → eye complete (starts 0.3 s, > 1 beat) · 82.64 small inhale (breath amplitude swell) |
+| **S045** CU 100 mm night | **(review: restaged)** 0–1.6 s high (31° down), 15° to his left of frontal: his right forearm lies across his waist (the S011 band across the frame, jacket sleeve + rolled cuff), the wrist rolled until the turned cuff's **PROP_PATCH decal** (ported from ship_cabin S011: #7D9CBB plain weave, off-white running stitches, double knot) faces the lens; his LEFT hand comes from upper frame right, index + middle pads resting on the patch's upper corner (pad contact solved ≤ 1 mm, the close-up hands are placed first and the figure's arms reach them); one rub at 0.8 s; the coat sleeves pushed up into bunched tubes; left fingers+patch registered at **(0.45, 0.60)**; 1.6–3.0 s tilt up + arc to the 50° three-quarter, follow focus patch → eye (2.4 s); end: eye at **(0.60, 0.44)**, shore light bokeh at **(0.40, 0.46)** (S046 anchor), catchlight on the eye; moon fixed in the ship from upper right (keys the hands, then a 3/4 key on his face), lantern low frame right | **145.14** fingertips on the patch (frame 1) · **146.7 (tl 1.62)** eyes lift / head turns slightly screen-left · **147.54 (tl 2.46)** catchlight appears |
+| **S067** MS 50 mm handheld | **(review: rebuilt)** across the poop to the starboard rail, 1.75 m high, 7.5° down, breathing handheld; **48→24 fps ramp**: 0–1.3 s at 50 % (sea, lantern, wind, handheld, breathing, cloth all on the remapped clock), real time by 1.5 s; the operator frames on the lantern (world-level, no roll), cage centre at **(0.38, 0.36)** on frame 0 (light match from S066's reading lamp); navigator (indigo jacket) screen-left (4.9 m) holding the gathered coat, shakes it open, steps in and flings it left → right; the **coat is a build-time Verlet cloth** (`scenes/_sea_deck_coat.js`, 31×27 particles, collisions with capsules from the boy's bones, the hatch cover, the coil, the deck): the heavy collar is carried on an arc to his shoulders, body and hem fly free with air drag and settle over him (shoulders → hips, his shins, feet and head stay out); the boy (5.0 m, same depth as the navigator so the throw runs along his body) sleeps curled on his left side on a low hatch cover against a coil, head screen-right, grounded by his lowest torso point, shivering until the coat lands; he pulls the collar toward his chin; the navigator's left fingers go to his right cuff; lantern on a post just inboard of the rail, hatch spill as low warm fill, moon key from upper right behind the lens | **213.6 (tl 0.39)** coat shaken open · **214.25 (tl 1.04)** collar lands on his shoulder, the body settling · **214.9 (tl 1.69)** collar pull (1.55–1.85) · **215.3 (tl 2.09)** left fingers on the right cuff (1.88–2.1) |
+| **S075** MCU 100 mm locked, pre-dawn | at the port poop rail facing aft (home = screen-left), camera on the poop looking to port: rail strip across the bottom, open deep-blue sea in the right half; **(review)** sky between P02 and P20 (night→predawn blend 0.62–0.72, sky exposure 0.62) with the first warm band low at frame right (narrow sun glow just inside the edge); no lantern; he turns to his own left through the camera side (~150°: feet pivot 60°, shoulders and head follow) into a right profile turned a little toward the lens; the first light rakes the front of his face from the right, the near cheek stays in the blue sky fill; camera solved from the end pose so the eye is at **(0.33, 0.40)** through the 12-frame dissolve into S076 (u > 1 held; checked against S076 f5658: the two eyes coincide) | 234.09 still, looking home · **235.0 (tl 1.08)** the turn (1.0–1.55 s) |
 | **view_shiplamp** (nested) | from the poop deck just inboard of the starboard-quarter bracket, looking outboard-aft: the horn lamp swaying (swing ×1.7 of the roll) in the upper-left third over the heavy swell, the moon's silver road on the right, a warm strip of rail lower left, the helmsman far; vertical fov fixed (40°), lamp x adapts to the pane aspect (0.8 … 2.4); linear HDR, no DOF | — |
 
 ## Deviations from the shot list (and why)
@@ -50,24 +54,74 @@ Stills / sync frames / contact sheet: `out/check/sea_deck/` (`sheet.jpg` = all s
 * **Shore-light cheats (S022, S045).** He looks screen-left at the light while the light is in frame near the lens axis — the
   approved "camera tells the truth of feeling" cheat (ruling 2): his facing is ~75° (S022) / ~110° (S045) off the lens axis.
   The catchlight is a small 1900 K emissive point on the faceless head (the shot list's own post note).
-* **S045 camera arc.** A pure tilt from his front-left puts his crossing left coat sleeve across the whole CU; the move starts
-  nearly frontal (15° to his left) and arcs to the 50° three-quarter during the tilt-up. He is at the starboard rail facing
-  forward (the port rail is crowded by the mizzen). The registered frame-0 point (0.45, 0.60) is placed between the left palm and
-  the patch (the palm itself sits ~0.1 higher) so the patch is inside the registered area.
+* **S045 camera arc.** The move starts nearly frontal (15° to his left) and arcs to the 50° three-quarter during the tilt-up.
+  He is at the starboard rail facing forward (the port rail is crowded by the mizzen). (Review: a side-on start was tried so his
+  left fingers would point up-frame like S044's flat palm; his left forearm then fills the foreground. The frontal start keeps
+  S011's patch composition — forearm band across the frame, fingers from upper right — so S045 repeats the first reveal.)
 * **S045 sleeves.** The baked outer coat has long wide sleeves that swallow close-up hands. The figure's forearms (all its
-  sleeve layers + skin) are discarded in a wrist→elbow capsule (chained onto the figure's own materials, S045 only) and replaced by
-  the close-up hands' own jacket cuffs plus a bunched coat-sleeve tube from mid-forearm to the elbow — "pushes up the wide sleeve".
-* **S067 staging.** With a 50 mm lens the shot list's (0.70, 0.66) for a boy lying on the deck is geometrically incompatible with
-  the navigator's chest at (0.26, 0.50) and the lantern at (0.38, 0.36) (a lying body 0.75 m below a chest at the same depth is
-  0.16 frame-heights lower only at ~15 m). Solved staging: the boy sleeps on a raised hatch cover at (0.70, 0.74), the navigator's
-  chest at (0.23, 0.40), both ~4.7 m away so he is in profile facing right (giving direction left → right and downward, T21); the
-  lantern hangs on a short iron hook just inboard of the starboard rail at (0.38, 0.36) for this shot (it lives on the quarter
-  bracket elsewhere). He releases the coat mid-throw (it spreads and lands by itself).
+  sleeve layers + skin) are discarded in a wrist→elbow capsule (chained onto the figure's own materials, S045 only) and replaced
+  by the close-up hands' own jacket cuffs + jacket sleeves (S011's tapered tubes) and a bunched coat-sleeve tube from 17 cm up the
+  forearm to the elbow — "pushes up the wide sleeve".
+* **S067 staging.** With a 50 mm lens the shot list's (0.70, 0.66) for a boy lying on the deck is incompatible with the
+  navigator's chest at (0.26, 0.50) and the lantern at (0.38, 0.36). Solved staging (review): camera 1.75 m above the planks, 7.5°
+  down; the boy sleeps on a low hatch cover (≈ 27 cm) at (0.69, 0.78), 5.0 m away — the same depth as the navigator (4.9 m, chest
+  ≈ (0.24, 0.44)), so the coat flies along his body axis (from the boy's feet end toward his head, T21 left → right); the lantern
+  hangs on a short iron hook on its own post just inboard of the starboard rail at (0.38, 0.36) for this shot (it lives on the
+  quarter bracket elsewhere). He releases the coat at real time 0.23 s; the collar is art-directed to the boy's shoulder by 0.45 s
+  and held until 0.8 s (so it cannot slide off), the rest is free cloth.
 * **Barefoot on deck** (bible) is not used: only the sandal variants are baked; feet are out of frame or in darkness.
 * **No moon shadow map** in any shot (costs ~30 % of a frame for a weak night key; `?sdon=shadow` restores it). The lantern,
   hatch and dawn lights were never shadowed.
 
-## Measured cost (1280×536, `render.mjs --range`, 23 frames after the first)
+## Review (art director + DP pass, 2026-10-05)
+
+Re-rendered every shot at u = 0.05 / 0.5 / 0.95, every sync frame, the nested view (full frame + the three-pane nest lab), the
+neighbours' adjoining frames (S007 f1074, S009 f1159, S021 f1926, S044 f3481, S046 f3568, S068 f5176, S074 f5613, S076
+f5653–5664; museum_gallery S023 and corridor S066 have no module yet), 6 consecutive frames (S067 f5140–5145, S022
+f1990–1995: RMSE between neighbours 0.020–0.029 / 0.0114, smooth, no pops, no NaN/black frames). Renders:
+`out/check/sea_deck/r0` (before), `review_final/` (after, + `sync/`, `view/`), contact sheet `sheet.jpg`.
+
+### Found (before) → fixed
+
+| # | shot | problem | fix |
+|---|---|---|---|
+| 1 | all | engine grain stripes (vertical bars at S075's right edge, horizontal lines over S008's sky / S067) | module-side grain in the half-res additive layer after DOF (pier_waiting's method), engine grain 0; nested views get none |
+| 2 | **S067** | after the fig-2 lib update the boy floated ~15 cm over the hatch cover with straight stilt legs; the 3-keyframe coat hung over him as a flat grey board with holes (his shirt poking through), then slid away; the lantern burned white right behind the navigator's head; stiff "zombie" throwing arm; bulwark / hatch wood showed metre-wide contour-map grain | staging re-solved (camera 1.75 m, 7.5° down; boy at the navigator's depth so the throw runs along his body); boy re-posed (curled, rolled 30° back, lower arm under the cheek) and grounded by his lowest torso vertex; **coat rebuilt as a deterministic build-time Verlet cloth** (`_sea_deck_coat.js`: hold → shake → fling, collar art-directed to his shoulder, free body + hem with air drag, collisions with bone capsules / hatch cover / coil / deck; 48 fps states lerped per frame, ≈ 4 s once at build) — outer brown up, lining down, collar pull on CPU; navigator's hands carry the sim's pins, then follow through with bent elbows; horn panes and hatch spill toned down; plank scale ×1.5–2.6 |
+| 3 | **S045** | hands phase unreadable: patch invisible, wide coat-sleeve "bells" open to the lens, the jacket cuff a floating blue ring, mid-tilt frames broken; face end lit flat orange by the lantern, black mouth blotches | restaged on S011's proven composition (right forearm across the frame, wrist rolled until the turned cuff faces the lens, left pads solved onto the patch corner ≤ 1 mm, close-up hands placed first and the figure's arms reach them); **PROP_PATCH decal ported from ship_cabin S011** (same cloth, stitches, double knot → continuity S011 = S045); jacket sleeves (S011's tubes) + bunched coat-sleeve tubes; salt crust as fine crystals and dark work nails (S011's hand tweak); moon fixed in the ship from upper right (keys hands, then a 3/4 silver key on his face), lantern weak and low; cheap Lambert stand-ins for the defocused junk behind the hands (≈ −1 s/frame) |
+| 4 | **S022** | the "catchlight" floated ~1 cm in front of his profile (a glow in the air beside the face); face a dark red mask, no moon edge | eye point measured on the head mesh (most forward vertex over the left eye, head-bone space) for focus + catchlight; moon as a hard silver kicker from upper right just behind the lens (cheekbone, ear, jaw, head-cloth), lantern a weak warm glow under the jaw |
+| 5 | **S075** | turn ended almost frontal (S076 is a right profile); neck-only twist; sky a flat mauve with no first light; vertical grain bars | ~150° turn (feet 60°, shoulders + head follow) into a right profile turned a little to the lens; first light rakes the front of his face from the right; sky darkened toward P02–P20 with a narrow warm band just inside frame right (sunSharp 70 / sunElev −2.5 on both blend endpoints, see ISSUES.md); the S075→S076 dissolve now overlays two right profiles with the eyes coincident at (0.33, 0.40) |
+| 6 | **S008** | the sea's mid-ground read as regular "corduroy" stripes; cumulus were blurred brown smudges | per-pixel short waves at 22 % height (long swell keeps the weight; lib note in ISSUES.md); cumulus cards re-painted crisper (190 puffs, 4 px blur, bluer bases, pinker crowns) |
+
+Checked and kept: S008 registrations (ship (0.55, 0.64) → shrinking 9 → 7.5 % width, horizon 0.42, shore light (0.10, 0.44),
+dip at f1132) · S022 shore light (0.30, 0.58) = S021's village mark, rack done at 81.62, catchlight (0.70, 0.40) → S023 ·
+S045 left fingers + patch at (0.45, 0.60) (S044's palm), eye (0.60, 0.44), shore bokeh (0.40, 0.46) = S046's E1 lantern ·
+S067 lantern cage (0.38, 0.36) on frame 0 (S066's reading lamp), coat left → right (T21 into S068) · view_shiplamp (lamp
+upper left third, moon road right, rail lower left; three pane aspects). Continuity: patch inside the RIGHT cuff turned back by
+the LEFT hand (S045, S067), night coat on in S022/S045, off (given away) in S067/S075, head-cloth, shore always screen-left.
+
+### Cost after the review (1280×536, `render.mjs --range`, 24 frames after the first; machine shared, load 9–12 on 4 cores)
+
+| shot | range | mean s/frame (raw) | max | EMPTY probe at the time |
+|---|---|---|---|---|
+| S008 | 1100–1124 | 0.92 | 1.22 | ≈ 0.2–0.5 (idle 0.34) |
+| S022 | 1960–1984 | 0.93 | 2.22 | 0.39 → 0.18 |
+| S045 hands | 3485–3509 | 1.91 (3.40 before the cheap-background swap) | 3.83 | 0.47 → 0.17 |
+| S045 face | 3540–3564 | 1.19 | 1.93 | — |
+| S067 | 5130–5154 | 1.43 (2.39–2.47 in the first run) | 2.75 | 0.17 → 0.39 |
+| S075 | 5620–5644 | 1.02 | 1.25 | — |
+
+All shots are under the 2.5 s worst-case on average; S045's hands phase (1.6 s of the shot) stays above the 1.5 s typical
+(two close-up salt hands + the hi figure + DOF at f/2.2). Scene build ≈ 22–35 s per process (+ ≈ 4 s for the coat sim).
+
+### Still weak (not fixed in this pass)
+
+* S067's draped coat is a single stiff-ish sheet (bend 0.25; softer settings flipped the landing inside-out) — it reads as a
+  covering, a little board-like at the front edge; one sleeve flap settles ~0.3 s after the surge.
+* Faceless heads: warm-tan skin even under the silver moon; no beard / brow scar at previz scale.
+* S045's left fingers point down-left (S011's direction) rather than up-frame like S044's palm (position, size and palm-down match).
+* S045 hands phase cost (above).
+
+## Measured cost — original build (before the review; kept for reference)
 
 The machine was shared with 3–4 other render agents (load average 11–15 on 4 cores) during every run, so the raw numbers are
 inflated 1.4–4×. Each run was followed by the engine EMPTY probe (`_lab_perf`, 0.34 s/frame idle); "idle-equivalent" = raw ×
@@ -98,23 +152,27 @@ figure cache, hands) — paid once.
 
 ## Known weaknesses
 
-* **Film grain (engine bug, logged in `lib/ISSUES.md`)**: the grade pass's grain hash loses float precision at late frame numbers,
-  producing regular vertical/horizontal stripes (visible in S008's sky, S067/S075 in mid-grey areas). Not fixable from a module.
-* Faceless mannequin heads read flat in CU (S022, S045 end, S075 end); the head-cloth's topknot tail sticks out like a horn.
-* S045: the patch reads only as a small pale-blue area beside the left fingertips at 1280 px; the left hand dominates. The
-  forearm tubes are simple lathes (no cloth folds beyond a ripple); the close-up jacket cuffs' open ends can show inside the tube.
-* S067: the coat is a single sheet (no padded thickness, no sleeves volume); the collar pull and the cuff touch are small at MS;
-  the boy's curled pose is approximate (hand-tuned channels, no contact solve with the coil). The lantern sits near the
-  navigator's shoulder on screen, as registered.
-* S008: cumulus cards are flat billboards (no parallax worth noting at 7.6 km, but no volumetric light); sails are static apart
-  from a breath term; no rigging beyond sheets.
-* Hull is a clean loft (no planking strakes in the geometry, wales, or gallery); the painted transom is generic.
+* Faceless mannequin heads read flat in CU (S022, S045 end, S075 end); the head-cloth's topknot tail sticks out like a horn;
+  the skin stays warm-tan even under a silver moon key (the skin shader's hue lock), so night faces read warmer than CT_NAV.
+* S045: at 1280 px the patch is a ~60×40 px pale square under the left fingertips (readable, small); the hands' phase is dark
+  by design (moon key, 3 stops under the sky); the bunched coat-sleeve tubes are simple lathes. The left fingers point
+  down-left (S011's direction), not up-frame like S044's palm: the match is position + size + palm-down (see deviations).
+* S067: the coat is a single sheet (no padded thickness); with bend stiffness 0.25 it lies a little board-like over the boy;
+  one sleeve flap is still settling at the 214.25 surge (tl 1.04) and is down by tl 1.35. The boy's curled pose is seen nearly
+  side-on from the low lens, so his drawn-up thighs foreshorten (shins + feet read). The sim is tuned for this staging: moving
+  the boy / navigator / lantern needs a re-check of the landing (orbit debug `?sddbg=orb:0:4.5:75`).
+* S008: cumulus cards are flat billboards (no parallax worth noting at 7.6 km, no volumetric light); sails are static apart
+  from a breath term; no rigging beyond sheets; the per-pixel short waves are held at 22 % height (full height reads as
+  corduroy from 30–40 m up), so the fine chop is soft.
+* Hull is a clean loft (no planking strakes in the geometry, wales, or gallery); the painted transom is generic; the wood
+  texture's grain swirls still show on the bulwark in S067 at the new 0.25 m plank scale.
 * The shore light flicker in S008 is a Gaussian dip of the point's intensity (≈ 6 frames) — subtle at 1280 px by design.
-* Night readability relies on a fairly strong moon key from the camera side in S045/S067 (more readable than "silhouette with a
-  moon edge" the bible describes for wides).
+* Night readability relies on a fairly strong moon key from the camera side in S022/S045/S067 (more readable than "silhouette
+  with a moon edge" the bible describes for wides).
 
 ## Debug / A-B switches (page URL, e.g. `tools/bench.mjs --q ...`)
 
-`?sddbg=top|side|side2|flat|<metres>` (overview from above with the camera marked · orbit views · no DOF and brighter ·
-pull back) · `?sdoff=sea,dof,cloud,foam,hatch,coat` · `?sdon=shadow` (restore the moon shadow map) · `?sdlog=1` (projected
+`?sddbg=top|side|side2|flat|<metres>|orb:<deg>:<dist>[:<elev>]` (overview from above with the camera marked · orbit views · no DOF and
+brighter · pull back · orbit around the shot's subject point; `&sdpiv=patch` pivots S045 on the patch) · `?sdcoat=dbg` (S067 coat lining
+painted green) · `?sd8k=<0..1>` (S008 short-wave height) · `?sdoff=sea,dof,cloud,foam,hatch,coat` · `?sdon=shadow` (restore the moon shadow map) · `?sdlog=1` (projected
 registration points to the console).

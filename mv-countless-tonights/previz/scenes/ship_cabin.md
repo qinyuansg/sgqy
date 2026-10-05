@@ -15,7 +15,8 @@ Module: `previz/scenes/ship_cabin.js` (one scene build serves every shot; per-sh
   coast along the top, islands, reef dots, a black dotted route, illegible annotation marks, two soft creases. A
   0.60 × 0.32 m deformable sheet (73 × 41 grid; corners curl; the free lower-right corner lifts in the gust), a rolled
   remainder with dark roller knobs at its left end, **two brass bar weights (镇纸) exactly where S004's acrylic strips
-  are**, a round grey stone on the lower-left corner, a candle-wax drip at (0.30, 0.62).
+  are** (rounded cast bars with a raised spine), a smooth grey sea pebble on the lower-left corner, a candle-wax drip at
+  (0.30, 0.62).
 * **Compass** (in-use state): lathe-turned brass body with raised rim lip, `TX.compassFace({state:'then'})` dial on a
   ring (the well is open), cream-tan lacquered well floor with the N–S double line, golden laminated mica, a blued-steel
   diamond-section needle (3.6 cm) with the red-lacquer south tip and brass cap, a soft contact shadow, white salt bloom on
@@ -24,9 +25,9 @@ Module: `previz/scenes/ship_cabin.js` (one scene build serves every shot; per-sh
   PointLight (unshadowed fill) + a shadow-casting SpotLight at the flame pointing down (the only figure shadows).
 * **Stern window**: `FX.windowLight` (deep dusk blue through the `bars` cookie, shadowed far spot + visible bars) and a
   faint `FX.windowShaft`; outside a cheap gradient backdrop (dusk sky / faint warm horizon / dark sea), no sky dome.
-* **Above deck (S007)**: deck planking with the hatch coaming and propped lid, bulwarks, mizzen mast, a **battened junk
+* **Above deck (S007)**: deck planking with the hatch coaming and the lid standing open leaning aft, bulwarks, mizzen mast, a **battened junk
   sail** (10 panels bellied forward between bamboo battens, coarse rust-ochre cotton with seams and patches, panel
-  translucency via the emissive map), sheets fanning to a block, the `createSky('dusk')` dome; cool sky hemisphere +
+  translucency via the emissive map, a vertex-colour gradient warm head → cool foot), sheets fanning to a block, the `createSky('dusk')` dome; cool sky hemisphere +
   a low warm afterglow from forward.
 * Characters: NAVIGATOR `hi` (S007, S010), NAVIGATOR `mid` (view_cabin), close-up NAVIGATOR hands: R (S006 thumb),
   R `cuffTurned` + L (S011), each with a sleeve tube continuing the cuff stub.
@@ -41,104 +42,200 @@ Module: `previz/scenes/ship_cabin.js` (one scene build serves every shot; per-sh
   the top edge x 0.55–0.95 at y 0.06, stone (0.08, 0.85), free corner (0.95, 0.88), wax (0.30, 0.62). Camera 0.926 m
   above the sheet (inside the open hatch), up = world −x, so the stern window is at frame right.
 * 48 fps: everything that moves runs on `Tq = T0 + tl/2` (lamp swing, flame flicker, ship sway ≤ 1 % of frame).
-* Lamp pool from the upper left, cool barred window stripe on the right third; at **tl 1.10 (32.77 '蓝') the gust lifts the
-  free lower-right corner ~6 cm, it flutters and settles by 2.6 s**.
-* Deviation: the cool stripe reads as a desaturated grey-blue on the cream paper (it adds to the warm lamp light) rather
-  than a saturated P03.
+* Whole sheet sharp (shot list 全幅清晰: no DOF). Lamp pool from the upper left (spot narrowed to 0.66 rad so it stays on the
+  left two-thirds), the cool barred window
+  stripe on the right third (window #2F62B4 ×1.25; the bars' shadows run fore-aft, i.e. horizontal in frame, as they
+  physically must from a vertical-barred stern window onto a horizontal table).
+* **tl 1.10 (32.77 '蓝')**: the gust rolls the free lower-right corner up in a real page curl (fold line across the corner,
+  paper wrapped on a cylinder then straight, ≈6 cm lift, pale back face, moving shadow on the table), it flutters and
+  settles by 2.6 s. (Before the review a 6 cm vertical lift was invisible from straight above.)
+* Props: the 镇纸 are rounded cast-brass bars with a raised spine (box-projected UVs; the stretched texture had drawn
+  copper-pipe streaks); the stone is a smooth speckled grey sea pebble (the 'granite' block texture read as a wicker ball).
 
 ### S006 · 34.50–40.17 s · ECU 100 mm macro — glint along the star ring, thumb wipes the salt at 午
-* Locked camera low over the dial's SE side (~0.28 m, ~36° down, f/5.6, focus on the star ring; bearing glyphs in front are soft
-  → illegible). The **light moves, not the camera**: the lantern is positioned each frame (out of frame) by solving the
-  mirror geometry so its specular glint (+ a small glint sprite) walks the star ring from ESE to 午: over the star points at
+* Locked camera low over the dial's SE side (~0.26 m, ~36° down, T8, focus on the star ring; bearing glyphs in front are
+  soft → illegible). The **light moves, not the camera**: the lantern is positioned each frame (out of frame) by solving
+  the mirror geometry so its glint (+ a small glint sprite) walks the star ring from ESE to 午: over the star points at
   1.7 s (36.21 '星辰'), resting on 午 at 4.7 s (39.21 '盘').
-* Thumb: enters at 2.5 s (36.99 '刻'), one ~1 s push stroke across the salt at 午 (the salt band on the rim is
-  alpha-wiped behind it), withdraws by 4.0 s. Bounce fill from the lens side so the near thumb is not a pure silhouette.
-* Deviations: the camera sits ~36° above the dial at ~0.28 m (a touch steeper than "grazing", so the star ring, the well
-  with the needle and the south rim all read); the thumb, coming from his side, enters from the **upper right** as a long
-  soft warm-dark shape whose pad lands on the rim at lower left — not from the lower right (every lower-right staging put
-  the forearm in front of the lens). The salt wipe is small in frame. Ring order: library dial has the star ring inside
-  the bearings (see lib/ISSUES.md), so the star band is the sharp middle band with the glyph ring soft in front.
+* Thumb (review restage): the right hand rests **outside the dial beyond its south-west rim (screen left)**, fingers hooked
+  over the box edge, the extended thumb lying along the rim at the dial's own focus distance (the whole hand is rotated
+  about the pad until the distal thumb points E, dipping 10°). Enters at 2.5 s (36.99 '刻'), one slow ~0.85 s drag E → W
+  across the salt at 午 (the salt band is alpha-wiped behind the pad), lifts away to the left by 4.0 s. Focus racks to the
+  thumb's nail plane while it works and back to the star ring for 4.7 s. A cool twilight fill from the stern window
+  (behind the lens) models the thumb's near side against the warm lamp rim; salt specks and nail cracks read.
+* Deviations: the thumb enters from **screen left**, not lower right — any staging from the lens side puts the hand
+  between lens and dial as a defocused dark shape over half the frame (that was the state before the review). Ring order:
+  library dial has the star ring inside the bearings (lib/ISSUES.md), so the star band is the sharp middle band.
 
 ### S007 · 40.17–44.79 s · MCU 32 mm → crane rise through the hatch to the sail (T04)
-* Navigator stooped under beam A over the table, face at ≈ (0.58, 0.55) with beam A behind the head-cloth, warm lamp from the left (practical cheated to the
-  starboard end of beam A so it is out of frame and ≥ 40 cm from him), cool skylight from the hatch on the head-cloth.
-* 1.61 s (41.78 '你把半生'): he lifts his head to the hatch (lookAt); the camera starts rising (ease-in) along his
-  eyeline, tilting up past beam A, through the hatch (≈2.9–3.1 s), out above the coaming; 3.77 s (43.94 '帆') the
-  battened sail fills ~80 % of frame, still rising to the end. Focus pulls face → beam → sail; exposure ramps ×1.9 and
-  the grade cools across the hatch passage.
-* Deviation: no momentary all-black "hatch wood fills frame" seam (CG needs no hidden cut); the sky is visible through the
-  opening slightly before the passage.
+* Navigator stooped under beam A over the table, face ≈ (0.58, 0.50) with beam A behind the head-cloth; warm lamp from frame
+  left (practical at x 0.53 on beam A, just out of frame), a soft cool skylight term from the hatch on the head-cloth and
+  shoulders, and a warm bounce off the lamp-lit chart below that softens the hard split down the nose. Skin balanced for the
+  practical (≈2700 K camera: lamp #FFD7AD on skin) so P19 stays brown, not orange.
+* 1.61 s (41.78 '你把半生'): he lifts his head to the hatch (lookAt); the camera (time-parameterised Hermite path — no
+  velocity jumps at the knots, zero velocity at the start of the move) rises and tilts to ~45° past beam A; the hatch's
+  forward coaming sweeps down through frame as a dark band with the sail and sky beyond (≈2.2–2.8 s, the dark-wood
+  'hidden seam'); it rises through the opening at ~56° and tilts on up; **3.77 s (43.94 '帆') the battened sail fills
+  ~80 % of frame**, still rising at the cut (→ S008). Focus face → near wood (0.45 m) → sail, T4; exposure ramps ×1.8 and
+  the grade cools across the passage. The hatch lid stands open leaning AFT (forward it blocked the view with its black
+  underside). The sail carries a vertex-colour gradient (warm head in the afterglow, cool foot, darker toward each batten).
 
 ### S009 · 48.29–50.00 s · ECU 100 mm top-down — needle settles exactly on 午
 * Camera 0.40 m straight down, up vector solved so the **south tip points at screen 215° (lower left, as in S003)** and
   the **pivot sits at (0.46, 0.50)** (T05 A-frame); a 4° tilt puts the frame's left/right edges out of the focal plane
   (bearing glyphs soft); f/2.8 focused on the needle.
 * Damped oscillation ±8° → ±4° (0.6 s) → ±1° (1.1 s), **dead stop at tl 1.455 so frame 1194 (49.77 '南') is at rest**
-  on the N–S line; f1170 (48.75 '根针') still swinging. Cool window fill gives the line along the needle.
+  on the N–S line; f1170 (48.75 '根针') still swinging.
+* Light (review): the lantern is hung where its mirror image lands just beyond the frame's upper-left corner, so a warm
+  sheen grades across the in-use brass from upper left (it read museum-chocolate before); a faint cool window light is
+  solved into the needle's sloped top facet so a cool line runs along its north half at rest.
 
 ### S010 · 50.00–52.75 s · CU 100 mm — the eye, gaze to frame left (T05 B-frame)
-* Navigator **seated** on the sea chest at the table's forward end (the shot text says he sits), head turned to the
-  stern window; camera at his front-left (his LEFT, scar side), ~0.97 m, the near-eye point placed at (0.46, 0.50),
-  imperceptible push. Warm lantern (cheated to his left) on the cheek, cool window key on the front planes (brow, nose).
-* Deviations: faceless mannequin → **no eye, no blink at 51.39**, no eyebrow scar; the loose strands at the head-cloth
-  edge were tried and removed (on the sculpted head they read as cracks). The shot reads as a profile fragment of the
-  head; the T05 match is by position only.
+* Navigator **seated** on the sea chest at the table's forward end, head turned to the stern window; camera at his
+  front-left (his LEFT, scar side), ~0.97 m; the near-eye point (from the figure's own `eye()`, fig-2 head) at
+  (0.46, 0.50) — measured (0.459, 0.499) — imperceptible push; T4 focused on that eye.
+* Light (review, short-side chiaroscuro instead of an evenly lit orange mask): the stern window he looks at is a narrow cool
+  key (#7AA2DA) on the front planes — brow, nose bridge, the rim of the eye socket; the lantern, cheated behind his left
+  shoulder (the lamp's shadowed spot re-aimed at the head — the unshadowed point light lit the inside of the nostril through
+  the head like an ember), rakes warm across the near cheek, jaw and ear and sweeps with the swing; a faint off-axis warm
+  bounce off the chart keeps a trace of warmth in the cool side (bible §2.2); the socket stays in shadow (留白). Head-cloth
+  stays indigo (the window spot no longer hits it).
+* Deviations: faceless mannequin → **no eye, no blink at 51.39**, no eyebrow scar; the sync beat is a ≈0.7° head settle
+  over ~5 frames centred on 51.43. The loose strands at the head-cloth edge were tried and removed (they read as cracks).
 
 ### S011 · 52.75–56.00 s · INSERT 100 mm — LEFT fingers turn back the RIGHT cuff, pads rest on the patch
-* Close-up hands staged on the table (no full figure): right forearm palm-up across the lower frame with the **turned
-  cuff showing the pale-blue patch (#7D9CBB, stitched border) on the RIGHT cuff**; left hand from the upper right,
-  index + middle pads land on the patch's far edge at **tl 0.25 (53.0 vocal end)** — the cut-in mid-gesture is a short
-  settle + inward wrist roll — then nothing moves; the lantern pool brightens on the patch 1.0–2.5 s. Patch centre is
-  measured from the cuff geometry's patch mask each frame; contact ≈ (0.50, 0.52).
-* Deviation: the fold-back itself is not animated (the library's cuffTurned cuff is a static roll); fingers point
-  ≈ 45° rather than 30° below horizontal.
+* Close-up hands staged on the chart table (no full figure), ~0.9 m (fingertip ≈ 12 % of frame height): right forearm
+  palm-up across the frame with the **turned cuff showing the patch on the RIGHT cuff** toward the lens; the left hand
+  from the upper right, fingers pointing to screen lower-left **30° below horizontal** (→ S012), index + middle pads
+  solved onto the cuff surface (roll about the finger axis + translation, both pads within 0.1 mm of each other, touching)
+  at **tl 0.25 (53.0 vocal end)** — the cut-in mid-gesture is a short settle + inward wrist roll — then nothing moves; the
+  lantern pool brightens on the patch 1.0–2.5 s. Pads ≈ (0.51, 0.43) / (0.55, 0.61) around the registered (0.50, 0.52).
+* **PROP_PATCH hero decal** (review): a skinned copy of the cuff's outward cloth in the library patch window (same place
+  and size, 3.3 × 3.8 cm), drawn with plain weave #7D9CBB, irregular hand running stitches #E9E4D6, the uneven corner with a
+  double knot and thread tail (upper-left on screen so the fingers do not hide it), a frayed turned-under edge and a centre
+  rubbed pale; the library's flat patch underneath is painted over in the cuff colour.
+* Hands: dull work-darkened nails (the library whitens the free edge and lunula — patched in this module's materials
+  only), salt at 0.45 (fine crystals in the creases, not white blotches); softer, folded sleeve tubes; the cream roller end
+  behind the cuff (brightest blob in frame) is hidden in this shot; skin balanced for the practical as in S007.
+* Deviation: the fold-back itself is not animated (the library's cuffTurned cuff is a static roll); the patch is the
+  library's 3.3 × 3.8 cm (bible 4.5 × 6 cm), kept for continuity with S035/S045/S067.
 
 ### view_cabin (nested, gallery G3a / S024)
-* Navigator (`mid`) on the port side of the compass box, bent over it in profile, facing starboard; lamp hanging from the
-  hatch's forward trimmer right above the dial and swinging; the barred stern window glowing blue behind the table at
-  frame right (moonlight upper right); dust in the window shaft; slow truck screen-right over `u` for parallax.
+* Navigator (`mid`) on the port side of the compass box, bent over it in profile, facing starboard; the lamp hangs from the
+  hatch's forward trimmer at x 0.13 (review: 45 cm clear of his head-cloth — it overlapped his head from this angle) over
+  the compass box / chart, lighting his profile from the front (point light ×2.6, spot widened to 1.15 rad), swinging; the
+  barred stern window glowing blue behind the table at frame right; dust in the window shaft; slow truck screen-right over
+  `u` for parallax.
 * Aspect-aware: landscape RTs use a 22 mm lens; portrait RTs (pane aspect < 1.2, e.g. 1.4 / 2.4) use a 60° vertical FOV
-  so the lamp, his head and the dial stack vertically. No post in nested renders — values are linear HDR at the same
-  levels as the main shots.
+  aimed a little starboard (review) so the lamp, his head, the window and the dial all sit in the narrow pane. No post in
+  nested renders — values are linear HDR at the same levels as the main shots.
 
-## Timing (1280 × 536, `render.mjs --range`, 24 frames from each shot)
-See the table below; measured while 3–4 other agents were rendering (load average 10–19 on 4 cores). The engine's empty
-frame (`_lab_perf` EMPTY via tools/bench.mjs) measured 0.65–1.7 s in the same windows (0.34–0.37 s idle), i.e. a load
-factor of ≈ 2.5–4.5×; the idle estimates divide by the factor measured next to each run.
+## Timing (1280 × 536)
+Measured after the review (`out/check/ship_cabin/review/perf/`). The machine was shared with 3–5 other rendering agents
+(load average 5–16 on 4 cores), so wall times swing ±2× between identical frames; the review therefore also measured a
+**load-independent cost: CPU-seconds of this run's Chromium process tree per frame** (`review/perf/cpuprof.mjs`, utime+stime
+of every process / SwiftShader thread under the render's node process, 12 frames after a warm-up frame). Idle estimate =
+CPU-s ÷ 3.3 (the parallelism SwiftShader reached on heavy frames here, e.g. S006: 4.63 CPU-s in 1.39 s wall at load 7.5);
+calibration: EMPTY engine frame 0.44–0.48 CPU-s ↔ 0.34 s idle (README).
 
-| shot | frames timed | measured mean (max) s/frame | load avg | est. idle s/frame | main costs |
+| shot | frames | CPU-s / frame | wall s/frame (load) | est. idle s/frame | main costs |
 |---|---|---|---|---|---|
-| S005 | 760–784 | 3.24 (6.56) | 13.7 | ≈ 1.0 | 2 shadowed spots (lamp + window bars), window shaft, DOF f/5.6 |
-| S006 | 860–884 | 4.64 (6.24) | 10.8 | ≈ 1.4 | full-frame brass dial (normal + ORM + env), DOF; thumb frames 888–950 ≈ +0.2 |
-| S007 | 1000–1024 | 5.20 (9.77) | 11.1 | ≈ 1.6 (max ≈ 3 on the first rise frames) | hi figure + sky dome + sail, DOF |
-| S009 | 1170–1194 | 6.18 (8.25) → 5.27 after light pruning | 12.8 | ≈ 1.5 | full-frame dial, DOF f/2.8 + tilt (most pixels blurred) |
-| S010 | 1210–1234 | 4.54 (7.83) | 15.1 | ≈ 1.2 | hi figure head CU (procedural skin), DOF |
-| S011 | 1280–1304 | 10.36 (12.6); 6.85 re-run (EMPTY 0.9 s) | 14.9 | ≈ 2.4–2.8 (worst) | two close-up hands + cuffs: the lib's procedural skin/cloth shaders cover ~70 % of frame (`?figmat=plain` → 4.0 s ≈ 1.5 s idle) |
-| NEST_CABIN lab (2 nested `view_cabin` renders 420×720 + 640×400 + outer) | 0–12 | 4.60 (7.22) | 19.0 | ≈ 1.2 (the nested view itself ≈ 0.4–0.5) | mid figure, lamp spot shadow, window light + shaft + dust |
+| EMPTY (`_lab_perf`) | 1–12 | 0.44 / 0.48 | 0.39 (5.4) / 0.45 (11.6) | 0.34 | engine post + JPEG |
+| S005 | 771–782 | 3.05 | 1.74 (6.5); `--range` 766–790: 1.48 (4.5) | ≈ 0.95 | 2 shadowed spots (lamp + window bars), shaft, curl re-deform; no DOF now |
+| S006 thumb | 887–898 | 4.63 | 1.39 (7.5); `--range` 880–904: 3.03 (5.9) | ≈ 1.4 | full-frame brass dial (normal + ORM + env), T8 DOF over most pixels, close-up hand skin, thumb shadow pass |
+| S006 dial only | 841–852 | 3.58 | 1.89 (7.8) | ≈ 1.1 | as above without the hand |
+| S007 | 1005–1016 | 4.17 | 2.45 (8.2); `--range` 1000–1024: 2.33 (14) | ≈ 1.3 | hi figure + deck + sky dome + sail, DOF |
+| S009 | 1173–1184 | 3.41 | 2.14 (8.9); `--range` 1170–1194: 2.50 (10.9) | ≈ 1.05 | full-frame dial, f/2.8 + tilt DOF (most pixels blurred) |
+| S010 | 1213–1224 | 2.69 | 2.14 (12.8); `--range` 1210–1234: 1.47 (8.7) | ≈ 0.8 | hi figure head CU, shadowed kicker, DOF |
+| S011 | 1283–1294 | 5.36 | 4.71 (14.2); `--range` 1280–1304: 2.07 (8.4) | ≈ 1.6 (worst) | two close-up hands + cuffs + sleeves + patch decal, shadowed lamp spot, DOF (bloom off) |
+| NEST_CABIN lab (2 nested `view_cabin` RTs + outer) | 1–12 | 3.09 | 2.09 (11.6) | ≈ 0.95 | mid figure, lamp spot shadow, window light + shaft + dust |
 
-After the timing run: zero-intensity / unused lights are made invisible (they leave every material's light loop), the
-chart sheet is only re-deformed when its lift changes, S009 has no lamp shadow pass, structure meshes no longer cast
-shadows, and S011 skips bloom. Startup (scene build incl. textures + 5 figure/hand loads from the bake) ≈ 45–60 s under
-the same load. Raw numbers: `out/check/ship_cabin/perf/timing.txt`.
+All shots are inside the 2.5 s worst-case budget even at a pessimistic parallelism of 2.5 (S011 ≈ 2.1, S006 ≈ 1.85); S011
+is the only one a little over the 1.5 s typical target. Perf changes in the review: S005 drops its DOF (shot list 全幅清晰),
+S006 casts the lamp shadow only while the thumb is in frame, unused lights stay invisible. The module grain quad costs
+≈ 0.02 s. Startup (scene build incl. textures + 5 figure/hand loads from the bake) ≈ 20–30 s. Raw numbers:
+`out/check/ship_cabin/review/perf/{timing,timing2,cpu}.txt` (+ `perf/timing.txt` from the first build).
 
 ## Contact sheet / checks
-* `out/check/ship_cabin/sheet.jpg` — every shot at u = 0.5 + `view_cabin` (landscape) and the G3a portrait/landscape panes.
-* `out/check/ship_cabin/S0*_u{0.05,0.50,0.95}_*.jpg`, `all_u.jpg` — start / mid / end of each shot.
-* `out/check/ship_cabin/v3/` — sync frames f769 f786 · f869 f888 f941 · f1003 f1030 f1055 · f1170 f1194 · f1200 f1233 ·
-  f1266 f1272 f1332.
-* Match registrations verified on the renders: S005 first frame = T03 numbers (islet, bars, stone, wax, lower edge);
-  S009 last frame pivot (0.46, 0.50), south tip at lower left (= S003 orientation); S010 near-eye point (0.46, 0.50);
-  S011 end contact ≈ (0.50, 0.52), fingers to lower left (→ S012).
+* `out/check/ship_cabin/sheet.jpg` — every shot at u = 0.05 / 0.5 / 0.95, `view_cabin` (landscape), the G3a portrait +
+  landscape panes (NEST_CABIN lab), and S007 at the '帆' sync frame.
+* `out/check/ship_cabin/S0*_u{0.05,0.50,0.95}_*.jpg` — start / mid / end of each shot (review renders).
+* `out/check/ship_cabin/sync_final/` (+ `sheet_sync.jpg`) — sync frames f769 f786 f799 · f869 f888 f907 f941 · f964 f1003
+  f1019 f1026 f1033 f1055 · f1170 f1194 f1199 · f1200 f1233 · f1266 f1272 f1332 f1343 and the nested views.
+* Review rounds: `out/check/ship_cabin/review/` (r1 = state before the review, r2/r3*/final/final2 after; s005*…s011* =
+  per-shot iterations; consec = 6-frame flicker strips; match = S011 → S012 overlay; grain = scan-line check).
+* Match registrations verified on the renders: S005 first frame = T03 numbers (islet, bars, stone, wax, lower edge — camera
+  and chart layout unchanged by the review); S009 last frame pivot (0.46, 0.50), south tip at lower left (= S003
+  orientation); S010 near-eye point measured (0.459, 0.499); S011 end: fingers to screen lower-left 30°, pads around
+  (0.50, 0.52).
 * For the gallery (S004): use `needleChart('museum')` from this module on the same 0.60 × 0.32 m sheet layout (see
   lib/ISSUES.md) — the T03 match cut depends on both shots drawing the same chart.
 
 ## Known weaknesses
-* S010 cannot show the eye, the blink or the scar on the faceless head; it is the weakest frame of the module.
-* S006 thumb is a big soft shape from the upper right that covers half the frame for ~1 s; salt wipe small.
-* S005's window stripe is a pale grey-blue rather than the bible's P03.
-* S011 is the heaviest shot (≈ 2.4–2.8 s idle estimate), at or slightly over the 2.5 s worst-case budget; the cost is the
-  library's procedural skin/cloth shading of two frame-filling close-up hands.
-* The sail is a stylised quad with bellied panels; no luff rope, no yard detail; rigging is minimal.
-* Cabin interior is lit only by the lantern + window: deep blacks in S007's background.
-* Practical cheats: the lantern hangs at a different point of beam A per shot (S005/S009/S011 default, S007 starboard,
-  S010 port, view_cabin from the hatch trimmer, S006 solved off-frame for the glint) — never two of these in one frame.
+* S010 cannot show the eye, the blink or the scar on the faceless head; the moodier chiaroscuro makes it read as a
+  profile in the window light, but it is still the weakest frame of the module.
+* The library 'headcloth' reads as a flat beret in S007 / S010 / view_cabin (lib hair style; not changeable here).
+* Skin under the 1950 K practical stays warm-orange even balanced for the lamp; the faces / hands are still mannequin
+  smooth (lib look).
+* S006: the thumb is big in a 100 mm macro (≈ 40 % of frame for ~1.5 s) and enters from screen left, not lower right.
+* S007: ≈0.5 s of the rise (2.25–2.8 s) is mostly the dark coaming band (the intended dark-wood seam); the sail is a
+  stylised quad with bellied panels (no luff rope / yard detail).
+* S011: patch is the library's 3.3 × 3.8 cm (bible 4.5 × 6 cm); the cuff fold-back is not animated.
+* S004 (museum_gallery) does not exist yet, so the T03 cut is verified against the shot-list numbers only; S012
+  (restoration_lab) currently opens with the pinch at ≈ (0.72, 0.57), not at the registered (0.50, 0.52) that S011 ends on.
+
+## Review (art director + DP pass, 2026-10-05)
+Re-rendered every shot at u = 0.05 / 0.5 / 0.95, every sync frame, the nested view in both pane aspects, 6-frame
+consecutive strips (S009 settle, S011 hold) and the neighbours' adjoining frames (S008 f1075, S012 f1344); compared with
+the brief, shot list (`gen.keyframe_en / endframe_en / motion_en`), bible §5.3 / §6.1 / §6.2 / §6.4 / §6.14 / §7.3 and
+`director_rulings.md`. Problems found and fixed in `ship_cabin.js` (no engine / lib edits):
+
+**Whole module**
+* **Film grain printed as regular scan-lines** (engine hash precision at f760+, lib/ISSUES.md [sea_deck]) — very visible
+  over S007's sky and S005's paper. Fixed with the pier_waiting recipe: engine grain 0, integer-hash grain in the half-res
+  additive layer after the DOF, luminance-weighted; none in nested renders.
+* **Lamp flicker strobed** frame to frame on the macro inserts (±5 %, S009 brass jumped visibly): flicker depth halved
+  (`flk()`), the candle now breathes.
+* **Skin read saturated orange** (1950 K light × P19 albedo): close-ups of skin (S007, S010, S011) are balanced for the
+  practical (lamp #FFD7AD on skin, ≈2700 K camera) with a slightly cooler grade; skin is brown, the lamp still amber.
+
+**S005** — the gust lifted the corner 6 cm straight toward a top-down lens, i.e. invisibly: now a true page curl (fold line
+across the corner, wraps up past vertical, pale back face, moving shadow) that reads at 32.77 '蓝'. The window stripe was
+lavender (warm spill + blue on cream): lamp pool narrowed to the left two-thirds, window bluer. Brass bars were stretched-
+texture "copper pipes" → rounded cast bars with a spine, metre-scaled UVs. The stone ("wicker ball": masonry texture) →
+smooth speckled sea pebble. DOF removed (shot list 全幅清晰).
+
+**S006** — the thumb was a defocused dark-red band across half the frame (hand between lens and dial). Restaged from
+screen left at the dial's focal distance, the distal thumb laid along the rim, one slow E → W drag over the salt, focus rack
+to the nail and back for the glint's rest on 午, cool window fill on its near side: salt specks, cracked nail, the drag all
+read.
+
+**S007** — the crane rise never showed the hatch: tilt too fast, opening wider than the frame, the lid's black underside
+filling the frame. New time-parameterised path (no velocity kinks): beam → forward coaming sweeping down as a dark band
+with sail and sky beyond → through the opening → sail fills at 43.94 '帆'. Hatch lid moved to lean aft. Face reframed to
+(0.58, 0.50); cool hatch skylight on the head-cloth (a spot here drew an ugly pool on the deck-head → hemisphere term);
+warm chart bounce softens the split down the nose; deck-head untinted (it was a dead black field); lamp kept just out of
+frame left. Sail gets a warm-head / cool-foot / batten-shadow gradient.
+
+**S009** — in-use brass read museum chocolate: lamp solved so its reflection grades a warm sheen across the dial from upper
+left; the bible's cool line along the needle added (faint, solved into the needle's top facet).
+
+**S010** — an evenly lit orange mask → short-side chiaroscuro: cool window key on the front planes, warm shadowed kicker
+from behind his left shoulder raking cheek / jaw / ear and swinging, socket in shadow. Fixed an "ember" in the nostril (the
+unshadowed point light lit it through the head → the kicker is the lamp's shadowed spot). Near eye from the figure's own
+`eye()`: measured (0.459, 0.499). Head-cloth no longer lit royal blue. A ≈0.7° head settle marks 51.39 '回'.
+
+**S011** — the index finger floated above the cuff, fingers pointed ~0°/45° instead of 30°, the patch target sat on the
+cuff's inner wall, the frame was too tight (no readable right hand), the patch was a flat sticker, nails were manicure-white
+with salt "blotches", the sleeve a stovepipe and the chart roller end the brightest blob behind the cuff. Now: camera 0.9 m
+(fingertip ≈ 12 % of frame), fingers at 30° to lower left, both pads solved onto the outer cloth (touching), the outer-
+surface patch centre, a hand-stitched patch decal with the double-knotted corner, dull nails / fine salt, folded sleeves,
+roller hidden.
+
+**view_cabin** — the lantern overlapped his head from the vitrine's angle: moved along the trimmer 45 cm clear, lighting
+his profile; the portrait pane aimed a little starboard so lamp, head, window and dial all fit the G3a pane.
+
+Checked and fine: T03 registration (camera / chart layout untouched), T05 pivot → eye, sync timings (curl at 1.10 s, thumb
+2.5 / glint 4.7, look-up 1.61 / sail 3.77, needle dead at f1194, pads settle at f1272), no NaN / black frames, no
+z-fighting (decal 0.4 mm proud + polygon offset), consecutive frames differ only by grain and the lamp's slow swing.
+Cross-module: S012's opening pinch is off its registered position (see Known weaknesses) — for the restoration_lab owner.
