@@ -1,0 +1,615 @@
+[
+ {
+  "id": "S001",
+  "prompt_en": "Extreme close-up, 100mm macro, lens 1.18 m high, axis square to the south glass face of a frameless museum vitrine at night; motion-control push-in of only 2% across the whole 13 s, never stopping; 24 fps. Fade up from black over 0.5 s. At 1.2 s the slim gloved right hand of RESTORER, a ~28-year-old East Asian woman conservator (thin warm-white cotton glove, ribbed wrist, faint grey-brown brass smudge on index fingertip and thumb, edge of her charcoal wool coat cuff), enters from frame right, fingertips on the dusty glass, wiping a slow arc leftward; at 3 s a few white sea-salt crystals glint beyond the cleared band; at 4.5 s her fingertips slow and stop. At 6.6 s focus drifts through the glass into its dark mirror depth: the LEFT hand of NAVIGATOR, a ~35-year-old 17th-century seaman (large, thick-knuckled, rope-callused, cracked fingertips, white salt crystals between the fingers, faded indigo cuff), rises out of deep navy, palm toward the glass, and stops one finger-width from her hand at 11 s, not touching. He exists only inside the glass. Light: one narrow 3000K pin spot from above inside the vitrine; near-black navy behind; a soft brass glint far below. Neutral-cool modern grade, shadows #1A2D4A, fine 35mm grain, subtle halation, 2.39:1 anamorphic, no text.",
+  "prompt_zh": "极近特写，100mm 微距，镜头高 1.18 米，光轴垂直于夜间博物馆无框展柜的南侧玻璃面；运动控制在整整 13 秒内只推进约 2%，匀速不停；24 fps。0.5 秒内由黑场淡入。1.2 秒，修复师（约 28 岁东亚女性文物修复师）纤细的右手入画——戴略暖白的薄棉修复手套、罗纹腕口，食指与拇指指尖一点浅灰褐的黄铜污迹，画右边缘露出深灰羊毛呢外套的袖口——指尖贴着蒙尘的玻璃，从画右向画左缓缓擦出一道弧线；3 秒，擦净的清洁带另一侧闪过几粒白色海盐结晶；4.5 秒，指尖放慢、停住。6.6 秒，焦点缓缓穿过玻璃，进入它幽暗的镜像深处：航海人（约 35 岁，17 世纪远洋帆船上的火长）的左手从深蓝暗处升起——手大、指节粗、掌心有缆绳磨出的厚茧、指尖干裂、指缝里结着白色细盐，袖口是褪色的靛蓝粗布——掌心朝向玻璃，11 秒停在她的手前约一指宽处，尚未重合。他只存在于玻璃之中。光：展柜内顶部一盏 3000K 窄角射灯；玻璃后是近黑的深蓝绒布，画面下方远处一点柔和的黄铜反光。现代中性偏冷调色，暗部 #1A2D4A，细腻 35mm 颗粒，轻微光晕，2.39:1 变形宽银幕，无任何文字。",
+  "negative": "visible seam or jump at 6.5 s, the navigator's hand passing through the glass or casting a shadow in the gallery, translucent ghost arm or body behind the hand, navigator's RIGHT hand or any visible cuff patch, restorer's bare fingers, optical-white or blue-white glove, glove without the brass smudge, two hands merging or morphing, one hand completely hidden behind the other, compass sharp and competing with the hands, fingerprint smears forming letters, cyan or green glass tint, cool LED spot colour, zoom, rotation, camera shake",
+  "gen": {
+   "duration_s": 13.25,
+   "refs": [
+    "CHAR_RESTORER",
+    "CHAR_NAVIGATOR",
+    "PROP_GLOVES",
+    "PROP_COAT",
+    "PROP_COMPASS",
+    "LOC_GALLERY",
+    "LOC_DECK"
+   ],
+   "keyframe_en": "Still at t=1.2 s (after the 12-frame fade-up): extreme close-up of a frameless low-iron glass pane filling the 2.39:1 frame, a fine film of dust lit along its upper edge by a narrow 3000K top spot; beyond the glass near-black navy velvet and, low in frame, the soft out-of-focus honey glint of an aged brass compass; the gloved right index fingertip of RESTORER (thin warm-white cotton glove, faint grey-brown brass smudge on the tip) just touching the glass at (0.78,0.52), the charcoal wool coat cuff at the right edge; 100mm macro, focus on the glass surface, very shallow depth; neutral-cool grade, deep shadow detail, fine 35mm grain.",
+   "keyframe_zh": "静帧（约 1.2 秒，12 帧淡入之后）：无框低铁超白玻璃的极近特写占满 2.39:1 画面，玻璃上一层细尘被顶部 3000K 窄光勾亮上缘；玻璃后是近黑的深蓝绒布，画面下方一点虚焦的黄铜蜂蜜色反光；修复师戴略暖白薄棉手套的右手食指指尖（指尖一点浅灰褐黄铜污迹）刚触到玻璃，位于 (0.78,0.52)，画右边缘露出深灰羊毛呢外套袖口；100mm 微距，焦点在玻璃表面，极浅景深；现代中性偏冷调色，暗部有层次，细腻 35mm 颗粒。",
+   "endframe_en": "t=13.25 s, must equal S002 frame 0 (hidden seam): her gloved right hand, back of the hand to camera, fingers up, centred at (0.50,0.55), hand width ~44% of frame height, fingertips on the glass; NAVIGATOR's ~8% larger salt-crusted LEFT hand, palm to camera, thumb on the same side as hers (frame left), ~2 cm deeper in mirror depth and offset ~1% down-left, so his fingertips, thumb pad and palm heel show around her glove outline; focus at glass +1 cm, both hands sharp; compass glint soft at (0.52,0.88).",
+   "motion_en": "Camera: motion-control dolly push, 2% scale over 13.25 s, constant after a 12-frame ease-in; no pan, tilt, roll, shake or zoom; 24 fps. 0-0.5 s fade up from black. 1.23 s fingertip contacts the glass; 1.2-4.5 s the gloved fingertips wipe a smooth arc from frame right to left, decelerating, then stop and stay (micro-tremor only). 3.0 s salt crystals glint behind the cleared band. 6.6-9.0 s focus racks slowly (>=1 beat) from the glass surface to ~30 cm mirror depth; her hand softens. 8.0-11.0 s his left hand rises from below centre and advances toward the glass, focus following it back to ~2 cm; it stops at 11.0 s one finger-width from her hand. 11-13.25 s both hands nearly still, closing a few millimetres. Must NOT move: vitrine, glass edges, compass, pin spot, dust outside the wiped band; his hand never touches or lights anything in the room.",
+   "motion_zh": "摄影机：运动控制轨道推进，13.25 秒内画面放大约 2%，12 帧缓入后匀速；不摇、不俯仰、不滚转、不晃、不变焦；24 fps。0–0.5 秒由黑场淡入。1.23 秒指尖触到玻璃；1.2–4.5 秒戴手套的指尖由画右向画左擦出一道平滑弧线，逐渐放慢，停住后保持（只允许极细的颤动）。3.0 秒擦净带后闪过盐晶。6.6–9.0 秒焦点缓慢（≥1 拍）从玻璃表面移到约 30 cm 的镜像深处，她的手变虚。8.0–11.0 秒他的左手从画面中下方升起并向玻璃靠近，焦点随之回到约 2 cm 深处；11.0 秒停在她的手前一指宽。11–13.25 秒两只手几乎静止，只再靠近几毫米。不得移动：展柜、玻璃边缘、罗盘、射灯、擦拭带以外的灰尘；他的手不触碰、不照亮房间里的任何东西。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 7.0,
+     "note": "Seg 1 (f0-f168): fade-up, wipe, salt glint, stop, rack starts 6.6 s. Generate 0-7.0 s = 0.5 s tail handle past the hidden seam at 6.5 s (f156)."
+    },
+    {
+     "t0": 6.5,
+     "t1": 13.25,
+     "note": "Seg 2 (f156-f318): I2V from the seg-1 frame at 6.5 s with focus already travelling; navigator's hand rises and stops at 11.0 s; last frame = S002 frame 0. Generate 6.0-13.75 s (0.5 s handles), cut on matched frames, no dissolve."
+    }
+   ],
+   "plates": [
+    {
+     "name": "A",
+     "desc": "Modern plate on motion-control path MC_G1_OPEN (save for S002 and S071): G1 south glass ECU, dust film, RESTORER's gloved right hand wiping then resting; vitrine interior near-black navy with the soft compass glint; 3000K top spot. Focus keyframed: glass surface to 6.6 s, rack to 30 cm, then follow plate B back to ~2 cm."
+    },
+    {
+     "name": "B",
+     "desc": "Mirror-depth plate: NAVIGATOR's LEFT hand only, palm to camera, against a deep navy void (#0E1B30 to #1A2D4A) with a faint low warm 1950K bounce from lower left (his lantern-lit world); same 100mm perspective and push; rises from 30 cm depth to 2 cm; generated ~8% larger than her hand; salt crystals crisp; no arm beyond the faded indigo cuff."
+    },
+    {
+     "name": "C",
+     "desc": "Glass element pass: dust-film texture and an animated clean-band matte following her fingertip path (1.2-4.5 s), plus a few salt-crystal glints behind the band at 3.0 s."
+    }
+   ],
+   "post": "Composite B as a reflection, never a ghost: inside the clean-band matte (feather ~40 px at 1920) screen B at ~30% at first reveal (3.0 s glints), ramping to ~55% by 11 s; outside the band hold B under the dust layer at <=10%. Pull A's transmitted vitrine interior down ~1 stop inside the matte so the reflection can read (dark behind the glass, bright reflected space, bible 8.3). Defocus B by mirror depth (30 cm -> 2 cm) in sync with A's rack; no light or shadow from B on A. Grade A CT_MODERN, B CT_NAV attenuated by reflectance; final grain 1.0 (B 1.15 before comp); halation 0.3 on the pin spot. 12-frame fade from black. Sync: f30 (1.23 s, first instrumental onset) fingertip contact; f72 (3.0 s) salt glint; f108 (4.5 s) fingertips stop; f158 (6.6 s, vocal pad) rack starts; f264 (11.0 s) his hand stops. Save MC data (T01) for S002/S071.",
+   "match_to": "Hidden seam into S002 on the identical frame f318. T01 registry (0.50,0.55), hand width 45% of frame height is reached in S002 at 15.14 s; the same MC path and point are reused in S071 (future viewer's right hand)."
+  }
+ },
+ {
+  "id": "S002",
+  "prompt_en": "Extreme close-up easing into a slow pull-back to medium close-up, 100mm, lens 1.18 m, square to a frameless museum vitrine's glass; motion control, one continuous take, 24 fps. 0-1.9 s: the slim gloved right hand of RESTORER, ~28-year-old East Asian woman conservator (thin warm-white cotton glove, brass smudge on the index tip, charcoal wool coat cuff), and, inside the glass, the larger salt-crusted LEFT hand of NAVIGATOR, ~35-year-old 17th-century seaman (thick knuckles, rope calluses, cracked fingertips, faded indigo cuff), drift together until at 1.9 s they almost coincide palm to palm, 3-5 mm apart, centred low-middle. 2.3 s: her fingertips give one small tremor; his hand stays still. 3.4 s: she lifts her hand away to frame right and the camera eases into a slow 1.2 m retreat. 4.2 s: focus racks into the mirror depth; his hand recedes and the reflection opens into a deep-navy night sea, a horn-paned stern lantern swinging over heavy swell at upper left of the pane; through the glass, the quiet gallery and an aged brass compass under a 3000K pin spot; her faint silhouette on the glass at right. 6.2 s: a distant 4000K flashlight beam sweeps right to left once. Fine 35mm grain, 2.39:1, no text.",
+  "prompt_zh": "极近特写缓缓转为后退至中近景，100mm，镜头高 1.18 米，正对夜间博物馆无框展柜的玻璃；运动控制，一镜到底，24 fps。0–1.9 秒：修复师（约 28 岁东亚女性文物修复师）戴略暖白薄棉手套的纤细右手（食指指尖一点黄铜污迹，深灰羊毛呢外套袖口），与玻璃之中航海人（约 35 岁，17 世纪火长）更大的、带盐的左手（指节粗、掌心缆绳厚茧、指尖干裂、褪色靛蓝袖口）继续靠近，1.9 秒时掌心相对、几乎完全重合，只差 3–5 毫米，位于画面中央偏下。2.3 秒：她的指尖下意识轻轻一颤；他的手纹丝不动。3.4 秒：她把手从玻璃上移开、退出画右，摄影机以缓入转为约 1.2 米的缓慢后退。4.2 秒：焦点移进镜像深处——他的手退远，反射展开成一片深蓝夜海，一盏角片艉灯在沉重的涌浪上摇晃，位于这块玻璃的左上方；透过玻璃，是安静的现代展厅和 3000K 射灯下一枚旧黄铜罗盘；她淡淡的身影浮在玻璃右侧。6.2 秒：远处一道 4000K 手电光束由画右向画左扫过一次。细腻 35mm 颗粒，2.39:1，无任何文字。",
+  "negative": "jump at the seam with S001, hands morphing or fusing through the glass, ghost body standing in the gallery, the sea seen outside the glass instead of in its reflection, unmirrored or pasted-on reflection, reflection fading out globally, electric bulb in the stern lantern, blue streak flare, the restorer's body blocking the vitrine during the pull-back, guard's face or figure in focus, flashlight sweeping more than once or left-to-right, compass needle moving, zoom instead of a dolly retreat, wobble",
+  "gen": {
+   "duration_s": 7.875,
+   "refs": [
+    "CHAR_RESTORER",
+    "CHAR_NAVIGATOR",
+    "CHAR_GUARD",
+    "PROP_GLOVES",
+    "PROP_COAT",
+    "PROP_SHIPLAMP",
+    "PROP_FLASHLIGHT",
+    "PROP_COMPASS",
+    "LOC_GALLERY",
+    "LOC_DECK"
+   ],
+   "keyframe_en": "Still, frame 0 (identical to S001's last frame): ECU through vitrine glass; RESTORER's gloved right hand back-to-camera, fingers up, at (0.50,0.55), hand width ~44% of frame height; behind her glove, in the glass's mirror depth, the larger salt-crusted LEFT hand of NAVIGATOR palm to camera, his fingertips, thumb pad and palm heel showing around her glove outline; both sharp; deep navy behind; dust glowing under the 3000K top spot; soft brass glint low; neutral-cool grade, fine grain.",
+   "keyframe_zh": "静帧，第 0 帧（与 S001 末帧完全一致）：隔着展柜玻璃的极近特写；修复师戴手套的右手手背朝镜头、四指向上，位于 (0.50,0.55)，手宽约占画面高 44%；在她手套之后、玻璃的镜像深处，航海人更大的带盐左手掌心朝镜头，指尖、拇指根与掌根从她手套轮廓的四周露出；两手都在焦内；背景深蓝；顶部 3000K 射灯照亮玻璃上的细尘；下方一点柔和黄铜反光；现代中性偏冷调色，细腻颗粒。",
+   "endframe_en": "t=7.875 s, hidden cut into S003 on a moving glass-edge highlight: MCU of the G1 vitrine; glass hood spans ~65% of frame width; compass small on its 15-degree cradle at (0.50,0.62); in the hood's south pane the reflected night sea with the swinging stern lantern at (0.36,0.32); the restorer's faint reflected silhouette at (0.74,0.45); the hood's front-right vertical edge carries a thin moonlit highlight at x~0.66, drifting left - S003 opens on the same line.",
+   "motion_en": "Camera: 0-3.4 s residual MC push (~1%) easing to zero at 3.45 s, then a 12-24-frame ease into a constant slow pull-back of 1.2 m to the end, same axis (no arc yet); the last 6 frames begin an imperceptible drift right that brings the hood-edge highlight into frame. 24 fps. Subject: 0-1.9 s the hands close the last millimetres (his advancing, hers still) to near-coincidence at 1.9 s; 2.3 s one tiny tremor of her fingertips, his hand absolutely still. 3.4-3.9 s her hand lifts off the glass and exits frame right (she steps out of the camera axis). 4.24 s focus racks >=1 beat into mirror depth; his hand recedes ~40 cm and darkens as the sea reflection widens; the stern lantern swings on a 6-8 s period, swell rolling slowly. 6.25 s a 4000K flashlight beam sweeps once right to left in the far background, then gone. Must NOT move: vitrine, compass, pin spot; the reflection never fades globally.",
+   "motion_zh": "摄影机：0–3.4 秒为运动控制推进的余势（约 1%），在 3.45 秒缓停，随后以 12–24 帧缓入转为匀速缓慢后退约 1.2 米直到结束，光轴不变（尚不绕行）；最后 6 帧开始几乎察觉不到地向右偏移，让玻璃罩立边的高光进入画面。24 fps。主体：0–1.9 秒两手合上最后几毫米（他的手靠近，她的手不动），1.9 秒几乎重合；2.3 秒她的指尖轻轻一颤，他的手绝对静止。3.4–3.9 秒她的手离开玻璃、从画右退出（她走出镜头轴线）。4.24 秒焦点用 ≥1 拍移进镜像深处；他的手退远约 40 cm、渐暗，海面反射随之展开；艉灯以 6–8 秒周期摆动，涌浪缓慢起伏。6.25 秒远景里一道 4000K 手电光束由画右向画左扫过一次，随即消失。不得移动：展柜、罗盘、射灯；反射绝不整体淡出。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 3.8,
+     "note": "Seg 1: ECU hands, continuation of S001 plates A/B/C; near-coincidence 1.9 s, tremor 2.3 s, her hand lifts away 3.4-3.8 s. Generate 0-4.3 s (0.5 s tail handle)."
+    },
+    {
+     "t0": 3.3,
+     "t1": 7.875,
+     "note": "Seg 2: MC pull-back reveal; his hand recedes; sea reflection opens; flashlight at 6.25 s. Generate 2.8-8.375 s (0.5 s handles); blend the seam 3.3-3.8 s on her hand's exit motion."
+    }
+   ],
+   "plates": [
+    {
+     "name": "A",
+     "desc": "Modern MC plate (continuation of MC_G1_OPEN): G1 vitrine, aged compass under the 3000K spot, gallery depth seen through the glass hood with moonlight shafts on the teak floor; RESTORER's hand withdrawing to frame right; her faint reflection on the right of the south pane."
+    },
+    {
+     "name": "B",
+     "desc": "NAVIGATOR's LEFT hand (continues S001 plate B), receding into mirror depth 4.2-5.5 s and darkening."
+    },
+    {
+     "name": "C",
+     "desc": "Night-sea mirror plate (LOC_DECK): deep navy heavy swell under moonlight, a hexagonal horn-paned stern lantern (1950K, candle) swinging on a 6-8 s period at a dark stern rail; rendered from the MC path mirrored across the glass plane so parallax is true."
+    },
+    {
+     "name": "D",
+     "desc": "Flashlight element: one narrow 4000K beam sweeping right to left across the far gallery floor and columns at 6.25 s; the guard himself only a dark blur."
+    }
+   ],
+   "post": "Reflection lives only inside the hood's south-pane matte (planar track, 6 px feather; hood edges keep their own highlights). B continues at ~50% from S001 to 4.0 s, then hands over to C by depth as focus passes (4.24-5.0 s), not by a global fade; C sits at ~30-35% screen with the transmitted compass and gallery readable beneath; C is a true mirror image; lantern in the upper-left third of the pane. Darken the vitrine interior inside the pane ~0.7 stop. Her silhouette reflection ~10%, darker than C. Grade A CT_MODERN, C CT_NAV attenuated; grain unified 1.0; lantern halation 0.5 inside the reflection. Sync: f363 (15.14 '千') hands closest = T01 registry (0.50,0.55), hand width 45% of frame height; f373 (15.56 '年') tremor; f401 (16.7) pull-back begins; f420 (17.49 downbeat) rack into the sea; f468 (19.5) flashlight sweep.",
+   "match_to": "Frame 0 = S001 last frame (hidden seam). The 15.14 s T01 frame is the reference for S071 (future viewer's hand at the same point, same MC data). Ends on the hood-edge highlight that hides the cut into S003 (T02)."
+  }
+ },
+ {
+  "id": "S003",
+  "prompt_en": "Close-up, 75mm anamorphic, lens about 1.2 m high, slight high angle; the camera, carrying the retreat's momentum, arcs 15 degrees to the right around a frameless museum vitrine and creeps in toward the object; 24 fps. At 0.5 s, as the arc begins, the reflected deep-navy night sea and swinging horn-paned ship lantern in the glass start sliding sideways across the pane, by changing angle, not fading, and at 1.8 s slip past the glass edge and vanish. By 2.9 s only the object remains: a 17th-century brass mariner's compass in its museum state, stabilised chocolate-brown patina with honey high points, blue-green verdigris in the deepest grooves, an engraved bearing ring and drilled star points, a crack across the mica cover near the north-west edge, the red-lacquered south tip of the blued needle still pointing south toward lower left, tilted 15 degrees on a clear acrylic cradle over near-black navy velvet. At 4.9 s the camera settles and holds. Light: one narrow 3000K pin spot from directly above inside the vitrine; a cool moonlit edge on the glass. Modern grade, shadows #1A2D4A, fine 35mm grain, engraved marks soft, 2.39:1, no legible text.",
+  "prompt_zh": "近景，75mm 变形镜头，镜头高约 1.2 米，略俯；摄影机承接后退的余势，绕夜间博物馆无框展柜向右弧移约 15°，并缓缓向展品推近；24 fps。0.5 秒弧移开始，玻璃里反射的深蓝夜海与摇晃的角片船灯开始沿玻璃横向滑走——靠角度变化，不是淡出——1.8 秒滑过玻璃边缘、消失。2.9 秒，画面里只剩那件东西：一枚 17 世纪黄铜罗盘的博物馆状态——经稳定化处理的巧克力褐包浆、高点保留蜂蜜色，最深的刻槽里有蓝绿色铜绿，二十四向刻字圈与钻孔星点，云母片在西北（乾位）边缘一道裂纹，发蓝钢针南端那滴朱红漆仍指着南、朝向画左下——倾斜 15° 躺在透明亚克力托架上，下衬近黑的深蓝绒布。4.9 秒摄影机停稳、保持。光：展柜内正上方一盏 3000K 窄角射灯；玻璃边缘一线冷月光。现代调色，暗部 #1A2D4A，细腻 35mm 颗粒，刻字保持柔和，2.39:1，无可读文字。",
+  "negative": "reflection fading or dissolving instead of sliding off by angle, sea or lantern still visible after 1.8 s, ghost overlay, compass in its fresh golden in-use state, intact mica, missing verdigris, needle not pointing south or moving, wrong or AI-invented bearing characters in sharp focus, red or beige lining instead of navy velvet, vitrine label or plaque text, several spotlights, cool LED spot, camera shake, whip pan",
+  "gen": {
+   "duration_s": 7.292,
+   "refs": [
+    "PROP_COMPASS",
+    "PROP_SHIPLAMP",
+    "LOC_GALLERY",
+    "LOC_DECK"
+   ],
+   "keyframe_en": "Still, frame 0 (same framing as S002's last frame, now on a 75mm lens): MCU of the G1 vitrine, glass hood ~65% of frame width, the museum-state compass small at (0.50,0.62) on its acrylic cradle over near-black navy velvet under a 3000K pin spot; the reflected night sea and swinging stern lantern still in the south pane at upper left (0.36,0.32); a thin moonlit highlight on the hood's front-right vertical edge at x~0.66; dark gallery beyond with cool moonlit floor shafts; neutral-cool grade, fine grain.",
+   "keyframe_zh": "静帧，第 0 帧（与 S002 末帧同构图，换 75mm）：G1 展柜中近景，玻璃罩约占画面宽 65%，博物馆状态的罗盘小小地位于 (0.50,0.62)，在亚克力托架上、近黑深蓝绒布之上，顶部 3000K 射灯；南侧玻璃左上方 (0.36,0.32) 仍映着夜海与摇晃的艉灯；玻璃罩前右立边一线冷月高光位于 x≈0.66；远处是黑暗的展厅与地板上的冷月光斑；现代中性偏冷调色，细腻颗粒。",
+   "endframe_en": "t=7.29 s: close-up, compass centred at (0.50,0.55), ~60% of frame height, tilted 15 degrees toward camera; needle's red south tip pointing lower left (same on-screen orientation as S009); mica crack at the north-west edge near the top of the needle well; no trace of the sea reflection on the glass; pin-spot highlight on the rim at the top.",
+   "motion_en": "Camera: from the retreat's momentum, 0-0.45 s ease into a slow rightward arc of ~15 degrees around the vitrine, combined with a gentle push-in toward the compass (~25 cm in total); the arc decelerates over 3.0-4.9 s and settles at 4.9 s, then locked to the end; 24 fps. Reflection: from 0.45 s the reflected sea and lantern slide across the pane toward frame left with the angle change and exit past the hood's left vertical edge by 1.8 s - no fade; by 2.9 s only the compass remains. Focus: rack from reflection depth to the compass dial over 0.5-1.8 s. Must NOT move: compass, needle, cradle, pin spot, vitrine; no zoom.",
+   "motion_zh": "摄影机：承接后退余势，0–0.45 秒缓入为绕展柜约 15° 的缓慢右弧移，同时轻轻推向罗盘（共约 25 cm）；3.0–4.9 秒弧移减速，4.9 秒停稳，此后锁定到结束；24 fps。反射：0.45 秒起，随角度变化，反射里的海与船灯沿玻璃向画左滑动，1.8 秒前滑出玻璃罩左立边——不淡出；2.9 秒只剩罗盘。焦点：0.5–1.8 秒由反射深处转到罗盘盘面。不得移动：罗盘、针、托架、射灯、展柜；不变焦。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 3.0,
+     "note": "Seg 1: arc start and reflection slide-off (plates A + C). Generate 0-3.5 s."
+    },
+    {
+     "t0": 2.5,
+     "t1": 7.29,
+     "note": "Seg 2: push-in and settle on the compass, single plate. Generate 2.0-7.29 s; blend on the continuous push 2.5-3.0 s."
+    }
+   ],
+   "plates": [
+    {
+     "name": "A",
+     "desc": "Modern MC plate: G1 vitrine with the museum-state compass along the arc + push path; gallery and moonlight shafts beyond; no reflection content generated in the glass."
+    },
+    {
+     "name": "C",
+     "desc": "Reuse S002 plate C (night sea + stern lantern), re-rendered from the arc path mirrored across the south pane so it slides left and out of the pane by 1.8 s."
+    }
+   ],
+   "post": "Reflection C composited only inside the south-pane matte at ~30% (continuing S002), moved by the mirrored-camera solve; it leaves by geometry, never by opacity. Compass glyphs: the AI plate keeps the 24 bearings soft; if the dial resolves at this size, replace the ring with the calligrapher-approved texture (clockwise from north 子 癸 丑 艮 寅 甲 卯 乙 辰 巽 巳 丙 午 丁 未 坤 申 庚 酉 辛 戌 乾 亥 壬) tracked to the dial. Grade CT_MODERN: P09 honey highs, P10 patina, P12 verdigris <=1% of frame. Hidden cut from S002 on the hood-edge highlight at frame 0. Sync: f518 (21.58 '有') arc begins; f550 (22.9 '远') sea gone; f576 (24.0) compass alone; f624 (26.0) settled; hold to f682.",
+   "match_to": "Opens on S002's hood-edge highlight (hidden cut, completes T02). Museum state contrasts with the in-use compass of S006/S009; needle on-screen orientation (south to lower left) = S009."
+  }
+ },
+ {
+  "id": "S004",
+  "prompt_en": "Insert, 50mm anamorphic, camera overhead looking down through the horizontal glass top of a museum flat case at night, axis square to the chart's gently tilted board, polariser killing glare; locked with an imperceptible descending push (about 3% over 3.2 s); 24 fps. Filling the frame: a yellowed early-17th-century Chinese needle-route sea chart on a mulberry-paper handscroll in its museum state, paper #CDB98C with brown foxing, edge losses mended with slightly paler toned tissue, soft fold lines and visible fibres; a fictional coastline drawn as little mountain-profile islands and ink-dot reefs over pale indigo water, a twin-peaked islet at 62% across and 40% down, a fine dotted route line; tiny brush annotations soft and illegible; two clear acrylic strips hold the left end and the top edge. In the first frame a gloved fingertip of RESTORER (thin warm-white cotton glove, faint brass smudge) rests on the glass at lower right; at 0.2 s it lifts and by 1.1 s has withdrawn out of frame, leaving a fading smudge of reflection. Light: dimmed 3000K case light, a thin line of cool moonlight along the glass edge. Neutral-cool modern grade, fine 35mm grain, 2.39:1, no text.",
+  "prompt_zh": "插入镜头，50mm 变形镜头，摄影机在上方透过博物馆平柜的水平玻璃面向下拍，光轴垂直于海图下那块微倾的卡板，用偏振镜消除反光；锁定，几乎察觉不到地向下推进（3.2 秒内约 3%）；24 fps。占满画面的是一张泛黄的 17 世纪上半叶针路图，桑皮纸手卷的博物馆状态：纸色 #CDB98C，满布褐色霉斑，边缘缺损处用颜色略浅的调色和纸修补，折痕柔软，纸纤维可见；一段虚构的海岸线以山形立面画法画成小小的岛屿侧影，墨点为礁，水面淡花青晕染，一座双峰小岛位于横向 62%、纵向 40% 处，一条细墨点航线；小楷注记柔和、不可读；两条透明亚克力压条压住左端与上边。第一帧里，修复师戴略暖白薄棉手套的指尖（一点黄铜污迹）停在画右下的玻璃上；0.2 秒抬起，1.1 秒前退出画面，只留下一点渐淡的反光。光：调暗的 3000K 柜内光，玻璃边缘一线冷月光。现代中性偏冷调色，细腻 35mm 颗粒，2.39:1，无任何文字。",
+  "negative": "legible or fake Chinese characters on the chart, European compass rose, keystoned or skewed chart, glare hot-spots on the glass, chart corners moving, fresh cream paper (this is the aged museum state), yellow-green or sepia cast, red route line, bare finger, fingertip lingering after 1.1 s, label or plaque text, visible case frame logos",
+  "gen": {
+   "duration_s": 3.25,
+   "refs": [
+    "CHAR_RESTORER",
+    "PROP_CHART",
+    "PROP_GLOVES",
+    "LOC_GALLERY"
+   ],
+   "keyframe_en": "Still, frame 0: overhead insert through the G2 flat-case glass; the museum-state chart fills the frame with the registry of the end frame; a gloved fingertip resting on the glass at lower right (0.90,0.82) with a faint glove reflection; a moonlight line along the glass edge at the top; dim even 3000K case light; paper fibres, foxing and tissue repairs crisp.",
+   "keyframe_zh": "静帧，第 0 帧：透过 G2 平柜玻璃的俯拍插入镜头；博物馆状态的海图按末帧登记的构图占满画面；一只戴手套的指尖停在画右下 (0.90,0.82) 的玻璃上，带一点手套的淡反光；画面上方玻璃边缘一线月光；均匀而暗的 3000K 柜内光；纸纤维、霉斑与补纸清晰。",
+   "endframe_en": "t=3.25 s, T03 A-frame for S005: unrolled chart spans x 0.05-0.95 (chart width = 90% of frame width); its lower edge at y~0.88 with the free lower-right corner at (0.95,0.88); upper edge just beyond the frame top (the 32 cm scroll is taller than the 2.39 frame at this scale); twin-peaked islet centred at (0.62,0.40); acrylic strip 1 vertical across the left end at x~0.10; acrylic strip 2 horizontal along the top edge from x 0.55 to 0.95 at y~0.06; dotted route from (0.15,0.70) to the islet; no fingertip, no reflection smudge.",
+   "motion_en": "Camera: locked overhead, axis square to the chart's 10-degree board, imperceptible descending push (~3% scale over 3.25 s, constant); 24 fps. Subject: frame 0 the gloved fingertip rests on the glass at lower right; 0.2-1.1 s it lifts and withdraws out of frame right, its faint reflection fading by 1.4 s; the chart is fully readable by 0.48 s. Must NOT move: chart, acrylic strips, paper corners, light.",
+   "motion_zh": "摄影机：俯拍锁定，光轴垂直于倾斜 10° 的卡板，几乎察觉不到地向下推进（3.25 秒内匀速约 3%）；24 fps。主体：第 0 帧戴手套的指尖停在画右下的玻璃上；0.2–1.1 秒抬起并从画右退出，淡反光在 1.4 秒前消失；0.48 秒海图已完整呈现。不得移动：海图、亚克力压条、纸角、光。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 3.25,
+     "note": "Single generation."
+    }
+   ],
+   "plates": [],
+   "post": "Keep only the thin moonlight edge line as glare. Chart annotations stay soft and low-contrast (no AI pseudo-script in focus). Grade CT_MODERN with paper held near P15 #D6C6A2 - no yellow-green or sepia. Verify the end frame against S005's start (islet and strip/weight positions within +/-3%). Sync: f694 (28.9 '海图泛黄') chart fully presented; f708 (29.52 '黄') fingertip gone.",
+   "match_to": "End frame = T03 A-frame for the S005 match cut (same chart, same crop; acrylic strips -> brass weights)."
+  }
+ },
+ {
+  "id": "S005",
+  "prompt_en": "Insert, 50mm anamorphic, straight overhead onto the chart table in the cramped stern cabin of a 17th-century Chinese ocean-going junk at dusk; the camera rides the ship's slow 7-second roll with a faint sway; shot at 48 fps for 50% slow motion. Matching the museum frame exactly: the same needle-route chart in use, fresher cream paper #DCCDA6 with crisp ink, softened by handling, corners curling, one candle-wax drip, the twin-peaked islet at 62% across and 40% down; two small brass weights sit exactly where the acrylic strips were, on the left end and the top edge, and a round grey stone pins the lower-left corner; the lower-right corner is free. Warm 1950K light from a horn-paned cabin lantern swinging overhead slides slowly across the paper; cool dusk blue from the barred stern window lays a vertical stripe at frame right. At 1.1 s a gust from the stern window at frame right lifts the free lower-right corner; the paper curls up, flutters and settles back in slow motion. Navigator-era grade: strong warm/cool split, amber #E2A458 against twilight blue #2E4A6E, smoke-dark wood at the edges, fine grain, subtle halation, annotations illegible, 2.39:1, no text.",
+  "prompt_zh": "插入镜头，50mm 变形镜头，正俯拍 17 世纪远洋帆船艉部狭小针房里的海图桌，暮色；摄影机随船体约 7 秒一周期的起伏轻轻晃动；48 fps 拍摄，50% 慢动作。与博物馆画面严格对位：同一张针路图在使用中——纸色较新的米色 #DCCDA6、墨色清楚，却已被手翻软、四角卷起，有一处烛泪，双峰小岛位于横向 62%、纵向 40%；两块小铜镇纸恰好放在亚克力压条的位置——左端与上边——一块灰色圆石压住左下角；右下角空着。头顶摆动的角片舱灯 1950K 暖光在纸面上缓缓移过；艉墙直棂小窗透进的暮色冷蓝在画右投下一道竖条。1.1 秒，一阵风从画右的艉窗灌入，掀起空着的右下纸角；纸卷起、颤动，再以慢动作落回原处。航海时代调色：全片最强的冷暖对比，琥珀 #E2A458 对暮蓝 #2E4A6E，画边是被烟熏深的木头，细腻颗粒，轻微光晕，注记不可读，2.39:1，无任何文字。",
+  "negative": "brand-new pristine paper, aged foxing (that is the museum state), weights or stone in the wrong place, corner lifting on the left or top, whole chart blowing away, European compass rose, legible or fake characters, electric light, modern objects, chart misaligned with the S004 frame, jerky speed ramp, flame streak flare, cyan dusk",
+  "gen": {
+   "duration_s": 2.833,
+   "refs": [
+    "PROP_CHART",
+    "PROP_SHIPLAMP",
+    "LOC_CABIN"
+   ],
+   "keyframe_en": "Still, frame 0 (must match S004's last frame within +/-3%): straight down onto the cabin chart table; the same chart in its in-use state, cream #DCCDA6, crisp ink, corners curling; islet at (0.62,0.40); a small brass weight on the left end at (0.10,0.50) and another on the top edge at (0.78,0.06), exactly where the acrylic strips were; a round grey stone on the lower-left corner (0.08,0.85); lower-right corner free at (0.95,0.88); a candle-wax drip near (0.30,0.62); warm 1950K lantern pool from upper left, a vertical twilight-blue stripe from the stern window at frame right; smoke-dark table wood at the edges; navigator grade, fine grain.",
+   "keyframe_zh": "静帧，第 0 帧（须与 S004 末帧误差 ±3% 以内）：正俯拍船舱海图桌；同一张海图的当年状态，米色 #DCCDA6、墨色清楚、四角卷起；双峰小岛在 (0.62,0.40)；一块小铜镇纸压在左端 (0.10,0.50)，另一块在上边 (0.78,0.06)，恰是亚克力压条的位置；一块灰色圆石压住左下角 (0.08,0.85)；右下角 (0.95,0.88) 空着；(0.30,0.62) 附近一处烛泪；舱灯 1950K 暖光池来自左上，艉窗暮蓝在画右投下竖条；画边是烟熏深的桌木；航海时代调色，细腻颗粒。",
+   "endframe_en": "",
+   "motion_en": "Shot at 48 fps, played at 24 fps (50% slow motion): the 68 timeline frames cover 1.42 s of real action. Camera: overhead, riding the ship's slow roll - a gentle sway of <=1% of frame, at half speed. Light: the lantern glow slides slowly across the paper (reads as a 12-16 s swing at half speed). 1.10 s: a gust from frame right lifts the free lower-right corner ~6 cm; the paper curls, flutters and settles back by 2.6 s. Must NOT move: the weights, the stone, the islet's position, the rest of the chart (only the free corner lifts).",
+   "motion_zh": "以 48 fps 拍摄、24 fps 播放（50% 慢动作）：时间线上 68 帧对应 1.42 秒的真实动作。摄影机：俯拍，随船体缓慢起伏，以半速轻轻晃动，幅度 ≤ 画面 1%。光：舱灯暖光在纸面上缓缓移过（半速下看起来是 12–16 秒的摆动）。1.10 秒：一阵风从画右掀起空着的右下纸角约 6 cm，纸卷起、颤动，2.6 秒前落回。不得移动：镇纸、圆石、小岛位置、海图其余部分（只有空着的那只角被掀起）。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 2.83,
+     "note": "Single generation at 48 fps (or a 2.83 s half-speed render); use S004's end frame as the composition reference image."
+    }
+   ],
+   "plates": [],
+   "post": "Match cut T03: overlay S004's last frame at 50% to validate islet and weight positions (+/-3%). The 3000K -> 1950K jump is the cut itself (no dissolve). Annotations illegible. Grade CT_NAV, grain 1.15, halation 0.5 around the lantern pool. Sync: f769 (32.05) lyric onset; f786 (32.77 '蓝') corner lift begins.",
+   "match_to": "Start = T03 B-frame from S004. The same swinging lantern light carries into S006 (glint along the brass)."
+  }
+ },
+ {
+  "id": "S006",
+  "prompt_en": "Extreme close-up, 100mm macro at T5.6-T8, slight high angle grazing the face of a brass mariner's compass in the stern cabin of a 17th-century junk; camera locked, only riding the ship's gentle roll; 24 fps. The compass in its in-use state: warm golden brass #B8925A, soot and grease in the engraved grooves, eight trigram bars, a ring of 24 engraved bearings, an outer ring of tiny drilled star points linked by hair-fine lines, a silver-inlaid pole star, intact golden mica over the blued needle with its red-lacquered south tip, white salt bloom on the rim. The light moves, not the camera: one warm glint from the swinging horn-paned lantern (1950K, overhead) travels along the star ring; at 1.7 s it crosses the star points. At 2.5 s the right thumb of NAVIGATOR enters, a ~35-year-old seaman's large, cracked, rope-callused thumb with salt in the creases, slowly wipes salt from the rim at the south mark and withdraws by 4.0 s, leaving the brass bright; at 4.7 s the glint comes to rest on that south mark. The rim is the brightest line. Navigator-era grade, deep layered shadow, fine 35mm grain, engraved characters soft, 2.39:1, no legible text.",
+  "prompt_zh": "极近特写，100mm 微距，T5.6–T8，略俯、贴着 17 世纪远洋帆船艉部针房里一枚黄铜罗盘的盘面；摄影机锁定，只随船体轻微起伏；24 fps。罗盘为当年状态：温暖的金黄铜色 #B8925A，刻槽里积着烟灰与油污，八卦刻线、二十四向刻字一圈、外圈二十八处钻孔小星点以极细刻线相连、一颗嵌银的北辰，完整的微金色云母片下是发蓝钢针、南端一滴朱红漆，口沿有白色盐霜。动的是光，不是摄影机：头顶摆动的角片舱灯（1950K）投下一点暖光，沿星点外圈移动；1.7 秒掠过星点。2.5 秒，航海人（约 35 岁）粗大、干裂、带缆绳老茧、纹路里嵌着盐的右手拇指入画，沿南向（午位）口沿缓缓抹去一层盐霜，4.0 秒前收回，铜面露出亮色；4.7 秒那点暖光停在这一处南向口沿上。口沿是画面最亮的线。航海时代调色，暗部深而有层次，细腻 35mm 颗粒，刻字柔和，2.39:1，无可读文字。",
+  "negative": "camera moving instead of the light, glint jumping or flickering, a modern compass rose or Western letters, wrong or AI-invented characters in sharp focus, verdigris or cracked mica (museum state), needle swinging, thumb with clean manicured nail, left thumb, plastic hyper-sharp macro, oversaturated gold, electric light",
+  "gen": {
+   "duration_s": 5.667,
+   "refs": [
+    "CHAR_NAVIGATOR",
+    "PROP_COMPASS",
+    "PROP_SHIPLAMP",
+    "LOC_CABIN"
+   ],
+   "keyframe_en": "Still, frame 0: macro at a grazing slight-high angle across the warm golden brass dial in a dark cabin: the outer ring of drilled star points linked by hair-fine lines sharp in the foreground, the 24-bearing ring beyond (glyphs soft), intact golden mica over the blued needle; soot in the grooves; white salt bloom on the rim at the south mark at lower left; a single warm 1950K lantern glint on the star ring at the east side (frame right); rim the brightest line; deep layered shadow; navigator grade, fine grain.",
+   "keyframe_zh": "静帧，第 0 帧：微距，略俯、几乎掠射地横过黑暗船舱中温暖的金色铜盘：前景是以极细刻线相连的钻孔星点外圈，清晰；其后是二十四向刻字圈（字形柔和），完整的金色云母下是发蓝钢针；刻槽积灰；画左下南向口沿上有白色盐霜；星圈东侧（画右）一点 1950K 舱灯暖光；口沿最亮；暗部深而有层次；航海时代调色，细腻颗粒。",
+   "endframe_en": "",
+   "motion_en": "Camera locked, riding a <=0.5% ship roll; 24 fps. The light moves, not the camera: one slow lantern half-swing carries a warm glint along the star ring from the east side toward the south mark (about 60 degrees of arc, from 辰 through 巽, 巳, 丙 to 午) - crossing the star points at 1.7 s, reaching the south mark at 4.7 s and resting there as the lantern reaches the end of its swing. 2.5 s the navigator's right thumb enters from lower right, wipes salt off the rim at the south mark in one slow stroke (~1 s) and withdraws by 4.0 s. Must NOT move: compass, needle (still), framing.",
+   "motion_zh": "摄影机锁定，只随船体起伏 ≤0.5%；24 fps。动的是光：舱灯一次缓慢的半摆，把一点暖光从星圈东侧带向南向（约 60° 弧，由辰经巽、巳、丙到午）——1.7 秒掠过星点，4.7 秒到达南向并停住（灯摆到尽头）。2.5 秒航海人的右手拇指从画右下入画，用一次约 1 秒的缓慢抹动擦去南向口沿的盐霜，4.0 秒前收回。不得移动：罗盘、针（静止）、构图。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 5.67,
+     "note": "Single generation (5.67 s); if the model drifts, split at 2.4 s before the thumb entry with a 0.5 s handle."
+    }
+   ],
+   "plates": [],
+   "post": "Engraved bearings: generate soft; if any glyph resolves in focus, replace the ring with the calligrapher-approved texture (correct 24-bearing order, 午 at south) or defocus it. Glint travel is a pendulum lamp's: keep it to ~60 degrees of arc, not a half circle. Grade CT_NAV, rim peak P11 #D2B27E, grain 1.15, halation 0.5 on the glint. Sync: f869 (36.21 '星辰') glint over the star points; f888 (36.99 '刻') thumb enters; f941 (39.21 '盘') glint rests on 午.",
+   "match_to": "Light continuity from S005 (same swinging lantern). In-use state vs the museum state in S003. The thumb's owner looks up in S007."
+  }
+ },
+ {
+  "id": "S007",
+  "prompt_en": "Medium close-up rising into a vertical reveal, 32mm anamorphic, crane, 24 fps. In a cramped smoke-blackened stern cabin with 1.65 m headroom: NAVIGATOR, a ~35-year-old East Asian compass-keeper of a 17th-century junk: long sun-weathered face, high cheekbones, deep-set dark-brown eyes with deep sun creases, short neat beard bleached brown by salt, a pale 1.5 cm scar at the tail of his LEFT eyebrow, topknot wrapped in an indigo head-cloth (no queue), faded indigo cross-collar cotton jacket, stoops under a low beam, warm swinging 1950K horn-lantern light on his face, gaze tired and steady. At 1.6 s he lifts his eyes to the open square hatch overhead; the camera leaves his face and rises straight up along his eyeline, slowly, past the dark beam and through the 70 cm hatch frame into dusk-blue backlight, and at 3.8 s a towering rust-ochre battened junk sail fills the frame overhead against a deep twilight sky, bamboo battens dividing it into bellied panels, wind pressing it full. Focus follows: face, beam, sail. Navigator-era grade, amber #E2A458 cabin against twilight blue #2E4A6E, greens down, real skin with pores and salt, fine 35mm grain, 2.39:1, no text, no modern objects.",
+  "prompt_zh": "中近景升起为竖直揭示，32mm 变形镜头，伸缩摇臂，24 fps。在烟熏发黑、净高只有 1.65 米的狭小艉舱里：航海人——约 35 岁的东亚男性，17 世纪远洋帆船上的火长：长脸、风吹日晒、颧骨突出、眼窝略深的深褐眼睛带着很深的日晒纹，短而整齐、被盐漂浅成褐色的胡须，左眉尾一道约 1.5 厘米的浅白旧疤，发髻裹着靛蓝布头巾（不留辫），穿褪色的靛蓝右衽交领粗棉短褂——弯腰站在低矮的横梁下，摆动的角片舱灯 1950K 暖光落在脸上，目光疲惫而稳定。1.6 秒，他抬眼望向头顶打开的方形舱口；摄影机离开他的脸，沿他的视线竖直、缓慢地升起，越过黑色横梁，穿过 70 厘米见方的舱口，进入暮蓝的逆光；3.8 秒，一面高耸的锈赭色竹篾横撑硬帆在头顶展开、填满画面，背后是深暮色的天，竹篾把帆分成一格一格鼓起的弧面，风把它撑满。焦点随行：脸、横梁、帆。航海时代调色，舱内琥珀 #E2A458 对暮蓝 #2E4A6E，绿色压低，真实皮肤带毛孔与盐，细腻 35mm 颗粒，2.39:1，无任何文字、无现代物件。",
+  "negative": "Qing queue or shaved forehead, clean modern haircut, missing eyebrow scar or scar on the right brow, cloth sail without battens, Western square-rigged sails, portholes, electric light, fast drone swoop, whip tilt, visible seam at the hatch, camera passing through solid wood, glossy plastic skin, steady studio lighting without the lantern swing",
+  "gen": {
+   "duration_s": 4.625,
+   "refs": [
+    "CHAR_NAVIGATOR",
+    "PROP_SHIPLAMP",
+    "LOC_CABIN",
+    "LOC_DECK"
+   ],
+   "keyframe_en": "Still, frame 0: MCU on a 32mm lens in the cramped smoke-blackened stern cabin; NAVIGATOR stooped under a low dark beam at frame centre-right (face at ~0.58,0.48), eyes lowered toward the chart table below frame; long weathered face, high cheekbones, short salt-bleached beard, pale scar at the tail of the LEFT eyebrow, indigo head-cloth over a topknot, faded indigo cross-collar jacket; face lit by warm swinging 1950K horn-lantern light from upper left; plank wall #3A2A1E behind; a square of dusk-blue light from the open hatch at the top edge; navigator grade, fine grain.",
+   "keyframe_zh": "静帧，第 0 帧：32mm 中近景，烟熏发黑的狭小艉舱；航海人弯腰站在低矮的黑色横梁下，位于画面中偏右（脸约在 0.58,0.48），目光低垂、看向画面下方的海图桌；长脸风霜、颧骨高、短须被盐漂浅，左眉尾浅白旧疤，靛蓝头巾裹髻，褪色靛蓝交领短褂；脸被左上方摆动的 1950K 角片舱灯照亮；身后是 #3A2A1E 的木板壁；画面上缘是打开的舱口透下的一方暮蓝；航海时代调色，细腻颗粒。",
+   "endframe_en": "t=4.625 s: looking straight up, the rust-ochre battened sail fills ~85% of frame, battens running near-horizontal, a sliver of deep twilight sky (#0E1B30 to #2E4A6E) at the top edge; camera still rising - S008 picks up the upward/outward motion.",
+   "motion_en": "Camera: 0-1.6 s almost static on his face (slight upward drift); 1.61 s as he lifts his eyes, the crane rises straight up along his eyeline while tilting from level to vertical, slow and smooth (~0.6 m/s), passing the beam (~2.2 s) and the 70x70 cm hatch frame (2.9-3.1 s, frame momentarily filled by dark hatch wood = hidden seam), emerging into dusk; 3.77 s the sail fills the frame overhead; keep rising to the end. 24 fps. Subject: he lifts head and eyes at 1.6 s and holds the upward gaze; lantern swings on a 6-8 s period. Must NOT move: beam and hatch geometry (rigid), head-cloth; the sail only breathes with wind pressure, never flaps wildly.",
+   "motion_zh": "摄影机：0–1.6 秒几乎停在他的脸上（轻微上移）；1.61 秒他抬眼时，摇臂沿他的视线竖直升起，同时由平视俯仰为正仰，缓慢平滑（约 0.6 m/s），约 2.2 秒越过横梁，2.9–3.1 秒穿过 70×70 cm 的舱口边框（深色舱口木料短暂占满画面＝隐藏接缝），进入暮色；3.77 秒帆在头顶填满画面；继续上升到结束。24 fps。主体：1.6 秒抬头抬眼，保持仰望；舱灯 6–8 秒一周期摆动。不得移动：横梁与舱口结构（刚性）、头巾；帆只随风压鼓动，不剧烈拍打。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 3.1,
+     "note": "Seg 1 = plate A (cabin): face, look-up at 1.61 s, crane rise to the hatch; ends with the hatch's dark wood filling frame. Generate 0-3.4 s."
+    },
+    {
+     "t0": 2.9,
+     "t1": 4.625,
+     "note": "Seg 2 = plate B (exterior): starts inside the hatch frame wood, rises out past the hatch rim, tilts to the sail; sail fills frame at 3.77 s. Generate 2.6-5.1 s (handles)."
+    }
+   ],
+   "plates": [
+    {
+     "name": "A",
+     "desc": "Cabin interior crane plate (LOC_CABIN): navigator under the beam, look-up, rise and tilt to the hatch."
+    },
+    {
+     "name": "B",
+     "desc": "Exterior plate (LOC_DECK, stern deck above the hatch): hatch rim in the foreground, rising and tilting up to the mainsail against the dusk sky."
+    }
+   ],
+   "post": "Join A -> B with a soft wipe matched to the hatch's dark wood (2.9-3.1 s); match camera speed across the seam; exposure ramps from the cabin lantern key to the dusk backlight during the hatch passage; no dissolve (T04). Grade CT_NAV; cabin warm share ~40% -> exterior ~5%; grain 1.15. Sync: f1003 (41.78 '你把半生') look-up, camera departs face; f1055 (43.94 '帆') sail fills frame.",
+   "match_to": "Cut on motion from S006 (thumb -> its owner looks up). Upward/outward motion continues into S008's aerial pull-back (T04)."
+  }
+ },
+ {
+  "id": "S008",
+  "prompt_en": "Extreme wide, 28mm spherical aerial, high and steady, slowly pulling back and rising, horizon dead level, 24 fps. A three-masted 17th-century Chinese ocean-going junk, tiny on a vast deep-blue South China Sea at dusk after sunset: huge rust-ochre battened sails bellied in segments, painted eyes on the bow, bow heading frame right, a long heavy 2-3 m swell with silver crests, spray and salt mist at the bow. Towering cumulus with the last warm light on their tops; zenith near-black navy #0E1B30; a faint warm line along the horizon. On the far left horizon a low black coastline holds one tiny warm 1900K light; at 2.4 s it flickers once. No clear human figure: the only human traces are an amber square of lantern light from the open cabin hatch on the stern deck and a single dot of a helmsman under the lit stern lantern, together under 2% of frame. The sea is real and heavy. Navigator-era grade, sea #1A2D4A to #2E4A6E, crest highlights #C8D2DB not pure white, 250D-like fine grain, 2.39:1, no text, no fast drone swoop.",
+  "prompt_zh": "大远景，28mm 球面镜头航拍，高而稳，缓慢后拉并上升，地平线绝对水平，24 fps。一艘 17 世纪的三桅远洋帆船，在日落之后暮色深蓝的南海上显得极小：巨大的锈赭色竹篾横撑硬帆一格一格地鼓起，船首画着船眼，船首朝画右，2–3 米的长涌浪沉重而有体积，浪尖银亮，船首切开白沫与盐雾。高耸的积云顶端残留最后一点暖光；天顶近黑的深蓝 #0E1B30；地平线上一线极淡的残暖。画左远处的地平线上，一段低矮的黑色海岸线上只有一点极小的 1900K 暖灯；2.4 秒时它闪了一下。甲板上没有清晰的人影：唯一的人的痕迹，是艉部甲板上打开的舱口透出的一格琥珀色灯光，以及亮着的艉灯下一个掌舵人的小点，二者合计不到画面的 2%。海洋真实而沉重。航海时代调色，海面 #1A2D4A 至 #2E4A6E，浪尖高光 #C8D2DB 而非纯白，250D 式细腻颗粒，2.39:1，无文字，禁止航拍式快速掠过。",
+  "negative": "shore or lights on the right side, bow heading left, sun disk in frame, orange sunset sky, Western galleon or square sails, multiple ships, modern boats, lighthouse, tilted or curved horizon, fisheye bulge, fast swoop or banking, cartoon water, flat glassy sea, pure white wave tops, crowded deck, large readable figure",
+  "gen": {
+   "duration_s": 3.5,
+   "refs": [
+    "PROP_SHIPLAMP",
+    "LOC_DECK"
+   ],
+   "keyframe_en": "Still, frame 0: high oblique aerial (~35 degrees down) of the junk at dusk, ship at (0.55,0.64), hull ~8% of frame width, bow to frame right, rust-ochre battened sails bellied, heavy swell with silver crests, cumulus above; low black coastline on the far left horizon with a tiny 1900K light at (0.10,0.44); horizon level at y~0.42; amber hatch square on the stern deck; stern lantern lit; navigator grade, 250D-like grain.",
+   "keyframe_zh": "静帧，第 0 帧：约 35° 俯角的高空斜视航拍，暮色中的帆船位于 (0.55,0.64)，船身约占画面宽 8%，船首朝画右，锈赭色竹篾硬帆鼓满，浪尖银亮的沉重涌浪，上方积云；画左远处地平线上低矮的黑色海岸线，一点 1900K 小灯在 (0.10,0.44)；地平线水平，位于 y≈0.42；艉部甲板一格琥珀色舱口光；艉灯亮着；航海时代调色，250D 式颗粒。",
+   "endframe_en": "",
+   "motion_en": "Camera: heavy-lift aerial, slow constant pull-back (~3 m/s) and rise (~1 m/s) while tilting from ~35 degrees down to ~15 degrees down so the horizon settles level in the upper half; no swoop, no bank, no yaw; 24 fps. Subject: the junk ploughs slowly toward frame right; swell rolls with weight; spray at the bow; sails hold their curve. 2.39 s the shore light at far left flickers once (one dip and return, ~6 frames). Must NOT move: horizon level, coastline position at left, the light's colour.",
+   "motion_zh": "摄影机：重载航拍，匀速缓慢后拉（约 3 m/s）并上升（约 1 m/s），同时由约 35° 俯角抬到约 15°，让地平线水平地落在画面上半部；不掠过、不侧倾、不偏航；24 fps。主体：帆船缓缓向画右破浪；涌浪沉重起伏；船首溅起浪花；帆保持弧面。2.39 秒画左远处的岸灯闪一下（一次变暗再恢复，约 6 帧）。不得移动：地平线水平、画左海岸线位置、灯的颜色。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 3.5,
+     "note": "Single generation."
+    }
+   ],
+   "plates": [],
+   "post": "If the generated shore light is missing or misplaced, add a 1900K (#E2A458) point element on the left coastline at (0.10,0.44), ~3 px at 1920, with one 6-frame dip at f1132; keep it in later plates of the same coast (S022, S045). Figure area <=2%. Grade CT_NAV; crests P04 not white; zenith P01; horizon warm line <=30% of P21 saturation. Sync: f1078 (44.9 '去问天地') pull-out; f1132 (47.18 '心') light flicker.",
+   "match_to": "Motion continuity from S007 (upward/outward). Shore and its light are screen-left (lock shared with S010's gaze, S022, S045); the ship heads screen-right."
+  }
+ },
+ {
+  "id": "S009",
+  "prompt_en": "Extreme close-up, 100mm macro at T8, straight down onto the needle well of a brass mariner's compass in a 17th-century ship's cabin; camera locked to the ship, riding a faint roll; 24 fps. Under a thin, slightly golden mica cover, the 3.6 cm blued-steel dry-pivot needle on its fine brass pin swings in two or three shrinking arcs, about 8 degrees, then 4, then 1, and at 1.5 s stops dead, the drop of red lacquer on its south tip aligned exactly on the south bearing, pointing to lower left. Around it, warm golden brass with soot in the grooves and the engraved bearing ring soft at the frame edge. The pivot pin sits at 46% across and 50% down; the needle spans about 60% of frame height. Light: swinging 1950K horn-lantern warmth across the brass from upper left, a cool twilight-blue line along the needle from the stern window. Navigator-era grade, amber against twilight blue, deep shadow detail, fine 35mm grain, engraved characters soft, 2.39:1, no legible text, no plastic macro sharpness.",
+  "prompt_zh": "极近特写，100mm 微距，T8，正俯拍 17 世纪船舱里一枚黄铜罗盘的针池；摄影机与船体固定，随轻微的起伏；24 fps。薄而微带金色的云母片下，3.6 厘米的发蓝钢针在细铜针轴上摆动两三次，幅度越来越小——约 8°、4°、1°——1.5 秒时稳稳停住，南端那一滴朱红漆恰好对准南向（午位），指向画左下。四周是温暖的金黄铜面、刻槽里的烟灰，二十四向刻字圈在画边柔焦。针轴位于横向 46%、纵向 50%；针长约占画面高 60%。光：左上方摆动的 1950K 角片舱灯暖光掠过铜面，艉窗的暮蓝在针上留一线冷光。航海时代调色，琥珀对暮蓝，暗部有层次，细腻 35mm 颗粒，刻字柔和，2.39:1，无可读文字，避免塑料感的超锐微距。",
+  "negative": "needle still swinging after 1.5 s, needle settling on the wrong bearing, red tip pointing up or right, Western compass card with N/E/S/W letters, magnetic card compass, cracked mica or verdigris (museum state), pivot drifting in frame, plastic hyper-sharp macro, oversaturated gold, legible or invented characters in focus",
+  "gen": {
+   "duration_s": 1.708,
+   "refs": [
+    "PROP_COMPASS",
+    "PROP_SHIPLAMP",
+    "LOC_CABIN"
+   ],
+   "keyframe_en": "Still, frame 0: top-down macro of the needle well; pivot at (0.46,0.50); the blued needle mid-swing about 8 degrees clockwise of south, ~60% of frame height; intact mica with faint golden lamination; warm brass with soot; bearing ring soft at the frame edges; warm lantern light from upper left, a cool line along the needle; navigator grade, fine grain.",
+   "keyframe_zh": "静帧，第 0 帧：正俯拍针池微距；针轴在 (0.46,0.50)；发蓝钢针正摆到南向顺时针约 8°，约占画面高 60%；完整的云母带淡淡金色层纹；温暖铜面积着烟灰；刻字圈在画边柔焦；左上方舱灯暖光，针上一线冷光；航海时代调色，细腻颗粒。",
+   "endframe_en": "t=1.708 s, T05 A-frame for S010: needle at rest; pivot pin exactly at (0.46,0.50); needle axis from upper right to lower left with the red-lacquered south tip at lower left; needle length ~60% of frame height; brass dial soft around; nothing moving.",
+   "motion_en": "Camera locked to the ship (riding a <=0.5% roll, the pivot never drifts in frame); 24 fps. Needle: damped oscillation about south - +/-8 degrees at 0 s, +/-4 by ~0.6 s, +/-1 by ~1.1 s - and it stops dead at 1.48 s with the red tip on the south bearing; still to the end. Light: lantern warmth sliding slightly. Must NOT move: dial, mica, pivot position.",
+   "motion_zh": "摄影机与船体固定（随 ≤0.5% 的起伏，针轴在画面中绝不漂移）；24 fps。针：围绕南向的阻尼摆动——0 秒 ±8°、约 0.6 秒 ±4°、约 1.1 秒 ±1°——1.48 秒红端停在南向、完全静止，直到结束。光：舱灯暖光轻微滑动。不得移动：盘面、云母、针轴位置。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 1.71,
+     "note": "Single shot built from two plates (see plates); no generation segmenting needed."
+    }
+   ],
+   "plates": [
+    {
+     "name": "A",
+     "desc": "Compass dial macro (in-use state, LOC_CABIN light): locked top-down, needle removed or at rest, lantern light sliding slightly."
+    },
+    {
+     "name": "B",
+     "desc": "Needle element: blued-steel needle with red south tip and brass pivot cap, generated as a clean still with alpha (or CG), rotated in comp on a damped-oscillation curve so it settles exactly at f1194."
+    }
+   ],
+   "post": "Animate plate B in comp to lock the sync (49.77 s = f1194 '南'); light motion blur only during the swings; the needle's soft shadow on the dial follows the rotation; mica reflections over the needle. Bearing glyphs soft, or replaced with the approved calligraphy texture. Grade CT_NAV. Sync: f1170 (48.75 '根针') still swinging; f1194 (49.77 '南') at rest.",
+   "match_to": "End = T05 A-frame -> S010 near pupil at (0.46,0.50). On-screen needle orientation (south to lower left) = S003 museum compass."
+  }
+ },
+ {
+  "id": "S010",
+  "prompt_en": "Close-up, 100mm anamorphic, eye level, slightly off-axis; barely perceptible push-in (about 2% over 2.7 s); 24 fps. NAVIGATOR, a ~35-year-old East Asian compass-keeper of a 17th-century junk: long sun-weathered face, high cheekbones, deep-set dark-brown eyes with deep sun creases, short neat beard bleached brown by salt, a pale 1.5 cm scar at the tail of his LEFT eyebrow, topknot wrapped in an indigo head-cloth (no queue), faded indigo cross-collar cotton jacket, with a few wind-loosened strands at the head-cloth edge, sits at frame right in three-quarter view facing frame left, toward the barred stern window and the unseen shore of home; the pale scar at the tail of his LEFT eyebrow is clearly visible. The first frame holds his near pupil exactly where the compass pivot was, at 46% across and 50% down. His gaze is lost, slightly unfocused; at 1.4 s he blinks once, slowly. Wind through the window bars stirs the loose strands. Light: warm 1950K lantern light swinging gently across his cheek; cool dusk blue from the stern window rims the eye socket. Real skin, pores, wind-reddened cheeks, salt in the beard. Navigator-era grade, fine 35mm grain, 2.39:1, no text.",
+  "prompt_zh": "近景，100mm 变形镜头，平视略偏；几乎察觉不到地推进（2.7 秒内约 2%）；24 fps。航海人——约 35 岁的东亚男性，17 世纪远洋帆船上的火长：长脸、风吹日晒、颧骨突出、眼窝略深的深褐眼睛带着很深的日晒纹，短而整齐、被盐漂浅成褐色的胡须，左眉尾一道约 1.5 厘米的浅白旧疤，发髻裹着靛蓝布头巾（不留辫），穿褪色的靛蓝交领粗棉短褂，头巾边几缕被风吹乱的碎发——他在画右，四分之三侧脸朝向画左，望向艉墙直棂小窗外看不见的、家的方向的海岸；左眉尾的旧疤清晰可见。第一帧里，他靠近镜头那只眼睛的瞳孔恰好位于罗盘针轴的位置：横向 46%、纵向 50%。眼神迷茫、微微失焦；1.4 秒他缓慢地眨了一下眼。从窗棂间吹进来的风拨动碎发。光：1950K 舱灯暖光在脸颊上轻轻摆动；艉窗暮蓝勾出眼眶。真实皮肤、毛孔、被风吹红的面颊、胡须里的盐。航海时代调色，细腻 35mm 颗粒，2.39:1，无任何文字。",
+  "negative": "looking to frame right or at camera, scar on the right brow or missing, Qing queue, tears or crying, exaggerated emotion, head turning, more than one blink, smooth beauty skin, makeup, modern haircut, porthole window, electric light, slow-motion blink",
+  "gen": {
+   "duration_s": 2.75,
+   "refs": [
+    "CHAR_NAVIGATOR",
+    "PROP_SHIPLAMP",
+    "LOC_CABIN"
+   ],
+   "keyframe_en": "Still, frame 0, T05 B-frame: CU of NAVIGATOR in three-quarter view at frame right facing frame left; his near (left) eye's pupil exactly at (0.46,0.50), the eye about 25% of frame height; long weathered face, deep sun creases, short salt-bleached beard, pale scar at the tail of the LEFT eyebrow, indigo head-cloth edge with loose strands; warm lantern light on the cheek, cool dusk blue rimming the eye socket from the stern window at frame left; pores and salt; navigator grade, fine grain.",
+   "keyframe_zh": "静帧，第 0 帧，T05 B 帧：航海人四分之三侧脸的近景，人在画右、面朝画左；靠近镜头的左眼瞳孔恰在 (0.46,0.50)，眼睛约占画面高 25%；长脸风霜、深深的日晒纹、被盐漂浅的短须，左眉尾浅白旧疤，靛蓝头巾边几缕碎发；脸颊上舱灯暖光，画左艉窗的暮蓝勾出眼眶；毛孔与盐粒清晰；航海时代调色，细腻颗粒。",
+   "endframe_en": "",
+   "motion_en": "Camera: barely perceptible push-in (~2% over 2.75 s), nothing else; 24 fps. Subject: gaze fixed toward frame left, slightly unfocused; 1.39 s one slow natural blink at real speed; wind through the window bars lifts a few strands at the head-cloth edge; lantern light swings slowly across his cheek. Must NOT move: head position (pupil stays at 0.46,0.50 +/-1%), no head turn, no expression change beyond the blink.",
+   "motion_zh": "摄影机：几乎察觉不到地推进（2.75 秒内约 2%），无其他运动；24 fps。主体：视线固定望向画左、微微失焦；1.39 秒一次真实速度的缓慢眨眼；窗棂间的风吹动头巾边几缕碎发；舱灯暖光在脸颊上缓缓摆过。不得移动：头部位置（瞳孔保持在 0.46,0.50 ±1%），不转头，除眨眼外不改变表情。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 2.75,
+     "note": "Single generation; I2V from the keyframe."
+    }
+   ],
+   "plates": [],
+   "post": "Validate the pupil registry against S009's end frame (overlay). Skin protection: hue 18-32 degrees, P19 #A26F4C base, wind-red cheeks; no smoothing. Grade CT_NAV, grain 1.15. Sync: f1200 (50.01 '可认得') cut; f1233 (51.39 '回') blink.",
+   "match_to": "Start = T05 B-frame from S009 (pivot -> pupil). Gaze screen-left = the shore of S008/S022/S045. Leads to his hand in S011."
+  }
+ },
+ {
+  "id": "S011",
+  "prompt_en": "Insert, 100mm, slight high angle, locked with a faint natural breathing drift; 24 fps. In a dim 17th-century ship's cabin, the right wrist of NAVIGATOR, a ~35-year-old seaman's large, thick-knuckled hand with rope calluses, cracked fingertips and white salt in the creases, lies across frame in the sleeve of his faded indigo coarse-cotton jacket. Cut into the motion: his LEFT thumb and forefinger are already folding back the RIGHT cuff; by 0.25 s the fold is open, the right wrist rolls slightly inward and the inside of the cuff faces the camera, showing a 4.5 by 6 cm patch of paler blue hand-woven cloth, #7D9CBB, sewn with small off-white running stitches, one corner uneven with a double knot, its centre rubbed soft and shiny. His left fingertips settle on the patch and do not move again; hold through the musical pause to the end. Light: the swinging 1950K horn-lantern light passes over the patch, warm, then dimmer; twilight blue in the shadows. Navigator-era grade, cotton weave and salt in fine detail, deep shadow, fine 35mm grain, 2.39:1, no text.",
+  "prompt_zh": "插入镜头，100mm，略俯，锁定，只带极轻的自然呼吸感；24 fps。昏暗的 17 世纪船舱里，航海人（约 35 岁）的右手腕横在画面中——手大、指节粗、掌心有缆绳老茧、指尖干裂、纹路里嵌着白盐——穿在褪色的靛蓝粗棉短褂袖子里。切入时动作已在进行：他的左手拇指与食指正把右袖口的折边翻开；0.25 秒折边完全翻开，右手腕微微内翻，袖口内侧朝向镜头，露出一块 4.5×6 厘米、颜色更浅的浅蓝手织布补丁（#7D9CBB），本白棉线细密的平针，一角针脚不齐、打了两次小结，中间被摩挲得起毛发亮。左手指腹停在补丁上，此后不再移动；画面停在这里，越过乐句后的空拍直到结束。光：摆动的 1950K 角片舱灯一下一下落在补丁上，暖，又暗下去；阴影里是暮蓝。航海时代调色，棉布织纹与盐粒细节清楚，暗部深，细腻 35mm 颗粒，2.39:1，无任何文字。",
+  "negative": "patch on the left cuff or on the outside of the sleeve, right hand turning the cuff, patch visible before the fold opens, bright new patch, machine-even stitches, missing double knot, fingers moving after 0.25 s, smooth clean hands, rings, modern fabric, extra fingers, fused fingers, deformed hands",
+  "gen": {
+   "duration_s": 3.25,
+   "refs": [
+    "CHAR_NAVIGATOR",
+    "PROP_PATCH",
+    "PROP_SHIPLAMP",
+    "LOC_CABIN"
+   ],
+   "keyframe_en": "Still, frame 0 (mid-gesture): slight-high-angle insert; his right forearm in a faded indigo coarse-cotton sleeve across the lower frame, wrist at centre; his LEFT thumb and forefinger, reaching over from upper right, halfway through folding back the RIGHT cuff, a strip of paler blue cloth just appearing inside; large thick-knuckled hands, cracked fingertips with dark lines, rope calluses, white salt crystals in the creases; warm lantern light on the cuff, twilight blue in the shadows; 100mm, focus on the inner layer of the cuff.",
+   "keyframe_zh": "静帧，第 0 帧（动作中途）：略俯的插入镜头；他的右前臂穿着褪色的靛蓝粗棉袖子横在画面下部，手腕在画面中央；他的左手从画右上方伸过来，拇指与食指正把右袖口折边翻开一半，里层一条浅蓝布刚刚露出；手大、指节粗、指尖干裂嵌着深色细线、掌心缆绳老茧、纹路里有白色盐晶；袖口上是舱灯暖光，阴影里是暮蓝；100mm，焦点在袖口里层。",
+   "endframe_en": "t=3.25 s, gesture-match A-frame for S012: the turned-back RIGHT cuff shows the pale blue patch (double-knotted uneven corner at upper right); his LEFT index and middle fingertip pads rest on the patch with the contact point at (0.50,0.52), fingers pointing from upper right toward lower left ~30 degrees below horizontal, fingertip ~12% of frame height; everything still.",
+   "motion_en": "Camera: locked with a faint natural breathing drift (<=0.5%); 24 fps. Subject: cut in mid-gesture - 0-0.25 s the fold completes, the right wrist rolls slightly inward to present the patch, and the left fingertip pads settle on it at 0.25 s; then complete stillness to 3.25 s, only the lantern light passing over the patch (brightening ~1.0-2.5 s). Must NOT move after 0.25 s: fingers, cuff, wrist.",
+   "motion_zh": "摄影机：锁定，只有极轻的自然呼吸漂移（≤0.5%）；24 fps。主体：切入时动作进行中——0–0.25 秒折边翻完，右手腕微微内翻让补丁朝向镜头，左手指腹在 0.25 秒落在补丁上；此后直到 3.25 秒完全静止，只有舱灯的光掠过补丁（约 1.0–2.5 秒变亮）。0.25 秒之后不得移动：手指、袖口、手腕。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 3.25,
+     "note": "Single generation; start from the mid-gesture keyframe (cut-in on action)."
+    }
+   ],
+   "plates": [],
+   "post": "Patch lock check: inside the RIGHT cuff, #7D9CBB, off-white running stitches, one uneven double-knotted corner, rubbed centre - identical in S035 (being sewn), S045, S067. Grade CT_NAV, grain 1.15. GAP1 breath: no cut and no new movement during 53.0-56.0. Sync: f1266 (52.75 '岸' tail) gesture in progress; f1272 (53.0, vocal end) fingertips land; f1332 (55.5) hold; cut at f1344 (56.0).",
+   "match_to": "End frame fingertip registry (0.50,0.52), fingers to lower left -> S012 start (cross-era gesture match). Patch identical in S035/S045/S067."
+  }
+ },
+ {
+  "id": "S012",
+  "prompt_en": "Close-up, 75mm anamorphic, 45-degree high angle over an oak conservation bench at night; slow push-in (about 4% over 2.4 s); 24 fps. The opening frame matches the previous fingertip: the gloved right thumb and forefinger of RESTORER, a ~28-year-old East Asian woman conservator in thin warm-white cotton gloves with ribbed wrists and a faint grey-brown brass smudge on the index fingertip and thumb, pinch a blue-and-white porcelain rim shard at frame centre, fingers pointing to lower left. She holds her breath and eases it toward a second shard on grey conservation foam; at 1.2 s the two break edges meet with a tiny click, the hairline join running exactly between two five-petal plum blossoms of the cobalt rim band, no blossom split. Her left forearm stays pressed on the bench edge at lower left, the charcoal wool coat sleeve unrolled, a small pilled lighter-grey worn spot on the outer little-finger side of the LEFT cuff just visible. Light: articulated 3500K bench lamp from upper left at 45 degrees, one specular highlight on the glaze; cool harbour night at frame right. Modern grade, glaze #EDF1EF, cobalt #2B4A8B, fine grain, 2.39:1, no text.",
+  "prompt_zh": "近景，75mm 变形镜头，45° 俯拍夜间的橡木修复台；缓慢推进（2.4 秒内约 4%）；24 fps。起幅与上一镜的指尖对位：修复师——约 28 岁的东亚女性文物修复师，戴略暖白的薄棉修复手套、罗纹腕口，食指与拇指指尖一点浅灰褐黄铜污迹——右手拇指与食指在画面中央捏着一片青花口沿残片，手指朝向画左下。她屏住呼吸，把它慢慢移向灰色海绵垫上的另一片；1.2 秒两片断口轻轻咬合——细细的接缝恰好从口沿钴蓝纹带的两朵五瓣梅花之间穿过，没有一朵梅花被裂开。她的左前臂一直压在画左下的台沿上，深灰羊毛呢外套袖子没有挽起，左袖口外侧（小指一侧）那块起毛、颜色变浅的小磨损刚好可见。光：可调臂台灯 3500K 从左上 45° 落下，釉面一点镜面高光；画右是港口夜色的冷光。现代调色，釉白 #EDF1EF，钴蓝 #2B4A8B，细腻颗粒，2.39:1，无任何文字。",
+  "negative": "bare fingers, nitrile or blue gloves, crack running through a plum blossom, scrolling peony or lotus pattern, reign mark, rolled-up sleeve, worn spot on the right cuff, glossy plastic porcelain, glue strings, shards trembling, harsh cold light, readable labels on tools, brand names",
+  "gen": {
+   "duration_s": 2.417,
+   "refs": [
+    "CHAR_RESTORER",
+    "PROP_SHARDS",
+    "PROP_GLOVES",
+    "PROP_COAT",
+    "LOC_LAB"
+   ],
+   "keyframe_en": "Still, frame 0 (gesture-match B-frame): CU at a 45-degree high angle; RESTORER's gloved right thumb and forefinger pinching a blue-and-white rim shard, fingertip contact at (0.50,0.52), fingers pointing from upper right to lower left ~30 degrees, fingertip ~12% of frame height; the second shard on grey foam at lower left; her left forearm in the charcoal coat sleeve resting on the bench edge at the lower-left corner with the worn spot on the outer side of the LEFT cuff just visible; 3500K lamp from upper left, specular on the glaze; cool window night at right.",
+   "keyframe_zh": "静帧，第 0 帧（手势匹配 B 帧）：45° 俯拍近景；修复师戴手套的右手拇指与食指捏着一片青花口沿残片，指尖接触点在 (0.50,0.52)，手指由画右上指向画左下约 30°，指尖约占画面高 12%；另一片在画左下的灰色海绵垫上；她穿深灰呢外套的左前臂压在画左下角的台沿，左袖口外侧的磨损刚好可见；3500K 台灯来自左上，釉面有高光；画右是窗外冷色夜光。",
+   "endframe_en": "",
+   "motion_en": "Camera: slow push-in (~4% over 2.4 s) at a constant 45-degree high angle; 24 fps. Subject: 0-1.2 s she eases the shard ~2 cm toward the second shard with one tiny corrective twist; the break edges meet at 1.2 s and hold; breath held, no other body movement; the left forearm stays pressed on the bench edge. Must NOT move: the second shard, the foam, the lamp light.",
+   "motion_zh": "摄影机：45° 俯角不变，缓慢推进（2.4 秒内约 4%）；24 fps。主体：0–1.2 秒她把残片向另一片移近约 2 cm，做一次极小的校正转动；1.2 秒断口咬合并保持；屏住呼吸，身体其他部分不动；左前臂一直压在台沿上。不得移动：另一片残片、海绵垫、台灯光。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 2.42,
+     "note": "Single generation; I2V from the gesture-match keyframe."
+    }
+   ],
+   "plates": [],
+   "post": "Cross-era gesture match: overlay S011's end frame; fingertip contact within +/-3%. The 1950K -> 3500K jump is the cut. Check the canonical pattern (one continuous plum branch, 16 blossoms; join between blossoms). Worn spot: LEFT cuff, outer little-finger side, ~1 cm above the edge, 18x8 mm, #5A5E62. Grade CT_MODERN (lab ratio 4:1), glaze P06, cobalt P07, grain 1.0. Sync: f1344 (56.0; '青花碎了' 56.06) cut; f1373 (57.2 '碎') click.",
+   "match_to": "Start matches S011's end-frame fingertip registry (0.50,0.52). Worn LEFT-cuff lock shared with S062/S064/S070."
+  }
+ },
+ {
+  "id": "S013",
+  "prompt_en": "Extreme close-up, 100mm macro at T5.6-T8, low angle grazing the glaze; a slider tracks slowly along a crack (under 2 cm/s) with focus following; 24 fps. On a conservation bench at night, a shard of a folk-kiln blue-and-white flared bowl: slightly bluish white glaze #EDF1EF with tiny pinholes, quick loose cobalt #2B4A8B brushwork with soft bleeding and dark heaped iron spots #18294F, a grey-white hairline break running through the glaze. The camera glides along the crack; at 0.2 s the moving focus plane arrives at the rim band, a 1 cm band between thin double lines holding one continuous flowering plum branch, and travels along it past five-petal blossoms and buds, every blossom whole because the crack passes between them; at 1.8 s the move eases to a stop on an unbroken stretch of the rim, the lip edge kept clearly in frame, as fresh as if just painted. Light: 3500K bench lamp raking from upper left, the glaze holding a soft travelling specular. Shallow depth, real macro texture, not plastic. Modern neutral-cool grade, fine 35mm grain, 2.39:1, no text, no reign mark.",
+  "prompt_zh": "极近特写，100mm 微距，T5.6–T8，低角度贴着釉面；滑轨沿一道裂纹缓慢横移（≤2 cm/s），焦点随行；24 fps。夜里修复台上，一片民窑青花撇口碗的残片：白中泛极淡青的釉 #EDF1EF 带细小棕眼，钴料 #2B4A8B 笔触快而不工整、有晕散，积料处有深色铁锈斑 #18294F，一道灰白的细裂纹穿过釉面。镜头沿裂纹滑行；0.2 秒移动的焦平面到达口沿纹带——上下两道细弦线之间 1 厘米宽、一枝连绵不断的折枝梅——沿纹带继续经过一朵朵五瓣梅花与花苞，每一朵都完整，因为裂纹只从花与花之间穿过；1.8 秒运动缓缓停在一段完好的碗沿上，口沿边缘清楚地留在画内，像刚画上去一样。光：3500K 台灯从左上方掠射，釉面上一点柔和的高光随之移动。浅景深，真实的微距质感，不要塑料感。现代中性偏冷调色，细腻 35mm 颗粒，2.39:1，无文字，无底款。",
+  "negative": "crack through a blossom, scrolling peony, lotus or dragon pattern, crisp machine-printed decoration, mirror-gloss glaze, oversaturated cobalt, fake cracks forming characters, rack past the band, plastic hyper-sharp AI macro, focus breathing, gloves or fingers in frame",
+  "gen": {
+   "duration_s": 2.833,
+   "refs": [
+    "PROP_SHARDS",
+    "PROP_BOWL",
+    "LOC_LAB"
+   ],
+   "keyframe_en": "Still, frame 0: low grazing macro on a blue-and-white shard; a grey-white hairline crack runs diagonally from lower left toward the rim band at upper right; focus on the crack just below the band; cobalt bleed and iron spots soft beyond; pinholes in the glaze; raking 3500K specular from upper left; modern grade, fine grain.",
+   "keyframe_zh": "静帧，第 0 帧：低角度掠射的青花残片微距；一道灰白细裂纹由画左下斜向画右上的口沿纹带；焦点在纹带下方的裂纹上；更远处钴料晕散与铁锈斑柔焦；釉面棕眼；左上方 3500K 掠射高光；现代调色，细腻颗粒。",
+   "endframe_en": "t=2.83 s: the rim band of plum blossoms runs across frame at y~0.45, three whole five-petal blossoms sharp at centre, the lip edge a clean line at y~0.30, glaze specular at upper left; still.",
+   "motion_en": "Camera: slider glides along the crack toward the rim (<=2 cm/s; ~4 cm in 1.8 s), focus tracking the crack; 0.22 s the focus plane reaches the rim band; 0.22-1.84 s it travels along the band past the blossoms; 1.84 s eases to a stop on a whole stretch of the rim with the lip edge in frame; locked to the end. 24 fps. Must NOT move: the shard; no rack beyond the band.",
+   "motion_zh": "摄影机：滑轨沿裂纹滑向碗沿（≤2 cm/s；1.8 秒约 4 cm），焦点跟随裂纹；0.22 秒焦平面到达口沿纹带；0.22–1.84 秒沿纹带经过一朵朵梅花；1.84 秒缓停在一段完整的碗沿上，口沿边缘在画内；此后锁定到结束。24 fps。不得移动：残片；焦点不越过纹带。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 2.83,
+     "note": "Single generation."
+    }
+   ],
+   "plates": [],
+   "post": "Pattern lock: one continuous flowering plum branch, 16 five-petal blossoms alternating with buds, cracks never through a blossom. T5.6-T8 depth, no plastic sharpening. Grade CT_MODERN. Sync: f1407 (58.64 '春色') focus on the band; f1446 (60.26 '沿') stop.",
+   "match_to": "The rim plum band is the canonical pattern for S015/S016 and later S019, S041, S066."
+  }
+ },
+ {
+  "id": "S014",
+  "prompt_en": "Medium close-up, 75mm anamorphic, eye level, slightly to the side; locked with a faint push-in; 24 fps. At an oak conservation bench by a dark arched window at frame right: RESTORER, a ~28-year-old East Asian woman, soft oval face, straight natural brows, inner double eyelids, natural pale lips, a tiny light-brown mole below the outer corner of her LEFT eye, faint tiredness under the eyes, black-brown hair in a loose low ponytail with two or three strands at the right temple, a head-band magnifier lowered over her eyes, charcoal wool melton coat with the middle horn button fastened, thin white cotton gloves. At 1.0 s she tilts a glued blue-and-white shard section up to the magnifier, reading the unglazed foot ring: orange-brown kiln flush, kiln grit, glaze pinholes; almost at once, at 1.6 s, her right hand sets a pencil to the open deep-green ledger at the bottom edge and writes a date, a flicker of professional certainty at the corner of her mouth. Ledger out of focus and illegible. Light: 3500K bench lamp from upper left; cool harbour night through the window; a distant 2700K shelf lamp. Modern grade, natural skin texture, fine grain, 2.39:1, no text.",
+  "prompt_zh": "中近景，75mm 变形镜头，平视略侧；锁定，轻微推进；24 fps。在画右一扇黑暗圆拱窗下的橡木修复台前：修复师——约 28 岁东亚女性，鹅蛋脸，自然平直的眉，内双眼皮，唇色自然偏淡，左眼外眼角下方一颗极小的浅褐色痣，眼下有熬夜的淡青，黑褐色头发松松扎成低马尾，右侧太阳穴落下两三缕碎发，头戴式放大镜已放下到眼前，穿深灰羊毛呢外套、扣着中间一粒牛角扣，戴白色薄棉手套。1.0 秒，她把一块已粘合的青花残片翻起凑到放大镜前，看圈足露胎处：火石红的橙褐、粘着的窑砂、釉面的针孔；几乎立刻，1.6 秒，她的右手把铅笔落在画面下缘摊开的深绿布面登记簿上，写下一个日期，嘴角掠过一点职业性的笃定。登记簿在焦外、不可读。光：3500K 台灯来自左上；窗外港口夜色的冷光；远处书架上一盏 2700K 小灯。现代调色，自然皮肤质感，细腻颗粒，2.39:1，无任何文字。",
+  "negative": "readable handwriting or numbers in focus, AI pseudo-script, ink fountain pen, reign mark on the foot, make-up, jewellery, watch, tidy re-tied hair, mole on the right side, bare hands, smiling broadly, looking at camera, beauty filter, magnifier pushed up while reading, ring light, cold fluorescent light",
+  "gen": {
+   "duration_s": 2.792,
+   "refs": [
+    "CHAR_RESTORER",
+    "PROP_SHARDS",
+    "PROP_LEDGER",
+    "PROP_GLOVES",
+    "PROP_COAT",
+    "LOC_LAB"
+   ],
+   "keyframe_en": "Still, frame 0: MCU, RESTORER leaning toward the bench at frame centre-left, facing frame right toward the dark arched window; head magnifier down; her left gloved hand lifting a glued shard section; her right hand holding a pencil above the open deep-green cloth ledger at the bottom edge; mole under the LEFT eye, loose low ponytail, right-temple strands, charcoal coat with the middle button done; 3500K lamp from upper left (4:1), harbour night cool through the window, a 2700K shelf-lamp point far left; modern grade, fine grain.",
+   "keyframe_zh": "静帧，第 0 帧：中近景，修复师在画面中偏左、俯身向台面，面朝画右的黑暗圆拱窗；头戴放大镜已放下；戴手套的左手正托起一块已粘合的残片；右手握铅笔悬在画面下缘摊开的深绿布面登记簿上方；左眼下小痣、低马尾、右侧碎发、深灰外套扣着中间一粒扣；左上方 3500K 台灯（光比 4:1），窗外港口夜色冷光，画左远处一点 2700K 书架小灯；现代调色，细腻颗粒。",
+   "endframe_en": "",
+   "motion_en": "Camera: locked, faint push-in (~2% over 2.8 s); 24 fps. Subject: 0-1.0 s she tilts the shard toward the magnifier; 1.03 s turns it to show the unglazed foot ring and reads it in one glance; 1.57 s her right hand sets the pencil to the ledger and writes a short date in two quick strokes; a small sure tightening at the corner of her mouth. Must NOT move: the lamp, ledger position; no head turn toward camera.",
+   "motion_zh": "摄影机：锁定，轻微推进（2.8 秒内约 2%）；24 fps。主体：0–1.0 秒她把残片斜向放大镜；1.03 秒翻转露出圈足露胎处，一眼读懂；1.57 秒右手把铅笔落在登记簿上，两笔快速写下日期；嘴角一点笃定的收紧。不得移动：台灯、登记簿位置；不转头看镜头。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 2.79,
+     "note": "Single generation."
+    }
+   ],
+   "plates": [],
+   "post": "Ledger must stay out of focus and illegible (replace any in-focus AI script with a soft plate). Face locks: mole under LEFT eye, right-temple strands, no make-up; skin hue 18-32 degrees, P17 base. Grade CT_MODERN, lab ratio 4:1, grain 1.0. Sync: f1495 (62.28 '读懂') foot ring turned to the loupe; f1508 (62.82 '年代') pencil down.",
+   "match_to": "Lab geography (lamp upper left, window right, she faces the window) as in S012/S015. The ledger returns in S050/S053."
+  }
+ },
+ {
+  "id": "S015",
+  "prompt_en": "Insert, 100mm macro, near-overhead about 15 degrees from vertical, tilted from the near side so the outer rim band reads along the near lip; locked; 24 fps; 1.2 s, nearly still. In a tray of fine white conservation sand under a 3500K bench lamp, a folk-kiln blue-and-white flared bowl stands mostly re-assembled from shards: hairline grey-white joins, the fine line inside below the lip, and at dead centre, 50% across and 52% down, the double circle holding a single five-petal plum blossom, its heart the deepest cobalt. The rim is a near-perfect circle about 80% of frame height; along the near lip the outer band of one continuous flowering plum branch reads unbroken, the joins passing only between blossoms, and just below it the top of the cracked-ice lattice window motif; the boat-and-crescent side faces the top of frame. At frame right, between the two scenes, a 2.5 by 3 cm piece of the wall is missing, a small dark gap showing sand. Crisp sand grains; one soft specular on the glaze from upper left. At 0.4 s everything is centred and still. Modern grade, glaze #EDF1EF, cobalt #2B4A8B, fine 35mm grain, 2.39:1, no text, no reign mark.",
+  "prompt_zh": "插入镜头，100mm 微距，接近正俯、与垂直约成 15°，从近侧倾斜以便近侧口沿上的外口沿纹带可读；锁定；24 fps；1.2 秒，几乎静止。3500K 台灯下一盘细白的修复沙里，一只民窑青花撇口碗已由残片粘合大半，立在沙中：灰白的细接缝，口沿内一道细弦线，正中心（横向 50%、纵向 52%）是双圈里的一朵五瓣梅花，花心钴料积色最深。碗口是近乎正圆的一圈，约占画面高 80%；近侧口沿上，那一枝连绵不断的折枝梅纹带完整无缺，接缝只从花与花之间穿过，纹带下方露出冰裂纹窗格纹样的上缘；画小船与新月的 A 面朝向画面上方。画右，两面纹样之间，碗壁缺了约 2.5×3 厘米的一块，是一个露出沙子的小暗口。沙粒质感清晰；釉面左上方一点柔和高光。0.4 秒时一切居中、静止。现代调色，釉白 #EDF1EF，钴蓝 #2B4A8B，细腻 35mm 颗粒，2.39:1，无文字，无底款。",
+  "negative": "bowl off-centre or oval from perspective, rim circle smaller or larger than 80% of frame height, missing piece filled in, cracks through blossoms, rice or water in the bowl, glue blobs, tools or gloves in frame, pure 90-degree view hiding the outer band, any camera movement, plastic gloss",
+  "gen": {
+   "duration_s": 1.208,
+   "refs": [
+    "PROP_SHARDS",
+    "PROP_BOWL",
+    "LOC_LAB"
+   ],
+   "keyframe_en": "Still (frame 0 and end frame identical): near-overhead, ~15 degrees from vertical tilted from the 6 o'clock side; the re-assembled bowl in white sand; centre blossom at (0.50,0.52); rim circle diameter ~80% of frame height; outer plum band visible along the near (lower) lip with the cracked-ice window motif just below it; side A (boat and crescent) toward 12 o'clock; missing 2.5x3 cm gap at 3 o'clock (frame right) showing sand; soft specular upper left; 3500K lamp; modern grade, fine grain.",
+   "keyframe_zh": "静帧（第 0 帧与末帧相同）：接近正俯，与垂直约成 15°，从 6 点钟一侧倾斜；白沙里粘合大半的碗；碗心梅花在 (0.50,0.52)；碗口圆直径约占画面高 80%；近侧（下方）口沿上可见外口沿折枝梅纹带，纹带下方露出冰裂纹窗格纹样；A 面（小船与新月）朝 12 点；3 点钟（画右）缺失 2.5×3 cm、露出沙子；左上方一点柔和高光；3500K 台灯；现代调色，细腻颗粒。",
+   "endframe_en": "t=1.21 s, T07 A-frame for S016: rim circle centred (0.50,0.52), diameter ~80% of frame height, ~15 degrees from vertical tilted from the 6 o'clock side; near-lip plum band and the top of the side-B window motif readable at 6 o'clock; side A toward 12 o'clock; chopstick-free; specular at upper left (0.36,0.24) - S016 must reproduce rim position, size, ellipse and the specular position within +/-3%.",
+   "motion_en": "Locked camera; 24 fps; nothing moves - no breathing drift, no light flicker. 0.39 s (the long '代') the frame is fully settled. Must NOT move: bowl, sand, camera, light.",
+   "motion_zh": "摄影机锁定；24 fps；画面中没有任何运动——没有呼吸漂移，没有光的闪动。0.39 秒（“代”的长音）画面完全稳定。不得移动：碗、沙、摄影机、光。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 1.21,
+     "note": "Single still-like generation (or a still with 1.21 s of grain)."
+    }
+   ],
+   "plates": [],
+   "post": "This is the T07 A-frame: render at the exact framing used for S016's start (lock the camera tilt, ellipse and specular). A true 90-degree view cannot show the outer plum band, hence the 15-degree tilt - see director note. Grade CT_MODERN, grain 1.0 (animated). Sync: f1546 (64.43, long '代') settled; cut at f1566 (65.25).",
+   "match_to": "T07 A-frame -> S016 frame 0 (cross-era composition + pattern match: restored rim -> intact rim)."
+  }
+ },
+ {
+  "id": "S016",
+  "prompt_en": "Close-up, 50mm anamorphic; the first frame repeats the previous bowl exactly, about 15 degrees from vertical, rim circle centred at 50% across and 52% down, about 80% of frame height; then a slow rise and gentle tilt to about 60 degrees (about 35 cm of travel in 1.75 s) with focus easing back; 24 fps. A 17th-century coastal stone house at night: the same blue-and-white bowl, now whole with fresh glaze, its outer band of flowering plum unbroken, full of cold white rice, top grains dry and translucent, absolutely no steam, a pair of untouched bamboo chopsticks laid across the rim. At 0.1 s the rim match completes; at 1.1 s the rise reveals the bowl on a dark camphor table before the empty bench at frame right; an ivory candle, 11 cm with one wax drip, in a brass candlestick at table centre; at the left frame edge rest the folded slender hands of WIFE, a ~30-year-old woman of that era in a washed pale-blue cotton jacket, a plain thin, slightly tarnished silver bangle on her LEFT wrist; her face stays out of frame. Light: 1850K candle low and warm; cold moonlight through a cracked-ice lattice from frame right. Home grade, blacks lifted, fine grain, 2.39:1, no text.",
+  "prompt_zh": "近景，50mm 变形镜头；第一帧与上一镜的碗完全一致——与垂直约成 15°，碗口圆居中于横向 50%、纵向 52%，约占画面高 80%；随后缓慢升起并轻轻俯仰到约 60°（1.75 秒内移动约 35 厘米），焦点随之后移；24 fps。17 世纪海边石屋的夜里：同一只青花碗，此刻完整、釉光新鲜，外口沿折枝梅纹带完好，盛着一碗早已凉透的白饭——表面米粒发干、半透明，绝对没有一丝热气——一双没动过的竹筷横放在碗口。0.1 秒碗沿匹配完成；1.1 秒升起后露出：碗放在深色樟木方桌上、画右那条空着的长凳前；桌子中间一只旧铜烛台插着一支象牙白蜡烛，11 厘米，一道蜡泪；画左边缘，是等待的人叠放在桌沿的纤细双手——她是那个时代约 30 岁的妇人，穿洗旧的浅蓝粗棉短袄，左手腕一只微微氧化的素银细镯；她的脸始终在画外。光：1850K 烛光低位暖光；画右冰裂纹窗格透入冷月光。家中调色，黑位略抬，细腻颗粒，2.39:1，无任何文字。",
+  "negative": "steam or vapour from the rice, warm fresh rice, eaten rice, chopsticks in the bowl or held, a person on the right bench, her face in frame, bangle on the right wrist, gold or jade bangle, candle taller or shorter than 11 cm, electric light, red lanterns, incense, fast crane swoop, bowl pattern different from the plum-band canonical bowl",
+  "gen": {
+   "duration_s": 1.75,
+   "refs": [
+    "CHAR_WIFE",
+    "PROP_BOWL",
+    "PROP_CANDLE",
+    "LOC_HOME"
+   ],
+   "keyframe_en": "Still, frame 0 (T07 B-frame): identical framing to S015's last frame - the same bowl whole, rim circle centred (0.50,0.52), ~80% of frame height, ~15 degrees from vertical from the 6 o'clock side; near-lip plum band unbroken; bowl full of cold white rice, top grains dry and translucent, no steam; bamboo chopsticks across the rim from lower left to upper right; candle-warm light from left-centre, low; cold lattice-patterned moonlight from frame right across the rice; specular at (0.36,0.24); dark camphor table at the edges; home grade.",
+   "keyframe_zh": "静帧，第 0 帧（T07 B 帧）：与 S015 末帧构图完全一致——同一只碗完整，碗口圆居中 (0.50,0.52)，约占画面高 80%，从 6 点钟一侧与垂直约成 15°；近侧口沿折枝梅纹带完好；碗里盛满凉白饭，表面米粒发干、半透明，无热气；竹筷由左下到右上横在碗口；低位烛光暖光来自画左偏中；画右冰裂纹窗格的冷月光影落在饭上；高光在 (0.36,0.24)；画边是深色樟木桌面；家中调色。",
+   "endframe_en": "t=1.75 s: ~60-degree high angle; bowl and chopsticks at the right third (0.68,0.60) before the edge of the empty bench at frame right; brass candlestick with an 11 cm ivory candle (one drip) at (0.46,0.40); WIFE's folded hands with the silver bangle on the LEFT wrist at the left edge (0.06,0.62); cracked-ice lattice shadows across the table from the right; no face.",
+   "motion_en": "Camera: from the matched frame, slow rise of ~35 cm with a tilt from ~75 to ~60 degrees down and a slight drift left over 1.75 s (constant after a 6-frame ease-in); focus eases from the rim to the table plane; 24 fps. Subject: still life - candle flame breathes slowly; her hands rest motionless; no steam from the rice. Must NOT move: bowl, chopsticks, rice, hands, bench.",
+   "motion_zh": "摄影机：从匹配帧开始，1.75 秒内缓慢升起约 35 cm，俯角由约 75° 收到约 60°，并略向左移（6 帧缓入后匀速）；焦点从碗沿后移到桌面；24 fps。主体：静物——烛焰缓慢呼吸；她的手静止；饭没有热气。不得移动：碗、筷子、饭、手、长凳。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 1.75,
+     "note": "Single generation; I2V from the T07 B-frame keyframe."
+    }
+   ],
+   "plates": [],
+   "post": "Match cut T07: overlay S015's end frame; rim circle position/size/ellipse within +/-3%. Bowl must be the canonical plum-band bowl. Absolutely no steam (M4 lock). Candle state B: 11 cm, one drip. WIFE's face never in frame. Grade CT_HOME, blacks +1%, grain 1.15, halation 0.5 on the flame. Sync: f1569 (65.36 '却读不懂') match completes; f1592 (66.32 '失') empty bench revealed.",
+   "match_to": "Start = T07 B-frame from S015. The same room continues inside the glass in S017 (candle B -> C)."
+  }
+ },
+ {
+  "id": "S017",
+  "prompt_en": "Medium shot, 75mm anamorphic, eye level, square to a dark arched six-over-six timber sash window of a museum conservation studio at night; locked; 24 fps. First frame: on the glass, a faint reflection of RESTORER, a ~28-year-old East Asian woman conservator with a loose low ponytail and charcoal wool coat, head bowed over her work, dim, lit by a 3500K lamp off frame upper left. At 0.8 s focus pulls slowly through her reflection into the glass's mirror depth: an old coastal stone house at night, where WIFE, a ~30-year-old woman in a washed pale-blue cotton jacket, hair in a low bun with a plain wooden pin, a thin silver bangle on her LEFT wrist, sits upright on the left bench beside a single candle; the right bench is empty, a bowl of untouched rice and chopsticks before it. Her face stays unresolved, broken by candle backlight and cracked-ice lattice shadow, never sharp. From 1.0 to 2.0 s a soft time-passing dissolve inside the reflection only: the candle burns from 11 cm to 6 cm, wax pooling, the lattice shadow slides one cell, the rice unchanged. At 2.6 s her shoulders rise and fall once. The restorer's reflection stays, darker than the candlelight. Fine grain, 2.39:1, no text.",
+  "prompt_zh": "中景，75mm 变形镜头，平视，正对夜间博物馆修复室一扇六格对六格的深色圆拱木窗；锁定；24 fps。第一帧：玻璃上淡淡映着修复师——约 28 岁东亚女性文物修复师，松松的低马尾，深灰羊毛呢外套——低头工作的轮廓，很暗，被画外左上方的 3500K 台灯照着。0.8 秒，焦点缓缓穿过她的倒影，进入玻璃的镜像深处：夜里一座海边旧石屋，等待的人——约 30 岁的妇人，穿洗旧的浅蓝粗棉短袄，低髻插一支素面木簪，左腕一只素银细镯——挺直地坐在画左的长凳上，身旁一支蜡烛；画右的长凳空着，凳前一碗没动过的饭和一双竹筷。她的脸始终看不清——被烛光侧逆与冰裂纹窗格的影子切碎，永不清晰。1.0 到 2.0 秒，只在倒影之内做一次柔和的时间流逝叠化：蜡烛从 11 厘米烧到 6 厘米，蜡泪堆在接蜡盘里，窗格的影子在桌上移过一格，饭始终没动。2.6 秒，她的肩轻轻起伏一次。修复师的倒影一直留在玻璃上，暗于烛火。细腻颗粒，2.39:1，无任何文字。",
+  "negative": "wife's face sharp or clearly lit, wife looking at camera, a person on the right bench, steam from the rice, glass window panes inside the 17th-century house, ghost figure standing in the lab, global dissolve of the window layer, the restorer's reflection brighter than the candle, flicker during the dissolve, candle growing taller, electric light in the old house, crying, slow-motion shoulders",
+  "gen": {
+   "duration_s": 3.542,
+   "refs": [
+    "CHAR_WIFE",
+    "CHAR_RESTORER",
+    "PROP_CANDLE",
+    "PROP_BOWL",
+    "PROP_COAT",
+    "LOC_HOME",
+    "LOC_LAB"
+   ],
+   "keyframe_en": "Still, frame 0: MS square to one section of the lab's dark arched six-over-six sash window at night; white-painted muntins form a grid; on the glass a faint reflection of RESTORER, head bowed over her bench (low ponytail, charcoal coat), dim and warm from a 3500K lamp off frame upper left, at (0.62,0.40); deeper in the glass, out of focus, a warm candle point at (0.42,0.46) and dark shapes of a room; harbour lights beyond very dim; focus on the reflection plane; modern grade, fine grain.",
+   "keyframe_zh": "静帧，第 0 帧：正对修复室深色六格对六格圆拱窗一段的中景；白漆窗棂组成方格；玻璃上淡淡映着修复师低头伏案的轮廓（低马尾、深灰外套），位于 (0.62,0.40)，被画外左上方 3500K 台灯照得暗而暖；玻璃更深处，虚焦的一点暖色烛光在 (0.42,0.46)，以及一个房间的暗影；窗外港口灯极暗；焦点在倒影平面；现代调色，细腻颗粒。",
+   "endframe_en": "t=3.54 s: focus deep in the mirror; the old home in the glass: WIFE upright on the left bench at (0.30,0.55), face unresolved; candle now 6 cm with wax pooled, flame at (0.42,0.46) - suggested light anchor for S018's lit lab window; empty bench at right with the bowl and chopsticks; lattice shadow advanced one cell; the restorer's faint reflection still on the glass at (0.62,0.40), darker than the candle.",
+   "motion_en": "Camera locked; 24 fps. 0-0.8 s focus racks slowly (>=1 beat) from her reflection to the old home in mirror depth; her reflection softens but stays. 1.0-2.0 s a 24-frame dissolve inside the reflection layer only: candle 11 cm -> 6 cm, lattice shadow one cell across the table, rice unchanged. 2.6 s the wife's shoulders rise and fall once, real speed. Must NOT move: window muntins, camera; the restorer's reflection keeps only her faint working motion; no global dissolve of the window layer.",
+   "motion_zh": "摄影机锁定；24 fps。0–0.8 秒焦点缓慢（≥1 拍）从她的倒影移到镜像深处的旧日家中；她的倒影变虚但仍在。1.0–2.0 秒只在反射层内做 24 帧叠化：蜡烛 11 cm → 6 cm，窗格影在桌面移过一格，饭不变。2.6 秒等待的人肩膀以真实速度起伏一次。不得移动：窗棂、摄影机；修复师的倒影只保留轻微的工作动作；窗户层不做整体叠化。",
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 2.0,
+     "note": "Seg 1: plates A + B1 (candle state B). Generate B1 locked for 0-2.0 s."
+    },
+    {
+     "t0": 1.0,
+     "t1": 3.54,
+     "note": "Seg 2: plates A + B2 (candle state C, lattice one cell on, shoulders at 2.6 s). Generate B2 locked for 0.6-3.54 s; B1->B2 dissolve 1.0-2.0 s (f1632-f1656)."
+    }
+   ],
+   "plates": [
+    {
+     "name": "A",
+     "desc": "Modern foreground (LOC_LAB): the arched window's glass and white muntins, dark, with RESTORER's faint reflection bowed over the bench (generated as a reflection layer or from a camera mirrored across the glass); harbour lights beyond very dim."
+    },
+    {
+     "name": "B1",
+     "desc": "Old home interior (LOC_HOME), locked: candle state B (11 cm, one drip), WIFE upright on the left bench, face unresolved, empty right bench with the bowl of cold rice and chopsticks, cracked-ice lattice moonlight from the right; generated in the on-screen layout."
+    },
+    {
+     "name": "B2",
+     "desc": "Same locked frame: candle state C (6 cm, wax pooled in the pan), lattice shadow advanced one cell; her shoulders rise and fall once at 2.6 s."
+    }
+   ],
+   "post": "Composite B inside the glass as a reflection: screen at ~45-55% so the old home reads brighter than her reflection (bible 8.3-6); suppress A's transmitted harbour ~1.5 stops so the glass reads as a mirror; muntins and glass waviness over B; defocus B by depth at the start, rack 0-0.8 s while A's reflection softens. B1 -> B2 24-frame dissolve 1.0-2.0 s on B only. B is used in the on-screen layout (wife screen-left, as in S016); director to confirm the mirror rule of bible 8.3-4. WIFE's face stays unresolved. Grade A CT_MODERN, B CT_HOME attenuated; grain unified. Sync: f1608 (67.0) start; f1627 (67.8) rack complete; f1644 (68.5) dissolve midpoint; f1670 (69.6) shoulders; cut at f1693 (70.54) to S018.",
+   "match_to": "Continues S016's room inside the lab window (T09 as revised by V22: candle B -> C). Light transition into S018 (candle point in the glass -> the lit lab window seen from outside; shared anchor ~(0.42,0.46)). Unresolved-face lock shared with S024-S026."
+  }
+ }
+]

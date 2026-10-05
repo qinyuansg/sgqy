@@ -37,8 +37,11 @@ vec3 fzPerturb(vec3 surf_pos, vec3 surf_norm, vec2 dHdxy, float faceDir){
 
 // Install procedural code into a MeshPhysicalMaterial.
 // parts: {uniforms, head (glsl), color (glsl, may set float fzH (height, m) & fzR (rough mult)), key}
+const QS = typeof location !== 'undefined' ? new URLSearchParams(location.search) : new URLSearchParams('');
+const DEBUG_PLAIN = QS.get('figmat') === 'plain';
 function install(mat, parts) {
   mat.userData.fzUniforms = parts.uniforms || {};
+  if (DEBUG_PLAIN) return mat;
   mat.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, mat.userData.fzUniforms);
     sh.vertexShader = sh.vertexShader
@@ -46,9 +49,9 @@ function install(mat, parts) {
       .replace('#include <begin_vertex>', '#include <begin_vertex>\n' + VERT_BODY);
     sh.fragmentShader = sh.fragmentShader
       .replace('#include <common>', '#include <common>\n' + FRAG_HEAD + (parts.head || ''))
-      .replace('#include <color_fragment>', '#include <color_fragment>\n float fzH = 0.0; float fzR = 1.0; vec3 fzFw3 = fwidth(vRest); float fzFw = max(max(fzFw3.x, fzFw3.y), fzFw3.z);\n {\n' + (parts.color || '') + '\n }\n')
+      .replace('#include <color_fragment>', '#include <color_fragment>\n float fzH = 0.0; float fzR = 1.0; vec3 fzFw3 = fwidth(vRest); float fzFw = max(max(fzFw3.x, fzFw3.y), fzFw3.z);\n {\n' + (QS.get('figmat') === 'nocolor' ? '' : (parts.color || '')) + '\n }\n')
       .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\n roughnessFactor = clamp(roughnessFactor * fzR, 0.04, 1.0);')
-      .replace('#include <normal_fragment_maps>', '#include <normal_fragment_maps>\n normal = fzPerturb(-vViewPosition, normal, vec2(dFdx(fzH), dFdy(fzH)), faceDirection);');
+      .replace('#include <normal_fragment_maps>', '#include <normal_fragment_maps>\n' + (QS.get('figmat') === 'nobump' || QS.get('figmat') === 'nocolor' ? '' : ' normal = fzPerturb(-vViewPosition, normal, vec2(dFdx(fzH), dFdy(fzH)), faceDirection);'));
   };
   mat.customProgramCacheKey = () => parts.key;
   return mat;
@@ -101,47 +104,49 @@ uniform vec3 uPatchColor, uWearColor, uStitchColor;
 ${o.print ? 'uniform sampler2D uPrint;' : ''}
 float fzWeave2(vec2 q, float P){
   vec2 t = q / P;
-  ${twill ? 'float a = sin(6.2831 * (t.x + t.y) ); return a * 0.8 + 0.2 * sin(6.2831 * t.x * 2.0);' : rib ? 'return abs(sin(3.1416 * t.x)) * 1.4 - 0.7 + 0.25 * sin(6.2831 * t.y);' : 'return sin(6.2831 * t.x) * sin(6.2831 * t.y) + 0.35 * (fzNoise(vec3(t * 0.37, 1.0)));'}
+  ${twill ? 'return sin(6.2831 * (t.x + t.y)) * 0.8 + 0.2 * sin(12.566 * t.x);' : rib ? 'return abs(sin(3.1416 * t.x)) * 1.4 - 0.7 + 0.25 * sin(6.2831 * t.y);' : 'return sin(6.2831 * t.x) * sin(6.2831 * t.y);'}
 }
-float fzWeave(vec3 p, vec3 n, float P){ vec3 w = fzTriW(n); return w.x * fzWeave2(p.zy, P) + w.y * fzWeave2(p.xz, P) + w.z * fzWeave2(p.xy, P); }
 ${o.print ? `vec4 fzPrint(vec3 p, vec3 n){ vec3 w = fzTriW(n); float s = 1.0 / uPrintScale;
   return w.x * texture2D(uPrint, p.zy * s) + w.y * texture2D(uPrint, p.xz * s) + w.z * texture2D(uPrint, p.xy * s); }` : ''}
 `;
   const color = /* glsl */`
-  vec3 rp = vRest; vec3 rn = normalize(vRestN);
+  vec3 rp = vRest; vec3 rn = vRestN;
   float wear = clamp(vAux.x, 0.0, 1.0);
   float patchM = smoothstep(0.47, 0.53, vAux.y) * (uPatchInside > 0.5 ? (gl_FrontFacing ? 0.0 : 1.0) : 1.0);
   float seam = vAux.z; float hem = vAux.w;
-  // colour: dye mottling & fading
-  float mot = fzFbm(rp * 9.0) * uMottle + fzNoise(rp * 60.0) * uMottle * 0.35;
-  diffuseColor.rgb *= 1.0 + mot;
+  // one low-frequency noise drives dye mottling and the fold micro-relief
+  float n1 = fzNoise(rp * 11.0);
+  diffuseColor.rgb *= 1.0 + n1 * uMottle;
   diffuseColor.rgb = mix(diffuseColor.rgb, vec3(dot(diffuseColor.rgb, vec3(0.3, 0.5, 0.2))) * 1.15, uFade);
   ${o.print ? 'vec4 pr = fzPrint(rp, rn); diffuseColor.rgb = mix(diffuseColor.rgb, pr.rgb, pr.a * uPrintAmt * (1.0 - patchM));' : ''}
-  // wear (pilling, lightening) and patch (different blue cloth with stitched border)
-  float wearN = wear * (0.65 + 0.35 * fzNoise(rp * 420.0));
-  diffuseColor.rgb = mix(diffuseColor.rgb, uWearColor, smoothstep(0.1, 0.9, wearN) * 0.85);
-  vec3 pc = uPatchColor * (1.0 + 0.12 * fzFbm(rp * 30.0 + 5.0));
-  diffuseColor.rgb = mix(diffuseColor.rgb, pc, patchM);
-  float edge = 1.0 - smoothstep(0.0, 0.06, abs(vAux.y - 0.5));
-  float dash = step(0.0, sin((rp.x + rp.y + rp.z) * 2300.0));
-  float stitch = edge * dash * fzAA(0.0027, fzFw);
-  diffuseColor.rgb = mix(diffuseColor.rgb, uStitchColor, stitch * step(0.02, vAux.y) * 0.8 * (uPatchInside > 0.5 ? (gl_FrontFacing ? 0.0 : 1.0) : 1.0));
-  // seams & hem: slight darkening in the seam groove
+  float wearN = 0.0;
+  if (wear > 0.01) { // pilling, lightening
+    wearN = wear * (0.65 + 0.35 * fzNoise(rp * 420.0));
+    diffuseColor.rgb = mix(diffuseColor.rgb, uWearColor, smoothstep(0.1, 0.9, wearN) * 0.85);
+  }
+  if (vAux.y > 0.02) { // patch of different cloth with a running-stitch border
+    vec3 pc = uPatchColor * (1.0 + 0.1 * n1);
+    diffuseColor.rgb = mix(diffuseColor.rgb, pc, patchM);
+    float edge = 1.0 - smoothstep(0.0, 0.06, abs(vAux.y - 0.5));
+    float dash = step(0.0, sin((rp.x + rp.y + rp.z) * 2300.0));
+    float stitch = edge * dash * fzAA(0.0027, fzFw);
+    diffuseColor.rgb = mix(diffuseColor.rgb, uStitchColor, stitch * 0.8 * (uPatchInside > 0.5 ? (gl_FrontFacing ? 0.0 : 1.0) : 1.0));
+  }
   float seamLine = 1.0 - smoothstep(0.0, 0.12, seam);
   diffuseColor.rgb *= 1.0 - 0.18 * seamLine;
-  float hemLine = smoothstep(0.03, 0.0, hem);
-  // inner side darker (lining in shadow)
   if (!gl_FrontFacing) diffuseColor.rgb *= mix(uInner, 0.85, patchM);
-  // height field (metres)
+  // height field (metres): weave in the dominant projection plane (only when resolvable)
   float P = uWeave;
-  float wv = fzWeave(rp, rn, P) * uWAmp * fzAA(P, fzFw);
-  float sl = fzNoise(rp * vec3(260.0, 31.0, 260.0)) * uSlub * fzAA(0.004, fzFw);
-  float fl = (fzFbm(rp * vec3(14.0, 5.0, 14.0)) + 0.5 * fzNoise(rp * vec3(40.0, 9.0, 40.0))) * uFold * fzAA(0.03, fzFw);
-  float fz = fzNoise(rp * 900.0) * 0.00004 * uFuzz * fzAA(0.0012, fzFw);
-  fzH = wv + sl + fl + fz;
-  fzH *= mix(1.0, 0.25, smoothstep(0.2, 0.8, wearN)); // worn area: flattened weave
+  float wv = 0.0;
+  if (fzFw < P * 0.45) {
+    vec3 an = abs(rn);
+    vec2 q = (an.x > an.y && an.x > an.z) ? rp.zy : ((an.y > an.z) ? rp.xz : rp.xy);
+    wv = fzWeave2(q, P) * uWAmp * fzAA(P, fzFw);
+  }
+  float fl = n1 * uFold * 0.9 * fzAA(0.05, fzFw);
+  fzH = wv + fl;
+  fzH *= 1.0 - 0.75 * smoothstep(0.2, 0.8, wearN);
   fzH -= seamLine * 0.0006 * fzAA(0.004, fzFw);
-  // hem stitch line ~1 cm from the edge
   float hs = 1.0 - smoothstep(0.0, 0.08, abs(hem - 0.33));
   fzH -= hs * 0.00025 * fzAA(0.003, fzFw) * step(0.001, hem);
   fzR = 1.0 + 0.08 * wearN - 0.05 * patchM;
@@ -184,53 +189,58 @@ export function skinMaterial(o = {}) {
     return d; }`;
   const color = /* glsl */`
   vec3 rp = vRest;
-  float nail = smoothstep(0.42, 0.58, vAux.x) * uHand;
-  float side = vAux.w; float js = 0.02; float isMcp = 0.0;
-  if (uHand > 0.5) { float bd = 1.0;
+  float side = vAux.w;
+  float dors = smoothstep(0.1, 0.6, side), palm = smoothstep(-0.1, -0.6, side);
+  float sv = fzNoise(rp * 40.0);
+  diffuseColor.rgb *= 1.0 + 0.05 * sv;
+  float nail = 0.0, wr = 0.0, crease = 0.0, palmLines = 0.0;
+  if (uHand > 0.5) {
+    nail = smoothstep(0.42, 0.58, vAux.x);
+    float js = 0.02, isMcp = 0.0, bd = 1.0;
     for (int i = 0; i < 15; i++) { vec3 dj = rp - uJC[i]; float a = dot(dj, uJA[i]); float dd = dot(dj, dj);
       float rad = sqrt(max(dd - a * a, 0.0));
-      if (rad < abs(uJR[i]) * 1.5 && abs(a) < 0.0085 && dd < bd) { bd = dd; js = a; isMcp = uJR[i] < 0.0 ? 1.0 : 0.0; } } }
-  float dors = smoothstep(0.1, 0.6, side), palm = smoothstep(-0.1, -0.6, side);
-  // subtle colour variation: warmer knuckles/fingertips, blotchy age spots
-  float sv = fzFbm(rp * 40.0);
-  diffuseColor.rgb *= 1.0 + 0.05 * sv;
-  float tipWarm = uHand * (1.0 - smoothstep(0.0, 0.012, abs(js))) * 0.25 * dors;
-  diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * uFlush * 1.35, tipWarm + palm * uHand * 0.18);
-  float spots = smoothstep(0.55, 0.8, fzNoise(rp * 140.0)) * uAge * dors * 0.35;
-  diffuseColor.rgb *= 1.0 - spots * 0.35;
-  // nails
-  diffuseColor.rgb = mix(diffuseColor.rgb, uNail, nail * 0.85);
-  // salt crust: dried white patches (mid scale) + crystalline specks (close / macro), on dorsal side & creases
-  float saltM = clamp(vAux.y * uSalt, 0.0, 1.0);
-  float patchS = smoothstep(0.58, 0.78, fzFbm(rp * 150.0) * 0.5 + 0.5 + 0.18 * (saltM - 0.5)) * saltM;
-  float cr1 = fzCell(rp * 900.0), cr2 = fzCell(rp * 2300.0);
-  float speck1 = (1.0 - smoothstep(0.12, 0.32, cr1)) * smoothstep(0.35, 0.65, fzNoise(rp * 220.0) * 0.5 + 0.5) * fzAA(0.0016, fzFw);
-  float speck2 = (1.0 - smoothstep(0.15, 0.4, cr2)) * smoothstep(0.3, 0.6, fzNoise(rp * 500.0) * 0.5 + 0.5) * fzAA(0.0007, fzFw);
-  float saltA = clamp(patchS * 0.55 + (speck1 * 0.9 + speck2 * 0.7) * saltM, 0.0, 1.0);
-  saltA = max(saltA, saltM * 0.08);
-  diffuseColor.rgb = mix(diffuseColor.rgb, uSaltCol, saltA * 0.8);
-  // height detail (m)
-  float d = uDetail;
-  float pores = fzNoise(rp * 2600.0) * 0.000018 * fzAA(0.0006, fzFw);
-  float fine = fzNoise(rp * vec3(700.0, 300.0, 700.0)) * 0.00003 * (0.4 + uAge) * fzAA(0.002, fzFw);
-  // knuckle wrinkles (dorsal) and joint creases (palmar)
-  float jw = js + fzNoise(rp * 700.0) * 0.00035;
-  float env = (1.0 - smoothstep(0.0008, 0.0032 + 0.0015 * uAge, abs(jw)));
-  float dors2 = smoothstep(0.35, 0.9, side);
-  float wr = sin(jw * 6.2831 / (0.0019 + 0.0004 * uAge)) * env * dors2 * (0.6 + 0.4 * fzNoise(rp * 900.0)) * (0.000018 + 0.00005 * uAge) * fzAA(0.0019, fzFw);
-  float crease = (1.0 - smoothstep(0.0, 0.00055, abs(abs(js + 0.0004) - 0.0011))) * palm * (1.0 - isMcp) * 0.00009 * fzAA(0.0013, fzFw);
-  // palm lines (canonical hand frame: palm normal -X, fingers -Y, thumb +Z)
-  vec2 q = rp.zy;
-  float pl = min(min(fzPalmLine(q, vec2(-0.034, -0.062), vec2(-0.005, -0.068), vec2(0.022, -0.080)),
-                     fzPalmLine(q, vec2(0.030, -0.052), vec2(0.004, -0.048), vec2(-0.030, -0.040))),
-                     fzPalmLine(q, vec2(0.028, -0.050), vec2(0.010, -0.030), vec2(0.012, -0.010)));
-  float wristL = min(abs(rp.y + 0.006), abs(rp.y + 0.0005));
-  pl = min(pl, wristL + step(0.0, rp.y + 0.03) * 0.0 + step(0.022, abs(rp.z)) * 1.0);
-  float palmLines = (1.0 - smoothstep(0.0, 0.0009, pl)) * palm * uHand * step(-0.097, rp.y) * step(rp.y, 0.004) * 0.00014 * fzAA(0.0016, fzFw);
-  // salt crystals stand proud of the skin
-  float saltH = (speck1 * 0.00008 + speck2 * 0.00005) * saltM + patchS * 0.00004 * fzAA(0.006, fzFw);
-  fzH = (pores + fine + wr - crease - palmLines) * d * (1.0 - nail * 0.9) + saltH;
-  fzH += nail * fzNoise(rp * vec3(3000.0, 200.0, 3000.0)) * 0.000006;
+      if (rad < abs(uJR[i]) * 1.5 && abs(a) < 0.0085 && dd < bd) { bd = dd; js = a; isMcp = uJR[i] < 0.0 ? 1.0 : 0.0; } }
+    float tipWarm = (1.0 - smoothstep(0.0, 0.012, abs(js))) * 0.25 * dors;
+    diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * uFlush * 1.35, tipWarm + palm * 0.18);
+    diffuseColor.rgb *= 1.0 - smoothstep(0.55, 0.8, sv * 0.5 + 0.5) * uAge * dors * 0.12; // age spots
+    diffuseColor.rgb = mix(diffuseColor.rgb, uNail, nail * 0.85);
+    if (fzFw < 0.0009) { // knuckle wrinkles / creases / palm lines only resolve in close-ups
+      float jw = js + fzNoise(rp * 700.0) * 0.00035;
+      float env = 1.0 - smoothstep(0.0008, 0.0032 + 0.0015 * uAge, abs(jw));
+      float dors2 = smoothstep(0.35, 0.9, side);
+      wr = sin(jw * 6.2831 / (0.0019 + 0.0004 * uAge)) * env * dors2 * (0.000018 + 0.00005 * uAge) * fzAA(0.0019, fzFw);
+      crease = (1.0 - smoothstep(0.0, 0.00055, abs(abs(js + 0.0004) - 0.0011))) * palm * (1.0 - isMcp) * 0.00009 * fzAA(0.0013, fzFw);
+      if (palm > 0.01) {
+        vec2 q = rp.zy;
+        float pl = min(min(fzPalmLine(q, vec2(-0.034, -0.062), vec2(-0.005, -0.068), vec2(0.022, -0.080)),
+                           fzPalmLine(q, vec2(0.030, -0.052), vec2(0.004, -0.048), vec2(-0.030, -0.040))),
+                           fzPalmLine(q, vec2(0.028, -0.050), vec2(0.010, -0.030), vec2(0.012, -0.010)));
+        float wristL = min(abs(rp.y + 0.006), abs(rp.y + 0.0005));
+        pl = min(pl, wristL + step(0.022, abs(rp.z)));
+        palmLines = (1.0 - smoothstep(0.0, 0.0009, pl)) * palm * step(-0.097, rp.y) * step(rp.y, 0.004) * 0.00014 * fzAA(0.0016, fzFw);
+      }
+    }
+  }
+  float saltA = 0.0, saltH = 0.0;
+  if (uSalt > 0.01) { // dried salt: white patches (mid scale) + crystals (close)
+    float saltM = clamp(vAux.y * uSalt, 0.0, 1.0);
+    float patchS = smoothstep(0.58, 0.78, fzNoise(rp * 150.0) * 0.5 + 0.5 + 0.18 * (saltM - 0.5)) * saltM;
+    float speck = 0.0;
+    if (fzFw < 0.0012) {
+      vec3 g = rp * 900.0; vec3 c = floor(g); vec3 f = fract(g) - 0.5;
+      float hsh = fzHash(c); vec3 o = vec3(fzHash(c + 17.3), fzHash(c + 41.9), fzHash(c + 7.1)) - 0.5;
+      speck = step(0.45, hsh) * (1.0 - smoothstep(0.12, 0.32, length(f - o * 0.5))) * fzAA(0.0016, fzFw);
+    }
+    saltA = clamp(patchS * 0.55 + speck * 0.9 * saltM, 0.0, 1.0);
+    saltA = max(saltA, saltM * 0.08);
+    diffuseColor.rgb = mix(diffuseColor.rgb, uSaltCol, saltA * 0.8);
+    saltH = speck * 0.00008 * saltM + patchS * 0.00004 * fzAA(0.006, fzFw);
+  }
+  float pores = 0.0;
+  if (fzFw < 0.00035) pores = fzNoise(rp * 2600.0) * 0.000018 * fzAA(0.0006, fzFw);
+  float fine = 0.0;
+  if (fzFw < 0.001) fine = fzNoise(rp * vec3(700.0, 300.0, 700.0)) * 0.00003 * (0.4 + uAge) * fzAA(0.002, fzFw);
+  fzH = (pores + fine + wr - crease - palmLines) * uDetail * (1.0 - nail * 0.9) + saltH;
   fzR = mix(1.0, 0.45, nail) * (1.0 + saltA * 0.5) * (1.0 + 0.08 * uAge);
   `;
   install(mat, { uniforms: U, head, color, key: 'skin_' + (o.vertexColors ? 'v' : '') });
@@ -258,13 +268,14 @@ export function hairMaterial(o = {}) {
   float az = atan(rp.x, rp.z);
   float warp = fzNoise(vRest * 18.0) * 0.6;
   float sc = (az + warp * 0.05) * (0.08 + r * 0.6);
-  float clump = sin(sc * 6.2831 / 0.006) * 0.00035 * fzAA(0.006, fzFw);
-  float strand = sin(sc * 6.2831 / 0.0011 + fzNoise(vRest * 300.0) * 2.0) * 0.00006 * fzAA(0.0011, fzFw);
-  float lumps = fzFbm(vRest * 30.0) * 0.0008;
-  fzH = clump + strand + lumps;
-  float g = smoothstep(0.4, 0.9, fzNoise(vRest * vec3(400.0, 60.0, 400.0)) * 0.5 + 0.5) * uGrey;
-  diffuseColor.rgb = mix(diffuseColor.rgb * (1.0 + 0.25 * fzNoise(vRest * 90.0)), vec3(0.62, 0.6, 0.58), g);
-  fzR = 1.0 + 0.25 * fzNoise(vRest * 70.0);
+  float n1 = fzNoise(vRest * 30.0);
+  float clump = sin(sc * 6.2831 / 0.006 + n1 * 1.5) * 0.00035 * fzAA(0.006, fzFw);
+  float strand = 0.0;
+  if (fzFw < 0.0006) strand = sin(sc * 6.2831 / 0.0011 + n1 * 6.0) * 0.00006 * fzAA(0.0011, fzFw);
+  fzH = clump + strand + n1 * 0.0008;
+  float g = uGrey > 0.0 ? smoothstep(0.4, 0.9, fract(sin(dot(floor(vec2(sc, vRest.y) * vec2(700.0, 40.0)), vec2(12.9898, 78.233))) * 43758.5453)) * uGrey : 0.0;
+  diffuseColor.rgb = mix(diffuseColor.rgb * (1.0 + 0.25 * n1), vec3(0.62, 0.6, 0.58), g);
+  fzR = 1.0 + 0.25 * n1;
   `;
   install(mat, { uniforms: U, head, color, key: 'hair' });
   return mat;
@@ -275,9 +286,10 @@ export function leatherMaterial(o = {}) {
   const mat = new THREE.MeshPhysicalMaterial({ color: col(o.color ?? 0x2a211c), roughness: o.roughness ?? 0.45, metalness: 0, clearcoat: o.clearcoat ?? 0.15, clearcoatRoughness: 0.5, envMapIntensity: 0.7, side: o.side ?? THREE.FrontSide });
   mat.name = 'leather';
   const color = /* glsl */`
-  fzH = fzNoise(vRest * 1800.0) * 0.00002 * fzAA(0.0008, fzFw) + fzFbm(vRest * 60.0) * 0.0002;
-  diffuseColor.rgb *= 1.0 + 0.08 * fzFbm(vRest * 25.0);
-  fzR = 1.0 + 0.2 * fzNoise(vRest * 40.0);
+  float n1 = fzNoise(vRest * 45.0);
+  fzH = n1 * 0.0002 + (fzFw < 0.0005 ? fzNoise(vRest * 1800.0) * 0.00002 * fzAA(0.0008, fzFw) : 0.0);
+  diffuseColor.rgb *= 1.0 + 0.08 * n1;
+  fzR = 1.0 + 0.2 * n1;
   `;
   install(mat, { uniforms: {}, color, key: 'leather' });
   return mat;

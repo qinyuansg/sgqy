@@ -551,10 +551,10 @@ export function handPose(name, p = {}, D = dimsOf({})) {
     case 'flat': case 'flat_on_glass': {
       const sp = p.spread ?? (name === 'flat_on_glass' ? 0.6 : 0.2);
       const press = name === 'flat_on_glass' ? -0.06 : 0;
-      return { wrist: [press, 0], thumb: [-0.05, 0.25 + 0.15 * sp, 0.02, 0.05, 0], index: [press, 0.02, 0.0, 0.05 * sp], middle: [press, 0.02, 0.0, 0.0], ring: [press, 0.02, 0.0, -0.05 * sp], little: [press, 0.03, 0.02, -0.12 * sp] };
+      return { wrist: [press, 0], thumb: [-0.05, 0.15 - 0.55 * sp, 0.02, 0.05, 0], index: [press, 0.02, 0.0, 0.05 * sp], middle: [press, 0.02, 0.0, 0.0], ring: [press, 0.02, 0.0, -0.05 * sp], little: [press, 0.03, 0.02, -0.12 * sp] };
     }
     case 'wipe': // fingers together, slightly bent, thumb alongside the index
-      return { wrist: [0.0, 0.0], thumb: [0.28, -0.32, 0.12, 0.12, 0.15], index: [0.12, 0.12, 0.05, -0.06], middle: [0.12, 0.12, 0.05, 0.0], ring: [0.13, 0.14, 0.06, 0.05], little: [0.15, 0.16, 0.08, 0.09] };
+      return { wrist: [0.0, 0.0], thumb: [0.12, 0.42, 0.1, 0.12, 0.1], index: [0.12, 0.12, 0.05, -0.06], middle: [0.12, 0.12, 0.05, 0.0], ring: [0.13, 0.14, 0.06, 0.05], little: [0.15, 0.16, 0.08, 0.09] };
     case 'grip': case 'hold_cup': case 'rattan': {
       const R = p.radius ?? (name === 'hold_cup' ? 0.038 : name === 'rattan' ? 0.012 : 0.02);
       const ch = { _radius: R, wrist: [p.wrist ?? 0.0, 0.08] };
@@ -590,7 +590,7 @@ export function handPose(name, p = {}, D = dimsOf({})) {
     case 'touch': // fingertips resting on a surface (e.g. on a sleeve patch)
       return { wrist: [0.25, 0], thumb: [0.3, 0.3, 0.2, 0.25, 0.2], index: [0.35, 0.35, 0.18, 0.02], middle: [0.42, 0.45, 0.22, 0], ring: [0.55, 0.65, 0.3, -0.02], little: [0.65, 0.75, 0.35, -0.05] };
     case 'spread':
-      return { wrist: [-0.1, 0], thumb: [-0.15, 0.55, -0.05, 0.0, 0], index: [-0.08, 0.0, 0.0, 0.18], middle: [-0.08, 0, 0, 0.02], ring: [-0.08, 0.0, 0.0, -0.15], little: [-0.08, 0.02, 0.0, -0.3] };
+      return { wrist: [-0.1, 0], thumb: [-0.15, -0.55, -0.05, 0.0, 0], index: [-0.08, 0.0, 0.0, 0.18], middle: [-0.08, 0, 0, 0.02], ring: [-0.08, 0.0, 0.0, -0.15], little: [-0.08, 0.02, 0.0, -0.3] };
     default:
       if (name.startsWith('blend:')) return lerpA ? handPose('relaxed', p, D) : null;
       return handPose('relaxed', p, D);

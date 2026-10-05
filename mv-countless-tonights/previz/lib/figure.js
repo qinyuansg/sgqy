@@ -236,7 +236,7 @@ export function figureKey(o = {}) {
 }
 const LOD = {
   hi: { body: 0.008, head: 0.0042, hair: 0.0045, cloth: 0.0085, detail: 0.0036, hand: 'figure' },
-  mid: { body: 0.011, head: 0.0055, hair: 0.006, cloth: 0.011, detail: 0.005, hand: 'figure' },
+  mid: { body: 0.012, head: 0.006, hair: 0.0065, cloth: 0.012, detail: 0.005, hand: 'crowd' },
   lo: { body: 0.018, head: 0.011, hair: 0.012, cloth: 0.018, detail: 0.009, hand: null },
 };
 
