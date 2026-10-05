@@ -850,7 +850,7 @@ export default async function create(ctx) {
   })();
   function childFeet(tl, T0) {
     const C = child, { A, B, Cp, spot } = S42;
-    const s0 = smoothstep(0.2, 0.62, tl), s1 = smoothstep(0.62, 0.8, tl), s2 = smoothstep(0.8, 1.2, tl);
+    const s0 = smoothstep(0.15, 0.55, tl), s1 = smoothstep(0.55, 0.73, tl), s2 = smoothstep(0.73, 1.15, tl);   // feet appear at the top of frame ≈ 0.78–0.83 s ('等' 139.02 = 0.85 s), settled by 1.15 s
     let p, ground, dir;
     if (s1 <= 0) { p = A.clone().lerp(B, s0); ground = lerp(0, DOOR.y0, smoothstep(0.7, 1, s0)); dir = B.clone().sub(A); }
     else if (s2 <= 0) { p = B.clone().lerp(Cp, s1); ground = lerp(DOOR.y0, STEP_Y, smoothstep(0.2, 0.9, s1)); dir = Cp.clone().sub(B); }
@@ -858,7 +858,7 @@ export default async function create(ctx) {
     const walkHead = Math.atan2(dir.x, dir.z), faceLens = Math.atan2(S42.pos.x - spot.x, S42.pos.z - spot.z);   // settle facing the lens
     let head = walkHead; if (s2 > 0) head = walkHead + (((faceLens - walkHead + Math.PI * 3) % (Math.PI * 2)) - Math.PI) * smoothstep(0.55, 1, s2);
     C.root.position.copy(p); C.root.rotation.set(0, head, 0);
-    const prog = s0 * 0.9 + s1 * 0.6 + s2 * 1.2, moving = tl > 0.2 && tl < 1.2;
+    const prog = s0 * 0.9 + s1 * 0.6 + s2 * 1.2, moving = tl > 0.15 && tl < 1.15;
     if (moving) C.pose('walk', { phase: prog % 1, stride: 0.7 * (1 - 0.7 * smoothstep(0.75, 1, s2)) });
     else C.pose('stand', { weight: -0.15 });
     if (!moving || s2 > 0.7) C.pose({ 'legL.upper.y': -0.22 * (moving ? smoothstep(0.7, 1, s2) : 1), 'legR.upper.y': -0.22 * (moving ? smoothstep(0.7, 1, s2) : 1) }, { add: true });   // a small child's feet stand straight / slightly pigeon-toed (the kit stance toes out ~25°, which read as sideways feet at the probe's grazing angle)
@@ -971,17 +971,18 @@ export default async function create(ctx) {
   // ---- view_home_rain: standing on the step, she puts her right palm out under the eave edge
   // she stands on the step between the door and the bowl, facing out; ~207 s her LEFT palm (the bangle) goes out past the
   // eave edge just beyond the bowl, palm up under the drip line, catches a drop, and is drawn back at ~209.3 s
-  const RAIN_W = { x: BOWL_S.x + 0.32, z: BOWL_S.z - 0.42, yaw: -Math.PI / 2 + 0.3 };
+  // review: she stands in front of the door (not between the lens and the niche lamp), facing out, palm out at chest height
+  const RAIN_W = { x: -3.44, z: 1.3, yaw: -Math.PI / 2 + 0.2 }, RAIN_PALM = V3(-EAVE_X - 0.08, 0.6, 1.72);
   function wifeReachRain(Tr) {
     const W = wife;
     W.root.position.set(RAIN_W.x, STEP_Y, RAIN_W.z); W.root.rotation.set(0, RAIN_W.yaw, 0);
     W.pose('stand', { weight: -0.3 }); W.pose({ 'hips.x': 0.1, 'spine.x': 0.18, 'chest.x': 0.12, 'neck.x': 0.2, 'head.x': 0.18, 'head.y': 0.15 }, { add: true });
     W.root.updateMatrixWorld(true); settleFeet(W, STEP_Y); W.breathe(Tr, 1.0);
     const out = ease.inOutSine(clamp((Tr - 206.95) / 0.5)) * (1 - ease.inOutSine(clamp((Tr - 209.3) / 0.6)));
-    const rest = W.root.localToWorld(V3(0.2, 0.8, 0.12)), palmOut = V3(-EAVE_X - 0.05, 0.52, BOWL_S.z - 0.17);
+    const rest = W.root.localToWorld(V3(0.2, 0.8, 0.12)), palmOut = RAIN_PALM;
     const wrist = rest.clone().lerp(palmOut.clone().add(V3(0.07, 0.02, -0.01)), out);
-    W.reach('L', wrist, { palm: V3(0.6, -0.5, -0.1).lerp(V3(0, 1, 0), out).normalize(), fingers: V3(-1, -0.6 * (1 - out), 0.05).normalize(), pole: V3(0.2, -1, -0.5).normalize() });
-    W.hands.L.pose(out > 0.5 ? 'cupped' : 'relaxed', { curl: 0.3 });
+    W.reach('L', wrist, { palm: V3(0.6, -0.5, -0.1).lerp(V3(0, 1, 0), out).normalize(), fingers: V3(-0.35, -0.6 * (1 - out), 1).normalize(), pole: V3(0.2, -1, -0.5).normalize() });   // review: fingers out to her left (across the lens' view) — pointing at the low camera they read as a wave
+    W.hands.L.pose('relaxed', { curl: out > 0.5 ? 0.12 : 0.3 });   // an open palm held out (the cupped curl read as a wave from the yard)
     W.reach('R', W.root.localToWorld(V3(-0.14, 0.78, 0.1)), { palm: V3(-1, 0, 0), fingers: V3(0, -1, 0.1).normalize() });
   }
   // ---- view_home_rain: drops into the bowl's centre blossom (first at 207.07, then every 1.35 s), crown splash
@@ -1251,7 +1252,7 @@ export default async function create(ctx) {
       // BEHIND the eave drips and the drop into the bowl (forward scatter), the bowl in the lower frame, her palm out in the
       // rain between them; the old camera looked at the door with the lamp out of frame (wide) and the drops unlit
       const wide = camera.aspect >= 1.4;
-      cam.place(camera, CRAIN.pos, CRAIN.target.clone().add(V3(0, wide ? -0.12 : 0.15, 0))); cam.lens(camera, camera.aspect < 1.1 ? 30 : wide ? 26 : 28);
+      const cr = wide ? CRAIN.wide : CRAIN.tall; cam.place(camera, cr.pos, cr.target); cam.lens(camera, cr.mm * (camera.aspect < 1.4 && camera.aspect > 1.1 ? 0.95 : 1));
       camera.near = 0.03; camera.far = 600;
       return { dof: null, exposure: 1.0 };
     },
@@ -1359,8 +1360,23 @@ export default async function create(ctx) {
     // view_home_rain: hand-placed (designed for a tall vitrine pane, aspect ≈ 0.8–1.3; checked offline): at 28 mm / 0.9 the
     // niche lamp sits mid-left behind the rain curtain (0.36, 0.46), her palm upper right (0.67, 0.25), the bowl lower right
     // (0.61, 0.80); wide panes get a wider lens from the same place
-    CRAIN.pos.set(-4.2, -0.3, 2.85); CRAIN.target.set(-3.2, 0.5, 0.72);
-    best = { err: 0 };
+    // review: solved for a tall pane (aspect 0.85, 30 mm) and a wide one (2.39, 26 mm) from low in the yard south-west of
+    // the bowl: niche lamp (0.52, 0.32) BEHIND the drip curtain, her palm out under the eave (0.42, 0.46), the bowl + splash
+    // low (0.47, 0.78)
+    {
+      const palmP = RAIN_PALM, bowlP = BOWL_S.clone().add(V3(0, 0.03, 0));
+      for (const [key, asp, mm, pts] of [['tall', 0.85, 30, [[lampOutWorld, [0.24, 0.3]], [palmP, [0.52, 0.42]], [bowlP, [0.7, 0.78]], [bowlP, [0.7, 0.78]]]],
+        ['wide', 2.39, 26, [[lampOutWorld, [0.3, 0.3]], [palmP, [0.54, 0.42]], [bowlP, [0.68, 0.8]], [bowlP, [0.68, 0.8]]]]]) {
+        let b = null;
+        for (let cx = -5.4; cx <= -4.3; cx += 0.1) for (let cz = 0.8; cz <= 1.9; cz += 0.1) for (const cy of [-0.33, -0.22, -0.1, 0.05]) {
+          const dB = V3(cx, cy, cz).distanceTo(bowlP), r = aimCamera(V3(cx, cy, cz), pts, mm, asp); r.err += 0.3 * Math.max(0, 0.8 - dB) ** 2 + 0.02 * Math.max(0, dB - 1.9) ** 2;
+          if (!b || r.err < b.err) b = r;
+        }
+        CRAIN[key] = { pos: b.pos, target: b.target, mm, err: b.err };
+      }
+      CRAIN.pos.copy(CRAIN.tall.pos); CRAIN.target.copy(CRAIN.tall.target);
+    }
+    best = { err: CRAIN.tall.err };
     console.log('OH solved CRAIN', CRAIN.pos.toArray().map((x) => x.toFixed(2)), best.err.toFixed(4));
     console.log('OH solved CHAND', CHAND.pos.toArray().map((x) => x.toFixed(2)), best.err.toFixed(4));
     console.log('OH solved C35', C35.pos.toArray().map((x) => x.toFixed(3)), C35.target.toArray().map((x) => x.toFixed(3)));

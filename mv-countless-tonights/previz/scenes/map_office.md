@@ -2,6 +2,10 @@
 
 Module `scenes/map_office.js`. Shots **S021** (CH1), **S044** (CH2), **S047** and **S048** (BR1). There are no named views.
 
+> **Review pass (art director + DP, 2026-10-05):** the light, the map drawing, the pen grip, the moths, S044's push and
+> S048's handle and staging changed after the notes below were written. Where they conflict with the **Review** section at
+> the end of this file, the Review section is current.
+
 Contact sheet (all shots at u = 0.5): `out/check/map_office/sheet.jpg`.
 
 Other check renders:
@@ -211,3 +215,141 @@ These are URL query parameters; they are inert in production.
 - `mdump=1` with `out/check/map_office/mo_dump.mjs` dumps the map canvases.
 
 Debug renderer: `out/check/map_office/mo_render.mjs --frames … [--q …]`.
+
+## Review — art director + DP pass (2026-10-05)
+
+I re-rendered every shot at u 0.05 / 0.5 / 0.95 and every sync-point frame, rendered the adjoining frames of all six
+neighbours (S020, S022, S043, S045, S046, S049) fresh from their current modules, rendered 6 consecutive frames in S021 and
+S048, and read the code. Review renders are in `out/check/map_office/rv1` (the state I found) and `rv2`–`rv6` (iterations).
+The final stills are in `final/`, the sync frames in `sync/`, the cut pairs in `match/pairs.jpg`, the contact sheet in
+`sheet.jpg`, and the motion and perf clips in `perf_*.mp4`.
+
+### What I found
+
+| area | problem (state found, `rv1`) |
+|---|---|
+| Light (S021/S044/S047) | The 2200 K lamp was the key and flooded the paper amber/orange. The moon stripes were weak, the grade read as a warm sepia insert rather than CT_MAP's "hardest, coldest" look, and the hands were orange. |
+| Map drawing | The hachures were contour-start rows: at S021/S044 they read as banded rings ("doughnut" hills); in the S047 macro they merged into fur. The river ran against its own valley. |
+| Pen (S021/S044) | The library `write` grip + `pen` socket put the pen through the midpoint of thumb and index pads, which sit ≈ 6 cm apart. The pen floated in the gap, and from above the index finger covered the nib, so no steel showed. |
+| Ruler | Read as a dead black slab, with the brass edges sunk below its top. |
+| Ink | In the S047 macro the line read as a glossy black rod: uniform edge, periodic bead glints, no fibre bleed. Cause: the bleed noise was sampled at ~1 texel per 0.1 mm, and the spike threshold sat above the noise texture's actual range (its channels sit at 0.5 ± 0.12). |
+| Left press (S021/S044) | The thumb lay closed along the index, so four fingers showed, not "五指张开". |
+| Moths | The multiply decal was too faint to see. When forced visible, it also darkened the moon stripes. |
+| S044 | The end hand (S045's A-frame) was cropped at the fingertips, and the push was 1.35×. |
+| S048 handle | It read as a varnished wooden dowel on two wooden blocks: bands ran along the bar, not round it, and the tabs were blocks. It looked nothing like a rattan-wrapped handle, nor like S049's aged one. The straps and buckles were hidden below frame. |
+| S048 shoes | The extra leg and foot channels de-registered the library sole from the upper, leaving a grey blade under the far shoe. Side-on, the far shoe was hidden behind the near one. |
+| S048 focus | Focus sat on the bar behind the knuckles, so the hand (the subject of 指节发白) was soft at f/4. |
+| Perf | S048 hand CU 1.59 s at load 3.4, max 2.3 s. Everything else was within budget. |
+
+### What I changed (all in `scenes/map_office.js`)
+
+**Desk light and grade (CT_MAP).**
+- The moon is now the key. It comes through the louvres as a soft-edged pool of stripes on the action (spot angle 0.09, penumbra 0.8). The stripe period is ≈ 4 cm (the shot list's "about 4 cm apart"), with a 2.5 px cookie blur, so the edges stay hard.
+- The kerosene lamp moved to frame right, low and raking: (0.62, TY + 0.27, −0.28). It now runs at 0.15 instead of 1.15, with a narrower cone (0.95 rad, penumbra 0.85). It warms the upper right and the hands' lamp-side flanks but no longer floods the sheet.
+- The fill is a cold grey-green hemisphere light (#56666a / #2a2a24, 0.85), standing in for the moonlit lime-wash walls.
+- Grade: exposure 1.7, temp −0.2 (S047 −0.28), saturation 0.7 (S047 0.6), contrast 1.26.
+- Result: silver stripes on cool paper, warmth kept to the lamp side, hands no longer orange. Measured on the final S021 frame: gaps ≈ 53 and stripes ≈ 190 / 255 (p5/p95 down a column), a hard look in the spirit of the bible's 10:1 (display-referred, after ACES).
+
+**Map drawing.**
+- New terrain: a coastal escarpment, peaks, and a sharpened ridged-noise network of spurs and ravines running down to the coast. The plain widens behind both villages, and a river valley follows the drawn river.
+- New hachures (`hach2`): jittered fall-line pen dashes on a 1 mm stratified grid (≈ 266 k strokes), tapered from the uphill end. Width, alpha and density are mapped to the slope distribution (p15/p30/p95, computed once), so steep ground is dark and crests and plain stay white, as in a Lehmann-style relief. They are drawn in a lighter brown than the coastline.
+- At macro (S047), every other dash is dropped at 80 % alpha, so single strokes read on the fibres.
+- Waterlining is stronger (five lines). There is still no text anywhere. The registrations are unchanged: coast x 0.30 on the S021 line, village mark (0.295, 0.581).
+
+**Ruling-pen grip.**
+- A module-side `socket_rulingpen` on the wrist: the shaft runs from just beyond the index pad (pad on the shaft) back into the thumb web.
+- The thumb channels are solved once so the thumb pad meets the shaft 1.5 cm behind the index pad. The middle finger sits under the shaft, and the ring and little fingers tuck.
+- The pen is held 4.8 cm up the shaft (was 7.2), and the steel is brushed (metalness 0.55).
+- Result: from above, the two steel blades and nut read at the nib, beyond the index fingertip, in S021, S044 and S047.
+
+**Ruler.** The ebony has a visible figure (brown streaks and pores on #4a3e35 under a white material colour), so stripes and lamp read across it. The brass edges are flush with the top and slightly polished.
+
+**Ink.**
+- Fibre bleed: worley noise at ≈ 1 mm cells, plus elongated fibre runs at ≈ 0.25 mm with the threshold set to the noise texture's real range. At macro the edge now feathers into the paper.
+- The wet surface is a shallow dome (bump 0.4). Irregular pooling glints along the line replace the periodic beads.
+- Program cache key: `inkStrip6`.
+
+**Left press.** The thumb is now spread with `cmcFlex` −0.55, which is how the library spreads a thumb (cf. `flat_on_glass`); `cmcAdd` only rotates it under the index. All five fingers are spread on 掌 in S021 and S044.
+
+**Moths.**
+- The shadows are now real lamp shadows. A 256² per-frame cookie on the kerosene spot (`lampL.map`) projects two moths through the spot's own frustum, so they only remove lamp light and never touch the moon stripes.
+- The moths sit ≈ 30 % of the way from the flame, giving ×3.3 magnification and a penumbra of ≈ half the shadow width. The result is large, soft, cool patches drifting over S021's upper right. They are subtle, as specified ("moths only as soft passing shadows").
+- Cost is within noise (interleaved A/B). Debug: `mothdbg=1`; switch off with `moff=moth`.
+
+**S044.**
+- The frame is 0.64 → 0.52 m wide (a 1.23× push; was 0.557 → 0.413).
+- The end hand fits whole: palm at **(0.450, 0.600)** (measured), all five fingertips inside the frame, about 45 % of frame height. The ruler is at the bottom edge, and the fresh line is visible under the heel without being touched.
+- The nib reaches the village's lowest row on 142.92, as before.
+
+**S048.**
+- **Handle:**
+  - Two taut leather loops at ±68 mm (the museum case's tab positions) rise from brass foot plates, with brass rivets, and wrap over the bar.
+  - The cane bar (Ø23 × 150 mm) has a helical honey rattan wrap of ≈ 36 turns.
+  - The straps moved to ±13.5 cm, buckled just below the top edge, with keepers.
+  - The new handle reads as new rattan and leather, and as the same object as S049's aged one.
+- **Bar registration:** **y 0.659, x 0.279–0.721** (measured) against S049's bar at y ≈ 0.66, x 0.28–0.72.
+- **Staging:**
+  - She stays side-on, per the ruling, but turned 17° toward the gate opening. The far shoe now steps out from behind the near one, and both black cloth shoes with their pale soles read.
+  - The extra leg channels are dropped, so the soles stay registered.
+  - Her left forearm lies across her waist, out of the hand CU.
+- **Focus** ends between the knuckle row and the bar, at f/5.6, so the clenched hand is the sharp subject.
+- **Grip on 关 (154.4):** the rattan radius goes 12.4 → 9 mm, wrist flex 0.14, and the blanch is stronger (0.72 toward #f2e4dc).
+- **Bulb:** creamier (#ffdcb6), with a warm floor bounce of 0.42.
+- **Perf:** the head and hair layers are hidden (never in frame) and the bulb shadow map is 1024.
+
+### Registrations (measured with `mopts=1`, final)
+
+| shot | measured | target |
+|---|---|---|
+| S021 78.32 山河 | nib (0.300, 0.652), coast 0.298 | nib crosses the coast at x 0.30 |
+| S021 79.64 掌 | palm (0.621, 0.449) | (0.62, 0.45) |
+| S021 end | village mark (0.295, 0.581), uncovered | S022 shore light (0.30, 0.58) |
+| S044 end | palm (0.450, 0.600) | S045 register (0.45, 0.60) |
+| S047 | nib down (0.30, 0.66) at f3639, up at f3662 | 151.64 / 152.6 |
+| S048 start | iron strip y 0.660, held 0–0.567 s | y 0.66, ≥ 12 frames |
+| S048 end | bar y 0.659, x 0.279–0.721 | S049 bar y 0.66, x 0.28–0.72 |
+
+### Cut pairs (`match/pairs.jpg`, neighbours rendered from their current modules)
+
+| cut | result |
+|---|---|
+| S020→S021 | Horizontal line at the same height, read left → right. |
+| S021→S022 | The village mark sits where S022's shore light is. |
+| S043→S044 | Line match, as in CH1. |
+| S044→S045 | My palm is on the register. **S045 (sea_deck, not edited) frames the navigator's left hand ≈ 0.15 frame-width right of (0.45, 0.60) on its first frame. That is for its owner to check.** |
+| S046→S047 | The E4 threshold line becomes the ink line at y 0.66. |
+| S047→S048 | Ink line → iron strip at y 0.66. |
+| S048→S049 | New handle → aged handle, same bar position and size. |
+
+### Continuity and artefacts
+- Cuff and cufflink: the plain starched band cuff and charcoal sleeve are unchanged. There is no ring and no text. The ink is blue-black (#1E2230), never red.
+- She holds the case in her RIGHT hand; the case is new (bright buckles, unworn wrap) and the sill is granite with an iron edge.
+- Six consecutive frames show no flicker. S021 f1890–1895 (final module, moths moving): mean luminance 78.1–79.1 / 255, frame-to-frame steps ≤ 0.5 from the pen, hand and moth motion. S048 f3700–3705: steps ≤ 0.2 (`consec/`, `rv6/consec.jpg`).
+- No NaNs, no black frames, no render errors in any log.
+
+### Performance (1280×536, `render.mjs --range` over 23 frames, mean after the first)
+
+| shot / range | idle-ish (load ≈ 3.4) | loaded (load 7.7–9.2) | max single frame |
+|---|---|---|---|
+| S021 1870:1894 | 0.48 s | 1.20 s | 1.80 s |
+| S044 3440:3464 | 0.78 s | 0.77 s | 1.05 s |
+| S047 3640:3664 | 1.01 s | 0.93 s | 1.31 s |
+| S048 low 3670:3694 | 0.79 s* | 1.01 s | 1.50 s |
+| S048 hand CU 3700:3724 | 0.97 s* | 1.41 s | 1.65 s |
+
+\* After the S048 optimisation, at load ≈ 7. All shots are within the 1.5 s typical target even under load, and no frame
+exceeds the 2.5 s worst case. Scene build is ≈ 16–19 s (map canvas with ≈ 266 k hachures, the macro patch, fibres, the
+cached hands and figure).
+
+### Still weak (honest list)
+- **Hands:** the library close-up hands are still a little smooth and mannequin-like at S048's CU. The MIGRANT blanch is a whole-hand tint (no per-knuckle mask in the library skin shader).
+- **S047 hand:** S047 shows the pen's steel blades at the lower right over the ruler, not the spec's "cuff and cufflink at the lower-left corner". A right hand drawing left → right sits lower right of the nib, and the cuff is ≥ 13 cm away in a 7.5 cm-tall frame. This is kept as a documented deviation.
+- **S021 end:** the left forearm still crosses the right end of the fresh line. Physics: palm at (0.62, 0.45) with the pen at (0.64, 0.70).
+- **Sweeps:** the left-hand sweeps in S021 and S044 stay fast (≈ 45 cm in 0.6 s), as the sync points require.
+- **S048 staging:** side-on along the sill is still the poetic, not literal, gate.
+- **Ink sheen:** the ink sheen at S021 distance is small (the line is ≈ 4 px wide). It reads as a dark wet line with a few glints.
+
+### Debug probes added
+URL knobs, all inert by default:
+- `mlamp` (lamp intensity), `mlx` (lamp x), `mhemi` (fill), `mexp` / `mtemp` / `msat` / `mst` (CT_MAP grade), `mpen` (moon pool penumbra)
+- `moff=lamp,moon,nrm,moth` (in addition to the existing switches)

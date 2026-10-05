@@ -27,7 +27,7 @@ const C = {
   paper: '#E2D6B8', ink: '#1E2230', teak: '#5A3A26', ebony: '#1E1A17', brass: '#A8894F', wall: '#D9D2C2', dado: '#3E4A40',
   rattan: '#A8783F', rattanGrip: '#7A5530', strap: '#6A4A30', buckle: '#9A7D4E', granite: '#8F8C86',
 };
-const K2200 = hex('#ffbb7d'), K2400 = hex('#ffd3a4'), MOON = hex('#98b2e8'), DUSK = hex('#7d8aa6');
+const K2200 = hex('#ffbb7d'), K2400 = hex('#ffdcb6'), MOON = hex('#98b2e8'), DUSK = hex('#7d8aa6');
 
 // ------------------------------------------------------------------ desk geometry
 const TY = 0.80;                                  // table top
@@ -134,18 +134,18 @@ function mapDrawing() {
   const RIV = { x0: coastX(52.4) + 0.1, x1: 70, y0: 52.4, y1: 44.5 };
   const riverY = (x) => { const t = clamp((x - RIV.x0) / (RIV.x1 - RIV.x0), 0, 1);
     return lerp(RIV.y0, RIV.y1, Math.pow(t, 1.25)) + 0.75 * Math.sin(t * 15.0 + 0.5) * (1 - 0.5 * t) + 0.3 * Math.sin(t * 37.0 + 1.1); };
-  const PEAKS = [[57, 21, 4.6, 95, 80], [46, 7, 3.4, 45, 40], [75, 35, 4.2, 130, 85], [54, 33, 2.6, 45, 30], [67, 63, 3.3, 85, 50],
+  const PEAKS = [[57, 21, 4.6, 95, 80], [46, 7, 3.4, 45, 40], [75, 35, 4.2, 130, 85], [67, 63, 3.3, 85, 50],
     [83, 11, 3.2, 60, 60], [86, 52, 3.0, 70, 90], [39, 24, 1.6, 22, 18], [44, 45, 1.5, 30, 14]];
   const H = (x, y) => {
     const dist = x - coastX(y);
     if (dist < 0) return 0;
     const plainW = 2.6 + 8.2 * Math.exp(-((y - 56.6) ** 2) / 20) + 1.6 * Math.exp(-((y - 37.7) ** 2) / 5);
     const rise = smoothstep(plainW, plainW + 9, dist);
-    let h = 0.9 * rise + 1.0 * smoothstep(18, 46, dist);
-    for (const [px, py, A, sx, sy] of PEAKS) h += A * Math.exp(-(((x - px) ** 2) / sx + ((y - py) ** 2) / sy));
-    // spurs: ridged noise stretched across the coast (long in x, short in y) → ridges and ravines running down to the sea
-    const sp = N.ridged(x / 90 + 0.1 * N.fbm(x / 90, y / 70, 3, 2), y / 70, 2, 2, 5);
-    h += 0.8 * (sp - 0.45) * smoothstep(plainW + 1, plainW + 9, dist) * (0.5 + 0.5 * smoothstep(-0.3, 0.4, N.fbm(x / 90 + 0.5, y / 70, 2, 2)));
+    let h = 0.9 * rise + 0.9 * smoothstep(18, 46, dist);
+    for (const [px, py, A, sx, sy] of PEAKS) h += 0.75 * A * Math.exp(-(((x - px) ** 2) / sx + ((y - py) ** 2) / sy));
+    // ridge network: sharpened ridged noise (connected crests, spurs running down to the coast, ravines between)
+    const rg = N.ridged(x / 90 + 0.09 * N.fbm(x / 90, y / 70, 3, 2), y / 70 + 0.05 * N.fbm(x / 90 + 0.3, y / 70, 3, 2), 3, 3, 4);
+    h += 2.1 * rg * rg * smoothstep(plainW + 1, plainW + 10, dist) * (0.6 + 0.4 * smoothstep(-0.3, 0.4, N.fbm(x / 90 + 0.5, y / 70, 2, 2)));
     h += 0.3 * N.fbm(x / 90, y / 70, 6, 4, 0.5);
     if (x > RIV.x0 - 1) h -= 1.1 * Math.exp(-((y - riverY(x)) ** 2) / 12) * smoothstep(plainW - 1, plainW + 6, dist);   // river valley
     return 2.5 * Math.max(0, h * smoothstep(0.4, 2.6, dist));
@@ -183,24 +183,26 @@ function mapDrawing() {
     return lerp(lerp(Gi(i, j), Gi(i + 1, j), u), lerp(Gi(i, j + 1), Gi(i + 1, j + 1), u), v); };
   const grad = (x, y) => { const e = step; return [(hAt(x + e, y) - hAt(x - e, y)) / (2 * e), (hAt(x, y + e) - hAt(x, y - e)) / (2 * e)]; };
   const hach = [];
-  const cell = 0.15;
+  const cell = 0.1;
+  const GP = (() => { const rq = rng(77), gs = []; for (let k = 0; k < 24000; k++) { const x = 3 + rq() * 84, y = 3 + rq() * 64; if (hAt(x, y) > 0.03) gs.push(Math.hypot(...grad(x, y))); }
+    gs.sort((a, b) => a - b); const q = (f) => gs[Math.floor(f * (gs.length - 1))]; return { p15: q(0.15), p30: q(0.3), p95: q(0.95) }; })();
   for (let j = 0; j < MAPH / cell; j++) for (let i = 0; i < MAPW / cell; i++) {
-    const px = (i + 0.15 + 0.7 * r()) * cell, py = (j + 0.15 + 0.7 * r()) * cell, rr = r(), rl = r(), rw = r();   // moderate jitter: even spacing, no lattice
+    const px = (i + 0.25 + 0.5 * r()) * cell, py = (j + 0.25 + 0.5 * r()) * cell, rr = r(), rl = r(), rw = r();   // moderate jitter: even spacing, no lattice
     if (px < 2.7 || px > MAPW - 2.7 || py < 2.7 || py > MAPH - 2.7) continue;
     if (hAt(px, py) <= 0.03) continue;
     const [gx, gy] = grad(px, py), gm = Math.hypot(gx, gy);
-    const tg = smoothstep(0.36, 1.05, gm);                                         // slope → ink weight across the slope distribution (p30 … p95)
-    if (gm < 0.2 || rr > smoothstep(0.22, 0.55, gm)) continue;
+    const tg = smoothstep(GP.p30, GP.p95, gm);                                     // slope → ink weight across the slope distribution (p30 … p95)
+    if (gm < GP.p15 * 0.8 || rr > smoothstep(GP.p15 * 0.8, GP.p30 * 1.2, gm)) continue;
     if (inVillage(px, py)) continue;
     const L = 0.3 * (0.9 + 0.2 * rl) * (1.15 - 0.3 * smoothstep(0.5, 2.5, gm));   // straight pen dashes, shorter where steep
     const ux = -gx / gm, uy = -gy / gm;
     const mx = px + ux * L * 0.5, my = py + uy * L * 0.5, ex = px + ux * L, ey = py + uy * L;
     if (ex - coastX(ey) < 1.2 || inVillage(ex, ey)) continue;
-    const w = lerp(0.0045, 0.05, Math.pow(tg, 1.3)) * (0.85 + 0.3 * rw), a = 0.5 + 0.45 * tg;
+    const w = lerp(0.002, 0.026, Math.pow(tg, 1.3)) * (0.85 + 0.3 * rw), a = 0.55 + 0.4 * tg;
     hach.push([px, py, mx, my, ex, ey, w, a]);
   }
-  if (new URLSearchParams(location.search).has('mopts')) { const gs = []; for (let k = 0; k < 20000; k++) { const x = 3 + r() * 84, y = 3 + r() * 64; if (hAt(x, y) > 0.03) gs.push(Math.hypot(...grad(x, y))); } gs.sort((a, b) => a - b); console.warn('[map_office] gm pct', [0.1, 0.3, 0.5, 0.7, 0.9, 0.97].map((q) => gs[Math.floor(q * gs.length)].toFixed(2)).join(' '), 'n', hach.length); }
-  ops.push({ k: 'hach2', list: hach, c: INK });
+  if (new URLSearchParams(location.search).has('mopts')) { const gs = []; for (let k = 0; k < 20000; k++) { const x = 3 + r() * 84, y = 3 + r() * 64; if (hAt(x, y) > 0.03) gs.push(Math.hypot(...grad(x, y))); } gs.sort((a, b) => a - b); console.warn('[map_office] gm pct', [0.1, 0.3, 0.5, 0.7, 0.9, 0.97].map((q) => gs[Math.floor(q * gs.length)].toFixed(2)).join(' '), 'n', hach.length, JSON.stringify(GP)); }
+  ops.push({ k: 'hach2', list: hach, c: '84,60,40' });   // hachures in a lighter brown than the coast and lines
   // ---- the river (from the hills down the valley to the coast just north of the fishing village)
   { const pts = []; for (let k = 0; k <= 160; k++) { const x = lerp(RIV.x1, RIV.x0, k / 160); pts.push([x, riverY(x)]); }
     for (let k = 0; k < pts.length - 1; k += 4) ops.push({ k: 'line', pts: pts.slice(k, k + 5), w: lerp(0.016, 0.06, k / pts.length), c: INK, a: 0.85 }); }
@@ -244,11 +246,13 @@ function drawOps(g, ops, k, ox = 0, oy = 0, clip = null) {
       }
     } else if (o.k === 'hach2') {
       g.fillStyle = `rgb(${o.c})`;
+      const macro = k >= 80;                                                      // S047 patch: fewer, fainter dashes (no merged 'fur')
       for (const [x0, y0, x1, y1, x2, y2, w, a] of o.list) {
         if (!inClip(x0, y0)) continue;
+        if (macro) { const hs = Math.sin(x0 * 12.9898 + y0 * 78.233) * 43758.5453; if (hs - Math.floor(hs) > 0.5) continue; }
         const dx = x2 - x0, dy = y2 - y0, l = Math.hypot(dx, dy) || 1, nx = -dy / l, ny = dx / l;
         const w0 = w * 0.5, w1 = w * 0.42, w2 = w * 0.12;                         // tapered wedge, blunt uphill end
-        g.globalAlpha = a;
+        g.globalAlpha = macro ? a * 0.8 : a;
         g.beginPath();
         g.moveTo(X(x0 + nx * w0), Y(y0 + ny * w0)); g.lineTo(X(x1 + nx * w1), Y(y1 + ny * w1)); g.lineTo(X(x2 + nx * w2), Y(y2 + ny * w2));
         g.lineTo(X(x2 - nx * w2), Y(y2 - ny * w2)); g.lineTo(X(x1 - nx * w1), Y(y1 - ny * w1)); g.lineTo(X(x0 - nx * w0), Y(y0 - ny * w0));
@@ -388,16 +392,19 @@ export default async function create(ctx) {
   const ruler = new THREE.Group(); ruler.name = 'ruler'; desk.add(ruler);
   const RL = 0.62;
   {
-    const ebonyT = (() => { const W = 1024, Hh = 64, c = canvas(W, Hh), g = c.getContext('2d'), rr = rng(77); g.fillStyle = '#1b1715'; g.fillRect(0, 0, W, Hh);
-      for (let k = 0; k < 140; k++) { g.strokeStyle = `rgba(${rr() < 0.5 ? '60,48,40' : '8,6,5'},${0.15 + rr() * 0.3})`; g.lineWidth = 0.6 + rr() * 1.6; const y = rr() * Hh; g.beginPath(); g.moveTo(0, y); for (let x = 0; x <= W; x += 32) g.lineTo(x, y + 2.5 * Math.sin(x * 0.01 + k)); g.stroke(); }
+    // review: the ruler read as a dead black slab. Ebony keeps its near-black (#1E1A17) but with a visible figure — dark
+    // brown streaks and fine pores — so the louvre stripes and the lamp read across it; the brass edges are flush with the top.
+    const ebonyT = (() => { const W = 2048, Hh = 96, c = canvas(W, Hh), g = c.getContext('2d'), rr = rng(77); g.fillStyle = '#4a3e35'; g.fillRect(0, 0, W, Hh);
+      for (let k = 0; k < 220; k++) { g.strokeStyle = `rgba(${rr() < 0.55 ? '74,58,46' : '6,5,4'},${0.18 + rr() * 0.35})`; g.lineWidth = 0.6 + rr() * 2.2; const y = rr() * Hh, ph = rr() * 6; g.beginPath(); g.moveTo(0, y); for (let x = 0; x <= W; x += 24) g.lineTo(x, y + 3.5 * Math.sin(x * 0.004 + ph) + 1.2 * Math.sin(x * 0.03 + k)); g.stroke(); }
+      for (let k = 0; k < 2600; k++) { g.fillStyle = `rgba(4,3,2,${0.3 + rr() * 0.4})`; g.fillRect(rr() * W, rr() * Hh, 2 + rr() * 6, 0.8); }
       return ctex(c); })();
-    const ebony = new THREE.MeshStandardMaterial({ map: ebonyT, roughness: 0.32, metalness: 0, envMap: envDesk, envMapIntensity: 0.6 });
-    const brassM = new THREE.MeshStandardMaterial({ color: hex('#d6ad6a'), roughness: 0.5, metalness: 0.35, envMap: envDesk, envMapIntensity: 1.2 });
+    const ebony = new THREE.MeshStandardMaterial({ map: ebonyT, color: hex('#ffffff'), roughness: 0.34, metalness: 0, envMap: envDesk, envMapIntensity: 0.9 });
+    const brassM = new THREE.MeshStandardMaterial({ color: hex('#d9b06a'), roughness: 0.36, metalness: 0.45, envMap: envDesk, envMapIntensity: 1.5 });
     const bevelM = new THREE.MeshStandardMaterial({ color: hex('#f3d9a2'), roughness: 0.34, metalness: 0.6, envMap: envDesk, envMapIntensity: 2.0 });
     const body = new THREE.Mesh(new THREE.BoxGeometry(RL, RULER.t, RULER.w - 2 * RULER.brass), ebony); body.position.set(0, RULER.t / 2, 0); body.castShadow = body.receiveShadow = true; ruler.add(body);
     for (const s of [-1, 1]) {
-      const e = new THREE.Mesh(new THREE.BoxGeometry(RL, RULER.t * 0.92, RULER.brass), brassM);
-      e.position.set(0, RULER.t * 0.46, s * (RULER.w / 2 - RULER.brass / 2)); e.castShadow = e.receiveShadow = true; ruler.add(e);
+      const e = new THREE.Mesh(new THREE.BoxGeometry(RL, RULER.t * 1.0, RULER.brass), brassM);
+      e.position.set(0, RULER.t * 0.5, s * (RULER.w / 2 - RULER.brass / 2)); e.castShadow = e.receiveShadow = true; ruler.add(e);
       // polished bevel along the top outer edge (15° toward the paper side): catches the moon stripes as bright dashes
       const bv = new THREE.Mesh(new THREE.BoxGeometry(RL, 0.0006, RULER.brass * 1.25), bevelM);
       bv.rotation.x = s * 0.27; bv.position.set(0, RULER.t - 0.0002, s * (RULER.w / 2 - RULER.brass * 0.55)); ruler.add(bv);
@@ -417,7 +424,7 @@ export default async function create(ctx) {
     const bottle = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.032, 0.05, 24), glassM); bottle.position.set(0.56, TY + 0.025, 0.20); desk.add(bottle);
     const inkIn = new THREE.Mesh(new THREE.CylinderGeometry(0.027, 0.029, 0.035, 24), new THREE.MeshStandardMaterial({ color: 0x0b0d14, roughness: 0.1 })); inkIn.position.set(0.56, TY + 0.018, 0.20); desk.add(inkIn);
   }
-  const LAMP = V(0.80, TY + 0.27, -0.30);           // flame (kerosene lamp on the desk at frame right, beyond the map's right edge: low and raking —
+  const LAMP = V(+(QS0.get('mlx') || 0.62), TY + 0.27, -0.28);           // flame (kerosene lamp on the desk at frame right, beyond the map's right edge: low and raking —
                                                     // it models the hands' lamp-side flanks but stays dim on the flat paper, so the louvre stripes key the frame)
   {
     const brassL = TX.mat('brass', { tex: { tone: 'then', patina: 0.2, polish: 0.7 }, roughness: 1, metalness: 1, envMap: envDesk });
@@ -429,38 +436,48 @@ export default async function create(ctx) {
   }
 
   // ---- moths round the lamp (bible: two or three). The moths stay just outside the desk frames, between the lamp and the
-  //      map; only their soft shadows pass over the paper (S021 upper right). The lamp flame is ~2 cm, the moth ~4 cm from
-  //      the paper's shadow point ×3, so a real shadow is a soft blur — drawn as a projected multiply decal, not a shadow map.
-  const mothU = { uA: { value: 0 }, uFlap: { value: 1 } };
-  const mothShadow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.ShaderMaterial({
-    uniforms: mothU, transparent: true, depthWrite: false,
-    blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.ZeroFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
-    vertexShader: `varying vec2 vUv; void main(){ vUv = uv * 2.0 - 1.0; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-    fragmentShader: `varying vec2 vUv; uniform float uA, uFlap;
-      void main(){ vec2 q = vUv; float body = exp(-(q.x * q.x * 30.0 + q.y * q.y * 3.0));
-        vec2 w = vec2(abs(q.x) / max(uFlap, 0.25), q.y * 1.4 + 0.15); float wing = exp(-dot(w - vec2(0.45, 0.0), w - vec2(0.45, 0.0)) * 4.5);
-        float a = uA * clamp(body * 0.8 + wing, 0.0, 1.0) * smoothstep(1.0, 0.7, length(q));
-        gl_FragColor = vec4(0.0, 0.0, 0.0, a); }` }));
-  mothShadow.rotation.x = -Math.PI / 2; mothShadow.renderOrder = 4; desk.add(mothShadow);
+  //      map; only their soft shadows pass over the paper (S021 upper right). Review: the shadow is now a real LAMP shadow —
+  //      a per-frame cookie (lampL.map, 256²) with the moths' silhouettes projected through the spot's own frustum — so it
+  //      only removes kerosene light (the old multiply decal also darkened the moon stripes, and was too faint to read).
+  //      Flame ≈ 2 cm, moth ≈ 44 % of the way to the paper → ×2.3 magnification and a ≈ 2.5 cm penumbra (blurred cookie).
+  const MOTH_N = 256, mothCanvas = canvas(MOTH_N, MOTH_N), mothG = mothCanvas.getContext('2d');
+  mothG.fillStyle = '#fff'; mothG.fillRect(0, 0, MOTH_N, MOTH_N);
+  const mothTex = new THREE.CanvasTexture(mothCanvas); mothTex.colorSpace = THREE.SRGBColorSpace;
+  const lampCam = new THREE.PerspectiveCamera(60, 1, 0.05, 3);
+  const mothState = { drawn: false };
   function flyMoths(T, on = true) {
-    // the shadow wanders over the upper right of the S021 frame; the moth itself sits 44 % of the way from the flame,
-    // 14–16 cm above the paper and just outside the frame edge
-    const t = T * 0.95 + 3.1;
-    const hit = V(0.27 + 0.055 * Math.sin(t * 1.7) + 0.02 * noise1(t * 2.3, 4), TY + 0.0011, -0.06 + 0.06 * Math.cos(t * 1.3) + 0.02 * noise1(t * 3.1, 5));
-    const f = 0.44 + 0.04 * Math.sin(t * 2.9), mag = 1 / f;
-    const d = hit.clone().sub(LAMP);
-    mothShadow.visible = on;
-    mothShadow.position.copy(hit);
-    mothShadow.rotation.z = Math.atan2(d.x, d.z) + 0.4 * Math.sin(t * 3.7);
-    mothShadow.scale.set(0.04 * mag, 0.026 * mag, 1);
-    mothU.uFlap.value = 0.55 + 0.45 * Math.abs(Math.sin(T * 2 * Math.PI * 9.3));
-    mothU.uA.value = 0.36 * clamp(0.45 + 1.4 * noise1(T * 0.7, 9), 0, 1);
-    if (QS.has('mothdbg')) { mothU.uA.value = 1; console.warn('moth hit', toFrame(hit)); }
+    mothG.fillStyle = '#fff'; mothG.fillRect(0, 0, MOTH_N, MOTH_N);
+    mothTex.needsUpdate = true;
+    if (!on) return;
+    lampCam.fov = THREE.MathUtils.radToDeg(2 * lampL.angle) * lampL.shadow.focus; lampCam.position.copy(lampL.position);
+    lampCam.lookAt(lampL.target.position); lampCam.updateMatrixWorld(true); lampCam.updateProjectionMatrix();
+    const uvOf = (p) => { const q = p.clone().project(lampCam); return [(q.x + 1) / 2 * MOTH_N, (1 - (q.y + 1) / 2) * MOTH_N]; };
+    for (let m = 0; m < 2; m++) {           // two moths: one wanders over the frame's upper right, one mostly off frame
+      const t = T * (0.95 + 0.22 * m) + 3.1 + 5.7 * m;
+      const hit = m === 0
+        ? V(0.27 + 0.055 * Math.sin(t * 1.7) + 0.02 * noise1(t * 2.3, 4), TY, -0.06 + 0.06 * Math.cos(t * 1.3) + 0.02 * noise1(t * 3.1, 5))
+        : V(0.42 + 0.08 * Math.sin(t * 1.3), TY, -0.16 + 0.07 * Math.cos(t * 1.9));
+      const f = 0.3 + 0.04 * Math.sin(t * 2.9);                                      // close to the chimney: large, soft shadows
+      const M = LAMP.clone().lerp(hit, f);                                           // the moth itself
+      const ray = hit.clone().sub(LAMP).normalize(), side = V().crossVectors(ray, V(0, 1, 0)).normalize();
+      const head = Math.atan2(ray.x, ray.z) + 0.6 * Math.sin(t * 3.7);
+      const span = 0.016 * (0.55 + 0.45 * Math.abs(Math.sin(T * 2 * Math.PI * (9.3 + m))));   // half wingspan, flapping
+      const c = uvOf(M), e = uvOf(M.clone().addScaledVector(side, span));
+      let r = Math.hypot(e[0] - c[0], e[1] - c[1]);
+      const blur = r * 0.5;                                                          // penumbra (2 cm flame × (1 − f) / f at the paper)
+      const dark = QS.has('mothdbg') ? 1 : 0.9 * clamp(0.55 + 1.2 * noise1(T * 0.7, 9 + m), 0.25, 1);
+      mothG.save(); mothG.filter = `blur(${blur.toFixed(1)}px)`; mothG.translate(c[0], c[1]); mothG.rotate(head);
+      mothG.fillStyle = `rgba(0,0,0,${dark.toFixed(3)})`;
+      mothG.beginPath(); mothG.ellipse(-r * 0.45, 0, r * 0.55, r * 0.42, -0.3, 0, 6.283); mothG.ellipse(r * 0.45, 0, r * 0.55, r * 0.42, 0.3, 0, 6.283); mothG.fill();
+      mothG.beginPath(); mothG.ellipse(0, 0, r * 0.14, r * 0.6, 0, 0, 6.283); mothG.fill();
+      mothG.restore();
+      if (QS.has('mothdbg')) console.warn('moth', m, 'hit frame', toFrame(hit), 'uv', c.map((v) => v.toFixed(1)).join(','), 'r', r.toFixed(1));
+    }
   }
 
   // ---- lights (desk)
   const lampL = new THREE.SpotLight(K2200, 2.0, 0, 0.95, 0.85, 2);
-  lampL.position.copy(LAMP); lampL.target.position.set(0.0, TY, 0.02);
+  lampL.position.copy(LAMP); lampL.target.position.set(0.0, TY, 0.02); lampL.map = mothTex;
   lampL.castShadow = true; lampL.shadow.mapSize.set(1024, 1024); lampL.shadow.camera.near = 0.05; lampL.shadow.camera.far = 2.5;
   lampL.shadow.bias = -0.0002; lampL.shadow.normalBias = 0.002; lampL.shadow.radius = 3;
   scene.add(lampL, lampL.target);
@@ -468,7 +485,7 @@ export default async function create(ctx) {
   const louvre = (() => {
     const W = 1024, c = canvas(W, W), g = c.getContext('2d');
     g.fillStyle = '#000'; g.fillRect(0, 0, W, W);
-    const n = 50, per = W / n;                       // ≈ 4 cm stripe period on the desk (shot list: "about 4 cm apart")
+    const n = 36, per = W / n;                       // ≈ 4 cm stripe period on the desk (shot list: "about 4 cm apart")
     g.filter = 'blur(2.5px)';                         // hard moon (bible §3.2 map office 10:1, hard): ≈ 4 mm penumbra
     g.fillStyle = '#fff';
     for (let k = 0; k < n; k++) g.fillRect(k * per + per * 0.29, -20, per * 0.42, W + 40);
@@ -476,13 +493,13 @@ export default async function create(ctx) {
     const t = ctex(c, { srgb: true }); return t;
   })();
   const MOON_DIR = V(-0.70, -0.60, 0.40).normalize();
-  const moonL = new THREE.SpotLight(MOON, 1.0, 0, 0.13, 0.25, 0);
+  const moonL = new THREE.SpotLight(MOON, 1.0, 0, 0.09, +(QS0.get('mpen') || 0.8), 0);   // review: a soft-edged pool of stripes on the action, not a uniform field
   moonL.map = louvre;
   moonL.castShadow = true; moonL.shadow.mapSize.set(1024, 1024); moonL.shadow.camera.near = 4.0; moonL.shadow.camera.far = 7.5;
   moonL.shadow.bias = -0.0002; moonL.shadow.normalBias = 0.002; moonL.shadow.radius = 2;
   scene.add(moonL, moonL.target);
   const aimMoon = (target, I) => { moonL.target.position.copy(target); moonL.position.copy(target).addScaledVector(MOON_DIR, -6); moonL.intensity = I; moonL.target.updateMatrixWorld(); };
-  const hemi = new THREE.HemisphereLight(hex('#56666a'), hex('#2a2a24'), +(QS0.get('mhemi') || 0.4)); scene.add(hemi);   // moonlit lime-wash walls: cold grey-green fill (CT_MAP)
+  const hemi = new THREE.HemisphereLight(hex('#56666a'), hex('#2a2a24'), +(QS0.get('mhemi') || 0.85)); scene.add(hemi);   // moonlit lime-wash walls: cold grey-green fill (CT_MAP)
   const deskLights = [lampL, moonL];
 
   // ================================================================ INK LINES (procedural wet iron-gall strip)
@@ -491,10 +508,10 @@ export default async function create(ctx) {
     const halfW = width / 2, geoHalf = halfW * 2.2;
     const geo = new THREE.PlaneGeometry(len + 2 * geoHalf * (new URLSearchParams(location.search).has('inkdbg') ? 4 : 1), 2 * geoHalf * (new URLSearchParams(location.search).has('inkdbg') ? 4 : 1), 64, 1);
     const U = { uEnd: { value: 0 }, uLen: { value: len }, uHalfW: { value: halfW }, uGeo: { value: geoHalf }, uSeed: { value: seed * 0.137 }, uNoise: { value: noiseT },
-      uBleed: { value: 0.35 }, uNib: { value: 1 }, uBump: { value: 1 } };
+      uBleed: { value: 0.35 }, uNib: { value: 1 }, uBump: { value: 0.4 } };
     const INKDBG = new URLSearchParams(location.search).has('inkdbg');
     if (INKDBG) U.uHalfW.value *= 4, U.uGeo.value *= 4;
-    const m = new THREE.MeshStandardMaterial({ color: INKDBG ? hex('#ff0000') : hex(C.ink), emissive: INKDBG ? hex('#ff0000') : hex('#000000'), roughness: 0.2, metalness: 0, envMap: envDesk, envMapIntensity: 1.4, transparent: true, depthWrite: false,
+    const m = new THREE.MeshStandardMaterial({ color: INKDBG ? hex('#ff0000') : hex(C.ink), emissive: INKDBG ? hex('#ff0000') : hex('#000000'), roughness: 0.26, metalness: 0, envMap: envDesk, envMapIntensity: 1.4, transparent: true, depthWrite: false,
       polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 });
     m.onBeforeCompile = (sh) => {
       Object.assign(sh.uniforms, U);
@@ -508,14 +525,16 @@ export default async function create(ctx) {
           float ym = (vInk.y - 0.5) * 2.0 * uGeo;                    // metres across (+ = frame up)
           float endm = uEnd * uLen;
           float nA = texture2D(uNoise, vec2(xm * 7.0 + uSeed, uSeed * 3.1)).r;      // slow width wander
-          float nB = texture2D(uNoise, vec2(xm * 61.0, ym * 61.0 + uSeed)).b;          // fibre bleed (worley)
+          float nB = texture2D(uNoise, vec2(xm * 60.0, ym * 60.0 + uSeed)).b;          // fibre bleed (worley, ≈ 1 mm cells; ≤ 1 texel/px at macro)
+          float nF = texture2D(uNoise, vec2(xm * 140.0 + 0.3, ym * 45.0 + uSeed * 2.0)).g;   // fibre runs (≈ 0.25 mm, a little elongated)
           float nC = texture2D(uNoise, vec2(xm * 23.0 + 0.5, uSeed + ym * 9.0)).g;
           float pool = uNib * exp(-max(endm - xm, 0.0) / (2.6 * uHalfW));           // ink pooled at the nib
           float hw = uHalfW * (0.92 + 0.16 * nA + 0.35 * pool);
           float dx = xm < 0.0 ? -xm : (xm > endm ? xm - endm : 0.0);
           float r = length(vec2(dx, ym)) / hw;                                      // 0 centre .. 1 edge (round caps)
-          float bleed = uBleed * (0.55 * nB + 0.45 * nC);
-          inkA = 1.0 - smoothstep(0.86 + 0.2 * bleed, 1.0 + 0.55 * bleed, r);
+          float spikes = smoothstep(0.57, 0.7, nF) * (0.6 + 0.8 * nB);   // noise channels sit at 0.5 ± 0.12
+          float bleed = uBleed * (0.6 * nB + 0.4 * nC + 3.2 * spikes);
+          inkA = 1.0 - smoothstep(0.8 + 0.1 * bleed, 1.0 + 0.65 * bleed, r);
           if (inkA < 0.02 || endm <= 0.0) discard;
           // iron-gall: darker rim, bluish wet centre
           float rim = smoothstep(0.55, 0.95, r);
@@ -523,10 +542,12 @@ export default async function create(ctx) {
           diffuseColor.a = inkA * (0.9 + 0.1 * (1.0 - rim));
           // meniscus + beads → slope of the wet surface (for glints)
           float s = clamp(ym / hw, -1.0, 1.0);
-          float bead = 1.0 + 0.45 * sin(xm / (0.0021 + 0.0006 * nA) + nC * 6.0) + 1.4 * pool;
+          // review: a shallow wet dome (it read as a glossy rod), irregular pooling instead of periodic beads
+          float nD = texture2D(uNoise, vec2(xm * 160.0 + uSeed, 0.37)).a;
+          float bead = 0.75 + 0.6 * nD + 1.4 * pool;
           float dhdy = -2.0 * s * bead * 0.9;                                       // across (tangent-space y = frame up)
-          float dhdx = 0.8 * cos(xm / (0.0021 + 0.0006 * nA) + nC * 6.0) * (1.0 - s * s) * 1.1 - pool * 1.2 * sign(xm - endm) * (1.0 - s * s);
-          inkD = uBump * vec2(dhdx, dhdy) * smoothstep(1.0, 0.7, r);
+          float dhdx = 0.9 * (texture2D(uNoise, vec2(xm * 160.0 + uSeed + 0.004, 0.37)).a - nD) / 0.004 * 0.28 * (1.0 - s * s) - pool * 1.2 * sign(xm - endm) * (1.0 - s * s);
+          inkD = vec2(uBump * 2.2 * dhdx, uBump * dhdy) * smoothstep(1.0, 0.7, r);   // shallow across, beads + pooled end along
         }`)
         .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
         {
@@ -534,7 +555,7 @@ export default async function create(ctx) {
           normal = normalize(normal - inkD.x * tX - inkD.y * tY);
         }`);
     };
-    m.customProgramCacheKey = () => 'inkStrip1';
+    m.customProgramCacheKey = () => 'inkStrip6';
     const mesh = new THREE.Mesh(geo, m); mesh.rotation.x = -Math.PI / 2; mesh.receiveShadow = true; mesh.renderOrder = 3;
     mesh.userData.U = U; mesh.userData.len = len; mesh.userData.geoHalf = geoHalf;
     return mesh;
@@ -546,7 +567,7 @@ export default async function create(ctx) {
   // ================================================================ RULING PEN
   const pen = new THREE.Group(); pen.name = 'pen';        // origin = nib tip, +Y = toward the handle top, ±X = the two blades
   {
-    const steel = new THREE.MeshStandardMaterial({ color: 0xc9cdd2, metalness: 0.85, roughness: 0.32, envMap: envDesk, envMapIntensity: 1.8 });
+    const steel = new THREE.MeshStandardMaterial({ color: 0xd2d6dc, metalness: 0.55, roughness: 0.3, envMap: envDesk, envMapIntensity: 1.6 });   // brushed: reads against the ebony from above
     const ebonyH = new THREE.MeshStandardMaterial({ color: 0x141110, roughness: 0.3, envMap: envDesk, envMapIntensity: 0.7 });
     const blade = (s) => {
       const sh = new THREE.Shape(); sh.moveTo(0, 0); sh.quadraticCurveTo(0.0032, 0.010, 0.0028, 0.022); sh.lineTo(0.0022, 0.034); sh.lineTo(-0.0022, 0.034); sh.lineTo(-0.0028, 0.022); sh.quadraticCurveTo(-0.0032, 0.010, 0, 0);
@@ -604,9 +625,40 @@ export default async function create(ctx) {
     return { p, a: top.sub(p), b: side.sub(p) };
   };
   let penGrip = PEN_GRIP;
+  // Review: a ruling-pen tripod grip. The library 'write' preset + 'pen' socket put the pen through the midpoint of the
+  // thumb and index pads, which sit ≈ 6 cm apart: the pen floated in the gap and, from above, the index lay over the nib.
+  // Here the shaft runs from just beyond the index pad (pad on the shaft) back into the thumb web, and the thumb is
+  // solved once so its pad meets the shaft 1.5 cm behind the index pad. The ring and little fingers tuck.
+  const penSock = new THREE.Object3D(); penSock.name = 'socket_rulingpen'; handR.byName.wrist.add(penSock);
+  const IDX = handR.dims.F.find((f) => f.name === 'index');
+  function rulingFrame() {        // → { contact, dir } in wrist space for the current channels
+    const wr = handR.byName.wrist; handR.root.updateMatrixWorld(true);
+    const inv = wr.matrixWorld.clone().invert();
+    const b3 = handR.fingerBones.index[2];
+    const pad = handR.tip('index', V()).applyMatrix4(inv), ax = b3.localToWorld(V(0, -IDX.len[2] * 0.7, 0)).applyMatrix4(inv);
+    const contact = pad.clone().addScaledVector(pad.clone().sub(ax).normalize(), 0.004);
+    const D = handR.dims, web = V(0.03 * handR.mir * D.tf, -0.066 * D.s, 0.033 * D.wf);
+    return { contact, dir: web.sub(contact).normalize() };
+  }
+  const RULE = (() => {
+    const base = { wrist: [-0.15, 0.1], thumb: [0.45, 0.45, 0.22, 0.15, 0.3], index: [0.34, 0.36, 0.14, 0.02], middle: [0.5, 0.78, 0.38, 0.0], ring: [0.85, 1.15, 0.5, -0.02], little: [0.95, 1.2, 0.5, -0.05] };
+    let best = base, bd = 1e9;
+    handR.root.position.set(0, 0, 0); handR.root.quaternion.identity();
+    for (const tf of [0.35, 0.5, 0.65, 0.8, 0.95]) for (const ta of [0.2, 0.35, 0.5, 0.65]) for (const tm of [0.1, 0.25, 0.4, 0.55]) {
+      const ch = { ...base, thumb: [tf, ta, tm, 0.2, 0.3] };
+      handR.setChannels(ch);
+      const { contact, dir } = rulingFrame(), q = contact.clone().addScaledVector(dir, 0.015);
+      const tp = handR.tip('thumb', V()).applyMatrix4(handR.byName.wrist.matrixWorld.clone().invert());
+      const d = Math.abs(tp.distanceTo(q) - 0.007);
+      if (d < bd) { bd = d; best = ch; }
+    }
+    if (QS0.has('mopts')) console.warn('[map_office] RULE thumb', best.thumb.join(','), 'err', bd.toFixed(4));
+    return best;
+  })();
   function penHand(nib, axis, across, roll = 0, pose = null) {
-    handR.pose(pose || 'write');
-    if (pen.parent !== handR.sockets.pen) handR.hold(pen, 'pen');
+    if (pose) handR.pose(pose); else handR.setChannels(RULE);
+    { const { contact, dir } = rulingFrame(); penSock.position.copy(contact); penSock.quaternion.setFromUnitVectors(V(0, 1, 0), dir); }
+    if (pen.parent !== penSock) penSock.add(pen);
     pen.position.set(0, -penGrip, 0); pen.rotation.set(0, roll, 0); pen.updateMatrixWorld(true);
     placeHand(handR, penRefs, nib, axis, across);
   }
@@ -640,7 +692,7 @@ export default async function create(ctx) {
     return { p, a: n, b: f };
   };
   const PEN_PALM = V(-0.55, -0.8, 0.1);   // writing hand: palm faces the paper and the body's midline
-  const PRESS = { wrist: [-0.30, 0], thumb: [-0.12, -0.5, -0.04, 0.02, 0.1], index: [0.0, 0.03, 0.01, 0.17], middle: [0.0, 0.03, 0.01, 0.02], ring: [0.0, 0.04, 0.02, -0.13], little: [0.02, 0.05, 0.03, -0.28] };
+  const PRESS = { wrist: [-0.30, 0], thumb: [-0.55, -0.3, -0.05, 0.02, 0.1], index: [0.0, 0.03, 0.01, 0.17], middle: [0.0, 0.03, 0.01, 0.02], ring: [0.0, 0.04, 0.02, -0.13], little: [0.02, 0.05, 0.03, -0.28] };
   const HOLD_RULER = { wrist: [-0.05, 0.05], thumb: [0.15, 0.1, 0.1, 0.12, 0.2], index: [0.28, 0.42, 0.22, 0.06], middle: [0.3, 0.46, 0.25, 0.0], ring: [0.36, 0.55, 0.3, -0.05], little: [0.45, 0.62, 0.33, -0.12] };
   const blendCh = (a, b, t) => { const o = {}; for (const k of Object.keys(a)) o[k] = a[k].map((x, i) => lerp(x, b[k][i], t)); return o; };
   // left hand: fingertips on the ruler (hold) → lift, travel over the wet line → spread and pressed flat on the map (press).
@@ -705,10 +757,11 @@ export default async function create(ctx) {
   const migHandR = await loadCharacterHand('MIGRANT', 'R', { lod: 'close' });
   { const old = mig.hands.R, bone = old.root.parent; migHandR.root.position.copy(old.root.position); migHandR.root.quaternion.copy(old.root.quaternion); migHandR.root.scale.copy(old.root.scale); bone.remove(old.root); bone.add(migHandR.root); mig.hands.R = migHandR; }
   mig.root.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  for (const k of ['head', 'hair']) mig.setLayerVisible(k, false);   // review/perf: never in S048's frames (shoes → hand); their bulb shadow falls outside frame too
   const skinBase = migHandR.skinMat ? migHandR.skinMat.color.clone() : null;
   // PROP_CASE, new state, hanging: local X = long axis (her forward), Y up, Z = thickness (toward camera), origin = handle-bar centre
   const caseG = new THREE.Group(); caseG.name = 'case'; gate.add(caseG);
-  const CASE = { L: 0.58, Hh: 0.38, D: 0.21, top: -0.034 };
+  const CASE = { L: 0.58, Hh: 0.38, D: 0.21, top: -0.028 };   // top = case top below the bar centre (finger clearance under the bar)
   {
     const ratt = TX.mat('rattan', { repeat: [3.2, 2.1], tex: { seed: 13, age: 0.25 } });
     const rattTop = TX.mat('rattan', { repeat: [3.2, 1.2], tex: { seed: 14, age: 0.25 } });
@@ -722,28 +775,48 @@ export default async function create(ctx) {
     box(L + 0.004, Hh + 0.004, 0.012, leatherD, 0, cy, D / 2 - 0.06);
     for (const sx of [-1, 1]) for (const sy of [-1, 1]) box(0.05, 0.05, D + 0.006, leatherD, sx * (L / 2 - 0.022), cy + sy * (Hh / 2 - 0.022), 0);
     // straps round the case (vertical), buckles on the camera face just below the top edge
-    for (const sx of [-0.17, 0.17]) {
+    // review: straps moved in to ±13.5 cm and buckled just under the top edge, so strap + bright buckle read under the bar in the
+    // end frame (shot list endframe); keeper loop below the buckle
+    for (const sx of [-0.135, 0.135]) {
       box(0.032, Hh + 0.008, 0.004, leather, sx, cy, D / 2 + 0.002); box(0.032, 0.004, D + 0.008, leather, sx, top + 0.002, 0); box(0.032, Hh + 0.008, 0.004, leather, sx, cy, -D / 2 - 0.002);
-      const bk = new THREE.Mesh(new THREE.TorusGeometry(0.015, 0.0026, 8, 20), buckleM); bk.scale.set(1.1, 0.85, 1); bk.position.set(sx, top - 0.05, D / 2 + 0.006); bk.castShadow = true; caseG.add(bk);
-      box(0.004, 0.026, 0.003, buckleM, sx, top - 0.05, D / 2 + 0.007);
+      const bk = new THREE.Mesh(new THREE.TorusGeometry(0.014, 0.0026, 8, 20), buckleM); bk.scale.set(1.15, 0.85, 1); bk.position.set(sx, top - 0.02, D / 2 + 0.006); bk.castShadow = true; caseG.add(bk);
+      box(0.0035, 0.024, 0.003, buckleM, sx, top - 0.02, D / 2 + 0.008);
+      box(0.038, 0.009, 0.006, leatherD, sx, top - 0.042, D / 2 + 0.005);
     }
-    // handle: two leather tabs (±68 mm, as the museum case) + rattan-wrapped cane bar Ø23 mm × 150 mm, fresh honey wrap
-    for (const sx of [-0.068, 0.068]) { const tab = box(0.022, 0.044, 0.012, leather, sx, -0.018, 0.0); tab.castShadow = true; }
-    const barT = (() => { const W = 512, c = canvas(W, 64), g = c.getContext('2d'), rr = rng(66); g.fillStyle = '#9c6f3c'; g.fillRect(0, 0, W, 64);
-      for (let x = 0; x < W; x += 9) { g.fillStyle = `rgba(${170 + rr() * 40},${118 + rr() * 26},${62 + rr() * 16},0.95)`; g.save(); g.translate(x, 0); g.transform(1, 0, 0.35, 1, 0, 0); g.fillRect(0, 0, 7, 64); g.restore(); }
-      for (let k = 0; k < 40; k++) { g.strokeStyle = `rgba(90,60,30,${0.2 + rr() * 0.2})`; g.lineWidth = 0.7; g.beginPath(); const x = rr() * W; g.moveTo(x, 0); g.lineTo(x + 20, 64); g.stroke(); }
-      return ctex(c); })();
-    const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.0115, 0.0115, 0.15, 24, 1), new THREE.MeshStandardMaterial({ map: barT, roughness: 0.55 }));
+    // handle (review): two leather loops at ±68 mm (the museum case's tab positions) pulled taut by the weight — straps from the
+    // case top up both sides of the bar and over it, riveted with brass — and a cane bar Ø23 × 150 mm wrapped in a fresh honey
+    // rattan strip (≈ 36 helical turns; the old texture ran its bands along the bar, so it read as a wooden dowel)
+    const loopM = new THREE.MeshStandardMaterial({ color: hex('#5e3f27'), roughness: 0.5, side: THREE.DoubleSide });
+    for (const sx of [-0.068, 0.068]) {
+      for (const sz of [-1, 1]) box(0.022, -top - 0.002, 0.0028, loopM, sx, top / 2, sz * 0.0128);
+      const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.0129, 0.0129, 0.022, 16, 1, true, 0, Math.PI), loopM);
+      cap.rotation.z = Math.PI / 2; cap.position.set(sx, 0, 0); cap.castShadow = true; caseG.add(cap);
+      for (const sz of [-1, 1]) { const rv = new THREE.Mesh(new THREE.CylinderGeometry(0.0022, 0.0022, 0.0015, 10), buckleM); rv.position.set(sx, top + 0.006, sz * 0.0145); rv.rotation.x = sz * Math.PI / 2; caseG.add(rv); }
+      box(0.026, 0.0016, 0.036, buckleM, sx, top + 0.0008, 0);   // brass foot plate
+    }
+    const barT = (() => { const Wu = 256, Hv = 1024, c = canvas(Wu, Hv), g = c.getContext('2d'), rr = rng(66); g.fillStyle = '#6a4626'; g.fillRect(0, 0, Wu, Hv);
+      const N = 36, bh = Hv / N;
+      for (let k = -1; k <= N; k++) {
+        const y0 = k * bh, sh = 0.86 + 0.14 * rr();
+        const grd = g.createLinearGradient(0, y0, 0, y0 + bh);
+        grd.addColorStop(0, `rgb(${Math.round(150 * sh)},${Math.round(104 * sh)},${Math.round(54 * sh)})`); grd.addColorStop(0.35, `rgb(${Math.round(190 * sh)},${Math.round(140 * sh)},${Math.round(80 * sh)})`);
+        grd.addColorStop(0.7, `rgb(${Math.round(178 * sh)},${Math.round(128 * sh)},${Math.round(70 * sh)})`); grd.addColorStop(1, `rgb(${Math.round(140 * sh)},${Math.round(96 * sh)},${Math.round(50 * sh)})`);
+        g.save(); g.transform(1, bh / Wu, 0, 1, 0, 0); g.fillStyle = grd; g.fillRect(0, y0 + 0.8, Wu, bh - 1.6);
+        for (let f = 0; f < 6; f++) { g.strokeStyle = `rgba(${rr() < 0.5 ? '230,190,120' : '90,60,30'},${0.12 + rr() * 0.18})`; g.lineWidth = 0.8; const yy = y0 + 3 + rr() * (bh - 6); g.beginPath(); g.moveTo(0, yy); g.lineTo(Wu, yy); g.stroke(); }
+        g.restore();
+      }
+      const t = ctex(c, { wrap: true }); return t; })();
+    const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.0115, 0.0115, 0.15, 32, 1), new THREE.MeshStandardMaterial({ map: barT, roughness: 0.46, envMap: envGate, envMapIntensity: 0.5 }));
     bar.rotation.z = Math.PI / 2; bar.castShadow = true; caseG.add(bar); caseG.userData.bar = bar;
   }
   // gate lights: enamel-shade bulb overhead (2400 K, shadowed) + cool blue-hour spill from the doorway
   const bulbL = new THREE.SpotLight(K2400, 8.0, 0, 0.95, 0.7, 2);
   bulbL.position.copy(G(0.62, 2.2, 0.32)); bulbL.target.position.copy(G(0.05, 0.35, -0.1));
-  bulbL.castShadow = true; bulbL.shadow.mapSize.set(1536, 1536); bulbL.shadow.camera.near = 0.5; bulbL.shadow.camera.far = 4; bulbL.shadow.bias = -0.0002; bulbL.shadow.normalBias = 0.003;
+  bulbL.castShadow = true; bulbL.shadow.mapSize.set(1024, 1024); bulbL.shadow.camera.near = 0.5; bulbL.shadow.camera.far = 4; bulbL.shadow.bias = -0.0002; bulbL.shadow.normalBias = 0.003;
   scene.add(bulbL, bulbL.target);
   const duskL = new THREE.DirectionalLight(DUSK, 0.35); duskL.position.copy(G(-0.5, 2.0, -6)); duskL.target.position.copy(G(0, 0.5, 0)); scene.add(duskL, duskL.target);
   const gateFill = new THREE.HemisphereLight(hex('#4a5a7a'), hex('#3a2c20'), 0.12); scene.add(gateFill);
-  const bounceL = new THREE.PointLight(hex('#c79a6a'), 0.18, 1.6, 2); bounceL.position.copy(G(0.1, 0.06, 0.45)); scene.add(bounceL);   // warm floor bounce of the bulb pool
+  const bounceL = new THREE.PointLight(hex('#c79a6a'), 0.42, 1.6, 2); bounceL.position.copy(G(0.1, 0.06, 0.45)); scene.add(bounceL);   // warm floor bounce of the bulb pool
   const gateLights = [bulbL, duskL, gateFill, bounceL];
 
   // ---- visibility per set
@@ -774,14 +847,15 @@ export default async function create(ctx) {
   // ---- lamp & moon levels (shared by the desk shots)
   function deskLight(T, { lamp = 1, moon = 1, aim = V(0, TY, 0), moths = true } = {}) {
     const fl = flicker(T, 3);
-    lampL.intensity = +(QS.get('mlamp') || 0.6) * lamp * (0.985 + 0.015 * (fl - 0.92) / 0.1);   // kerosene: steady (no candle flicker), a breath of life
+    lampL.intensity = +(QS.get('mlamp') || 0.15) * lamp * (0.985 + 0.015 * (fl - 0.92) / 0.1);   // kerosene: steady (no candle flicker), a breath of life
     lampL.target.position.copy(aim); lampL.target.updateMatrixWorld();
     aimMoon(aim, 2.5 * moon);
-    flyMoths(T, moths);
+    flyMoths(T, moths && !OFF.has('moth'));
   }
+  const EXP_MAP = +(QS0.get('mexp') || 1.7);
   const mapPost = (o = {}) => ({
-    exposure: 1.0, contrast: 1.26, saturation: 0.7, temp: -0.1, tint: -0.03,
-    shadowTint: [0.44, 0.5, 0.5], highTint: [0.55, 0.52, 0.48], lift: [0.004, 0.007, 0.008],
+    exposure: EXP_MAP, contrast: 1.26, saturation: +(QS0.get('msat') || 0.7), temp: +(QS0.get('mtemp') || -0.2), tint: -0.03,
+    shadowTint: QS0.has('mst') ? QS0.get('mst').split(',').map(Number) : [0.44, 0.5, 0.5], highTint: [0.55, 0.52, 0.48], lift: [0.004, 0.007, 0.008],
     vignette: 0.42, grain: 0, aberration: 0.4, bloom: { strength: 0.22, radius: 0.5, threshold: 0.9 }, ...o,
   });
 
@@ -792,7 +866,7 @@ export default async function create(ctx) {
     // coast (x 0.30) at 1.278 s (78.32 山河); left hand off the ruler ~2.0 s, spread flat on the land at 2.598 s (79.64 掌),
     // palm (0.62, 0.45); the harbour-village mark (0.30, 0.58) stays uncovered (→ S022 shore light).
     S021(tl, u, T) {
-      useSet('desk'); patchMesh.visible = false; penGrip = 0.072;
+      useSet('desk'); patchMesh.visible = false; penGrip = 0.048;
       const W0 = 0.80, H0 = 50 / 36 * W0;                       // frame width at the paper → camera height for 50 mm
       const coastW = mw(coastX(S021.lineY), S021.lineY);
       const cx = coastW.x + 0.2 * W0, cz = mw(0, S021.lineY).z - 0.16 * (W0 / 2.39);
@@ -819,8 +893,9 @@ export default async function create(ctx) {
       leftHand(smoothstep(1.98, 2.598, tl), pHold, V(0.3, -0.4, -1), pPress, V(0.42, 0, -1), 0.0006 * smoothstep(2.6, 2.72, tl));
       deskLight(T, { aim: V(cx, TY, cz) });
       setGrain(T, 0.16);
+      if (DBG && Math.abs(tl - 1.278) < 0.03) { const f3 = (v) => v.toArray().map((x) => x.toFixed(3)).join(','); dbg('S021 pen', 'nib', f3(nib), 'penO', f3(pen.localToWorld(V())), 'penTop', f3(pen.localToWorld(V(0, 0.14, 0))), 'pinch', f3(handR.sockets.pinch.getWorldPosition(V())), 'idx', f3(handR.tip('index', V())), 'thumb', f3(handR.tip('thumb', V())), 'wrist', f3(handR.root.getWorldPosition(V()))); }
       if (DBG && Math.abs(tl - 1.278) < 0.03) dbg('S021 nib frame', toFrame(nib), 'coast', toFrame(coastW), 'mark', toFrame(mw(drawing.hm.x, drawing.hm.y)), 'palm', toFrame(pPress));
-      return mapPost({ dof: null, exposure: 1.0 });
+      return mapPost({ dof: null });
     },
 
     // ---------------------------------------------------------------------------------------------------------- S044
@@ -828,8 +903,8 @@ export default async function create(ctx) {
     // village's lowest houses (nib at the village on 142.92, tl 0.712); pen lifts 1.7 s; left hand rises over the wet line and
     // spreads above it at 2.272 s (144.48 掌), palm (0.45, 0.60) ≈ 45 % of frame height (→ S045 left hand).
     S044(tl, u, T) {
-      useSet('desk'); patchMesh.visible = false; penGrip = 0.072;
-      const W0 = 0.557, W1 = 0.413, h0 = 75 / 36 * W0, h1 = 75 / 36 * W1;
+      useSet('desk'); patchMesh.visible = false; penGrip = 0.048;
+      const W0 = 0.64, W1 = 0.52, h0 = 75 / 36 * W0, h1 = 75 / 36 * W1;   // review: 1.28× push; the end hand (≈ 45 % of frame height, fingertips inside the frame) matches S045's first frame
       const vx = coastX(S044.lineY) + 2.4;
       const villL = Math.min(...drawing.houses.filter((hs) => Math.abs(hs.y - (S044.lineY - 0.31)) < 0.3).map((hs) => hs.x - hs.w / 2));
       const lineZ = mw(0, S044.lineY).z;
@@ -864,7 +939,7 @@ export default async function create(ctx) {
       deskLight(T, { aim: V(cx, TY, cz) });
       setGrain(T, 0.16);
       if (DBG && (Math.abs(tl - 0.712) < 0.03 || tl > 2.6)) dbg('S044', tl.toFixed(2), 'nib', toFrame(nib), 'palm', toFrame(handL.sockets.palm.getWorldPosition(V())), 'village', toFrame(mw(vx, S044.vY)));
-      return mapPost({ dof: { focus: h - 0.018 * smoothstep(1.9, 2.3, tl), fstop: 8 }, exposure: 1.02 });
+      return mapPost({ dof: { focus: h - 0.018 * smoothstep(1.9, 2.3, tl), fstop: 8 }, exposure: EXP_MAP * 1.02 });
     },
 
     // ---------------------------------------------------------------------------------------------------------- S047
@@ -889,7 +964,7 @@ export default async function create(ctx) {
       handR.root.visible = true; handL.root.visible = false;
       deskLight(T, { aim: V(cx, TY, cz), lamp: 1.0, moon: 1.0 });
       setGrain(T, 0.14);
-      return mapPost({ dof: { focus: h, fstop: 8 }, exposure: 1.0, saturation: 0.6, temp: -0.14 });   // BR1: greyed, low saturation
+      return mapPost({ dof: { focus: h, fstop: 8 }, saturation: 0.6, temp: -0.28 });   // BR1: greyed, low saturation
     },
 
     // ---------------------------------------------------------------------------------------------------------- S048
@@ -901,14 +976,16 @@ export default async function create(ctx) {
       queue.position.set(0.06 * tl - 0.08, 0, 0);       // the queue shuffles on, soft beyond the doorway
       handR.root.visible = false; handL.root.visible = false;
       // her: standing on the sill just behind the strip, facing +X, weight forward a little; breathing
-      mig.root.position.set(0.02, SILL.y, -0.22); mig.root.rotation.set(0, Math.PI / 2, 0);   // gate-local
-      mig.pose('stand', { weight: 0.25 }); mig.pose({ 'legL.upper.x': 0.13, 'legL.lower.x': 0.06, 'legL.foot.x': -0.06, 'legR.upper.x': -0.07, 'legR.foot.x': 0.05 }, { add: true }); mig.breathe(T, 0.8);
+      mig.root.position.set(0.02, SILL.y, -0.22); mig.root.rotation.set(0, Math.PI / 2 - 0.3, 0);   // gate-local; review: turned 17° toward the gate opening → the far shoe steps out from behind the near one (a pair reads), soles stay registered
+      // review: plain contrapposto stand — the extra leg/foot channels de-registered the library sole (skinned to the foot only)
+      // from the shoe upper (a grey blade under the far shoe)
+      mig.pose('stand', { weight: 0.25 }); mig.pose({ 'armL.upper.x': 0.3, 'armL.upper.z': 0.08, 'armL.lower.x': 1.35, 'armL.lower.y': 0.4, handL: 'relaxed' }, { add: true }); mig.breathe(T, 0.8);   // left forearm across her waist (out of the hand CU)
       mig.root.updateMatrixWorld(true);
       const tight = smoothstep(1.47, 1.64, tl);
       const grip = mig.root.localToWorld(V(-0.25, 0.71, 0.05));   // wrist: the case rides clear of her right thigh
       mig.reach('R', grip, { palm: V(0, 0.05, -1), fingers: V(0.05, -1, 0.06) });
-      migHandR.pose('rattan', { radius: lerp(0.0124, 0.0094, tight), wrist: 0.12 * tight });
-      if (skinBase) migHandR.skinMat.color.copy(skinBase).lerp(hex('#f6ece6'), 0.55 * tight);
+      migHandR.pose('rattan', { radius: lerp(0.0124, 0.009, tight), wrist: 0.14 * tight });
+      if (skinBase) migHandR.skinMat.color.copy(skinBase).lerp(hex('#f2e4dc'), 0.72 * tight);   // blood pushed out of the grip
       mig.lookAt(G(2.5, 1.5, -0.5), 0.3);
       mig.root.updateMatrixWorld(true);
       const g = migHandR.sockets.grip.getWorldPosition(V());
@@ -927,12 +1004,15 @@ export default async function create(ctx) {
       const corr = lerp(-(toFrame(strip)[1] - want), -(toFrame(barW)[1] - want), smoothstep(0.35, 0.75, m)) * vfov;
       camera.rotateX(corr);
       camera.updateMatrixWorld(true);
-      const focusD = lerp(lerp(camera.position.distanceTo(strip), camera.position.distanceTo(G(0.08, 0.05, -0.18)), smoothstep(0.2, 0.55, tl)), camera.position.distanceTo(barW), smoothstep(0.6, 1.0, tl));
+      const knuck = migHandR.fingerBones.middle[0].getWorldPosition(V()).lerp(barW, 0.5);   // between the knuckle row (the fingers hook over the bar from our side) and the bar
+      const focusD = lerp(lerp(camera.position.distanceTo(strip), camera.position.distanceTo(G(0.08, 0.05, -0.18)), smoothstep(0.2, 0.55, tl)), camera.position.distanceTo(knuck), smoothstep(0.6, 1.0, tl));
+      if (DBG && tl > 2.3) { const cp = camera.position; dbg('S048 focus', focusD.toFixed(3), 'wrist', cp.distanceTo(migHandR.root.getWorldPosition(V())).toFixed(3), 'mcp', cp.distanceTo(migHandR.fingerBones.middle[0].getWorldPosition(V())).toFixed(3), 'pip', cp.distanceTo(migHandR.fingerBones.middle[1].getWorldPosition(V())).toFixed(3), 'bar', cp.distanceTo(barW).toFixed(3)); }
       setGrain(T, 0.18);
       if (DBG) dbg('S048 geo', 'hroot', migHandR.root.getWorldPosition(V()).toArray().map((v) => v.toFixed(3)), 'hvis', migHandR.root.visible, migHandR.root.parent && migHandR.root.parent.name, 'target', grip.toArray().map((v) => v.toFixed(3)), 'root', mig.root.getWorldPosition(V()).toArray().map((v) => v.toFixed(3)), 'eye', mig.eye().toArray().map((v) => v.toFixed(3)), 'toeL', mig.worldPos('footL').toArray().map((v) => v.toFixed(3)), 'grip', g.toArray().map((v) => v.toFixed(3)), 'handL', mig.worldPos('handL').toArray().map((v) => v.toFixed(3)), 'rotY', mig.root.rotation.y.toFixed(3), 'parent', mig.root.parent && mig.root.parent.name);
+      if (DBG && tl < 0.05) dbg('S048 layers', Object.keys(mig.layers).join(' '), 'footR', mig.worldPos('footR').toArray().map((v) => v.toFixed(3)).join(','), 'footL', mig.worldPos('footL').toArray().map((v) => v.toFixed(3)).join(','));
       if (DBG && (tl < 0.05 || Math.abs(tl - 1.05) < 0.03 || tl > 2.3)) dbg('S048', tl.toFixed(2), 'strip', toFrame(strip), 'barL', toFrame(caseG.localToWorld(V(-0.075, 0, 0))), 'barR', toFrame(caseG.localToWorld(V(0.075, 0, 0))));
       return {
-        dof: { focus: focusD, fstop: 4 }, exposure: 1.08, contrast: 1.0, saturation: 0.72, temp: -0.02,
+        dof: { focus: focusD, fstop: 5.6 }, exposure: 1.08, contrast: 1.0, saturation: 0.72, temp: -0.02,
         shadowTint: [0.47, 0.5, 0.56], highTint: [0.57, 0.53, 0.46], lift: [0.012, 0.012, 0.014],
         vignette: 0.38, grain: 0, bloom: { strength: 0.42, radius: 0.6, threshold: 0.8 },
       };

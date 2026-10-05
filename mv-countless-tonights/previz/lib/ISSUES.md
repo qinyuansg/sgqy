@@ -224,3 +224,33 @@ the inside of the nostril through the head (warm "ember") — use a shadowed spo
 The grade pass now hashes grain with an integer PCG hash on (pixel, frame) — no more vertical stripes past f≈2100.
 Modules that set engine `grain: 0` and drew their own grain (pier_waiting, night_window) should switch back to the
 engine grain (default 0.035, or a per-shot value) so the film's grain is uniform; the integration QA pass will do this.
+
+## [old_home review] notes (worked around in scenes/old_home.js; not blockers)
+- **Close-up hand swapped onto a figure: the 12 cm default forearm stub rides with the HAND bone.** `loadCharacterHand(code, side,
+  { lod:'close' })` builds `forearmLen` 0.12 (hand.js default) while the figure's own hands use 0.03. Parented to the figure's
+  hand bone, the stub follows the wrist flex, so on any bent wrist it sticks out of the sleeve as a bare-skin "plank" at the hand's
+  angle (old_home S016 end frame, view_home_hand, the wife's folded hands read as upright sticks). Workaround: pass
+  `hand: { forearmLen: 0.03 }`. Suggestion: default the stub to 0.03 when a close hand is meant for a figure, or document it.
+- **sky.js under a dense deck: a bright band of clear sky just above the horizon.** `skyCloud()` fades cover out below ~6°
+  (`smoothstep(0, 0.1, d.y)`) and thin cloud gets a moon silver-lining term, so with cloudCover ≈ 0.93 the only "thin" cloud is the
+  faded horizon strip, which lights up toward a low moon (old_home S041 CH2). Worked around by string-patching THIS module's sky +
+  sea shader instances (uniform `uLowCloud`: cover runs to the horizon, the moon becomes a diffuse in-cloud glow). Suggestion: a
+  `lowCloud` / `horizonFade` preset field.
+- **Additive "reflection" materials on a figure show inner garment layers through outer ones** (no occlusion between additive
+  layers): the RESTORER's cream knit showed through her charcoal coat and the dark hair added nothing (bald head). Rendered the
+  figure normally into its own RT and added that image onto the glass instead (old_home S017 `ghostPlate`).
+- **CHILD (barefoot) feet have no toes** — a single smooth toe mass reads as a sock in a ground-level insert. old_home adds five
+  small toe digits per foot (skin material, parented to the foot bones) for S042's "toes curl and wiggle".
+
+## [map_office review] notes (worked around in scenes/map_office.js; not blockers)
+- **hand.js `write` + `pen` socket (update to the [map_office] note above):** the socket sits at the midpoint of the thumb and index
+  pads, which are ≈ 6 cm apart in the `write` preset, so a pen in it floats between the fingers. map_office now uses its own wrist
+  socket. The shaft runs from just beyond the index pad back to the thumb web, and the thumb channels are solved once so the thumb
+  pad meets the shaft 1.5 cm behind the index pad. Suggestion: a `ruling` / `tripod` preset whose `pen` socket lies on the
+  index pad's shaft line.
+- **Thumb spread:** in `setChannels` the radial spread of the thumb comes from a negative `cmcFlex` (thumb[0]), as `flat_on_glass`
+  uses. `cmcAdd` (thumb[1]) negative only rotates it under the index. Worth a line in README's channel table: "−cmcFlex = spread".
+- **`TX.noiseTexture()` channels are narrow:** R/G/B/A sit at about 0.5 ± 0.12, not 0…1. Thresholds such as `smoothstep(0.6, 0.86, n)`
+  almost never fire. Remap in the shader (e.g. `(n − 0.5) * 4 + 0.5`) or document the range.
+- **Neighbour observation (sea_deck, not edited):** S045's first frame frames the navigator's left hand ≈ 0.15 frame-width right of the
+  shot list's register (0.45, 0.60). map_office's S044 end palm sits on the register (0.450, 0.600).
