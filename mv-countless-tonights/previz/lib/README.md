@@ -156,7 +156,21 @@ Bodies, heads, hair and garments are signed-distance sculpts meshed with surface
 to a 20-bone rig; garments are separate open cloth shells (clean hems/cuffs/necklines with a thickness rim) that
 follow the rig; trims (collars, cuff bands, plackets, lapels, 交领/大襟 bands, knot/horn buttons, sashes) are swept
 ribbons. Hands are detailed 16-bone hands (`hand.js`) used both on figures and alone for close-ups/macro.
-Everything is deterministic. Reference renders: `bible/refs/previz_cast_lineup.jpg`, `bible/refs/previz_hands.jpg`.
+Everything is deterministic. Reference renders: `bible/refs/previz_cast_lineup.jpg`, `previz_hands.jpg`,
+`previz_poses.jpg`, `previz_seated.jpg`.
+
+**Look (`fig-2`, polish pass 2026-10, see `CHANGES.md`):** art-house stop-motion, not mannequin.
+* Adults ≈ 7.5 heads. The trunk is one loft through art-directed cross-sections: ribcage, waist and pelvis, a sloping
+  trapezius into a soft deltoid (no shoulder knob), women's shoulders narrower. Forearms and calves taper into defined
+  wrists and ankles, and the neck has sternocleidomastoids.
+* The neutral stance is relaxed: arms close to the body, elbows slightly bent, hands soft.
+* Heads are faceless but sculpted (brow ridge, cheekbones, nose bridge, tip and wings, lips as one soft volume with a
+  closed mouth line, closed lids in soft sockets, jaw line, ears). Light them from the side or front-low and the planes
+  read.
+* Skin is warm per the bible, with a reddish terminator and face zones (lips, cheeks, nose, ears, lids, beard shadow).
+* Hair is flow-aligned strand locks with a feathered, soft hairline.
+* Cloth is a fitted layer plus a hanging, tailored loft with crisp, crease-smoothed edges. Hands have knuckles, tendons
+  and nails; gloves have seams and joint wrinkles.
 
 ```js
 import { loadCharacter, loadCharacterHand, loadCrowd, makeCharacter, makeCharacterHand, makeExtra, makeCrowd,
@@ -276,22 +290,39 @@ outer layer (no saw-tooth edges at V-necks and lapels). Skirt parts below the hi
 weighted so that when SEATED the front panel lies on the thighs, the back panel stays with the pelvis (it passes into the
 seat — use a solid bench/chair seat, or keep it out of frame) and the centre front drapes down between the knees.
 Mandarin / stand collars hug the neck column.
+How an upper garment is built (bind pose):
+* A **fitted layer**: the body grown a few mm, which keeps the clavicles, shoulder blades and chest planes.
+* A **hanging cloth loft** that rests on the shoulders and hangs from the widest section above. `drape` 0..1 sets how
+  far; jackets, coats and lab coats get waist suppression, and `flare` opens the skirt part.
+* **Tapered sleeve tubes**, sized by `sleeveEase` / `sleeveWidth`, with elbow-crook folds and a break above long cuffs.
+* Each outer layer wraps the layers beneath it with a ≥ 4.5 mm gap.
+
+Shell edges are snapped to the crease and then smoothed along it, so hems, necklines, lapels and cuffs are clean and
+never torn. Cloth over the top of the shoulder rides with the clavicle, so lowering the arms gives no puffed shoulder
+tips. Trouser legs below the knee ride with the shin, so a bent knee no longer swings a wide or rolled hem forward.
 Hair `style`: ponytail (+`strands:'R'`) low_bun bun braid short cropped bob loose perm topknot thin headcloth (cloth over
 a topknot) headscarf cap; `color, grey, thickness, hairline, bangs, volume, part:false, partX`.
 Materials (`figure_mat.js`): `clothMaterial` (sheen; procedural weave/fold relief, dye mottling, fading, prints, wear, patch
 with stitched border, seams, hem stitch; detail stays fixed to the cloth in rest space), `skinMaterial` (pores, knuckle
 wrinkles, palmar creases & palm lines, nails, age spots, salt crust), `hairMaterial` (strand grooves, grey), `leatherMaterial`,
 `floralPrint`, `materialFromDesc`. `?figmat=plain` in the page URL disables the procedural detail (perf A/B).
+Material details:
+* **Skin:** a warm wrap terminator and a light hue lock so ACES does not drift it grey or pink. Face colour zones are
+  set in head space, so they follow `lookAt`.
+* **Cloth sheen** is tinted by the fabric's own colour and capped for dark cloth: indigo or black next to a practical
+  stays indigo or black.
+* **Hair:** 44 strand locks around a per-style flow axis, about 9 strands per lock, a grey mix per strand, and the
+  hairline fading into the skin colour.
 
 ### Cache (bake) — run after editing any of figure.js figure_garments.js figure_sdf.js hand.js cast.js
-`node previz/tools/bake_cast.mjs` (4 jobs, ~2.5 min) → `previz/lib/cache/*.bin` + `index.json` (~60 MB: 12 characters ×
+`node previz/tools/bake_cast.mjs` (4 jobs, ~6–8 min under load) → `previz/lib/cache/*.bin` + `index.json` (~60 MB: 12 characters ×
 hi/mid + variants, 42 crowd extras, their figure hands; add `--hands` for the standard close-up hands, `RESTORER GUARD …`
 or `EXTRA_MIGRANT EXTRA_CHAPEL …` to bake a subset). The cache is keyed to the exact library sources: if they changed, `load*` warn
 "figure cache is stale" and sculpt live (correct, just slow).
 
 ### Performance (1280×536, SwiftShader; low load)
-Engine baseline ≈ 0.25–0.3 s (FXAA default; see the review section). One small `hi` figure ≈ +0.1 s (≈ 60–90k tris incl.
-hands), a close-up one (filling ⅓–½ of the frame, shadowed key) ≈ +0.45 s; `mid` ≈ 15 % cheaper; a crowd extra ≈ +0.05 s.
+Engine baseline ≈ 0.25–0.3 s (FXAA default; see the review section). One small `hi` figure ≈ +0.1 s (≈ 65–95k tris incl.
+hands; fig-2 is within ±10 % of fig-1 per frame, see CHANGES.md), a close-up one (filling ⅓–½ of the frame, shadowed key) ≈ +0.45 s; `mid` ≈ 15 % cheaper; a crowd extra ≈ +0.05 s.
 With `aa:'msaa'` add ≈ +0.15 s per hi figure. Close-up hand: close ≈ 25k tris, macro ≈ 50k. Keep ≤ 2 close-up hi figures
 per frame; use `lod:'mid'` for figures smaller than ~1/3 of frame height and crowds for groups. Garment shells are two-sided (inner side darkened by
 `innerShade`) so panels folded over by skinning (seated laps, bent elbows) never open see-through holes; shoes are
@@ -303,6 +334,17 @@ nose/ear into a thin dark slit), `bias ≈ -0.0001`, a tight `shadow.camera.near
 POSES (sit / pray_kneel / reach), POSES2·BENCH·TEA·PATCH·SIT (walk with case, pray_sit on a pew, phone, tea, patch touch,
 long-skirt & qipao sitting), HEADS/APOSE (hair styles), REF_CAST, REF_H1…H6 (macro hands), PENTEST.
 `scenes/_lab_hands.js` (hand variants), `scenes/_lab_one.js?probe=…&n=…&lod=…` (perf probe; `node tools/bench.mjs`).
+`scenes/_lab_polish.js` with `out/lab/polish_shots.json` (character polish pass; `?wip=1` loads `lib/_wip/` copies for the
+unprefixed ids, `OLD_<id>` = production lib): CAST, CAST_CU/CL/MID, BENCH, BENCH_SIDE, SKIRT, WALK, PRAY, REACH, CONT, CROWD, SHEEN,
+FACE_<code>, H_WIPE/SALT/PART/CUP/PATCH/WORN, MIDC_<code>[_S seated|_X seated side|_B bind pose], SHC_<code> / SHF<n>
+(frontal shoulder line), PERF0-2.
+
+### Known weaknesses (fig-2)
+* Seated long robes and qipao (FUTURE, MOTHER) still have a stiff lap flap, a ragged side hem, and shins that can show
+  through the front below the knee. Frame them above the knee or keep them standing. Knee-length skirts and coats are fine.
+* Very wide or rolled trousers (NAVIGATOR) flare into a bell around the shin when seated.
+* The back panels of seated coats pass into the seat, as before; use a solid seat.
+* Pulled-back hair styles have a fairly high hairline, which reads as a tall forehead in three-quarter close-ups.
 
 ---
 

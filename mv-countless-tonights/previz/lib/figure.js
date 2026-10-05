@@ -21,7 +21,7 @@
 //   leg*.foot : .x + point toes down
 //   hips.px/py/pz, root.px/py/pz : translations (m). handL / handR : hand preset name or channels.
 import * as THREE from 'three';
-import { Field, prim, meshField, filterFaces, compact, toGeometry, concat, vnoise3, decimate } from './figure_sdf.js';
+import { Field, prim, meshField, filterFaces, compact, toGeometry, concat, vnoise3, decimate, loftTable, loftAt, loftPrim } from './figure_sdf.js';
 import { skinMaterial, hairMaterial, materialFromDesc } from './figure_mat.js';
 import { makeHand, handPose } from './hand.js';
 import { buildGarment, buildHair } from './figure_garments.js';
@@ -34,15 +34,48 @@ const sstep = (a, b, x) => { const t = clamp((x - a) / (b - a)); return t * t * 
 // Proportions (fractions of height): [male, female]
 // ------------------------------------------------------------------------------------------
 const PR = {
-  ankleY: [0.043, 0.043], kneeY: [0.283, 0.284], hipJY: [0.513, 0.513], hipJX: [0.050, 0.054],
-  pelvisY: [0.548, 0.548], spineY: [0.615, 0.618], chestY: [0.705, 0.708], neckY: [0.832, 0.830],
-  headY: [0.894, 0.894], shJY: [0.814, 0.808], shJX: [0.101, 0.090], clavX: [0.012, 0.011],
-  uArm: [0.170, 0.168], fArm: [0.145, 0.141], hand: [0.108, 0.106], footL: [0.150, 0.146],
-  neckR: [0.0330, 0.0290], uArmR: [0.0245, 0.0210], elbR: [0.0190, 0.0166], fArmR: [0.0222, 0.0192], wristR: [0.0150, 0.0136],
-  thighR: [0.048, 0.050], kneeR: [0.0285, 0.0280], calfR: [0.0285, 0.0275], ankleR: [0.0160, 0.0148],
-  rib: [[0.086, 0.098, 0.058], [0.077, 0.090, 0.054]], waist: [[0.077, 0.064, 0.055], [0.072, 0.062, 0.052]],
-  pelvis: [[0.090, 0.062, 0.060], [0.096, 0.064, 0.063]], hu: [0.125, 0.127],
+  // fractions of height [male, female] — natural adult proportions (≈7.5 heads, women narrower shoulders / men broader
+  // but not boxy, tapered limbs with defined wrists / knees / ankles, slender natural neck)
+  ankleY: [0.041, 0.041], kneeY: [0.284, 0.285], hipJY: [0.515, 0.515], hipJX: [0.049, 0.051],
+  pelvisY: [0.551, 0.551], spineY: [0.617, 0.619], chestY: [0.707, 0.708], neckY: [0.830, 0.828],
+  headY: [0.891, 0.888], shJY: [0.803, 0.797], shJX: [0.104, 0.092], clavX: [0.012, 0.011],
+  uArm: [0.172, 0.170], fArm: [0.146, 0.142], hand: [0.108, 0.106], footL: [0.148, 0.144],
+  neckR: [0.0322, 0.0290], uArmR: [0.0250, 0.0212], elbR: [0.0180, 0.0156], fArmR: [0.0218, 0.0186], wristR: [0.0148, 0.0130],
+  thighR: [0.0450, 0.0455], kneeR: [0.0262, 0.0254], calfR: [0.0285, 0.0272], ankleR: [0.0142, 0.0130],
+  rib: [[0.083, 0.097, 0.058], [0.074, 0.088, 0.052]], waist: [[0.077, 0.064, 0.054], [0.069, 0.062, 0.050]],
+  pelvis: [[0.083, 0.062, 0.057], [0.087, 0.064, 0.059]], hu: [0.130, 0.133],
 };
+// Trunk cross-sections (fractions of H, adult reference heights; remapped to each figure's hip / shoulder / neck):
+// [yRef, a male, a female, bf male, bf female, bb male, bb female, c]  a = half-width, bf / bb = front / back half-depth,
+// c = z of the section centre. Seat behind the hips, lumbar hollow, ribcage forward, rounded upper back (natural S-curve).
+const TORSO = [
+  [0.462, 0.020, 0.022, 0.016, 0.016, 0.020, 0.022, -0.004],
+  [0.474, 0.042, 0.045, 0.030, 0.031, 0.036, 0.038, -0.005],
+  [0.488, 0.062, 0.065, 0.041, 0.042, 0.050, 0.053, -0.006],
+  [0.515, 0.086, 0.091, 0.050, 0.051, 0.064, 0.068, -0.009],
+  [0.540, 0.092, 0.098, 0.053, 0.054, 0.069, 0.073, -0.010],
+  [0.570, 0.089, 0.093, 0.054, 0.054, 0.063, 0.065, -0.007],
+  [0.600, 0.083, 0.082, 0.053, 0.052, 0.054, 0.054, -0.003],
+  [0.628, 0.078, 0.070, 0.050, 0.048, 0.047, 0.046, -0.001],
+  [0.658, 0.080, 0.071, 0.050, 0.047, 0.049, 0.047, -0.001],
+  [0.690, 0.086, 0.076, 0.055, 0.050, 0.054, 0.051, -0.003],
+  [0.728, 0.091, 0.080, 0.062, 0.054, 0.060, 0.055, -0.005],
+  [0.765, 0.089, 0.078, 0.060, 0.053, 0.060, 0.055, -0.009],
+  [0.795, 0.079, 0.069, 0.052, 0.046, 0.055, 0.050, -0.014],
+  [0.822, 0.050, 0.043, 0.037, 0.032, 0.041, 0.037, -0.020],
+];
+function torsoKeys(P, H) {
+  const sex = P.sex, build = P.build, ch = P.child, belly = 0.3 * clamp((P.age - 40) / 35) + 0.25 * ch;
+  const hj = P.hipJY / H, sh = (P.shJY / H) + 0.009, nk = P.neckY / H, shRef = lerp(0.812, 0.806, sex); // keys were set for a 0.009 H higher joint
+  const mapY = (y) => (y <= shRef ? hj + (y - 0.515) * (sh - hj) / (shRef - 0.515) : sh + (y - shRef) * (nk - sh) / (0.83 - shRef));
+  return TORSO.map(([y, am, af, bfm, bff, bbm, bbf, c]) => {
+    const chest = sstep(0.64, 0.72, y), waist = sstep(0.57, 0.62, y) * (1 - sstep(0.66, 0.70, y)), hip = 1 - sstep(0.56, 0.62, y);
+    const fb = chest * lerp(0.94, 1.10, build) + waist * lerp(0.88, 1.2, build) + hip * lerp(0.93, 1.1, build) + (1 - chest - waist - hip) * lerp(0.92, 1.12, build);
+    const kid = 1 + ch * (0.06 + 0.2 * waist - 0.08 * hip);
+    const bel = belly * sstep(0.54, 0.6, y) * (1 - sstep(0.64, 0.69, y));
+    return { y: mapY(y) * H, a: (lerp(am, af, sex) * fb * kid + 0.006 * bel) * H, bf: (lerp(bfm, bff, sex) * fb * kid + 0.012 * bel) * H, bb: lerp(bbm, bbf, sex) * fb * kid * H, c: c * H };
+  });
+}
 function dims(o) {
   const sex = typeof o.sex === 'number' ? o.sex : o.sex === 'm' ? 0 : 1;
   const age = o.age ?? 30;
@@ -52,6 +85,8 @@ function dims(o) {
   const g = (k) => { const v = PR[k]; return Array.isArray(v[0]) ? v[0].map((x, i) => lerp(x, v[1][i], sex)) : lerp(v[0], v[1], sex); };
   const P = { H, sex, age, build, child };
   for (const k of Object.keys(PR)) P[k] = g(k);
+  // head height sets the head / neck bone heights (vertex at H, chin at H - hu)
+  P.headY = 1 - 0.84 * P.hu; P.neckY = P.headY - 0.47 * P.hu;
   // children: bigger head, shorter legs
   if (child > 0) {
     P.hu = lerp(P.hu, 0.18, child);
@@ -70,12 +105,19 @@ function dims(o) {
   P.pelvis = P.pelvis.map((x, i) => x * (i === 1 ? 1 : lerp(0.93, 1.12, build)));
   // older: thinner limbs, slightly lower chest
   if (age > 50) { const a = clamp((age - 50) / 30); for (const k of ['uArmR', 'fArmR', 'calfR']) P[k] *= 1 - 0.07 * a; }
+  P.girth = gl * (age > 50 ? 1 - 0.07 * clamp((age - 50) / 30) : 1); // muscle masses (deltoid …) scale with the limbs
   P.stoop = o.stoop ?? clamp((age - 45) / 35, 0, 0.8);
   // metres
   const M = {};
-  for (const k of Object.keys(P)) M[k] = typeof P[k] === 'number' && !['H', 'sex', 'age', 'build', 'child', 'stoop'].includes(k) ? P[k] * H : P[k];
+  for (const k of Object.keys(P)) M[k] = typeof P[k] === 'number' && !['H', 'sex', 'age', 'build', 'child', 'stoop', 'girth'].includes(k) ? P[k] * H : P[k];
   for (const k of ['rib', 'waist', 'pelvis']) M[k] = P[k].map((x) => x * H);
   M.H = H; M.hu = P.hu * H;
+  // trunk loft keys (metres); rib / waist / pelvis summaries kept consistent with it (garments, accessories)
+  M.torso = torsoKeys(M, H);
+  const TT = loftTable(M.torso);
+  const at = (yr) => loftAt(TT, M.torso[0].y + (yr - 0.462) / (0.822 - 0.462) * (M.torso[M.torso.length - 1].y - M.torso[0].y));
+  const rb = at(0.728), wa = at(0.628), pv = at(0.540);
+  M.rib = [rb[0], M.rib[1], rb[1]]; M.waist = [wa[0], M.waist[1], wa[1]]; M.pelvis = [pv[0], M.pelvis[1], pv[2]];
   return M;
 }
 
@@ -129,7 +171,10 @@ function channelMap(name) {
   return { x: ['x', 1], y: ['y', 1], z: ['z', 1] };
 }
 const CMAP = Object.fromEntries(BONES.map((b) => [b, channelMap(b)]));
-const BIND_POSE = { 'armL.upper.z': 0.66, 'armR.upper.z': 0.66, 'armL.lower.x': 0.06, 'armR.lower.x': 0.06, 'legL.upper.z': 0.045, 'legR.upper.z': 0.045 };
+// sculpt / bind pose: arms abducted 0.45 rad (was 0.66) — closer to the common poses (hanging, forward), so garments deform
+// less at the shoulders (no puffed shoulder tips); the 'apose' preset keeps the classic 0.66
+const BIND_POSE = { 'armL.upper.z': 0.45, 'armR.upper.z': 0.45, 'armL.lower.x': 0.06, 'armR.lower.x': 0.06, 'legL.upper.z': 0.045, 'legR.upper.z': 0.045 };
+const APOSE = { ...BIND_POSE, 'armL.upper.z': 0.66, 'armR.upper.z': 0.66 };
 
 const _eu = new THREE.Euler(), _qa = new THREE.Quaternion(), _qb = new THREE.Quaternion(), _va = new THREE.Vector3(), _vb = new THREE.Vector3(), _vc = new THREE.Vector3(), _m4 = new THREE.Matrix4();
 function rawEuler(name, ch) {
@@ -144,65 +189,109 @@ function rawEuler(name, ch) {
 // ------------------------------------------------------------------------------------------
 function bodyField(P, BW, bi, o) {
   const f = new Field();
-  const H = P.H, hu = P.hu, fem = P.sex, ch = P.child;
+  const H = P.H, hu = P.hu, fem = P.sex, ch = P.child, male = 1 - fem;
   const F = (n) => BW[bi[n]];
   const add = (n, type, oo, opt) => f.add(prim(type, { frame: F(n), ...oo }), { bone: bi[n], ...opt });
-  const kT = 0.035 * H; // torso blend
-  // ---- torso
-  add('hips', 'ellipsoid', { c: [0, -0.006 * H, 0.0], r: P.pelvis }, { k: kT, tag: 'torso' });
-  for (const sg of [1, -1]) add('hips', 'ellipsoid', { c: [sg * 0.038 * H, -0.034 * H, -0.028 * H], rot: [0.25, 0, -sg * 0.15], r: [0.044 * H * (1 + 0.05 * fem), 0.052 * H, 0.038 * H * (1 + 0.08 * fem)] }, { k: 0.03 * H, tag: 'torso' });
-  // lower belly
-  add('hips', 'ellipsoid', { c: [0, 0.02 * H, 0.024 * H], r: [P.waist[0] * 0.92, 0.05 * H, 0.04 * H * (1 + 0.3 * Math.max(0, (P.age - 45) / 30))] }, { k: kT, tag: 'torso' });
-  add('spine', 'ellipsoid', { c: [0, 0.004 * H, 0.004 * H], r: P.waist }, { k: kT, tag: 'torso' });
-  add('chest', 'ellipsoid', { c: [0, 0.036 * H, 0.0], r: P.rib }, { k: kT, tag: 'torso' });
-  // upper chest / pecs
-  for (const sg of [1, -1]) add('chest', 'ellipsoid', { c: [sg * 0.036 * H, 0.072 * H, 0.026 * H], rot: [0, 0, sg * 0.2], r: [0.046 * H, 0.036 * H, 0.030 * H] }, { k: 0.03 * H, tag: 'torso' });
-  if (fem > 0.3 && ch < 0.5) for (const sg of [1, -1]) add('chest', 'ellipsoid', { c: [sg * 0.037 * H, 0.048 * H, 0.036 * H], rot: [0.3, 0, 0], r: [0.031 * H, 0.030 * H, 0.026 * H].map((x) => x * (0.8 + 0.12 * fem)) }, { k: 0.03 * H, tag: 'torso' });
+  const kT = 0.026 * H; // torso blend (smaller than before: defined waist / ribcage / hips instead of a blob)
+  const age = clamp((P.age - 40) / 35), belly = 0.3 * age;
+  // ---- trunk: one loft through art-directed cross-sections (see TORSO), split into hips / spine / chest segments so the
+  // skin weights blend across the overlaps; anatomical accents (pecs, breasts, shoulder blades, trapezius) on top.
+  const TT = loftTable(P.torso);
+  const yS = P.spineY, yC = P.chestY;
+  f.add(loftPrim(TT, -1, yS - 0.012 * H), { k: 0, bone: bi.hips, tag: 'torso', keepK: true });              // identical where they overlap:
+  f.add(loftPrim(TT, P.pelvisY + 0.02 * H, yC - 0.012 * H), { k: 0, bone: bi.spine, tag: 'torso', keepK: true }); // hard union is exact
+  f.add(loftPrim(TT, yS + 0.012 * H, 9), { k: 0, bone: bi.chest, tag: 'torso', keepK: true });
+  // pectorals (flat, broad planes) and breasts (female)
+  const frontAt = (dy) => { const q = loftAt(TT, yC + dy); return q[3] + q[1] - (yC ? 0 : 0); };
+  const backAt = (dy) => { const q = loftAt(TT, yC + dy); return q[3] - q[2]; };
+  const cz = BW[bi.chest].elements[14];
+  for (const sg of [1, -1]) add('chest', 'ellipsoid', { c: [sg * 0.038 * H, 0.066 * H, frontAt(0.066 * H) - cz - 0.022 * H], rot: [0, 0, sg * 0.22], r: [0.042 * H, 0.03 * H, 0.024 * H] }, { k: 0.02 * H, tag: 'torso' });
+  if (fem > 0.3 && ch < 0.5) for (const sg of [1, -1]) add('chest', 'ellipsoid', { c: [sg * 0.037 * H, 0.044 * H, frontAt(0.044 * H) - cz - 0.016 * H], rot: [0.35, sg * 0.15, 0], r: [0.029 * H, 0.028 * H, 0.025 * H].map((x) => x * (0.8 + 0.12 * fem)) }, { k: 0.022 * H, tag: 'torso' });
   // shoulder blades / upper back
-  for (const sg of [1, -1]) add('chest', 'ellipsoid', { c: [sg * 0.044 * H, 0.076 * H, -0.028 * H], rot: [0, 0, sg * 0.25], r: [0.046 * H, 0.052 * H, 0.026 * H] }, { k: 0.03 * H, tag: 'torso' });
-  // trapezius slope (neck -> shoulder)
+  for (const sg of [1, -1]) add('chest', 'ellipsoid', { c: [sg * 0.042 * H, 0.072 * H, backAt(0.072 * H) - cz + 0.016 * H], rot: [0, 0, sg * 0.25], r: [0.04 * H, 0.046 * H, 0.02 * H] }, { k: 0.02 * H, tag: 'torso' });
+  // trapezius slope (neck -> shoulder) and clavicles
   for (const [s, sg] of [['L', 1], ['R', -1]]) {
     const nb = BW[bi.neck], sh = BW[bi[`arm${s}.upper`]];
-    const a = _va.set(sg * 0.004 * H, -0.006 * H, -0.008 * H).applyMatrix4(nb).toArray();
-    const b = _vb.set(-sg * 0.022 * H, -0.002 * H, -0.004 * H).applyMatrix4(sh).toArray();
-    f.add(prim('cone', { a, b, r1: P.neckR * 0.9, r2: 0.016 * H }), { k: 0.035 * H, bone: bi.chest, tag: 'torso' });
-    // clavicle / shoulder top
-    add(`arm${s}.clav`, 'cone', { a: [0, -0.004 * H, 0], b: [sg * (P.shJX - P.clavX) * 0.92, -0.004 * H, -0.016 * H], r1: 0.012 * H, r2: 0.015 * H }, { k: 0.025 * H, tag: 'torso' });
+    const a = _va.set(sg * 0.004 * H, -0.004 * H, -0.010 * H).applyMatrix4(nb).toArray();
+    // shoulder end placed in world axes from the joint (the upper-arm frame is rotated by the bind pose): one straight
+    // slope neck -> acromion instead of a concave fillet at the neck and a flat shelf over the clavicle
+    const b = _vb.setFromMatrixPosition(sh).add(_vc.set(-sg * 0.023 * H, 0.014 * H, -0.008 * H)).toArray();
+    f.add(prim('cone', { a, b, r1: P.neckR * 0.78, r2: 0.011 * H }), { k: 0.03 * H, bone: bi.chest, tag: 'torso' });
+    // clavicle: a slim bar at the front, sloping slightly down to the acromion (it must stay under the trapezius line)
+    add(`arm${s}.clav`, 'cone', { a: [0, -0.004 * H, 0.002 * H], b: [sg * (P.shJX - P.clavX) * 0.9, -0.008 * H, -0.010 * H], r1: 0.008 * H, r2: 0.009 * H }, { k: 0.02 * H, tag: 'torso' });
   }
-  // ---- neck
-  add('neck', 'cone', { a: [0, -0.012 * H, 0.002 * H], b: [0, (P.headY - P.neckY) + 0.016 * H, 0.012 * H], r1: P.neckR * 1.08, r2: P.neckR * 0.93 }, { k: 0.03 * H, tag: 'neck' });
-  // ---- head (units of hu, in head-bone space; face toward +Z). Faceless, with subtle planes.
+  // ---- neck: column + sternocleidomastoids (mastoid -> sternal notch) — a natural neck that catches side light
+  add('neck', 'cone', { a: [0, -0.014 * H, 0.0], b: [0, (P.headY - P.neckY) + 0.012 * H, 0.010 * H], r1: P.neckR * 1.04, r2: P.neckR * 0.9, s: [1, 1, 0.94] }, { k: 0.024 * H, tag: 'neck' });
+  {
+    const hb = BW[bi.head], cb = BW[bi.chest];
+    for (const sg of [1, -1]) {
+      const a = _va.set(sg * 0.24 * hu, 0.16 * hu, -0.10 * hu).applyMatrix4(hb).toArray();
+      const b = _vb.set(sg * 0.010 * H, (P.neckY - P.chestY) - 0.006 * H, 0.014 * H).applyMatrix4(cb).toArray();
+      f.add(prim('cone', { a, b, r1: 0.0058 * H, r2: 0.0052 * H }), { k: 0.012 * H, bone: bi.neck, tag: 'neckm' }); // (collars follow the column, not these)
+    }
+    if (male > 0.5 && ch < 0.5) f.add(prim('ellipsoid', { frame: F('neck'), c: [0, 0.028 * H, P.neckR * 0.78], r: [0.006 * H, 0.009 * H, 0.005 * H] }), { k: 0.008 * H, bone: bi.neck, tag: 'neckm' }); // larynx
+  }
+  // ---- head (hu units, head-bone space; face toward +Z). Faceless but sculpted: brow ridge, closed-lid eye mounds in soft
+  // sockets, cheekbones, nose bridge / tip / wings, muzzle with upper & lower lip volumes and a mouth line, chin, jaw line,
+  // ears. Landmarks: vertex 0.84, brow 0.40, eye line 0.325, nose base 0.12, mouth 0.04, chin -0.16.
   const U = (v) => v.map((x) => x * hu);
   const hd = (type, oo, opt) => add('head', type, oo, { tag: 'head', ...opt });
-  const jaw = lerp(1, 0.86, fem), brow = lerp(1, 0.7, fem), nose = lerp(1, 0.86, fem), kid = ch;
-  const fs = lerp(1, 0.86, kid); // children: smaller face under a larger cranium
-  // Proportions (art-directed): eye line at mid-head, equal brow→nose-base / nose-base→chin thirds, soft planes rather
-  // than bulging features — a calm carved-wood mannequin face that reads young or old from silhouette and planes only.
-  hd('ellipsoid', { c: U([0, 0.44, -0.06]), r: U([0.35 * lerp(1, 0.96, fem), 0.40, 0.44]) }, { k: 0.06 * hu });            // cranium
-  hd('ellipsoid', { c: U([0, 0.17 * fs + 0.04 * kid, 0.11]), r: U([0.255 * jaw, 0.325 * fs, 0.30 * fs]) }, { k: 0.10 * hu }); // face egg
-  hd('ellipsoid', { c: U([0, -0.075 * fs + 0.05 * kid, 0.255 * fs]), r: U([0.095 * jaw, 0.075, 0.085]) }, { k: 0.09 * hu });   // chin
+  const hs = (type, oo, k) => f.sub(prim(type, { frame: F('head'), ...oo }), { k: k * hu, bone: bi.head, tag: 'head' });
+  const jaw = lerp(1, 0.88, fem), brow = lerp(1, 0.55, fem), nose = lerp(1, 0.88, fem), kid = ch;
+  const fs = lerp(1, 0.84, kid);                        // children: smaller face under a larger cranium
+  const fy = (y) => y * fs - 0.05 * kid + 0.04 * kid;   // face-feature height remap (kids: features lower on the head)
+  const fz = (z) => z * lerp(1, 0.95, kid);
+  const lean = 0.02 * age * male;                       // older men: a little hollower in the cheeks
+  hd('ellipsoid', { c: U([0, 0.43, -0.07]), r: U([0.335 * lerp(1, 0.97, fem), 0.41, 0.45]) }, { k: 0.05 * hu });          // cranium
+  hd('ellipsoid', { c: U([0, 0.50, 0.115]), r: U([0.27, 0.23, 0.255]) }, { k: 0.08 * hu });                                  // forehead (upright)
+  hd('ellipsoid', { c: U([0, fy(0.21), fz(0.115)]), r: U([0.262 * lerp(1, 0.97, fem), 0.25 * fs, 0.25 * fs]) }, { k: 0.08 * hu }); // mid-face mass
+  hd('ellipsoid', { c: U([0, fy(0.05), fz(0.07)]), r: U([0.205 * jaw, 0.15 * fs, 0.235 * fs]) }, { k: 0.09 * hu });          // lower face (egg)
+  hd('ellipsoid', { c: U([0, fy(-0.088), fz(0.256)]), r: U([0.068 * jaw, 0.07 * fs, 0.07 * fs]) }, { k: 0.07 * hu });         // chin (small, soft)
   for (const sg of [1, -1]) {
-    hd('sphere', { c: U([sg * 0.19 * jaw, 0.03 + 0.04 * kid, 0.02]), r: 0.07 * hu * jaw }, { k: 0.12 * hu });                  // jaw angle
-    hd('ellipsoid', { c: U([sg * 0.165, 0.255 * fs + 0.04 * kid, 0.255 * fs]), r: U([0.06, 0.042, 0.055]) }, { k: 0.1 * hu }); // cheekbone plane
-    hd('ellipsoid', { c: U([sg * 0.343, 0.29, -0.03]), rot: [0, sg * 0.35, 0], r: U([0.03, 0.112, 0.07]) }, { k: 0.03 * hu }); // ear
+    hd('sphere', { c: U([sg * 0.198 * jaw, fy(0.065), -0.05]), r: 0.056 * hu * jaw }, { k: 0.09 * hu });                       // jaw angle
+    hd('cone', { a: U([sg * 0.19 * jaw, fy(0.05), -0.03]), b: U([sg * 0.055 * jaw, fy(-0.105), fz(0.215)]), r1: 0.04 * hu * jaw, r2: 0.036 * hu * jaw }, { k: 0.085 * hu }); // soft jaw line -> oval
+    hd('ellipsoid', { c: U([sg * 0.205, fy(0.27), fz(0.2)]), rot: [0, sg * 0.55, 0], r: U([0.076, 0.05, 0.06 - lean]) }, { k: 0.07 * hu });  // cheekbone
+    hd('ellipsoid', { c: U([sg * 0.14, fy(0.215), fz(0.25)]), r: U([0.075, 0.07, 0.05 + 0.006 * fem - lean]) }, { k: 0.11 * hu }); // front of the cheek (merges softly)
+    hd('ellipsoid', { c: U([sg * 0.33, 0.285, -0.06]), rot: [0, sg * 0.4, sg * 0.08], r: U([0.026, 0.105, 0.062]) }, { k: 0.022 * hu }); // ear
   }
-  hd('cone', { a: U([-0.13, 0.395 * fs + 0.05 * kid, 0.36 * fs]), b: U([0.13, 0.395 * fs + 0.05 * kid, 0.36 * fs]), r1: 0.03 * hu * brow, r2: 0.03 * hu * brow }, { k: 0.12 * hu }); // brow plane
-  // nose: a broad soft wedge (not a blade — a thin ridge casts a slit-like shadow under a high key)
-  hd('cone', { a: U([0, 0.35 * fs + 0.05 * kid, 0.40 * fs]), b: U([0, 0.18 * fs + 0.05 * kid, 0.455 * fs * nose + 0.41 * (1 - nose)]), r1: 0.03 * hu, r2: 0.042 * hu * nose, s: [1.25, 1, 1] }, { k: 0.06 * hu }); // nose
-  hd('ellipsoid', { c: U([0, 0.165 * fs + 0.05 * kid, 0.41 * fs]), r: U([0.08 * nose, 0.035, 0.04]) }, { k: 0.05 * hu });  // nose wings
-  hd('ellipsoid', { c: U([0, 0.06 * fs + 0.05 * kid, 0.335 * fs]), r: U([0.1, 0.055, 0.05]) }, { k: 0.1 * hu });             // soft mouth plane
-  for (const sg of [1, -1]) f.sub(prim('ellipsoid', { frame: F('head'), c: U([sg * 0.12, 0.325 * fs + 0.05 * kid, 0.44 * fs]), r: U([0.062, 0.03, 0.018]) }), { k: 0.09 * hu, bone: bi.head, tag: 'head' }); // faint eye planes
+  hd('cone', { a: U([-0.17, fy(0.4), fz(0.3)]), b: U([0.17, fy(0.4), fz(0.3)]), r1: 0.042 * hu, r2: 0.042 * hu, s: [1, 0.65 + 0.35 * brow, 1] }, { k: 0.07 * hu }); // brow ridge
+  // nose: a straight bridge growing out of the brow, soft rounded tip, soft wings (no ball / no blade)
+  const nz = (z) => fz(z) * nose + fz(0.38) * (1 - nose);
+  hd('cone', { a: U([0, fy(0.36), fz(0.345)]), b: U([0, fy(0.198), nz(0.428)]), r1: 0.022 * hu, r2: 0.03 * hu * nose, s: [1.25, 1, 1] }, { k: 0.05 * hu }); // bridge
+  hd('ellipsoid', { c: U([0, fy(0.17), nz(0.412)]), r: U([0.038 * (0.9 + 0.1 * nose), 0.032, 0.032]) }, { k: 0.035 * hu });                             // tip
+  for (const sg of [1, -1]) hd('ellipsoid', { c: U([sg * 0.054 * (0.92 + 0.08 * nose), fy(0.15), fz(0.358)]), r: U([0.03, 0.025, 0.028]) }, { k: 0.035 * hu }); // alae
+  // muzzle and lips (soft volumes, slight bow; a fine mouth line)
+  hd('ellipsoid', { c: U([0, fy(0.05), fz(0.255)]), r: U([0.14, 0.11, 0.105]) }, { k: 0.06 * hu });
+  hd('ellipsoid', { c: U([0, fy(0.042), fz(0.316)]), rot: [0.16, 0, 0], r: U([0.094, 0.042, 0.03]) }, { k: 0.05 * hu }); // lips: one soft volume
+  hd('ellipsoid', { c: U([0, fy(0.062), fz(0.348)]), r: U([0.05, 0.016, 0.018]) }, { k: 0.02 * hu });    // upper-lip bow
+  hs('ellipsoid', { c: U([0, fy(0.041), fz(0.367)]), r: U([0.088, 0.0016, 0.006]) }, 0.0025);             // lip line (shallow, closed mouth)
+  for (const sg of [1, -1]) hs('sphere', { c: U([sg * 0.1, fy(0.041), fz(0.322)]), r: 0.008 * hu }, 0.012); // mouth corners
+  hs('ellipsoid', { c: U([0, fy(-0.03), fz(0.33)]), r: U([0.05, 0.014, 0.012]) }, 0.03);                 // mentolabial sulcus (soft)
+  // eye sockets (soft) and closed lids — no eyes drawn, but the planes catch light
+  for (const sg of [1, -1]) {
+    hs('ellipsoid', { c: U([sg * 0.138, fy(0.33), fz(0.352)]), r: U([0.085, 0.047, 0.05]) }, 0.05);       // socket under the brow
+    hd('ellipsoid', { c: U([sg * 0.138, fy(0.322), fz(0.272)]), r: U([0.068, 0.032, 0.046]) }, { k: 0.035 * hu }); // closed lid (≈3 cm eye)
+    hs('ellipsoid', { c: U([sg * 0.352, 0.27, -0.048]), rot: [0, sg * 0.4, 0], r: U([0.01, 0.04, 0.026]) }, 0.016); // ear concha (shallow)
+  }
   // ---- arms
   for (const [s, sg] of [['L', 1], ['R', -1]]) {
     const up = `arm${s}.upper`, lo = `arm${s}.lower`, hn = `arm${s}.hand`;
-    add(up, 'ellipsoid', { c: [sg * 0.003 * H, -0.024 * H, 0.0], r: [0.027 * H * lerp(1, 0.9, fem), 0.042 * H, 0.030 * H] }, { k: 0.03 * H, tag: 'arm' }); // deltoid
-    add(up, 'cone', { a: [0, 0, 0], b: [0, -P.uArm, 0], r1: P.uArmR, r2: P.elbR }, { k: 0.02 * H, tag: 'arm' });
-    add(up, 'ellipsoid', { c: [0, -0.48 * P.uArm, 0.006 * H], r: [P.uArmR * 0.82, 0.38 * P.uArm, P.uArmR * 0.8] }, { k: 0.02 * H, tag: 'arm' }); // biceps
-    add(up, 'ellipsoid', { c: [0, -0.40 * P.uArm, -0.007 * H], r: [P.uArmR * 0.8, 0.36 * P.uArm, P.uArmR * 0.75] }, { k: 0.02 * H, tag: 'arm' }); // triceps
-    add(lo, 'cone', { a: [0, 0.004 * H, 0], b: [0, -P.fArm, 0], r1: P.fArmR * 0.95, r2: P.wristR, s: [0.82, 1, 1] }, { k: 0.02 * H, tag: 'arm' });
-    add(lo, 'ellipsoid', { c: [sg * 0.002 * H, -0.24 * P.fArm, 0.003 * H], r: [P.fArmR * 0.98, 0.36 * P.fArm, P.fArmR * 1.02] }, { k: 0.02 * H, tag: 'arm' }); // forearm muscle
-    // wrist stub (the detailed hand overlaps it)
-    add(hn, 'ellipsoid', { c: [0, -0.008 * H, 0], r: [P.wristR * 0.75, 0.012 * H, P.wristR * 1.05] }, { k: 0.01 * H, tag: 'wrist' });
+    // deltoid split: the cap over the joint follows the clavicle (stays put when the arm lowers: no LBS bulge / square
+    // shoulder tip), the body of the muscle follows the upper arm
+    {
+      const cl = `arm${s}.clav`, Up = BW[bi[up]], Cl = BW[bi[cl]];
+      const capW = _va.set(sg * 0.006 * H, -0.007 * H, 0).applyMatrix4(Up).sub(_vb.setFromMatrixPosition(Cl));
+      const gm = P.girth;
+      add(cl, 'ellipsoid', { c: capW.toArray(), r: [0.021 * H * lerp(1, 0.9, fem) * gm, 0.0175 * H * gm, 0.026 * H * lerp(1, 0.92, fem) * gm] }, { k: 0.02 * H, tag: 'arm' }); // top ≈ trapezius line
+      add(up, 'ellipsoid', { c: [sg * 0.005 * H, -0.034 * H, 0.0], r: [0.023 * H * lerp(1, 0.88, fem) * gm, 0.038 * H, 0.028 * H * lerp(1, 0.92, fem) * gm] }, { k: 0.022 * H, tag: 'arm' });
+    }
+    add(up, 'cone', { a: [0, -0.022 * H, 0], b: [0, -P.uArm, 0], r1: P.uArmR * 0.92, r2: P.elbR }, { k: 0.016 * H, tag: 'arm' });
+    add(up, 'ellipsoid', { c: [0, -0.46 * P.uArm, 0.006 * H], r: [P.uArmR * 0.78, 0.34 * P.uArm, P.uArmR * 0.76] }, { k: 0.016 * H, tag: 'arm' }); // biceps
+    add(up, 'ellipsoid', { c: [0, -0.38 * P.uArm, -0.007 * H], r: [P.uArmR * 0.78, 0.36 * P.uArm, P.uArmR * 0.72] }, { k: 0.016 * H, tag: 'arm' }); // triceps
+    add(lo, 'sphere', { c: [0, 0.004 * H, -0.010 * H], r: 0.0105 * H }, { k: 0.012 * H, tag: 'arm' });             // olecranon (elbow point)
+    add(lo, 'cone', { a: [0, 0.002 * H, 0], b: [0, -P.fArm, 0], r1: P.fArmR * 0.9, r2: P.wristR, s: [0.78, 1, 1] }, { k: 0.016 * H, tag: 'arm' });
+    add(lo, 'ellipsoid', { c: [sg * 0.002 * H, -0.22 * P.fArm, 0.004 * H], r: [P.fArmR * 0.9, 0.32 * P.fArm, P.fArmR * 1.0] }, { k: 0.018 * H, tag: 'arm' }); // forearm muscle bellies
+    add(hn, 'ellipsoid', { c: [0, -0.008 * H, 0], r: [P.wristR * 0.72, 0.012 * H, P.wristR * 1.02] }, { k: 0.01 * H, tag: 'wrist' }); // wrist stub
     if (o.mitten) { // cheap hands for crowds
       add(hn, 'box', { c: [0, -0.045 * H, 0.002 * H], h: [0.007 * H, 0.028 * H, 0.020 * H], rad: 0.006 * H }, { k: 0.012 * H, tag: 'mitten' });
       add(hn, 'cone', { a: [0, -0.02 * H, 0.016 * H], b: [-sg * 0.004 * H, -0.05 * H, 0.03 * H], r1: 0.0065 * H, r2: 0.005 * H }, { k: 0.008 * H, tag: 'mitten' });
@@ -212,18 +301,21 @@ function bodyField(P, BW, bi, o) {
   for (const [s, sg] of [['L', 1], ['R', -1]]) {
     const up = `leg${s}.upper`, lo = `leg${s}.lower`, ft = `leg${s}.foot`;
     const thL = P.hipJY - P.kneeY, shL = P.kneeY - P.ankleY;
-    add(up, 'cone', { a: [0, 0.012 * H, -0.004 * H], b: [0, -thL, 0.002 * H], r1: P.thighR, r2: P.kneeR }, { k: 0.03 * H, tag: 'leg' });
-    add(up, 'ellipsoid', { c: [0.002 * sg * H, -0.42 * thL, 0.011 * H], r: [P.thighR * 0.86, 0.36 * thL, P.thighR * 0.82] }, { k: 0.03 * H, tag: 'leg' }); // quads
-    add(up, 'ellipsoid', { c: [sg * 0.014 * H, -0.02 * H, -0.004 * H], r: [0.028 * H * (1 + 0.06 * fem), 0.05 * H, 0.038 * H] }, { k: 0.03 * H, tag: 'leg', w: 0.7 }); // outer hip
-    add(up, 'ellipsoid', { c: [0, -thL + 0.004 * H, 0.008 * H], r: [P.kneeR * 0.78, P.kneeR * 0.85, P.kneeR * 0.8] }, { k: 0.025 * H, tag: 'leg' }); // knee cap region
-    add(lo, 'cone', { a: [0, 0, 0], b: [0, -shL, -0.002 * H], r1: P.kneeR * 0.98, r2: P.ankleR }, { k: 0.02 * H, tag: 'leg' });
-    add(lo, 'ellipsoid', { c: [-sg * 0.002 * H, -0.30 * shL, -0.011 * H], r: [P.calfR * 0.92, 0.32 * shL, P.calfR * 0.88] }, { k: 0.03 * H, tag: 'leg' }); // calf
-    // foot (ankle origin; sole at y = -ankleY)
+    add(up, 'cone', { a: [0, 0.010 * H, -0.004 * H], b: [0, -thL, 0.002 * H], r1: P.thighR, r2: P.kneeR }, { k: 0.026 * H, tag: 'leg' });
+    add(up, 'ellipsoid', { c: [0.002 * sg * H, -0.46 * thL, 0.010 * H], r: [P.thighR * 0.8, 0.36 * thL, P.thighR * 0.74] }, { k: 0.024 * H, tag: 'leg' });            // quads
+    add(up, 'ellipsoid', { c: [-sg * 0.014 * H, -0.26 * thL, -0.004 * H], r: [P.thighR * 0.62, 0.30 * thL, P.thighR * 0.72] }, { k: 0.022 * H, tag: 'leg' });         // adductors (inner thigh)
+    add(up, 'ellipsoid', { c: [sg * 0.012 * H, -0.02 * H, -0.006 * H], r: [0.024 * H * (1 + 0.08 * fem), 0.046 * H, 0.034 * H] }, { k: 0.026 * H, tag: 'leg', w: 0.7 }); // outer hip
+    add(up, 'ellipsoid', { c: [0, -thL + 0.008 * H, 0.010 * H], r: [P.kneeR * 0.48, P.kneeR * 0.55, P.kneeR * 0.4] }, { k: 0.016 * H, tag: 'leg' });                    // patella
+    add(lo, 'cone', { a: [0, 0, 0.002 * H], b: [0, -shL, -0.002 * H], r1: P.kneeR * 0.96, r2: P.ankleR }, { k: 0.022 * H, tag: 'leg' });
+    add(lo, 'ellipsoid', { c: [-sg * 0.001 * H, -0.27 * shL, -0.013 * H], r: [P.calfR * 0.86, 0.26 * shL, P.calfR * 0.74] }, { k: 0.022 * H, tag: 'leg' });   // gastrocnemius
+    add(lo, 'ellipsoid', { c: [-sg * 0.008 * H, -0.36 * shL, -0.008 * H], r: [P.calfR * 0.56, 0.2 * shL, P.calfR * 0.6] }, { k: 0.018 * H, tag: 'leg' });      // medial calf, a little lower
+    // foot (ankle origin; sole at y = -ankleY). Length = footL: heel back ≈ -0.23 fl, toe tip ≈ +0.77 fl
     const fl = P.footL, ay = P.ankleY;
-    add(ft, 'sphere', { c: [0, 0, 0], r: P.ankleR * 1.05 }, { k: 0.012 * H, tag: 'foot' });
-    add(ft, 'ellipsoid', { c: [0, -ay * 0.52, -0.018 * H], r: [0.020 * H, ay * 0.5, 0.026 * H] }, { k: 0.015 * H, tag: 'foot' }); // heel
-    add(ft, 'cone', { a: [0, -ay * 0.45, 0.004 * H], b: [sg * 0.004 * H, -ay * 0.62, fl * 0.62], r1: 0.019 * H, r2: 0.016 * H, s: [1.2, 0.72, 1] }, { k: 0.015 * H, tag: 'foot' });
-    add(ft, 'cone', { a: [sg * 0.004 * H, -ay * 0.66, fl * 0.62], b: [sg * 0.006 * H, -ay * 0.72, fl * 0.79], r1: 0.0125 * H, r2: 0.0095 * H, s: [1.75, 0.8, 1] }, { k: 0.01 * H, tag: 'foot' }); // toes
+    add(ft, 'sphere', { c: [0, 0, -0.002 * H], r: P.ankleR * 1.0 }, { k: 0.01 * H, tag: 'foot' });
+    for (const m of [1, -1]) add(ft, 'sphere', { c: [m * P.ankleR * 0.82, m > 0 === sg > 0 ? -0.003 * H : 0.001 * H, -0.002 * H], r: P.ankleR * 0.42 }, { k: 0.006 * H, tag: 'foot' }); // malleoli
+    add(ft, 'ellipsoid', { c: [0, -ay * 0.55, -0.14 * fl], r: [0.017 * H, ay * 0.46, 0.09 * fl] }, { k: 0.012 * H, tag: 'foot' }); // heel
+    add(ft, 'cone', { a: [0, -ay * 0.45, 0.0], b: [sg * 0.004 * H, -ay * 0.66, fl * 0.56], r1: 0.016 * H, r2: 0.0135 * H, s: [1.22, 0.7, 1] }, { k: 0.014 * H, tag: 'foot' }); // instep / metatarsals
+    add(ft, 'cone', { a: [sg * 0.004 * H, -ay * 0.7, fl * 0.56], b: [sg * 0.006 * H, -ay * 0.76, fl * 0.71], r1: 0.0105 * H, r2: 0.0082 * H, s: [1.7, 0.78, 1] }, { k: 0.009 * H, tag: 'foot' }); // toes
   }
   return f;
 }
@@ -231,15 +323,15 @@ function bodyField(P, BW, bi, o) {
 // ------------------------------------------------------------------------------------------
 const GEO_CACHE = new Map();
 export const FIGURE_CACHE = GEO_CACHE;
-export const FIGURE_LIB_VERSION = 'fig-1';
+export const FIGURE_LIB_VERSION = 'fig-2';
 export function figureKey(o = {}) {
   const P = dims(o);
   const L = LOD[o.lod || 'hi'] || LOD.hi;
   return JSON.stringify({ v: FIGURE_LIB_VERSION, P, lod: o.lod || 'hi', costume: o.costume || [], hair: o.hair || null, mitten: !L.hand, barefoot: !!o.barefoot });
 }
 const LOD = {
-  hi: { body: 0.008, head: 0.0042, hair: 0.0045, cloth: 0.0085, detail: 0.0036, hand: 'figure', dec: 0.0007 },
-  mid: { body: 0.012, head: 0.006, hair: 0.0065, cloth: 0.012, detail: 0.005, hand: 'crowd', dec: 0.0012 },
+  hi: { body: 0.008, head: 0.0028, hair: 0.0042, cloth: 0.0085, detail: 0.0036, hand: 'figure', dec: 0.0007 },
+  mid: { body: 0.012, head: 0.0042, hair: 0.0060, cloth: 0.012, detail: 0.005, hand: 'crowd', dec: 0.0012 },
   lo: { body: 0.018, head: 0.011, hair: 0.012, cloth: 0.018, detail: 0.009, hand: null, dec: 0.0025, simple: true },
 };
 
@@ -287,6 +379,10 @@ export class Figure {
     this.materials = {};
     const skinCol = o.skin ?? 0xd2a586;
     this.materials.skin = o.skinMaterial || skinMaterial({ color: skinCol, age: clamp((P.age - 20) / 60), salt: o.salt ?? 0 });
+    { // face colour zones (lips, cheeks, ears, lids, beard shadow) need the head's bind frame
+      const su = this.materials.skin.userData.fzUniforms;
+      if (su && su.uFace) { su.uFace.value = 1; su.uHeadInv.value.copy(BW[this.bi.head]).invert(); su.uHu.value = P.hu; su.uBeard.value = P.sex < 0.5 && P.child < 0.5 ? 0.7 * clamp((P.age - 22) / 30) : 0; }
+    }
     const mk = (name, geo, mat) => {
       const m = new THREE.SkinnedMesh(geo, mat);
       m.name = name; m.castShadow = true; m.receiveShadow = true;
@@ -301,6 +397,8 @@ export class Figure {
     if (G.head) mk('head', G.head.geo, this.materials.skin);
     if (G.hair) {
       this.materials.hair = o.hair?.material || materialFromDesc(G.hair.mat);
+      const hu = this.materials.hair.userData.fzUniforms;
+      if (hu && hu.uSkin) hu.uSkin.value.set(skinCol); // soft hairline fades into this figure's skin
       mk('hair', G.hair.geo, this.materials.hair);
     }
     for (const g of G.garments) {
@@ -363,6 +461,16 @@ export class Figure {
     const G = { garments: [], accessories: [] };
     // ---- garments first (we need their coverage to cull hidden skin)
     const ctx = { P, BW, bi: this.bi, field, ev, lod: L, H, bones: BONES };
+    { // longest hem among skirt-like garments (seated skirt weights are keyed to it, identically for every layer)
+      const HF = { waist: 0.60, hip: 0.47, thigh: 0.40, knee: 0.295, below_knee: 0.25, calf: 0.19, ankle: 0.065, floor: 0.035 };
+      let mh = null;
+      for (const sp of o.costume || []) {
+        if (!['skirt', 'dress', 'cheongsam', 'robe', 'coat', 'lab_coat', 'side_jacket', 'apron', 'shirt', 'blouse', 'jacket', 'sailor', 'vest'].includes(sp.type)) continue;
+        const fr = typeof sp.length === 'number' ? sp.length : HF[sp.length] ?? (['coat', 'robe', 'lab_coat', 'dress', 'cheongsam', 'skirt'].includes(sp.type) ? (sp.type === 'robe' ? 0.065 : sp.type === 'skirt' || sp.type === 'dress' || sp.type === 'cheongsam' ? 0.19 : 0.295) : 0.47);
+        mh = mh === null ? fr * H : Math.min(mh, fr * H);
+      }
+      ctx.minHemY = mh;
+    }
     const covers = [];
     // layer order (inner -> outer); garments wrap the hulls of the layers beneath them
     const RANK = { trousers: 0, skirt: 0.5, shirt: 1, blouse: 1.2, cheongsam: 1.5, dress: 1.5, vest: 1.8, jacket: 2, sailor: 2, side_jacket: 2, lab_coat: 2.6, coat: 3, robe: 3, apron: 4, shawl: 4.5, sash: 5, belt: 5, shoes: 6 };
@@ -409,7 +517,9 @@ export class Figure {
       return true;
     });
     mb = compact(mb);
-    if (L.dec) mb = decimate(mb, { maxError: L.dec, ratio: 0.2 });
+    // the neck overlap with the finer head mesh stays undecimated (exact surface: no seam line where the two meshes cross)
+    const neckLow0 = P.neckY + (P.headY - P.neckY) * 0.25;
+    if (L.dec) mb = decimate(mb, { maxError: L.dec, ratio: 0.2, lock: (x, y) => y > neckLow0 - 0.01 });
     const tauB = 0.010 * H / 1.7;
     const wb = field.weights(mb.pos, { tau: tauB, nBones: BONES.length });
     mb.skinIndex = wb.skinIndex; mb.skinWeight = wb.skinWeight;
@@ -421,11 +531,24 @@ export class Figure {
     const r = P.hu * 0.75;
     const neckLow = P.neckY + (P.headY - P.neckY) * 0.25;
     const bbH = { min: [hc.x - r, neckLow - 0.01, hc.z - r], max: [hc.x + r, H + 0.01, hc.z + r * 1.05] };
-    let mh = meshField((x, y, z) => Math.max(bodyEval(x, y, z) - 0.0005, neckLow - y), bbH, L.head, { project: 2 });
+    let mh = meshField((x, y, z) => Math.max(bodyEval(x, y, z) - 0.0004 + 0.0009 * sstep(neckLow + 0.02 * H / 1.7, neckLow, y), neckLow - y), bbH, L.head, { project: 2 });
     mh.idx = filterFaces(mh.pos, mh.idx, (x, y, z) => y > neckLow + L.head * 0.5 && !covers.some((cv) => cv(x, y, z) < -0.012));
     mh = compact(mh);
     if (L.dec) mh = decimate(mh, { maxError: L.dec * 0.5, ratio: 0.25 });
     const wh = field.weights(mh.pos, { tau: tauB, nBones: BONES.length });
+    { // the face and skull follow the head bone rigidly above the jaw line (no shear of the face when the head turns)
+      const inv = hb.clone().invert(), q = new THREE.Vector3(), hi = this.bi.head, hu = P.hu;
+      for (let v = 0; v < mh.pos.length / 3; v++) {
+        q.fromArray(mh.pos, v * 3).applyMatrix4(inv);
+        const t = sstep(-0.24 * hu, -0.1 * hu, q.y - 0.3 * Math.max(0, q.z));
+        if (t <= 0) continue;
+        const W = new Map();
+        for (let j = 0; j < 4; j++) { const b = wh.skinIndex[v * 4 + j], w = wh.skinWeight[v * 4 + j] * (1 - t); if (w > 0) W.set(b, (W.get(b) || 0) + w); }
+        W.set(hi, (W.get(hi) || 0) + t);
+        const top = [...W.entries()].sort((a, b) => b[1] - a[1]).slice(0, 4); const sum = top.reduce((a, e) => a + e[1], 0);
+        for (let j = 0; j < 4; j++) { wh.skinIndex[v * 4 + j] = top[j] ? top[j][0] : hi; wh.skinWeight[v * 4 + j] = top[j] ? top[j][1] / sum : 0; }
+      }
+    }
     mh.skinIndex = wh.skinIndex; mh.skinWeight = wh.skinWeight;
     mh.aux = new Float32Array(mh.pos.length / 3 * 4);
     G.head = { geo: toGeometry(mh, { skin: mh }) };
@@ -687,10 +810,13 @@ function legIK(P, hipY, ankleZ, ankleY) {
   return { thigh, knee };
 }
 
+// relaxed stance: arms hang close to the body (just clearing the hips), soft elbow bend, forearms a little pronated so
+// the backs of the hands turn outward, shoulders down; hands relaxed (fingers together, thumb alongside the index)
 const STAND_BASE = {
-  'armL.upper.z': 0.13, 'armR.upper.z': 0.13, 'armL.upper.x': 0.03, 'armR.upper.x': 0.03,
-  'armL.lower.x': 0.2, 'armR.lower.x': 0.2, 'armL.lower.y': 0.15, 'armR.lower.y': 0.15,
-  'armL.hand.x': 0.08, 'armR.hand.x': 0.08,
+  'armL.upper.z': 0.085, 'armR.upper.z': 0.085, 'armL.upper.x': 0.04, 'armR.upper.x': 0.04, 'armL.upper.y': 0.06, 'armR.upper.y': 0.06,
+  'armL.lower.x': 0.24, 'armR.lower.x': 0.24, 'armL.lower.y': 0.32, 'armR.lower.y': 0.32,
+  'armL.hand.x': 0.1, 'armR.hand.x': 0.1, 'armL.hand.z': 0.06, 'armR.hand.z': 0.06,
+  'armL.clav.z': -0.02, 'armR.clav.z': -0.02,
   'legL.upper.z': 0.025, 'legR.upper.z': 0.025, 'legL.upper.y': 0.08, 'legR.upper.y': 0.08,
   'legL.foot.y': 0.05, 'legR.foot.y': 0.05,
   handL: 'relaxed', handR: 'relaxed',
@@ -698,7 +824,7 @@ const STAND_BASE = {
 
 export const POSES = {
   neutral: () => ({}),
-  apose: () => ({ ...BIND_POSE }),
+  apose: () => ({ ...APOSE }),
   stand: (P, p) => {
     const w = p.weight ?? 0; // -1 on right leg … +1 on left leg (contrapposto)
     return { ...STAND_BASE, 'hips.z': -0.03 * w, 'hips.px': 0.012 * w * P.H / 1.7, 'chest.z': 0.03 * w, 'legL.upper.z': 0.025 - 0.02 * w, 'legR.upper.z': 0.025 + 0.02 * w, 'legR.lower.x': w > 0 ? 0.12 * w : 0, 'legL.lower.x': w < 0 ? -0.12 * w : 0 };

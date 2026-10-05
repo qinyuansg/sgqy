@@ -131,17 +131,20 @@ function buildField(D, R, o) {
     for (let j = 0; j < 3; j++) {
       const bw = W[bones[j]], L = lens[j], r0 = rr[j], r1 = rr[j + 1];
       const flat = isThumb ? (j === 2 ? 0.8 : 0.88) : 0.86;
-      f.add(prim('cone', { frame: bw, a: [0, 0, 0], b: [0, -L, 0], r1: r0, r2: r1, s: [flat, 1, 1] }), { k: 0.0042 * s, bone: bones[j], tag: 'finger' });
+      f.add(prim('cone', { frame: bw, a: [0, 0, 0], b: [0, -L, 0], r1: r0 * 0.95, r2: r1 * 0.95, s: [flat, 1, 1] }), { k: 0.0042 * s, bone: bones[j], tag: 'finger' }); // shaft (a little narrower than the joints)
+      if (j > 0 || isThumb) f.add(prim('ellipsoid', { frame: bw, c: [0, 0, 0], r: [r0 * flat * 1.0, r0 * 0.75, r0 * 1.04] }), { k: 0.0032 * s, bone: bones[j], tag: 'finger' }); // joint (PIP / DIP width)
       // palmar pad
       const pr = (r0 + r1) / 2;
       const tip = j === 2;
       f.add(prim('ellipsoid', { frame: bw, c: [-pr * (tip ? 0.2 : 0.26), -L * (tip ? 0.60 : 0.52), 0], r: [pr * (tip ? 0.74 : 0.66), L * (tip ? 0.42 : 0.40), pr * (tip ? 0.86 : 0.84)] }), { k: pr * 0.7, bone: bones[j], tag: 'pad' });
       // dorsal knuckle at the joint at the end of this phalanx (PIP/DIP heads)
-      if (j < 2) f.add(prim('ellipsoid', { frame: bw, c: [r1 * 0.06, -L, 0], r: [r1 * 0.82, r1 * 0.78, r1 * 1.0] }), { k: r1 * 0.8, bone: bones[j], tag: 'knuckle' });
+      if (j < 2) f.add(prim('ellipsoid', { frame: bw, c: [r1 * 0.2, -L, 0], r: [r1 * 0.72, r1 * 0.85, r1 * 0.92] }), { k: r1 * 0.7, bone: bones[j], tag: 'knuckle' });
       if (tip) {
         const rr2 = (r0 * 0.42 + r1 * 0.58) * flat;
-        const np = prim('ellipsoid', { frame: bw, c: [rr2 - 0.00075, -L * 0.58, 0], rot: [0.06, 0, 0], r: [0.00105, L * 0.40, (r0 + r1) * 0.5 * 0.68] });
-        f.add(np, { k: 0.0009 * s, bone: bones[j], tag: 'nail' });
+        // nail seated in its folds: a shallow trench around the footprint, then the plate (slightly domed) on top
+        f.sub(prim('ellipsoid', { frame: bw, c: [rr2 - 0.0003, -L * 0.6, 0], rot: [0.06, 0, 0], r: [0.0009, L * 0.43, (r0 + r1) * 0.5 * 0.74] }), { k: 0.0006 * s, bone: bones[j], tag: 'nailbed' });
+        const np = prim('ellipsoid', { frame: bw, c: [rr2 - 0.00078, -L * 0.6, 0], rot: [0.06, 0, 0], r: [0.00112, L * 0.40, (r0 + r1) * 0.5 * 0.68] });
+        f.add(np, { k: 0.0005 * s, bone: bones[j], tag: 'nail' });
         nails.push({ bone: bones[j], frame: bw.clone().invert(), L, w: (r0 + r1) * 0.5 * 0.62, x0: rr2 * 0.4 });
       }
     }
@@ -165,6 +168,13 @@ function nailSD(n, x, y, z) {
   const dy = (p.y - cy) / hy, dz = p.z / n.w;
   const r = Math.pow(Math.pow(Math.abs(dy), 3) + Math.pow(Math.abs(dz), 3), 1 / 3);
   return (r - 1) * Math.min(hy, n.w);
+}
+
+// position along the nail: 0 at the cuticle … 1 at the free edge (meaningful inside the footprint only)
+function nailT(n, x, y, z) {
+  const p = new THREE.Vector3(x, y, z).applyMatrix4(n.frame);
+  const cy = -n.L * 0.6, hy = n.L * 0.36;
+  return Math.min(1, Math.max(0, (cy + hy - p.y) / (2 * hy)));
 }
 
 const _cache = new Map();
@@ -301,8 +311,8 @@ export function makeHand(o = {}) {
     const pv = new THREE.Vector3(), nv3 = new THREE.Vector3(), dX = new THREE.Vector3();
     for (let v = 0; v < nv; v++) {
       const x = ms.pos[v * 3], y = ms.pos[v * 3 + 1], z = ms.pos[v * 3 + 2];
-      let nm = 0;
-      for (const n of nails) nm = Math.max(nm, Math.min(1, Math.max(0, 0.5 - nailSD(n, x, y, z) / 0.0011)));
+      let nm = 0, nt = 0;
+      for (const n of nails) { const q = Math.min(1, Math.max(0, 0.5 - nailSD(n, x, y, z) / 0.0011)); if (q > nm) { nm = q; nt = nailT(n, x, y, z); } }
       // side: normal against the dominant bone's dorsal axis (+X local)
       const b = w.skinIndex[v * 4];
       nv3.set(ms.nrm[v * 3], ms.nrm[v * 3 + 1], ms.nrm[v * 3 + 2]);
@@ -320,19 +330,38 @@ export function makeHand(o = {}) {
         const dors = Math.max(0, sideV);
         sm = Math.max(0, Math.min(1, 0.08 + 0.75 * dors + 0.3 * vnoise3(x * 120, y * 120, z * 120, 11) + 0.25 * (1 - Math.min(1, Math.abs(js) / 0.006)) - 0.25 * Math.max(0, -sideV)));
       }
-      aux[v * 4] = nm; aux[v * 4 + 1] = sm; aux[v * 4 + 2] = 0; aux[v * 4 + 3] = sideV;
+      aux[v * 4] = nm; aux[v * 4 + 1] = sm; aux[v * 4 + 2] = nm > 0.05 ? nt : 0; aux[v * 4 + 3] = sideV;
     }
     G.joints = JT.map((J) => ({ c: J.c.toArray(), ax: J.ax.toArray(), r: J.mcp ? -J.r : J.r }));
     ms.aux = aux;
     ms.skinIndex = w.skinIndex; ms.skinWeight = w.skinWeight;
-    if (decE) ms = decimate(ms, { maxError: decE, ratio: 0.25, attr: ms.aux, attrTol: [0.2, 2, 2, 0.45] });
+    if (decE) ms = decimate(ms, { maxError: decE, ratio: 0.25, attr: ms.aux, attrTol: [0.2, 2, 0.25, 0.45] });
     G.skin = ms;
     if (glove) {
       // cotton glove: grown, smoothed hand + cuff up the wrist
-      const gf = f.derive((e) => e.tag !== 'nail' && e.tag !== 'vein' && e.tag !== 'tendon' && e.tag !== 'knuckle' && e.tag !== 'mcp', { grow: (e) => (e.op === 's' ? -0.0012 : e.tag === 'pad' ? 0.0004 : 0.0009) * D.s, kMul: 1.35, kAdd: 0.0006 });
+      const gf = f.derive((e) => e.tag !== 'nail' && e.tag !== 'nailbed' && e.tag !== 'vein' && e.tag !== 'tendon' && e.tag !== 'knuckle' && e.tag !== 'mcp', { grow: (e) => (e.op === 's' ? -0.0012 : e.tag === 'pad' ? 0.0004 : 0.0009) * D.s, kMul: 1.35, kAdd: 0.0006 });
       const gcuffLen = (o.gloveCuff ?? 0.055) * D.s;
       gf.add(prim('cone', { frame: R.W[R.forearm], a: [0, -0.01, 0], b: [0, gcuffLen, 0], r1: D.wristR[1] + 0.0014, r2: D.wristR[1] + 0.006, s: [D.wristR[0] / D.wristR[1] * 1.05, 1, 1] }), { k: 0.008, bone: R.forearm, tag: 'gcuff' });
-      gf.disp = (x, y, z, d) => d - 0.00025 * vnoise3(x * 160, y * 160, z * 160, 21);
+      // soft cloth: low noise + wrinkle rings around the finger joints (bunching on the palm side) + a loose wrist
+      const GJ = [];
+      for (const name of [...FINGERS, 'thumb']) for (let j = name === 'thumb' ? 1 : 0; j < 3; j++) {
+        const bm = R.W[R.fingerBones[name][j]];
+        GJ.push({ c: new THREE.Vector3().setFromMatrixPosition(bm), ax: new THREE.Vector3(0, -1, 0).transformDirection(bm), dx: new THREE.Vector3(1, 0, 0).transformDirection(bm), r: name === 'thumb' ? D.T.r[j] : D.F.find((ff) => ff.name === name).r[j] });
+      }
+      gf.disp = (x, y, z, d) => {
+        let w = 0.00022 * vnoise3(x * 160, y * 160, z * 160, 21);
+        for (const J of GJ) {
+          const vx = x - J.c.x, vy = y - J.c.y, vz = z - J.c.z;
+          const a = vx * J.ax.x + vy * J.ax.y + vz * J.ax.z;
+          if (Math.abs(a) > 0.0075) continue;
+          const r2 = vx * vx + vy * vy + vz * vz - a * a; if (r2 > (J.r * 2.0) ** 2) continue;
+          const palmar = -(vx * J.dx.x + vy * J.dx.y + vz * J.dx.z) / (Math.sqrt(r2) + 1e-6); // +1 palm side
+          const env = (1 - Math.abs(a) / 0.0075) ** 2 * (0.55 + 0.45 * Math.max(0, palmar));
+          w += 0.00034 * env * Math.sin(a * 6.2831 / 0.0034 + 2.2 * vnoise3(x * 400, y * 400, z * 400, 22));
+        }
+        if (y > -0.004) w += 0.0004 * Math.sin(Math.atan2(z, x) * 5 + y * 300) * Math.min(1, y / 0.02 + 0.2); // loose at the wrist
+        return d - w;
+      };
       gf.accel({ min: [-0.08 * D.s, -0.22 * D.s, -0.065 * D.s], max: [0.055 * D.s, gcuffLen + 0.01, 0.115 * D.s] }, 0.009 * D.s);
       const gEval = (x, y, z) => gf.eval(x, y, z);
       // open shell at the cuff: keep everything below the cut plane, remove the cap
@@ -352,7 +381,7 @@ export function makeHand(o = {}) {
         const b = gw.skinIndex[v * 4];
         pv.set(x, y, z).applyMatrix4(inv[b]);
         let seam = 1;
-        if (joints.includes(b)) seam = Math.min(1, Math.abs(pv.z) < 0.004 ? Math.abs(pv.x) / 0.0018 : 1); // side seams of fingers
+        if (joints.includes(b) && Math.abs(pv.z) > 0.0045) seam = Math.min(1, Math.abs(pv.x + 0.0008) / 0.0011); // side seams (fourchettes) along the fingers
         // three decorative stitch lines on the back of the hand
         if (b === R.wrist && x > 0.004 && y < -0.022 * D.s && y > -0.07 * D.s) for (const zz of [0.012, 0.0, -0.012]) seam = Math.min(seam, Math.abs(z - zz * D.wf + (y + 0.045) * 0.08) / 0.0016);
         gaux[v * 4 + 2] = seam;
@@ -435,7 +464,7 @@ class Hand {
     };
     this.meshes = {};
     if (glove) {
-      this.gloveMat = o.gloveMaterial || clothMaterial({ fabric: 'cotton', color: o.gloveColor ?? 0xecebe4, sheen: 0.8, sheenColor: 0xffffff, mottle: 0.025, stitchColor: 0xd8d6cc, detail: 1.1, wearColor: o.smudgeColor ?? 0xb9ae9c });
+      this.gloveMat = o.gloveMaterial || clothMaterial({ fabric: 'cotton', color: o.gloveColor ?? 0xecebe4, sheen: 0.5, sheenColor: 0xe6e2da, roughness: 0.93, mottle: 0.035, stitchColor: 0xc9c5ba, detail: 1.6, fold: 1.4, wearColor: o.smudgeColor ?? 0xb9ae9c });
       this.meshes.glove = mk(G.geo.glove, this.gloveMat, 'glove');
       if (G.geo.skinArm) this.meshes.skinArm = mk(G.geo.skinArm, this.skinMat, 'skinArm');
       if (!o.gloveOnly) { this.meshes.skin = mk(G.geo.skin, this.skinMat, 'skin'); this.meshes.skin.visible = false; }
@@ -552,7 +581,8 @@ export function handPose(name, p = {}, D = dimsOf({})) {
   switch (name) {
     case 'relaxed': {
       const c = p.curl ?? 1;
-      return { wrist: [0.05, 0.05], thumb: [0.12 * c, 0.08, 0.15 * c, 0.2 * c, 0], index: [0.22 * c, 0.32 * c, 0.15 * c, 0.02], middle: [0.28 * c, 0.42 * c, 0.2 * c, 0], ring: [0.33 * c, 0.5 * c, 0.24 * c, -0.02], little: [0.38 * c, 0.58 * c, 0.3 * c, -0.05] };
+      // fingers together with a natural cascade of curl (index least, little most), thumb resting alongside the index
+      return { wrist: [0.05, 0.04], thumb: [0.2 * c, 0.32, 0.18 * c, 0.22 * c, 0.15], index: [0.2 * c, 0.34 * c, 0.18 * c, -0.035], middle: [0.26 * c, 0.42 * c, 0.22 * c, -0.005], ring: [0.32 * c, 0.5 * c, 0.26 * c, 0.03], little: [0.38 * c, 0.56 * c, 0.3 * c, 0.07] };
     }
     case 'flat': case 'flat_on_glass': {
       const sp = p.spread ?? (name === 'flat_on_glass' ? 0.6 : 0.2);

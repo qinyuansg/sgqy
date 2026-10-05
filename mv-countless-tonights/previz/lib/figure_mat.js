@@ -52,6 +52,10 @@ function install(mat, parts) {
       .replace('#include <color_fragment>', '#include <color_fragment>\n float fzH = 0.0; float fzR = 1.0; vec3 fzFw3 = fwidth(vRest); float fzFw = max(max(fzFw3.x, fzFw3.y), fzFw3.z);\n {\n' + (QS.get('figmat') === 'nocolor' ? '' : (parts.color || '')) + '\n }\n')
       .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\n roughnessFactor = clamp(roughnessFactor * fzR, 0.04, 1.0);')
       .replace('#include <normal_fragment_maps>', '#include <normal_fragment_maps>\n' + (QS.get('figmat') === 'nobump' || QS.get('figmat') === 'nocolor' ? '' : ' normal = fzPerturb(-vViewPosition, normal, vec2(dFdx(fzH), dFdy(fzH)), faceDirection);'));
+    if (parts.diffuse) { // custom direct-diffuse term (e.g. skin terminator) — patches RE_Direct_Physical
+      const chunk = THREE.ShaderChunk.lights_physical_pars_fragment.replace('reflectedLight.directDiffuse += irradiance * BRDF_Lambert( material.diffuseColor );', parts.diffuse);
+      sh.fragmentShader = sh.fragmentShader.replace('#include <lights_physical_pars_fragment>', chunk);
+    }
   };
   mat.customProgramCacheKey = () => parts.key;
   return mat;
@@ -79,10 +83,15 @@ let _clothId = 0;
 export function clothMaterial(o = {}) {
   const fab = { ...(FABRIC[o.fabric || 'cotton'] || FABRIC.cotton), ...(o.fabricOverride || {}) };
   const base = col(o.color ?? 0x777777);
-  const sheenCol = o.sheenColor !== undefined ? col(o.sheenColor) : base.clone().lerp(new THREE.Color(1, 1, 1), 0.35);
+  // sheen tinted by the fibre colour itself (a dark indigo / navy keeps a dark, coloured sheen — the old lerp toward white
+  // blew out to near-white under a close practical), with a small lift so pale fabrics still glow softly at grazing angles
+  const lum = base.r * 0.3 + base.g * 0.55 + base.b * 0.15;
+  const sheenCol = o.sheenColor !== undefined ? col(o.sheenColor) : base.clone().multiplyScalar(1.5).add(new THREE.Color(0.05, 0.05, 0.05)).lerp(new THREE.Color(1, 1, 1), 0.12 * Math.min(1, lum * 3));
+  sheenCol.r = Math.min(1, sheenCol.r); sheenCol.g = Math.min(1, sheenCol.g); sheenCol.b = Math.min(1, sheenCol.b);
+  const sheenAmt = Math.min(o.sheen ?? fab.sheen, 0.4 + 0.6 * Math.min(1, lum * 4)); // dark cloth: capped sheen weight
   const mat = new THREE.MeshPhysicalMaterial({
     color: base, roughness: o.roughness ?? fab.rough, metalness: 0,
-    sheen: o.sheen ?? fab.sheen, sheenRoughness: fab.sheenRough, sheenColor: sheenCol,
+    sheen: sheenAmt, sheenRoughness: fab.sheenRough, sheenColor: sheenCol,
     side: o.side ?? (o.patchInside || o.doubleSide ? THREE.DoubleSide : THREE.FrontSide), vertexColors: !!o.vertexColors,
     envMapIntensity: o.envMapIntensity ?? 0.6,
   });
@@ -167,23 +176,27 @@ ${o.print ? `vec4 fzPrint(vec3 p, vec3 n){ vec3 w = fzTriW(n); float s = 1.0 / u
 export function skinMaterial(o = {}) {
   const base = col(o.color ?? 0xd2a586);
   const mat = new THREE.MeshPhysicalMaterial({
-    color: base, roughness: o.roughness ?? 0.6, metalness: 0,
-    sheen: o.sheen ?? 0.22, sheenRoughness: 0.6, sheenColor: col(o.sheenColor ?? 0xb07060),
-    specularIntensity: 0.5, envMapIntensity: o.envMapIntensity ?? 0.5,
+    // warm, matte with a soft sheen; specular low and broad (no plastic hot spots), warm terminator (see `diffuse`)
+    color: base, roughness: o.roughness ?? 0.52, metalness: 0,
+    sheen: o.sheen ?? 0.32, sheenRoughness: 0.5, sheenColor: col(o.sheenColor ?? base.clone().lerp(new THREE.Color(0.85, 0.42, 0.32), 0.55)),
+    specularIntensity: 0.42, specularColor: new THREE.Color(1.0, 0.94, 0.9), envMapIntensity: o.envMapIntensity ?? 0.45,
     side: o.side ?? THREE.FrontSide, vertexColors: !!o.vertexColors,
   });
   mat.name = 'skin';
   const U = {
     uAge: { value: o.age ?? 0.2 }, uSalt: { value: o.salt ?? 0 }, uHand: { value: o.hand ? 1 : 0 },
-    uNail: { value: col(o.nailColor ?? base.clone().lerp(new THREE.Color(0.95, 0.78, 0.74), 0.5)) },
+    uNail: { value: col(o.nailColor ?? base.clone().lerp(new THREE.Color(0.95, 0.78, 0.74), 0.45)) },
     uSaltCol: { value: col(0xe9e6df) }, uDetail: { value: o.detail ?? 1 },
     uFlush: { value: col(o.flush ?? 0xc9705a) },
     uJC: { value: Array.from({ length: 15 }, (_, i) => new THREE.Vector3().fromArray(o.joints?.[i]?.c || [0, 9, 0])) },
     uJA: { value: Array.from({ length: 15 }, (_, i) => new THREE.Vector3().fromArray(o.joints?.[i]?.ax || [0, -1, 0])) },
     uJR: { value: Array.from({ length: 15 }, (_, i) => o.joints?.[i]?.r || 0) },
+    // face colour zones (figure.js sets these: rest -> head-local transform, head unit, beard shadow)
+    uFace: { value: 0 }, uHeadInv: { value: new THREE.Matrix4() }, uHu: { value: 0.22 }, uBeard: { value: 0 },
   };
-  const head = /* glsl */`uniform float uAge, uSalt, uHand, uDetail; uniform vec3 uNail, uSaltCol, uFlush;
+  const head = /* glsl */`uniform float uAge, uSalt, uHand, uDetail, uFace, uHu, uBeard; uniform vec3 uNail, uSaltCol, uFlush; uniform mat4 uHeadInv;
   uniform vec3 uJC[15]; uniform vec3 uJA[15]; uniform float uJR[15];
+  float fzE(vec3 q, vec3 c, vec3 r){ vec3 d = (q - c) / r; return clamp(1.0 - dot(d, d), 0.0, 1.0); }
   float fzPalmLine(vec2 q, vec2 a, vec2 b, vec2 c){ // distance to quadratic bezier-ish polyline
     float d = 1.0; for (int i = 0; i < 8; i++) { float t0 = float(i) / 8.0, t1 = float(i + 1) / 8.0;
       vec2 p0 = mix(mix(a, b, t0), mix(b, c, t0), t0); vec2 p1 = mix(mix(a, b, t1), mix(b, c, t1), t1);
@@ -194,7 +207,23 @@ export function skinMaterial(o = {}) {
   float side = vAux.w;
   float dors = smoothstep(0.1, 0.6, side), palm = smoothstep(-0.1, -0.6, side);
   float sv = fzNoise(rp * 40.0);
-  diffuseColor.rgb *= 1.0 + 0.05 * sv;
+  diffuseColor.rgb *= (1.0 + 0.05 * sv) * vec3(1.0, 0.968, 0.955); // keep the hue warm (ACES drifts light skin toward yellow)
+  float tz = 0.0;
+  if (uFace > 0.5) { // natural colour zones of a face without make-up (head-local, units of head height)
+    vec3 q = (uHeadInv * vec4(rp, 1.0)).xyz / uHu; q.x = abs(q.x);
+    float lip = smoothstep(0.0, 0.5, fzE(q, vec3(0.0, 0.04, 0.35), vec3(0.1, 0.034, 0.05)));
+    float cheek = fzE(q, vec3(0.15, 0.2, 0.25), vec3(0.1, 0.09, 0.12));
+    float noseT = fzE(q, vec3(0.0, 0.17, 0.42), vec3(0.05, 0.05, 0.06));
+    float ear = fzE(q, vec3(0.33, 0.29, -0.06), vec3(0.07, 0.13, 0.1));
+    float lid = fzE(q, vec3(0.138, 0.33, 0.3), vec3(0.095, 0.06, 0.08));
+    float beard = uBeard * fzE(q, vec3(0.0, -0.01, 0.22), vec3(0.23, 0.13, 0.22)) * smoothstep(0.12, 0.06, q.y);
+    vec3 c0 = diffuseColor.rgb;
+    diffuseColor.rgb = mix(diffuseColor.rgb, c0 * vec3(0.93, 0.72, 0.70), lip * 0.8);
+    diffuseColor.rgb *= mix(vec3(1.0), vec3(1.05, 0.94, 0.92), clamp(cheek * 0.9 + noseT * 0.7 + ear * 0.9, 0.0, 1.0));
+    diffuseColor.rgb *= mix(vec3(1.0), vec3(0.93, 0.9, 0.93), lid);
+    diffuseColor.rgb *= mix(vec3(1.0), vec3(0.9, 0.9, 0.93), beard);
+    tz = clamp(fzE(q, vec3(0.0, 0.5, 0.3), vec3(0.2, 0.14, 0.15)) + noseT, 0.0, 1.0); // T-zone: a little glossier
+  }
   float nail = 0.0, wr = 0.0, crease = 0.0, palmLines = 0.0;
   if (uHand > 0.5) {
     nail = smoothstep(0.42, 0.58, vAux.x);
@@ -202,16 +231,20 @@ export function skinMaterial(o = {}) {
     for (int i = 0; i < 15; i++) { vec3 dj = rp - uJC[i]; float a = dot(dj, uJA[i]); float dd = dot(dj, dj);
       float rad = sqrt(max(dd - a * a, 0.0));
       if (rad < abs(uJR[i]) * 1.5 && abs(a) < 0.0085 && dd < bd) { bd = dd; js = a; isMcp = uJR[i] < 0.0 ? 1.0 : 0.0; } }
-    float tipWarm = (1.0 - smoothstep(0.0, 0.012, abs(js))) * 0.25 * dors;
-    diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * uFlush * 1.35, tipWarm + palm * 0.18);
+    float knuck = (1.0 - smoothstep(0.0, 0.009, abs(js))) * dors;
+    diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * uFlush * 1.3, knuck * 0.22 + palm * 0.16); // warmer knuckles, palms
     diffuseColor.rgb *= 1.0 - smoothstep(0.55, 0.8, sv * 0.5 + 0.5) * uAge * dors * 0.12; // age spots
-    diffuseColor.rgb = mix(diffuseColor.rgb, uNail, nail * 0.85);
+    // nail plate: pink bed, pale lunula at the cuticle, whiter translucent free edge (vAux.z: 0 cuticle … 1 tip)
+    float nt = vAux.z;
+    vec3 nailC = mix(uNail, mix(uNail, vec3(0.97, 0.92, 0.88), 0.55), 1.0 - smoothstep(0.08, 0.24, nt));
+    nailC = mix(nailC, vec3(0.94, 0.9, 0.86), smoothstep(0.8, 0.93, nt));
+    diffuseColor.rgb = mix(diffuseColor.rgb, nailC, nail * 0.9);
     if (fzFw < 0.0009) { // knuckle wrinkles / creases / palm lines only resolve in close-ups
       float jw = js + fzNoise(rp * 700.0) * 0.00035;
-      float env = 1.0 - smoothstep(0.0008, 0.0032 + 0.0015 * uAge, abs(jw));
+      float env = 1.0 - smoothstep(0.0008, 0.0034 + 0.0016 * uAge, abs(jw));
       float dors2 = smoothstep(0.35, 0.9, side);
-      wr = sin(jw * 6.2831 / (0.0019 + 0.0004 * uAge)) * env * dors2 * (0.000018 + 0.00005 * uAge) * fzAA(0.0019, fzFw);
-      crease = (1.0 - smoothstep(0.0, 0.00055, abs(abs(js + 0.0004) - 0.0011))) * palm * (1.0 - isMcp) * 0.00009 * fzAA(0.0013, fzFw);
+      wr = sin(jw * 6.2831 / (0.0017 + 0.0004 * uAge)) * env * dors2 * (0.00004 + 0.00008 * uAge) * fzAA(0.0017, fzFw);
+      crease = (1.0 - smoothstep(0.0, 0.0006, abs(abs(js + 0.0004) - 0.0011))) * palm * (1.0 - isMcp) * 0.00011 * fzAA(0.0013, fzFw);
       if (palm > 0.01) {
         vec2 q = rp.zy;
         float pl = min(min(fzPalmLine(q, vec2(-0.034, -0.062), vec2(-0.005, -0.068), vec2(0.022, -0.080)),
@@ -226,7 +259,8 @@ export function skinMaterial(o = {}) {
   float saltA = 0.0, saltH = 0.0;
   if (uSalt > 0.01) { // dried salt: white patches (mid scale) + crystals (close)
     float saltM = clamp(vAux.y * uSalt, 0.0, 1.0);
-    float patchS = smoothstep(0.7, 0.86, fzNoise(rp * 260.0) * 0.5 + 0.5 + 0.12 * (saltM - 0.5)) * saltM;
+    // crust: fine irregular flakes that gather in the creases and between the knuckles (not confetti blobs)
+    float patchS = smoothstep(0.62, 0.8, fzNoise(rp * 520.0) * 0.35 + fzNoise(rp * 190.0) * 0.4 + 0.45 + 0.12 * (saltM - 0.5)) * saltM * 0.75;
     float speck = 0.0;
     if (fzFw < 0.0012) {
       vec3 g = rp * 900.0; vec3 c = floor(g); vec3 f = fract(g) - 0.5;
@@ -243,9 +277,16 @@ export function skinMaterial(o = {}) {
   float fine = 0.0;
   if (fzFw < 0.001) fine = fzNoise(rp * vec3(700.0, 300.0, 700.0)) * 0.00003 * (0.4 + uAge) * fzAA(0.002, fzFw);
   fzH = (pores + fine + wr - crease - palmLines) * uDetail * (1.0 - nail * 0.9) + saltH;
-  fzR = mix(1.0, 0.45, nail) * (1.0 + saltA * 0.5) * (1.0 + 0.08 * uAge);
+  if (nail > 0.01) fzH += nail * 0.000012 * sin(rp.z * 6.2831 / 0.0009 + rp.x * 900.0) * fzAA(0.0009, fzFw); // faint ridges
+  fzR = mix(1.0, 0.36, nail) * (1.0 + saltA * 0.5) * (1.0 + 0.08 * uAge) * (1.0 - 0.14 * tz) * (1.0 + 0.12 * palm);
   `;
-  install(mat, { uniforms: U, head, color, key: 'skin_' + (o.vertexColors ? 'v' : '') });
+  // warm terminator: red falls off more slowly than green / blue (pre-integrated-skin look); zero at N·L = 0, so it
+  // agrees with shadow maps (no glowing band past the shadow edge)
+  const diffuse = /* glsl */`
+	float fzNL = saturate( dot( geometryNormal, directLight.direction ) );
+	vec3 fzSkinNL = pow( vec3( fzNL ), vec3( 0.72, 0.93, 1.02 ) );
+	reflectedLight.directDiffuse += fzSkinNL * directLight.color * BRDF_Lambert( material.diffuseColor );`;
+  install(mat, { uniforms: U, head, color, diffuse, key: 'skin2_' + (o.vertexColors ? 'v' : '') });
   return mat;
 }
 
@@ -256,31 +297,57 @@ export function skinMaterial(o = {}) {
 export function hairMaterial(o = {}) {
   const base = col(o.color ?? 0x17120f);
   const mat = new THREE.MeshPhysicalMaterial({
-    // soft, broken highlight + fuzzy sheen rim: reads as a mass of hair, not a lacquered helmet
-    color: base, roughness: o.roughness ?? 0.62, metalness: 0,
-    sheen: 0.75, sheenRoughness: 0.55, sheenColor: base.clone().lerp(new THREE.Color(0.55, 0.47, 0.4), 0.45),
-    specularIntensity: 0.42, specularColor: new THREE.Color(0.85, 0.78, 0.7), envMapIntensity: 0.35,
+    // a soft mass of hair: broad broken highlight, fuzzy sheen rim, strand-grouped locks following the flow
+    color: base, roughness: o.roughness ?? 0.56, metalness: 0,
+    sheen: 0.65, sheenRoughness: 0.5, sheenColor: base.clone().lerp(new THREE.Color(0.62, 0.52, 0.44), 0.5),
+    specularIntensity: 0.4, specularColor: new THREE.Color(0.9, 0.82, 0.72), envMapIntensity: 0.3,
   });
   mat.name = 'hair';
-  const U = { uCrown: { value: new THREE.Vector3().fromArray(o.crown || [0, 1.7, -0.03]) }, uGrey: { value: o.grey ?? 0 } };
-  const head = 'uniform vec3 uCrown; uniform float uGrey;';
+  const v3 = (a, d) => new THREE.Vector3().fromArray(a || d);
+  const U = {
+    uCrown: { value: v3(o.crown, [0, 1.7, -0.03]) }, uGrey: { value: o.grey ?? 0 },
+    uFlowC: { value: v3(o.flowC, o.crown || [0, 1.7, -0.03]) }, uFlowA: { value: v3(o.flowA, [0, 1, 0]) },
+    uFlowE1: { value: v3(o.flowE1, [1, 0, 0]) }, uFlowE2: { value: v3(o.flowE2, [0, 0, 1]) }, uPulled: { value: o.pulled ? 1 : 0 },
+    uSkin: { value: col(o.skin ?? 0xc99a78) }, uHu: { value: o.hu ?? 0.22 },
+  };
+  const head = 'uniform vec3 uCrown, uFlowC, uFlowA, uFlowE1, uFlowE2, uSkin; uniform float uGrey, uPulled, uHu;';
   const color = /* glsl */`
-  vec3 rp = vRest - uCrown;
-  // strand coordinate: azimuth around the crown axis (scaled to arc length) + small warp
-  float r = length(rp.xz) + 1e-4;
-  float az = atan(rp.x, rp.z);
-  float warp = fzNoise(vRest * 18.0) * 0.6;
-  float sc = (az + warp * 0.05) * (0.08 + r * 0.6);
-  float n1 = fzNoise(vRest * 30.0);
-  float clump = sin(sc * 6.2831 / 0.006 + n1 * 1.5) * 0.0006 * fzAA(0.006, fzFw);
-  float strand = 0.0;
-  if (fzFw < 0.0006) strand = sin(sc * 6.2831 / 0.0011 + n1 * 6.0) * 0.00006 * fzAA(0.0011, fzFw);
-  fzH = clump + strand + n1 * 0.0008;
-  float g = uGrey > 0.0 ? smoothstep(0.4, 0.9, fract(sin(dot(floor(vec2(sc, vRest.y) * vec2(700.0, 40.0)), vec2(12.9898, 78.233))) * 43758.5453)) * uGrey : 0.0;
-  diffuseColor.rgb = mix(diffuseColor.rgb * (1.0 + 0.25 * n1), vec3(0.62, 0.6, 0.58), g);
-  fzR = 1.0 + 0.35 * n1;
+  vec3 v = vRest - uFlowC;
+  // cross-flow coordinate: angle around the flow axis (meridians converge on the gathering point / crown)
+  float phi = atan(dot(v, uFlowE2), dot(v, uFlowE1));
+  float rr = length(v - uFlowA * dot(v, uFlowA)) + 1e-4;
+  float alongF = dot(v, uFlowA);
+  float n1 = fzNoise(vRest * 18.0), n2 = n1 * 0.8 + 0.2 * sin(dot(vRest, vec3(31.0, 17.0, 23.0)));  // one noise (perf)
+  // locks: ~44 around the head, widths and positions varying, gently wavy along the strand
+  const float NL = 44.0;                       // locks around the full circle (integer: no seam at ±pi)
+  float q = phi * (NL / 6.2831853) + n2 * 0.9 + 0.35 * sin(alongF * 55.0 + n1 * 2.0);
+  float lockId = floor(q), fq = fract(q);
+  float lh = fzHash(vec3(lockId, 3.7, 1.3));
+  float prof = smoothstep(0.0, 0.5 + 0.2 * lh, fq) * smoothstep(1.0, 0.45 - 0.15 * lh, fq);
+  prof = mix(prof, 0.6, 0.35 * fract(lh * 7.31));                  // some locks merge (flatter)
+  float lockP = 6.2831853 / NL * rr;         // lock width in metres at this radius
+  float aaL = fzAA(lockP, fzFw);
+  float lockH = (prof - 0.5) * 0.00055 * aaL;
+  // fine strands inside each lock (only when resolvable)
+  float sq = q * 9.0 + n1 * 2.5;
+  float strand = sin(sq * 6.2831) * 0.00007 * fzAA(lockP / 9.0, fzFw);
+  fzH = lockH + strand + n1 * 0.0005;
+  // tone: lock-to-lock variation, darker in the partings between locks (approx. occlusion), lighter crowns
+  float tone = (0.9 + 0.2 * lh) * mix(1.0, 0.82 + 0.26 * prof, aaL);
+  vec3 hc = diffuseColor.rgb * tone * (1.0 + 0.12 * n1);
+  // grey: per-strand mix, averaged where strands are not resolvable (no stripes)
+  if (uGrey > 0.0) {
+    float gs = step(1.0 - uGrey * 0.85, fzHash(vec3(floor(sq), lockId, 7.0)));
+    float g = mix(uGrey * 0.85, gs, fzAA(lockP / 9.0, fzFw) * 0.8);
+    hc = mix(hc, vec3(0.6, 0.585, 0.565) * (0.9 + 0.2 * lh), clamp(g, 0.0, 1.0));
+  }
+  // soft hairline: strands thin out over the skin (aux.w = 0 at the edge)
+  float edge = smoothstep(0.05, 0.75, vAux.w + (n1 * 0.25 + (fq - 0.5) * 0.35) * (1.0 - vAux.w));
+  diffuseColor.rgb = mix(uSkin * 0.85, hc, edge);
+  fzH *= edge;
+  fzR = mix(1.3, 1.08 + 0.3 * n1, edge);
   `;
-  install(mat, { uniforms: U, head, color, key: 'hair' });
+  install(mat, { uniforms: U, head, color, key: 'hair2' });
   return mat;
 }
 

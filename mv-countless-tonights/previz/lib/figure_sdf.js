@@ -170,6 +170,78 @@ export class Ribbon {
   }
 }
 
+// Loft: a trunk-like solid through elliptical cross-sections stacked along Y (bind space, world-aligned).
+// keys: [{y, a (half-width x), bf (front half-depth, +z), bb (back half-depth), c (z of the section centre)}] sorted by y
+// (metres). The section is interpolated with a monotone cubic, sampled every ~2 mm; front and back halves are separate
+// half-ellipses sharing the width (C1 at the sides). The distance is slope-corrected so it stays ≈ Lipschitz-1 for the
+// narrow-band mesher. y0 / y1 clip the solid (flat caps; overlapping segments of one loft union seamlessly).
+export function loftTable(keys, dy = 0.004) {
+  const n = keys.length, Y = keys.map((k) => k.y);
+  const fields = ['a', 'bf', 'bb', 'c'];
+  // natural cubic spline per field (C2: no curvature jumps at the keys -> no Mach bands in raking light)
+  const T = { n, Y, V: {}, M: {} };
+  for (const f of fields) {
+    const v = keys.map((k) => k[f]);
+    const M = new Float64Array(n); // second derivatives
+    if (n > 2) {
+      const a = new Float64Array(n), b = new Float64Array(n), c = new Float64Array(n), d = new Float64Array(n);
+      for (let i = 1; i < n - 1; i++) {
+        const h0 = Y[i] - Y[i - 1], h1 = Y[i + 1] - Y[i];
+        a[i] = h0; b[i] = 2 * (h0 + h1); c[i] = h1; d[i] = 6 * ((v[i + 1] - v[i]) / h1 - (v[i] - v[i - 1]) / h0);
+      }
+      for (let i = 2; i < n - 1; i++) { const m = a[i] / b[i - 1]; b[i] -= m * c[i - 1]; d[i] -= m * d[i - 1]; } // Thomas
+      for (let i = n - 2; i >= 1; i--) M[i] = (d[i] - (i < n - 2 ? c[i] * M[i + 1] : 0)) / b[i];
+    }
+    T.V[f] = Float64Array.from(v); T.M[f] = M;
+  }
+  T.yMin = Y[0]; T.yMax = Y[n - 1];
+  const N = Math.max(2, Math.ceil((T.yMax - T.yMin) / dy) + 1); T.step = (T.yMax - T.yMin) / (N - 1); T.N = N;
+  T.seg = new Int16Array(N); let sgi = 0;
+  for (let j = 0; j < N; j++) { const y = T.yMin + j * T.step; while (sgi < n - 2 && y >= Y[sgi + 1]) sgi++; T.seg[j] = sgi; }
+  let ma = 0, mb = 0, mc = 0;
+  for (let j = 0; j < N; j++) { const q = loftAt(T, T.yMin + j * T.step); ma = Math.max(ma, q[0]); mb = Math.max(mb, q[1], q[2]); mc += q[3] / N; }
+  T.maxA = ma; T.maxB = mb; T.midC = mc;
+  return T;
+}
+const _lq = new Float64Array(8);
+// evaluate all four fields and their y-derivatives at y -> out [a, bf, bb, c, da, dbf, dbb, dc]
+function loftEval(T, y, out = _lq) {
+  const yc = Math.min(T.yMax, Math.max(T.yMin, y));
+  let i = T.seg[Math.min(T.N - 1, Math.max(0, Math.floor((yc - T.yMin) / T.step)))];
+  const Y = T.Y;
+  while (i < T.n - 2 && yc > Y[i + 1]) i++;
+  while (i > 0 && yc < Y[i]) i--;
+  const h = Y[i + 1] - Y[i], A = (Y[i + 1] - yc) / h, B = 1 - A;
+  const inside = y === yc ? 1 : 0;
+  let k = 0;
+  for (const f of ['a', 'bf', 'bb', 'c']) {
+    const V = T.V[f], M = T.M[f];
+    out[k] = A * V[i] + B * V[i + 1] + ((A * A * A - A) * M[i] + (B * B * B - B) * M[i + 1]) * h * h / 6;
+    out[k + 4] = inside * ((V[i + 1] - V[i]) / h - (3 * A * A - 1) / 6 * h * M[i] + (3 * B * B - 1) / 6 * h * M[i + 1]);
+    k++;
+  }
+  return out;
+}
+// sample the loft at height y -> [a, bf, bb, c]
+export function loftAt(T, y) { const q = loftEval(T, y, new Float64Array(8)); return [q[0], q[1], q[2], q[3]]; }
+export function loftDist(T, x, y, z, grow = 0) {
+  const q = loftEval(T, y);
+  const a = q[0] + grow, c = q[3];
+  const dz = z - c, front = dz >= 0;
+  const b = (front ? q[1] : q[2]) + grow;
+  const qx = x / a, qz = dz / b;
+  const k0 = Math.sqrt(qx * qx + qz * qz), k1 = Math.sqrt((qx / a) * (qx / a) + (qz / b) * (qz / b));
+  // (no slope correction: its derivative is not continuous across keys — normals kinked into horizontal bands; the plain
+  // section distance overestimates by 1/cos(slope) ≤ ~1.15 on a trunk, inside the mesher's Lipschitz margin)
+  return k1 < 1e-12 ? -Math.min(a, b) : k0 * (k0 - 1) / k1;
+}
+export function loftPrim(T, y0, y1) {
+  const ya = Math.max(y0, T.yMin), yb = Math.min(y1, T.yMax);
+  const fn = (x, y, z) => Math.max(loftDist(T, x, y, z), ya - y, y - yb);
+  const hh = (yb - ya) / 2;
+  return new Prim('fn', { fn, br: Math.hypot(T.maxA, T.maxB + 0.02, hh) + 0.01, lc: [0, (ya + yb) / 2, T.midC] });
+}
+
 // polynomial smooth min / max
 export function smin(a, b, k) {
   if (k <= 0) return a < b ? a : b;
@@ -185,12 +257,13 @@ export function smax(a, b, k) { return -smin(-a, -b, k); }
 // ---------------------------------------------------------------------------------------------
 export class Field {
   constructor(items = []) { this.items = items.slice(); this.disp = null; this.grow = 0; }
-  add(p, o = {}) { this.items.push({ p, op: o.op || 'u', k: o.k ?? 0.01, bone: o.bone ?? -1, tag: o.tag || '', grow: o.grow || 0, w: o.w ?? 1 }); return this; }
+  add(p, o = {}) { this.items.push({ p, op: o.op || 'u', k: o.k ?? 0.01, bone: o.bone ?? -1, tag: o.tag || '', grow: o.grow || 0, w: o.w ?? 1, keepK: !!o.keepK }); return this; }
   sub(p, o = {}) { return this.add(p, { ...o, op: 's' }); }
   int(p, o = {}) { return this.add(p, { ...o, op: 'i' }); }
   // derive a new field from a subset of items, with extra growth and a new blend radius
   derive(filter, { grow = 0, k = null, kMul = 1, kAdd = 0 } = {}) {
-    const f = new Field(this.items.filter(filter).map((it) => ({ ...it, grow: (it.grow || 0) + (typeof grow === 'function' ? grow(it) : grow), k: k ?? (it.k * kMul + kAdd) })));
+    // keepK items (segments of one loft) keep their hard union: blending identical overlapping segments would bulge
+    const f = new Field(this.items.filter(filter).map((it) => ({ ...it, grow: (it.grow || 0) + (typeof grow === 'function' ? grow(it) : grow), k: it.keepK ? it.k : (k ?? (it.k * kMul + kAdd)) })));
     return f;
   }
   // Spatial acceleration: per-block candidate lists of primitives (exact for union semantics
@@ -492,6 +565,54 @@ export function snapBoundary(m, fa, fb, iters = 6, h = 0.005) {
   return { boundary: be, verts };
 }
 
+// Smooth open boundaries (hems, cuffs, necklines) into clean curves: 1-D Laplacian along each boundary loop, then
+// re-snap onto the crease between surface fa and cut fb; the first interior ring is relaxed and re-projected onto fa so
+// no slivers / fold-overs remain next to the edge (a surface-nets cut otherwise zigzags along the crease).
+export function smoothBoundary(m, fa, fb, { iters = 4, h = 0.005 } = {}) {
+  const be = boundaryEdges(m.idx);
+  if (!be.length) return m;
+  const nb = new Map();
+  const link = (a, b) => { let l = nb.get(a); if (!l) nb.set(a, (l = [])); if (!l.includes(b)) l.push(b); };
+  for (const [a, b] of be) { link(a, b); link(b, a); }
+  const P = m.pos;
+  const e = h * 0.2;
+  const grad = (f, x, y, z) => { const gx = f(x + e, y, z) - f(x - e, y, z), gy = f(x, y + e, z) - f(x, y - e, z), gz = f(x, y, z + e) - f(x, y, z - e); const l = Math.hypot(gx, gy, gz) || 1; return [gx / l, gy / l, gz / l, l / (2 * e)]; };
+  const snap = (v, fs) => {
+    let x = P[v * 3], y = P[v * 3 + 1], z = P[v * 3 + 2];
+    for (let it = 0; it < 4; it++) for (const f of fs) { const d = f(x, y, z), g = grad(f, x, y, z), st = Math.max(-h, Math.min(h, d / Math.max(g[3], 0.3))); x -= g[0] * st; y -= g[1] * st; z -= g[2] * st; }
+    P[v * 3] = x; P[v * 3 + 1] = y; P[v * 3 + 2] = z;
+  };
+  const verts = [...nb.keys()].filter((v) => nb.get(v).length === 2);
+  const tmp = new Float64Array(verts.length * 3), orig = new Float64Array(verts.length * 3);
+  verts.forEach((v, i) => { for (let k = 0; k < 3; k++) orig[i * 3 + k] = P[v * 3 + k]; });
+  for (let it = 0; it < iters; it++) {
+    verts.forEach((v, i) => { const [a, b] = nb.get(v); for (let k = 0; k < 3; k++) tmp[i * 3 + k] = P[v * 3 + k] * 0.5 + (P[a * 3 + k] + P[b * 3 + k]) * 0.25; });
+    verts.forEach((v, i) => { for (let k = 0; k < 3; k++) P[v * 3 + k] = tmp[i * 3 + k]; snap(v, [fb, fa]); });
+  }
+  // safety: a vertex that drifted (snap not converging near a corner of the cut) goes back where it was
+  verts.forEach((v, i) => {
+    const x = P[v * 3], y = P[v * 3 + 1], z = P[v * 3 + 2];
+    const moved = Math.hypot(x - orig[i * 3], y - orig[i * 3 + 1], z - orig[i * 3 + 2]);
+    if (moved > 0.8 * h || Math.abs(fa(x, y, z)) > 0.3 * h || Math.abs(fb(x, y, z)) > 0.3 * h) for (let k = 0; k < 3; k++) P[v * 3 + k] = orig[i * 3 + k];
+  });
+  // first interior ring
+  const isB = new Uint8Array(P.length / 3); for (const v of nb.keys()) isB[v] = 1;
+  const ring = new Map();
+  for (let f = 0; f < m.idx.length; f += 3) {
+    const t = [m.idx[f], m.idx[f + 1], m.idx[f + 2]];
+    if (!(isB[t[0]] || isB[t[1]] || isB[t[2]])) continue;
+    for (const v of t) if (!isB[v]) { let l = ring.get(v); if (!l) ring.set(v, (l = new Set())); for (const w of t) if (w !== v) l.add(w); }
+  }
+  for (let it = 0; it < 2; it++) for (const [v, l] of ring) {
+    const ox = P[v * 3], oy = P[v * 3 + 1], oz = P[v * 3 + 2];
+    let sx = 0, sy = 0, sz = 0; for (const w of l) { sx += P[w * 3]; sy += P[w * 3 + 1]; sz += P[w * 3 + 2]; }
+    const n = l.size; P[v * 3] += 0.4 * (sx / n - P[v * 3]); P[v * 3 + 1] += 0.4 * (sy / n - P[v * 3 + 1]); P[v * 3 + 2] += 0.4 * (sz / n - P[v * 3 + 2]);
+    snap(v, [fa]);
+    if (Math.hypot(P[v * 3] - ox, P[v * 3 + 1] - oy, P[v * 3 + 2] - oz) > 0.6 * h || fb(P[v * 3], P[v * 3 + 1], P[v * 3 + 2]) > 0.2 * h) { P[v * 3] = ox; P[v * 3 + 1] = oy; P[v * 3 + 2] = oz; }
+  }
+  return m;
+}
+
 // Laplacian smoothing of positions for a subset (or all) vertices, keeping them on the surface
 export function relax(m, iters = 1, lambda = 0.5, onlyVerts = null) {
   const nv = m.pos.length / 3;
@@ -642,7 +763,7 @@ export function vnoise3(x, y, z, seed = 0) {
 // m: {pos, nrm, idx, ...per-vertex arrays}; returns a new compacted record.
 // opts: maxError (m, geometric deviation bound), ratio (target face fraction), minNormalDot.
 // ---------------------------------------------------------------------------------------------
-export function decimate(m, { maxError = 0.0008, ratio = 0.3, minNormalDot = 0.35, attr = null, attrTol = null } = {}) {
+export function decimate(m, { maxError = 0.0008, ratio = 0.3, minNormalDot = 0.35, attr = null, attrTol = null, lock = null } = {}) {
   const nv = m.pos.length / 3, nf0 = m.idx.length / 3;
   if (nf0 < 200) return m;
   const P = m.pos, F = new Int32Array(m.idx);
@@ -673,6 +794,7 @@ export function decimate(m, { maxError = 0.0008, ratio = 0.3, minNormalDot = 0.3
   for (let v = 0; v < nv; v++) if (areaSum[v] > 0) for (let i = 0; i < 10; i++) Q[v * 10 + i] /= areaSum[v] / Math.max(1, vf[v].length);
   const locked = new Uint8Array(nv);
   for (const [a, b] of boundaryEdges(m.idx)) { locked[a] = 1; locked[b] = 1; }
+  if (lock) for (let v = 0; v < nv; v++) if (lock(P[v * 3], P[v * 3 + 1], P[v * 3 + 2])) locked[v] = 1; // keep exact (e.g. overlap zones)
   const alive = new Uint8Array(nf0).fill(1);
   const removed = new Uint8Array(nv);
   const stamp = new Uint32Array(nv);

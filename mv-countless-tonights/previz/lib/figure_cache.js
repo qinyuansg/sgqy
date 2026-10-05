@@ -111,7 +111,9 @@ export function deserializeHand(buf) {
 }
 
 // ---- browser loading ---------------------------------------------------------------------------
-const BASE = '/previz/lib/cache/';
+// module-relative (a copy of the library in another folder uses its own cache next to it)
+const LIBDIR = new URL('./', import.meta.url).href;
+const BASE = LIBDIR + 'cache/';
 // the cache is only valid for the exact library sources it was baked from
 export const SOURCE_FILES = ['figure.js', 'figure_garments.js', 'figure_sdf.js', 'hand.js', 'cast.js'];
 export function sourceHash(texts) { return hashKey(texts.join('\n/*--*/\n')); }
@@ -123,7 +125,7 @@ export async function cacheIndex() {
     const r = await fetch(BASE + 'index.json');
     INDEX = r.ok ? await r.json() : empty;
     if (INDEX !== empty) {
-      const texts = await Promise.all(SOURCE_FILES.map((f) => fetch('/previz/lib/' + f).then((x) => x.text())));
+      const texts = await Promise.all(SOURCE_FILES.map((f) => fetch(LIBDIR + f).then((x) => x.text())));
       const h = sourceHash(texts);
       if (INDEX.src !== h) { console.warn(`figure cache is stale (baked ${INDEX.src}, sources ${h}) - building live; run: node previz/tools/bake_cast.mjs`); INDEX = empty; }
     }
