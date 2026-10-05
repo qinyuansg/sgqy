@@ -176,19 +176,22 @@ function bodyField(P, BW, bi, o) {
   const hd = (type, oo, opt) => add('head', type, oo, { tag: 'head', ...opt });
   const jaw = lerp(1, 0.86, fem), brow = lerp(1, 0.7, fem), nose = lerp(1, 0.86, fem), kid = ch;
   const fs = lerp(1, 0.86, kid); // children: smaller face under a larger cranium
-  hd('ellipsoid', { c: U([0, 0.44, -0.06]), r: U([0.35 * lerp(1, 0.97, fem), 0.40, 0.44]) }, { k: 0.06 * hu });            // cranium
-  hd('ellipsoid', { c: U([0, 0.16 * fs + 0.04 * kid, 0.12]), r: U([0.262 * jaw, 0.34 * fs, 0.31 * fs]) }, { k: 0.10 * hu }); // face egg
-  hd('ellipsoid', { c: U([0, -0.085 * fs + 0.05 * kid, 0.30 * fs]), r: U([0.10 * jaw, 0.08, 0.09]) }, { k: 0.08 * hu });     // chin
+  // Proportions (art-directed): eye line at mid-head, equal brow→nose-base / nose-base→chin thirds, soft planes rather
+  // than bulging features — a calm carved-wood mannequin face that reads young or old from silhouette and planes only.
+  hd('ellipsoid', { c: U([0, 0.44, -0.06]), r: U([0.35 * lerp(1, 0.96, fem), 0.40, 0.44]) }, { k: 0.06 * hu });            // cranium
+  hd('ellipsoid', { c: U([0, 0.17 * fs + 0.04 * kid, 0.11]), r: U([0.255 * jaw, 0.325 * fs, 0.30 * fs]) }, { k: 0.10 * hu }); // face egg
+  hd('ellipsoid', { c: U([0, -0.075 * fs + 0.05 * kid, 0.255 * fs]), r: U([0.095 * jaw, 0.075, 0.085]) }, { k: 0.09 * hu });   // chin
   for (const sg of [1, -1]) {
-    hd('sphere', { c: U([sg * 0.205 * jaw, 0.03 + 0.04 * kid, 0.03]), r: 0.075 * hu * jaw }, { k: 0.12 * hu });               // jaw angle
-    hd('ellipsoid', { c: U([sg * 0.175, 0.27 * fs + 0.04 * kid, 0.27 * fs]), r: U([0.07, 0.05, 0.07]) }, { k: 0.12 * hu });  // cheekbone plane
+    hd('sphere', { c: U([sg * 0.19 * jaw, 0.03 + 0.04 * kid, 0.02]), r: 0.07 * hu * jaw }, { k: 0.12 * hu });                  // jaw angle
+    hd('ellipsoid', { c: U([sg * 0.165, 0.255 * fs + 0.04 * kid, 0.255 * fs]), r: U([0.06, 0.042, 0.055]) }, { k: 0.1 * hu }); // cheekbone plane
     hd('ellipsoid', { c: U([sg * 0.343, 0.29, -0.03]), rot: [0, sg * 0.35, 0], r: U([0.03, 0.112, 0.07]) }, { k: 0.03 * hu }); // ear
   }
-  hd('cone', { a: U([-0.16, 0.42 * fs + 0.05 * kid, 0.365 * fs]), b: U([0.16, 0.42 * fs + 0.05 * kid, 0.365 * fs]), r1: 0.042 * hu * brow, r2: 0.042 * hu * brow }, { k: 0.1 * hu }); // brow
-  hd('cone', { a: U([0, 0.36 * fs + 0.05 * kid, 0.41 * fs]), b: U([0, 0.235 * fs + 0.05 * kid, 0.485 * fs * nose + 0.43 * (1 - nose)]), r1: 0.025 * hu, r2: 0.039 * hu * nose }, { k: 0.035 * hu }); // nose
-  hd('ellipsoid', { c: U([0, 0.215 * fs + 0.05 * kid, 0.44 * fs]), r: U([0.072 * nose, 0.034, 0.04]) }, { k: 0.03 * hu });  // nose wings
-  hd('ellipsoid', { c: U([0, 0.085 * fs + 0.05 * kid, 0.33 * fs]), r: U([0.11, 0.065, 0.065]) }, { k: 0.1 * hu });           // soft mouth plane
-  for (const sg of [1, -1]) f.sub(prim('ellipsoid', { frame: F('head'), c: U([sg * 0.125, 0.33 * fs + 0.05 * kid, 0.445 * fs]), r: U([0.065, 0.03, 0.025]) }), { k: 0.08 * hu, bone: bi.head, tag: 'head' }); // faint eye planes
+  hd('cone', { a: U([-0.13, 0.395 * fs + 0.05 * kid, 0.36 * fs]), b: U([0.13, 0.395 * fs + 0.05 * kid, 0.36 * fs]), r1: 0.03 * hu * brow, r2: 0.03 * hu * brow }, { k: 0.12 * hu }); // brow plane
+  // nose: a broad soft wedge (not a blade — a thin ridge casts a slit-like shadow under a high key)
+  hd('cone', { a: U([0, 0.35 * fs + 0.05 * kid, 0.40 * fs]), b: U([0, 0.18 * fs + 0.05 * kid, 0.455 * fs * nose + 0.41 * (1 - nose)]), r1: 0.03 * hu, r2: 0.042 * hu * nose, s: [1.25, 1, 1] }, { k: 0.06 * hu }); // nose
+  hd('ellipsoid', { c: U([0, 0.165 * fs + 0.05 * kid, 0.41 * fs]), r: U([0.08 * nose, 0.035, 0.04]) }, { k: 0.05 * hu });  // nose wings
+  hd('ellipsoid', { c: U([0, 0.06 * fs + 0.05 * kid, 0.335 * fs]), r: U([0.1, 0.055, 0.05]) }, { k: 0.1 * hu });             // soft mouth plane
+  for (const sg of [1, -1]) f.sub(prim('ellipsoid', { frame: F('head'), c: U([sg * 0.12, 0.325 * fs + 0.05 * kid, 0.44 * fs]), r: U([0.062, 0.03, 0.018]) }), { k: 0.09 * hu, bone: bi.head, tag: 'head' }); // faint eye planes
   // ---- arms
   for (const [s, sg] of [['L', 1], ['R', -1]]) {
     const up = `arm${s}.upper`, lo = `arm${s}.lower`, hn = `arm${s}.hand`;
@@ -245,6 +248,8 @@ export function makeFigure(o = {}) {
 }
 
 export class Figure {
+  // same name as the environment kit's helpers ({ object3D, update }) — fig.object3D === fig.root
+  get object3D() { return this.root; }
   constructor(o) {
     this.opts = o;
     const P = this.P = dims(o);
@@ -327,6 +332,20 @@ export class Figure {
         (this.handKeys = this.handKeys || []).push(h.cacheKey);
       }
     }
+    // garments with a skirt part (hem below the crotch): rendered two-sided while the thighs are raised (seated, kneeling)
+    // so panels that skinning folds over show their (darker) inside instead of see-through holes; single-sided otherwise
+    // (two-sided cloth costs ≈ +0.3 s per close-up figure). Override with fig.setTwoSided(true|false|null=auto).
+    const HEMF = { waist: 0.60, hip: 0.47, thigh: 0.40, knee: 0.295, below_knee: 0.25, calf: 0.19, ankle: 0.065, floor: 0.035 };
+    this._foldMats = [];
+    for (const sp of o.costume || []) {
+      const hf = typeof sp.length === 'number' ? sp.length : HEMF[sp.length] ?? (['coat', 'robe', 'lab_coat', 'dress', 'cheongsam', 'skirt'].includes(sp.type) ? 0.3 : 0.47);
+      const longType = ['skirt', 'dress', 'cheongsam', 'robe', 'coat', 'lab_coat', 'side_jacket', 'apron'].includes(sp.type);
+      if (sp.type === 'shoes' || sp.type === 'trousers' || sp.type === 'sash' || sp.type === 'belt') continue;
+      if (!(longType || hf <= 0.45)) continue;
+      const name = sp.name; if (!name) continue;
+      for (const [k, m] of Object.entries(this.materials)) if ((k === name || k.startsWith(name + '.')) && m && m.isMaterial && m.side === THREE.FrontSide) this._foldMats.push(m);
+    }
+    this._twoSided = null;
     // ---- state
     this.ch = {};
     this.pose('stand');
@@ -365,12 +384,12 @@ export class Figure {
       for (const geo of [built[i].geo, ...(built[i].extras || []).map((e) => e.geo)]) {
         const pa = geo.attributes.position.array, ix = geo.index.array;
         const keep = [];
+        // a face is dropped only when ALL its corners are well inside an outer layer: culling on the centroid left a
+        // saw-tooth edge that showed through openings (V-necks, lapels, cuffs)
+        const deep = (o) => { for (const cv of outer) if (cv(pa[o], pa[o + 1], pa[o + 2]) < -0.009) return true; return false; };
         for (let f = 0; f < ix.length; f += 3) {
           const a = ix[f] * 3, b = ix[f + 1] * 3, c = ix[f + 2] * 3;
-          const x = (pa[a] + pa[b] + pa[c]) / 3, y = (pa[a + 1] + pa[b + 1] + pa[c + 1]) / 3, z = (pa[a + 2] + pa[b + 2] + pa[c + 2]) / 3;
-          let hidden = false;
-          for (const cv of outer) if (cv(x, y, z) < -0.0055) { hidden = true; break; }
-          if (!hidden) keep.push(ix[f], ix[f + 1], ix[f + 2]);
+          if (!(deep(a) && deep(b) && deep(c))) keep.push(ix[f], ix[f + 1], ix[f + 2]);
         }
         geo.setIndex(new THREE.BufferAttribute(new Uint32Array(keep), 1));
       }
@@ -450,7 +469,10 @@ export class Figure {
       if (k === 'handL' || k === 'handR' || k === 'ik' || k === 'look') { this.ch[k] = v; continue; }
       this.ch[k] = (params.add ? (this.ch[k] || 0) : 0) + v;
     }
-    this._applyChannels(this._expand(this.ch));
+    const E = this._expand(this.ch);
+    this._applyChannels(E);
+    this._flex = Math.max(E['legL.upper']?.x || 0, E['legR.upper']?.x || 0);
+    this._updateFold();
     // hands
     for (const s of ['L', 'R']) {
       const h = this.hands[s]; if (!h) continue;
@@ -463,6 +485,13 @@ export class Figure {
     if (this.ch.ik) for (const [s, t] of Object.entries(this.ch.ik)) this.reach(s, this.root.localToWorld(new THREE.Vector3().fromArray(t.target)), { ...t, pole: t.pole ? new THREE.Vector3().fromArray(t.pole).transformDirection(this.root.matrixWorld) : undefined, palm: t.palm ? new THREE.Vector3().fromArray(t.palm).transformDirection(this.root.matrixWorld) : undefined, fingers: t.fingers ? new THREE.Vector3().fromArray(t.fingers).transformDirection(this.root.matrixWorld) : undefined });
     if (this.ch.look) this.lookAt(this.root.localToWorld(new THREE.Vector3().fromArray(this.ch.look)));
     return this;
+  }
+  setTwoSided(on = null) { this._twoSided = on; this._updateFold(); return this; }
+  _updateFold() {
+    if (!this._foldMats || !this._foldMats.length) return;
+    const two = this._twoSided ?? (this._flex || 0) > 0.6;
+    const side = two ? THREE.DoubleSide : THREE.FrontSide;
+    for (const m of this._foldMats) if (m.side !== side) m.side = side;
   }
   // blend two channel dicts (numbers lerp; hand channels blend via hand.js)
   static blend(a, b, t) {

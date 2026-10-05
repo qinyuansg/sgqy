@@ -399,6 +399,7 @@ export function makeHand(o = {}) {
 
 // ------------------------------------------------------------------------------------------
 class Hand {
+  get object3D() { return this.root; } // alias, like the environment kit's helpers
   constructor(o, D, R, G, side, glove, salt) {
     this.side = side; this.dims = D; this.opts = o;
     this.mir = side === 'R' ? -1 : 1;

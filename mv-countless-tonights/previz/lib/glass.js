@@ -85,7 +85,9 @@ float wipeMask(vec2 p){
     nested = nc * uNStr * soft * inb * mk * mix(1.0, 0.35 + 1.6 * fres, uNFres);
   }
   float edgeA = (1.0 - smoothstep(0.0, uEdgeW, e)) * uEdge;
-  vec3 col = outgoingLight * uReflect + nested + uHazeCol * (haze + dust * 2.0) * uHazeLevel + uEdgeTint * edgeA * uHazeLevel * (1.0 + 4.0 * fres);
+  // pane borders: the 6 mm edge of low-iron glass reads as a faint green-grey line (light trapped in the sheet) — enough
+  // for an empty case to read in a dark gallery without becoming a drawn outline
+  vec3 col = outgoingLight * uReflect + nested + uHazeCol * (haze + dust * 2.0) * uHazeLevel + uEdgeTint * edgeA * (uHazeLevel + 0.02) * (1.0 + 4.0 * fres);
   float alpha = clamp(uAbsorb + haze * 0.08 + dust * 0.15 + edgeA * 0.55, 0.0, 1.0);
   gl_FragColor = vec4(col, alpha);
 `);
@@ -143,7 +145,7 @@ export function vitrine(o = {}) {
     // frameless hood: thin green-tinted glass edges (6 mm low-iron) + a dark seating channel on the plinth
     // (no emissive: a self-lit green edge reads as neon wire in a dark gallery; the edge is a dark green-black strip that
     // only brightens where it catches a real reflection)
-    const edgeM = new THREE.MeshStandardMaterial({ color: 0x0c1412, roughness: 0.08, metalness: 0.0, envMapIntensity: 1.6, transparent: true, opacity: 0.55, depthWrite: false });
+    const edgeM = new THREE.MeshStandardMaterial({ color: 0x16211e, roughness: 0.08, metalness: 0.0, envMapIntensity: 2.4, transparent: true, opacity: 0.65, depthWrite: false });
     const e = 0.005;
     for (const sx of [-1, 1]) for (const sz of [-1, 1]) { const b = new THREE.Mesh(new THREE.BoxGeometry(e, p.h, e), edgeM); b.position.set(sx * p.w / 2, (y0 + y1) / 2, sz * p.d / 2); grp.add(b); }
     for (const sz of [-1, 1]) { const b = new THREE.Mesh(new THREE.BoxGeometry(p.w, e, e), edgeM); b.position.set(0, y1, sz * p.d / 2); grp.add(b); }

@@ -46,7 +46,7 @@ export default async function create(ctx) {
 * `setShot` must be a **pure function of its inputs** (no accumulated state, no `Math.random`, no
   `Date`) — frames are rendered out of order and in parallel processes. Use `ctx.util.rng(seed)`,
   `noise1`, `fbm1`, `flicker(T)`.
-* Return per-shot post overrides: `dof:{focus (m), fstop}`, `exposure`, `temp` (+warm/−cool),
+* Return per-shot post overrides: `dof:{focus (m), fstop}`, `aa` ('fxaa'|'msaa'|'none'), `exposure`, `temp` (+warm/−cool),
   `tint`, `saturation`, `contrast`, `lift/gamma/gain` (rgb arrays), `shadowTint/highTint`,
   `vignette`, `grain`, `bloom:{strength,radius,threshold}`, `fade`.
 * Nested renders: `ctx.renderNested(key, viewName, tl, u, T, rt)` renders module `key`'s view into a
@@ -71,6 +71,18 @@ export default async function create(ctx) {
   ≤ 2 shadow-casting lights, shadow maps ≤ 2048, nested RTs ≤ 960 px wide, instancing for crowds,
   no per-frame geometry rebuilds (animate transforms/uniforms only). Build heavy things once.
 * No text, logos, real flags or insignia in picture.
+* Half-res additive layer: unlit, additive, soft objects (volumetric shafts, light cones) can be drawn at half resolution
+  with `obj.layers.set(LOWRES_LAYER)` (`import { LOWRES_LAYER } from '../engine/post.js'`; `FX.windowShaft` / `FX.beamCone`
+  do it by default). They are depth-tested against the scene and added back before bloom; lights are not visible to that
+  pass, so never put lit materials there. Nested renders draw that layer inline.
+* Anti-aliasing is per shot: `post.aa` = `'fxaa'` (default) | `'msaa'` | `'none'`. FXAA runs in the grade pass and is
+  nearly indistinguishable at 1280 px under grain; 4× MSAA keeps sub-pixel lines crisper (rain, distant glazing bars,
+  hair strands, glass edges) but SwiftShader's multisampled rasterisation is expensive: ≈0.13 s fixed, ≈+0.35 s per
+  close-up hi figure, +1.8 s for a 12-figure lineup. Use `aa:'msaa'` only for line-critical hero shots without figures.
+  `?aa=msaa|fxaa|none` in the page URL (`tools/bench.mjs --q aa=msaa`) forces one mode for A/B tests.
+* Cost reference (this machine): engine fixed cost ≈ 0.25–0.3 s per frame with FXAA (bloom ≈ 0.1 s of it), DOF ≈ +0.15 s
+  (half-res gather). `render.mjs` prints a `timing:` line (first frame incl. scene build, then mean s/frame) at the end of
+  every run.
 
 ## Testing your module
 

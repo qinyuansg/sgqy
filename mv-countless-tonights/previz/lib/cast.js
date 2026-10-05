@@ -96,10 +96,11 @@ export function castSpec(code, o = {}) {
       hair: { style: 'short', color: k('hair'), grey: 0.55, thickness: 0.04, hairline: 0.66 },
       hands: { age: 0.8 },
       costume: [
-        { type: 'shirt', name: 'shirt', color: k('shirt'), fabric: 'cotton', collar: 'shirt', ease: 0.008, length: 'hip' },
+        // shirt tucked in (layered under the trousers) so no white shirt-tail shows below the jacket front
+        { type: 'shirt', name: 'shirt', color: k('shirt'), fabric: 'cotton', collar: 'shirt', ease: 0.008, length: 'hip', layer: -0.5 },
         { type: 'trousers', name: 'trousers', color: k('trousers'), fabric: 'serge', ease: 0.01, wide: 0.02 },
         { type: 'shoes', name: 'shoes', shoe: 'leather', color: k('shoes') },
-        { type: 'jacket', name: 'jacket', color: k('jacket'), fabric: 'serge', ease: 0.017, collar: 'lapel', vDepth: 0.22, buttons: 3, buttonColor: k('buttons'), length: 'hip' },
+        { type: 'jacket', name: 'jacket', color: k('jacket'), fabric: 'serge', ease: 0.017, collar: 'lapel', vDepth: 0.22, buttons: 3, buttonColor: k('buttons'), length: 0.44 },
       ],
       accessories: ['glasses_cord', 'badge', 'flashlight'],
     };

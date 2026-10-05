@@ -163,8 +163,16 @@ function clothWeights(ctx, pos, { skirt = false, tau = 0.016 } = {}) {
     let tot = 0; for (const b of used) tot += acc[b];
     for (const b of used) acc[b] = 0;
     used.length = 0;
-    const legShare = sstep(crotch + 0.09 * P.H / 1.7, crotch - 0.03 * P.H / 1.7, y);
-    const shinShare = 0.85 * sstep(knee + 0.02 * P.H / 1.7, knee - 0.12 * P.H / 1.7, y);
+    // front panel follows the thighs, the back panel mostly stays with the pelvis (it is sat upon): without this a seated
+    // skirt rotates forward as a rigid tube — the back swings up through the seat and the open hem faces the camera.
+    // "front" from the ANGLE around the pelvis axis, not raw z: nested layers (knit under coat) then get identical weights
+    // at the same bearing and stay nested when posed (a z threshold gave inner layers less leg share → poke-through)
+    const sc = P.H / 1.7, zr = z - R.hips.z;
+    const front = sstep(-0.35, 0.5, zr / (Math.hypot(x * 0.6, zr) + 1e-6));
+    // between the knees the front drapes down instead of bridging flat (closes the open-hem "mouth" of a seated skirt)
+    const sag = (1 - sstep(0.03 * sc, 0.075 * sc, Math.abs(x))) * sstep(crotch - 0.02 * sc, crotch - 0.16 * sc, y) * front;
+    const legShare = sstep(crotch + 0.09 * sc, crotch - 0.03 * sc, y) * (0.3 + 0.7 * front) * (1 - 0.45 * sag);
+    const shinShare = 0.85 * sstep(knee + 0.02 * sc, knee - 0.12 * sc, y) * front;
     const wL = sstep(-0.05 * P.H / 1.7, 0.05 * P.H / 1.7, x);
     const put = (b, w) => { if (w <= 1e-4) return; if (acc[b] === 0) used.push(b); acc[b] += w; };
     put(hipsB, 1 - legShare);
@@ -503,11 +511,16 @@ function upperGarment(spec, ctx, index) {
   const neckRing = (yOff, n = 30) => ringOn(ns, new THREE.Vector3(nb.x, nb.y + yOff, nb.z + 0.004 * H), new THREE.Vector3(0, 1, 0), n, 0.2 * H, new THREE.Vector3(0, 0, 1));
   if (collar === 'mandarin' || collar === 'stand') {
     const hc = (spec.collarHeight ?? 0.032) * s;
-    const ring = neckRing(0.014 * s + hc * 0.5);
+    // stand collars hug the NECK column (the neck∪torso surface flares into the shoulders at this height, which made
+    // the band stand off like a shelf)
+    const neckOnly = field.derive((e) => e.op === 'u' && e.tag === 'neck', { grow: ease + gap * 0.7 + 0.002 * s, kAdd: 0.006 * s });
+    neckOnly.accel({ min: [-0.2 * H, P.chestY, -0.2 * H], max: [0.2 * H, P.headY + 0.05 * H, 0.2 * H] }, 0.03 * s);
+    const no = (x, y, z) => neckOnly.eval(x, y, z);
+    const ring = ringOn(no, new THREE.Vector3(nb.x, nb.y + 0.018 * s + hc * 0.5, nb.z + 0.004 * H), new THREE.Vector3(0, 1, 0), 30, 0.2 * H, new THREE.Vector3(0, 0, 1));
     // gap at the very front for the mandarin opening
     const pts = ring.filter((p, i) => { const a = Math.atan2(p.x - nb.x, p.z - nb.z); return Math.abs(a) > 0.16; });
     const ordered = pts.sort((a, b) => Math.atan2(a.x - nb.x, -(a.z - nb.z)) - Math.atan2(b.x - nb.x, -(b.z - nb.z)));
-    sweptBand(spec.collarColor !== undefined ? trims2 : trims, ns, resample(ordered, 34), { width: hc, th: thT * 1.05, embed: thT * 0.4, normal: (p) => new THREE.Vector3(p.x - nb.x, 0, p.z - nb.z).normalize(), rad: 0.002 * s });
+    sweptBand(spec.collarColor !== undefined ? trims2 : trims, no, resample(ordered, 34), { width: hc, th: thT * 1.05, embed: thT * 0.4, normal: (p) => new THREE.Vector3(p.x - nb.x, 0, p.z - nb.z).normalize(), rad: 0.002 * s });
     trimPts.push(...ordered);
   }
   if (collar === 'shirt' || collar === 'lapel' || collar === 'v' || collar === 'round') {

@@ -87,6 +87,8 @@ export function clothMaterial(o = {}) {
     envMapIntensity: o.envMapIntensity ?? 0.6,
   });
   mat.name = 'cloth_' + (o.fabric || 'cotton');
+  // shadow pass: back faces only (what a front-sided shell rendered) — a two-sided shell must not double the shadow cost
+  mat.shadowSide = THREE.BackSide;
   const U = {
     uWeave: { value: fab.weave * (o.weaveScale || 1) }, uWAmp: { value: fab.wAmp * (o.detail ?? 1) },
     uSlub: { value: fab.slub * (o.detail ?? 1) }, uFold: { value: fab.fold * (o.fold ?? 1) },
@@ -254,9 +256,10 @@ export function skinMaterial(o = {}) {
 export function hairMaterial(o = {}) {
   const base = col(o.color ?? 0x17120f);
   const mat = new THREE.MeshPhysicalMaterial({
-    color: base, roughness: o.roughness ?? 0.48, metalness: 0,
-    sheen: 0.6, sheenRoughness: 0.35, sheenColor: base.clone().lerp(new THREE.Color(0.6, 0.5, 0.42), 0.4),
-    specularIntensity: 0.7, specularColor: new THREE.Color(0.85, 0.78, 0.7), envMapIntensity: 0.5,
+    // soft, broken highlight + fuzzy sheen rim: reads as a mass of hair, not a lacquered helmet
+    color: base, roughness: o.roughness ?? 0.62, metalness: 0,
+    sheen: 0.75, sheenRoughness: 0.55, sheenColor: base.clone().lerp(new THREE.Color(0.55, 0.47, 0.4), 0.45),
+    specularIntensity: 0.42, specularColor: new THREE.Color(0.85, 0.78, 0.7), envMapIntensity: 0.35,
   });
   mat.name = 'hair';
   const U = { uCrown: { value: new THREE.Vector3().fromArray(o.crown || [0, 1.7, -0.03]) }, uGrey: { value: o.grey ?? 0 } };
@@ -269,13 +272,13 @@ export function hairMaterial(o = {}) {
   float warp = fzNoise(vRest * 18.0) * 0.6;
   float sc = (az + warp * 0.05) * (0.08 + r * 0.6);
   float n1 = fzNoise(vRest * 30.0);
-  float clump = sin(sc * 6.2831 / 0.006 + n1 * 1.5) * 0.00035 * fzAA(0.006, fzFw);
+  float clump = sin(sc * 6.2831 / 0.006 + n1 * 1.5) * 0.0006 * fzAA(0.006, fzFw);
   float strand = 0.0;
   if (fzFw < 0.0006) strand = sin(sc * 6.2831 / 0.0011 + n1 * 6.0) * 0.00006 * fzAA(0.0011, fzFw);
   fzH = clump + strand + n1 * 0.0008;
   float g = uGrey > 0.0 ? smoothstep(0.4, 0.9, fract(sin(dot(floor(vec2(sc, vRest.y) * vec2(700.0, 40.0)), vec2(12.9898, 78.233))) * 43758.5453)) * uGrey : 0.0;
   diffuseColor.rgb = mix(diffuseColor.rgb * (1.0 + 0.25 * n1), vec3(0.62, 0.6, 0.58), g);
-  fzR = 1.0 + 0.25 * n1;
+  fzR = 1.0 + 0.35 * n1;
   `;
   install(mat, { uniforms: U, head, color, key: 'hair' });
   return mat;

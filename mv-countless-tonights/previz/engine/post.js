@@ -1,4 +1,5 @@
-// Film post chain: scene (linear HDR, MSAA) -> depth of field (half-res gather) -> bloom/halation -> ACES + grade + grain.
+// Film post chain: scene (linear HDR; FXAA by default, 4× MSAA per shot with aa:'msaa') [+ half-res additive layer]
+// -> depth of field (half-res gather) -> bloom/halation -> ACES + grade (+ FXAA) + grain.
 // Each Chain renders one shot into its own display-referred RGBA8 target so the engine can dissolve two shots.
 import * as THREE from 'three';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
@@ -91,7 +92,7 @@ void main(){
 // own-blur ramp from the FULL-res depth (no half-res stair-steps along in-focus silhouettes), foreground coverage from the gather
 const MERGE_FRAG = /* glsl */ `
 #include <packing>
-varying vec2 vUv; uniform sampler2D tColor, tBlur, tDepth; uniform vec2 texel;
+varying vec2 vUv; uniform sampler2D tColor, tBlur, tDepth, tLow; uniform vec2 texel; uniform float uLow;
 ` + DOF_COMMON + `
 void main(){
   vec3 s = texture2D(tColor, vUv).rgb;
@@ -100,16 +101,47 @@ void main(){
                  + texture2D(tBlur, vUv + vec2(-texel.x, texel.y)) + texture2D(tBlur, vUv + vec2(texel.x, texel.y)));
   float z = -perspectiveDepthToViewZ(texture2D(tDepth, vUv).x, near, far) * 1000.0;
   float a = max(smoothstep(0.6, 2.2, abs(cocAt(z))), b.a);
-  gl_FragColor = vec4(mix(s, b.rgb, a), 1.0);
+  gl_FragColor = vec4(mix(s, b.rgb, a) + uLow * texture2D(tLow, vUv).rgb, 1.0);
 }`;
-const COPY_FRAG = /* glsl */ `varying vec2 vUv; uniform sampler2D tColor; void main(){ gl_FragColor = vec4(texture2D(tColor, vUv).rgb, 1.0); }`;
+const COPY_FRAG = /* glsl */ `varying vec2 vUv; uniform sampler2D tColor, tLow; uniform float uLow;
+void main(){ gl_FragColor = vec4(texture2D(tColor, vUv).rgb + uLow * texture2D(tLow, vUv).rgb, 1.0); }`;
+
+// Half-resolution layer for soft ADDITIVE, UNLIT effects (volumetric window shafts, light cones): objects with
+// object.layers.set(LOWRES_LAYER) are skipped by the main pass and rendered at half res against a downsampled depth
+// buffer (farthest of each 2×2, so light may graze a silhouette rather than leave a dark halo), then added back
+// before bloom. ≈4× cheaper fill. Lights are not visible to that pass — only unlit materials belong there.
+export const LOWRES_LAYER = 1;
+const DEPTHDOWN_FRAG = /* glsl */ `varying vec2 vUv; uniform sampler2D tDepth; uniform vec2 texel;
+void main(){ vec2 h = 0.5 * texel;
+  float d = max(max(texture2D(tDepth, vUv + vec2(-h.x, -h.y)).x, texture2D(tDepth, vUv + vec2(h.x, -h.y)).x),
+                max(texture2D(tDepth, vUv + vec2(-h.x, h.y)).x, texture2D(tDepth, vUv + vec2(h.x, h.y)).x));
+  gl_FragDepth = d; gl_FragColor = vec4(0.0); }`;
 
 const GRADE_FRAG = /* glsl */ `
 varying vec2 vUv;
 uniform sampler2D tColor; uniform vec2 res; uniform float frame;
 uniform float exposure, contrast, saturation, temp, tint, vignette, grain, halation, fade, aberration;
 uniform vec3 lift, gamma, gain, shadowTint, highTint;
-uniform float splitBalance;
+uniform float splitBalance, fxaa;
+// FXAA (Lottes, "PC fast" variant) on the linear HDR image, luma Reinhard-compressed: the alternative to 4× MSAA
+// for geometry-heavy shots (aa:'fxaa' — MSAA rasterisation of skinned figures is the single biggest cost there)
+float fxL(vec3 c){ float l = dot(c, vec3(0.2126, 0.7152, 0.0722)); return sqrt(l / (1.0 + l)); }
+vec3 fxaaAt(vec2 uv){
+  vec2 px = 1.0 / res;
+  vec3 cNW = texture2D(tColor, uv + vec2(-0.5, -0.5) * px).rgb, cNE = texture2D(tColor, uv + vec2(0.5, -0.5) * px).rgb;
+  vec3 cSW = texture2D(tColor, uv + vec2(-0.5, 0.5) * px).rgb, cSE = texture2D(tColor, uv + vec2(0.5, 0.5) * px).rgb;
+  vec3 cM = texture2D(tColor, uv).rgb;
+  float lNW = fxL(cNW), lNE = fxL(cNE), lSW = fxL(cSW), lSE = fxL(cSE), lM = fxL(cM);
+  float lMin = min(lM, min(min(lNW, lNE), min(lSW, lSE))), lMax = max(lM, max(max(lNW, lNE), max(lSW, lSE)));
+  if (lMax - lMin < max(0.0312, lMax * 0.125)) return cM;
+  vec2 dir = vec2(-((lNW + lNE) - (lSW + lSE)), ((lNW + lSW) - (lNE + lSE)));
+  float red = max((lNW + lNE + lSW + lSE) * 0.03125, 1.0 / 128.0);
+  dir = clamp(dir / (min(abs(dir.x), abs(dir.y)) + red), -8.0, 8.0) * px;
+  vec3 a = 0.5 * (texture2D(tColor, uv + dir * (1.0 / 3.0 - 0.5)).rgb + texture2D(tColor, uv + dir * (2.0 / 3.0 - 0.5)).rgb);
+  vec3 b = a * 0.5 + 0.25 * (texture2D(tColor, uv - dir * 0.5).rgb + texture2D(tColor, uv + dir * 0.5).rgb);
+  float lb = fxL(b);
+  return (lb < lMin || lb > lMax) ? a : b;
+}
 vec3 aces(vec3 x){ const float a=2.51,b=0.03,c=2.43,d=0.59,e=0.14; return clamp((x*(a*x+b))/(x*(c*x+d)+e),0.0,1.0); }
 vec3 toSRGB(vec3 c){ return mix(c*12.92, 1.055*pow(c, vec3(1.0/2.4))-0.055, step(0.0031308, c)); }
 float hash(vec2 p){ p = fract(p*vec2(443.897,441.423)); p += dot(p, p.yx+19.19); return fract((p.x+p.y)*p.x); }
@@ -117,10 +149,13 @@ void main(){
   vec2 uv = vUv;
   vec2 dc = (uv - 0.5);
   vec3 col;
+  vec3 c0 = texture2D(tColor, uv).rgb;
+  vec3 aaD = fxaa > 0.5 ? fxaaAt(uv) - c0 : vec3(0.0);   // AA correction, carried onto the aberration-offset channels
   if (aberration > 0.0) {
     vec2 off = dc * aberration * 0.004;
-    col = vec3(texture2D(tColor, uv + off).r, texture2D(tColor, uv).g, texture2D(tColor, uv - off).b);
-  } else col = texture2D(tColor, uv).rgb;
+    col = vec3(texture2D(tColor, uv + off).r, c0.g, texture2D(tColor, uv - off).b) + aaD;
+  } else col = c0 + aaD;
+  col = max(col, 0.0);
   col *= exposure;
   // white balance: temp (+warm / -cool), tint (+magenta / -green)
   col *= vec3(1.0 + temp * 0.18 + tint*0.05, 1.0 - tint * 0.08, 1.0 - temp * 0.22 + tint*0.05);
@@ -158,14 +193,21 @@ export const DEFAULT_POST = {
   vignette: 0.32, grain: 0.035, aberration: 0.6, fade: 0,
   bloom: { strength: 0.35, radius: 0.55, threshold: 0.85 },
   dof: null, // {focus: metres, fstop: 2.0} or null
+  // anti-aliasing: 'fxaa' (default: FXAA in the grade pass) | 'msaa' (4× scene MSAA: crisper sub-pixel lines — rain, glazing
+  // bars, hair strands — but SwiftShader's multisampled rasterisation costs ≈0.13 s fixed + ≈0.15 s per close-up hi figure,
+  // 1.8 s for a 12-figure lineup) | 'none'
+  aa: 'fxaa',
 };
 
 export class Chain {
-  constructor(renderer, W, H, { samples = 4 } = {}) {
-    this.renderer = renderer; this.W = W; this.H = H;
+  constructor(renderer, W, H, { samples = 4, aa = null } = {}) {
+    this.renderer = renderer; this.W = W; this.H = H; this.forceAA = aa; // aa: force 'msaa'|'fxaa'|'none' for every shot
     const depthTexture = new THREE.DepthTexture(W, H);
     depthTexture.type = THREE.UnsignedIntType;
     this.rtScene = new THREE.WebGLRenderTarget(W, H, { type: THREE.HalfFloatType, samples, depthTexture, depthBuffer: true });
+    const depthTexture1 = new THREE.DepthTexture(W, H);
+    depthTexture1.type = THREE.UnsignedIntType;
+    this.rtScene1 = new THREE.WebGLRenderTarget(W, H, { type: THREE.HalfFloatType, samples: 0, depthTexture: depthTexture1, depthBuffer: true }); // aa:'fxaa'|'none'
     this.rtA = new THREE.WebGLRenderTarget(W, H, { type: THREE.HalfFloatType, depthBuffer: false });
     this.out = new THREE.WebGLRenderTarget(W, H, { type: THREE.UnsignedByteType, depthBuffer: false });
     const Wh = Math.max(2, W >> 1), Hh = Math.max(2, H >> 1);
@@ -176,8 +218,13 @@ export class Chain {
     const sm = (frag, uniforms) => new THREE.ShaderMaterial({ vertexShader: FS_VERT, fragmentShader: frag, depthTest: false, depthWrite: false, uniforms });
     this.cocMat = sm(COC_FRAG, { tColor: { value: this.rtScene.texture }, tDepth: { value: depthTexture }, texel: { value: new THREE.Vector2(1 / W, 1 / H) }, ...lens() });
     this.gatherMat = sm(GATHER_FRAG, { tHalf: { value: this.rtHalfA.texture }, texelH: { value: new THREE.Vector2(1 / Wh, 1 / Hh) }, maxCoc: { value: Math.max(6, W / 110) } });
-    this.mergeMat = sm(MERGE_FRAG, { tColor: { value: this.rtScene.texture }, tBlur: { value: this.rtHalfB.texture }, tDepth: { value: depthTexture }, texel: { value: new THREE.Vector2(1 / W, 1 / H) }, ...lens() });
-    this.copyMat = sm(COPY_FRAG, { tColor: { value: this.rtScene.texture } });
+    this.rtLow = new THREE.WebGLRenderTarget(Wh, Hh, { type: THREE.HalfFloatType, depthBuffer: true });
+    const low = () => ({ tLow: { value: this.rtLow.texture }, uLow: { value: 0 } });
+    this.mergeMat = sm(MERGE_FRAG, { tColor: { value: this.rtScene.texture }, tBlur: { value: this.rtHalfB.texture }, tDepth: { value: depthTexture }, texel: { value: new THREE.Vector2(1 / W, 1 / H) }, ...lens(), ...low() });
+    this.copyMat = sm(COPY_FRAG, { tColor: { value: this.rtScene.texture }, ...low() });
+    this.depthDownMat = new THREE.ShaderMaterial({ vertexShader: FS_VERT, fragmentShader: DEPTHDOWN_FRAG, depthTest: true, depthFunc: THREE.AlwaysDepth, depthWrite: true, colorWrite: false,
+      uniforms: { tDepth: { value: depthTexture }, texel: { value: new THREE.Vector2(1 / W, 1 / H) } } });
+    this.depthDownQ = fsQuad(this.depthDownMat);
     this.dofMat = this.cocMat; // (back-compat name: the lens uniforms live here)
     this.cocQ = fsQuad(this.cocMat); this.gatherQ = fsQuad(this.gatherMat); this.mergeQ = fsQuad(this.mergeMat); this.copyQ = fsQuad(this.copyMat);
     this.bloom = new UnrealBloomPass(new THREE.Vector2(W, H), 0.4, 0.5, 0.85);
@@ -187,19 +234,52 @@ export class Chain {
         tColor: this.rtA.texture, res: new THREE.Vector2(W, H), frame: 0,
         exposure: 1, contrast: 1, saturation: 1, temp: 0, tint: 0, vignette: 0.3, grain: 0.03, halation: 0, fade: 0, aberration: 0,
         lift: new THREE.Vector3(), gamma: new THREE.Vector3(1, 1, 1), gain: new THREE.Vector3(1, 1, 1),
-        shadowTint: new THREE.Vector3(0.5, 0.5, 0.5), highTint: new THREE.Vector3(0.5, 0.5, 0.5), splitBalance: 0,
+        shadowTint: new THREE.Vector3(0.5, 0.5, 0.5), highTint: new THREE.Vector3(0.5, 0.5, 0.5), splitBalance: 0, fxaa: 0,
       }).map(([k, v]) => [k, { value: v }])),
     });
     this.gradeQ = fsQuad(this.gradeMat);
   }
 
   // Render scene+camera through the chain into this.out. p = merged post params.
+  // any visible object on the low-res layer?
+  _hasLow(scene) {
+    let n = 0;
+    scene.traverseVisible((o) => { if (!n && (o.layers.mask & (1 << LOWRES_LAYER)) && (o.isMesh || o.isPoints || o.isLine)) n = 1; });
+    return n > 0;
+  }
+
+  _renderLow(scene, camera) {
+    const r = this.renderer;
+    r.setRenderTarget(this.rtLow);
+    r.setClearColor(0x000000, 1);
+    r.clear(true, true, true);
+    r.render(this.depthDownQ.scene, this.depthDownQ.cam);            // depth := farthest of each 2×2 full-res texel
+    const bg = scene.background, au = r.autoClear, sm = r.shadowMap.autoUpdate, mask = camera.layers.mask;
+    scene.background = null; r.autoClear = false; r.shadowMap.autoUpdate = false;
+    camera.layers.set(LOWRES_LAYER);
+    r.render(scene, camera);
+    camera.layers.mask = mask; scene.background = bg; r.autoClear = au; r.shadowMap.autoUpdate = sm;
+  }
+
   render(scene, camera, p, frame) {
     const r = this.renderer;
-    r.setRenderTarget(this.rtScene);
+    const mask = camera.layers.mask;
+    const hasLow = this._hasLow(scene);
+    const aa = this.forceAA || p.aa;
+    const rt = aa === 'fxaa' || aa === 'none' ? this.rtScene1 : this.rtScene;
+    if (this._rt !== rt) { // re-point the post passes at the chosen scene target
+      this._rt = rt;
+      this.cocMat.uniforms.tColor.value = this.mergeMat.uniforms.tColor.value = this.copyMat.uniforms.tColor.value = rt.texture;
+      this.cocMat.uniforms.tDepth.value = this.mergeMat.uniforms.tDepth.value = this.depthDownMat.uniforms.tDepth.value = rt.depthTexture;
+    }
+    camera.layers.disable(LOWRES_LAYER);
+    r.setRenderTarget(rt);
     r.setClearColor(0x000000, 1);
     r.clear(true, true, true);
     r.render(scene, camera);
+    camera.layers.mask = mask;
+    if (hasLow) this._renderLow(scene, camera);
+    this.copyMat.uniforms.uLow.value = this.mergeMat.uniforms.uLow.value = hasLow ? 1 : 0;
 
     if (p.dof) {
       const du = this.cocMat.uniforms;
@@ -228,6 +308,7 @@ export class Chain {
     for (const k of ['exposure', 'contrast', 'saturation', 'temp', 'tint', 'vignette', 'grain', 'fade', 'aberration', 'splitBalance']) g[k].value = p[k];
     for (const k of ['lift', 'gamma', 'gain', 'shadowTint', 'highTint']) g[k].value.fromArray(p[k]);
     g.frame.value = frame;
+    g.fxaa.value = aa === 'fxaa' ? 1 : 0;
     r.setRenderTarget(this.out);
     r.render(this.gradeQ.scene, this.gradeQ.cam);
     r.setRenderTarget(null);

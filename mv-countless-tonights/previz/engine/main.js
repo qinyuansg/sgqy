@@ -40,8 +40,9 @@ const timing = await loadJSON('/timing/timing.json');
 const TOTAL = shots[shots.length - 1].out_frame;
 
 const MSAA = +(q.get('msaa') ?? 4); // scene MSAA samples (?msaa=0 for perf A/B)
-const chainA = new Chain(renderer, W, H, { samples: MSAA });
-const chainB = new Chain(renderer, W, H, { samples: MSAA });
+const AA = q.get('aa'); // ?aa=fxaa|msaa|none forces the anti-aliasing mode of every shot (otherwise per-shot post.aa)
+const chainA = new Chain(renderer, W, H, { samples: MSAA, aa: AA });
+const chainB = new Chain(renderer, W, H, { samples: MSAA, aa: AA });
 const display = new Display(renderer);
 
 const instances = new Map();
@@ -59,8 +60,9 @@ const ctx = {
   renderNested(key, view, tl, u, T, rt, aspect) {
     const inst = instances.get(key);
     if (!inst) throw new Error('renderNested: module not loaded (add to needs): ' + key);
-    const c = inst.camera, oldAspect = c.aspect;
+    const c = inst.camera, oldAspect = c.aspect, oldMask = c.layers.mask;
     c.aspect = aspect || rt.width / rt.height;
+    c.layers.enable(1); // nested views have no post chain: draw the half-res layer (post.js LOWRES_LAYER) inline
     const shot = typeof view === 'string' ? { id: view, nested: true } : view;
     inst.setShot(shot, tl, u, T);
     c.updateProjectionMatrix();
@@ -70,7 +72,7 @@ const ctx = {
     renderer.clear(true, true, true);
     renderer.render(inst.scene, c);
     renderer.setRenderTarget(prevRT);
-    c.aspect = oldAspect; c.updateProjectionMatrix();
+    c.aspect = oldAspect; c.updateProjectionMatrix(); c.layers.mask = oldMask;
     return rt.texture;
   },
 };

@@ -9,6 +9,7 @@
 import * as THREE from 'three';
 import { noiseTexture, spriteTexture } from './textures.js';
 import { rng, flicker, noise1, fbm1 } from '../engine/util.js';
+import { LOWRES_LAYER } from '../engine/post.js'; // soft additive volumetrics render at half resolution (see engine/post.js)
 
 const V3 = (a) => (a && a.isVector3 ? a.clone() : new THREE.Vector3(...(a || [0, 0, 0])));
 const COL = (c, k = 1) => (c && c.isColor ? c.clone() : new THREE.Color(c ?? 0xffffff)).multiplyScalar(k);
@@ -43,7 +44,7 @@ export function glow({ color = 0xffb060, size = 0.2, intensity = 1, falloff = 2.
 // penumbra: angular size of the source (rad; sun/moon ≈ 0.0093 + a little scatter) — the cookie (glazing bars, lead
 // lines) blurs with distance from the window instead of streaking down the whole beam as hard stripes.
 export function windowShaft({ center = [0, 2, 0], right = [0.6, 0, 0], up = [0, 0.9, 0], dir = [0.4, -0.6, 0.7], length = 6, color = 0xbcd0ff,
-  intensity = 0.35, cookie = null, floorY = -1e5, noise = 0.6, soft = 0.12, steps = 10, seed = 0, penumbra = 0.014 } = {}) {
+  intensity = 0.35, cookie = null, floorY = -1e5, noise = 0.6, soft = 0.12, steps = 10, seed = 0, penumbra = 0.014, lowres = true } = {}) {
   const C = V3(center), R = V3(right), U = V3(up), D = V3(dir).normalize().multiplyScalar(length);
   const ckRes = (cookie && cookie.image && cookie.image.width) || 512;
   // cookie texels per metre of blur, along the window's smaller half-extent
@@ -103,6 +104,7 @@ export function windowShaft({ center = [0, 2, 0], right = [0.6, 0, 0], up = [0, 
   });
   const mesh = new THREE.Mesh(geo, mat);
   mesh.matrixAutoUpdate = false; mesh.matrix.copy(M); mesh.renderOrder = 20; mesh.frustumCulled = false;
+  if (lowres) mesh.layers.set(LOWRES_LAYER);
   // rasterise only the faces the ray enters through: front faces from outside the prism, back faces from inside
   // (halves the fragment work vs DoubleSide; the shader's inside test stays as a safety net)
   const _cl = new THREE.Vector3();
@@ -209,7 +211,7 @@ function invertTex(t) {
 }
 
 // ------------------------------------------------------------------ soft light cone (flashlight / lantern spill)
-export function beamCone({ origin = [0, 1, 0], dir = [0, 0, -1], angle = 0.25, length = 6, color = 0xfff1d6, intensity = 0.25, noise = 0.4 } = {}) {
+export function beamCone({ origin = [0, 1, 0], dir = [0, 0, -1], angle = 0.25, length = 6, color = 0xfff1d6, intensity = 0.25, noise = 0.4, lowres = true } = {}) {
   const geo = new THREE.ConeGeometry(Math.tan(angle) * length, length, 32, 1, true).translate(0, -length / 2, 0);
   const mat = new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
@@ -223,6 +225,7 @@ export function beamCone({ origin = [0, 1, 0], dir = [0, 0, -1], angle = 0.25, l
         gl_FragColor = vec4(uCol * uInt * a, 1.0); }`,
   });
   const mesh = new THREE.Mesh(geo, mat); mesh.renderOrder = 20;
+  if (lowres) mesh.layers.set(LOWRES_LAYER);
   const o = V3(origin), d = V3(dir).normalize();
   mesh.position.copy(o); mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), d);
   return { object3D: mesh, material: mat, update(T, p = {}) { mat.uniforms.uT.value = T; if (p.intensity !== undefined) mat.uniforms.uInt.value = p.intensity; if (p.dir) mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), V3(p.dir).normalize()); if (p.origin) mesh.position.copy(V3(p.origin)); } };
@@ -458,7 +461,10 @@ export function rain({ center = [0, 2, 0], size = [8, 5, 8], count = 2500, speed
         vec3 wp = p + side * position.x * wpx - ax * position.y * uLen * (0.7 + 0.6 * aSeed.w);
         float edge = smoothstep(0.0, 0.05, ph) * smoothstep(1.0, 0.92, ph);
         float ld = distance(p, uLampP);
-        vC = uCol * uInt + uLampC / (1.0 + ld * ld * 0.8);
+        // drops scatter mostly FORWARD (refraction): bright when the lamp is behind them, faint when lit from the camera side
+        float cs = dot(normalize(p - uLampP), toC), g = 0.55;
+        float hg = (1.0 - g * g) / pow(1.0 + g * g - 2.0 * g * cs, 1.5);
+        vC = uCol * uInt * (0.35 + 0.65 * aSeed.z) + uLampC * (0.45 * hg) / (1.0 + ld * ld * 0.8);
         vA = edge * uWid / wpx * (0.4 + 0.6 * aSeed.x) * smoothstep(uNear * 0.35, uNear, dist);
         gl_Position = projectionMatrix * viewMatrix * vec4(wp, 1.0); }`,
     fragmentShader: /* glsl */ `varying float vA; varying vec2 vUv; varying vec3 vC;

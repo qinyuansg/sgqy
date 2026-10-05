@@ -61,7 +61,7 @@ export default async function create(ctx) {
   }
 
   // ============================================================ (b) vitrine: compass under glass, moon shaft, dust, nested sea reflection
-  const rt = ctx.makeRT(640, 534); const RT_ASPECT = 1.2;
+  const rt = ctx.makeRT(480, 400); const RT_ASPECT = 1.2; // seen through hazy glass: 480 px is plenty (640 cost +0.15 s)
   let V, shaft, dust;
   {
     const G = groups.vit;
@@ -156,7 +156,13 @@ export default async function create(ctx) {
         shaft.update(T); dust.update(T, { camera, focus: 2.15, fstop: 2.8 });
         if (off.has('dof')) { const r = setups.K_VIT(tl, u, T); r.dof = null; return r; }
       }
-      if (which === 'candle') { candle.update(T); steam1.update(T); }
+      if (which === 'candle') {
+        candle.update(T); steam1.update(T);
+        const off = new Set((new URLSearchParams(location.search).get('off') || '').split(','));
+        if (candle.light) candle.light.castShadow = !off.has('cshadow');
+        groups.candle.traverse((o) => { if (o.name === 'windowLight') o.visible = !off.has('wl'); });
+        if (off.has('dof')) { const r = setups.K_CANDLE(tl, u, T); r.dof = null; return r; }
+      }
       const r = (setups[shot.id] || setups.K_MAT)(tl, u, T);
       const post = r.post || {}; delete r.post;
       return { ...post, ...r };

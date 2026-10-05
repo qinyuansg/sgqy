@@ -27,7 +27,7 @@ export default async function create(ctx) {
   // lights: soft key (spot, wide penumbra), fill, rim, backdrop wash — in a rig moved to each study
   const rig = new THREE.Group(); scene.add(rig);
   const key = new THREE.SpotLight(0xfff2e6, 90, 30, 0.5, 0.9, 2); key.position.set(3.6, 5.2, 6.5); key.castShadow = true;
-  key.shadow.mapSize.set(2048, 2048); key.shadow.bias = -0.0003; key.shadow.normalBias = 0.02; key.shadow.radius = 6; key.shadow.camera.near = 3; key.shadow.camera.far = 25;
+  key.shadow.mapSize.set(2048, 2048); key.shadow.bias = -0.0002; key.shadow.normalBias = 0.005; key.shadow.radius = 5; key.shadow.camera.near = 3; key.shadow.camera.far = 25;
   key.target.position.set(0, 0.9, 0); rig.add(key, key.target);
   const rim = new THREE.DirectionalLight(0xcad8ff, 1.1); rim.position.set(-4, 5, -6); rim.target.position.set(0, 1, 0); rig.add(rim, rim.target);
   const fill = new THREE.HemisphereLight(0xc4ccd8, 0x302a24, 0.75); scene.add(fill);

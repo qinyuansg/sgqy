@@ -74,16 +74,16 @@ Load cost (first use, per page): 0.2–0.6 s per 512² surface, chart 1.7 s, com
 
 | call | notes |
 |---|---|
-| `windowShaft({ center, right, up, dir, length, cookie, color, intensity≈0.1–0.35, floorY, noise, soft, steps=10 })` | volumetric light shaft through a window (oblique prism, ray-marched, cookie in window space → glazing bars / stained-glass colours *inside* the beam). `right`/`up` are half-extent vectors of the window, `dir` the travel direction of the light. Works with the camera inside the beam. Cost ∝ screen coverage. |
-| `windowLight({ same window, cookie, intensity (≈ lux at the window, 1–3 moon), colored })` | the matching floor/wall pool: a far SpotLight through the opening + **real shadow casters** (alpha-tested lattice from the cookie, invisible blocker plane with a hole) so bars and figures shadow correctly. `colored:true` projects the cookie as colour (stained-glass petals), pre-warped to the oblique window. 1 shadow light. (`cookieSpot` = old alias.) |
-| `dustMotes({ center, size, count, moteSize, intensity, beam: { shaft } | { cone } , ambient })` + `update(T, { camera, focus, fstop })` | brownian motes lit only inside the beam (tinted by stained-glass cookie), twinkle, physically sized bokeh. Keep `intensity ≲ 1.5`: very bright tiny points get the engine DOF's sample pattern. |
-| `beamCone({ origin, dir, angle, length })` | soft flashlight / lantern spill cone; `update(T, { dir, origin, intensity })` |
+| `windowShaft({ center, right, up, dir, length, cookie, color, intensity≈0.1–0.35, floorY, noise, soft, steps=10, penumbra=0.014, lowres=true })` | volumetric light shaft through a window (oblique prism, ray-marched, cookie in window space → glazing bars / stained-glass colours *inside* the beam). `right`/`up` are half-extent vectors of the window, `dir` the travel direction of the light. Works with the camera inside the beam. `penumbra` = angular size of the source (rad): the cookie blurs with distance from the window (mip LOD), so lead lines / bars fade down the beam instead of streaking it. `lowres` (default) draws it in the engine's half-res additive layer (`engine/post.js LOWRES_LAYER`, ≈4× cheaper; depth-tested against the scene). Only the faces the ray enters through are rasterised. Cost ∝ screen coverage (≈0.1–0.25 s full screen at half res). |
+| `windowLight({ same window, cookie, intensity (≈ lux at the window, 1–3 moon), colored, bounce=0.3, floorY=0, bounceRange=7 })` | the matching floor/wall pool: a far SpotLight through the opening + **real shadow casters** (alpha-tested lattice from the cookie, invisible blocker plane with a hole) so bars and figures shadow correctly. `colored:true` projects the cookie as colour (stained-glass petals), pre-warped to the oblique window. `bounce` (floor albedo; 0 = off) adds an unshadowed first-bounce fill: a PointLight 12 cm *below* the pool on `floorY` (the floor itself is not lit by it; walls, pews, figures get the upward glow), flux = albedo × light through the window × cookie transmission, tinted by the cookie's mean colour — `.bounce` is that light. 1 shadow light (+1 cheap point light). `update(T, { intensity })` scales both. (`cookieSpot` = old alias.) |
+| `dustMotes({ center, size, count, moteSize, intensity, beam: { shaft } | { cone } , ambient })` + `update(T, { camera, focus, fstop })` | brownian motes lit only inside the beam (tinted by the shaft's cookie at the same penumbra blur), twinkle, physically sized bokeh. (The engine DOF now rotates its sample pattern per pixel, so bright motes defocus into soft discs, not star stamps.) |
+| `beamCone({ origin, dir, angle, length, lowres=true })` | soft flashlight / lantern spill cone (half-res layer like the shaft); `update(T, { dir, origin, intensity })` |
 | `candle({ state:'A'|'B'|'C'|'D', intensity≈0.3–1, holder:true, castShadow:false })` | PROP_CANDLE burn states 18/11/6/2.5 cm, shader flame (core/blue base/flicker/lean), halo, wax glow, flickering PointLight. `setState()`, `setBurn(0..1)`, `flameY`. Point-light shadows cost 6 shadow passes — leave off unless essential. |
 | `oilLamp()` | PROP_LAMP stoneware dish + 2 cm flame + light (door niche) |
 | `lantern({ style:'horn'|'ship'|'paper'|'glass', size, period=7, pendulum })` | PROP_SHIPLAMP horn lantern (size 1 = 55 cm stern lamp, 0.45 = cabin lamp). Origin = hook. `update(T, { swing: rad | [z, x] })` (e.g. from ship roll), `flameWorld()` for `sea.setLamps`. |
 | `flameMesh()` · `glow({ color, size, intensity })` | bare flame billboard / round additive halo |
 | `steam({ position, count, height, width, opacity, light })` | curling tea steam (backlight it); `update(T, { wind:[x,z], light })` |
-| `rain({ center, size, count, speed, wind, intensity≈0.25, lamp:{position,color,intensity} })` | camera-facing streaks, brighter near a lamp, near-camera fade |
+| `rain({ center, size, count, speed, wind, intensity≈0.25, lamp:{position,color,intensity} })` | camera-facing streaks; the lamp term uses a forward-scattering phase (Henyey-Greenstein g 0.55): drops glow when the lamp is *behind* them, stay faint when lit from the camera side; per-drop brightness varies; near-camera fade |
 | `drips({ points, toY })` + `ripples({ radius, sources: drips.sources(center, r), rainRate })` | eave drips and the rain bowl's water: ripples perturb a standard material's normal (reflects env/lights) |
 | `seaSpray({ center, area, burst:{ origin, dir, period } })` · `fogCards({ center, size, count, color, opacity })` | low sea mist / bow bursts; soft Y-billboard fog planes with near fade |
 
@@ -132,11 +132,11 @@ PMREM, for metal/glass/porcelain reflections (`bible/refs/previz_kit_env.jpg`).
 
 ### Performance (1280×536, SwiftShader, 4 cores; measured with other renders running, so ±30 %)
 
-Engine baseline ≈ 0.3–0.45 s (+≈0.5 s with DOF). Sky dome ≈ 0.09 s full screen · sea ≈ 0.3 s (half screen,
-128×96 grid; `cols/rows` lower it) · windowShaft 0.1–0.4 s by coverage (`steps` 6–10) · dust/steam/rain/glows cheap ·
+Engine baseline ≈ 0.25–0.34 s with the default FXAA (bloom ≈ 0.1 s of it; `aa:'msaa'` adds ≥ 0.13 s), +≈0.15 s with DOF. Sky dome ≈ 0.09 s full screen · sea ≈ 0.3 s (half screen,
+128×96 grid; `cols/rows` lower it) · windowShaft ≈ 0.1–0.25 s by coverage (half-res layer; was 0.4–0.75 s full res) · dust/steam/rain/glows cheap ·
 each extra real light costs on every lit pixel (prefer vitrine `'strip'`, `glow()` halos) · point-light shadows =
-6 passes · nested RT costs its scene at RT resolution (≤ 960 px wide). Lab frames: sea wide ≈ 0.7 s, candle CU ≈ 1.8 s
-(with candle shadows + DOF), vitrine ≈ 2.9 s (nested sea + DOF + shadowed moon + 4 cases) — trim per shot.
+6 passes · nested RT costs its scene at RT resolution (≤ 960 px wide; a reflection seen through hazy glass reads fine at
+480 px — the 640×534 sea in the vitrine lab costs ≈0.34 s). Lab frames: see the review section at the end of this file.
 
 ### Lab / tools
 
@@ -209,7 +209,7 @@ export default async function create(ctx) {
 `makeFigure({ sex:'f'|'m'|0..1, height, age, build 0..1, stoop 0..1, skin, hair:{style,color,…}, costume:[…],
 hands:{glove, variant:'bare'|'salt', L:{…}, R:{smudge:[…]}}, lod, barefoot })`. Coordinates: metres, Y up, **faces +Z,
 its LEFT is +X**, `fig.root` origin = floor between the feet (move/rotate `root` to place it).
-Members: `root`, `bones[]`, `bone(name)`, `layers{body, head, hair, <garment names>, <garment>.trim|binding|buttons|band|sole}`,
+Members: `root` (`object3D` is an alias, matching the environment kit's `{ object3D }` helpers), `bones[]`, `bone(name)`, `layers{body, head, hair, <garment names>, <garment>.trim|binding|buttons|band|sole}`,
 `materials{…}` (change `.color`, `.userData.fzUniforms` live), `hands.L/.R` (Hand), `accessories`, `P` (dimensions,
 e.g. `P.H`, `P.hipJY`), `eye()` (world point between the eyes), `worldPos(bone)`, `socket(side,name)`.
 
@@ -250,7 +250,7 @@ vitrine: `for (const k of ['body','head','hair','knit','trousers','shoes']) fig.
 skin, variant:'bare'|'glove'|'salt', salt, gloveColor, smudge:['index','thumb'], cuffs:[{ style:'plain'|'band'|'rolled',
 color, fabric, radius, edge, len, detail:[{type:'worn', angle, w, h, at}|{type:'patch', color, stitch, inside, width, height}] }],
 forearmLen })`. Canonical frame (LEFT): wrist joint at the origin, forearm +Y, fingers −Y, palm faces −X, thumb +Z
-(RIGHT = mirror in X). Members: `root` (place it, or `placeWrist(pos, fingerDir, palmNormal)`), `bones`, `byName`,
+(RIGHT = mirror in X). Members: `root` (alias `object3D`; place it, or `placeWrist(pos, fingerDir, palmNormal)`), `bones`, `byName`,
 `fingerBones.index[0..2]`, `meshes{skin, glove, skinArm, cuffs[]}`, `sockets{grip, cup, pen, pinch, palm}`, `tip(name)`
 (world pad position), `setGlove(on)`, `pose(name, params)`, `setChannels(ch)`.
 Socket frames (prop local axes): **grip/cup** origin = centre of the gripped cylinder, +Y = cylinder axis across the palm
@@ -269,8 +269,13 @@ relative to A (same parent). `blendHandChannels(a, b, t)`, `handPose(name, param
 buttons, buttonColor, trimColor, open, vDepth, slit, cuff:{style, color, width, detail}, wide, rolled, print:{colors,…},
 shoe, soleColor, faded, wearZones:['elbows','shoulders','knees'], wearColor, underCollar, ragged }]`.
 Types: shirt blouse jacket coat lab_coat dress cheongsam robe vest sailor (cross-collar junk jacket) side_jacket (大襟)
-trousers skirt apron shoes (leather|cloth|boot|sandal|slipper) sash/belt shawl. Layers are ordered inner→outer by type;
-each outer garment wraps the hulls of the ones beneath it, and hidden inner faces / skin are culled.
+trousers skirt apron shoes (leather|cloth|boot|sandal|slipper) sash/belt shawl. Layers are ordered inner→outer by type
+(override with `layer`, e.g. `layer: -0.5` tucks a shirt under the trousers — the GUARD's is); each outer garment wraps
+the hulls of the ones beneath it, and inner faces / skin are culled only where all three corners lie ≥ 9 mm inside an
+outer layer (no saw-tooth edges at V-necks and lapels). Skirt parts below the hips (coats, qipao, skirts, long tops) are
+weighted so that when SEATED the front panel lies on the thighs, the back panel stays with the pelvis (it passes into the
+seat — use a solid bench/chair seat, or keep it out of frame) and the centre front drapes down between the knees.
+Mandarin / stand collars hug the neck column.
 Hair `style`: ponytail (+`strands:'R'`) low_bun bun braid short cropped bob loose perm topknot thin headcloth (cloth over
 a topknot) headscarf cap; `color, grey, thickness, hairline, bangs, volume, part:false, partX`.
 Materials (`figure_mat.js`): `clothMaterial` (sheen; procedural weave/fold relief, dye mottling, fading, prints, wear, patch
@@ -285,13 +290,91 @@ or `EXTRA_MIGRANT EXTRA_CHAPEL …` to bake a subset). The cache is keyed to the
 "figure cache is stale" and sculpt live (correct, just slow).
 
 ### Performance (1280×536, SwiftShader; low load)
-Engine baseline ≈ 0.34 s. One `hi` figure ≈ +0.25 s (≈ 60–90k tris incl. hands), `mid` ≈ +0.18 s, a crowd extra ≈ +0.05 s.
-Close-up hand: close ≈ 25k tris, macro ≈ 50k. Keep ≤ 2 hi figures per frame within the 1 s budget; use `lod:'mid'` for
-figures smaller than ~1/3 of frame height and crowds for groups. Figure cloth is front-sided (DoubleSide only where a
-patch is on the inside of a cuff).
+Engine baseline ≈ 0.25–0.3 s (FXAA default; see the review section). One small `hi` figure ≈ +0.1 s (≈ 60–90k tris incl.
+hands), a close-up one (filling ⅓–½ of the frame, shadowed key) ≈ +0.45 s; `mid` ≈ 15 % cheaper; a crowd extra ≈ +0.05 s.
+With `aa:'msaa'` add ≈ +0.15 s per hi figure. Close-up hand: close ≈ 25k tris, macro ≈ 50k. Keep ≤ 2 close-up hi figures
+per frame; use `lod:'mid'` for figures smaller than ~1/3 of frame height and crowds for groups. Garment shells are two-sided (inner side darkened by
+`innerShade`) so panels folded over by skinning (seated laps, bent elbows) never open see-through holes; shoes are
+front-sided. Shadow-casting key lights on figures: `shadow.normalBias ≈ 0.003–0.005` (0.02 displaces the shadow of a
+nose/ear into a thin dark slit), `bias ≈ -0.0001`, a tight `shadow.camera.near/far`.
 
 ### Lab
 `scenes/_lab_figures.js` with `out/lab/fig_shots.json`: CAST, FIG<n>, MID<n>, FACE<n>, BACK<n> (n = CAST_CODES index),
 POSES (sit / pray_kneel / reach), POSES2·BENCH·TEA·PATCH·SIT (walk with case, pray_sit on a pew, phone, tea, patch touch,
 long-skirt & qipao sitting), HEADS/APOSE (hair styles), REF_CAST, REF_H1…H6 (macro hands), PENTEST.
 `scenes/_lab_hands.js` (hand variants), `scenes/_lab_one.js?probe=…&n=…&lod=…` (perf probe; `node tools/bench.mjs`).
+
+---
+
+## Art-direction / tech review — pass 1 (engine + both kits)
+
+A review pass over both kits and the engine post chain. Everything above is updated in place where behaviour changed;
+this section lists the changes, the measured costs, and what is still weak. Review lab: `scenes/_lab_review.js`
+(`out/lab/review_shots.json`: RV_FACE, RV_SIT, RV_SIDE, RV_PRAY, RV_STAND under a low-key cinematic rig; RV_DBG1-3 seated
+skirt diagnostics with `?dbl=1` / `?noskin=1` / `?only=<layer>` / `?probe=1` via `tools/bench.mjs --q`), engine probe
+`scenes/_lab_perf.js` (`out/lab/perf_shots.json`: EMPTY, FLAT, DOF, BLOOM0, SHAFT).
+
+### Engine (`engine/post.js`, `engine/main.js`, `render.mjs`)
+* **Depth of field is half resolution** (CoC prepass → half-res gather → full-res merge): ≈ +0.15 s instead of +0.38 s.
+  The gather is split into an own-CoC disc (skipped for in-focus pixels) and a wide foreground-spill ring with
+  energy-normalised coverage, its pattern is rotated per pixel (no more star/ring stamps on dust motes, flames and glints),
+  the half-res CoC is max-|CoC| downsampled and the merge uses the full-res depth for the own-blur ramp plus a 4-tap tent
+  on the half-res result (no stair-stepped halos on in-focus silhouettes). Same `dof: { focus, fstop, maxCoc }` contract.
+* **Half-res additive layer** `LOWRES_LAYER` (= 1): see `README_previz.md`. `FX.windowShaft`/`FX.beamCone` use it.
+* **Anti-aliasing is per shot, FXAA by default** (`post.aa: 'fxaa' | 'msaa' | 'none'`, `?aa=` to force): SwiftShader's
+  4× MSAA rasterisation was the largest single cost with figures (≈0.13 s fixed, +0.35 s per close-up hi figure, +1.8 s on
+  the 12-figure lineup); FXAA in the grade pass is visually equivalent at 1280 px under grain. Use `aa:'msaa'` only for
+  line-critical hero shots without figures. `?msaa=N` still sets the MSAA sample count.
+* `render.mjs` prints `timing: first frame … then X s/frame = Y fps` for stills and `--out` runs.
+
+### Environment kit
+* `windowShaft`: `penumbra` (cookie blurs with distance from the window), `lowres`, single-sided rasterisation, haze noise
+  sampled 3× per pixel instead of per step. `dustMotes` tint uses the same penumbra.
+* `windowLight`: `bounce` first-bounce fill (+ `floorY`, `bounceRange`, `.bounce`).
+* `rain`: forward-scattering lamp phase, per-drop brightness variation.
+* `vitrine` frameless edges: no emissive (the self-lit green read as neon wire in a dark gallery); dark green-black glass edge
+  that only brightens with real reflections.
+
+### Character kit (re-baked)
+* Head sculpt re-proportioned (eye line at mid-head, equal brow→nose-base→chin thirds, broader soft nose, gentler brow /
+  cheek / eye planes): reads calm and human instead of long-jawed and blade-nosed.
+* Seated skirts (see Garments): no more open hem "mouth" / back panel swinging up through the seat; cloth two-sided; no
+  saw-tooth inner necklines; mandarin collars hug the neck; GUARD shirt tucked, jacket 44 % of height (no white shirt tail).
+* Hair material: rougher, weaker specular, fuzzier sheen, stronger clump relief (less lacquered-helmet).
+* `Figure.object3D` / `Hand.object3D` aliases of `root`.
+
+### Measured (1280×536, this 4-core machine, idle; `render.mjs --range`, 24 frames env kit / 10 frames figure labs, mean s/frame after the first)
+
+| lab shot | before | after | what it contains |
+|---|---|---|---|
+| engine EMPTY (`_lab_perf`) | 0.37* | **0.34** | clear + post + JPEG encode (*before: bench.mjs, without JPEG) |
+| engine DOF (`_lab_perf`) | 0.77* | **0.51** | flat lit scene + f/2 DOF |
+| K_MAT swatch board | 1.68 | **1.21** | 21 textured tiles, shadowed key + 3 spots + point, DOF f/8 |
+| K_VIT vitrine | 3.02 | **1.57** | nested sea (480×400 now), moon shaft + dust, shadowed window light, 4 cases, DOF |
+| K_CANDLE | 2.14 | **1.58** | candle with point-light shadows (≈0.17 s), shadowed lattice moon (≈0.16 s), steam, DOF |
+| SEA (dusk deck) | 0.88 | **0.68** | sky + heavy sea + coast + horn lamp |
+| SEA nested 'reflection' | 1.13 | **0.83** | night sea close on the lamp |
+| K_CHAPEL | 1.71 | **1.08** | coloured window light + shaft + 1400 motes + bounce, DOF |
+| K_RAIN | 1.35 | **1.10** | 5000 streaks, drips, ripples, oil lamp, fog cards, DOF |
+| K_ENV spheres | 0.60 | **0.45** | 15 env-mapped spheres |
+| CAST (12 hi figures) | 3.53 | **1.91** | studio rig, 2048 shadow |
+| BENCH / TEA / POSES2 (lab) | 2.32 / 2.09 / 3.54 | **1.88 / 2.00 / 1.98** | 11 hi figures in the set, 6 seated (two-sided skirts) |
+| RV_SIT (review, 2 close seated figures) | — | **1.57** | shadowed key + rim + fill, DOF (MSAA would be 2.24) |
+| RV_PRAY (review) | — | **1.30** | 2 seated figures |
+| H_LINE (5 close-up hands) | 1.34 | **0.73** | |
+
+Every lab is a kitchen-sink demo and most are still above the 1.0 s budget; production shots must pick: one shadowed key,
+nested RTs ≤ 480 px behind glass, `lod:'mid'` beyond ⅓ frame height, candle `castShadow` only for the hero CU, DOF only
+when it is part of the shot.
+
+### Known weaknesses (after this pass)
+* Figures: silhouettes are still soft and a little bulky (no tailoring edges, rounded shoulders); faces read as masks
+  under a hard top key (by design faceless, but light them from the side/front-low); hair is a sculpted shell with a hard
+  hairline; macro hands still slightly plasticky.
+* Seated skirts: the back panel passes into the seat (needs a solid seat); the qipao's slit edges leave a pale flap on the
+  lap; long skirts while striding: the back panel follows the legs only 30 %, so a trailing heel may show through.
+* Two-sided cloth (auto when thighs are raised > 0.6 rad) costs ≈ +0.15 s per close seated figure.
+* Fixed engine cost ≈ 0.3 s/frame of the 1.0 s budget; bloom (UnrealBloomPass, ≈0.1 s) could be replaced by a cheaper one.
+* Scene build of the environment labs is ≈ 25 s (CPU canvas textures: chart, compass, bowl…) and is paid by every render
+  process — a texture disk cache would help parallel renders.
+* Stained-glass shafts still show faint lead-line streaks within ~1 m of the window; colour separation inside the beam is weak.
