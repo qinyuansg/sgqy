@@ -128,16 +128,27 @@ function mapDrawing() {
   const ops = [];               // {k:'line', pts:[[x,y]...], w, c, a} · {k:'poly', pts, fill, a} · {k:'dot', x, y, rad, c, a}
   const INK = '62,44,30', INK2 = '44,32,24';
   const vill = [];              // village house rectangles (for masking hachures)
-  // ---- land height field (cm units → arbitrary height), flat coastal plain, hills behind, a valley to the S044 village
+  // ---- land height field (cm units → arbitrary height). Review: spurs and ravines run down to the coast (the old field was
+  //      one long ridge parallel to the coast + fbm rings); a narrow coastal plain that widens behind both villages; a
+  //      river valley that follows the drawn river (it used to run against it); the S047 hill north-east of the S021 line.
+  const RIV = { x0: coastX(52.4) + 0.1, x1: 70, y0: 52.4, y1: 44.5 };
+  const riverY = (x) => { const t = clamp((x - RIV.x0) / (RIV.x1 - RIV.x0), 0, 1);
+    return lerp(RIV.y0, RIV.y1, Math.pow(t, 1.25)) + 0.75 * Math.sin(t * 15.0 + 0.5) * (1 - 0.5 * t) + 0.3 * Math.sin(t * 37.0 + 1.1); };
   const H = (x, y) => {
     const dist = x - coastX(y);
     if (dist < 0) return 0;
-    const plain = smoothstep(2.2, 7.5, dist);
-    let h = 3.8 * Math.exp(-((dist - 13) ** 2) / 40) + 4.8 * Math.exp(-((dist - 27) ** 2) / 90) + 2.8 * smoothstep(30, 52, dist);
-    h += 1.3 * N.fbm(x / 90, y / 70, 4, 4, 0.55) + 0.8 * N.ridged(x / 90 + 0.3, y / 70, 3, 3);
-    h += 2.6 * Math.exp(-(((x - 58) ** 2) / 70 + ((y - 19) ** 2) / 50));               // the S047 slope: a spur north-east
-    h -= 1.5 * Math.exp(-((y - 50.0 - 0.1 * (x - 40)) ** 2) / 16) * smoothstep(8, 20, dist); // valley: river down to the coast
-    return Math.max(0, h * plain);
+    const plainW = 2.6 + 8.2 * Math.exp(-((y - 56.6) ** 2) / 20) + 1.6 * Math.exp(-((y - 37.7) ** 2) / 5);
+    const rise = smoothstep(plainW, plainW + 8.5, dist);
+    let h = 3.6 * rise + 3.4 * smoothstep(16, 44, dist);
+    const ph = (y + 1.8 * Math.sin(dist * 0.23 + 0.4)) * (2 * Math.PI / 9.0) + 0.9 + 0.35 * N.fbm(x / 90, y / 70, 3, 2);
+    h += 1.55 * Math.sin(ph) * smoothstep(plainW + 1, plainW + 11, dist) * (1 - 0.55 * smoothstep(26, 48, dist));   // spurs ⟂ coast
+    h += 3.6 * Math.exp(-(((x - 57) ** 2) / 85 + ((y - 20) ** 2) / 75));       // the S047 hill (its south flank crosses y 29.7)
+    h += 2.6 * Math.exp(-(((x - 46) ** 2) / 40 + ((y - 6.5) ** 2) / 35));
+    h += 2.8 * Math.exp(-(((x - 74) ** 2) / 110 + ((y - 33) ** 2) / 70));
+    h += 2.2 * Math.exp(-(((x - 67) ** 2) / 70 + ((y - 64) ** 2) / 45));
+    h += 0.9 * N.fbm(x / 90, y / 70, 5, 4, 0.5) + 0.45 * N.ridged(x / 90 + 0.3, y / 70, 4, 3);
+    if (x > RIV.x0 - 1) h -= 2.6 * Math.exp(-((y - riverY(x)) ** 2) / 7) * smoothstep(plainW - 1, plainW + 6, dist);   // river valley
+    return Math.max(0, h * smoothstep(0.4, 2.6, dist));
   };
   const inVillage = (x, y) => vill.some((b) => x > b[0] - 0.5 && x < b[2] + 0.5 && y > b[1] - 0.5 && y < b[3] + 0.5);
   // ---- villages (built first: hachures avoid them)
@@ -161,44 +172,45 @@ function mapDrawing() {
   const markHouses = [[-0.05, -0.42], [0.38, -0.38], [0.0, 0.02], [0.42, 0.06], [0.14, 0.46], [0.66, -0.12], [0.58, 0.42], [0.82, 0.2]];
   for (const [dx, dy] of markHouses) vill.push([hm.x + dx - 0.2, hm.y + dy - 0.17, hm.x + dx + 0.2, hm.y + dy + 0.17]);
 
-  // ---- hachures: strokes start on contour lines and run downhill, weight ∝ slope
-  const step = 0.07, dh = 0.24, nx = Math.ceil(MAPW / step), ny = Math.ceil(MAPH / step);
+  // ---- hachures. Review: jittered fall-line strokes (stratified 1.5 mm cells, no contour rows → no banding or moiré at
+  //      16–25 px/cm), tapered from the uphill end, width/alpha/density ∝ slope (Lehmann-ish: steep = dark, crests and plain
+  //      white); each stroke bends once along the fall line. Drawn as filled wedges ('hach2' op).
+  const step = 0.07, nx = Math.ceil(MAPW / step), ny = Math.ceil(MAPH / step);
   const grid = new Float32Array((nx + 1) * (ny + 1));
   for (let j = 0; j <= ny; j++) for (let i = 0; i <= nx; i++) grid[j * (nx + 1) + i] = H(i * step, j * step);
-  const G = (i, j) => grid[clamp(j, 0, ny) * (nx + 1) + clamp(i, 0, nx)];
+  const Gi = (i, j) => grid[clamp(j, 0, ny) * (nx + 1) + clamp(i, 0, nx)];
+  const hAt = (x, y) => { const fx = x / step, fy = y / step, i = Math.floor(fx), j = Math.floor(fy), u = fx - i, v = fy - j;
+    return lerp(lerp(Gi(i, j), Gi(i + 1, j), u), lerp(Gi(i, j + 1), Gi(i + 1, j + 1), u), v); };
+  const grad = (x, y) => { const e = step; return [(hAt(x + e, y) - hAt(x - e, y)) / (2 * e), (hAt(x, y + e) - hAt(x, y - e)) / (2 * e)]; };
   const hach = [];
-  for (let j = 1; j < ny; j++) for (let i = 1; i < nx; i++) {
-    const h0 = G(i, j);
-    if (h0 <= 0.02) continue;
-    const gx = (G(i + 1, j) - G(i - 1, j)) / (2 * step), gy = (G(i, j + 1) - G(i, j - 1)) / (2 * step), gm = Math.hypot(gx, gy);
-    if (gm < 0.2) continue;
-    // choose the edge family by contour orientation; crossing of a contour level between (i,j) and the next node
-    const useX = Math.abs(gx) >= Math.abs(gy);
-    const h1 = useX ? G(i + 1, j) : G(i, j + 1);
-    const k0 = Math.floor(h0 / dh), k1 = Math.floor(h1 / dh);
-    if (k0 === k1) continue;
-    const L = (Math.max(k0, k1)) * dh, t = (L - h0) / (h1 - h0);
-    const px = (i + (useX ? t : 0)) * step + (r() - 0.5) * 0.02, py = (j + (useX ? 0 : t)) * step + (r() - 0.5) * 0.02;
-    if (px < 2.6 || px > MAPW - 2.6 || py < 2.6 || py > MAPH - 2.6) continue;
+  const cell = 0.15;
+  for (let j = 0; j < MAPH / cell; j++) for (let i = 0; i < MAPW / cell; i++) {
+    const px = (i + r()) * cell, py = (j + r()) * cell, rr = r(), rl = r(), rw = r();
+    if (px < 2.7 || px > MAPW - 2.7 || py < 2.7 || py > MAPH - 2.7) continue;
+    if (hAt(px, py) <= 0.03) continue;
+    const [gx, gy] = grad(px, py), gm = Math.hypot(gx, gy);
+    if (gm < 0.1 || rr > smoothstep(0.1, 0.45, gm)) continue;
     if (inVillage(px, py)) continue;
-    const len = clamp(0.95 * dh / gm, 0.06, 0.55) * (0.85 + 0.3 * r());
-    const w = clamp(0.009 + 0.028 * gm, 0.009, 0.06), a = clamp(0.42 + 0.5 * gm, 0.42, 0.96);
+    const L = 0.3 * (0.8 + 0.4 * rl) * (1.15 - 0.25 * smoothstep(0.5, 2.5, gm));
     const ux = -gx / gm, uy = -gy / gm;
-    const x1 = px + ux * len, y1 = py + uy * len;
-    if (x1 - coastX(y1) < 1.5) continue;
-    hach.push([px, py, x1, y1, w, a]);
+    const mx = px + ux * L * 0.5, my = py + uy * L * 0.5;
+    const [g2x, g2y] = grad(mx, my), g2 = Math.hypot(g2x, g2y) || 1;
+    const ex = mx - g2x / g2 * L * 0.5, ey = my - g2y / g2 * L * 0.5;
+    if (ex - coastX(ey) < 1.2 || inVillage(ex, ey)) continue;
+    const w = clamp(0.006 + 0.0135 * gm, 0.007, 0.05) * (0.85 + 0.3 * rw), a = 0.5 + 0.42 * smoothstep(0.25, 2.2, gm);
+    hach.push([px, py, mx, my, ex, ey, w, a]);
   }
-  ops.push({ k: 'hach', list: hach, c: INK });
+  ops.push({ k: 'hach2', list: hach, c: INK });
   // ---- the river (from the hills down the valley to the coast just north of the fishing village)
-  { const pts = []; for (let k = 0; k <= 160; k++) { const t = k / 160; const y = lerp(44.5, 52.4, t) + 0.9 * Math.sin(t * 17.0 + 0.5) * (1 - 0.6 * t) + 0.35 * Math.sin(t * 41.0); const x = lerp(70, coastX(52.4) + 0.1, Math.pow(t, 0.85)) + 0.9 * Math.sin(t * 23 + 1) * (1 - t); pts.push([x, y]); }
-    for (let k = 0; k < pts.length - 1; k += 4) ops.push({ k: 'line', pts: pts.slice(k, k + 5), w: lerp(0.018, 0.075, k / pts.length), c: INK, a: 0.8 }); }
+  { const pts = []; for (let k = 0; k <= 160; k++) { const x = lerp(RIV.x1, RIV.x0, k / 160); pts.push([x, riverY(x)]); }
+    for (let k = 0; k < pts.length - 1; k += 4) ops.push({ k: 'line', pts: pts.slice(k, k + 5), w: lerp(0.016, 0.06, k / pts.length), c: INK, a: 0.85 }); }
   // ---- coast road: dashed double line behind the beach linking both villages
   { const pts = []; for (let y = 30; y <= 66; y += 0.5) pts.push([coastX(y) + 2.6 + 0.25 * Math.sin(y * 0.4), y]);
     ops.push({ k: 'line', pts, w: 0.018, c: INK, a: 0.55, dash: [0.45, 0.3], off: 0.09 }); ops.push({ k: 'line', pts, w: 0.018, c: INK, a: 0.55, dash: [0.45, 0.3], off: -0.09 }); }
   // ---- coastline + waterlining (sea otherwise blank)
   { const pts = []; for (let y = 1.0; y <= MAPH - 1.0; y += 0.12) pts.push([coastX(y), y]);
     ops.push({ k: 'line', pts, w: 0.12, c: INK2, a: 1.0 });
-    [[0.18, 0.55, 0.02], [0.38, 0.38, 0.016], [0.64, 0.24, 0.014], [0.98, 0.13, 0.012]].forEach(([o, a, w]) => ops.push({ k: 'line', pts: pts.map(([x, y]) => [x - o - 0.03 * Math.sin(y * 0.9 + o * 9), y]), w, c: INK, a }));
+    [[0.16, 0.62, 0.022], [0.34, 0.48, 0.019], [0.56, 0.36, 0.016], [0.84, 0.25, 0.014], [1.2, 0.15, 0.012]].forEach(([o, a, w]) => ops.push({ k: 'line', pts: pts.map(([x, y]) => [x - o - 0.03 * Math.sin(y * 0.9 + o * 9), y]), w, c: INK, a }));
     // beach stipple in front of both villages
     for (let k = 0; k < 1100; k++) { const y = 52.6 + r() * 7.6, x = coastX(y) + 0.15 + Math.pow(r(), 1.4) * 1.9; ops.push({ k: 'dot', x, y, rad: 0.018 + r() * 0.012, c: INK, a: 0.55 }); }
     for (let k = 0; k < 160; k++) { const y = S021.markY - 1.0 + r() * 2.0, x = coastX(y) + 0.1 + Math.pow(r(), 1.4) * 0.8; ops.push({ k: 'dot', x, y, rad: 0.016, c: INK, a: 0.5 }); }
@@ -230,6 +242,19 @@ function drawOps(g, ops, k, ox = 0, oy = 0, clip = null) {
         g.strokeStyle = `rgba(${o.c},${a.toFixed(3)})`; g.lineWidth = Math.max(minW * 0.8, w * k);
         g.beginPath(); g.moveTo(X(x0), Y(y0)); g.lineTo(X(lerp(x0, x1, 0.5)) + w * k * 0.15, Y(lerp(y0, y1, 0.5))); g.lineTo(X(x1), Y(y1)); g.stroke();
       }
+    } else if (o.k === 'hach2') {
+      g.fillStyle = `rgb(${o.c})`;
+      for (const [x0, y0, x1, y1, x2, y2, w, a] of o.list) {
+        if (!inClip(x0, y0)) continue;
+        const dx = x2 - x0, dy = y2 - y0, l = Math.hypot(dx, dy) || 1, nx = -dy / l, ny = dx / l;
+        const w0 = w * 0.5, w1 = w * 0.42, w2 = w * 0.12;                         // tapered wedge, blunt uphill end
+        g.globalAlpha = a;
+        g.beginPath();
+        g.moveTo(X(x0 + nx * w0), Y(y0 + ny * w0)); g.lineTo(X(x1 + nx * w1), Y(y1 + ny * w1)); g.lineTo(X(x2 + nx * w2), Y(y2 + ny * w2));
+        g.lineTo(X(x2 - nx * w2), Y(y2 - ny * w2)); g.lineTo(X(x1 - nx * w1), Y(y1 - ny * w1)); g.lineTo(X(x0 - nx * w0), Y(y0 - ny * w0));
+        g.fill();
+      }
+      g.globalAlpha = 1;
     } else if (o.k === 'line') {
       const pts = o.pts; if (!pts.some(([x, y]) => inClip(x, y, 3))) continue;
       g.strokeStyle = `rgba(${o.c},${o.a})`; g.lineWidth = Math.max(minW, o.w * k);
