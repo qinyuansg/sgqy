@@ -1,0 +1,165 @@
+{
+ "summary": "Q3 (CH2 135.4 s - BR2 191.0 s, S041-S060 + cut into S041). The section's architecture holds: S046 harbour-across-eras is the best shot here (locked frame, slice timing exactly per ruling, migrant back-to-camera with case in her RIGHT hand, lantern light-match from S045 lands at (0.40,0.46)), and the T17 horizontal chain S046->S047->S048->S049 holds y~0.66 on every cut. But the two emotional pivots of the section do not land: (1) BR1's 'she starts reading the person' - S050 never lifts her eyes, S052's jasmine reads as a burn stain, and S054 is a static high wide of a mannequin face with no rack to the eye and a spectral ring in the wrong place for the S055 light cut; (2) BR2's motivation for S061 - in S060 the phone leaves frame and the last frame is the brightest of the shot, so the 'light dies' darkness (ruling S060->S061) never happens. CH2 delivers only 2 of its 4 'new details': the child's feet (S042, awkwardly) and the village under the line (S044, fighting stripes) read; the cloth in the letter (S043) and the touch of the patch (S045) do not. Director notes status: #1 faces - NOT fixed in this range (S043 frontal mask + eye band, S045 end bald lit profile, S054 lit mask; S050 ear reads as an earbud); #2 map office - NOT fixed (S044/S047 stripes dominate, S047 still fur); #4 S045 - partially (patch visible 145.1-146.7 but hands at mean 13/255 and the fingers never touch it); #5 S049 - partially (handle->case->letter order exists but contents are abstract slabs, the opening happens off-camera, and the old handle reads newer than the new one); #6 S048 hand - scale OK, but the hand rests on the bar without gripping; #7 grain - NOT fixed (module grain quads still live in pier_waiting, map_office, sea_deck, harbor_eras, night_window); #8 exposure - jumps at S044->S045 (69->14, -2.3 stops), S050->S051 (22->186), S058->S059 (9->40), and S060's end (43) vs S061's start (21). Chapel light S055/S056/S058 is beautiful; S057's diamond-quarry reflection (T18 set-up for S061) is unreadable.",
+ "findings": [
+  {
+   "shot": "S054",
+   "module": "restoration_lab",
+   "severity": "blocker",
+   "kind": "story",
+   "issue": "BR1's emotional pivot ('也读我没说完的喜欢' - she reads the person, not the date) is not delivered. Instead of the paper-level ECU with a rack from the jasmine to her eye, the whole shot (170.21-174.58) is a static high three-quarter wide of the restorer hunched over the bench: her warm-lit mannequin face (bald-reading cap, nose, cheek) fills the top third, the magnifier is held upright like a lollipop beside her face (her eye is never behind the lens), the jasmine is invisible (<1% of frame), the right glove is a featureless white lump, the left arm lies flat as a plank, and there is no focus move at 172.14-172.92. The spectral ring appears on the paper at (0.75,0.69) instead of (0.72,0.30), so the light-to-light cut into S055 (lancet's brightest cluster upper-right) does not connect.",
+   "fix": "Rebuild to the keyframe: 100 mm, lens 3-4 cm above the blotter at the letter's near edge, looking up across the sheet toward her. Bottom band: jasmine + the broken stroke soft-sharp at (0.42,0.88), >=10% of frame width. Her face 0.30-0.35 m beyond, three-quarter, keyed only by the lowered 3500K lamp as top/edge light (keep >=70% of the face below 0.15 luminance; no frontal fill) so the mask never reads. 170.82 the magnifier slides in between flower and lens (rim ~35% of frame height, her gloved fingers on the handle at lower right). 172.14->172.92 rack focus from 0.06 m to the eye through the lens (f/2): the magnified eye (mole below the LEFT eye at the lens edge) becomes the sharpest thing at (0.52,0.42) on '欢'. 174.3 tilt the magnifier 15 deg so the pastel ring (muted ruby/amber/cobalt) lands at (0.72,0.30) and hold 6 frames into the S055 cut. Gloved fingertips hover 5 mm above the paper, never touching."
+  },
+  {
+   "shot": "S060",
+   "module": "night_window",
+   "severity": "blocker",
+   "kind": "story",
+   "issue": "The ruling's beat (phone light dies at 190.6; she sees only an unlit bent back) never happens. The phone is lowered out of the bottom edge at ~190.3 (f4566-4570) and the last 0.6 s is a bright warm sill + window pillar with his empty open hand; the face-down phone on the thigh is never seen. The end frame (mean 43/255) is brighter than the start (38) and twice S061's first frame (21) - there is no darkness to move her. Continuity: the phone is a modern slab with a chrome-blue bezel highlight, not the old dark-grey phone in a worn navy flip case with a cracked corner (bible 6.17); at 188.71 his thumb lies ON the screen instead of hovering over the dial key.",
+   "fix": "Tilt down ~12 deg with the phone over 190.03-190.5 so it never leaves frame; land it face-down on his right thigh at (0.56,0.70), navy case back with the cracked corner up, his hand resting on it (ruling S062+: it stays there until S072). Ramp the screen light 1->0 over 4 frames ending exactly 190.6. Cut the reading-lamp spill on the sill by ~1.5 stops and keep the pale window pillar out of frame or in shadow so the last frame sits at mean <=20/255 with only harbour points and a warm lamp edge from frame left. Model the flip cover (open, hinged left) and drop the chrome bezel. Thumb hovers 5-8 mm above the dial key at 188.71, withdraws at 190.03."
+  },
+  {
+   "shot": "S043",
+   "module": "pier_waiting",
+   "severity": "blocker",
+   "kind": "readability",
+   "issue": "CH2's new detail - the cloth triangle in the repeatedly folded letter - is unreadable. The 'letter' is a flat cream card ~6% of frame width that never unfolds; the cloth is a grey smudge on it (140.22); she never visibly opens, strokes or refolds anything - two detached mitten forearms pat a card on a lid. The rattan suitcase 'across her knees' reads as a 70 cm crate / lectern filling the lower half. Frame 0 shows her frontal mannequin face with the black band across the eyes (Q1's S020 fault repeated; director note #1). The S043->S044 match only works because the case's lid edge (y 0.63-0.68) happens to sit at the ruler height - the letter fold, the registered element, plays no part.",
+   "fix": "Keep S020's camera data (the repeat) but open at S020's END framing and push to ~1.4x by 140.2 so the top of frame cuts at her nose - no face, braid and bowed head-top only at upper left. Scale the case to bible size (~50x33x17 cm) lying on her thighs, top surface at y~0.70. 139.9-140.22 the letter unfolds visibly (two folds lifting) to ~22% of frame width at (0.52,0.62); the cloth triangle #6F7F8F, 3x4 cm (~5-6% of frame width), lifted 1 cm by her right thumb at 141.18 so the 2400K bulb rims it; hold 0.4 s; refold on the old creases and press with the palm by 141.8 so the folded top edge is the clean horizontal at y=0.66, x 0.34-0.66 (S044 register). Use hi hands with articulated fingers; forearms continuous with the blouse sleeves."
+  },
+  {
+   "shot": "S044 / S047",
+   "module": "map_office",
+   "severity": "blocker",
+   "kind": "lighting",
+   "issue": "Director note #2 NOT fixed. In S044 and S047 the louvre moon-stripes are still ~60/40 hard white bands across the whole frame, brighter than the map; the coastline is a heavy black hair-like squiggle; S047's hachures still read as animal fur at 100 mm; the new ink line is a matte black rod with a dotted highlight (not wet iron-gall ink); the pen reads as a white plastic tube; S047's lower 30% is a dead black slab (ruler body). S044 end: black marks on the pressed fingernails (map decal showing through the nails) and the spread fingers are cut by the top edge, palm centre ~(0.47,0.42) instead of (0.45,0.60). The village (the 'new detail') is rows of tiny boxes that only half-read under the stripes.",
+   "fix": "Stripes: contrast <=1.3:1 (moon-through-louvre x0.3, penumbra x3 so slats are soft bands), make the 2200K lamp from frame right the key. Paper: replace the hachure texture with sparse printed 0.2 mm strokes at ~15% opacity, fibre only as a low-amplitude (<=0.1) normal; coastline 0.4 mm sepia at 50%; village houses drawn as tiny pitched roofs + boats, darker than the hachures. Ink: 1.0-1.2 mm blue-black line with a clearcoat/specular strip catching the lamp for ~0.8 s behind the nib, a hair of bleed. Nib: steel (metalness 1, roughness 0.25). S047: drop the ruler to y>=0.80 (line stays at 0.66) and give its brass edge + ebony a lamp highlight so the lower third isn't black. S044: end with palm centre (0.45,0.60), fingertips >=0.06 below the top edge, hand width ~35-40% of frame height (also the S045 register); lift the nail geometry 1 mm or draw the decal with polygonOffset so nothing prints through the hand."
+  },
+  {
+   "shot": "S045",
+   "module": "sea_deck",
+   "severity": "blocker",
+   "kind": "figure",
+   "issue": "CH2 lock 'first touch the patch, then look at the shore light' does not read. 145.1-146.7 his left hand hovers over his upturned right palm, fingertips 1-2 cm off a pale-blue rectangle stuck on the OUTSIDE of the cuff; nothing turns the cuff back, nothing touches the patch. Hands at mean 13/255 (note #4 only partly fixed). At 146.7 ('某个', the eye lift) the frame is still on the hands; the tilt then whips through the dark coat in ~0.8 s. The end frame (147.5-148.67) is a fully lit bald mannequin profile - bare skull under a small cap, a large crisp ear, a catch-light dot for an eye (note #1). Hands read as lumpy rubber (salt crust as warts).",
+   "fix": "145.14 left index+middle fingertips hook the right cuff edge and fold it back 3-4 cm, revealing the patch on the INSIDE (bible lock); pads rest on it with real contact 145.4-146.0, thumb rubs once. Lift the hands 1-1.3 stops (moon key on hands, stern-lantern 1950K kicker from frame right) to mean ~30/255 with the patch the brightest mid-tone; salt as fine glints (2-3 px) not bumps. Start the tilt at 145.9, arrive on the eye at 146.7, hold to the cut. Final framing MCU 75-85 mm, face mostly silhouette against the deep-blue sea: moon rim from upper right on brow/nose/cheek edge only, head-cloth pulled down over the skull and ear (ear in shadow), catch-light in the near eye; shore light at (0.40,0.46) kept for the S046 light-match, bokeh ~4% of frame height so it is the brightest thing in frame."
+  },
+  {
+   "shot": "S044-S045",
+   "module": "map_office",
+   "severity": "major",
+   "kind": "cut",
+   "issue": "The cross-era hand match does not match: S044 ends on a spread hand ~0.8 frame-heights wide, fingers to the top edge, mean 69/255 with white stripes; S045 opens on a hand ~0.55 wide pointing down-left, mean 14/255. Scale, orientation and a 2.3-stop exposure drop make it a jarring cut, not a match.",
+   "fix": "Change the S044 side (already under rework): stop the push so the hand is ~35-40% of frame height wide at (0.45,0.60), palm down, fingers toward frame top; with softened stripes S044's end should sit near mean 40. In S045 orient his left hand the same way at frame 0 (wrist toward the lower edge, fingers toward the top, palm down onto the cuff) and lift to mean ~30 (see S045)."
+  },
+  {
+   "shot": "S052",
+   "module": "restoration_lab",
+   "severity": "major",
+   "kind": "readability",
+   "issue": "'原来还有这个' - the jasmine reads as an orange-brown burn/rust stain (~3% of frame) with a hooked stroke, not a pressed flower. The front of the letter carries crisp, high-contrast pseudo-hanzi that look like real-but-wrong characters (ruling 4: letters stay illegible/soft; to a Chinese audience these read as gibberish). The sheet flips as a rigid board around a vertical axis. The glove drops to blue-grey in shadow (continuity with the warm-white gloves of S049).",
+   "fix": "Model the pressed jasmine: 5-7 translucent overlapping browned petals (#A88A5A), ~2.5 cm -> >=8% of frame height at (0.58,0.46), raking lamp from upper left giving a hairline shadow and petal translucency; keep the broken last column immediately beside it (ruling). Defocus the front text (focus plane on the back margin, f/2.8) or halve its stroke contrast and blur the texture 1.5 px. Curl the sheet as it turns (>=20 deg bend, vertex curl or 3-segment hinge) over 165.9-166.4. Add a warm 2800K bounce so the glove stays warm-white (#E9E4DA) in shadow."
+  },
+  {
+   "shot": "S050",
+   "module": "restoration_lab",
+   "severity": "major",
+   "kind": "story",
+   "issue": "She never lifts her eyes: the head stays bowed through 160.92 ('看穿：她抬眼，若有所思') to the end, so the line '读过年月，不等于把你看穿' has no face to land on. Her right arm is a rigid straight tube reaching ~70 cm to the ledger (plank pose); the letter she is reading is not in frame (only the ledger). At 960 px her ear (dark concha, bright rim) reads as a black earbud - an unwanted 'she is listening to music' read. The flashlight sweep in the door pane at ~160.6 does read - keep.",
+   "fix": "160.92-161.6 head lifts 12-15 deg and turns ~10 deg toward frame right past the lamp (not toward the door), held to 162.5, pencil frozen mid-air; keep the face in the current low-key side light (the lift should reveal only brow/eye-socket edge). Bend her right elbow ~100 deg, forearm along the bench edge, hand at (0.64,0.82); left forearm in the foreground with the worn cuff spot (keyframe). Put the letter (out of its sleeve) flat in the lamp pool at lower centre, soft. Lighten the ear's interior albedo and soften its rim so it reads as skin."
+  },
+  {
+   "shot": "S057",
+   "module": "chapel",
+   "severity": "major",
+   "kind": "continuity",
+   "issue": "T18 set-up fails: the clear diamond quarry at (0.70,0.45) with the restorer's half-seen face is unreadable - it is lost among large, saturated, defocused foreground petals as one more pale blob. The brief's '修复师的倒影在一小块玻璃里若隐若现' and the S057<->S061 'same glass, seventy years apart' rhyme both depend on this shot.",
+   "fix": "Make the quarry the clearest shape on the right third: a thin candle glint on its lead cames outlining the lozenge, clear glass darker than its coloured neighbours (dark nave behind), the face inside as a cool moon-silver (temp -0.3 against the warm chapel) low-ponytail silhouette at 12-15% luminance, fading in 180.94->182.4. Darken/desaturate the surrounding foreground petals ~30% and halve their scale; bias focus so the quarry's CoC is <=3 px while the profile stays sharp."
+  },
+  {
+   "shot": "S049",
+   "module": "restoration_lab",
+   "severity": "major",
+   "kind": "continuity",
+   "issue": "The aged handle reads NEWER than the new one: S049's is a smooth brown wooden dowel while S048's has a textured rattan wrap - the 'same object, decades later' ageing is inverted. The case opening happens off-camera (155.7-156.0) and the '15 deg tilt' reads as a cut from a side view to a top-down view. Contents are flat abstract slabs: a red square with a yellow half-disc (comb), a flat grey board (the shirt). Director note #5 only partly fixed.",
+   "fix": "Old handle = S048's rattan-wrap geometry with dark-brown sweat-stained albedo, frayed fibre ends, a broken binding at the right; the same lit position y=0.66. Show the lid lifting on its far hinge 155.6-156.3 while the camera tilts smoothly 15 deg (no framing jump). Comb: boxwood #C9A36A with visible teeth on the red-brown cloth, moved aside to the left; shirt: folded grey-blue cloth with fold lines, collar and one button; polyester sleeve with a clear edge highlight when lifted at 157.02."
+  },
+  {
+   "shot": "S048",
+   "module": "map_office",
+   "severity": "major",
+   "kind": "figure",
+   "issue": "The hand does not grip: a mitten-like fist rests on top of the handle bar, fingers never curl around it, and nothing tightens at 154.4 ('关'); note #6 scale is now OK. The mid-tilt frames 153.4-153.8 are unreadable (a doubled threshold line, a floating shoe over a second floor). The two shoes merge into one large black blob at frame 0.",
+   "fix": "Fingers wrap under the bar (2nd-5th fingers' tips hidden behind it, knuckles on top, thumb over the index), small hand per bible; at 154.4 a 2-3 mm squeeze with knuckle highlights +20% (whitening). Tilt path: rise along her side (skirt hem -> blouse hem -> hand) with focus following, a single threshold line. Separate the shoes (10 cm apart, one slightly ahead) so they read as a pair side-on."
+  },
+  {
+   "shot": "S058-S059",
+   "module": "night_window",
+   "severity": "major",
+   "kind": "cut",
+   "issue": "T19 match: positions are close but the cut jumps ~2 stops: S058 ends at mean 9/255 (shoulders barely above black), S059 opens at 40 with cream window frames as the brightest elements. The guard's back is ~25% wider (shoulders ~37% of frame width vs 29%) and centred ~0.04 right of the register (0.66,0.50).",
+   "fix": "S059 side: 75 -> 65 mm or dolly back 0.3 m so shoulder width is ~30% at (0.66,0.50); darken the window frames (dark painted timber, or 1 stop less lamp spill) so frame 0 sits at mean ~22-25; keep the two warm points near (0.52,0.38) to rhyme with S058's candles. S058 (chapel) last 0.5 s: add blue-hour fill so the dove-grey shoulders read at ~0.25 luminance (mean ~20) instead of near-black."
+  },
+  {
+   "shot": "S059",
+   "module": "night_window",
+   "severity": "major",
+   "kind": "lighting",
+   "issue": "At 187.3 ('手机冷光亮起') nothing visible happens on him; by the end only a faint glint on the hand - the 6500K glow that must rim his right cheek, ear and glasses from below is missing, so the beat that S060/S061 pay off is weak. The thermos (set-up for the S077 refill) is not in frame. The harbour through the window is a flat navy plane with two points (no breakwater, no anchored-ship lights). His hair reads as a white bald cap.",
+   "fix": "Add a small 6500K area light at the phone, ramping 0->1 over 187.3-187.7, aimed up to rim cheek/ear/glasses rim (screen face never visible). Place the dented steel thermos with its scuffed navy cup-lid at lower right ~(0.86,0.82). Add 8-12 harbour light points at varied depth plus a breakwater lamp line. Hair: short salt-and-pepper texture with darker temples, thinning crown."
+  },
+  {
+   "shot": "S040-S041",
+   "module": "old_home",
+   "severity": "major",
+   "kind": "cut",
+   "issue": "The 'reflection' hand-off is a hard on-axis jump cut: S040 ends on the glove ~60% of frame height at (0.37,0.58); S041 opens on the same glove ~22% of frame height at (0.36,0.55) - a ~2.7x scale jump on the same subject. The glove then floats on a straight vertical black sleeve (puppet-stick arm, orange cuff band) beside a large defocused warm blob (G3c case glow) that owns the centre for ~1 s.",
+   "fix": "Change S041's opening (the incoming side): start on S040's last-frame scale and angle (glove ~60% frame height at (0.37,0.58), sleeve entering from lower-left at ~35 deg), slightly soft, then over 135.42-136.4 rack focus into the reflection while the glove's opacity goes to 0 - no reframe. Drop the G3c glow 2 stops or move it off-centre so the eaves image reads by 135.48 ('千年啊')."
+  },
+  {
+   "shot": "S041",
+   "module": "old_home",
+   "severity": "major",
+   "kind": "composition",
+   "issue": "Locked CH2 frame: the empty bowl - the object that carries the cut into S042 and the 'waiting for rain' idea - is a 1-2% white speck; the right half of the 2.39 frame is a flat, featureless grey 'cloud' plane over a flat sea, so the CH2 weather change (heavier, lower cloud, damp stone) reads as fog on a wall rather than weather. The wife sits on a dark block rather than the doorstone.",
+   "fix": "Give the bowl a small pool of door/niche spill so it is the brightest small highlight left of her, or move it 0.4 m toward camera so it reads >=3% of frame width at (0.28,0.80); give the cloud deck structure (darker bellies, a lit edge around the moon glow, 2-3 layered bands moving slowly), a faint glitter path on the sea under the glow; wet the step (roughness ~0.25, a dark damp edge) and add 2-3 eaves drips. Seat her on the doorstone (no block)."
+  },
+  {
+   "shot": "S042",
+   "module": "old_home",
+   "severity": "major",
+   "kind": "figure",
+   "issue": "The child's entrance is awkward: at 139.0 (f3336) a foot slides in horizontally at mid-height like a floating limb, then two legs drop from the top edge like pillars; shins run to the top of frame (spec: nothing above the ankles), which makes the child read adult-tall; at 139.68 the toes poke out BELOW the sole line (clipping into the stone). The rim band of the canonical bowl, at its largest in CH2, reads as isolated dots rather than one continuous plum branch.",
+   "fix": "Step in from behind/above the threshold: heel lands first at (0.50,0.70) on 139.02 from ~5 cm above, foot travel <=12 frames, soles never shown to camera. Flag the door light so shins above ~8 cm fall into darkness (or tilt 6 deg down) - only feet and ankles read. Toe group sits on the stone (+2 mm), and the 139.68 wiggle is a 3-4 mm curl of the toes, not a sub-sole pop. Paint the rim band as a continuous branch linking the blossoms (bible PROP_BOWL)."
+  },
+  {
+   "shot": "S055",
+   "module": "chapel",
+   "severity": "minor",
+   "kind": "composition",
+   "issue": "Mid-crane (~176.0) the frame is ~85% flat lime wall crossed by streaky, noisy shafts, the lancet cut at the right edge and a black-and-white striped object at the left edge (x<0.07) that reads as an artefact; for ~1.5 s the 'grand and quiet' volume (vault, nave depth) disappears. Frame 0 lancet is narrower (x 0.66-0.78) with its top visible rather than cut.",
+   "fix": "Move the crane path 2.5-3 m off the south wall and start the 40 deg pan by 175.4 so vault ribs, the nave and the shafts' landing on the floor stay in frame through the descent; remove/fix the striped object; increase shaft samples (or blue-noise jitter) so dust reads as dust, not scratches. Frame 0: lancet x 0.62-0.92 with its top cut by the frame as written."
+  },
+  {
+   "shot": "S043-S060 (grain)",
+   "module": "pier_waiting, map_office, sea_deck, harbor_eras, night_window",
+   "severity": "major",
+   "kind": "grade",
+   "issue": "Director note #7 NOT fixed: module-side grain quads are still active in pier_waiting (S043), map_office (S044, S047, S048), sea_deck (S045), harbor_eras (S046, its own 0.15-0.18 units) and night_window (S059, S060), while restoration_lab and chapel use the engine grain - S045/S046's skies show visibly coarser blue grain than the lab inserts S049-S054.",
+   "fix": "In each listed module delete grainQuad/grainProbe/setGrain and the 'grain: 0' overrides; return the era amount from the per-shot post (CT_MIG 0.044, CT_NAV 0.042, CT_MODERN 0.035) and let engine/post.js's integer-hash grain draw it. Verify on an S045 | S046 | S050 triptych at 1280 px."
+  },
+  {
+   "shot": "S050-S051",
+   "module": "restoration_lab",
+   "severity": "minor",
+   "kind": "grade",
+   "issue": "S051 frame 0 is near-blown cream (mean 186/255) straight after S050's 22 - a 3-stop flash on the cut - then drops to ~116 as the lamp contracts; the keyframe wants deep blue-black edges from frame 0. The faded vermilion column rule is missing, so the last line reads as a row of ticks.",
+   "fix": "Open S051 already at the contracted-pool level (mean ~110-120, vignette to deep blue-black at the edges) or move the lamp-pull into S050's last 0.3 s; add the faded vermilion rule (#B4533F) running left-right under the column."
+  },
+  {
+   "shot": "S056 / S057 / S058",
+   "module": "chapel",
+   "severity": "minor",
+   "kind": "continuity",
+   "issue": "MOTHER's costume reads as a white short-sleeved shirt with a turn-down collar and front buttons (modern blouse / T-shirt) rather than the dove-grey qipao with a stand collar - the 1950s Nanyang era cue is lost, and white cloth blooms under the petals (S058 at 185.1).",
+   "fix": "Dove-grey qipao (mid-grey ~0.45 albedo, slight sheen): mandarin stand collar, diagonal right-side placket with 2-3 frog buttons, cap sleeves; the petals then read as coloured light on grey silk without clipping."
+  }
+ ]
+}

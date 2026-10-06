@@ -103,9 +103,11 @@ function findShot(f) {
   return lo;
 }
 
-async function renderShotInto(shot, f, chain) {
+// fShot: the frame the shot is staged at (an incoming dissolve holds its first frame before its in_frame);
+// f: the film frame (grain, song time for flicker etc. still advance).
+async function renderShotInto(shot, f, chain, fShot = f) {
   const dur = (shot.out_frame - shot.in_frame) / FPS;
-  const tl = (f - shot.in_frame) / FPS, u = tl / dur, T = f / FPS;
+  const tl = (fShot - shot.in_frame) / FPS, u = tl / dur, T = fShot / FPS;
   ctx.frame = f; ctx.T = T;
   let inst;
   try {
@@ -126,6 +128,16 @@ async function renderShotInto(shot, f, chain) {
 
 const DISSOLVES = new Set(['dissolve', 'light', 'reflection', 'match_dissolve']);
 
+// Dissolve window of the transition INTO shots[j]: transition_in.align = 'center' (default, the shot list's
+// convention: half before the cut, half after) | 'end' (completes on the cut) | 'start' (begins on the cut).
+function dissolveWindow(j) {
+  const s = shots[j], tr = s && s.transition_in;
+  if (!tr || !DISSOLVES.has(tr.type) || !(tr.frames > 0) || j === 0) return null;
+  const n = tr.frames | 0, al = tr.align || 'center';
+  const ws = al === 'start' ? s.in_frame : al === 'end' ? s.in_frame - n : s.in_frame - Math.floor(n / 2);
+  return { ws, we: ws + n, n, light: tr.type === 'light' };
+}
+
 async function renderFrame(f) {
   f = Math.max(0, Math.min(TOTAL - 1, f | 0));
   const i = findShot(f), shot = shots[i];
@@ -136,11 +148,14 @@ async function renderFrame(f) {
   if (tr.type === 'fade_in' && n > 0 && local < n) fade = 1 - util.ease.inOutSine((local + 1) / (n + 1));
   const fo = shot.fade_out_frames | 0;
   if (fo > 0 && f >= shot.out_frame - fo) fade = Math.max(fade, util.ease.inOutSine((f - (shot.out_frame - fo) + 1) / fo));
-  if (DISSOLVES.has(tr.type) && n > 0 && local < n && i > 0) {
-    const texPrev = await renderShotInto(shots[i - 1], f, chainA);
-    const texCur = await renderShotInto(shot, f, chainB);
-    const a = util.ease.inOutSine((local + 1) / (n + 1));
-    display.show(texPrev, texCur, a, { fade, mode: tr.type === 'light' ? 1 : 0 });
+  let dj = -1, w = null;
+  for (const j of [i, i + 1]) { const x = dissolveWindow(j); if (x && f >= x.ws && f < x.we) { dj = j; w = x; break; } }
+  if (w) {
+    const out = shots[dj - 1], inc = shots[dj];
+    const texPrev = await renderShotInto(out, f, chainA);                         // outgoing may run past its out_frame (u > 1)
+    const texCur = await renderShotInto(inc, f, chainB, Math.max(f, inc.in_frame)); // incoming holds its first frame until its cut
+    const a = util.ease.inOutSine((f - w.ws + 1) / (w.n + 1));
+    display.show(texPrev, texCur, a, { fade, mode: w.light ? 1 : 0 });
   } else {
     const tex = await renderShotInto(shot, f, chainA);
     display.show(tex, null, 0, { fade });
