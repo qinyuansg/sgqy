@@ -1134,16 +1134,16 @@ export default async function create(ctx) {
       // blue; the moon is behind the camera, low
       const sAz = camAz + 9;                                   // the warm band just inside frame right
       const skyA = { preset: 'night', sunAz: sAz, sunElev: -2.5, sunGlowWidth: 8, sunSharp: 70, moonAz: camAz - 150, moonElev: 12, cloudCover: 0.26, stars: 0.35 };
-      const skyB = { preset: 'predawn', sunAz: sAz, sunElev: -2.5, sunGlowWidth: 8, sunSharp: 70, sunGlow: 1.6, moonAz: camAz - 150, moonElev: 12, cloudCover: 0.26, stars: 0.15 };
+      const skyB = { preset: 'predawn', sunAz: sAz, sunElev: -2.5, sunGlowWidth: 8, sunSharp: 70, sunGlow: 2.4, moonAz: camAz - 150, moonElev: 12, cloudCover: 0.26, stars: 0.15 };
       sky.set(skyB);
       setMoon(camAz - 150, 12, neck, 0.0, 1.5);
-      sky.blend(skyA, skyB, 0.66 + 0.1 * clamp(u)); sky.uniforms.uSkyExposure.value = 0.66;   // 234–235.6 s: between P02 and P20 (bible §2.3)
+      sky.blend(skyA, skyB, 0.52 + 0.1 * clamp(u)); sky.uniforms.uSkyExposure.value = 0.7;   // deep blue at left, the first light gathered at frame right   // 234–235.6 s: between P02 and P20 (bible §2.3)
       lamp.object3D.visible = false; for (const a of parts.lampArm) a.visible = false;
       // the first light: low, from the right horizon in front of him once he has turned (rakes the front of his profile;
       // the cheek toward the lens stays in the blue sky fill)
-      const kd = dirFromAz(camAz + 64, 7);
+      const kd = dirFromAz(camAz + +(Q.get('s75a') || 96), 6);                       // from the right horizon, a little behind him: a rim, not a key
       glowLight.color.set(0xdcb4a0); glowLight.position.copy(neck).addScaledVector(kd, 30); glowLight.target.position.copy(neck); glowLight.target.updateMatrixWorld();
-      glowLight.color.set(0xe8b8a0); glowLight.intensity = 1.2 + 4.2 * turn;      // a cool-peach rim lands on his cheek as he turns
+      glowLight.color.set(0xe8b8a0); glowLight.intensity = 1.0 + 3.2 * turn;      // a cool-peach rim lands on his cheek as he turns
       hemi.color.set(0x4a5f86); hemi.groundColor.set(0x10151f); hemi.intensity = 0.75;
       dbgPivot = neck; debugCam();
       envUpdate(T, T, { lampI: 0, seaLamp: 0, pose });
@@ -1341,9 +1341,9 @@ export default async function create(ctx) {
     // (review) turns to his own LEFT through the camera side, ~150°: from a left profile (home, screen-left) to a right
     // profile turned a little toward the lens (the first light, screen-right) — the T25 echo / S076 dissolve pose.
     // The feet pivot ~60°, the shoulders and head follow (no strained neck-only turn).
-    f.root.rotation.y = -Math.PI / 2 + 1.05 * turn;
+    f.root.rotation.y = -Math.PI / 2 + 1.12 * turn;
     f.pose('stand', { weight: lerp(-0.25, 0.2, turn) });
-    f.pose({ 'spine.y': lerp(0.0, 0.18, turn), 'chest.y': lerp(0.0, 0.38, turn), 'neck.y': lerp(0.05, 0.5, turn), 'head.y': lerp(0.12, 0.7, turn),
+    f.pose({ 'spine.y': lerp(0.0, 0.18, turn), 'chest.y': lerp(0.0, 0.38, turn), 'neck.y': lerp(0.05, 0.62, turn), 'head.y': lerp(0.12, 0.85, turn),
       'head.x': lerp(-0.06, -0.1, turn), 'neck.x': -0.03, 'head.z': 0.03 * Math.sin(Math.PI * turn) }, { add: true });
     f.breathe(T, 0.8, 0.2);
   }
