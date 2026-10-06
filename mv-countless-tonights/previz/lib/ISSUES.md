@@ -254,3 +254,52 @@ engine grain (default 0.035, or a per-shot value) so the film's grain is uniform
   almost never fire. Remap in the shader (e.g. `(n − 0.5) * 4 + 0.5`) or document the range.
 - **Neighbour observation (sea_deck, not edited):** S045's first frame frames the navigator's left hand ≈ 0.15 frame-width right of the
   shot list's register (0.45, 0.60). map_office's S044 end palm sits on the register (0.450, 0.600).
+
+## [corridor] notes (worked around in scenes/corridor.js; not blockers)
+- **`ctx.renderNested` has no camera override.** P5 (the end screen of S027 / S061 / S066) must show night_window's bay
+  from the corridor camera's own pose, not from `view_bay_back`'s camera. corridor primes one nested render with
+  `renderer.render` wrapped to capture night_window's scene + camera, then overrides that camera instance's
+  `updateMatrixWorld` only while its own renderNested call runs (pose, fov, `setViewOffset` sub-frustum; cleared after).
+  It also hides night_window's screen/stub and (S027) figures by matching on material colour/name. Fragile if night_window
+  renames meshes or swaps the camera object. Suggestion: `renderNested(key, view, tl, u, T, rt, aspect, { camera })` (a pose
+  + fov + view offset the engine applies to the view's camera) and an optional `hide` tag list for modules.
+- **`blendHandChannels(a, b, t)` throws `x.map is not a function`** when it gets a live `hand.channels` object, which holds
+  non-array entries next to the channel arrays. corridor filters to array entries (+ `_radius`) before blending.
+  Suggestion: skip non-array keys in the blend.
+- **Gloved close-up hands: skin under the glove pokes through** as soon as the glove is stretched or offset (glove removal).
+  corridor uses a second `loadCharacterHand(..., { gloves:true })` as a glove *shell* (skin, arm, cuff meshes hidden) and shows
+  the bare hand only once the shell has left the fingers. Suggestion: a `shellOnly` option.
+- **lib vitrine: frameless glass-edge strips (roughness 0.08) make hard specular dots** from any nearby PointLight (P3's plinth in
+  S066). corridor sets edge roughness 0.3 per instance.
+
+## [museum_gallery] notes (worked around in scenes/museum_gallery.js; not blockers)
+- **Engine DOF vs. layers seen through glass:** anything composited on a pane (era image, mirror, screen-space hand) is blurred by
+  the depth of whatever lies *behind* the glass (the far gallery), which cut the navigator's hand to a sharp-edged rectangle.
+  museum_gallery splits each pane overlay into three roles: a LOWRES-layer pass merged after the DOF (each layer pre-blurred by
+  its own CoC), a full-res L_OVL pass, and a depth-only pass that writes the layer's mirror depth (`gl_FragDepth`) where it covers.
+  Suggestion: an engine hook for "post-DOF overlays" or a per-pixel focus-depth override.
+- **NaN in a mirror pass:** rendering the hi RESTORER through a reflected camera with a Lengyel oblique near plane produced
+  non-finite pixels in the mirror RT at one pose (S002, tl 3.9); after the blur the engine bloom spread them over half the frame
+  (black). Worked around by discarding non-finite samples in the overlay shader. Root cause not isolated (figure material vs.
+  the oblique projection) — worth a `isnan` guard in the bloom/merge passes.
+- **lib vitrine:** the additive "pool" decal under the deck duplicates what the real pin spot already lights (double pool);
+  museum_gallery hides it. The frameless hood has no visible glass edges in wide frames; museum_gallery adds faint edge lines.
+
+## [museum_gallery] review addendum (2026-10-06; worked around in the module, not blockers)
+- **Depth proxies for composited reflections have two failure modes** (one depth per pixel): (1) where the proxy covers, the real
+  scene *behind* the glass is blurred by the proxy's depth (compass and far edges came out sharp inside the soft navigator hand /
+  future viewer); (2) a `gl_FragDepth` written farther than what is already in the depth buffer fails the depth test, so a plate
+  "deep in the glass" behind a case's back panel writes nothing (S026 was blurred whole). museum_gallery now composites hero
+  layers premultiplied-over (they hide what is behind them) or post-DOF in the low layer, and keeps proxy depths in front of the
+  case interior. This strengthens the earlier suggestion of an engine post-DOF full-res overlay hook.
+- **lib vitrine frameless edges** (same as corridor's note): at CU under the 3000 K pin spot the 5 mm strips read as four white
+  neon posts; museum_gallery sets roughness 0.65 / colour #070b0a / opacity 0.4 on its G1 instance.
+
+## [corridor] review notes (2026-10-06; worked around in scenes/corridor.js; not blockers)
+- The "renderNested has no camera override" note above now also covers a **zoom**: corridor captures old_home's
+  `view_home_rain` camera (same priming trick) and sets `setViewOffset` on it only around its own call, to render a
+  sub-rectangle of the view at full RT resolution (P2: the bowl and the drip line). A `{ camera, viewOffset }` option on
+  `ctx.renderNested` would make both the P5 pose override and this zoom clean.
+- S066's light match into S067 is made by moving night_window's reading lamp (found by position) 0.45 m south / 0.10 m
+  down inside corridor's own render only (restored in `finally`). If night_window moves LAMP_HEAD, update
+  `LAMP66` / the search point in corridor.js.
