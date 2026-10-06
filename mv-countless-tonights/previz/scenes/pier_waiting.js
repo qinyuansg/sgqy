@@ -16,15 +16,21 @@ import * as FX from '../lib/fx.js';
 import { createSky } from '../lib/sky.js';
 import { createSea, createCoast } from '../lib/sea.js';
 import { loadCharacter, loadCharacterHand, makeExtra, preloadCrowd } from '../lib/cast.js';
+import { makeFigure } from '../lib/figure.js';
 import { makeHand, handPose, blendHandChannels } from '../lib/hand.js';
-import { LOWRES_LAYER } from '../engine/post.js';
 
 const V3 = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
 const BULB = 0xffbb7c;            // 2400 K enamel-shaded incandescent (warm cream)
 const BULB_C = new THREE.Color(BULB);
 const LAMP_X = [-20, -15, -10, -5, 0, 5, 10, 15, 20], LAMP_Z = -0.6, LAMP_Y = 3.32;
 const RAIL_Z = -3.0, GATE_X = 8.0, BOOTH_Z = -1.9; // booth: in the cross railing between the long railing and the gate
-const SEAT = { x: -9.55, z: -1.3, rot: -Math.PI / 2 + 0.28 };  // her upturned crate under the third lamp, facing home (−X)
+// her upturned crate under the third lamp, facing home (−X). (integration) placed so that lamp 3 (x −10) hangs at her LEFT
+// (her local (0.85, 0.05)): a side key — rim on the hair crown, shoulder and cheek edge, raking light across the letter, her
+// body's shadow falling off the lid — instead of the top light that made the brow a black 'blindfold' band. V2 (S031–S033) she sits on the same crate
+// turned toward the railing and her family (rot π, SEAT_V2).
+const SEAT = (() => { const rot = -Math.PI / 2 + 0.28, lx = 0.85, lz = 0.05, c = Math.cos(rot), s = Math.sin(rot);
+  return { x: -10 - (lx * c + lz * s), z: -0.6 - (-lx * s + lz * c), rot }; })();
+const SEAT_V2 = { x: SEAT.x + 0.15, z: SEAT.z + 0.35, rot: Math.PI };
 const SEA_Y = -2.3;
 
 export default async function create(ctx) {
@@ -38,38 +44,8 @@ export default async function create(ctx) {
   const fog = new THREE.FogExp2(0x1a212d, 0.016);
   scene.fog = fog;
 
-  // ---------------------------------------------------------------- film grain, module-side (review fix)
-  // engine/post.js hashes `uv*res + frame*17.13`: past f ≈ 2100 float32 runs out of fractional bits and the grain turns into
-  // regular vertical stripes (very visible in S068 f5176+ and S076 f5653+; lib/ISSUES.md [sea_deck]). The engine grain is set
-  // to 0 here and an equivalent grain is drawn in the engine's half-res additive layer instead: that layer is merged AFTER the
-  // depth of field (so bokeh keeps its grain, unlike an in-scene quad) and is half-float (signed values). The quad samples the
-  // main scene target (captured by a 1-px probe mesh's onBeforeRender in the main pass) to weight the grain by luminance the
-  // way the engine does in display space (≈ x^0.55 in linear), integer hash of the pixel + a wrapped frame seed.
-  const grainSrc = { tex: null };
-  const grainMat = new THREE.ShaderMaterial({
-    uniforms: { tScene: { value: null }, uSeed: { value: 0 }, uAmt: { value: 0.0 }, uExp: { value: 1 } },
-    vertexShader: /* glsl */ `varying vec2 vUv; void main(){ vUv = position.xy * 0.5 + 0.5; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
-    fragmentShader: /* glsl */ `varying vec2 vUv; uniform sampler2D tScene; uniform float uSeed, uAmt, uExp;
-      uint hh(uint x){ x ^= x >> 16; x *= 0x7feb352du; x ^= x >> 15; x *= 0x846ca68bu; x ^= x >> 16; return x; }
-      void main(){
-        uvec2 p = uvec2(gl_FragCoord.xy); uint h1 = hh(p.x + hh(p.y + hh(uint(uSeed) + 7u))); uint h2 = hh(h1 ^ 0x9e3779b9u);
-        float g = float(h1 & 0xffffu) / 65535.0 + float(h2 & 0xffffu) / 65535.0 - 1.0;
-        vec3 c = texture2D(tScene, vUv).rgb * uExp;
-        float L = max(dot(c, vec3(0.2126, 0.7152, 0.0722)), 0.0);
-        float w = pow(L + 0.0015, 0.55) * (1.0 - 0.5 * smoothstep(0.6, 2.5, L));
-        gl_FragColor = vec4(vec3(g * uAmt * w), 1.0);
-      }`,
-    transparent: true, depthTest: false, depthWrite: false, fog: false,
-    blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor,
-  });
-  const grainQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), grainMat);
-  grainQuad.frustumCulled = false; grainQuad.renderOrder = 1e9; grainQuad.layers.set(LOWRES_LAYER);
-  grainQuad.onBeforeRender = () => { grainMat.uniforms.tScene.value = grainSrc.tex; };
-  const grainProbe = new THREE.Mesh(new THREE.PlaneGeometry(1e-4, 1e-4), new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false, depthTest: false }));
-  grainProbe.frustumCulled = false; grainProbe.renderOrder = -1e9;
-  grainProbe.onBeforeRender = (r) => { const rt = r.getRenderTarget(); grainSrc.tex = rt ? rt.texture : null; };
-  scene.add(grainQuad, grainProbe);
-  const GRAIN = 0.044;                              // CT_MIG grain (bible 1.25 relative), as the engine's display-space amount
+  // (integration) film grain: the engine's integer-hash grain (engine/post.js) is used everywhere; CT_MIG returns
+  // grain 0.044 through the per-shot post (MIG_POST). The module-side half-res grain quad of the review pass is gone.
 
   // ---------------------------------------------------------------- small helpers
   const std = (o) => new THREE.MeshStandardMaterial({ roughness: 0.7, metalness: 0, ...o });
@@ -178,6 +154,7 @@ export default async function create(ctx) {
 
   // ================================================================ THE SHED
   const shed = new THREE.Group(); shed.name = 'shed'; scene.add(shed);
+  let townM = null;
   {
     // wet floor planks (planks across the shed, along Z), puddles in the roughness
     const ws = TX.wood({ tone: 'pale', planks: 6, seed: 41, wear: 0.7 });
@@ -207,7 +184,7 @@ export default async function create(ctx) {
       for (let k = 0; k < 7; k++) { const lx = 60 + k * 140 + r() * 40, ly = H * 0.78 + r() * 20; const rg = g.createRadialGradient(lx, ly, 0, lx, ly, 26); rg.addColorStop(0, 'rgba(255,214,150,1)'); rg.addColorStop(0.25, 'rgba(240,170,90,0.5)'); rg.addColorStop(1, 'rgba(240,170,90,0)'); g.fillStyle = rg; g.fillRect(lx - 30, ly - 30, 60, 60); }
       return ctex(c);
     })();
-    const townM = new THREE.MeshBasicMaterial({ map: townTex, color: new THREE.Color(0.55, 0.55, 0.6) });
+    townM = new THREE.MeshBasicMaterial({ map: townTex, color: new THREE.Color(0.55, 0.55, 0.6) });
     const barM = std({ color: 0x1d1a17, roughness: 0.8 });
     const panes = [], bars = [];
     for (let k = 0; k < 10; k++) {
@@ -416,8 +393,11 @@ export default async function create(ctx) {
   // ================================================================ THE STEAMER (screen-right lock), moored along the seaward quay
   const steamer = new THREE.Group(); steamer.name = 'steamer'; steamer.position.x = 58; shed.add(steamer); // berth beyond the end doors (x 22…114)
   {
-    const hullM = std({ color: 0x1C1C1E, roughness: 0.55, metalness: 0.2 });
-    const whiteM = std({ color: 0xD9D6CC, roughness: 0.6 });
+    // (integration) at dusk the steamer must read as a SHIP: a dark hull silhouette with one row of warm 2000 K portholes (the
+    // brightest, warmest points of S036/S038), a sparse lit row on a superstructure in dusk shadow, the funnel and masts against
+    // the sky (it read as a white office block with three rows of white windows)
+    const hullM = std({ color: 0x141416, roughness: 0.55, metalness: 0.2 });
+    const whiteM = std({ color: 0x6f7279, roughness: 0.6 });
     const sh = new THREE.Shape();
     const L0 = -36, L1 = 56, B = 6.2;
     sh.moveTo(L0 + 4, -B); sh.lineTo(L1 - 18, -B); sh.quadraticCurveTo(L1 - 4, -B * 0.8, L1, 0); sh.quadraticCurveTo(L1 - 4, B * 0.8, L1 - 18, B); sh.lineTo(L0 + 4, B); sh.quadraticCurveTo(L0, B * 0.7, L0, 0); sh.quadraticCurveTo(L0, -B * 0.7, L0 + 4, -B);
@@ -425,24 +405,24 @@ export default async function create(ctx) {
     const HZ = 22.6;
     const hull = mesh(hg, hullM, steamer, 0, SEA_Y - 3.6, HZ, false);
     const sheer = mesh(boxG(L1 - L0 - 22, 0.16, 0.05), whiteM, steamer, (L0 + L1) / 2 - 6, SEA_Y + 4.85, HZ - B - 0.02, false);
-    const portM = new THREE.MeshBasicMaterial({ color: new THREE.Color(1.0, 0.62, 0.3).multiplyScalar(2.4) });
+    const portM = new THREE.MeshBasicMaterial({ color: new THREE.Color(1.0, 0.52, 0.2).multiplyScalar(6.0) });
     const darkPort = new THREE.MeshBasicMaterial({ color: 0x0a0b0d });
     const ports = [], dports = [], r = util.rng(5);
-    for (let x = L0 + 8; x < L1 - 14; x += 1.9) for (const y of [SEA_Y + 2.1, SEA_Y + 3.7]) (r() < 0.7 ? ports : dports).push(M4(x, y, HZ - B - 0.03, Math.PI));
-    instanced(new THREE.CircleGeometry(0.17, 12), portM, ports, steamer, false);
+    for (let x = L0 + 8; x < L1 - 14; x += 1.9) { (r() < 0.82 ? ports : dports).push(M4(x, SEA_Y + 3.7, HZ - B - 0.03, Math.PI)); dports.push(M4(x + 0.95, SEA_Y + 2.1, HZ - B - 0.03, Math.PI)); }
+    instanced(new THREE.CircleGeometry(0.21, 12), portM, ports, steamer, false);
     instanced(new THREE.CircleGeometry(0.17, 12), darkPort, dports, steamer, false);
     const deckY = SEA_Y + 5.0;
     mesh(boxG(36, 2.6, 9.6), whiteM, steamer, 12, deckY + 1.3, HZ, false);
     mesh(boxG(24, 2.4, 8.0), whiteM, steamer, 13, deckY + 3.9, HZ, false);
     mesh(boxG(7, 2.0, 7.0), whiteM, steamer, 22, deckY + 6.1, HZ, false);
-    const winM = new THREE.MeshBasicMaterial({ color: new THREE.Color(1.0, 0.7, 0.4).multiplyScalar(0.9) });
-    const wins = []; for (let x = -5; x < 30; x += 1.6) if (r() < 0.75) wins.push(M4(x, deckY + 1.5, HZ - 4.82, Math.PI));
-    for (let x = 2; x < 25; x += 1.8) if (r() < 0.6) wins.push(M4(x, deckY + 4.0, HZ - 4.02, Math.PI));
-    for (let x = 19; x < 25.5; x += 1.1) wins.push(M4(x, deckY + 6.3, HZ - 3.52, Math.PI));
+    const winM = new THREE.MeshBasicMaterial({ color: new THREE.Color(1.0, 0.6, 0.3).multiplyScalar(1.5) });
+    const wins = []; for (let x = -5; x < 30; x += 1.6) if (r() < 0.32) wins.push(M4(x, deckY + 1.5, HZ - 4.82, Math.PI));
+    for (let x = 2; x < 25; x += 1.8) if (r() < 0.2) wins.push(M4(x, deckY + 4.0, HZ - 4.02, Math.PI));
+    for (let x = 19; x < 25.5; x += 1.1) if (r() < 0.5) wins.push(M4(x, deckY + 6.3, HZ - 3.52, Math.PI));
     instanced(new THREE.PlaneGeometry(0.45, 0.4), winM, wins, steamer, false);
     // funnel: invented colours (ochre, slate band, black top), slight rake
     const fun = new THREE.Group(); fun.position.set(10, deckY + 5.1, HZ); fun.rotation.z = 0.07; steamer.add(fun);
-    mesh(new THREE.CylinderGeometry(1.5, 1.6, 7.6, 24), std({ color: 0xB58B4A, roughness: 0.6 }), fun, 0, 3.8, 0, false);
+    mesh(new THREE.CylinderGeometry(1.5, 1.6, 7.6, 24), std({ color: 0x8a6a3a, roughness: 0.6 }), fun, 0, 3.8, 0, false);
     mesh(new THREE.CylinderGeometry(1.52, 1.52, 1.1, 24), std({ color: 0x4E6273, roughness: 0.6 }), fun, 0, 5.4, 0, false);
     mesh(new THREE.CylinderGeometry(1.5, 1.51, 1.2, 24), std({ color: 0x111111, roughness: 0.7 }), fun, 0, 8.1, 0, false);
     for (const x of [-20, 44]) mesh(new THREE.CylinderGeometry(0.16, 0.22, 20, 8), std({ color: 0x2a2622 }), steamer, x, deckY + 10, HZ, false);
@@ -455,7 +435,7 @@ export default async function create(ctx) {
     // gangway from the quay to the deck, beyond the gate
     const gw = mesh(boxG(1.1, 0.12, 6.2), std({ color: 0x5a4636, roughness: 0.8 }), steamer, -28, 1.35, 13.6, false); gw.rotation.x = -0.45;
     // deck lights
-    for (const x of [-10, 4, 16, 30]) { const gl = FX.glow({ color: 0xffc078, size: 1.4, intensity: 0.7 }); gl.object3D.position.set(x, deckY + 3, 16.0); steamer.add(gl.object3D); }
+    for (const x of [-10, 4, 16, 30]) { const gl = FX.glow({ color: 0xffb060, size: 1.1, intensity: 0.4 }); gl.object3D.position.set(x, deckY + 3, 16.0); steamer.add(gl.object3D); }
   }
 
   // linear-time vertex-clustering decimation (far crowd LOD: ~17k → a few k triangles; position + normal only)
@@ -485,51 +465,106 @@ export default async function create(ctx) {
   // ================================================================ CROWD (instanced baked extras; walk-phase buckets)
   const crowd = new THREE.Group(); crowd.name = 'crowd'; shed.add(crowd);
   const CROWD_POSES = ['w0', 'w1', 'w2', 'w3', 'w4', 'w5', 'stand', 'standB', 'sit'];
-  const NVAR = 6, CAP = 24;
+  // (integration) a mixed 1920s–30s civilian crowd instead of six capped men in look-alike jackets (it read as police /
+  // conscripts): women in 大襟 jackets, headscarves and print blouses, a student in a long gown, a porter with a shoulder pole,
+  // an old man, children, a few men in flat caps; uniforms ONLY on the officials at the gate (khaki, invented, no insignia).
+  // Four variants come from the baked cache (extras 101/103/104/105); the others are sculpted live at 'lo' (≈2 s each).
+  const CROWD_SPECS = [
+    { seed: 101 },                                                                                   // 0 young man, brown jacket, bare head
+    { seed: 104 },                                                                                   // 1 woman 35, blue-grey blouse, low bun
+    { seed: 105 },                                                                                   // 2 woman 22, dark blouse, low bun
+    { seed: 103, recolor: { jacket: 0x55606e } },                                                    // 3 youth 18, lapel jacket, bare head
+    { spec: { sex: 'f', height: 1.53, build: 0.45, age: 46, skin: 0xC99A78, hair: { style: 'headscarf', color: 0x3c4a63 },
+      costume: [{ type: 'trousers', color: 0x2a2826, wide: 0.03 }, { type: 'side_jacket', color: 0x334766, length: 'hip' }, { type: 'shoes', shoe: 'cloth', color: 0x1f1e1f }] } }, // 4 woman, headscarf, indigo 大襟
+    { spec: { sex: 'f', height: 1.58, build: 0.35, age: 26, skin: 0xDDB392, hair: { style: 'low_bun', color: 0x1a1512 },
+      costume: [{ type: 'skirt', color: 0x2c2f3a, length: 'ankle' }, { type: 'blouse', color: 0xa98f7c, sleeve: 'long' }, { type: 'shoes', shoe: 'cloth', color: 0x1f1e1f }] }, print: true }, // 5 woman, faded print blouse, long skirt
+    { spec: { sex: 'm', height: 1.74, build: 0.3, age: 20, skin: 0xD2A47F, hair: { style: 'short', color: 0x15110f },
+      costume: [{ type: 'trousers', color: 0x24262c }, { type: 'robe', color: 0x56657a, collar: 'mandarin' }, { type: 'shoes', shoe: 'cloth', color: 0x1c1b1c }] } }, // 6 student, long gown 长衫
+    { spec: { sex: 'm', height: 1.64, build: 0.62, age: 34, skin: 0xB88A66, hair: { style: 'headcloth', color: 0x6b5d4a },
+      costume: [{ type: 'trousers', color: 0x3a3631, length: 'calf', rolled: true }, { type: 'side_jacket', color: 0x6a5641, length: 'hip' }, { type: 'shoes', shoe: 'sandal', color: 0x3a2e24 }] } }, // 7 porter (shoulder pole)
+    { spec: { sex: 'm', height: 1.63, build: 0.35, age: 64, skin: 0xC99A78, hair: { style: 'short', color: 0x77736c },
+      costume: [{ type: 'trousers', color: 0x2a2826 }, { type: 'robe', color: 0x5b4c3d, collar: 'mandarin' }, { type: 'shoes', shoe: 'cloth', color: 0x1c1b1c }] } }, // 8 old man, brown gown
+    { spec: { sex: 'f', age: 8, build: 0.45, skin: 0xD2A47F, hair: { style: 'braid', color: 0x1a1512 },
+      costume: [{ type: 'trousers', color: 0x2e3140 }, { type: 'blouse', color: 0xb7a48c, sleeve: 'long' }, { type: 'shoes', shoe: 'cloth', color: 0x1f1e1f }] }, print: true }, // 9 child
+    { spec: { sex: 'm', height: 1.69, build: 0.5, age: 41, skin: 0xC99A78, hair: { style: 'cap', color: 0x4a4038 },
+      costume: [{ type: 'trousers', color: 0x2f2b28 }, { type: 'jacket', color: 0x6a5a48, collar: 'mandarin', buttons: 0, length: 'hip' }, { type: 'shoes', shoe: 'cloth', color: 0x201d1b }] } }, // 10 man, flat cap, brown jacket
+    { spec: { sex: 'm', height: 1.72, build: 0.55, age: 38, skin: 0xC99A78, hair: { style: 'cap', color: 0x6f6b56 },
+      costume: [{ type: 'trousers', color: 0x5e5b4b }, { type: 'jacket', color: 0x8A8670, collar: 'lapel', buttons: 0, length: 'hip' }, { type: 'shoes', shoe: 'leather', color: 0x1c1a18 }] } }, // 11 OFFICIAL (gate only)
+  ];
+  const NVAR = CROWD_SPECS.length, CAP = 24, V_CHILD = 9, V_OFFICIAL = 11, V_PORTER = 7;
+  const CIVILIANS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 1, 4, 5, 2];  // walker mix (women weighted up); child + officials placed separately
+  const FEMALE = new Set([1, 2, 4, 5, 9]);
   const buckets = new Map();
-  const plainCache = new Map();
-  const plainOf = (m) => { // soft-focus extras: plain lit colour instead of the procedural cloth / skin shaders
-    if (!plainCache.has(m)) plainCache.set(m, new THREE.MeshLambertMaterial({ color: (m.color || new THREE.Color(0x777777)).clone().multiplyScalar(0.92) }));
-    return plainCache.get(m);
-  };
   const crowdMat = new THREE.MeshLambertMaterial({ vertexColors: true });
   await preloadCrowd('migrant', {});
   {
+    const hsh = (x, y, z) => { const v = Math.sin(x * 127.1 + y * 311.7 + z * 74.7) * 43758.5453; return v - Math.floor(v); };
     for (let v = 0; v < NVAR; v++) {
-      const f = makeExtra('migrant', 101 + v, { lod: 'lo' });
+      const S = CROWD_SPECS[v];
+      const f = S.seed ? makeExtra('migrant', S.seed, { lod: 'lo' }) : makeFigure({ ...S.spec, lod: 'lo', name: 'pier_extra_' + v });
+      const matName = new Map(); for (const [k, L] of Object.entries(f.layers)) if (L && L.material) matName.set(L.material, k);
       for (const p of CROWD_POSES) {
-        if (p[0] === 'w') f.pose('walk', { phase: +p[1] / 6, stride: 0.9 });
-        else if (p === 'sit') f.pose('sit_bench', { seat: 0.44, hands: 'lap' });
+        if (p[0] === 'w') f.pose('walk', { phase: +p[1] / 6, stride: v === V_CHILD ? 0.75 : 0.9 });
+        else if (p === 'sit') f.pose('sit_bench', { seat: v === V_CHILD ? 0.36 : 0.44, hands: 'lap' });
         else f.pose('stand', { weight: p === 'standB' ? 0.7 : -0.4 });
         const baked = f.bake();
-        // one vertex-coloured geometry per baked pose (plain colours: the crowd is always soft, small or fogged) → 1 draw call per bucket
+        // one vertex-coloured geometry per baked pose (plain colours: the crowd is always soft, small or fogged) → 1 draw call per bucket;
+        // cloth gets a little per-vertex mottling (and the print blouses a faded dot print) so it reads as cloth, not plastic
         const merged = (far) => mergeGeometries(baked.children.map((part) => {
           const g0 = far ? clusterDecimate(part.geometry, 0.028) : part.geometry, g = new THREE.BufferGeometry();
           g.setAttribute('position', g0.attributes.position); g.setAttribute('normal', g0.attributes.normal); g.setIndex(g0.index);
-          const c = (part.material.color || new THREE.Color(0x777777)).clone().multiplyScalar(0.92), n = g0.attributes.position.count, col = new Float32Array(n * 3);
-          for (let i = 0; i < n; i++) { col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b; }
+          const nm = matName.get(part.material) || '', rc = S.recolor && Object.entries(S.recolor).find(([k]) => nm.includes(k));
+          const c = (rc ? new THREE.Color(rc[1]) : (part.material.color || new THREE.Color(0x777777)).clone()).multiplyScalar(0.92);
+          const cloth = !/body|head|hair|skin|hand/.test(nm), pr = S.print && /blouse/.test(nm), pos = g0.attributes.position, n = pos.count, col = new Float32Array(n * 3);
+          for (let i = 0; i < n; i++) {
+            let k = 1;
+            if (cloth) { const h = hsh(pos.getX(i) * 9, pos.getY(i) * 9, pos.getZ(i) * 9); k = 0.94 + 0.12 * h; if (pr && h > 0.8) k = 1.35; }
+            col[i * 3] = c.r * k; col[i * 3 + 1] = c.g * k; col[i * 3 + 2] = c.b * (pr && k > 1.2 ? 0.95 * k : k);
+          }
           g.setAttribute('color', new THREE.BufferAttribute(col, 3)); return g;
         }));
         const mk = (geo) => { const im = new THREE.InstancedMesh(geo, crowdMat, CAP); im.frustumCulled = false; im.castShadow = false; im.receiveShadow = true; im.count = 0; im.visible = false; crowd.add(im); return im; };
-        buckets.set(v + '|' + p, { ims: [mk(merged(false))], n: 0 });
-        buckets.set(v + '|' + p + '|far', { ims: [mk(merged(true))], n: 0 });
+        const gN = merged(false), gF = merged(true);
+        for (const [nm, gg] of [['near', gN], ['far', gF]]) for (const an of ['position', 'normal', 'color']) { const arr = gg.attributes[an].array; for (let i = 0; i < arr.length; i++) if (!Number.isFinite(arr[i])) { console.warn('PWDBG NaN', v, p, nm, an, i); break; } }
+        buckets.set(v + '|' + p, { ims: [mk(gN)], n: 0 });
+        buckets.set(v + '|' + p + '|far', { ims: [mk(gF)], n: 0 });
       }
     }
   }
+  // carried things: rattan cases, cloth bundles (held), sacks on the shoulder, porters' bamboo poles with two baskets,
+  // women's arm baskets
+  const basketM = TX.mat('rattan', { repeat: [1.5, 0.6], tex: { seed: 27, age: 0.6 }, color: 0xb9a27f });
+  const poleM = std({ color: 0x9a8152, roughness: 0.6 });
+  const sackM = TX.mat('cotton', { repeat: [1, 1], tex: { tone: [118, 106, 88], seed: 5 } });
   const luggage = {
     case: new THREE.InstancedMesh(boxG(0.5, 0.33, 0.17).translate(0, 0.0, 0), caseM, 64),
     bundle: new THREE.InstancedMesh(new THREE.SphereGeometry(0.17, 10, 8).scale(1.1, 0.8, 0.9), bundleM, 64),
+    sack: new THREE.InstancedMesh(new THREE.SphereGeometry(0.2, 10, 8).scale(0.8, 1.25, 0.75), sackM, 32),
+    pole: new THREE.InstancedMesh(new THREE.CylinderGeometry(0.018, 0.018, 1.75, 6).rotateZ(Math.PI / 2), poleM, 16),
+    basket: new THREE.InstancedMesh(mergeGeometries([new THREE.CylinderGeometry(0.21, 0.17, 0.3, 14, 1, true), new THREE.CircleGeometry(0.17, 14).rotateX(Math.PI / 2).translate(0, -0.15, 0), new THREE.CylinderGeometry(0.004, 0.004, 0.62, 3).translate(0, 0.46, 0)]), basketM, 40),
   };
   for (const im of Object.values(luggage)) { im.frustumCulled = false; im.count = 0; im.castShadow = false; crowd.add(im); }
+  basketM.side = THREE.DoubleSide;
   // population (fixed; per shot filtered and timed)
   const POP = [];
   {
     const r = util.rng(2024);
     const lanes = [-2.42, -1.75, 0.35, 1.25, 2.3, 3.3, 4.3, 5.4];
-    for (let i = 0; i < 44; i++) POP.push({ kind: 'walk', v: i % NVAR, z: lanes[i % lanes.length] + (r() - 0.5) * 0.4, f: r(), sp: 0.95 + r() * 0.4, ph: r(), lug: r() < 0.7 ? (r() < 0.6 ? 'case' : 'bundle') : null, s: 0.97 + r() * 0.06 });
-    for (let i = 0; i < 30; i++) POP.push({ kind: 'family', v: (i * 5) % NVAR, x: -23 + r() * 30, z: -3.45 - r() * 3.6, rot: 0.2 + (r() - 0.5) * 1.6, pose: r() < 0.5 ? 'stand' : 'standB', s: 0.96 + r() * 0.08 });
-    for (let i = 0; i < 26; i++) POP.push({ kind: 'wait', v: (i * 7) % NVAR, x: -23 + r() * 30.5, z: -1.8 + r() * 8.2, rot: r() * 6.28, pose: r() < 0.25 ? 'sit' : r() < 0.5 ? 'stand' : 'standB', lug: r() < 0.6 ? 'case' : null, s: 0.96 + r() * 0.08 });
-    for (let i = 0; i < 10; i++) POP.push({ kind: 'queue', v: (i * 4 + 1) % NVAR, x: GATE_X - 0.6 - (i % 5) * 0.75 - r() * 0.2, z: -2.2 + Math.floor(i / 5) * 0.7 + 1.0 + r() * 0.3, rot: Math.PI / 2 + (r() - 0.5) * 0.4, pose: r() < 0.5 ? 'stand' : 'standB', lug: 'case', s: 0.97 + r() * 0.06 });
+    const lugFor = (v) => v === V_PORTER ? 'pole' : FEMALE.has(v) ? (r() < 0.45 ? 'bundle' : r() < 0.6 ? 'basketArm' : 'case') : (r() < 0.55 ? 'case' : r() < 0.6 ? 'sack' : 'bundle');
+    for (let i = 0; i < 44; i++) {
+      const v = CIVILIANS[i % CIVILIANS.length], z = lanes[i % lanes.length] + (r() - 0.5) * 0.4, f = r(), sp = 0.8 + r() * 0.5, ph = r();
+      POP.push({ kind: 'walk', v, z, f, sp, ph, dx: 0, lug: r() < 0.82 ? lugFor(v) : null, s: 0.96 + r() * 0.08 });
+      if (FEMALE.has(v) && v !== V_CHILD && r() < 0.4) POP.push({ kind: 'walk', v: V_CHILD, z: z - 0.42, f, sp, ph: ph + 0.3, dx: -0.22, lug: null, s: 0.9 + r() * 0.15 }); // a mother and her child
+    }
+    const FAM = [1, 4, 8, 2, 9, 5, 0, 4, 10, 1, 9, 8, 6, 2, 4];
+    for (let i = 0; i < 30; i++) POP.push({ kind: 'family', v: FAM[i % FAM.length], x: -23 + r() * 30, z: -3.45 - r() * 3.6, rot: 0.2 + (r() - 0.5) * 1.6, pose: r() < 0.5 ? 'stand' : 'standB', s: 0.95 + r() * 0.1 });
+    for (let i = 0; i < 26; i++) { const v = CIVILIANS[(i * 5 + 3) % CIVILIANS.length]; POP.push({ kind: 'wait', v, x: -23 + r() * 30.5, z: -1.8 + r() * 8.2, rot: r() * 6.28, pose: r() < 0.25 ? 'sit' : r() < 0.5 ? 'stand' : 'standB', lug: r() < 0.6 ? (v === V_PORTER ? 'pole' : 'case') : null, s: 0.95 + r() * 0.1 }); }
+    const Q = [4, 0, 5, 6, 1, 7, 2, 10, 9, 8];
+    for (let i = 0; i < 10; i++) POP.push({ kind: 'queue', v: Q[i], x: GATE_X - 0.6 - (i % 5) * 0.75 - r() * 0.2, z: -2.2 + Math.floor(i / 5) * 0.7 + 1.0 + r() * 0.3, rot: Math.PI / 2 + (r() - 0.5) * 0.4, pose: r() < 0.5 ? 'stand' : 'standB', lug: Q[i] === V_CHILD ? null : Q[i] === V_PORTER ? 'pole' : FEMALE.has(Q[i]) ? 'bundle' : 'case', s: 0.96 + r() * 0.08 });
+    // the only uniforms: two officials at the gate posts (+ one beyond it on the quay)
+    POP.push({ kind: 'official', v: V_OFFICIAL, x: GATE_X + 0.55, z: -0.95, rot: -Math.PI / 2 + 0.5, pose: 'stand', s: 1 });
+    POP.push({ kind: 'official', v: V_OFFICIAL, x: GATE_X + 0.6, z: 1.75, rot: -Math.PI / 2 - 0.4, pose: 'standB', s: 1.02 });
+    POP.push({ kind: 'official', v: V_OFFICIAL, x: GATE_X + 4.5, z: 2.9, rot: -Math.PI / 2 - 1.2, pose: 'stand', s: 0.98 });
   }
   const _d = new THREE.Object3D();
   // cfg: { t (s since shot start), speed, D (shot duration), keep(x,z)->bool, families, waits, queue, walkers, gateOpen 0..1 }
@@ -540,7 +575,7 @@ export default async function create(ctx) {
     if (cameraObj) { cameraObj.updateMatrixWorld(true); cameraObj.updateProjectionMatrix(); _pm.multiplyMatrices(cameraObj.projectionMatrix, cameraObj.matrixWorldInverse); _fr.setFromProjectionMatrix(_pm); }
     const inView = (x, z) => !cameraObj || _fr.intersectsSphere(_sph.set(_d.position.set(x, 0.85, z), 1.05));
     for (const b of buckets.values()) b.n = 0;
-    const lug = { case: 0, bundle: 0 };
+    const lug = Object.fromEntries(Object.keys(luggage).map((k) => [k, 0]));
     const farD2 = (cfg.farD ?? 9) ** 2, cp = cameraObj ? cameraObj.position : null;
     const put = (v, pose, x, z, rot, s) => {
       if (!inView(x, z)) return;
@@ -550,7 +585,16 @@ export default async function create(ctx) {
       _d.position.set(x, 0, z); _d.rotation.set(0, rot, 0); _d.scale.setScalar(s); _d.updateMatrix();
       for (const im of b.ims) im.setMatrixAt(b.n, _d.matrix); b.n++;
     };
-    const putLug = (kind, x, y, z, rot) => { const im = luggage[kind]; if (!im || lug[kind] >= 64 || !inView(x, z)) return; _d.position.set(x, y, z); _d.rotation.set(0, rot, 0); _d.scale.setScalar(1); _d.updateMatrix(); im.setMatrixAt(lug[kind]++, _d.matrix); };
+    const putLug = (kind, x, y, z, rot) => { const im = luggage[kind]; if (!im || lug[kind] >= im.instanceMatrix.count || !inView(x, z)) return; _d.position.set(x, y, z); _d.rotation.set(0, rot, 0); _d.scale.setScalar(1); _d.updateMatrix(); im.setMatrixAt(lug[kind]++, _d.matrix); };
+    // what a walker carries (walking +X: its right side is world −Z… +0.27 in z is the right hand side as before)
+    const carry = (kind, x, z, s, sway) => {
+      if (!kind) return;
+      if (kind === 'case') putLug('case', x + 0.02, 0.42 * s, z + 0.27, Math.PI / 2);
+      else if (kind === 'bundle') putLug('bundle', x + 0.02, 0.5 * s, z + 0.27, Math.PI / 2);
+      else if (kind === 'basketArm') putLug('basket', x + 0.08, 0.86 * s - 0.46, z - 0.25, 0);
+      else if (kind === 'sack') putLug('sack', x - 0.06, 1.42 * s, z + 0.13, Math.PI / 2);
+      else if (kind === 'pole') { const y = 1.43 * s + 0.015 * sway; putLug('pole', x, y, z + 0.17, 0); putLug('basket', x + 0.78, y - 0.95, z + 0.17, 0); putLug('basket', x - 0.78, y - 0.95, z + 0.17, 0); }
+    };
     const keep = cfg.keep || (() => true);
     const t = cfg.t || 0, D = cfg.D || 4, sp = cfg.speed ?? 1;
     for (const p of POP) {
@@ -558,29 +602,31 @@ export default async function create(ctx) {
       if (p.kind === 'walk') {
         if (cfg.walkers === false) continue;
         const v = p.sp * sp, xa = -24, xb = (cfg.gateOpen ? 20 : GATE_X - 1.2) - v * D;
-        const x = xa + p.f * (xb - xa) + v * t;
+        const x = xa + p.f * (xb - xa) + v * t + (p.dx || 0);
         // (review) with the gate open the flow funnels through it (it used to pass straight through the cross railing)
         const fz = cfg.funnel ? lerp(p.z, clamp(p.z, -0.45, 1.15), smoothstep(GATE_X - 6, GATE_X - 0.5, x) * (1 - smoothstep(GATE_X + 1, GATE_X + 7, x))) : p.z;
         const head = cfg.funnel ? Math.PI / 2 - Math.atan2(fz - p.z, 6) * (x < GATE_X ? 1 : -1) * 0.6 : Math.PI / 2;
         if (!keep(x, fz)) continue;
         const stride = 1.1 * p.s, ph = (((p.ph + x / stride) % 1) + 1) % 1;
         put(p.v, 'w' + (Math.floor(ph * 6) % 6), x, fz, head, p.s);
-        if (p.lug) putLug(p.lug, x + 0.02, p.lug === 'case' ? 0.42 : 0.5, fz + 0.27, Math.PI / 2);
+        carry(p.lug, x, fz, p.s, Math.sin(ph * Math.PI * 4));
       } else {
         if (p.kind === 'family' && cfg.families === false) continue;
         if (p.kind === 'wait' && cfg.waits === false) continue;
         if (p.kind === 'queue' && cfg.queue === false) continue;
+        if (p.kind === 'official' && cfg.officials === false) continue;
         let x = p.x, z = p.z;
         if (p.kind === 'queue' && cfg.gateOpen) x += cfg.gateOpen * 3.5;
         if (!keep(x, z)) continue;
         put(p.v, p.pose, x, z, p.rot, p.s);
-        if (p.lug) putLug(p.lug, x + Math.cos(p.rot) * 0.32, p.lug === 'case' ? 0.17 : 0.14, z - Math.sin(p.rot) * 0.32, p.rot + 0.3);
+        if (p.lug === 'pole') { putLug('basket', x + Math.cos(p.rot) * 0.4, 0.15, z - Math.sin(p.rot) * 0.4, 0); putLug('basket', x - Math.cos(p.rot) * 0.4, 0.15, z + Math.sin(p.rot) * 0.4, 0); }
+        else if (p.lug) putLug(p.lug, x + Math.cos(p.rot) * 0.32, p.lug === 'case' ? 0.17 : 0.14, z - Math.sin(p.rot) * 0.32, p.rot + 0.3);
       }
     }
     for (const w of cfg.extra || []) { // shot-specific walkers (crossing the frame during the shot)
       const x = w.x0 + w.v * t, stride = 1.1, ph = (((w.ph || 0) + x / stride) % 1 + 1) % 1;
       put(w.vi ?? 0, 'w' + (Math.floor(ph * 6) % 6), x, w.z, w.rot ?? Math.PI / 2, w.s || 1);
-      if (w.lug) putLug(w.lug, x + 0.02, w.lug === 'case' ? 0.42 : 0.5, w.z + 0.27, Math.PI / 2);
+      carry(w.lug, x, w.z, w.s || 1, Math.sin(ph * Math.PI * 4));
     }
     for (const b of buckets.values()) for (const im of b.ims) { im.count = b.n; im.visible = b.n > 0; im.instanceMatrix.needsUpdate = true; }
     for (const [k, im] of Object.entries(luggage)) { im.count = lug[k]; im.visible = lug[k] > 0; im.instanceMatrix.needsUpdate = true; }
@@ -627,11 +673,15 @@ export default async function create(ctx) {
     for (let k = 0; k < 5; k++) b(0.1, 0.014, 0.4, -0.24 + k * 0.12, 0.413, 0); // bottom boards (now the top)
     for (const [x, z] of [[-0.27, -0.18], [0.27, -0.18], [-0.27, 0.18], [0.27, 0.18]]) b(0.04, 0.42, 0.04, x, 0.21, z);
     mesh(mergeGeometries(cg), cw, crate);
+    crate.children[0].scale.x = 0.78; // (integration) a narrower upturned fruit crate: from the front it no longer shows as a pedestal either side of her shins
   }
 
   // ---------------------------------------------------------------- PROP_CASE (58×38×21 cm), lid hinged at the back, 蓝印花布 lining
   // local frame: origin = bottom centre, +Z = front (handle side), hinge along the back top edge (z −0.19, y 0.16)
-  const caseG = new THREE.Group(); scene.add(caseG);
+  // (integration) the case is drawn at 0.9 × 0.86 × 0.9 of the bible's 58×38×21 cm (≈ 52×34×18): on her lap at the full size it
+  // read as a lectern standing to her chest (QA); everything inside (lid, shirt, lining) scales with it
+  const CASE_S = [0.9, 0.86, 0.9];
+  const caseG = new THREE.Group(); caseG.scale.set(...CASE_S); scene.add(caseG);
   const lid = new THREE.Group(); lid.position.set(0, 0.16, -0.19); caseG.add(lid);
   const lining = std({ map: liningMap, roughness: 0.9 }); liningMap.repeat.set(1.6, 1.6);
   const leather = std({ color: 0x6A4A30, roughness: 0.55 });
@@ -667,7 +717,7 @@ export default async function create(ctx) {
   // PROP_SHIRT folded (30×22 cm block, #6F7F8F), collar at one end, hem corner with the cut triangle; one hinged top flap
   const shirtG = new THREE.Group(); shirtG.name = 'shirt'; caseG.add(shirtG);
   let shirtFlap, cutNotch;
-  const shirtM = TX.mat('shirt', { repeat: [3.2, 2.4], tex: { seed: 21, creases: 0.35 }, color: new THREE.Color(0.92, 1.12, 1.5) }); // (review) bluer + weave creases: it read as grey card under 2400 K
+  const shirtM = TX.mat('shirt', { repeat: [3.2, 2.4], tex: { seed: 21, creases: 0.6 }, color: new THREE.Color(0.92, 1.12, 1.5) }); // (review) bluer + weave creases: it read as grey card under 2400 K
   {
     // the folded block: a soft slab (rounded, slightly lumpy top, bulging sides), front-up with the 对襟 placket and collar
     const bg = new THREE.BoxGeometry(0.3, 0.032, 0.22, 24, 3, 18), N = TX.makeNoise(61), bp = bg.attributes.position;
@@ -684,16 +734,58 @@ export default async function create(ctx) {
     const dark = std({ color: 0x55667A, roughness: 0.9 }), seam = std({ color: 0x4d5b69, roughness: 0.95 });
     for (let k = 0; k < 3; k++) mesh(boxG(0.29, 0.0012, 0.003), seam, shirtG, 0, 0.006 + k * 0.009, 0.1125, false); // fold layers on the front face
     for (let k = 0; k < 3; k++) mesh(boxG(0.003, 0.0012, 0.2), seam, shirtG, 0.1525, 0.006 + k * 0.009, 0, false);
-    // collar (patched, #55667A): a flat stand-collar band round the neck opening, near the top edge, left of centre
-    const cpts = []; for (let k = 0; k <= 24; k++) { const a = Math.PI * (k / 24); cpts.push(V3(-0.06 + Math.cos(a) * 0.05, 0.0, -0.075 + Math.sin(a) * 0.028 * -1)); }
-    const collar = mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(cpts), 32, 0.0075, 8, false), std({ color: 0x66788c, roughness: 0.85 }), shirtG, 0, 0.034, 0, false); collar.scale.y = 0.8;
-    const neck = mesh(new THREE.CircleGeometry(0.044, 24, 0, Math.PI), std({ color: 0x5f6f80, roughness: 0.95 }), shirtG, -0.06, 0.0322, -0.075, false); neck.rotation.x = -Math.PI / 2; neck.scale.set(1, 0.6, 1);
-    // placket down the centre front with cloth knot buttons
-    mesh(boxG(0.011, 0.0015, 0.15), std({ color: 0x627384, roughness: 0.9 }), shirtG, -0.06, 0.033, 0.03, false);
-    for (let k = 0; k < 4; k++) { const b = mesh(new THREE.SphereGeometry(0.0042, 8, 6), dark, shirtG, -0.06, 0.035, -0.035 + k * 0.037, false); b.scale.y = 0.6; }
+    // (integration) the collar and the 对襟 front, so the block reads as a FOLDED SHIRT (QA: the round collar tube read as a
+    // briefcase handle). Same layout as before (collar left of centre near the top edge, placket down from it):
+    //  * the mended stand collar #55667A as an open elliptical BAND (flat cross-section ≈ 2 cm, standing up and leaning out,
+    //    taller at the back), split at the centre front where the placket starts;
+    //  * the neck opening inside it, dark (the inside of the back panel);
+    //  * a raised placket strip with its centre-front opening line, edge seams and four cloth knot buttons with loops;
+    //  * shoulder seams running out from the collar to the top edge.
+    const CX = -0.06, CZ = -0.07, RX = 0.046, RZ = 0.026;
+    const collarM = TX.mat('shirt', { repeat: [0.8, 0.25], tex: { seed: 23, creases: 0.2 }, color: new THREE.Color(0.8, 0.97, 1.3), side: THREE.DoubleSide });
+    {
+      const segs = 44, rows = [0, 0.35, 0.7, 1], pos = [], idx = [], gap = 0.16;
+      for (let i = 0; i <= segs; i++) {
+        const th = gap + (2 * Math.PI - 2 * gap) * (i / segs), dx = Math.sin(th), dz = Math.cos(th); // θ = 0 → +z (centre front)
+        const back = 0.5 - 0.5 * Math.cos(th), hh = 0.022 * (0.55 + 0.45 * back), lean = 0.95 + 0.25 * (1 - back);
+        for (const t of rows) {
+          const out = t * hh * Math.sin(lean) + 0.0025 * Math.sin(t * Math.PI), up = t * hh * Math.cos(lean) - 0.004 * t * t;
+          pos.push(CX + dx * (RX + out), 0.0335 + up, CZ + dz * (RZ + out * RZ / RX));
+        }
+      }
+      const R = rows.length;
+      for (let i = 0; i < segs; i++) for (let j = 0; j < R - 1; j++) { const a0 = i * R + j, b0 = a0 + R; idx.push(a0, b0, a0 + 1, a0 + 1, b0, b0 + 1); }
+      const cg = new THREE.BufferGeometry(); cg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); cg.setIndex(idx);
+      const uv = []; for (let i = 0; i <= segs; i++) for (const t of rows) uv.push(i / segs * 4, t); cg.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+      cg.computeVertexNormals();
+      mesh(cg, collarM, shirtG, 0, 0, 0, true);
+      // the edge rolls of the band (soft rounded top edge)
+      const top = []; for (let i = 0; i <= segs; i++) { const k = i * R + R - 1; top.push(V3(pos[k * 3], pos[k * 3 + 1], pos[k * 3 + 2])); }
+      mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(top), 48, 0.0018, 5, false), collarM, shirtG, 0, 0, 0, false);
+    }
+    { // the neck opening: the inside of the back panel, in the collar's shadow toward the front (vertex-shaded), cloth texture
+      const ng = new THREE.CircleGeometry(1, 32), np = ng.attributes.position, nc = new Float32Array(np.count * 3);
+      for (let i = 0; i < np.count; i++) { const y = np.getY(i), r = Math.hypot(np.getX(i), y), k = 0.62 + 0.38 * (0.5 + 0.5 * y) * (1 - 0.35 * r); nc[i * 3] = nc[i * 3 + 1] = nc[i * 3 + 2] = k; }
+      ng.setAttribute('color', new THREE.BufferAttribute(nc, 3));
+      const neck = mesh(ng, std({ map: shirtM.map, color: new THREE.Color(0.78, 0.92, 1.2), vertexColors: true, roughness: 0.95 }), shirtG, CX, 0.0332, CZ, false); neck.rotation.x = -Math.PI / 2; neck.scale.set(RX * 0.98, RZ * 0.98, 1);
+      neck.receiveShadow = false; // the inside of the back panel: in soft shade, not a black hole
+    }
+    // placket: raised strip from the collar's front split down to the bottom edge, centre-front opening, seams, knot buttons + loops
+    const PL0 = CZ + RZ - 0.002, PL1 = 0.104, plM = TX.mat('shirt', { repeat: [0.3, 2.0], tex: { seed: 29, creases: 0.15 }, color: new THREE.Color(0.86, 1.04, 1.38) });
+    mesh(new RoundedBoxGeometry(0.024, 0.004, PL1 - PL0, 2, 0.0015), plM, shirtG, CX, 0.0325, (PL0 + PL1) / 2, false);
+    mesh(boxG(0.0012, 0.0012, PL1 - PL0), std({ color: 0x2c3540, roughness: 0.95 }), shirtG, CX, 0.0348, (PL0 + PL1) / 2, false); // the opening
+    for (const sx of [-0.0115, 0.0115]) mesh(boxG(0.0007, 0.0008, PL1 - PL0), seam, shirtG, CX + sx, 0.0346, (PL0 + PL1) / 2, false);
+    for (let k = 0; k < 4; k++) {
+      const z = PL0 + 0.016 + k * 0.034;
+      const kn = mesh(new THREE.SphereGeometry(0.0042, 10, 8), dark, shirtG, CX - 0.004, 0.0362, z, false); kn.scale.set(1, 0.7, 1);
+      const lp = mesh(new THREE.TorusGeometry(0.0045, 0.0011, 5, 12, Math.PI * 1.3), dark, shirtG, CX + 0.003, 0.0352, z, false); lp.rotation.x = -Math.PI / 2;
+    }
+    // shoulder seams from the collar out to the top edge
+    for (const sx of [-1, 1]) { const sg = mesh(boxG(0.075, 0.0008, 0.0011), seam, shirtG, CX + sx * (RX + 0.03), 0.0336, CZ - 0.022, false); sg.rotation.y = sx * 0.55; }
     // raised soft ridges: the sleeves folded back underneath, the body folded in half (cloth rolls on the top face)
     const ridge = (x0, z0, x1, z1, r = 0.0045) => { const c = new THREE.CatmullRomCurve3([V3(x0, 0, z0), V3((x0 + x1) / 2, 0.0015, (z0 + z1) / 2), V3(x1, 0, z1)]); const m = mesh(new THREE.TubeGeometry(c, 12, r, 8, false), shirtM, shirtG, 0, 0.031, 0, false); m.scale.y = 0.55; return m; };
     ridge(-0.14, -0.035, -0.095, -0.085); ridge(-0.02, -0.088, 0.03, -0.03); ridge(-0.145, 0.05, 0.03, 0.065, 0.0035);
+    ridge(0.0, 0.02, 0.07, 0.085, 0.0022); ridge(-0.13, 0.0, -0.085, 0.09, 0.002); ridge(0.02, -0.02, 0.1, -0.06, 0.0018); // soft cloth wrinkles
     for (const [x, z, r] of [[-0.12, -0.05, 0.6], [0.0, -0.06, -0.55]]) { const c = mesh(boxG(0.07, 0.0012, 0.0025), seam, shirtG, x, 0.0318, z, false); c.rotation.y = r; }
     shirtFlap = new THREE.Group(); shirtFlap.position.set(0.15, 0.032, 0); shirtG.add(shirtFlap); // last third, hinged along the block's right edge
     mesh(boxG(0.1, 0.008, 0.214), shirtM, shirtFlap, -0.05, 0.004, 0, true);
@@ -707,7 +799,14 @@ export default async function create(ctx) {
   const comb = new THREE.Group(); scene.add(comb);
   {
     const cm = TX.mat('cotton', { repeat: [0.4, 0.4], tex: { tone: [142, 74, 60], seed: 33, creases: 0.8 } });
-    const b = mesh(new THREE.SphereGeometry(0.05, 18, 12), cm, comb, 0, 0.012, 0); b.scale.set(1.1, 0.26, 0.62);
+    // (integration) a cloth-wrapped comb you can read: a flat wrapped bundle whose top shows the comb's arched spine and the
+    // ridges of its teeth through the thin cotton (it was a soft red pebble, 80 % under her palm)
+    const bg = new RoundedBoxGeometry(0.106, 0.02, 0.058, 3, 0.008), bp = bg.attributes.position;
+    for (let i = 0; i < bp.count; i++) { const x = bp.getX(i), y = bp.getY(i), z = bp.getZ(i);
+      if (y > 0) { const spine = Math.exp(-(((z + 0.014) / 0.008) ** 2)) * 0.004 * (1 - (x / 0.053) ** 2), teeth = (z > -0.004 ? 0.0011 * Math.max(0, Math.sin(x * 2 * Math.PI / 0.0042)) * (1 - Math.abs(x) / 0.06) : 0);
+        bp.setY(i, y + spine + teeth - 0.003 * (x / 0.053) ** 2); } }
+    bg.computeVertexNormals();
+    const b = mesh(bg, cm, comb, 0, 0.011, 0);
     const knot = mesh(new THREE.SphereGeometry(0.011, 10, 8), cm, comb, 0.03, 0.024, 0.0); knot.scale.set(1.2, 0.8, 1);
     const tail = mesh(boxG(0.03, 0.003, 0.014), cm, comb, 0.05, 0.022, 0.01); tail.rotation.y = 0.5;
   }
@@ -738,7 +837,7 @@ export default async function create(ctx) {
   }
   cols.L.g.position.y = 0.0012; cols.L.g.children.forEach((ch) => { ch.position.y -= 0.0012; });
   // the triangle of shirt cloth kept inside the half fold (CH2, S043)
-  const clothTri = mesh(new THREE.ShapeGeometry(new THREE.Shape([new THREE.Vector2(0, 0), new THREE.Vector2(0.042, 0), new THREE.Vector2(0.0, 0.034)])), TX.mat('cotton', { repeat: [0.06, 0.06], tex: { tone: [118, 134, 150], seed: 21, creases: 0 }, roughness: 0.95, side: THREE.DoubleSide }), cols.R.g, 0.012, 0.0024, 0.022, false); // #6F7F8F cut from the shirt hem (review: the shirt map read black here)
+  const clothTri = mesh(new THREE.ShapeGeometry(new THREE.Shape([new THREE.Vector2(0, 0), new THREE.Vector2(0.044, 0), new THREE.Vector2(0.0, 0.036)])), TX.mat('cotton', { repeat: [0.06, 0.06], tex: { tone: [134, 150, 168], seed: 21, creases: 0.3 }, roughness: 0.95, side: THREE.DoubleSide }), cols.R.g, 0.006, 0.0024, -0.006, false); // (integration) in the middle of the opened sheet // #6F7F8F cut from the shirt hem (review: the shirt map read black here)
   clothTri.rotation.x = -Math.PI / 2; clothTri.rotation.z = 0.35; clothTri.visible = false;
   // a1: bottom third over (0..π), a2: top third over (0..π), a3: left half over (0..π)
   function foldLetter(a1, a2, a3) {
@@ -751,10 +850,11 @@ export default async function create(ctx) {
   const letterPt = (x, y, z) => letter.localToWorld(_tmp.set(x, y, z).clone());
 
   // ================================================================ placing her on the crate with the case on her knees
-  function seatHer({ x = SEAT.x, z = SEAT.z, rot = SEAT.rot } = {}) {
+  function seatHer({ x = SEAT.x, z = SEAT.z, rot = SEAT.rot, lean = 0.12 } = {}) {
     mig.root.position.set(x, 0, z); mig.root.rotation.set(0, rot, 0);
     crate.position.set(x - Math.sin(rot) * 0.06, 0, z - Math.cos(rot) * 0.06); crate.rotation.y = rot;
-    mig.pose('sit_chair', { seat: 0.43, feet: 0.06, lean: 0.12, hands: 'none' });
+    mig.pose('sit_chair', { seat: 0.43, feet: 0.06, lean, hands: 'none' });
+    if (lean > 0.15) { mig.bone('spine').rotateX(0.5 * (lean - 0.12)); mig.bone('chest').rotateX(0.6 * (lean - 0.12)); } // hunched over the case
     // case across the thighs, handle toward her body (case +Z → her −Z)
     caseG.position.copy(mig.root.localToWorld(V3(0, 0.565, 0.25))); caseG.rotation.set(0, rot + Math.PI, 0);
     caseG.updateMatrixWorld(true); mig.root.updateMatrixWorld(true);
@@ -764,17 +864,26 @@ export default async function create(ctx) {
   const headCentre = (fig) => { const hb = fig.worldPos('head'), e = fig.eye(); return hb.lerp(e, 0.5).add(V3(0, 0.025, 0)); };
   const herDir = (x, y, z) => V3(x, y, z).applyQuaternion(mig.root.quaternion).normalize();
   // lid top in her local frame: y = 0.565 + 0.21; the lid's camera-facing (hinge) edge at her local z = 0.25 + 0.19
-  const LID_Y = 0.565 + 0.21 + 0.0015, LID_FRONT_Z = 0.25 + 0.19;
+  const LID_Y = 0.565 + 0.21 * CASE_S[1] + 0.0015, LID_FRONT_Z = 0.25 + 0.19 * CASE_S[2];
   function placeLetter(lx, lz, rotExtra = 0) { // letter centre in her local frame (on the lid), page top toward the camera (her +Z)
     letter.position.copy(herLocal(lx, LID_Y, lz)); letter.rotation.set(0, mig.root.rotation.y + Math.PI + rotExtra, 0); letter.updateMatrixWorld(true);
   }
   // hand helpers: pinch / press at a world point, palm down, fingers along `fwd`
   const DOWN = V3(0, -1, 0);
-  function handAt(side, pt, fwd, pose, lift = 0.03, back = 0.085) {
+  function handAt(side, pt, fwd, pose, lift = 0.03, back = 0.085, elbowOut = 0.3) {
     const h = side === 'L' ? migHandL : migHandR;
     const w = pt.clone().addScaledVector(fwd, -back).add(V3(0, lift, 0));
-    mig.reach(side, w, { palm: DOWN, fingers: fwd.clone().add(V3(0, -0.25, 0)).normalize(), elbowOut: 0.3 });
+    mig.reach(side, w, { palm: DOWN, fingers: fwd.clone().add(V3(0, -0.25, 0)).normalize(), elbowOut });
     if (pose) h.pose(pose[0], pose[1] || {});
+  }
+
+  // the pinch socket (thumb / index tips) solved onto a world point: reach, measure, correct once
+  function pinchAt(side, pt, fwd, w = 1) {
+    const h = side === 'L' ? migHandL : migHandR;
+    h.pose('pinch');
+    handAt(side, pt, fwd, null, 0.02, 0.07, 0.5); mig.root.updateMatrixWorld(true);
+    const err = pt.clone().sub(h.sockets.pinch.getWorldPosition(V3()));
+    handAt(side, pt.clone().addScaledVector(err, w), fwd, null, 0.02, 0.07, 0.5);
   }
 
   // ================================================================ the elder (family member seeing her off): WIFE sculpt re-dressed, mid LOD
@@ -791,7 +900,8 @@ export default async function create(ctx) {
     for (const a of Object.values(elder.accessories || {})) if (a) a.visible = false;
   }
   // elder's close-up right hand (bible 5.5a: knuckly, soft-skinned back, deep-blue cotton cuff #2E3A52), + a sleeve
-  const elderHand = makeHand({ side: 'R', lod: 'close', sex: 'f', age: 0.88, skin: 0xC99A78, width: 1.04, thick: 1.06, length: 0.172, forearmLen: 0.14,
+  // (integration) older: darker, sun-worn, age 1 (deeper knuckle creases, tendons, looser skin) — beside her smooth, lighter hand
+  const elderHand = makeHand({ side: 'R', lod: 'close', sex: 'f', age: 1.0, skin: 0xAE7C5C, width: 1.05, thick: 1.04, length: 0.172, forearmLen: 0.14, slender: 0.85,
     cuffs: [{ style: 'band', color: 0x2E3A52, fabric: 'cotton', radius: 0.043, edge: 0.03, len: 0.08 }] });
   scene.add(elderHand.root);
   const elderSleeve = mesh(new THREE.CylinderGeometry(0.049, 0.058, 0.56, 16, 1, true), std({ color: 0x2E3A52, roughness: 0.9, side: THREE.DoubleSide }), elderHand.byName.forearm || elderHand.root, 0, 0.33, 0);
@@ -799,13 +909,44 @@ export default async function create(ctx) {
   // ---------------------------------------------------------------- free close-up hands for the inserts (S034, S039)
   const migFreeL = await loadCharacterHand('MIGRANT', 'L', { lod: 'close', hand: { forearmLen: 0.2 } });
   const migFreeR = await loadCharacterHand('MIGRANT', 'R', { lod: 'close', hand: { forearmLen: 0.2 } });
-  const floralM = TX.mat('floral', { repeat: [0.5, 0.5], tex: { ground: [143, 161, 179], seed: 11 } });
-  for (const h of [migFreeL, migFreeR]) { scene.add(h.root); const sl = mesh(new THREE.CylinderGeometry(0.047, 0.052, 0.34, 18, 1, true), std({ map: floralM.map, normalMap: floralM.normalMap, roughness: 0.9, side: THREE.DoubleSide }), h.byName.forearm || h.root, 0, 0.32, 0); sl.name = 'sleeve'; }
+  // (integration) the floral blouse sleeve (bible 褪色碎花布衫, ground #8FA1B3) with a hemmed edge, the print large enough to read as
+  // flowers (at the old scale it read as a grey check / tweed in S037 / S039)
+  const floralM = TX.mat('floral', { repeat: [0.22, 0.3], tex: { ground: [143, 161, 179], seed: 11 } });
+  const floralMap = (() => { // the MIGRANT blouse print (cast.js MIGRANT: ground #8FA1B3, flowers #EDE6D8 / #C99A97, leaves #9AA7A6), faded
+    const S = 512, c = canvas(S, S), g = c.getContext('2d'), r = util.rng(612), N = TX.makeNoise(19);
+    g.fillStyle = '#8FA1B3'; g.fillRect(0, 0, S, S);
+    const im = g.getImageData(0, 0, S, S), d = im.data;
+    for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) { const i = (y * S + x) * 4, n = 0.94 + 0.08 * (N.fbm(x / S, y / S, 6, 3) * 0.5 + 0.5) + 0.03 * ((x + y) % 3 === 0 ? 1 : 0); d[i] *= n; d[i + 1] *= n; d[i + 2] *= n; }
+    g.putImageData(im, 0, 0);
+    const flower = (cx, cy, rr, col) => { g.fillStyle = col; for (let k = 0; k < 5; k++) { const a = k * 2 * Math.PI / 5 + r(); g.beginPath(); g.ellipse(cx + Math.cos(a) * rr * 0.55, cy + Math.sin(a) * rr * 0.55, rr * 0.48, rr * 0.3, a, 0, 7); g.fill(); } g.fillStyle = 'rgba(214,190,120,0.9)'; g.beginPath(); g.arc(cx, cy, rr * 0.2, 0, 7); g.fill(); };
+    for (let k = 0; k < 46; k++) {
+      const x = r() * S, y = r() * S, rr = 9 + r() * 6;
+      for (const dx of [-S, 0, S]) for (const dy of [-S, 0, S]) {
+        g.fillStyle = 'rgba(154,167,166,0.85)'; g.beginPath(); g.ellipse(x + dx + rr * 1.1, y + dy + rr * 0.3, rr * 0.55, rr * 0.22, 0.6, 0, 7); g.fill();
+        flower(x + dx, y + dy, rr, k % 3 === 1 ? 'rgba(201,154,151,0.9)' : 'rgba(237,230,216,0.92)');
+      }
+    }
+    const t = ctex(c, true, true); t.repeat.set(1.2, 1.6); return t;
+  })();
+  const sleeveM = std({ map: floralMap, normalMap: floralM.normalMap, roughness: 0.9, side: THREE.DoubleSide });
+  for (const h of [migFreeL, migFreeR]) {
+    scene.add(h.root);
+    const sl = mesh(new THREE.CylinderGeometry(0.047, 0.055, 0.4, 20, 1, true).translate(0, 0.2, 0), sleeveM, h.byName.forearm || h.root, 0, 0.1, 0); sl.name = 'sleeve';
+    const hem = mesh(new THREE.TorusGeometry(0.0485, 0.0035, 6, 24), sleeveM, sl, 0, 0.002, 0, false); hem.rotation.x = Math.PI / 2;
+  }
   // clerk's hands (invented khaki-grey uniform cuff, no insignia)
   const khaki = 0x8A8670;
   const clerkR = makeHand({ side: 'R', lod: 'close', sex: 'm', age: 0.45, skin: 0xC69C7C, forearmLen: 0.14, cuffs: [{ style: 'band', color: khaki, fabric: 'cotton', radius: 0.046, edge: 0.03, len: 0.07 }] });
   const clerkL = makeHand({ side: 'L', lod: 'close', sex: 'm', age: 0.45, skin: 0xC69C7C, forearmLen: 0.14, cuffs: [{ style: 'band', color: khaki, fabric: 'cotton', radius: 0.046, edge: 0.03, len: 0.07 }] });
   for (const h of [clerkR, clerkL]) { scene.add(h.root); mesh(new THREE.CylinderGeometry(0.052, 0.06, 0.55, 16, 1, true), std({ color: khaki, roughness: 0.85, side: THREE.DoubleSide }), h.byName.forearm || h.root, 0, 0.4, 0); }
+  // (integration) a working man's plain short nails: the shared nail shader whitens the free edge (it read as a French manicure
+  // under the bulb in S037) — for the clerk's hands the free edge and lunula keep the nail-bed colour, the bed close to the skin
+  for (const h of [clerkR, clerkL]) {
+    const m = h.skinMat, prev = m.onBeforeCompile, key0 = m.customProgramCacheKey;
+    m.onBeforeCompile = (sh, r) => { prev.call(m, sh, r); sh.fragmentShader = sh.fragmentShader.replace('vec3(0.97, 0.92, 0.88)', 'uNail').replace('vec3(0.94, 0.9, 0.86)', 'uNail'); };
+    m.customProgramCacheKey = () => (key0 ? key0.call(m) : '') + '|plainNails';
+    if (m.userData.fzUniforms && m.userData.fzUniforms.uNail) m.userData.fzUniforms.uNail.value.set(0xc08f72);
+  }
   // the stamp in the clerk's right hand (grip socket: +Y = handle axis across the palm)
   const stampHolder = new THREE.Group(); clerkR.hold(stampHolder, 'grip');
   // ---------------------------------------------------------------- the nervous young traveller (CH3, S068)
@@ -835,15 +976,38 @@ export default async function create(ctx) {
     return ctex(c);
   })();
   const oilM = new THREE.MeshStandardMaterial({ map: oilMap, color: 0xffffff, roughness: 0.42, emissive: 0xffb36c, emissiveMap: oilMap, emissiveIntensity: 0.75, envMapIntensity: 0.8 });
+  // (integration) the CLOSED packet as soft, crumpled, translucent paper: the light through it shows the darker shapes of the
+  // brittle pieces and candied-melon strips inside; emission halved (it read as a glowing gold brick)
+  const packMap = (() => {
+    const W = 512, H = 400, c = canvas(W, H), g = c.getContext('2d'), r = util.rng(58);
+    g.drawImage(oilMap.image, 0, 0, W, H);
+    for (let k = 0; k < 7; k++) { // shadows of the sweets inside (soft, blurred by the paper)
+      const x = 70 + r() * 360, y = 60 + r() * 260, w = 60 + r() * 70, h = 40 + r() * 30, a = (r() - 0.5) * 1.2, melon = k > 4;
+      g.save(); g.translate(x, y); g.rotate(a); g.filter = 'blur(7px)'; g.fillStyle = melon ? 'rgba(230,215,180,0.45)' : 'rgba(110,64,24,0.55)';
+      g.beginPath(); g.roundRect(-w / 2, -h / 2, melon ? w * 1.3 : w, melon ? h * 0.45 : h, 10); g.fill(); g.restore();
+    }
+    g.filter = 'none'; g.strokeStyle = 'rgba(255,240,205,0.5)'; g.lineWidth = 2; // crumple highlights
+    for (let k = 0; k < 14; k++) { g.beginPath(); let x = r() * W, y = r() * H; g.moveTo(x, y); for (let j = 0; j < 3; j++) { x += (r() - 0.5) * 120; y += (r() - 0.5) * 90; g.lineTo(x, y); } g.stroke(); }
+    return ctex(c);
+  })();
+  const packM = new THREE.MeshStandardMaterial({ map: packMap, color: 0xffffff, roughness: 0.5, emissive: 0xffb36c, emissiveMap: packMap, emissiveIntensity: 0.36, envMapIntensity: 0.7, transparent: true, opacity: 0.94 });
   const brittleM = TX.mat('cotton', { repeat: [0.3, 0.3], tex: { tone: [200, 150, 79], seed: 44, creases: 0 }, roughness: 0.6 });
   const redM = std({ color: 0xA33A2E, roughness: 0.7 });
   function makeParcel(open = false) {
     const g = new THREE.Group();
     if (!open) {
-      mesh(new RoundedBoxGeometry(0.1, 0.026, 0.08, 3, 0.007), oilM, g, 0, 0.013, 0, false);
-      mesh(boxG(0.102, 0.003, 0.004), redM, g, 0, 0.027, 0); mesh(boxG(0.004, 0.003, 0.082), redM, g, 0, 0.027, 0);
-      mesh(boxG(0.004, 0.026, 0.084), redM, g, 0.051, 0.013, 0, false); mesh(boxG(0.104, 0.026, 0.004), redM, g, 0, 0.013, 0.041, false);
-      const k = mesh(new THREE.SphereGeometry(0.005, 8, 6), redM, g, 0, 0.03, 0); k.scale.set(1.3, 0.7, 1);
+      const pg = new RoundedBoxGeometry(0.1, 0.026, 0.08, 6, 0.008), pp = pg.attributes.position, N = TX.makeNoise(71);
+      for (let i = 0; i < pp.count; i++) { const x = pp.getX(i), y = pp.getY(i), z = pp.getZ(i), n = N.fbm(x * 9 + 3, z * 9 + y * 5 + 3, 3, 4), m = N.fbm(z * 21 + 1, x * 21 + 1, 2, 4);
+        const pinch = 1 - 0.18 * Math.exp(-(((Math.abs(x) - 0.05) / 0.012) ** 2)) * (Math.abs(y) / 0.013); // the twisted / folded ends
+        pp.setXYZ(i, x * (1 + 0.04 * n), y * (1 + 0.25 * n) * pinch + 0.0012 * m, z * (1 + 0.05 * m) * pinch); }
+      pg.computeVertexNormals();
+      mesh(pg, packM, g, 0, 0.013, 0, false);
+      // the thin red cotton string tied crosswise (P16), over the top and round the sides, and its knot + ends
+      const str = (pts, r = 0.0016) => mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts.map((p) => V3(...p))), 24, r, 5, false), redM, g, 0, 0, 0, false);
+      str([[-0.052, 0.0, 0], [-0.052, 0.024, 0], [-0.03, 0.0285, 0.001], [0, 0.0292, 0], [0.03, 0.0285, -0.001], [0.052, 0.024, 0], [0.052, 0.0, 0]]);
+      str([[0, 0.0, -0.042], [0, 0.024, -0.042], [0.001, 0.0285, -0.02], [0, 0.0292, 0], [-0.001, 0.0285, 0.02], [0, 0.024, 0.042], [0, 0.0, 0.042]]);
+      const k = mesh(new THREE.SphereGeometry(0.0045, 8, 6), redM, g, 0.002, 0.0305, 0.001); k.scale.set(1.4, 0.7, 1);
+      str([[0.003, 0.031, 0.002], [0.014, 0.029, 0.012], [0.022, 0.0275, 0.018]], 0.0011); str([[0.0, 0.031, 0.0], [-0.01, 0.029, 0.014], [-0.013, 0.0275, 0.024]], 0.0011);
     } else {
       const sheet = mesh(new THREE.PlaneGeometry(0.2, 0.17), oilM, g, 0, 0.0, 0, false); sheet.rotation.x = -Math.PI / 2;
       for (const [x, z, ry] of [[-0.02, -0.01, 0.1], [0.025, 0.015, -0.2], [0.0, 0.03, 0.4]]) { const b = mesh(boxG(0.03, 0.012, 0.02), brittleM, g, x, 0.03, z); b.rotation.y = ry; }
@@ -858,7 +1022,7 @@ export default async function create(ctx) {
   const caseCarry = new THREE.Group(); scene.add(caseCarry);
   { const cc = caseG.clone(true); const sc = cc.getObjectByName('shirt'); if (sc) sc.parent.remove(sc);
     cc.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(V3(0, 0, 1), V3(1, 0, 0), V3(0, 1, 0))); // handle axis → her forward, body hangs down
-    cc.position.copy(V3(0, 0.13, 0.22).applyQuaternion(cc.quaternion).negate()); caseCarry.add(cc); }
+    cc.position.copy(V3(0, 0.13 * CASE_S[1], 0.22 * CASE_S[2]).applyQuaternion(cc.quaternion).negate()); caseCarry.add(cc); }
   // hang it from her right hand's grip each frame (gravity keeps it vertical; swing follows the hand a little)
   function hangCase(swing = 0) {
     mig.root.updateMatrixWorld(true);
@@ -895,21 +1059,37 @@ export default async function create(ctx) {
 
   // ================================================================ SHOT SET-UPS
   // S020 / S043 shared camera (75 mm, slight high angle, push toward her hands); v = 0..1 push progress
-  function letterCam(v, T, dEnd = 2.05, hEnd = null) {
-    // square to the case (the lid edge stays a horizontal line); 75 mm push from her face+hands to the hands
-    const E = herLocal(0, LID_Y, LID_FRONT_Z), fwd = herDir(0, 0, 1), up = V3(0, 1, 0);
-    const d = lerp(3.05, dEnd, v), h = lerp(0.52, hEnd ?? 0.4 * dEnd / 2.05, v);
+  function letterCam(v, T, { d0 = 3.05, d1 = 2.05, sy0 = 0.5, yaw0 = -0.36, pitch0 = 0.37, pitch1 = 0.35 } = {}) {
+    // 75 mm push from her lap + hands to the hands. (integration) it starts ≈ 20° off her right-front (she sits at frame left,
+    // her right forearm reads coming down to the letter, the case reads as a flat case lying across her knees, the bulb at her
+    // left-behind is upper right) and arcs square to the case by the end, so the lid edge lands as one horizontal line (T10)
+    const yaw = yaw0 * (1 - ease.inOutSine(clamp(v)));
+    const E = herLocal(0, LID_Y, LID_FRONT_Z), fwd = herDir(Math.sin(yaw), 0, Math.cos(yaw)), up = V3(0, 1, 0);
+    // (integration) ≈ 21° down (was 10°): the lid surface and the letter on it read as a surface (the folds were a sliver), the
+    // bowed head shows its crown and hair, not a face, and the case front wall no longer stands up like a lectern
+    const d = lerp(d0, d1, v), h = d * Math.tan(lerp(pitch0, pitch1, v));
     const aim = lerp(0.23, d * 0.035, v);
     // (review) truck: she starts left of centre with the lamp side open at frame right (keyframe head ≈ 0.40), the push ends
     // centred on the folded line; a pure truck keeps the lid edge horizontal
-    const side = herDir(1, 0, 0).multiplyScalar(0.15 * (1 - ease.inOutSine(clamp(v))));
+    const side = herDir(1, 0, 0).multiplyScalar(0.15 * (yaw0 / -0.36) * (1 - ease.inOutSine(clamp(v))));
     // the lid's camera-side edge is solved onto y = 0.66 at the end of the push (T10 → S021, and S043 → S044)
-    aimAt(E.clone().addScaledVector(fwd, d).addScaledVector(up, h).add(side), E.clone().add(side), 0.5, lerp(0.8, 0.66, ease.inOutSine(clamp(v))), 75);
+    // (integration) the lid line starts at y ≈ 0.53 (knees + shins under the case at the bottom of frame: the case lies on her lap,
+    // not on a lectern) and the frame top cuts her bowed face at the nose; the push keeps it near the same height
+    aimAt(E.clone().addScaledVector(fwd, d).addScaledVector(up, h).add(side), E.clone().add(side), 0.5, lerp(sy0, 0.66, ease.inOutSine(clamp(v))), 75);
   }
   // warm bounce off the letter / rattan lid up into her bowed face (review: the top-only bulb left the brow sockets black,
   // reading as a blindfold); below the lid plane so the paper and hands are not lit by it
   function lidBounce(I = 0.45) {
     fillB.visible = true; fillB.color.set(0xffb27a); fillB.position.copy(herLocal(0, 0.7, LID_FRONT_Z + 0.3)); fillB.intensity = I; fillB.distance = 2.5;
+  }
+  // (integration) S020 / S043 / view_pier light: the bulb of lamp 3 at her left-behind is the key (rim on hair, cheek edge and
+  // shoulder, raking light across the letter); a weak warm bounce off the paper keeps the bowed face a readable dark shape
+  // (≈ 1.5–2 stops under the lit edge) — never the frontal mask
+  function letterLight(bounce = 0) {
+    lampRig(2, 1, 3, { k: 15, f: 8, aim: herLocal(0.05, 0.75, 0.3) }); lights({ fill1: false, cone: 0.7 });
+    lidBounce(bounce); fillB.position.copy(herLocal(0.03, LID_Y + 0.03, 0.34)); fillB.distance = 0.8; fillB.visible = bounce > 0; // just above the paper (no light through the case)
+    // the lamp's pool on the wet planks bounces up onto her knees and shins below the case (they read: the case is on her lap)
+    fillA.visible = true; fillA.color.set(0xffb27a); fillA.position.copy(herLocal(-0.05, 0.08, 0.95)); fillA.intensity = 0.55; fillA.distance = 1.4;
   }
   const pressDir = () => herDir(0.95, 0, 0.3); // the palm press: fingers toward frame right along the lid edge (S043 endframe)
   // interior inserts that never see the sky or the sea: skip both (their projected grid / dome still cost rasterisation)
@@ -950,6 +1130,7 @@ export default async function create(ctx) {
     const fA = toElder.clone().add(V3(0, -0.55, 0)).normalize();               // her fingers: toward the elder, downward
     const pA = toElder.clone().sub(fA.clone().multiplyScalar(toElder.dot(fA))).normalize(); // her palm faces the elder
     const Wa = C.clone().addScaledVector(fA, -0.06).addScaledVector(pA, -0.012);
+    if (mig.hands.L.meshes.skinArm) mig.hands.L.meshes.skinArm.visible = false; // (integration) its stub stuck out of the clasp like a stick (bent wrist)
     mig.reach('L', Wa, { palm: pA, fingers: fA, elbowOut: 0.2 });
     mig.hands.L.setChannels(blendHandChannels(handPose('hold_hand', {}, mig.hands.L.dims), handPose('relaxed', { curl: 0.6 }, mig.hands.L.dims), give));
     mig.root.updateMatrixWorld(true);
@@ -963,13 +1144,13 @@ export default async function create(ctx) {
     return res;
   }
   const S38_DMAX = 1.0;
-  const S36 = { X0: -0.6, cam: V3(-4.35, 1.34, -2.18), shipX: 72 };
+  const S36 = { X0: -0.6, cam: V3(-2.95, 1.2, -2.42), shipX: 72 }; // (integration) 1.5 m closer along the railing: the clasp in the foreground
   const setups = {
     // ---- S020  CH1 75.04–77.04: refolds the letter (thirds, then half) and presses it flat; T10 line at y 0.66 → S021
     S020(tl, u, T) {
       pierBase(T); sea.object3D.visible = false; // the sea is never in this frame (its projected grid alone cost ≈ 0.75 CPU-s)
-      seatHer(); hideLegs();
-      lampRig(2, 1, 3, { k: 15, f: 8, aim: herLocal(0.05, 0.6, 0.3) }); lights({ fill1: false }); lidBounce();
+      seatHer({ lean: 0.3 }); // (integration) legs shown: knees and shins under the case say 'on her lap' (with them hidden it read as a lectern); leaning over it
+      letterLight();
       setCrowd({ t: tl, D: 2.1, speed: 0.9, keep: keepSeat, farD: 5 });
       // fold timeline (sync: 75.44 → 0.40 start, 76.22 → 1.18 folded, 76.60 → 1.56 press)
       const a1 = Math.PI * ease.inOutSine(clamp((tl - 0.42) / 0.24)), a2 = Math.PI * ease.inOutSine(clamp((tl - 0.66) / 0.24)), a3 = Math.PI * ease.inOutSine(clamp((tl - 0.9) / 0.28));
@@ -982,20 +1163,23 @@ export default async function create(ctx) {
       mig.breathe(T, 0.8);
       // right hand (screen-left): settles 0–0.40, pinches the bottom third edge, then the top third edge, pushes, presses
       let rp, rpose = ['pinch'], rlift = 0.028;
-      if (tl < 0.42) { const k = ease.outCubic(clamp(tl / 0.4)); rp = letterPt(0.05, 0, R3 * 1.45).add(V3(0, (1 - k) * 0.12, 0)); rpose = ['relaxed', { curl: lerp(0.5, 0.8, k) }]; }
+      // (integration) the descent comes in from her right side with the elbow out, the forearm diagonal across the lid (it
+      // used to hang in front of her chest, forearm hidden behind the hand)
+      if (tl < 0.42) { const k = ease.outCubic(clamp(tl / 0.4)); rp = letterPt(0.05, 0, R3 * 1.45).add(V3(0, (1 - k) * 0.1, 0)).addScaledVector(herDir(-1, 0, 0), 0.07 * (1 - k)); rpose = ['relaxed', { curl: lerp(0.5, 0.8, k) }]; }
       else if (tl < 0.66) { rp = new THREE.Vector3().setFromMatrixPosition(cols.R.bot.matrixWorld).add(V3(0, 0, 0)); const e = cols.R.bot.localToWorld(V3(0.045, 0, R3 * 0.95)); rp = e; }
       else if (tl < 0.9) { const e = cols.R.top.localToWorld(V3(0.045, 0, -R3 * 0.95)); const k = clamp((tl - 0.66) / 0.08); rp = e.lerp(letterPt(0.045, 0, R3 * 0.4), 1 - k); }
       else if (tl < 1.5) { rp = letterPt(0.05, 0.004, -R3 * 0.15); rpose = ['flat', { spread: 0.1 }]; rlift = 0.026; }
       else { const k = ease.inOutSine(clamp((tl - 1.5) / 0.12)); rp = letterPt(0.03, 0.004, 0.028); rpose = ['flat', { spread: 0.2 }]; rlift = lerp(0.03, 0.021, k); }
-      const rdir = tl < 1.5 ? fwd : fwd.clone().lerp(pressDir(), ease.inOutSine(clamp((tl - 1.4) / 0.2))).normalize();
-      handAt('R', rp, rdir, rpose, rlift);
+      const diag = herDir(0.55, 0, 0.85), dk = ease.inOutSine(clamp((tl - 0.3) / 0.25));
+      const rdir = tl < 1.5 ? diag.clone().lerp(fwd, dk).normalize() : fwd.clone().lerp(pressDir(), ease.inOutSine(clamp((tl - 1.4) / 0.2))).normalize();
+      handAt('R', rp, rdir, rpose, rlift, 0.085, lerp(0.75, 0.3, dk));
       // left hand (screen-right): rests on the lid; folds the left half over 0.9–1.18; back to rest
       let lp, lpose = ['relaxed', { curl: 0.6 }], llift = 0.03;
       if (tl < 0.86 || tl > 1.3) lp = herLocal(0.2, LID_Y, 0.25);
       else if (tl < 1.18) { lp = cols.L.g.localToWorld(V3(-0.07, 0, 0.0)); lpose = ['pinch']; llift = 0.028; }
       else { const k = clamp((tl - 1.18) / 0.12); lp = letterPt(-0.02, 0.004, 0).lerp(herLocal(0.2, LID_Y, 0.25), k); }
       handAt('L', lp, fwd.clone().add(herDir(0.25, 0, 0)).normalize(), lpose, llift);
-      mig.lookAt(letterPt(0.03, 0, 0), 0.6); // (review) less bowed: the face (eyes down) reads instead of the crown + fringe band
+      mig.lookAt(letterPt(0.03, 0, 0), 0.9); mig.bone('neck').rotateX(0.12); // (integration) bowed over the letter: the face stays in its own shadow, the hair crown and cheek edge take the rim
       letterCam(ease.inOutSine(clamp(tl / 1.85)), T);
       const f = cam.distTo(camera, letterPt(0.04, 0, 0));
       return { ...MIG_POST, dof: { focus: f, fstop: 2.4 }, exposure: 1.05 };
@@ -1003,31 +1187,50 @@ export default async function create(ctx) {
     // ---- S043  CH2 139.88–142.21: same set-up; opens the last half fold, the triangle of the old shirt inside; thumb; refolds; press
     S043(tl, u, T) {
       pierBase(T); sea.object3D.visible = false; // the sea is never in this frame (its projected grid alone cost ≈ 0.75 CPU-s)
-      seatHer(); hideLegs();
-      lampRig(2, 1, 3, { k: 15, f: 8, aim: herLocal(0.05, 0.6, 0.3) }); lights({ fill1: false }); lidBounce();
+      seatHer({ lean: 0.3 });
+      letterLight();
       setCrowd({ t: tl + 7, D: 2.5, speed: 0.9, keep: keepSeat, farD: 5 });
-      clothTri.visible = true;
-      // 0–0.35 open the half fold; hold; 1.30 thumb stroke; 1.5–1.9 close; 1.93 press
-      const open = ease.outCubic(clamp(tl / 0.35)) * (1 - ease.inOutSine(clamp((tl - 1.5) / 0.4)));
-      const a3 = Math.PI * (1 - 0.95 * open); // opened nearly flat so the lifted half does not shadow the cloth (review)
-      foldLetter(Math.PI, Math.PI, a3);
-      placeLetter(0.055, LID_FRONT_Z - R3 / 2 - 0.002, 0.0);
+      // (integration) the letter visibly opens — the half fold, then the top third (等沉默 140.22 → 0.345 s) — to a 17 × 17 cm
+      // sheet with the grey-blue triangle of the old shirt in its middle; her right thumb lifts the triangle's corner into the
+      // bulb's edge light on 听见 (141.18 → 1.305 s) and holds it; she lays it back, refolds on the old creases (top third
+      // 1.56–1.74, the half 1.68–1.88, sliding the packet to the lid edge) and presses with the whole palm on 141.8 (1.925 s)
+      const o3 = ease.outCubic(clamp(tl / 0.3)) * (1 - ease.inOutSine(clamp((tl - 1.68) / 0.2)));
+      const o2 = ease.inOutSine(clamp((tl - 0.1) / 0.25)) * (1 - ease.inOutSine(clamp((tl - 1.56) / 0.18)));
+      foldLetter(Math.PI, Math.PI * (1 - 0.985 * o2), Math.PI * (1 - 0.985 * o3));
+      const slide = ease.inOutSine(clamp((tl - 1.66) / 0.24));
+      placeLetter(0.055, lerp(0.29, LID_FRONT_Z - R3 / 2 - 0.002, slide), 0.0);
+      clothTri.visible = o3 > 0.3;
+      const lift = ease.inOutSine(clamp((tl - 1.1) / 0.2)) * (1 - ease.inOutSine(clamp((tl - 1.5) / 0.1)));
+      // the cloth hinges on its right edge; its left corner (toward her right hand, screen left) rises ≈ 2 cm into the light
+      clothTri.quaternion.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0.35)).multiply(new THREE.Quaternion().setFromAxisAngle(V3(0, 1, 0), -0.75 * lift)); clothTri.updateMatrixWorld(true);
+      const corner = clothTri.localToWorld(V3(0.038, 0.002, 0.0));
       const fwd = herDir(0, 0, 1);
       mig.breathe(T, 0.8);
-      // left hand lifts/holds the opened half; right thumb strokes the cloth at 1.30
-      const lp = cols.L.g.localToWorld(V3(-0.07, 0, 0.0));
-      handAt('L', lp, fwd.clone().add(herDir(0.3, 0, 0)).normalize(), ['pinch'], 0.03);
-      // (review) her right hand rests on the lid at frame left and only the fingertips come in for the stroke on 听见, so the
-      // cloth triangle — the only news in the shot — stays uncovered from 0.35 s to 1.2 s; then the fold closes and the palm presses
-      const st = Math.sin(clamp((tl - 1.18) / 0.34) * Math.PI);
-      const sDir = herDir(0.9, 0, 0.35).normalize(), tri = letterPt(0.03, 0.003, 0.038);
-      const rRest = herLocal(-0.2, LID_Y, 0.31);
-      let rp, rpose, rdir = fwd, rlift = 0.03;
-      if (tl < 1.62) { rp = rRest.clone().lerp(tri.clone().addScaledVector(sDir, -0.055), st); rpose = st > 0.05 ? ['touch'] : ['relaxed', { curl: 0.65 }]; rdir = fwd.clone().lerp(sDir, st).normalize(); rlift = lerp(0.03, 0.036, st); }
-      else { const k = ease.inOutSine(clamp((tl - 1.62) / 0.3)); rp = rRest.clone().lerp(letterPt(0.03, 0.004, 0.028), k); rpose = k > 0.6 ? ['flat', { spread: 0.2 }] : ['relaxed', { curl: lerp(0.65, 0.3, k) }]; rdir = fwd.clone().lerp(pressDir(), k).normalize(); rlift = lerp(0.045, 0.022, ease.inOutSine(clamp((tl - 1.82) / 0.12))); }
-      handAt('R', rp, rdir, rpose, rlift);
-      mig.lookAt(letterPt(0.03, 0, 0.02), 0.62);
-      letterCam(0.2 + 0.8 * ease.inOutSine(clamp(tl / 2.2)), T, 1.6, 0.62);
+      const ph = (t0, t1) => ease.inOutSine(clamp((tl - t0) / (t1 - t0)));
+      // left hand: opens the half (pinching the left half's outer edge), keeps it open, closes it 1.68–1.88, then rests
+      const lRest = herLocal(0.2, LID_Y, 0.25), lEdge = cols.L.g.localToWorld(V3(-0.075, 0, 0.0));
+      let lp = lEdge, lpose = ['pinch'], llift = 0.03;
+      if (tl > 1.83) { lp = lEdge.clone().lerp(lRest, ph(1.83, 2.02)); lpose = ['relaxed', { curl: 0.6 }]; llift = 0.03 + 0.03 * Math.sin(ph(1.83, 2.02) * Math.PI); }
+      handAt('L', lp, herDir(-0.75, 0, 0.55), lpose, llift, 0.07, 0.6); // from outside the sheet (screen right): the hand never lies on it
+      // right hand: lifts the top third open (0.1–0.35), moves aside so the cloth reads (0.35–0.9), the thumb under the
+      // triangle's corner (1.0–1.55), folds the top third back (1.56–1.74), whole-palm press (1.925)
+      const rRest = herLocal(-0.17, LID_Y, 0.3), topEdge = cols.R.top.localToWorld(V3(0.045, 0, -R3 * 0.92));
+      const press = letterPt(0.035, 0.004, 0.0);
+      let rp, rpose = ['relaxed', { curl: 0.65 }], rdir = fwd, rlift = 0.03, rback = 0.085;
+      if (tl < 0.1) { rp = rRest.clone().lerp(topEdge, ph(0.0, 0.1)); }
+      else if (tl < 0.36) { rp = topEdge; rpose = ['pinch']; }
+      else if (tl < 0.95) { rp = topEdge.clone().lerp(rRest, ph(0.36, 0.6)); }
+      else if (tl < 1.56) { rp = null; }
+      else if (tl < 1.76) { rp = corner.clone().lerp(topEdge, ph(1.56, 1.62)); rpose = ['pinch']; rdir = herDir(0.75, 0, 0.66).lerp(fwd, ph(1.56, 1.7)).normalize(); }
+      else { const k = ph(1.76, 1.92); rp = topEdge.clone().lerp(press, k); rpose = k > 0.5 ? ['flat', { spread: 0.2 }] : ['relaxed', { curl: lerp(0.65, 0.3, k) }]; rdir = fwd.clone().lerp(pressDir(), k).normalize(); rlift = lerp(0.04, 0.022, ph(1.86, 1.93)); }
+      if (rp) handAt('R', rp, rdir, rpose, rlift, rback, 0.5);
+      else { // thumb + index pinch exactly at the cloth's lifting corner (the socket is solved onto it), the hand beside the cloth
+        const k = ph(0.95, 1.1), tgt = corner.clone().add(V3(0, -0.002, 0)), pdir = herDir(0.85, 0, 0.4);
+        pinchAt('R', rRest.clone().lerp(tgt, k), pdir, k);
+      }
+      mig.lookAt(letterPt(0.03, 0, 0.02), 0.9); mig.bone('neck').rotateX(0.12);
+      // the same camera as S020, from its END framing (square, lid line y 0.66) pushing on to ≈ 1.4× (face never in frame)
+      letterCam(ease.outSine(clamp(tl / 1.5)), T, { d0: 2.05, d1: 1.3, sy0: 0.66, yaw0: 0, pitch0: 0.35, pitch1: 0.37 });
       return { ...MIG_POST, dof: { focus: cam.distTo(camera, letterPt(0.03, 0, 0)), fstop: 2.4 }, exposure: 1.05 };
     },
     // ---- S031  V2 109.88–111.92: fabric match from S030 (same top-down composition): palms finish pressing the collar, the last
@@ -1047,12 +1250,12 @@ export default async function create(ctx) {
       const up1 = lift(0.28, 0.6);
       // right hand → hem corner press at 1.08 (hold half a beat), small lift, second press at 1.6
       const rDown = lift(0.62, 1.06) * (1 - 0.6 * lift(1.32, 1.45)) + 0.6 * lift(1.45, 1.6);
-      const collarR = CL(0.035, 0.036, -0.016), corner = CL(0.115, 0.045, 0.07); // (review) 2.4 cm back: fingertips poked out past the block's far edge
+      const collarR = CL(0.035, 0.036, -0.03), corner = CL(0.115, 0.045, 0.07); // (integration) palms either side of the collar, not on it: the collar + placket read at the cut // (review) 2.4 cm back: fingertips poked out past the block's far edge
       const rIdle = collarR.clone().add(V3(0, 0.05, 0));
       const rp = (tl < 0.62 ? collarR.clone().add(V3(0, 0.045 * up1, 0)) : rIdle.clone().lerp(corner.clone().add(V3(0, 0.045, 0)), ease.inOutSine(clamp((tl - 0.62) / 0.3))).add(V3(0, -0.045 * rDown, 0)));
       const side = CL(1, 0, 0).sub(CL(0, 0, 0)).normalize(); // image right = her right
       handAt('R', rp, fwd.clone().addScaledVector(side, -0.15).normalize(), ['wipe'], 0.022, 0.075);
-      const lp = CL(-0.075, 0.036, -0.021).add(V3(0, 0.038 * up1, 0));
+      const lp = CL(-0.135, 0.036, -0.005).add(V3(0, 0.038 * up1, 0));
       handAt('L', lp, fwd.clone().addScaledVector(side, 0.15).normalize(), ['wipe'], 0.022, 0.075);
       // camera: 80° top-down from over her shoulder, handle at the bottom edge
       const tgt = caseG.localToWorld(V3(0.0, 0.06, -0.012));
@@ -1061,38 +1264,53 @@ export default async function create(ctx) {
     },
     // ---- S032  V2 111.92–114.54: MCU 100 mm handheld; she looks back screen-left over the flowing crowd, one silent word
     S032(tl, u, T) {
-      pierBase(T, true); show(['shed', 'mig', 'crate', 'caseG', 'crowd']); sea.object3D.visible = false; // the sea is never in this frame (perf)
-      seatHer({ rot: 0.12 }); hideLegs();
-      lampRig(2, 1, 3, { k: 15, f: 7, aim: herLocal(0, 1.0, 0.2) }); lights({ sky: true, fill2: true });
-      setCrowd({ t: tl, D: 2.7, speed: 1.0, farD: 4.5, keep: (x, z) => !(Math.abs(x - SEAT.x) < 1.0 && z > -2.05 && z < -0.5) && !(z > -0.6 && Math.abs(x - SEAT.x) < 3.2) && !(z > -3 && z < -2.0 && Math.abs(x - SEAT.x) < 4), families: true,
-        extra: [{ x0: SEAT.x - 2.3, z: -2.45, v: 1.25, vi: 1, lug: 'case' }, { x0: SEAT.x - 0.7, z: -2.3, v: 1.05, vi: 3, ph: 0.4 }, { x0: SEAT.x - 3.9, z: -2.6, v: 1.3, vi: 4, lug: 'bundle', ph: 0.7 }, { x0: SEAT.x + 0.9, z: -2.4, v: 0.95, vi: 5, ph: 0.2 }] });
-      mig.breathe(T, 1.1);
+      // (integration) re-staged as a LOST PROFILE (QA blocker: the frontal, sharp, front-lit mask). She sits on the crate facing
+      // the railing and her family (V2 seat), the camera ≈ 35° behind her LEFT shoulder (100 mm, head ≈ 35 % of frame height at
+      // (0.62, 0.38)): we see the braid, the back of the head and — as she turns her head left toward home and the farewell party on
+      // 乡音 — the cheek line and the nose tip, a dark shape with a warm 2400 K edge (the families' lamp beyond her, upper left)
+      // against the brighter blue-hour windows and the lanterns. The silent word on 唇边 is two small jaw/chin movements plus a
+      // breath (shoulders). Defocused travellers sweep left → right behind her for the whole shot.
+      pierBase(T, true); show(['shed', 'mig', 'crate', 'caseG', 'crowd']); sea.object3D.visible = false; // never in this frame (perf)
+      const O = window.__PW32 || {};
+      seatHer({ ...SEAT_V2, rot: O.rot ?? SEAT_V2.rot }); hideLegs();
+      lights({ fill1: false, cone: 0.32 }); hemi.intensity = 0.22;
+      const bz = SEAT_V2.z;
+      setCrowd({ t: tl, D: 2.7, speed: 1.0, farD: 3.5, families: true, waits: false, queue: false, officials: false, keep: (x, z) => z < bz - 1.3,
+        extra: [{ x0: SEAT_V2.x - 3.2, z: bz - 1.35, v: 1.15, vi: 4, lug: 'bundle' }, { x0: SEAT_V2.x - 1.7, z: bz - 1.55, v: 1.05, vi: 6, ph: 0.4 },
+          { x0: SEAT_V2.x - 4.4, z: bz - 1.45, v: 1.2, vi: 7, lug: 'pole', ph: 0.7 }, { x0: SEAT_V2.x - 0.6, z: bz - 1.75, v: 1.0, vi: 5, ph: 0.2, lug: 'basketArm' },
+          { x0: SEAT_V2.x - 2.6, z: bz - 1.65, v: 1.1, vi: 1, ph: 0.55, lug: 'case' }, { x0: SEAT_V2.x - 3.0, z: bz - 1.9, v: 1.1, vi: 9, ph: 0.15, s: 0.95 },
+          { x0: SEAT_V2.x - 5.4, z: bz - 1.4, v: 1.25, vi: 0, ph: 0.85, lug: 'case' }, { x0: SEAT_V2.x + 0.4, z: bz - 1.5, v: 1.0, vi: 10, ph: 0.3, lug: 'sack' }] });
+      mig.breathe(T, 1.4);
       // hands resting on the closed case
       handAt('R', herLocal(-0.12, LID_Y, 0.3), herDir(0, 0, 1), ['relaxed', { curl: 0.7 }], 0.03);
       handAt('L', herLocal(0.14, LID_Y, 0.3), herDir(0, 0, 1), ['relaxed', { curl: 0.7 }], 0.03);
-      // head turn: 3/4 to screen-right (ship) → back to screen-left (home, the family at the railing) on 乡音 (0.0–0.55 s)
-      const k = ease.inOutSine(clamp((tl - 0.02) / 0.55));
-      const eye = mig.eye();
-      const lookR = V3(SEAT.x + 12, eye.y + 0.1, SEAT.z + 4.0), lookL = V3(SEAT.x - 12, eye.y + 0.15, SEAT.z + 1.4);
+      // head turn on 乡音 (0.02–0.57 s): from 3/4 to her right (the gate, the ship: screen right) to her left-front (home, the family)
+      const k = ease.inOutSine(clamp((tl - 0.02) / 0.6));
+      const lookR = herLocal(-3.0, 1.2, 1.6), lookL = herLocal(2.6, 1.22, 2.3);
       mig.lookAt(lookR.lerp(lookL, k), 1);
-      // the silent two-syllable word on 唇边 (112.33 → 0.41 s): two tiny nods of the chin
-      const w = clamp((tl - 0.4) / 0.42); mig.bone('head').rotateX(0.035 * Math.sin(w * Math.PI * 2) * Math.sin(w * Math.PI));
+      // the silent two-syllable word on 唇边 (112.33 → 0.41 s): two small jaw / chin movements
+      const w = clamp((tl - 0.4) / 0.42); mig.bone('head').rotateX(0.05 * Math.sin(w * Math.PI * 2) * Math.sin(w * Math.PI));
       mig.root.updateMatrixWorld(true);
-      const e = mig.eye();
-      const hc = headCentre(mig);
-      const camPos = V3(hc.x + 0.05, hc.y + 0.02, hc.z + 2.6);
-      const tgt = hc.clone().add(V3(-lerp(0.04, 0.0, k), -lerp(0.04, 0.035, k), 0)); // (review) face ≈ (0.62, 0.40) → (0.52, 0.42)
-      fillB.position.copy(e).add(V3(0.1, -0.5, 0.65)); fillB.intensity = 0.7; fillB.distance = 3;   // warm bounce off the case lid
-      skyLight.position.set(SEAT.x + 12, 2.5, SEAT.z - 3); skyLight.target.position.copy(e); skyLight.intensity = 1.2; // cool rim from the far end doors
-      cam.place(camera, camPos, tgt); cam.lens(camera, 100);
-      { // (review) the families' hurricane lanterns hung on the railing hooks: warm bokeh upper left (+ one at right) behind her
+      const e = mig.eye(), hc = headCentre(mig);
+      // key: the families' bulb beyond her, upper left — a 3/4 back rim on the hair, cheek edge and braid; nothing from the lens side
+      // the families' own bulbs (second lamp row, z −5.3) light them from above: a textured, brighter background (warm heads and
+      // shoulders, the blue windows between them) for her dark profile
+      fillA.visible = fillB.visible = true; fillA.color.set(BULB); fillB.color.set(BULB);
+      fillA.position.set(-12.5, LAMP_Y - 0.1, LAMP2_Z); fillB.position.set(-7.5, LAMP_Y - 0.1, LAMP2_Z); fillA.intensity = fillB.intensity = O.fam ?? 6; fillA.distance = fillB.distance = 6;
+      const KL = O.key || [-1.0, 1.5, 2.4];
+      key.position.copy(hc).add(herDir(KL[0], 0, KL[2]).multiplyScalar(Math.hypot(KL[0], KL[2]))).add(V3(0, KL[1], 0)); key.target.position.copy(hc); key.target.updateMatrixWorld();
+      key.intensity = O.ki ?? 30; key.distance = 8; key.shadow.camera.far = 8;
+      const camPos = hc.clone().add(herDir(0.574, 0, -0.819).multiplyScalar(4.3)).add(V3(0, O.ch ?? -0.35, 0)); // a little below her eye line: the lit windows rise behind the families' heads
+      aimAt(camPos, hc, lerp(0.6, 0.63, k), 0.38, 100);
+      { // the families' hurricane lanterns on the railing hooks: warm bokeh upper left (+ one right) behind her
         camera.updateMatrixWorld(true);
         const hit = (nx, ny, zp) => { const r = V3(nx, ny, 0.5).unproject(camera).sub(camera.position).normalize(); return camera.position.clone().addScaledVector(r, (zp - camera.position.z) / r.z); };
-        lanternAt(0, hit(-0.64, 0.5, -3.08)); lanternAt(1, hit(0.82, 0.12, -3.08));
+        lanternAt(0, hit(-0.55, 0.45, -3.08)); lanternAt(1, hit(0.75, 0.3, -3.08));
       }
       cam.handheld(camera, T, 0.7, 7);
+      townM.color.setRGB(...(O.town || [2.2, 2.2, 2.4])); // the blue-hour town through the landward windows: the brighter background she reads against
       if (String(window.__PZ).includes('mark') || PZ0.includes('mark')) { dbgMark.visible = true; dbgMark.position.copy(e); }
-      return { ...MIG_POST, dof: { focus: cam.distTo(camera, e), fstop: 2.0, maxCoc: 2.2 }, exposure: 1.1 };
+      return { ...MIG_POST, dof: { focus: cam.distTo(camera, hc), fstop: 2.0, maxCoc: 2.4 }, exposure: 1.12 };
     },
     // ---- S033  V2 114.54–116.67: CU 70° high angle, locked; reopens the lid on 一颗心 (0.79 s), lays the cloth-wrapped comb on
     //      the shirt's top-right corner (registered (0.64, 0.34) = museum layout), palm press on 念 (1.75 s)
@@ -1103,23 +1321,25 @@ export default async function create(ctx) {
       lampRig(2, 1, 3, { k: 15, f: 8, aim: caseG.localToWorld(V3(0, 0.1, 0)) }); lights({ fill1: false });
       setCrowd({ t: tl, D: 2.2, speed: 0.5, keep: keepSeat });
       const open = ease.inOutSine(clamp((tl - 0.05) / 0.74));
-      lid.rotation.x = -1.95 * open;
+      lid.rotation.x = -1.38 * open; // ≈ 80°: its raised front edge stands at the top of frame, in her left hand
       const CL = (x, y, z) => caseG.localToWorld(V3(x, y, z));
       const fwd = CL(0, 0, -1).sub(CL(0, 0, 0)).normalize();
-      // left fingertips under the near edge of the lid (lifting), let go at ~60°
-      const lidEdge = lid.localToWorld(V3(-0.15, 0.0, 0.38));
+      // left fingertips under the near edge of the lid: they lift it and (integration) keep holding its raised edge at the top of
+      // frame from 一颗心 (0.79 s) — no hand floating beside the case
+      const lidEdge = lid.localToWorld(V3(-0.24, 0.0, 0.38));
       const lk = clamp((tl - 0.45) / 0.3);
-      const lp = lidEdge.clone().lerp(CL(-0.2, 0.22, 0.12), ease.inOutSine(lk));
-      handAt('L', lp, fwd, ['relaxed', { curl: lerp(0.9, 0.6, lk) }], 0.018, 0.07);
+      handAt('L', lidEdge, fwd.clone().add(V3(0, -0.6 * open, 0)).normalize(), ['relaxed', { curl: lerp(0.9, 0.75, lk) }], 0.012 + 0.01 * open, 0.07, 0.85);
       // the comb: from her lap (bottom right, out of frame) to the shirt's top-right corner, placed at 1.4 s, pressed at 1.75 s
       const place = CL(0.105, 0.06, -0.044), start = CL(0.16, 0.34, 0.36);
       const c = ease.inOutSine(clamp((tl - 0.85) / 0.55));
       const combPos = start.clone().lerp(place, c).add(V3(0, 0.05 * Math.sin(c * Math.PI), 0));
       comb.position.copy(combPos); comb.rotation.set(0, caseG.rotation.y + 0.25, 0);
       const press = ease.inOutSine(clamp((tl - 1.55) / 0.2));
-      // the palm rests ON the bundle (it used to sink 1–2 cm into it): bundle top ≈ place + 2.5 cm, palm ≈ 1.6 cm under the wrist
-      const rp = tl < 1.42 ? combPos.clone().add(V3(0, 0.03, 0)) : place.clone().add(V3(0, 0.036 + 0.03 * (1 - press) * clamp((tl - 1.42) / 0.1) - 0.004 * press, 0));
-      handAt('R', rp, fwd, tl < 1.42 ? ['pinch'] : ['flat', { spread: 0.2 }], 0.02, 0.08);
+      // (integration) on 念 two fingertips press the bundle's near edge — the hand stays behind it, ≈ 70 % of the cloth (and the
+      // comb's shape inside) in view
+      const nearEdge = place.clone().addScaledVector(fwd, -0.03).add(V3(0, 0.022, 0));
+      const rp = tl < 1.42 ? combPos.clone().add(V3(0, 0.03, 0)) : nearEdge.clone().add(V3(0, 0.025 * (1 - press) * clamp((tl - 1.42) / 0.1) - 0.003 * press, 0));
+      handAt('R', rp, fwd, tl < 1.42 ? ['pinch'] : ['touch'], 0.016, tl < 1.42 ? 0.08 : 0.105);
       // (review) framed 5 cm toward her: the lid's near edge (and her lifting fingertips) now enter at the bottom of frame 0,
       // the shirt block is centred and the comb lands at ≈ (0.64, 0.32) — the museum layout position (S030/S049)
       const tgt = CL(0.0, 0.16, 0.04);
@@ -1136,8 +1356,10 @@ export default async function create(ctx) {
       // her two hands side by side, palms up, cupped to receive (little fingers together), fingers toward the elder (screen-left)
       const close = ease.inOutSine(clamp((tl - 0.62) / 0.62));
       const cupTo = (h) => h.setChannels(blendHandChannels(handPose('cupped', {}, h.dims), handPose('grip', { radius: 0.024 }, h.dims), close));
-      migFreeL.placeWrist(Q.clone().add(V3(-0.04, -0.012, 0.125)), [0.0, 0.12, -1], [0.3, 1, 0]); cupTo(migFreeL);
-      migFreeR.placeWrist(Q.clone().add(V3(0.04, -0.012, 0.125)), [0.0, 0.12, -1], [-0.3, 1, 0]); cupTo(migFreeR);
+      // (integration) elbows bent, cupped hands held toward her lap: the forearms come in diagonally from the bottom right (cropped
+      // ≈ x 0.85) with the floral sleeve hems near the wrists, not two straight tubes along the frame
+      migFreeL.placeWrist(Q.clone().add(V3(-0.042, -0.02, 0.122)), [0.0, 0.42, -1], [0.3, 1, 0.35]); cupTo(migFreeL);
+      migFreeR.placeWrist(Q.clone().add(V3(0.038, -0.02, 0.122)), [0.0, 0.42, -1], [-0.3, 1, 0.35]); cupTo(migFreeR);
       // the elder's hand brings the parcel in from screen-left, sets it in her palms (0.50–0.58 s), then covers her closing fingers
       const inK = ease.outCubic(clamp((tl - 0.04) / 0.5)), wrap = ease.inOutSine(clamp((tl - 0.6) / 0.6)), sq = 0.004 * Math.sin(clamp((tl - 1.24) / 0.35) * Math.PI);
       const eStart = Q.clone().add(V3(0.0, 0.105, -0.106)), eSet = Q.clone().add(V3(0.0, 0.088, 0.0)), eWrap = Q.clone().add(V3(0.0, 0.078 - sq, -0.035));
@@ -1187,8 +1409,8 @@ export default async function create(ctx) {
       mig.lookAt(V3(X0 + 6, 1.45, -1.2), 0.45);
       elder.lookAt(mig.eye(), 0.7);
       gateL.rotation.y = Math.PI; gateR.rotation.y = 0;
-      lamps[4].glow.set(0.18); // the bulb just above the lens: halo kept small (it flared over the top of frame)
-      aimAt(S36.cam, C, 0.36, 0.6, 32);
+      for (const i of [3, 4, 5]) lamps[i].glow.set(0.16); // the bulbs above the lens: halos small — the portholes stay the brightest, warmest points
+      aimAt(S36.cam, C, 0.3, 0.62, 32);
       // the steamer broadside-on in the end-door opening (frame ≈ 0.72, 0.36), its porthole side toward the shed, 75 m out
       camera.updateMatrixWorld(true);
       const ray = V3(0.44, 0.28, 0.5).unproject(camera).sub(camera.position).normalize();
@@ -1214,8 +1436,9 @@ export default async function create(ctx) {
       if (tl < 0.74) sp = pIn.clone().lerp(pk, ease.inOutSine(tl / 0.74));
       else if (tl < 1.0) sp = pk.clone().add(V3(0, 0.004 * Math.sin((tl - 0.74) / 0.26 * Math.PI), 0));
       else if (tl < 1.29) sp = pk.clone().lerp(hit, ease.inCubic((tl - 1.0) / 0.29));
-      else if (tl < 2.31) { sp = hit.clone(); sq = Math.min(1, (tl - 1.29) / 0.12) * (1 - clamp((tl - 2.0) / 0.3)); }
-      else sp = hit.clone().lerp(out, ease.inOutSine(clamp((tl - 2.31) / 0.5)));
+      // (integration) the lift starts at 2.06 s (125.35) and clears the mark by 2.31 (125.6): it holds ≥ 0.5 s before the cut
+      else if (tl < 2.06) { sp = hit.clone(); sq = Math.min(1, (tl - 1.29) / 0.12) * (1 - clamp((tl - 1.85) / 0.2)); }
+      else sp = hit.clone().lerp(out, ease.inOutSine(clamp((tl - 2.06) / 0.3)));
       stampImp.visible = tl >= 1.29; stampImp.material.opacity = 0.92;
       stampTool.position.copy(sp); stampTool.position.y -= 0.0015 * sq; stampTool.rotation.set(0, 0, 0); stampTool.scale.set(1, 1 - 0.03 * sq, 1);
       const toolW = B(sp.x, sp.y - 0.0015 * sq, sp.z);
@@ -1231,7 +1454,7 @@ export default async function create(ctx) {
       clerkL.pose('flat', { spread: 0.3 });
       clerkL.placeWrist(corner.clone().addScaledVector(away, 0.13).addScaledVector(rdir, 0.05).add(V3(0, 0.035, 0)), away.clone().negate().add(V3(0, -0.25, 0)).addScaledVector(rdir, -0.25).normalize(), [0, -1, 0]);
       // her left forearm and floral sleeve along the counter edge at the lower-left, stretched back toward the family (hand out of frame)
-      migFreeL.placeWrist(B(-0.56, 1.3, 0.05), rdir.clone().add(V3(0, -0.04, 0)).normalize(), V3(0, -1, 0).addScaledVector(away, -0.4));
+      migFreeL.placeWrist(B(-0.68, 1.3, 0.08), rdir.clone().add(V3(0, -0.04, 0)).normalize(), V3(0, -1, 0).addScaledVector(away, -0.4)); // (integration) floral sleeve, cropped at the left edge (x < 0.1)
       migFreeL.pose('hold_hand');
       const camT = B(permitC.x + 0.01, 1.112, permitC.z - 0.012);
       // (review) solved so the fresh violet mark sits on S040's registered spot (0.60, 0.50) (it was at 0.56, 0.53)
@@ -1259,30 +1482,43 @@ export default async function create(ctx) {
       const go = ease.inOutSine(clamp((tl - 0.07) / 1.1));
       gateL.rotation.y = Math.PI + 1.35 * go; gateR.rotation.y = -1.35 * go;
       setCrowd({ t: tl, D: 3.7, speed: 1.15, gateOpen: go, funnel: true, farD: 9, keep: (x, z) => !(x < 7.8 && z > -2.9 && z < 2.2) });
-      // her walk: from beside the railing toward the gate (+Z = screen right, slightly away), decelerating into the held arm
-      const step = ease.outSine(clamp(tl / 2.11));
-      const hz = lerp(-2.62, -2.12, step), hx = lerp(6.3, 6.55, step);
-      mig.root.position.set(hx, 0, hz); mig.root.rotation.set(0, lerp(0.15, 0.6, ease.inOutSine(clamp(tl / 0.8))), 0);
-      const stride = 0.7 * (1 - clamp((tl - 1.6) / 0.55));
-      mig.pose('walk', { phase: ((0.5 * step) / 0.85 + 0.1) % 1, stride: Math.max(0.05, stride) }); mig.breathe(T, 1.2);
-      mig.reach('R', mig.root.localToWorld(V3(-0.21, 0.74, 0.02 + 0.05 * Math.sin(T * 5.5) * stride)), { palm: herDir(1, 0, 0), fingers: V3(0, -1, 0.05) }); migHandR.pose('rattan'); hangCase(0.04 * Math.sin(T * 5.5 + 0.6) * stride);
-      const tense = ease.inOutSine(clamp((tl - 0.6) / 1.5));
-      elder.root.position.set(6.05, 0, -3.34); elder.root.rotation.set(0, 1.15, 0);
-      elder.pose('stand', { weight: 0.5 }); elder.bone('chest').rotateX(0.08 + 0.2 * tense); elder.bone('spine').rotateX(0.06 * tense); elder.root.updateMatrixWorld(true);
+      // (integration) she really WALKS: from a step beside the railing (left elbow bent ≈ 90°, the clasp at chest height
+      // ≈ 1.15 m) about 1.1 m toward the gate over 126.2–128.2, the case swinging in her right hand with air under it, until both
+      // arms are straight EXACTLY on 一站 (128.23 → 2.11 s); she looks back from 127.6 (1.48 s); the camera tracks ≈ 0.8 m with her.
+      elder.root.position.set(6.02, 0, -3.36); elder.root.rotation.set(0, 1.0, 0);
+      const tense = ease.inOutSine(clamp((tl - 1.2) / 0.95));
+      elder.pose('stand', { weight: 0.5 }); elder.bone('chest').rotateX(0.06 + 0.22 * tense); elder.bone('spine').rotateX(0.05 + 0.06 * tense); elder.root.updateMatrixWorld(true);
+      const se = elder.worldPos('armR.upper');
+      const P0 = V3(6.3, 0, -2.66), dir = V3(0.5, 0, 0.866), rotW = Math.atan2(dir.x, dir.z);
+      const wk = clamp((tl - 0.08) / (2.11 - 0.08)), step = wk * wk * (3 - 2 * wk); // eases in from a standstill, decelerates into the pull
+      // solve the walk length so that her left shoulder reaches S38_DMAX from the elder's right shoulder at step = 1
+      const offL = V3(0.175, 1.27, 0.0).applyAxisAngle(V3(0, 1, 0), rotW), A0 = P0.clone().add(offL).sub(se); A0.y = 0;
+      const bq = A0.dot(dir), cq = A0.lengthSq() - (S38_DMAX ** 2 - (1.27 + 0 - se.y) ** 2);
+      const sStar = -bq + Math.sqrt(Math.max(0, bq * bq - cq));
+      const walked = sStar * step;
+      mig.root.position.copy(P0).addScaledVector(dir, walked); mig.root.rotation.set(0, rotW - 0.12 * (1 - step) + 0.1 * tense, 0);
+      const stride = 0.12 + 0.68 * Math.sin(Math.PI * clamp(wk * 1.08));
+      mig.pose('walk', { phase: (0.15 + walked / 1.05) % 1, stride }); mig.breathe(T, 1.2);
+      mig.bone('chest').rotateY(0.22 * tense); mig.bone('spine').rotateY(0.1 * tense); // her upper body turns back toward the held hand
+      const sw = Math.sin((0.15 + walked / 1.05) * Math.PI * 2) * stride;               // the case swings with her stride
+      mig.reach('R', mig.root.localToWorld(V3(-0.21, 0.76, 0.03 + 0.06 * sw)), { palm: herDir(1, 0, 0), fingers: V3(0, -1, 0.05) }); migHandR.pose('rattan'); hangCase(0.07 * sw);
       mig.root.updateMatrixWorld(true);
-      let sh = mig.worldPos('armL.upper'); const se = elder.worldPos('armR.upper');
-      { // held back: never further than both arms allow (shoulder to shoulder ≤ S38_DMAX)
+      let sh = mig.worldPos('armL.upper');
+      { // safety: never further than both arms allow
         const d = sh.distanceTo(se);
         if (d > S38_DMAX) { const pull = se.clone().sub(sh).setY(0).normalize().multiplyScalar(d - S38_DMAX); mig.root.position.add(pull); mig.root.updateMatrixWorld(true); sh = mig.worldPos('armL.upper'); }
         if (window.__PW) window.__PW.s38d = d;
       }
-      const C = sh.clone().lerp(se, 0.5); C.y = 1.08 + 0.04 * tense;
+      // the clasp: near her chest at first (her elbow bent), drawn out to the midpoint of the straight arms
+      const Cmid = sh.clone().lerp(se, 0.5), Cnear = sh.clone().lerp(se, 0.62).add(V3(0, -0.1, 0));
+      const C = Cnear.lerp(Cmid, step); C.y = lerp(1.15, 1.1, step) + 0.03 * tense;
       claspHands(C, se.clone().sub(sh).setY(0).normalize());
-      const look = ease.inOutSine(clamp((tl - 1.3) / 0.5));
-      mig.lookAt(V3(9, 1.5, 1.5).lerp(V3(5.6, 1.35, -3.6), look), 0.95);
+      const look = ease.inOutSine(clamp((tl - 1.48) / 0.45));
+      mig.lookAt(V3(9.5, 1.5, 2.0).lerp(V3(5.7, 1.35, -3.6), look), 0.95);
       elder.lookAt(mig.eye(), 0.45);
-      const cz = -2.12 + 0.45 * ease.inOutSine(clamp(tl / 3.6));
-      aimAt(V3(2.85, 1.25, cz), V3(6.33, 1.02, -2.6), 0.47, 0.52, 40);
+      const ck = ease.inOutSine(clamp((tl - 0.1) / 2.6));
+      const tgt = C.clone().lerp(mig.worldPos('chest'), 0.55); tgt.y = 1.0;
+      aimAt(V3(2.85, 1.22, lerp(-2.4, -1.6, ck)), tgt, 0.47, 0.5, 40);
       cam.handheld(camera, T, 0.6, 21);
       // the steamer broadside beyond the end doors at frame right (as in S036)
       camera.updateMatrixWorld(true);
@@ -1302,10 +1538,12 @@ export default async function create(ctx) {
       lampRig(5, 6, 4, { k: 0.0, f: 4 }); lights({ sky: true });
       // (review) cool backlight raised and pushed aside (its glint on the glossy nails read as white sparkles), softer; a warm
       // shed fill from behind the camera models the knuckles and the soft old skin instead of a muddy silhouette
-      key.position.copy(H0).addScaledVector(F, 3.0).addScaledVector(R, 1.6).add(V3(0, 2.6, 0)); key.target.position.copy(H0); key.target.updateMatrixWorld(); key.color.set(0xb8c8e0); key.intensity = 11; key.angle = 0.35;
-      skyLight.position.copy(H0).addScaledVector(F, 10).addScaledVector(R, -4).add(V3(0, 5, 0)); skyLight.target.position.copy(H0); skyLight.intensity = 0.7;
-      fillA.position.copy(H0).addScaledVector(F, -1.3).addScaledVector(R, -0.6).add(V3(0, 0.9, 0)); fillA.intensity = 1.5; fillA.distance = 4;
-      setCrowd({ t: tl, D: 4.2, speed: 1.0, gateOpen: 1, walkers: false, waits: false, queue: false });
+      // (integration) the blue gate light BEHIND the hands (rim on the finger edges, light between the fingers), the warm shed
+      // fill from the camera side ≈ 1 stop under it: the hands are modelled by the rim, not evenly front-lit terracotta
+      key.position.copy(H0).addScaledVector(F, 2.6).addScaledVector(R, 0.55).add(V3(0, 1.1, 0)); key.target.position.copy(H0); key.target.updateMatrixWorld(); key.color.set(0xa9bedf); key.intensity = 16; key.angle = 0.3;
+      skyLight.position.copy(H0).addScaledVector(F, 10).addScaledVector(R, -4).add(V3(0, 5, 0)); skyLight.target.position.copy(H0); skyLight.intensity = 0.55;
+      fillA.color.set(0xffcf9e); fillA.position.copy(H0).addScaledVector(F, -1.3).addScaledVector(R, -0.6).add(V3(0, 0.9, 0)); fillA.intensity = 0.75; fillA.distance = 4;
+      setCrowd({ t: tl, D: 4.2, speed: 1.0, gateOpen: 1, walkers: false, waits: false, queue: false, officials: false });
       // the elder's right hand: back to camera, palm toward the departing hand, fingers up and gently curled, thumb at screen-left
       elderHand.placeWrist(H0.clone().add(V3(0, -0.085, 0)).addScaledVector(F, -0.01), UP.clone().addScaledVector(F, 0.22), F.clone().add(V3(0, -0.1, 0)));
       elderHand.setChannels(blendHandChannels(handPose('relaxed', { curl: 0.72 }, elderHand.dims), handPose('hold_hand', {}, elderHand.dims), 0.2)); // four fingers gently curled (T15)
@@ -1323,77 +1561,86 @@ export default async function create(ctx) {
     // ---- S068  CH3 215.67–217.71: MS 50 mm locked; on the bench she gives a piece of the peanut-sesame sweet to the nervous boy
     //      (left → right, T21): it lands in his palm on 面 (0.27 s); her smile crosses 千 (0.93 s); his cheek loosens at 1.53 s
     S068(tl, u, T) {
+      // (integration) re-staged as a small, tender gesture at LAP height (QA: two straight arms meeting at shoulder height read as a
+      // handshake / arm-wrestle, two frontal masks). The bench sits just in front of lamp 5, so the bulb is behind them: rims on
+      // hair and shoulders, the faces turned toward each other in 3/4 profile and in their own shadow, the oil paper glowing in her
+      // lap. Her right hand travels low from the packet to his palm resting open on his bundle and leaves the piece of brittle
+      // there on 面 (0.27 s); his hand stays low, cupped, and closes after it; her left hand stays on the packet; her smile is a
+      // small head tilt across 千 (0.93 s); his head lifts and turns a little toward her at 1.53 s. The boy is smaller (≈ 0.9,
+      // narrower shoulders), cap brim low.
       pierBase(T); show(['shed', 'mig', 'trav', 'travBundle', 'parcelOpen', 'piece', 'crowd']);
-      lampRig(4, 3, 5, { k: 24, f: 8, aim: V3(0.6, 0.8, -0.2) }); lights({ fill1: false, fill2: true }); hemi.intensity = 0.36;
-      key.position.set(-0.45, LAMP_Y - 0.03, -0.25);
-      fillB.position.set(-0.6, 0.35, -0.1); fillB.intensity = 0.9; fillB.distance = 3.5; // warm bounce off the wet planks / the parcel
+      const BX = -0.78;
+      bench68.position.set(BX + 0.06, 0, -0.1);
+      lampRig(4, 3, 5, { k: 17, f: 8, aim: V3(BX, 0.75, -0.1) }); lights({ fill1: false, fill2: true, cone: 0.7 }); hemi.intensity = 0.3;
+      key.position.set(0.0, LAMP_Y - 0.03, -0.45);
+      fillB.color.set(0xffb27a); fillB.position.set(BX - 1.0, 0.42, -0.1); fillB.intensity = 0.55; fillB.distance = 3.2; // warm bounce off the wet planks
       sea.object3D.visible = false; // never in this frame (perf)
-      setCrowd({ t: tl + 30, D: 2.1, speed: 0.8, farD: 2.5, queue: false, waits: false, keep: (x, z) => !(x < 2.6 && x > -5 && z > -2.2 && z < 1.8) });
-      const BX = 0.6;
-      // (review) the give was 25 cm short (her right arm could not reach his palm across 1 m of bench): they sit closer, she
-      // turns toward him, and the meeting point is solved between the two right shoulders every frame, so the piece really
-      // lands in his palm on 面 (0.27 s)
-      mig.root.position.set(BX, 0, -0.5); mig.root.rotation.set(0, -Math.PI / 2 + 0.38, 0);
-      mig.pose('sit_chair', { seat: 0.45, feet: 0.06, lean: 0.2, hands: 'none' });
-      mig.bone('spine').rotateY(0.16); mig.bone('chest').rotateY(0.12); mig.breathe(T, 1);
-      trav.root.position.set(BX + 0.05, 0, 0.3); trav.root.rotation.set(0, -Math.PI / 2 - 0.32, 0);
-      trav.pose('sit_chair', { seat: 0.45, feet: 0.04, lean: 0.3, hands: 'none' }); trav.breathe(T + 0.7, 1.3);
+      setCrowd({ t: tl + 30, D: 2.1, speed: 0.8, farD: 2.5, queue: false, waits: false, keep: (x, z) => !(x < BX + 2.0 && x > BX - 5.5 && z > -2.2 && z < 1.8) });
+      mig.materials.hair && (mig.materials.hair.roughness = 0.9);
+      mig.root.position.set(BX, 0, -0.42); mig.root.rotation.set(0, -Math.PI / 2 + 0.42, 0);
+      mig.pose('sit_chair', { seat: 0.45, feet: 0.06, lean: 0.24, hands: 'none' });
+      mig.bone('spine').rotateY(0.14); mig.bone('chest').rotateY(0.12); mig.breathe(T, 1);
+      trav.root.position.set(BX + 0.05, 0, 0.3); trav.root.rotation.set(0, -Math.PI / 2 - 0.36, 0); trav.root.scale.set(0.84, 0.9, 0.9);
+      trav.pose('sit_chair', { seat: 0.45 / 0.9, feet: 0.04, lean: 0.34, hands: 'none' }); trav.breathe(T + 0.7, 1.3);
       mig.root.updateMatrixWorld(true); trav.root.updateMatrixWorld(true);
-      // the open parcel on her lap (left hand holds it), tilted on her knees toward the light so it reads
-      const lap = mig.root.localToWorld(V3(0.04, 0.585, 0.2));
-      parcelOpen.position.copy(lap); parcelOpen.rotation.set(0, mig.root.rotation.y, 0); parcelOpen.rotateX(0.32);
-      mig.reach('L', lap.clone().add(V3(0, 0.04, 0)).add(herDir(0.07, 0, -0.07)), { palm: DOWN, fingers: herDir(-0.4, 0, 1) }); migHandL.pose('relaxed', { curl: 0.7 });
-      const shH = mig.worldPos('armR.upper'), shB = trav.worldPos('armR.upper');
-      const palmP = shH.clone().lerp(shB, 0.56); palmP.y = 0.88; palmP.x -= 0.12;   // in front of their bodies, toward the lens
-      const toBoy = shB.clone().sub(shH).setY(0).normalize();
-      // his right hand: palm up, waiting from frame 0, fingers toward her; closes 0.3–0.7 s
-      const fist = ease.inOutSine(clamp((tl - 0.32) / 0.4));
-      trav.reach('R', palmP.clone().addScaledVector(toBoy, 0.07).add(V3(0, -0.015, 0)), { palm: V3(0, 1, 0), fingers: toBoy.clone().negate().add(V3(-0.25, 0.05, 0)).normalize() });
-      trav.hands.R.setChannels(blendHandChannels(handPose('cupped', {}, trav.hands.R.dims), handPose('fist', {}, trav.hands.R.dims), fist * 0.85));
+      // the open parcel on her lap, her left hand on it
+      const lap = mig.root.localToWorld(V3(0.05, 0.6, 0.22));
+      parcelOpen.position.copy(lap); parcelOpen.rotation.set(0, mig.root.rotation.y, 0); parcelOpen.rotateX(0.28);
+      mig.reach('L', lap.clone().add(V3(0, 0.04, 0)).add(herDir(0.07, 0, -0.06)), { palm: DOWN, fingers: herDir(-0.4, 0, 1) }); migHandL.pose('relaxed', { curl: 0.65 });
+      // his bundle on his knees; his right palm rests open on its top, toward her
+      const bun = trav.root.localToWorld(V3(0.02, 0.6, 0.2)); travBundle.position.copy(bun); travBundle.rotation.set(0, trav.root.rotation.y, 0); travBundle.scale.setScalar(0.9);
+      const toHer = mig.worldPos('chest').sub(trav.worldPos('chest')).setY(0).normalize();
+      const palmP = bun.clone().add(V3(0, 0.12, 0)).addScaledVector(toHer, 0.07).add(V3(-0.04, 0, 0));
+      const fist = ease.inOutSine(clamp((tl - 0.34) / 0.5));
+      const fDir = V3(-1, -0.08, 0.3).normalize(); // fingers toward the lens, a little away from her: the open palm faces up on the bundle
+      trav.reach('R', palmP.clone().addScaledVector(fDir, -0.075).add(V3(0, -0.012, 0)), { palm: V3(0, 1, 0), fingers: fDir, elbowOut: 0.1 });
+      trav.hands.R.setChannels(blendHandChannels(handPose('cupped', {}, trav.hands.R.dims), handPose('relaxed', { curl: 1.0 }, trav.hands.R.dims), fist * 0.8));
+      trav.reach('L', bun.clone().add(V3(0.04, 0.05, 0.12)), { palm: V3(0, -0.4, -1), fingers: V3(-0.6, -0.5, -0.5) });
       trav.root.updateMatrixWorld(true);
       const boyPalm = trav.hands.R.sockets.palm.getWorldPosition(V3());
-      // her right hand: mid-reach at the cut (from frame left), pinch over his palm at 0.27, back to her lap from 0.45 s
-      const give = ease.outCubic(clamp(0.55 + tl / 0.27 * 0.45)), back = ease.inOutSine(clamp((tl - 0.45) / 0.9));
-      const over = boyPalm.clone().addScaledVector(toBoy, -0.045).add(V3(0, 0.05, 0));
-      const startP = mig.root.localToWorld(V3(-0.12, 0.8, 0.34));
-      const handP = startP.lerp(over, give).lerp(lap.clone().add(V3(0.0, 0.09, 0)), back);
-      mig.reach('R', handP, { palm: V3(0, -1, 0).addScaledVector(toBoy, 0.3).normalize(), fingers: toBoy.clone().add(V3(0, -0.5, 0)).normalize() });
-      migHandR.pose(tl < 0.32 ? 'pinch' : 'relaxed', { curl: 0.6 });
+      // her right hand: low, from the packet to just above his palm (mid-move at the cut), back to the packet from 0.5 s
+      const give = ease.outCubic(clamp(0.5 + tl / 0.27 * 0.5)), back = ease.inOutSine(clamp((tl - 0.5) / 0.85));
+      const over = boyPalm.clone().addScaledVector(toHer, 0.035).add(V3(0, 0.045, 0));
+      const startP = lap.clone().add(V3(0, 0.06, 0)), arc = 0.025 * Math.sin(Math.PI * give) * (1 - back);
+      const handP = startP.clone().lerp(over, give).lerp(lap.clone().add(V3(0.0, 0.07, 0)), back).add(V3(0, arc, 0));
+      mig.reach('R', handP, { palm: V3(0, -1, 0).addScaledVector(toHer, -0.35).normalize(), fingers: toHer.clone().negate().add(V3(0, -0.45, 0)).normalize(), elbowOut: 0.15 });
+      migHandR.pose(tl < 0.3 ? 'pinch' : 'relaxed', { curl: 0.55 });
       mig.root.updateMatrixWorld(true);
       const pin = migHandR.sockets.pinch.getWorldPosition(V3());
-      const drop = ease.inCubic(clamp((tl - 0.22) / 0.06));
-      piece.position.copy(pin.add(V3(0, -0.008, 0)).lerp(boyPalm.clone().add(V3(0, 0.012, 0)), drop)); piece.rotation.set(0, 0.4, 0);
+      const drop = ease.inCubic(clamp((tl - 0.21) / 0.07));
+      piece.position.copy(pin.add(V3(0, -0.007, 0)).lerp(boyPalm.clone().add(V3(0, 0.011, 0)), drop)); piece.rotation.set(0, 0.4, 0);
       if (window.__PW) window.__PW.s68 = { pin, boyPalm, over };
-      const bun = trav.root.localToWorld(V3(0.05, 0.62, 0.22)); travBundle.position.copy(bun); travBundle.rotation.set(0, trav.root.rotation.y, 0);
-      trav.reach('L', bun.clone().add(V3(0.0, 0.08, 0.1)), { palm: V3(0, -0.5, -1), fingers: V3(-0.5, -0.4, -0.6) });
-      // looks: she at him, smiling (a small head tilt on 0.93 s); he at the sweet, then half-relaxes toward her (1.53 s)
-      mig.lookAt(trav.eye().lerp(palmP, 0.35 * (1 - back)), 0.85);
-      const smile = Math.sin(clamp((tl - 0.85) / 0.6) * Math.PI);
-      mig.bone('head').rotateZ(-0.06 * smile); mig.bone('head').rotateX(0.03 * smile);
+      // looks: 3/4 profiles toward each other — she at him (her smile a small head tilt across 千), he at the sweet, then toward her
+      mig.lookAt(trav.eye().lerp(boyPalm, 0.45 * (1 - back)), 0.9);
+      const smile = Math.sin(clamp((tl - 0.82) / 0.7) * Math.PI);
+      mig.bone('head').rotateZ(-0.09 * smile); mig.bone('head').rotateX(0.05 * smile);
       const rel = ease.inOutSine(clamp((tl - 1.45) / 0.5));
-      trav.lookAt(palmP.clone().lerp(mig.eye(), 0.65 * rel), 0.9);
-      trav.bone('head').rotateZ(0.05 * rel);
-      // (review) closer and solved on the two heads: faces at ≈ (0.30, 0.38) / (0.70, 0.38), the give at mid-frame
-      const mid = mig.worldPos('head').lerp(trav.worldPos('head'), 0.5);
-      aimAt(V3(BX - 3.15, 1.12, mid.z), mid, 0.5, 0.36, 50);
-      return { ...MIG_POST, dof: { focus: cam.distTo(camera, palmP), fstop: 2.8, maxCoc: 1.6 }, exposure: 1.08 };
+      trav.lookAt(boyPalm.clone().lerp(mig.eye(), 0.6 * rel), 0.95);
+      trav.bone('head').rotateX(0.1 * (1 - 0.5 * rel)); trav.bone('head').rotateZ(0.05 * rel); // cap brim low over his eyes
+      // MS 50 mm locked, framed at chest height: faces in the top third, the hands and the sweet at lap height (frame y ≈ 0.66)
+      const mid = mig.worldPos('chest').lerp(trav.worldPos('chest'), 0.5); mid.y = 0.84;
+      aimAt(V3(BX - 3.15, 0.98, mid.z + 0.05), mid, 0.5, 0.45, 50);
+      return { ...MIG_POST, dof: { focus: cam.distTo(camera, palmP), fstop: 2.8, maxCoc: 1.6 }, exposure: 1.1 };
     },
     // ---- S076  OUTRO 235.54–237.08: dawn on the steamer's rail, MCU 100 mm locked; her right profile looks screen-right as a new
     //      coastline emerges from the mist (236.4 → 0.86 s); light from screen-right; dissolve-aligned eye (0.33, 0.40) with S075
     S076(tl, u, T) {
       show(['mig', 'deck', 'caseCarry']); lights({ sky: true });
       sky.object3D.renderOrder = -1000; // far coast at 3.2 km: the dome must draw first (its far-plane depth ties with the land)
-      fog.density = 0.0004; fog.color.setRGB(0.55, 0.52, 0.52);
-      sky.blend('predawn', 'dawn', 0.4, { sunAz: 34, sunElev: -1.2, moonAz: -120, moonElev: 8, cloudCover: 0.32 }); sky.update(T);
+      // (integration) still the blue hour before dawn (QA: a warm, high-key morning here pre-empted the film's last image and the
+      // cut to S077 jumped 1.3 stops back into night): blue-grey P20 haze, only a thin cool-peach band low at screen right; she is a
+      // profile in mist like S075 — the face plane ≈ 1 stop under the haze, the light from screen right a soft edge on her profile
+      fog.density = 0.0005; fog.color.setRGB(0.3, 0.34, 0.41);
+      sky.blend('predawn', 'dawn', 0.12, { sunAz: 34, sunElev: -3.0, moonAz: -120, moonElev: 8, cloudCover: 0.4 }); sky.update(T);
       for (const l of lamps) l.glow.set(0);
       lid.rotation.x = 0;
-      key.position.set(60, DECK_Y + 6, -14); key.target.position.set(0, DECK_Y + 1.3, 0); key.target.updateMatrixWorld(); key.color.set(0xf2c39c); key.intensity = 14000; key.angle = 0.06; key.distance = 0;
+      key.position.set(60, DECK_Y + 4, -18); key.target.position.set(0, DECK_Y + 1.3, 0); key.target.updateMatrixWorld(); key.color.set(0xd9b6a6); key.intensity = 5200; key.angle = 0.06; key.distance = 0;
       fillB.intensity = 0;
-      skyLight.position.set(-20, 30, 10); skyLight.target.position.set(0, DECK_Y, 0); skyLight.color.set(0x8ea2c4); skyLight.intensity = 0.55;
-      hemi.color.set(0x7d8fae); hemi.groundColor.set(0x3a3330); hemi.intensity = 0.55;
+      skyLight.position.set(-20, 30, 10); skyLight.target.position.set(0, DECK_Y, 0); skyLight.color.set(0x7d92b8); skyLight.intensity = 0.32;
+      hemi.color.set(0x6b7fa3); hemi.groundColor.set(0x2c2a2c); hemi.intensity = 0.4;
       mig.root.position.set(0, DECK_Y, -0.02); mig.root.rotation.set(0, Math.PI / 2 - 0.08, 0);
       mig.pose('stand', { weight: -0.3 }); mig.breathe(T, 1.1);
-      mig.reach('L', V3(0.28, DECK_Y + 1.13, -0.36), { palm: DOWN, fingers: V3(0.7, -0.1, -0.7) }); migHandL.pose('relaxed', { curl: 0.85 });
+      mig.reach('L', V3(0.13, DECK_Y + 1.135, -0.37), { palm: DOWN, fingers: V3(0.75, -0.1, -0.6) }); migHandL.pose('relaxed', { curl: 0.85 }); // elbow bent, the hand on the rail near her body
       mig.reach('R', mig.root.localToWorld(V3(-0.2, 0.74, 0.03)), { palm: herDir(1, 0, 0), fingers: V3(0, -1, 0.05) }); migHandR.pose('rattan'); hangCase();
       mig.lookAt(V3(500, DECK_Y + 1.6, -110), 1);
       const e = mig.eye();
@@ -1404,8 +1651,8 @@ export default async function create(ctx) {
       // level camera (horizon ≈ 0.5), trucked so her eye sits on S075's end eye (0.33, 0.40) — the dissolve anchor
       cam.place(camera, [e.x + 0.231, e.y - 0.072, e.z + 4.0], [e.x + 0.231, e.y - 0.072 + 0.012, e.z]); cam.lens(camera, 100);
       // cool pre-dawn fill from the open sky behind the camera: the white rail reads white, the face's sockets are not holes
-      fillA.visible = true; fillA.color.set(0xa9b8d6); fillA.position.copy(camera.position).add(V3(-0.6, 0.5, 0)); fillA.intensity = 15; fillA.distance = 0;
-      return { ...MIG_POST, temp: -0.04, saturation: 0.86, contrast: 1.06, dof: { focus: cam.distTo(camera, e), fstop: 2.8 }, exposure: 0.95, bloom: { strength: 0.35, radius: 0.6, threshold: 0.85 } };
+      fillA.visible = true; fillA.color.set(0x98a9c9); fillA.position.copy(camera.position).add(V3(-0.6, 0.5, 0)); fillA.intensity = 5; fillA.distance = 0;
+      return { ...MIG_POST, temp: -0.1, saturation: 0.8, contrast: 1.04, dof: { focus: cam.distTo(camera, e), fstop: 2.8 }, exposure: 0.78, bloom: { strength: 0.3, radius: 0.6, threshold: 0.85 } };
     },
     // ---- view_pier (nested: G3c pane S024, corridor P3 S066): MS of her on the crate under the third lamp, letter on the case
     view_pier(tl, u, T) {
@@ -1436,7 +1683,7 @@ export default async function create(ctx) {
   setups.DBG_E = (tl, u, T) => { const r = setups.S076(1.5, 1, 236.9); cam.lens(camera, 24); camera.position.y += 0.5; camera.lookAt(camera.position.x + 0.5, camera.position.y - 0.4, camera.position.z - 3); coast.land.material.uniforms.uCoastHaze.value = 0.0; return { ...r, dof: null }; };
   setups.default = setups.view_pier;
   // debug access for the review probe (out/check/pier_waiting/review/probe.mjs --eval); never used by the render path
-  window.__PW = { stampImp: null, THREE, scene, camera, mig, elder, trav, migHandL, migHandR, elderHand, migFreeL, migFreeR, clerkR, clerkL, caseG, caseCarry, letter, comb, parcel, parcelOpen, piece, steamer, crowd, key, fillA, fillB, skyLight, hemi,
+  window.__PW = { stampImp: null, THREE, scene, camera, mig, elder, trav, clothTri, cols, letterPt, migHandL, migHandR, elderHand, migFreeL, migFreeR, clerkR, clerkL, caseG, caseCarry, letter, comb, parcel, parcelOpen, piece, steamer, crowd, key, fillA, fillB, skyLight, hemi,
     getStamp: () => stampImp, proj: (v) => { const p = v.clone().project(camera); return [+(0.5 + 0.5 * p.x).toFixed(3), +(0.5 - 0.5 * p.y).toFixed(3)]; } };
 
   return {
@@ -1445,23 +1692,17 @@ export default async function create(ctx) {
     setShot(shot, tl, u, T) {
       camera.far = 900; camera.near = 0.03;
       for (const k of ['head', 'hair', 'trousers', 'shoes', 'shoes.sole']) mig.setLayerVisible(k, true); dbgMark.visible = false; glassGlow.object3D.visible = false;
+      for (const h of [migHandL, migHandR]) if (h.meshes.skinArm) h.meshes.skinArm.visible = true;
       key.color.set(BULB); key.angle = 0.62; key.distance = 14; skyLight.color.set(0x9fb2d2); hemi.color.set(0x2a3b5a); hemi.groundColor.set(0x2b2017);
       sky.object3D.renderOrder = 6; fog.density = 0.016; stampTool.scale.set(1, 1, 1);
       stampTool.position.set(0.3, 1.13, -0.33); gateL.rotation.y = Math.PI; gateR.rotation.y = 0; stampImp.visible = false; fillA.distance = fillB.distance = 11; // rest states (pure per frame)
       key.castShadow = true; fillA.visible = true; skyLight.visible = false; fillB.visible = false; sky.object3D.visible = sea.object3D.visible = true; steamer.visible = true;
-      booth.visible = true; boothFill.visible = false; bench68.visible = true; for (const L of lanterns) L.g.visible = false; steamer.position.set(58, 0, 0); steamer.rotation.set(0, 0, 0);
-      key.shadow.normalBias = 0.004; fillA.color.set(BULB); fillB.color.set(BULB); hemi.intensity = 0.35;
+      booth.visible = true; boothFill.visible = false; bench68.visible = true; bench68.position.set(0.66, 0, -0.1); trav.root.scale.set(1, 1, 1); travBundle.scale.setScalar(1); for (const L of lanterns) L.g.visible = false; steamer.position.set(58, 0, 0); steamer.rotation.set(0, 0, 0);
+      key.shadow.normalBias = 0.004; fillA.color.set(BULB); fillB.color.set(BULB); hemi.intensity = 0.35; key.shadow.camera.far = 9; townM.color.setRGB(0.55, 0.55, 0.6);
       for (const l of lamps) { l.cone.object3D.visible = true; l.glow.object3D.visible = true; }
       const fn = setups[shot.id] || setups.default;
       crowdCfg = null;
       const p = fn(tl, u, T, shot) || {};
-      { // module grain (see grainMat): replaces the engine grain; nested views (no post chain) get none
-        const g = shot.nested ? 0 : (p.grain ?? GRAIN);
-        grainQuad.visible = grainProbe.visible = g > 0;
-        grainMat.uniforms.uAmt.value = 1.0 * g; grainMat.uniforms.uExp.value = p.exposure ?? 1;
-        grainMat.uniforms.uSeed.value = Math.round(T * 24) % 977;
-        p.grain = 0;
-      }
       if (crowdCfg) { crowdCfg._log = String(window.__PZ || '').includes('crowdlog'); applyCrowd(crowdCfg, camera); } else crowd.visible = false;
       if (p.noCones) for (const l of lamps) l.cone.object3D.visible = false;
       for (const l of lamps) { const dx = camera.position.x - l.x, dz = camera.position.z - LAMP_Z; if (dx * dx + dz * dz < 2.2 * 2.2 && camera.position.y < LAMP_Y) l.cone.object3D.visible = false; }
@@ -1478,7 +1719,7 @@ export default async function create(ctx) {
         if (PZ.has('nofig')) mig.root.visible = false;
         if (PZ.has('nohair')) mig.setLayerVisible('hair', false);
         if (PZ.has('noglass')) glassPane.visible = false; else glassPane.visible = true;
-        if (PZ.has('nograin')) grainQuad.visible = grainProbe.visible = false;
+        if (PZ.has('nograin')) p.grain = 0;
         if (PZ.has('nosky')) sky.object3D.visible = false;
         if (PZ.has('nosea')) sea.object3D.visible = false;
         if (PZ.has('nocone')) for (const l of lamps) l.cone.object3D.visible = false;

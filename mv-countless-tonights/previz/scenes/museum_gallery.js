@@ -70,7 +70,9 @@ const MC_OPEN = { pos: V(0, 1.18, G1F + 1.28), target: V(0, 1.18, G1F), mm: 100 
 // (≈19°) and SSE so the arched pools reach across the floor toward the north-wall vitrines.
 const moonDir = (az, el) => { const a = az * D2R, e = el * D2R; return V(-Math.sin(a) * Math.cos(e), -Math.sin(e), Math.cos(a) * Math.cos(e)).normalize(); };
 // az measured from north (−Z) clockwise; returned vector = direction the light TRAVELS (from the moon to the ground)
-const MOON_INTRO = moonDir(166, 30), MOON_CH1 = moonDir(152, 17), MOON_FUT = moonDir(170, 24);
+// (integration) CH1B/INTERLUDE moon lowered to 12° (az 150) — ruling 2's cheat — so the doorway pools reach the north-wall cases and
+// the path she walks in S023 (at 17° only the arch tips reached that far: the gallery read black)
+const MOON_INTRO = moonDir(166, 30), MOON_CH1 = moonDir(150, 12), MOON_FUT = moonDir(170, 24);
 
 // ---------------------------------------------------------------------------------------------------------- canvas helpers
 function canvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
@@ -133,7 +135,7 @@ export default async function create(ctx) {
   const mBrick = TX.mat('brick', { repeat: [0.45, 0.45], tex: { limewash: 0.5, seed: 31 }, color: hex('#b8a89c') });
   const mCorWall = TX.mat('plaster_museum', { repeat: [0.25, 0.25], tex: { tone: 'grey', seed: 43 }, color: hex('#8e8a84') });
   const mBeam = TX.mat('wood_beam', { repeat: [1, 3] });
-  const mCeil = std({ color: 0x1a1612, roughness: 0.9 });
+  const mCeil = std({ color: 0x3b3530, roughness: 0.9 });   // (integration) the timber boarding catches the pools' bounce (it read 0 at the top of S023)
   const mIron = std({ color: hex(P.iron), roughness: 0.5, metalness: 0.35, envMap: env, envMapIntensity: 0.35 });
   const mPlinth = std({ color: hex(P.plinth), roughness: 0.55 });
   const velvetStd = (rep, seed, tone = P.velvet3) => { const t = TX.withRepeat(TX.velvet({ tone, seed }), rep[0], rep[1]); return std({ map: t.map, normalMap: t.normalMap, roughness: 0.92 }); };   // (perf: MeshPhysical sheen cost ≈ 0.3 cpu-s)
@@ -155,6 +157,11 @@ export default async function create(ctx) {
     for (const sx of [-1, 1]) { const w = mesh(new THREE.PlaneGeometry(14.6, GAL.h), mWall, room, sx * 15, GAL.h / 2, 0.3, true, true); w.rotation.y = -sx * Math.PI / 2; }
     // skirting
     mesh(box(30, 0.16, 0.03), mDark, room, 0, 0.08, GAL.z0 + 0.015, false, true);
+    // (integration) cast-iron half-columns (pilasters) against the north wall between and beside the G3 cases: they catch a
+    // silver moon edge and give the gallery between the panes a structure (S023 / S024 / S028)
+    { const pr = [[0, 0], [0.16, 0], [0.16, 0.05], [0.13, 0.08], [0.11, 0.2], [0.09, 0.26], [0.085, 5.4], [0.12, 5.5], [0.15, 5.65], [0.15, 5.8], [0, 5.8]];
+      const pg = new THREE.LatheGeometry(pr.map(([r, y]) => new THREE.Vector2(r, y)), 20, -Math.PI / 2, Math.PI);
+      for (const x of [-3.3, -1.1, 1.1, 3.3]) { const m = mesh(pg.clone(), mIron, room, x, 0, GAL.z0 + 0.02, true, true); m.rotation.y = 0; } }
     // south wall with the five arched doorways (extruded: reveals catch the moon)
     const s = new THREE.Shape(); s.moveTo(-15.2, -0.05); s.lineTo(15.2, -0.05); s.lineTo(15.2, GAL.h + 0.05); s.lineTo(-15.2, GAL.h + 0.05); s.lineTo(-15.2, -0.05);
     for (const x of DOORS_X) { const h = new THREE.Path(); h.moveTo(x - DOOR.w / 2, 0); h.lineTo(x + DOOR.w / 2, 0); h.lineTo(x + DOOR.w / 2, DOOR.spring); h.absarc(x, DOOR.spring, DOOR.r, 0, Math.PI, false); h.lineTo(x - DOOR.w / 2, 0); s.holes.push(h); }
@@ -377,12 +384,12 @@ export default async function create(ctx) {
     mesh(box(W - 0.04, 0.03, D - 0.06), mVelvet3, shell, 0, DECK3 - 0.015, D / 2 - 0.01);
     mesh(box(W - 0.04, DECK3 - G3.base - 0.03, 0.02), mPlinth, shell, 0, (DECK3 + G3.base) / 2 - 0.015, D - 0.05);
     mergeStatic(shell);
-    const strip = mesh(box(W - 0.12, 0.008, 0.016), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.0, 0.82, 0.6).multiplyScalar(1.6) }), v.grp, 0, G3.top - 0.035, D - 0.14, false, false);
+    const strip = mesh(box(W - 0.12, 0.008, 0.016), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.0, 0.86, 0.7).multiplyScalar(0.22) }), v.grp, 0, G3.top - 0.035, D - 0.14, false, false);   // (integration) dim 3000 K warm-white (it bloomed lilac)
     const glowM = new THREE.MeshBasicMaterial({ map: g3GlowTex, color: new THREE.Color(0.95, 0.74, 0.52).multiplyScalar(0.055), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
     const gl = mesh(new THREE.PlaneGeometry(W - 0.05, G3.top - G3.base - 0.05), glowM, v.grp, 0, (G3.top + G3.base) / 2, 0.016, false, false); gl.renderOrder = 8;
     const poolM = new THREE.MeshBasicMaterial({ map: TX.spriteTexture('soft'), color: new THREE.Color(0.95, 0.74, 0.52).multiplyScalar(0.09), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
     const pool = mesh(new THREE.PlaneGeometry(W * 0.95, D * 0.9), poolM, v.grp, 0, DECK3 + 0.002, D / 2, false, false); pool.rotation.x = -Math.PI / 2; pool.renderOrder = 8;
-    v.strip = strip; v.glow = gl;
+    v.strip = strip; v.glow = gl; v.glowC = glowM.color.clone();
     // front glass (G3c: a door hinged on its east edge)
     const gm = glassMaterial({ haze: 0.22, dust: 0.12, hazeLevel: 0.012, envMapIntensity: 0.55, reflect: 0.55, res: [ctx.W, ctx.H], aspect: (W - 0.06) / (G3.top - G3.base - 0.06), smudgeRepeat: [2.2, 4], seed: 20 + i });
     gm.material.envMap = env;
@@ -546,9 +553,15 @@ export default async function create(ctx) {
   const g3Spot = new THREE.SpotLight(0xffd4a4, 0, 3.2, 0.55, 0.85, 2); scene.add(g3Spot, g3Spot.target);   // the one lit wall case of a close shot
   const torch = new THREE.SpotLight(0xffeedd, 0, 14, 0.2, 0.55, 2); torch.castShadow = false; scene.add(torch, torch.target);
   const torchCone = FX.beamCone({ origin: [0, 1, 0], dir: [0, -1, 0.3], angle: 0.18, length: 3.2, color: 0xfff1e0, intensity: 0.12 }); scene.add(torchCone.object3D);
+  // (integration) the lib cone's edge read as a hard white wedge: steeper falloff toward the silhouette, no hot origin, dusty
+  torchCone.material.fragmentShader = torchCone.material.fragmentShader.replace('pow(abs(dot(normalize(vN), V)), 2.5)', 'pow(abs(dot(normalize(vN), V)), 6.0)').replace('smoothstep(0.0, 0.05, vAx)', 'smoothstep(0.0, 0.22, vAx)');
+  torchCone.material.uniforms.uNA.value = 0.75; torchCone.material.needsUpdate = true;
   const fillA = new THREE.PointLight(0x8fa3c4, 0, 4, 2); scene.add(fillA);             // per-shot "bounce" fill (moon pool / floor)
   const warmFill = new THREE.PointLight(0xffc88e, 0, 3, 2); scene.add(warmFill);
   const futTop = new THREE.SpotLight(0xf4efe6, 0, 0, 0.6, 0.95, 2); scene.add(futTop, futTop.target);  // the future gallery: broad soft top light
+  const mirLight = new THREE.PointLight(0xffd2a0, 0, 0.5, 2); mirLight.visible = false; scene.add(mirLight);   // mirror passes only: light on the glass side of a hand
+  // (integration) the moon pools' first bounce, from under the floor (lights walls, cases, columns, ceiling — not the floor)
+  const poolBounce = new THREE.PointLight(0x8ea2c6, 0, 14, 2); poolBounce.visible = false; scene.add(poolBounce);
   function setShadowRes(n) { if (moon.shadow.mapSize.x !== n) { moon.shadow.mapSize.set(n, n); if (moon.shadow.map) { moon.shadow.map.dispose(); moon.shadow.map = null; } } }
   function setMoon(dir, I, bounds) {
     moon.intensity = I;
@@ -563,7 +576,7 @@ export default async function create(ctx) {
   }
   // ---- volumetric moon shafts through the doorways (half-res layer) + dust
   const cookie = archCookie();
-  const shafts = DOORS_X.map((x, i) => FX.windowShaft({ center: [x, 2.2, GAL.z1], right: [1.2, 0, 0], up: [0, 2.2, 0], dir: MOON_CH1.toArray(), length: 18, cookie, color: 0xb8c8e8, intensity: 0.08, floorY: 0, noise: 0.55, seed: i, penumbra: 0.012 }));
+  const shafts = DOORS_X.map((x, i) => FX.windowShaft({ center: [x, 2.2, GAL.z1], right: [1.2, 0, 0], up: [0, 2.2, 0], dir: MOON_CH1.toArray(), length: 23, cookie, color: 0xb8c8e8, intensity: 0.08, floorY: 0, noise: 0.55, seed: i, penumbra: 0.012 }));
   const shaftsI = shafts.map((s, i) => FX.windowShaft({ center: [DOORS_X[i], 2.2, GAL.z1], right: [1.2, 0, 0], up: [0, 2.2, 0], dir: MOON_INTRO.toArray(), length: 10, cookie, color: 0xb8c8e8, intensity: 0.08, floorY: 0, noise: 0.55, seed: 9 + i, penumbra: 0.012 }));
   for (const s of [...shafts, ...shaftsI]) { s.object3D.visible = false; scene.add(s.object3D); }
   const dust = FX.dustMotes({ count: 900, center: [0, 1.6, 3.5], size: [6, 3.2, 7], moteSize: 0.0025, intensity: 0.9, beam: { shaft: shafts[2] }, ambient: 0.015, seed: 3 });
@@ -591,7 +604,12 @@ export default async function create(ctx) {
   if (torchObj) { torchObj.parent.remove(torchObj); guard.hold('R', torchObj, { socket: 'grip', grip: ['grip', { radius: 0.015 }] }); torchObj.position.set(0, 0, 0); torchObj.rotation.set(0, 0, 0); }
   // close-up gloved right hand (+ coat sleeve) — S001/S002/S004/S026/S030/S040
   const handR = await loadCharacterHand('RESTORER', 'R', { lod: 'close' });
-  toneGlove(handR.meshes.glove && handR.meshes.glove.material, 0.62);
+  // (integration) the hook's glove must read as cotton, not a puffy plaster cast: slimmer (finger width −18 %, thickness −12 %;
+  // hand frame: Z across the hand, X palm normal), warm white #E9E4DA toned down, a stronger weave relief and seams
+  handR.root.scale.set(0.88, 1.0, 0.82);
+  if (handR.meshes.glove) { const gm = handR.meshes.glove.material; gm.color.set('#E9E4DA').multiplyScalar(0.5); toned.add(gm);
+    const fz = gm.userData && gm.userData.fzUniforms; if (fz) { if (fz.uWAmp) fz.uWAmp.value *= 2.6; if (fz.uWeave) fz.uWeave.value = 0.0021; if (fz.uMottle) fz.uMottle.value = 0.07; if (fz.uFold) fz.uFold.value *= 1.4; }
+    gm.sheen = 0.35; gm.roughness = 0.95; }
   { const sl = new THREE.Mesh(new THREE.CylinderGeometry(0.052, 0.044, 0.36, 28, 1, false), mWool); sl.position.y = 0.04 + 0.18; sl.castShadow = sl.receiveShadow = true; handR.root.add(sl); handR.root.userData.sleeve = sl; }
   handR.root.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
   scene.add(handR.root); handR.root.visible = false;
@@ -605,11 +623,29 @@ export default async function create(ctx) {
   const navHand = await loadCharacterHand('NAVIGATOR', 'L', { lod: 'close' });
   eraScene.add(navHand.root); navHand.root.visible = false;
   // review: at ECU the salt read as plain warm skin — stronger crust (the lib's per-vertex salt map, back + finger gaps + edges)
-  navHand.root.traverse((o) => { const fz = o.isMesh && o.material && o.material.userData && o.material.userData.fzUniforms; if (fz && fz.uSalt) fz.uSalt.value = Math.max(1.0, fz.uSalt.value * 1.8); });
-  const glints = []; for (let k = 0; k < 7; k++) { const g = FX.glow({ color: 0xf2f4ff, size: 0.006 + (k % 3) * 0.002, intensity: 3, falloff: 3.5, core: 1.2 }); eraScene.add(g.object3D); g.object3D.visible = false; glints.push(g); }
+  navHand.root.traverse((o) => { const fz = o.isMesh && o.material && o.material.userData && o.material.userData.fzUniforms; if (fz && fz.uSalt) fz.uSalt.value = Math.max(1.6, fz.uSalt.value * 2.8); });
+  // (integration) the first trace of the other hand (S001 3.0 s): 7 faceted salt crystals (0.7–1.4 mm, 2–4 px at 1280) behind
+  // the glass in the wiped band, each catching the pin spot for a few frames — not round glow dots
+  const glints = []; { const cr = util.rng(57);
+    for (let k = 0; k < 7; k++) {
+      const grp = new THREE.Group(); const s = 0.00042 + cr() * 0.00028;
+      const base = new THREE.Mesh(new THREE.CircleGeometry(s, 5 + (k % 2)), new THREE.MeshBasicMaterial({ color: 0xffffff, depthWrite: false }));
+      base.scale.set(1, 0.6 + 0.4 * cr(), 1); base.rotation.z = cr() * 6.28; grp.add(base);
+      const fac = new THREE.Mesh(new THREE.CircleGeometry(s * 0.55, 3), new THREE.MeshBasicMaterial({ color: 0xffffff, depthWrite: false }));
+      fac.position.set(s * 0.25 * (cr() - 0.5), s * 0.25 * (cr() - 0.5), 0.0001); fac.rotation.z = cr() * 6.28; grp.add(fac);
+      base.renderOrder = fac.renderOrder = 20; eraScene.add(grp); grp.visible = false;
+      glints.push({ object3D: grp, set(v, flash = 0) { base.material.color.setRGB(0.55, 0.58, 0.62).multiplyScalar(v); fac.material.color.setRGB(1.0, 1.0, 1.05).multiplyScalar(v * (0.6 + 9.0 * flash)); } });
+    } }
   // salt crystals on his hand (review: the lib's crust sits on the back of the hand; from the palm side it read as plain skin):
   // tiny moonlit sparkles in the finger gaps and along the finger edges, riding the hand
-  const saltG = []; for (let k = 0; k < 12; k++) { const g = FX.glow({ color: 0xf2f5ff, size: 0.0026 + (k % 3) * 0.0008, intensity: 2, falloff: 4, core: 1.3 }); eraScene.add(g.object3D); g.object3D.visible = false; saltG.push(g); }
+  // (integration) salt on his hand's VISIBLE margins (her glove hides the palm centre): 20 tiny faceted crystals (0.3–0.6 mm)
+  // along the thumb, the little-finger edge, the finger tops and the heel, catching his moon for a few frames each
+  const saltG = []; { const cr = util.rng(91);
+    for (let k = 0; k < 40; k++) {
+      const s0 = 0.0003 + cr() * 0.00038, m = new THREE.Mesh(new THREE.CircleGeometry(s0, 4 + (k % 3)), new THREE.MeshBasicMaterial({ color: 0xffffff, depthWrite: false }));
+      m.scale.set(1, 0.55 + 0.45 * cr(), 1); m.rotation.z = cr() * 6.28; m.renderOrder = 20; eraScene.add(m); m.visible = false;   // drawn after the hand (no depth write)
+      saltG.push({ object3D: m, set(v) { m.material.color.setRGB(0.92, 0.95, 1.0).multiplyScalar(v); } });
+    } }
   const fut = await loadCharacter('FUTURE', { lod: 'hi' });
   eraScene.add(fut.root); fut.root.visible = false;
   const futHandL = await loadCharacterHand('FUTURE', 'L', { lod: 'close' });   // the reflected raised hand (a mirrored right hand = a left hand)
@@ -697,10 +733,41 @@ export default async function create(ctx) {
   // ROLE 1 'main' : full-res additive: the screen-space era layer (navigator hand / future viewer) — hero detail.
   // ROLE 2 'depth': depth-only, writes the era layer's mirror depth where it covers, so the engine DOF blurs it correctly.
   const smudge = TX.glassSmudge({ seed: 18 }).map;
+  // (integration) G1's own dust film (S001/S002, the hook): pane-UV, square ~0.375 mm texels. R = the film (mottled haze + old
+  // cleaning swirls), G = dust specks and a few fibres, B = two faint old fingerprints. Lit along the top by the pin spot.
+  const dustFilm = (() => {
+    const W = 1600, H = 1334, N = TX.makeNoise(83), r = util.rng(84);
+    const lay = () => { const c = canvas(W, H), g = c.getContext('2d'); g.fillStyle = '#000'; g.fillRect(0, 0, W, H); return [c, g]; };
+    // R: film density (low-frequency mottle) + swirl marks of an old cleaning cloth
+    const [cr, gr] = lay();
+    { const w = 400, h = 334, c0 = canvas(w, h), g0 = c0.getContext('2d'), im = g0.createImageData(w, h), d = im.data;
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const u = x / w, v = y / h;
+        const f = 0.5 + 0.5 * N.fbm(u, v, 5, 5, 0.55), f2 = 0.5 + 0.5 * N.fbm(u + 0.37, v + 0.11, 24, 3, 0.5);
+        const k = clamp(0.32 + 0.55 * smoothstep(0.25, 0.8, f) + 0.18 * (f2 - 0.5)); const i = (y * w + x) * 4; d[i] = d[i + 1] = d[i + 2] = k * 255; d[i + 3] = 255; }
+      g0.putImageData(im, 0, 0); gr.imageSmoothingEnabled = true; gr.drawImage(c0, 0, 0, W, H); }
+    gr.globalCompositeOperation = 'lighter';
+    for (let k = 0; k < 9; k++) { const x = r() * W, y = r() * H, R0 = 120 + r() * 380, a0 = r() * 6.28;
+      for (let q = 0; q < 18; q++) { gr.strokeStyle = `rgba(255,255,255,${0.012 + r() * 0.03})`; gr.lineWidth = 1 + r() * 3; gr.beginPath(); gr.arc(x, y, R0 + q * 3.1, a0, a0 + 0.8 + r() * 0.9); gr.stroke(); } }
+    // G: specks (0.4–1.5 mm) + a few short fibres
+    const [cg, gg] = lay();
+    for (let k = 0; k < 2600; k++) { const s = 0.5 + Math.pow(r(), 3) * 2.4; gg.fillStyle = `rgba(255,255,255,${0.35 + 0.65 * r()})`; gg.beginPath(); gg.arc(r() * W, r() * H, s, 0, 6.283); gg.fill(); }
+    gg.lineCap = 'round';
+    for (let k = 0; k < 40; k++) { const x = r() * W, y = r() * H, a = r() * 6.28, L = 8 + r() * 26; gg.strokeStyle = `rgba(255,255,255,${0.3 + 0.4 * r()})`; gg.lineWidth = 0.8; gg.beginPath(); gg.moveTo(x, y); gg.quadraticCurveTo(x + Math.cos(a + 0.6) * L * 0.6, y + Math.sin(a + 0.6) * L * 0.6, x + Math.cos(a) * L, y + Math.sin(a) * L); gg.stroke(); }
+    // B: two faint old fingerprints (ridges ~0.45 mm) on the visible part of the pane (S001: u 0.12–0.88, v 0.27–0.65)
+    const [cb, gb] = lay();
+    for (const [u, v, a] of [[0.30, 0.60, 0.5], [0.69, 0.33, -0.3]]) { gb.save(); gb.translate(u * W, (1 - v) * H); gb.rotate(a);
+      for (let q = 1; q < 28; q++) { gb.strokeStyle = `rgba(255,255,255,${0.5 * (1 - q / 30)})`; gb.lineWidth = 0.9; gb.beginPath(); gb.ellipse(0, 0, q * 1.25, q * 1.6, 0, r() * 0.6, 6.283 - r() * 1.1); gb.stroke(); }
+      gb.restore(); }
+    const R_ = cr.getContext('2d').getImageData(0, 0, W, H).data, G_ = gg.getImageData(0, 0, W, H).data, B_ = gb.getImageData(0, 0, W, H).data;
+    const out = canvas(W, H), og = out.getContext('2d'), im = og.createImageData(W, H), d = im.data;
+    for (let i = 0; i < W * H; i++) { d[i * 4] = R_[i * 4]; d[i * 4 + 1] = G_[i * 4]; d[i * 4 + 2] = B_[i * 4]; d[i * 4 + 3] = 255; }
+    og.putImageData(im, 0, 0);
+    const t = ctex(out, false); t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter; return t;
+  })();
   const OV_COMMON = `varying vec3 vW; varying vec2 vUv; varying vec3 vN;
-    uniform mat4 uProjM; uniform vec2 uRes; uniform sampler2D tMir, tEra, tEra2, tSmudge, uNoiseT; uniform float uMir, uMirFres, uEra, uEraFres, uEra2, uEra2Depth, uAspect, uEdgeSoft, uDepthK, uEra2Occ, uEraSoft, uEra2Over, uEra2Low; uniform vec4 uEra2Xf; uniform vec2 uEra2Fade; uniform sampler2D tEra2B; uniform vec2 uEra2BY;
-    uniform vec3 uEraO, uEraU, uEraV, uEraTint, uDustCol; uniform int uWipeN; uniform vec2 uWipeP[6]; uniform float uWipeL[6];
-    uniform float uWipeProg, uWipeW, uWipeSoft, uMaskFloor, uMaskFloor2, uDust, uDustTop, uDustLod, uGlint; uniform vec2 uDustRep;
+    uniform mat4 uProjM; uniform vec2 uRes; uniform sampler2D tMir, tEra, tEra2, tSmudge, uNoiseT, tDust2; uniform float uMir, uMirFres, uEra, uEraFres, uEra2, uEra2Depth, uAspect, uEdgeSoft, uDepthK, uEra2Occ, uEraSoft, uEra2Over, uEra2Low; uniform vec4 uEra2Xf; uniform vec2 uEra2Fade; uniform sampler2D tEra2B; uniform vec2 uEra2BY;
+    uniform vec3 uEraO, uEraU, uEraV, uEraTint, uDustCol, uStreakCol; uniform int uWipeN; uniform vec2 uWipeP[6]; uniform float uWipeL[6];
+    uniform float uWipeProg, uWipeW, uWipeSoft, uMaskFloor, uMaskFloor2, uDust, uDustTop, uDustLod, uGlint, uDust2, uStreak; uniform vec2 uDustRep, uDustLit; uniform vec4 uDust2K, uStreakL, uEraUV; uniform vec2 uEraFB; uniform float uEraComp;
     float wipeMask(vec2 p){
       if (uWipeN < 2) return 0.0;
       vec2 sc = vec2(uAspect, 1.0); p *= sc; float lim = uWipeProg * uWipeL[5]; float d = 1e9;
@@ -723,13 +790,28 @@ export default async function create(ctx) {
         vec3 P = cameraPosition + rd * max(t, 0.0); vec3 l = P - uEraO;
         vec2 euv = vec2(0.5 + 0.5 * dot(l, uEraU) / dot(uEraU, uEraU), 0.5 + 0.5 * dot(l, uEraV) / dot(uEraV, uEraV));
         float inb = t > 0.0 ? smoothstep(0.0, uEraSoft, euv.x) * smoothstep(1.0, 1.0 - uEraSoft, euv.x) * smoothstep(0.0, uEraSoft, euv.y) * smoothstep(1.0, 1.0 - uEraSoft, euv.y) : 0.0;
-        col += texture2D(tEra, clamp(euv, 0.0, 1.0)).rgb * inb * uEra * uEraTint * mix(uMaskFloor, 1.0, wm) * mix(1.0, 0.45 + 14.0 * fr, uEraFres);
+        inb *= smoothstep(uEraFB.x, uEraFB.y, euv.y);
+        vec3 ec = texture2D(tEra, clamp(clamp(euv, 0.0, 1.0) * uEraUV.xy + uEraUV.zw, 0.0, 1.0)).rgb; ec /= 1.0 + uEraComp * dot(ec, vec3(0.3, 0.55, 0.15));   // highlight roll-off (moon glitter)
+        col += ec * inb * uEra * uEraTint * mix(uMaskFloor, 1.0, wm) * mix(1.0, 0.45 + 14.0 * fr, uEraFres);
       }
       if (uMir > 0.0) { vec3 r = texture2D(tMir, vec2(1.0 - s.x, s.y)).rgb; r = (any(isnan(r)) || any(isinf(r))) ? vec3(0.0) : clamp(r, 0.0, 64.0); col += r * uMir * mix(1.0, fr / 0.04, uMirFres) * (1.0 - uEra2Occ * texture2D(tEra2, s).a); }
       if (uDust > 0.0) {   // dust film on the glass, lit along its upper edge by the warm pin spot; cleared where wiped
         vec4 sm = textureLod(tSmudge, vUv * uDustRep, uDustLod);
         float lit = mix(1.0, smoothstep(0.15, 1.0, vUv.y) * 1.7 + 0.2, uDustTop);
         col += uDustCol * (sm.r * 0.12 + sm.b * 1.8) * uDust * lit * (1.0 - 0.94 * wm);
+      }
+      if (uDust2 > 0.0) {  // G1's dust film (S001/S002): lit from the top by the pin spot; the wiped band is clear, its edges
+                           // hold the pushed-aside dust
+        vec4 dt = textureLod(tDust2, vUv, uDustLod);
+        float lit = mix(1.0, smoothstep(uDustLit.x, uDustLit.y, vUv.y), uDustTop);
+        float rim = wm * (1.0 - wm) * 4.0;
+        float dd = dt.r * uDust2K.x + dt.g * uDust2K.y + dt.b * uDust2K.z;
+        float stk = texture2D(uNoiseT, vUv * vec2(uAspect * 0.7, 23.0)).r;           // residual streaks along the stroke
+        col += uDustCol * dd * uDust2 * (lit + uDust2K.w) * (1.0 - wm * (0.8 - 0.32 * stk) + 0.5 * rim);
+      }
+      if (uStreak > 0.0) {   // a soft diagonal sheen (the reflected edge of a moonlit doorway) across the pane
+        vec2 p = vUv * vec2(uAspect, 1.0); float x = dot(p, normalize(uStreakL.xy)) - uStreakL.z;
+        col += uStreakCol * uStreak * (exp(-x * x / (uStreakL.w * uStreakL.w)) + 0.35 * exp(-(x + 2.6 * uStreakL.w) * (x + 2.6 * uStreakL.w) / (0.16 * uStreakL.w * uStreakL.w)));
       }
       if (uGlint > 0.0) { float g = texture2D(uNoiseT, vUv * vec2(uAspect, 1.0) * 7.0).b; col += vec3(0.9, 0.95, 1.0) * pow(max(g - 0.84, 0.0) * 6.2, 3.0) * uGlint * wm; }
       if (uEra2Low > 0.0) {   // the screen-space era layer after the DOF (pre-blurred by its own CoC): no depth proxy, so the
@@ -774,6 +856,9 @@ export default async function create(ctx) {
       uWipeN: { value: 0 }, uWipeP: { value: wp }, uWipeL: { value: wl }, uWipeProg: { value: 0 }, uWipeW: { value: 0.1 }, uWipeSoft: { value: 0.03 },
       uMaskFloor: { value: 1 }, uMaskFloor2: { value: 1 }, uDust: { value: 0 }, uDustCol: { value: new THREE.Color(1.0, 0.86, 0.66) }, tSmudge: { value: smudge }, uDustRep: { value: new THREE.Vector2(1, 1) },
       uDustTop: { value: 0.6 }, uDustLod: { value: 0 }, uNoiseT: { value: TX.noiseTexture() }, uGlint: { value: 0 },
+      tDust2: { value: dustFilm }, uDust2: { value: 0 }, uDust2K: { value: new THREE.Vector4(0.35, 1.0, 0.5, 0.06) }, uDustLit: { value: new THREE.Vector2(0.3, 0.7) },
+      uEraComp: { value: 0 }, uEraUV: { value: new THREE.Vector4(1, 1, 0, 0) }, uEraFB: { value: new THREE.Vector2(-1, 0) },
+      uStreak: { value: 0 }, uStreakL: { value: new THREE.Vector4(-0.7, 0.7, 0.0, 0.05) }, uStreakCol: { value: new THREE.Color(0.55, 0.62, 0.75) },
     };
     const mk = (role) => new THREE.ShaderMaterial({ uniforms: U, vertexShader: OV_VERT, fragmentShader: OV_COMMON + OV_FRAG[role], transparent: true,
       depthTest: true, depthWrite: role === 2, colorWrite: role !== 2,
@@ -792,8 +877,9 @@ export default async function create(ctx) {
         U.uWipeW.value = width; U.uWipeSoft.value = soft; U.uWipeProg.value = prog;
       },
       reset() { U.uMir.value = 0; U.uEra.value = 0; U.uEra2.value = 0; U.uEra2Over.value = 0; U.uEra2Low.value = 0; U.uDust.value = 0; U.uGlint.value = 0; U.uWipeN.value = 0; U.uMaskFloor.value = 1; U.uMaskFloor2.value = 1; U.uEraFres.value = 0.3; U.uMirFres.value = 1; U.uEraTint.value.setRGB(1, 1, 1); U.uDustLod.value = 0; U.uDepthK.value = 1; U.uEra2Occ.value = 0; U.uEraSoft.value = 0.06; U.uEra2Xf.value.set(1, 1, 0, 0); U.uEra2Fade.value.set(-2, -1); U.tEra2B.value = null; U.uEra2BY.value.set(0, 0);
-        U.uDustCol.value.setRGB(1.0, 0.86, 0.66); U.uDustTop.value = 0.6; U.uDustRep.value.set(1, 1); U.uMaskFloor.value = 1; U.uEra2Depth.value = 0.02; U.tEra2.value = null; U.tMir.value = null; U.tEra.value = null; },
-      sync() { low.visible = U.uEra.value > 0 || U.uMir.value > 0 || U.uDust.value > 0 || U.uGlint.value > 0 || U.uEra2Low.value > 0; main.visible = dep.visible = U.uEra2.value > 0; },
+        U.uDustCol.value.setRGB(1.0, 0.86, 0.66); U.uDustTop.value = 0.6; U.uDustRep.value.set(1, 1); U.uMaskFloor.value = 1; U.uEra2Depth.value = 0.02; U.tEra2.value = null; U.tMir.value = null; U.tEra.value = null;
+        U.uDust2.value = 0; U.uDust2K.value.set(0.35, 1.0, 0.5, 0.06); U.uDustLit.value.set(0.3, 0.7); U.uStreak.value = 0; U.uEraUV.value.set(1, 1, 0, 0); U.uEraFB.value.set(-1, 0); U.uEraComp.value = 0; U.uStreakL.value.set(-0.7, 0.7, 0.0, 0.05); U.uStreakCol.value.setRGB(0.55, 0.62, 0.75); },
+      sync() { low.visible = U.uEra.value > 0 || U.uMir.value > 0 || U.uDust.value > 0 || U.uGlint.value > 0 || U.uEra2Low.value > 0 || U.uDust2.value > 0 || U.uStreak.value > 0; main.visible = dep.visible = U.uEra2.value > 0; },
     };
     return api;
   }
@@ -838,7 +924,7 @@ export default async function create(ctx) {
   // ======================================================================================================== PER-SHOT STATE (pure)
   const S = { mirror: null };
   // every shared light restored to its build-time state on each frame (frames render in any order: no state may leak)
-  const LSNAP = [g1Spot, g2Light, g3Spot, torch, fillA, warmFill, futTop, inspLight, eraKey, eraMoon, eraLamp, eraHemi].map((l) => ({ l,
+  const LSNAP = [g1Spot, g2Light, g3Spot, torch, fillA, warmFill, futTop, inspLight, eraKey, eraMoon, eraLamp, eraHemi, poolBounce, mirLight].map((l) => ({ l,
     c: l.color.clone(), g: l.groundColor ? l.groundColor.clone() : null, d: l.distance, a: l.angle, p: l.penumbra, k: l.decay,
     pos: l.position.clone(), t: l.target ? l.target.position.clone() : null }));
   function restoreLights() { for (const s of LSNAP) { const l = s.l; l.color.copy(s.c); if (s.g) l.groundColor.copy(s.g); if (s.d !== undefined) l.distance = s.d; if (s.a !== undefined) l.angle = s.a;
@@ -849,24 +935,28 @@ export default async function create(ctx) {
     R.root.visible = false; guard.root.visible = false; handR.root.visible = false; handR.setGlove(true); setRShadow(true);
     navHand.root.visible = false; fut.root.visible = false; futHandL.root.visible = false; for (const g of glints) g.object3D.visible = false; for (const g of saltG) g.object3D.visible = false;
     dofProxy.visible = false; mirMoon.object3D.visible = false; archGlow.visible = false;
+    mirMoon.material.uniforms.uInt.value = 9; mirMoon.material.uniforms.uHalo.value = 0.5; archGlow.material.color.setRGB(0.35, 0.42, 0.56);
+    eraKey.visible = false; eraKey.intensity = 0; eraLamp.visible = true; eraHemi.color.set(0x3a5078); eraHemi.groundColor.set(0x14100c); eraHemi.intensity = 0.35;
     for (const s of [...shafts, ...shaftsI]) s.object3D.visible = false; dust.object3D.visible = false;
     compass.visible = !o.future; future.visible = !!o.future; g1Deck.material = o.future ? mLinen : g1Velvet;
     g1Spot.visible = true; g1Spot.intensity = o.g1Spot ?? 2.2 * 6;
     g2Light.intensity = o.g2 ?? 0; g2Light.visible = !!o.g2; g3Spot.intensity = 0; g3Spot.visible = false; torch.intensity = 0; torch.visible = false; torchCone.object3D.visible = false;
     inspLamp.visible = false; inspLight.intensity = 0; inspLight.visible = false;
     fillA.intensity = 0; fillA.visible = false; warmFill.intensity = 0; warmFill.visible = false; futTop.intensity = 0; futTop.visible = false;
+    poolBounce.intensity = 0; poolBounce.visible = false; mirLight.intensity = 0; mirLight.visible = false;
     hemi.intensity = o.hemi ?? 0.2; hemi.color.set(0x2a3d60); hemi.groundColor.set(0x1c140e);
     setShadowRes(o.shadowRes || 2048); setMoon(o.moon || MOON_CH1, o.moonI ?? 1.6, o.bounds);
     moon.visible = o.moonI !== 0;
     g3[2].door.rotation.y = 0;
-    for (const v of g3) { v.strip.visible = true; v.glow.visible = true; v.contents.visible = !!o.g3; } g3[1].contents.position.set(0, 0, 0);
+    for (const v of g3) { v.strip.visible = true; v.glow.visible = true; v.contents.visible = !!o.g3; v.glow.material.color.copy(v.glowC).multiplyScalar(o.g3glow ?? 1); } g3[1].contents.position.set(0, 0, 0);
     caseLid.rotation.x = -1.95;
     room.userData.skyM.color.setRGB(0.55, 0.62, 0.8); room.userData.skyM.map = room.userData.skyNight;
     scene.background.set('#020305');
     { const eg = scene.getObjectByName('g1edges'), em = eg.userData.m;
+      eg.visible = true;
       if (o.future) { em.blending = THREE.NormalBlending; em.color.set(0x3a4541); em.opacity = 0.8; eg.children.forEach((c) => c.scale.set(c.geometry.parameters.width > 0.1 ? 1 : 2.2, c.geometry.parameters.height > 0.1 ? 1 : 2.2, c.geometry.parameters.depth > 0.1 ? 1 : 2.2)); }
       else { em.blending = THREE.AdditiveBlending; em.color.setRGB(0.1, 0.13, 0.12); em.opacity = 1; eg.children.forEach((c) => c.scale.set(1, 1, 1)); } }
-    mBrick.visible = !o.future;                                                // the future: the brick panels lime-washed over
+    mBrick.visible = !o.future; mLining.color.setRGB(o.lining ?? 1, o.lining ?? 1, o.lining ?? 1);                                                // the future: the brick panels lime-washed over
     mWall.color.set(o.future ? '#a9a296' : '#2c3850'); mWallS.color.set(o.future ? '#a9a296' : '#2c3850');
     S.mirror = null;
   }
@@ -927,6 +1017,37 @@ export default async function create(ctx) {
     for (let it = 0; it < 3; it++) { const pc = herHandOnGlass(1, 0, 0); const sp = toScreenOpen(pc); S1.off[0] += 0.5 - sp[0]; S1.off[1] += S1_PALM_Y - sp[1]; }
     S1.cal = true; handR.root.visible = false;
   }
+  // (integration) the hook's wipe: index + middle pads on the glass, the hand ~35° off the pane, fingers leading to the left along
+  // an arc (0.78, 0.52) → (0.455, 0.42), 1.23–4.5 s (decelerating); 4.6–6.4 s the hand turns upright and lays its palm to the
+  // glass, ending exactly in the rest pose herHandOnGlass(1) (the T01 registration of S002 / S071)
+  const WIPE_PTS = [[0.80, 0.37], [0.715, 0.305], [0.63, 0.255], [0.55, 0.222], [0.475, 0.205]];
+  const wipeAt = (w) => { const f = clamp(w) * (WIPE_PTS.length - 1), i = Math.min(WIPE_PTS.length - 2, Math.floor(f)), t = f - i; const a = WIPE_PTS[i], b = WIPE_PTS[i + 1]; return [lerp(a[0], b[0], t), lerp(a[1], b[1], t)]; };
+  const WIPE_W = 0.026, WIPE_SOFT = 0.012, WIPE_DX = 0.02, WIPE_DY = 0.012;  // band half-width (pane heights), edge; centre between the index + middle pads
+  function setG1Wipe(prog, widen = 0) { ovG1.setWipe(WIPE_PTS.map((q) => toPaneUV(glassPt(q[0] + WIPE_DX, q[1] + WIPE_DY))), WIPE_W + widen, WIPE_SOFT + widen * 0.4, prog); }
+  const T35 = 35 * D2R, TREST = Math.atan(0.3);
+  function herHandWipe(w, r, T, k = 0.0003, lift = 0, xoff = 0) {
+    handR.root.visible = true;
+    const rest = tipPath(1), wp = wipeAt(w), rr = ease.inOutSine(clamp(r));
+    const fx = lerp(wp[0], rest.fx, rr), fy = lerp(wp[1], rest.fy, rr);
+    const ang = lerp(lerp(1.08, 1.3, w), Math.PI / 2 + 0.03, rr), tilt = lerp(T35, TREST, rr);   // fingers up-left: the band trails to the right, clear of the hand
+    const tip = glassPt(fx, fy).add(V(xoff, 0, 0.0035 + lift));
+    tip.x += k * util.noise1(T * 3.1, 11); tip.y += k * util.noise1(T * 2.7, 12);
+    const fd = V(-Math.cos(ang) * Math.cos(tilt), Math.sin(ang) * Math.cos(tilt), -Math.sin(tilt)).normalize();
+    const n0 = V(0, 0, -1).addScaledVector(fd, fd.z).normalize();                // palm toward the glass, square to the fingers
+    const palmN = n0.lerp(V(0, 0.25, -1).normalize(), rr).normalize();
+    handR.setChannels(blendHandChannels(handPose('wipe', {}, handR.dims), handPose('relaxed', { curl: 0.32 }, handR.dims), rr));
+    placeHandAt(handR, tip, fd, palmN, 'index');
+    return handR.sockets.palm.getWorldPosition(V());
+  }
+  // her glove's faint front-surface reflection: a mirror pass of the glove alone about a plane through the contact point, tilted
+  // 8° (a cheat: square to the lens the reflection hides behind the hand) so the reflected fingers meet the real ones at the pad
+  function gloveReflection(contact, strength, focus) {
+    const tl8 = 8 * D2R, n = V(0, Math.sin(tl8), Math.cos(tl8));
+    mirLight.position.copy(contact).add(V(0.03, -0.035, -0.035)); mirLight.color.set(0xffd2a0); mirLight.distance = 0.4;
+    const mt = mirrorPass(contact, n, rtMir, { hide: [compass, future, g2, g3Grp, guard.root, room, g1.object3D], mirFill: 0.0, boost: [[mirLight, 0.045]] });
+    if (!mt) return;
+    ovG1.U.tMir.value = blur(mt, rtMirB, Math.min(6, cocPx(camera.position.z - G1F + 0.06, focus, 100, 4) * 0.375 + 0.6)); ovG1.U.uMir.value = strength; ovG1.U.uMirFres.value = 0.0;
+  }
   // the navigator's left hand behind the glass at mirror depth d (m), rise r (0 low … 1 in place), palm toward the glass,
   // centred on HER palm (rel = screen offset), ~8 % larger than hers
   function navHandAt(d, r, T, herPalm, rel = [0.008, -0.022], o = {}) {
@@ -934,18 +1055,26 @@ export default async function create(ctx) {
     navHand.pose('relaxed', { curl: 0.22 });
     const w = MC_OPEN.target.distanceTo(MC_OPEN.pos) * 36 / MC_OPEN.mm, h = w / ctx.aspect;
     const c = herPalm.clone().setZ(G1F).add(V(rel[0] * w, -rel[1] * h, 0));
-    const p = c.clone().add(V(0.0, -0.17 * (1 - r), -d));
+    const p = c.clone().add(V(0.0, -(o.drop ?? 0.17) * (1 - r), -d));
     navHand.placeWrist([0, 0, 0], V(-0.03, 1, 0.12).normalize(), V(0, 0, 1)); navHand.root.scale.setScalar(1.06); navHand.root.updateMatrixWorld(true);
     const palm = navHand.sockets.palm.getWorldPosition(V());
     navHand.root.position.add(p.clone().sub(palm)); navHand.root.updateMatrixWorld(true);
-    { const fb = navHand.fingerBones, F = ['index', 'middle', 'ring', 'little'], wp = (b) => b.getWorldPosition(V()), pts = [];
-      for (let i = 0; i < 3; i++) { const a = wp(fb[F[i]][0]).add(wp(fb[F[i]][1])), b = wp(fb[F[i + 1]][0]).add(wp(fb[F[i + 1]][1])); pts.push(a.add(b).multiplyScalar(0.25), wp(fb[F[i]][1]).lerp(wp(fb[F[i + 1]][2]), 0.5)); }
-      for (const f of F) pts.push(navHand.tip(f, V()).lerp(wp(fb[f][2]), 0.35));
-      pts.push(wp(fb.thumb[1]).lerp(wp(fb.index[0]), 0.5), wp(fb.thumb[2]));
-      saltG.forEach((g, k) => { const q = pts[k % pts.length]; g.object3D.visible = true; g.object3D.position.copy(q).add(V(0.0015 * Math.sin(k * 3.7), 0.0015 * Math.cos(k * 2.9), 0.005));
-        const tw = Math.max(0, util.noise1(T * 2.2 + k * 7.1, 40 + k)); g.set((0.35 + 2.2 * tw * tw) * (o.salt ?? 1)); }); }
+    { const fb = navHand.fingerBones, wp = (b) => b.getWorldPosition(V()), pts = [];
+      const ctr = navHand.sockets.palm.getWorldPosition(V());
+      const edge = (q, k) => { const o = q.clone().sub(ctr); o.z = 0; return q.addScaledVector(o.normalize(), k).add(V(0, 0, 0.0095)); };   // bones sit ~6–8 mm inside the palm surface
+      // clusters along the visible margins: thumb, little-finger edge, the finger tops, the heel
+      const segs = [[fb.thumb[0], fb.thumb[1], 0.009], [fb.thumb[1], fb.thumb[2], 0.008], [fb.little[0], fb.little[1], 0.008], [fb.little[1], fb.little[2], 0.0065], [fb.ring[1], fb.ring[2], 0.006]];
+      const sr = util.rng(93);
+      for (let k = 0; k < 40; k++) {
+        if (k < 30) { const sg = segs[k % segs.length]; pts.push(edge(wp(sg[0]).lerp(wp(sg[1]), sr()), sg[2] * (0.75 + 0.5 * sr()))); }
+        else if (k < 36) pts.push(edge(navHand.tip(['index', 'middle', 'ring', 'little', 'thumb', 'little'][k - 30], V(), false), 0.002 + 0.003 * sr()));
+        else pts.push(edge(wp(navHand.byName.wrist).lerp(ctr, 0.3 + 0.3 * sr()), 0.028 + 0.01 * sr()));
+      }
+      saltG.forEach((g, k) => { const q = pts[k % pts.length]; g.object3D.visible = (o.salt ?? 1) > 0.01; g.object3D.position.copy(q);
+        const tw = Math.max(0, util.noise1(T * 2.6 + k * 7.1, 40 + k)); g.set((0.75 + 7.0 * Math.pow(tw, 3)) * (o.salt ?? 1)); }); }
     // his own night: cool moon from the upper right, a warm low ship-lamp glow from the lower left
-    eraMoon.intensity = 2.8; eraMoon.color.set(0x9fb4dc); eraMoon.position.copy(p).add(V(1.0, 1.4, 0.55)); eraMoon.target.position.copy(p); eraMoon.target.updateMatrixWorld();   // cool moon rim from his upper left-behind
+    eraMoon.intensity = 2.2; eraMoon.color.set(0x9fb4dc); eraMoon.position.copy(p).add(V(0.7, 1.1, 0.5)); eraMoon.target.position.copy(p); eraMoon.target.updateMatrixWorld();   // his night's moon, from the upper right
+    eraKey.visible = true; eraKey.color.set(0xb8c8ea); eraKey.position.copy(p).add(V(0.35, 0.5, -0.6)); eraKey.target.position.copy(p); eraKey.target.updateMatrixWorld(); eraKey.intensity = 1.6; eraKey.angle = 0.6; eraKey.penumbra = 0.8; eraKey.distance = 0;   // (integration) cool moon RIM from behind him: the margins outside her glove read
     eraLamp.visible = true; eraLamp.color.set(0xffa860); eraLamp.position.copy(p).add(V(-0.34, -0.2, 0.12)); eraLamp.intensity = 0.05 * util.flicker(T, 3); eraLamp.distance = 2;   // the ship lamp, low and warm
     eraHemi.intensity = 0.1;
     return p;
@@ -958,7 +1087,7 @@ export default async function create(ctx) {
     const pos = MC_OPEN.pos.clone().lerp(MC_OPEN.target, 0.026).add(V(0.012, 0, 1.2));
     const C = compass.getWorldPosition(V());
     frameAt(pos, C, 0.5, 0.62, 100);
-    return { pos, q: camera.quaternion.clone(), C };
+    return { pos, q: camera.quaternion.clone(), C, fov: camera.fov };
   })();
   const SEA = (() => {   // the image plane window x 0.19–0.95 (lamp ≈ (0.36, 0.32)) as seen from the S002 end camera
     const D = 20, zp = G1F - D;
@@ -967,13 +1096,29 @@ export default async function create(ctx) {
     const c = a.clone().add(b).multiplyScalar(0.5); c.y = (t.y + bt.y) / 2;
     return { c, U: V((b.x - a.x) / 2, 0, 0), Vv: V(0, (t.y - bt.y) / 2 * 1.02, 0), z: zp };
   })();
-  function seaPlane(tl, u, T, strength, focus, mm, N, off = null) {
+  // (integration) the S003 frame-0 camera sees the sea plane through the same screen window as S002's end (the 75 mm camera
+  // at 0.75× the distance frames the compass identically but a far plane 20 m away would shrink and jump ~0.07 at the cut)
+  const SEA3 = (() => {
+    const C = compass.getWorldPosition(V()), d0 = (S2END.pos.z - C.z) * 0.75, h0 = (S2END.pos.y - C.y) * 0.75;
+    frameAt(V(C.x + 0.009, C.y + h0, C.z + d0), C, 0.5, 0.62, 75);
+    const zp = SEA.z, a = rayZ(0.19, 0.5, zp), b = rayZ(0.95, 0.5, zp), t = rayZ(0.57, 0.0, zp), bt = rayZ(0.57, 1.0, zp);
+    const c = a.clone().add(b).multiplyScalar(0.5); c.y = (t.y + bt.y) / 2;
+    return { c, U: V((b.x - a.x) / 2, 0, 0), Vv: V(0, (t.y - bt.y) / 2 * 1.02, 0), z: zp };
+  })();
+  function seaBlur(P, camZ, focus, mm, N) { const z = camZ - P.z, c = cocPx(z, focus, mm, N), scrW = (2 * P.U.x) / (z * 36 / mm) * ctx.W; return Math.min(14, c * rtSea.width / scrW + 0.6); }
+  function seaPlane(tl, u, T, strength, focus, mm, N, off = null, o = {}) {
+    const P = o.plane || SEA;
     const tex0 = nested('sea_deck', 'view_shiplamp', tl, u, T, rtSea);
-    const z = camera.position.z - SEA.z, c = cocPx(z, focus, mm, N);
-    const scrW = (2 * SEA.U.x) / (z * 36 / mm) * ctx.W;                       // the image plane's width on screen (px)
-    eraPlane(ovG1, blur(tex0, rtBlur[560], Math.min(14, c * rtSea.width / scrW + 0.6)), strength, off ? SEA.c.clone().add(off) : SEA.c, SEA.U, SEA.Vv);
+    const b = o.blurOverride >= 0 ? o.blurOverride : seaBlur(P, camera.position.z, focus, mm, N);
+    eraPlane(ovG1, blur(tex0, rtBlur[560], b), strength, off ? P.c.clone().add(off) : P.c, P.U, P.Vv);
     ovG1.U.uEraSoft.value = 0.16;                                             // a soft vignette: the plate's edges never read inside the pane
+    ovG1.U.uEraUV.value.set(1, 0.68, 0, 0.32); ovG1.U.uEraFB.value.set(0.0, 0.28); ovG1.U.uEraComp.value = 0.9;   // (integration) the plate's upper 68 % (lamp, swell, moon road); the lit rail at its foot faded out
   }
+  // S002's end optics (the S003 hidden cut starts from them): focus = glass + 0.95 m (S002 rack + recede), f/5.6, 100 mm
+  const S2_FOCUS_END = (S2END.pos.z - G1F) + 0.95;
+  const S2_SEA_BLUR = seaBlur(SEA, S2END.pos.z, S2_FOCUS_END, 100, 5.6);
+  const S2_MIR_BLUR = Math.min(10, cocPx((S2END.pos.z - G1F) + 2.25, S2_FOCUS_END, 100, 5.6) * 0.5 + 0.8);
+
   const dustFor = (ov, focus, dGlass, mm, N, k) => { ov.U.uDust.value = k; ov.U.uDustLod.value = Math.log2(1 + cocPx(dGlass, focus, mm, N) * 0.5); };
 
   // ---------------------------------------------------------------------------------------------- INTERLUDE (S028 / S029)
@@ -1142,59 +1287,101 @@ export default async function create(ctx) {
     fut.root.updateMatrixWorld(true);
   }
 
+  // (integration) the glove's light in S001–S002 (one function, so the hidden seam S001 → S002 is lit identically): the pin
+  // spot's warm spill raking down across the back of the glove (texture, seams), a little warm top spill, a cool moon edge
+  // from the doorway side. k fades them (S002: the hand leaves)
+  const G3GLOW_INTRO = 5, S2MIR = 0.3;
+  function introGloveLights(rset, k = 1) {
+    futTop.visible = k > 0.001; futTop.color.set(0xffcf9c); futTop.position.set(-0.1, 1.5, G1F + 0.05); futTop.target.position.set(0.06, 1.14, G1F + 0.02); futTop.target.updateMatrixWorld();
+    futTop.intensity = lerp(0.17, 0.1, ease.inOutSine(clamp(rset))) * k; futTop.angle = 0.5; futTop.penumbra = 0.9; futTop.distance = 0;
+    warmFill.visible = true; warmFill.color.set(0xffc890); warmFill.position.set(0.02, 1.62, G1F + 0.12); warmFill.intensity = 0.03; warmFill.distance = 0.9;
+    fillA.visible = k > 0.001; fillA.color.set(0x9db0d0); fillA.position.set(0.42, 1.05, G1F + 0.35); fillA.intensity = 0.035 * k; fillA.distance = 0.9;   // cool moon edge (doorway side)
+  }
+  // the far torch sweep (S002 19.5 s): the guard far beyond G1 swings his beam right → left once (sw 0 → 1)
+  function torchSweep(sw, T) {
+    if (!(sw > 0 && sw < 1)) return;
+    const env = Math.sin(Math.PI * sw), a = lerp(0.95, -0.95, ease.inOutSine(sw));
+    const o = V(1.3, 1.05, -5.6), tgt = o.clone().add(V(Math.sin(a) * 2.6, -1.05, 1.2 + Math.cos(a) * 0.6));
+    torch.visible = true; torch.position.copy(o); torch.target.position.copy(tgt); torch.target.updateMatrixWorld();
+    torch.intensity = 14 * env; torch.angle = 0.32; torch.penumbra = 0.85; torch.distance = 10;
+    torchCone.object3D.visible = true; torchCone.update(T, { origin: o, dir: tgt.clone().sub(o), intensity: 0.035 * env });
+  }
+
+  // (integration) the moonlit gallery night (S023–S030, S040): the base is the corridor's level (mean 6–10 %, ≤ 40 % of pixels
+  // below 4 %): hemisphere fill with a cool floor-bounce ground colour (ceiling, beams), the pools' first bounce under the floor
+  // (walls, cases, columns), the doorway shafts with dust. Never a black frame; night stays night.
+  function nightGallery({ hemi: hI = 0.45, bounce = 2.4, at = [0, -0.3, -2.5], dist = 14, wall = '#4c5670' } = {}) {
+    mWall.color.set(wall); mWallS.color.set(wall);   // the lime-washed plaster under the moon reads deep blue (P02/P03), not black
+    hemi.intensity = hI; hemi.color.set(0x34486e); hemi.groundColor.set(0x3a4560);
+    poolBounce.visible = bounce > 0; poolBounce.color.set(0xa9b5c9); poolBounce.position.set(at[0], at[1], at[2]); poolBounce.intensity = bounce; poolBounce.distance = dist;
+  }
+
   const setups = {
     // ---------------------------------------------------------------------------------------------- S001 ECU 100 mm
     // 0–13.25 s, fade in. MC push 2 %. 1.23 touch; 1.2–4.5 wipe arc; 3.0 salt glints in the cleared band; 6.6–9 focus racks
     // through the glass; 8–11 his left hand rises, palm to glass, stops one finger short; 11–13.25 still, closing mm.
     S001(tl, u, T) {
-      reset({ moon: MOON_INTRO, moonI: 1.25, bounds: INTRO_BOUNDS, hemi: 0.12, shadowRes: 1024 });
+      // (integration) the hook. 0–3 s must read "a white cotton glove wiping museum glass": a lit dust film on the pane (brightest
+      // along the top, where the pin spot rakes it), the fingertip pads clearing a clean dark band, the glove's faint reflection
+      // meeting it at the contact point, 2.75–4 s a few faceted salt crystals glinting in the cleared band; 4.6–6.4 the hand turns
+      // upright onto the glass; 6.6 s the salt hand rises from below frame IN the wiped glass (25 % → full by 8.5 s), stops one
+      // finger short at 11.0 s; the focus follows him in but never lets her glove pass ~6 px of blur.
+      reset({ moon: MOON_INTRO, moonI: 0.5, bounds: INTRO_BOUNDS, hemi: 0.1, shadowRes: 1024, g3glow: G3GLOW_INTRO });
       const push = ease.inOutSine(clamp(tl / 13.25));
       const pos = MC_OPEN.pos.clone().lerp(MC_OPEN.target, 0.02 * push);
       cam.place(camera, pos, MC_OPEN.target); cam.lens(camera, MC_OPEN.mm);
-      // her hand: enters from the right (0.15–1.23), wipes 1.23–4.5 (decelerating), rests with a micro tremor
-      const s = tl < S1.touch ? 0 : ease.outCubic(clamp((tl - S1.touch) / (S1.wipeEnd - S1.touch)));
-      const enter = ease.outCubic(clamp((tl - 0.15) / 1.08));
-      const herPalm = herHandOnGlass(s, T, 0.0003, (1 - enter) * 0.03);
-      if (tl < S1.touch) { handR.root.position.x += (1 - enter) * 0.09; handR.root.updateMatrixWorld(true); }
-      // moonlight from the doorway behind the lens on the back of the glove; a little warm spill of the pin spot on top
-      warmFill.visible = true; warmFill.color.set(0xffc890); warmFill.position.set(0.02, 1.62, G1F + 0.12); warmFill.intensity = 0.05; warmFill.distance = 0.9;
-      // wipe mask (pane UV along the fingertip path) + dust
-      const wpts = [0, 0.25, 0.5, 0.75, 1].map((k) => toPaneUV(glassPt(tipPath(k).fx, tipPath(k).fy)));
-      ovG1.setWipe(wpts, 0.075, 0.025, s);
       const fGlass = camera.position.z - G1F;
-      // his hand: from 8.0 s it rises and advances 30 → 2 cm behind the glass, stops at 11.0; then closes 2 → 1.2 cm
-      const k8 = ease.inOutSine(clamp((tl - 8.0) / 3.0));
-      const d = lerp(0.30, 0.02, k8) - 0.008 * ease.inOutSine(clamp((tl - 11) / 2.25));
-      const vis = smoothstep(6.4, 9.6, tl);
-      if (tl > 6.0) navHandAt(d, k8, T, herPalm, undefined, { salt: vis });
-      // salt glints (3.0 s): a few white crystals right behind the cleared band — the first trace of the other hand
-      const gOn = tl > 2.6 && tl < 5.2;
+      // her hand: enters from the right (0.15–1.23), wipes 1.23–4.5 (decelerating), turns onto the glass 4.6–6.4, rests (tremor)
+      const w = tl < S1.touch ? 0 : ease.outCubic(clamp((tl - S1.touch) / (S1.wipeEnd - S1.touch)));
+      const rset = clamp((tl - 4.6) / 1.8);
+      const enter = ease.outCubic(clamp((tl - 0.15) / 1.08));
+      const herPalm = herHandWipe(w, rset, T, 0.0003, (1 - enter) * 0.028, (1 - enter) * 0.085);
+      const contact = handR.tip('index', V()).setZ(G1F);
+      // light: the pin spot's warm spill rakes down across the back of the glove (texture, seams), a cool moon edge from the
+      // doorway behind the lens; the far hood edges stay dark (they read as cage bars)
+      introGloveLights(rset, 1);
+      scene.getObjectByName('g1edges').visible = false;
+      // the dust film + the wiped band
+      setG1Wipe(w);
+      ovG1.U.uDust2.value = 0.09; ovG1.U.uDust2K.value.set(0.42, 0.3, 0.5, 0.05); ovG1.U.uDustLit.value.set(0.33, 0.64); ovG1.U.uDustTop.value = 0.88;
+      // his hand: 6.6 s rises from below frame at ~25 %, readable by 8.5 s, advances 26 → 2 cm behind the glass, stops at 11.0 s
+      // one finger short; then closes 2 → 1.2 cm (S002 carries on to near-coincidence on 千)
+      const kr = ease.inOutSine(clamp((tl - 6.6) / 4.4));
+      const d = lerp(0.26, 0.02, kr) - 0.008 * ease.inOutSine(clamp((tl - 11) / 2.25));
+      const vis = 0.25 + 0.75 * smoothstep(6.6, 8.5, tl);
+      const rise = ease.outSine(clamp((tl - 6.6) / 4.4));
+      if (tl > 6.5) navHandAt(d, rise, T, herPalm, undefined, { salt: smoothstep(7.5, 8.6, tl), drop: 0.3 });
+      // salt crystals (2.75–4.2 s): a cluster in the cleared band x 0.55–0.70, each catching the light for a few frames
+      const gOn = tl > 2.6 && tl < 6.6;
       for (let k = 0; k < glints.length; k++) {
-        const tp = tipPath(0.35 + 0.08 * k);
-        const gpt = glassPt(tp.fx + 0.025 * Math.sin(k * 2.3), tp.fy + 0.03 * Math.cos(k * 1.7)).add(V(0, 0, -0.006 - 0.002 * (k % 3)));
+        const fx = 0.55 + 0.15 * ((k * 0.618) % 1), wp = wipeAt(clamp((0.80 + WIPE_DX - fx) / 0.325));
+        const gpt = glassPt(fx + 0.006 * Math.sin(k * 2.3), wp[1] + WIPE_DY + 0.035 * Math.cos(k * 1.7)).add(V(0, 0, -0.005 - 0.002 * (k % 3)));
         glints[k].object3D.visible = gOn; glints[k].object3D.position.copy(gpt);
-        glints[k].set(3.2 * smoothstep(2.85, 3.05 + 0.06 * k, tl) * (1 - smoothstep(3.3 + 0.12 * k, 5.0, tl)));
+        const t0 = 2.75 + 0.19 * k, flash = Math.exp(-(((tl - t0) / 0.07) ** 2)) + 0.5 * Math.exp(-(((tl - t0 - 0.9) / 0.06) ** 2));
+        glints[k].set(smoothstep(2.6, 2.9, tl) * (1 - smoothstep(5.0, 6.4, tl)), flash);
       }
-      // focus: glass surface (+ glove) → 6.6–9.0 through the glass to ~30 cm → follows his hand back to ~2 cm
-      const rack = ease.inOutSine(clamp((tl - 6.6) / 2.4));
-      const focus = fGlass + lerp(0.0, d, rack) + lerp(0.004, 0, rack);
-      if (tl > 6.0 || gOn) {
+      // focus: the glass surface → from 6.6 (≥ 1 beat) into the glass after his hand, at most ~11 cm deep (her glove ≤ ~6 px)
+      const rack = ease.inOutSine(clamp((tl - 6.6) / 2.2));
+      const focus = fGlass + rack * Math.min(0.48 * d + 0.006, 0.105) + lerp(0.004, 0, rack);
+      if (tl > 6.5 || gOn) {
         const eraTex = eraPass();
-        ovG1.U.tEra2.value = eraTex; ovG1.U.uEra2.value = tl > 6.0 ? 0.9 * vis : 0.9; ovG1.U.uMaskFloor2.value = 0.5;
+        ovG1.U.tEra2.value = eraTex; ovG1.U.uEra2.value = tl > 6.5 ? 0.9 * vis : 0.9; ovG1.U.uMaskFloor2.value = 0.45;
         ovG1.U.uEra2Over.value = 0.85;   // his hand hides what lies behind the glass (else the depth proxy kept the compass sharp inside it)
-        ovG1.U.uEra2Depth.value = tl > 6.0 ? Math.max(d, 0.006) : 0.008;
+        ovG1.U.uEra2Depth.value = tl > 6.5 ? Math.max(d, 0.006) : 0.006;
       }
-      dustFor(ovG1, focus, fGlass, 100, 4, 0.03); ovG1.U.uDustRep.value.set(1.6, 1.33); ovG1.U.uDustTop.value = 0.75;
-      ovG1.U.uGlint.value = 0;   // review: the noise sparkle printed a star field along the band; the 7 crystals behind the glass are "几粒盐晶"
-      DBGP.herPalm = herPalm;
-      return { dof: { focus, fstop: 4.0, maxCoc: 1.6 }, exposure: 1.3, bloom: { strength: 0.28, threshold: 0.9 } };
+      // her glove's faint reflection on the pane meets the fingertip at the contact point (strongest while she wipes)
+      if (tl > 0.9) gloveReflection(contact, 0.2 * smoothstep(0.9, 1.4, tl) * (1 - 0.55 * ease.inOutSine(clamp((tl - 4.6) / 1.8))), focus);
+      ovG1.U.uDustLod.value = Math.log2(1 + cocPx(fGlass, focus, 100, 4) * 0.5);
+      ovG1.U.uGlint.value = 0;
+      DBGP.herPalm = herPalm; DBGP.contact = contact;
+      return { dof: { focus, fstop: 4.0, maxCoc: 1.6 }, exposure: 1.3, bloom: { strength: 0.3, threshold: 0.86 } };
     },
     // ---------------------------------------------------------------------------------------------- S002 ECU → MCU 100 mm
     // 13.25–21.125. Residual push to 3.45 s; hands nearly coincide on 千 (15.14 → tl 1.89); her tremor on 年 (tl 2.31);
     // 3.4–3.9 her hand lifts and exits right; from 3.45 a slow 1.2 m pull-back; 4.24 (17.49) focus into mirror depth, his hand
     // recedes ~40 cm and darkens as the night sea opens in the pane; 6.25 (19.5) the guard's torch sweeps once far away.
     S002(tl, u, T) {
-      reset({ moon: MOON_INTRO, moonI: 1.25, bounds: INTRO_BOUNDS, hemi: 0.12, shadowRes: 1024 });
+      reset({ moon: MOON_INTRO, moonI: lerp(0.5, 1.1, ease.inOutSine(clamp((tl - 3.5) / 4.3))), bounds: INTRO_BOUNDS, hemi: 0.1, shadowRes: 1024, g3glow: G3GLOW_INTRO });
       const back = ease.inOutSine(clamp((tl - 3.45) / 4.43)) * 1.2;
       const pushRes = 0.02 + 0.006 * ease.outSine(clamp(tl / 3.45));
       const base = MC_OPEN.pos.clone().lerp(MC_OPEN.target, pushRes);
@@ -1208,7 +1395,9 @@ export default async function create(ctx) {
       herHandOnGlass(1, T * 4, 0.0004 + 0.0016 * Math.exp(-Math.pow((tl - 2.31) / 0.12, 2)), 0.03 * lift);
       if (lift > 0) { handR.root.position.x += 0.35 * lift * lift; handR.root.updateMatrixWorld(true); }
       handR.root.visible = lift < 1;
-      warmFill.visible = true; warmFill.color.set(0xffc890); warmFill.position.set(0.02, 1.62, G1F + 0.12); warmFill.intensity = 0.05; warmFill.distance = 0.9;
+      introGloveLights(1, 1 - lift);
+      // the far hood edges come back with the pull-back (the hood must read at the MCU end; S003 matches it)
+      { const eg = scene.getObjectByName('g1edges'), ke = smoothstep(4.0, 7.0, tl); eg.visible = ke > 0.01; eg.userData.m.color.setRGB(0.1 * ke, 0.13 * ke, 0.12 * ke); }
       // his hand: closes the last millimetres to near-coincidence by 1.9, still; from 4.24 recedes 40 cm and darkens
       const recede = ease.inOutSine(clamp((tl - 4.24) / 2.6));
       const d = lerp(0.012, 0.006, ease.inOutSine(clamp(tl / 1.9))) + 0.40 * recede;
@@ -1218,39 +1407,37 @@ export default async function create(ctx) {
       const focus = fGlass + lerp(0.006, 0.55, rack) + 0.4 * recede * rack;
       const eraTex = eraPass();
       ovG1.U.tEra2.value = eraTex; ovG1.U.uEra2.value = 0.9 * (1 - 0.8 * recede); ovG1.U.uEra2Depth.value = d; ovG1.U.uEra2Over.value = 0.85;
-      // the sea opens in the pane: the wiped band widens to the whole pane, the image strengthens
-      const wpts = [0, 0.25, 0.5, 0.75, 1].map((k) => toPaneUV(glassPt(tipPath(k).fx, tipPath(k).fy)));
+      // the sea opens first inside the wiped band, then across the whole pane (the band itself stays as she wiped it); the dust
+      // film stays on the glass, softening as the focus goes deep
       const open = ease.inOutSine(clamp((tl - 3.7) / 3.2));
-      ovG1.setWipe(wpts, lerp(0.075, 1.3, open), lerp(0.025, 0.35, open), 1);
-      ovG1.U.uMaskFloor.value = lerp(0.25, 1.0, open); ovG1.U.uMaskFloor2.value = lerp(0.5, 0.8, ease.inOutSine(clamp(tl / 1.9)));
+      setG1Wipe(1);
+      ovG1.U.uMaskFloor.value = lerp(0.2, 1.0, open); ovG1.U.uMaskFloor2.value = 0.45;
       seaPlane(tl, u, T, ease.inOutSine(clamp((tl - 2.9) / 3.6)), Math.max(focus, fGlass + 0.3 * rack), 100, 5.6);   // nothing at the S001 seam; opens with the pull-back
-      dustFor(ovG1, focus, fGlass, 100, 4.5, 0.03 * (1 - 0.5 * open)); ovG1.U.uDustRep.value.set(1.6, 1.33); ovG1.U.uDustTop.value = 0.75;
-      // her faint reflected silhouette (she stepped back to the right of the lens) — true mirror
+      ovG1.U.uDust2.value = 0.09 * (1 - 0.45 * open); ovG1.U.uDust2K.value.set(0.42, 0.3, 0.5, 0.05);
+      ovG1.U.uDustLit.value.set(lerp(0.33, 0.45, open), lerp(0.64, 1.0, open)); ovG1.U.uDustTop.value = 0.88;
+      ovG1.U.uDustLod.value = Math.log2(1 + cocPx(fGlass, focus, 100, 5.6) * 0.5);
+      if (tl < 3.6) gloveReflection(handR.tip('index', V()).setZ(G1F), 0.09 * (1 - lift), focus);
+      // her faint reflected silhouette (she stepped back to the right of the lens) — true mirror: head and shoulders dark, a
+      // cool rim from the doorway behind her (no front fill: the reflection shows the side of her that faces the glass)
       if (tl > 3.6) {
-        // she stands just right of the lens (0.4 m), stepping back with it: her reflection lands at ~(0.74, 0.45) in the pane
         standAt(0.40, G1F + 1.05 + back, Math.PI + 0.2, { weight: 0.3 });
-        if (tl > 3.9) { fillA.visible = true; fillA.color.set(0xa8b4c8); fillA.position.set(0.3, 1.5, G1F + 0.6 + back); fillA.intensity = 0.14 * smoothstep(3.9, 4.6, tl); fillA.distance = 1.1; }
         R.pose({ 'armR.upper.x': 0.12, 'armR.lower.x': 0.35, 'neck.x': 0.14, 'head.y': 0.2 }, { add: true }); R.lookAt(V(0, 1.12, G1F - 0.2), 0.6);
-        const mt = mirrorPass(V(0, 1.2, G1F), V(0, 0, 1), rtMir, { hide: [compass, future, room.userData.sky] });   // (the corridor sky would print a hard blue doorway over the sea)
+        R.root.updateMatrixWorld(true);
+        mirLight.position.copy(R.eye()).add(V(0.25, 0.25, 0.75)); mirLight.color.set(0xb4c4e0); mirLight.distance = 2.2;
+        const mt = mirrorPass(V(0, 1.2, G1F), V(0, 0, 1), rtMir, { hide: [compass, future, room.userData.sky], mirFill: 0.08, boost: [[mirLight, 0.9 * smoothstep(3.9, 4.8, tl)]] });   // (the corridor sky would print a hard blue doorway over the sea)
         const zr = fGlass + (R.root.position.z - G1F);
-        ovG1.U.tMir.value = blur(mt, rtMirB, Math.min(10, cocPx(zr, focus, 100, 5.6) * 0.5 + 0.8)); ovG1.U.uMir.value = 0.32 * smoothstep(3.8, 5.2, tl); ovG1.U.uMirFres.value = 0.0;
+        ovG1.U.tMir.value = blur(mt, rtMirB, Math.min(10, cocPx(zr, focus, 100, 5.6) * 0.5 + 0.8)); ovG1.U.uMir.value = S2MIR * smoothstep(3.8, 5.2, tl); ovG1.U.uMirFres.value = 0.0;
       }
-      // far background: the guard's torch sweeps once right → left (6.25 s)
-      const sw = clamp((tl - 5.6) / 1.3);
-      if (sw > 0 && sw < 1) {
-        torch.visible = true; torchCone.object3D.visible = true;
-        const o = V(lerp(4.6, -3.6, ease.inOutSine(sw)), 1.05, -4.4);
-        const tgt = o.clone().add(V(-0.7, -1.05, 1.5));
-        torch.position.copy(o); torch.target.position.copy(tgt); torch.target.updateMatrixWorld(); torch.intensity = 55 * Math.sin(Math.PI * sw); torch.angle = 0.24; torch.distance = 9;
-        torchCone.update(T, { origin: o, dir: tgt.clone().sub(o), intensity: 0.24 * Math.sin(Math.PI * sw) });
-      }
+      // far background (19.5 s): the guard's torch swings once right → left far beyond the case — a soft beam, a moving pool on
+      // the far floor and the cases, never brighter than ~10 %
+      torchSweep(clamp((tl - 5.85) / 0.85), T);
       return { dof: { focus, fstop: 5.6, maxCoc: 1.5 }, exposure: 1.3, bloom: { strength: 0.32, threshold: 0.86 } };
     },
     // ---------------------------------------------------------------------------------------------- S003 CU 75 mm
     // 21.125–28.42. 0–0.45 retreat momentum → slow rightward arc ~15° + push toward the compass, settles 4.9 s; the sea slides
     // off the pane by angle (gone by ~2.9 s — virtual image plane far behind the glass); focus reflection → dial; hold.
     S003(tl, u, T) {
-      reset({ moon: MOON_INTRO, moonI: 1.25, bounds: INTRO_BOUNDS, hemi: 0.12, shadowRes: 1024 });
+      reset({ moon: MOON_INTRO, moonI: 1.1, bounds: INTRO_BOUNDS, hemi: 0.1, shadowRes: 1024, g3glow: G3GLOW_INTRO });
       const a = ease.inOutSine(clamp((tl - 0.1) / 4.8));
       const C = compass.getWorldPosition(V());
       const ang = lerp(0, 15, a) * D2R;
@@ -1260,20 +1447,32 @@ export default async function create(ctx) {
       frameAt(pos, C, 0.5, lerp(0.62, 0.55, a), 75);
       const fC = cam.distTo(camera, C);
       const focus = lerp(fC + 2.2, fC, ease.inOutSine(clamp((tl - 0.5) / 1.3)));
+      // (integration) the hidden cut S002 → S003: for the first ~0.6 s every reflected layer is driven as S002's end saw it — the
+      // sea plane fitted to S003's frame-0 camera (same screen window, so the lamp stays at S002's (0.39, 0.29)), S002's blur,
+      // her reflection rendered from S002's end camera — then eases into this shot's own optics as the arc begins.
       // ruling 1: the era image follows the shot list's layout — it slides toward frame LEFT with the angle change and leaves
-      // past the hood's left edge by ~1.8 s (a far virtual plane alone would drift right), gone by 2.9 s
-      seaPlane(tl + 7.875, u, T, 1.0, focus, 75, 5.6, V(-14.0 * ease.inOutSine(clamp((tl - 0.45) / 1.9)), 0, 0));
-      dustFor(ovG1, focus, cam.distTo(camera, V(C.x, C.y, G1F)), 75, 5.6, 0.012); ovG1.U.uDustRep.value.set(1.6, 1.33);
+      // past the hood's left edge by ~1.8 s, gone by 2.9 s
+      const kc = smoothstep(0.0, 0.6, tl);
+      seaPlane(tl + 7.875, u, T, 1.0, focus, 75, 5.6, V(-14.0 * ease.inOutSine(clamp((tl - 0.45) / 1.9)), 0, 0), { plane: SEA3, blurOverride: lerp(S2_SEA_BLUR, seaBlur(SEA3, camera.position.z, focus, 75, 5.6), kc) });
+      // the dust film and the wiped band continue from S002 (they leave the frame with the arc)
+      setG1Wipe(1); ovG1.U.uDust2.value = 0.09 * 0.55 * (1 - 0.4 * a); ovG1.U.uDust2K.value.set(0.42, 0.3, 0.5, 0.05);
+      ovG1.U.uDustLit.value.set(0.45, 1.0); ovG1.U.uDustTop.value = 0.88;
+      ovG1.U.uDustLod.value = Math.log2(1 + cocPx(cam.distTo(camera, V(C.x, C.y, G1F)), focus, 75, 5.6) * 0.5);
       // continuity across the hidden cut: her faint reflected silhouette (S002's end) is still in the pane and leaves by angle
       if (tl < 2.2) {
         standAt(0.40, G1F + 2.25, Math.PI + 0.2, { weight: 0.3 });
         R.pose({ 'armR.upper.x': 0.12, 'armR.lower.x': 0.35, 'neck.x': 0.14, 'head.y': 0.2 }, { add: true }); R.lookAt(V(0, 1.12, G1F - 0.2), 0.6);
-        fillA.visible = true; fillA.color.set(0xa8b4c8); fillA.position.set(0.3, 1.5, G1F + 1.8); fillA.intensity = 0.14; fillA.distance = 1.1;
-        const mt = mirrorPass(V(0, 1.2, G1F), V(0, 0, 1), rtMir, { hide: [compass, future, room.userData.sky] });
+        R.root.updateMatrixWorld(true);
+        mirLight.position.copy(R.eye()).add(V(0.25, 0.25, 0.75)); mirLight.color.set(0xb4c4e0); mirLight.distance = 2.2;
+        // the mirror camera: S002's end camera at the cut, easing into this one
+        const cp = camera.position.clone(), cq = camera.quaternion.clone(), cf = camera.fov;
+        if (kc < 1) { camera.position.lerpVectors(S2END.pos, cp, kc); camera.quaternion.slerpQuaternions(S2END.q, cq, kc); camera.fov = lerp(S2END.fov, cf, kc); camera.updateProjectionMatrix(); camera.updateMatrixWorld(); }
+        const mt = mirrorPass(V(0, 1.2, G1F), V(0, 0, 1), rtMir, { hide: [compass, future, room.userData.sky], mirFill: 0.08, boost: [[mirLight, 0.9]] });
+        camera.position.copy(cp); camera.quaternion.copy(cq); camera.fov = cf; camera.updateProjectionMatrix(); camera.updateMatrixWorld();
         const zr = cam.distTo(camera, V(C.x, C.y, G1F)) + (R.root.position.z - G1F);
-        ovG1.U.tMir.value = blur(mt, rtMirB, Math.min(10, cocPx(zr, focus, 75, 5.6) * 0.5 + 0.8)); ovG1.U.uMir.value = 0.32 * (1 - smoothstep(1.5, 2.2, tl)); ovG1.U.uMirFres.value = 0.0;
+        ovG1.U.tMir.value = blur(mt, rtMirB, lerp(S2_MIR_BLUR, Math.min(10, cocPx(zr, focus, 75, 5.6) * 0.5 + 0.8), kc)); ovG1.U.uMir.value = S2MIR * (1 - smoothstep(1.5, 2.2, tl)); ovG1.U.uMirFres.value = 0.0;
       }
-      return { dof: { focus, fstop: 5.6, maxCoc: 1.4 }, exposure: 1.35, bloom: { strength: 0.3, threshold: 0.9 } };
+      return { dof: { focus, fstop: 5.6, maxCoc: 1.4 }, exposure: lerp(1.3, 1.35, kc), bloom: { strength: lerp(0.32, 0.3, kc), threshold: lerp(0.86, 0.9, kc) } };
     },
     // ---------------------------------------------------------------------------------------------- S004 INSERT 50 mm overhead
     // 28.42–31.67. Square to the 10° board through G2's glass; T03 registry for the S005 match cut; frame 0 the gloved fingertip
@@ -1309,7 +1508,11 @@ export default async function create(ctx) {
     // catchlight); 0.12–2.52 tilt down (+5° → −2°, ≈ 7°, see md) — the reflected moon rides up with the glass; moon shafts from
     // the south doorways over the lens; the three cases in a row; she walks in from screen-left toward the moonlight.
     S023(tl, u, T) {
-      reset({ moon: MOON_CH1, moonI: 1.7, hemi: 0.2, g3: true, bounds: { x0: -7, x1: 9, y0: 0, y1: 6, z0: -7, z1: 7.6 } });
+      // (integration) the moonlit gallery must READ: doorway pools on the teak (moon 12°, ruling 2), the pools' bounce on walls,
+      // pilasters and ceiling, the cases glowing softly (interiors dark velvet, not light boxes); she enters at 1.15 s and steps
+      // into the doorway-4 pool at '今' (86.06, tl 2.52) — the moon is her key
+      reset({ moon: MOON_CH1, moonI: 3.6, g3: true, g3glow: 0.4, bounds: { x0: -8, x1: 13, y0: 0, y1: 6, z0: -7, z1: 7.6 } });
+      nightGallery({ hemi: 0.55, bounce: 10, at: [0.5, -0.3, -4.2] });
       for (const s of shafts) s.object3D.visible = true; dust.object3D.visible = true;
       // review: 7.9 m from the glass (was 9.2): G3a/b/c land on x 0.25 / 0.50 / 0.75 at ~72 % of frame height as the end frame asks
       const pos = V(0, 1.5, 1.55);
@@ -1323,23 +1526,22 @@ export default async function create(ctx) {
         setups._s23moon = { p: hit.clone().addScaledVector(rd, 60), a: hit.clone().addScaledVector(rd, 9) };
         cam.place(camera, pos, aim(lerp(el0, el1, tilt)));
       }
+      // the moon in the glass: soft (≈ 70 %), inside a faint reflected doorway arch — not a bulb
       mirMoon.object3D.visible = true; mirMoon.object3D.position.copy(setups._s23moon.p); mirMoon.object3D.scale.setScalar(0.55 * 7);
+      mirMoon.material.uniforms.uInt.value = 3.2; mirMoon.material.uniforms.uHalo.value = 1.1;
       archGlow.visible = true; archGlow.position.copy(setups._s23moon.a); archGlow.scale.set(2.2, 3.4, 1); archGlow.lookAt(setups._s23moon.a.clone().add(V(0, 0, -10)));
-      // she walks in from screen-left at ~1.3 m/s, close in front of the cases: a silhouette against G3a's warm glow,
-      // heading for the moon pool
-      const wx = -5.0 + 1.3 * Math.max(0, tl - 1.75);
-      if (tl > 1.75) { walkAt(wx, -5.35, Math.PI / 2, wx + 10); R.lookAt(V(wx + 3, 1.4, -6.3), 0.3); }
-      // mirror pass across the three G3 panes (one plane)
-      for (const s of shafts) s.update(T, { intensity: 0.07 }); dust.material.uniforms.uInt.value = 0.12; dust.update(T, { camera, focus: 6, fstop: 8 });
-      // G3a's dimmed 3000 K glow spilling on her as she walks in toward it (she is the silhouette, the cases her key)
-      warmFill.visible = true; warmFill.color.set(0xffc890); warmFill.position.set(G3.xs[0] - 0.7, 1.4, G3F + 0.45); warmFill.intensity = 0.25; warmFill.distance = 2.6;
-      if (tl > 1.75) { const hp = V(wx, 1.2, -5.35); futTop.visible = true; futTop.color.set(0xc8d2db); futTop.position.copy(hp).add(V(2.2, 2.6, 3.4)); futTop.target.position.copy(hp); futTop.target.updateMatrixWorld();
-        futTop.intensity = 9.0 * smoothstep(1.75, 2.4, tl); futTop.angle = 0.11; futTop.penumbra = 0.8; futTop.distance = 0; }
-      // first bounce from the big moon pool (under the floor: lights walls, cases, figure — not the floor)
-      fillA.visible = true; fillA.color.set(0x8ea2c6); fillA.position.set(2.4, -0.15, -0.5); fillA.intensity = 2.2; fillA.distance = 11;
+      archGlow.material.color.setRGB(0.75, 0.85, 1.05);
+      // she walks in from screen-left at 1.3 m/s from 1.15 s, close in front of the cases; at 2.36 s she crosses into the pool
+      const wx = -3.95 + 1.3 * Math.max(0, tl - 1.15);
+      if (tl > 1.1) { walkAt(wx, -5.35, Math.PI / 2, wx + 10); R.lookAt(V(wx + 3, 1.4, -6.3), 0.3); }
+      for (const s of shafts) s.update(T, { intensity: 0.024 }); dust.material.uniforms.uInt.value = 0.22; dust.update(T, { camera, focus: 6, fstop: 8 });
+      // a narrow cool edge on her from the doorway side as she enters the pool (the moon itself is her key)
+      if (tl > 1.1) { const hp = V(wx, 1.2, -5.35); futTop.visible = true; futTop.color.set(0xc8d2db); futTop.position.copy(hp).add(V(2.2, 2.6, 3.4)); futTop.target.position.copy(hp); futTop.target.updateMatrixWorld();
+        futTop.intensity = 4.0 * smoothstep(2.2, 2.6, tl); futTop.angle = 0.11; futTop.penumbra = 0.8; futTop.distance = 0; }
       const mt = mirrorPass(V(0, 1.6, G3PZ), V(0, 0, 1), rtMir, { hide: [g3Grp] });
       const mb = blur(mt, rtMirB, 1.6);
-      for (const ov of ovG3) { ov.U.tMir.value = mb; ov.U.uMir.value = 0.3; ov.U.uMirFres.value = 0.3; }
+      for (const ov of ovG3) { ov.U.tMir.value = mb; ov.U.uMir.value = 0.3; ov.U.uMirFres.value = 0.3;
+        ov.U.uStreak.value = 0.05; ov.U.uStreakL.value.set(0.6, 0.8, 1.25, 0.07); ov.U.uStreakCol.value.setRGB(0.55, 0.62, 0.76); }
       return { dof: { focus: lerp(14, 8.3, tilt), fstop: 5.6 }, exposure: 1.75, bloom: { strength: 0.35, threshold: 0.85 } };
     },
 
@@ -1348,8 +1550,16 @@ export default async function create(ctx) {
     // virtual image plane 1.6 m behind the glass (parallax), strength ~10 % at entry → 40 % centred; centred at 0.4 / 1.49 /
     // 2.57 s (多少 / 借月色 / 流传). Her dim reflection travels with us (she walks just behind the dolly).
     S024(tl, u, T) {
-      reset({ moon: MOON_CH1, moonI: 1.7, hemi: 0.2, g3: true, bounds: { x0: -7, x1: 9, y0: 0, y1: 6, z0: -7, z1: 7.6 } });
-      const v = 2.2 / 1.085, cx = -2.2 + (tl - 0.4) * v, d = 3.55;
+      // (integration) CH1's set piece, the S066 preview: three luminous panes of three nights in a moonlit room (never black between
+      // them: the north wall + pilasters in the pools' bounce, a diagonal moon sheen on each pane, the real contents faint behind
+      // the era image); the dolly runs at 2.03 m/s to G3b on 借月色 (88.28) and eases out so G3c centres on 流传 (89.36) and holds
+      reset({ moon: MOON_CH1, moonI: 3.6, g3: true, g3glow: 0.4, lining: 0.35, bounds: { x0: -8, x1: 13, y0: 0, y1: 6, z0: -7, z1: 7.6 } });
+      const v = 2.2 / 1.085, T1 = 1.49, T2 = 2.57, d = 3.55;
+      let cx;
+      if (tl <= T1) cx = (tl - T1) * v;
+      else if (tl < T2) { const Tt = T2 - T1, s = (tl - T1) / Tt; cx = Tt * v * (s * s * s - 2 * s * s + s) + 2.2 * (-2 * s * s * s + 3 * s * s); }
+      else cx = 2.2 + 0.012 * ease.inOutSine(clamp((tl - T2) / 0.8));
+      nightGallery({ hemi: 0.5, bounce: 15, at: [cx, -0.3, -4.6], dist: 10 });
       const pos = V(cx, 1.47, G3PZ + d);
       cam.lens(camera, 40); cam.place(camera, pos, pos.clone().add(V(0, -0.02, -1)));
       camera.updateMatrixWorld();
@@ -1357,22 +1567,29 @@ export default async function create(ctx) {
       const fw = d * 36 / 40;
       for (let i = 0; i < 3; i++) {
         const sx = 0.5 + (G3.xs[i] - cx) / fw;                                  // pane centre on screen
-        const str = 0.1 + 0.32 * (1 - smoothstep(0.0, 0.5, Math.abs(sx - 0.5)));
+        const ov = ovG3[i];
+        // the moon's sheen on every pane, upper right → lower left, sliding a little with the dolly (it is a reflection)
+        ov.U.uStreak.value = 0.035; ov.U.uStreakL.value.set(0.707, -0.707, -0.2 + 0.05 * (cx - G3.xs[i]), 0.04); ov.U.uStreakCol.value.setRGB(0.55, 0.63, 0.8);
         if (sx < -0.45 || sx > 1.45) continue;
+        const str = 0.25 + 0.35 * (1 - smoothstep(0.0, 0.5, Math.abs(sx - 0.5)));
         const tex = nested(views[i][0], views[i][1], tl, u, T, rtEra[i]);
         const D = 1.6, z = d + D, c = cocPx(z, d + D, 40, 4);
         const img = blur(tex, rtBlur.pane[i], 0.8 + c * 0.3);
-        eraPlane(ovG3[i], img, str, V(G3.xs[i], 1.62, G3PZ - D), V(0.82, 0, 0), V(0, 1.23, 0));
-        ovG3[i].U.uEraFres.value = 0.2;
+        eraPlane(ov, img, str, V(G3.xs[i], i === 0 ? 1.5 : 1.62, G3PZ - D), V(0.82, 0, 0), V(0, 1.23, 0));
+        ov.U.uEraFres.value = 0.2;
       }
-      // her reflection: she walks behind the dolly at the same pace (true mirror, dim)
+      // her reflection: she walks behind the dolly at the same pace (true mirror): a dark silhouette with a silver edge from the
+      // doorways behind her (no front light — the reflection shows the side of her that faces the glass)
       const hx = cx + 0.35;
-      walkAt(hx, G3PZ + d + 1.25, Math.PI / 2, hx + 10, { stride: 1.25 }); R.lookAt(V(hx + 1, 1.4, G3PZ), 0.5);
+      if (tl < T2 + 0.2) walkAt(hx, G3PZ + d + 1.25, Math.PI / 2, hx + 10, { stride: 1.25 });
+      else { standAt(hx, G3PZ + d + 1.25, Math.PI * 0.9, { weight: 0.2 }); }
+      R.lookAt(V(hx + 1, 1.4, G3PZ), 0.5); R.root.updateMatrixWorld(true);
+      mirLight.position.copy(R.eye()).add(V(-0.3, 0.35, 0.8)); mirLight.color.set(0xb8c8e6); mirLight.distance = 2.4;
       // (review) deeper under the floor: at −0.15 m its specular glint in the glass rode the bottom of the frame like a hot pixel
       fillA.visible = true; fillA.color.set(0x8ea2c6); fillA.position.set(cx + 1.0, -1.1, -2.0); fillA.intensity = 1.25; fillA.distance = 7;
-      const mt = mirrorPass(V(0, 1.6, G3PZ), V(0, 0, 1), rtMir, { hide: [g3Grp], mirFill: 0.5 });
+      const mt = mirrorPass(V(0, 1.6, G3PZ), V(0, 0, 1), rtMir, { hide: [g3Grp], mirFill: 0.3, boost: [[mirLight, 1.2]] });
       const mb = blur(mt, rtMirB, Math.min(6, cocPx(2 * d + 1.25, d + 1.6, 40, 4) * 0.375 + 1.0));
-      for (const ov of ovG3) { ov.U.tMir.value = mb; ov.U.uMir.value = 0.18; ov.U.uMirFres.value = 0.2; }
+      for (const ov of ovG3) { ov.U.tMir.value = mb; ov.U.uMir.value = 0.2; ov.U.uMirFres.value = 0.2; }
       return { dof: { focus: d + 1.6, fstop: 4 }, exposure: 1.6, bloom: { strength: 0.32, threshold: 0.85 } };
     },
     // ---------------------------------------------------------------------------------------------- S025 MCU 75 mm
@@ -1380,7 +1597,10 @@ export default async function create(ctx) {
     // wife's face by the candle (old_home view_home_candle) never resolves. Slow push with a 25° arc right: over the right
     // shoulder → near right profile. Focus hunts three times between her reflection depth and the home depth.
     S025(tl, u, T) {
-      reset({ moon: MOON_CH1, moonI: 0.55, hemi: 0.22, g3: true, bounds: { x0: -3, x1: 3, y0: 0, y1: 4, z0: -7, z1: 7.6 } });
+      // (integration) the gallery night level (mean ~7 %), her profile low-key: the moon from behind her (SSE) edges her ear, cheek
+      // and hair, the case light falls on the mount (not on her eye), her reflection stays darker than the candle
+      reset({ moon: MOON_CH1, moonI: 3.0, g3: true, g3glow: 0.4, lining: 0.35, bounds: { x0: -3, x1: 9, y0: 0, y1: 4, z0: -7, z1: 7.6 } });
+      nightGallery({ hemi: 0.45, bounce: 7, at: [0.8, -0.3, -4.0], dist: 10 });
       g3[1].glow.visible = false;
       setRShadow(false);                                                       // (her head's moon shadow printed a black disc on G3b's back panel)                                              // the era image sits over dark velvet (no light-box panel)
       // she stops close in front of G3b and leans in to ~15 cm from the glass: her own reflection lands on the empty mount
@@ -1414,21 +1634,21 @@ export default async function create(ctx) {
       const dRef = cam.distTo(camera, V(eye.x, eye.y, 2 * G3PZ - eye.z));
       const hunt = 0.5 + 0.5 * Math.sin((tl - 0.25) * 2.4);              // 0 = her reflection, 1 = the home depth
       const focus = lerp(dRef, dHome, 0.1 + 0.75 * hunt) - 0.35 * Math.exp(-Math.pow((tl - 2.62) / 0.35, 2));
-      const W = 0.36 * dHome / 4.4; ovG3[1].U.uEraSoft.value = 0.3;
+      const W = 1.6 * 0.36 * dHome / 4.4; ovG3[1].U.uEraSoft.value = 0.3;   // (integration) ×1.6: her never-resolving face oval ~13 % of frame height
       eraPlane(ovG3[1], blur(tex, rtBlur[384], Math.max(8, Math.min(14, cocPx(dHome, focus, 75, 2.8) * 0.6))), 0.55, camera.position.clone().addScaledVector(rc, dHome), cR.multiplyScalar(W), cU.multiplyScalar(W * 1.5));
       ovG3[1].U.uEraFres.value = 0.1;
       // moonlight edge on her ear and collar (the doorways behind her), warm teak bounce from below
       // (review) from behind her, the doorway side (SSW): an edge on ear, hair and collar — it was a cold front fill that blew the
       // profile out into a bright mask
-      fillA.visible = true; fillA.color.set(0xb4c0d2); fillA.position.copy(eye).add(V(-0.4, 0.45, 1.1)); fillA.intensity = 0.38; fillA.distance = 3.0;
+      fillA.visible = true; fillA.color.set(0xb4c0d2); fillA.position.copy(eye).add(V(-0.55, 0.4, 0.9)); fillA.intensity = 0.16; fillA.distance = 3.0;   // back rim from the SSW doorway, ~1 stop under
       warmFill.visible = true; warmFill.color.set(0xffc690); warmFill.position.copy(eye).add(V(0.12, -0.35, 0.1)); warmFill.intensity = 0.05; warmFill.distance = 0.9;   // teak bounce under her chin
       g3Spot.visible = true; g3Spot.position.set(G3.xs[1], G3.top - 0.05, G3.back + 0.45); g3Spot.target.position.set(G3.xs[1], DECK3, G3.back + 0.3); g3Spot.target.updateMatrixWorld(); g3Spot.intensity = 0.35; g3Spot.angle = 0.3;
       // the case's dimmed 3000 K glow spilling out onto her face front — what her reflection on the mount is made of
-      inspLight.visible = true; inspLight.color.set(0xffc890); inspLight.position.copy(bracketPos).add(V(0.05, 0.08, 0.15)); inspLight.target.position.copy(eye); inspLight.target.updateMatrixWorld();
+      inspLight.visible = true; inspLight.color.set(0xffc890); inspLight.position.copy(bracketPos).add(g3[1].contents.position).add(V(0.05, 0.3, 0.2)); inspLight.target.position.copy(bracketPos).add(g3[1].contents.position); inspLight.target.updateMatrixWorld();
       inspLight.intensity = 0.14; inspLight.angle = 0.35; inspLight.penumbra = 0.8; inspLight.distance = 1.4;
       // (review) the lights are set BEFORE the mirror pass — it used to render with them still off, so her reflection was black
       const mt = mirrorPass(V(0, 1.6, G3PZ), V(0, 0, 1), rtMir, { hide: [g3Grp], mirFill: 0.2, boost: [[inspLight, 0.26]] });
-      ovG3[1].U.tMir.value = blur(mt, rtMirB, Math.min(9, Math.max(3.5, cocPx(dRef, focus, 75, 2.8) * 0.375 + 0.5))); ovG3[1].U.uMir.value = 0.12;   // darker than the candle (continuity note) ovG3[1].U.uMirFres.value = 0.3;
+      ovG3[1].U.tMir.value = blur(mt, rtMirB, Math.min(9, Math.max(3.5, cocPx(dRef, focus, 75, 2.8) * 0.375 + 0.5))); ovG3[1].U.uMir.value = 0.06; ovG3[1].U.uMirFres.value = 0.3;   // darker than the candle (continuity note)
       DBGP.eye = eye; DBGP.mount = bracketPos.clone().add(g3[1].contents.position); DBGP.refl = V(eye.x, eye.y, 2 * G3PZ - eye.z);
       return { dof: { focus, fstop: 2.8, maxCoc: 1.4 }, exposure: 1.45, bloom: { strength: 0.3, threshold: 0.86 } };
     },
@@ -1616,6 +1836,7 @@ export default async function create(ctx) {
       if (OFF.has('moonshadow')) moon.castShadow = false; else moon.castShadow = true;
       if (OFF.has('shafts')) for (const s of [...shafts, ...shaftsI]) s.object3D.visible = false;
       if (OFF.has('fig')) { R.root.visible = false; guard.root.visible = false; }
+      if (OFF.has('hand')) handR.root.visible = false;
       if (OFF.has('room')) room.visible = false; else room.visible = true;
       if (OFF.has('g3')) g3Grp.visible = false; else g3Grp.visible = true;
       if (OFF.has('g2')) g2.visible = false; else g2.visible = true;

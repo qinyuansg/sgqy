@@ -167,22 +167,9 @@ export default async function create(ctx) {
     night: envTexture(ctx.renderer, 'moon_exterior', { sky: SKY18W }),
   };
   const fog = new THREE.FogExp2(0x4a5470, 0.0011); scene.fog = fog;
-  // ---- film grain, in-scene (engine/post.js grain hash degenerates into horizontal stripes at frame numbers > ~1500,
-  // ISSUES.md [sea_deck]; all three shots sit at f1693+). Multiplicative on the linear HDR frame, integer hash of the pixel
-  // + a wrapped frame seed; the engine grain is set to 0 in every set-up.
-  const grainMat = new THREE.ShaderMaterial({
-    uniforms: { uSeed: { value: 0 }, uAmt: { value: 0.15 } },
-    vertexShader: /* glsl */ `void main(){ gl_Position = vec4(position.xy, 0.0, 1.0); }`,
-    fragmentShader: /* glsl */ `uniform float uSeed, uAmt;
-      uint hh(uint x){ x ^= x >> 16; x *= 0x7feb352du; x ^= x >> 15; x *= 0x846ca68bu; x ^= x >> 16; return x; }
-      void main(){ uvec2 p = uvec2(gl_FragCoord.xy); uint h1 = hh(p.x + hh(p.y + hh(uint(uSeed) + 7u))); uint h2 = hh(h1 ^ 0x9e3779b9u);
-        float g = float(h1 & 0xffffu) / 65535.0 + float(h2 & 0xffffu) / 65535.0 - 1.0;
-        gl_FragColor = vec4(vec3(g * uAmt), 1.0); }`,
-    transparent: true, depthTest: false, depthWrite: false, fog: false,
-    blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.DstColorFactor, blendDst: THREE.OneFactor,
-  });
-  const grainQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), grainMat); grainQuad.frustumCulled = false; grainQuad.renderOrder = 1e9; scene.add(grainQuad);
-  const setGrain = (T, amt) => { grainMat.uniforms.uSeed.value = Math.round(T * 24) % 977; grainMat.uniforms.uAmt.value = amt; };
+  // film grain: the engine's integer-hash grain (engine/post.js), per-era amounts returned through post (integration pass;
+  // the old in-scene multiplicative grain quad is gone): E1 navigator 0.042 · E2 map office 0.040 · E3 migrant 0.044 ·
+  // E4 chapel era 0.038 · today (S018, S080) modern 0.035.
 
   // ================================================================ textures & materials
   const T = {
@@ -1330,8 +1317,7 @@ export default async function create(ctx) {
       dbgLog('S046 E' + era);
       // one dusk grade; per-era offsets only in practicals' warmth and texture (CT_BASE / CT_MIG softness / E4 desaturation)
       const per = [null, { temp: 0.06, saturation: 0.9 }, { temp: -0.02, saturation: 0.88 }, { temp: 0.02, saturation: 0.8, contrast: 0.98, gamma: [1.02, 1.02, 1.0] }, { temp: 0.0, saturation: 0.76 }][era];
-      setGrain(T0, [0, 0.15, 0.16, 0.18, 0.165][era]);   // bible grain 1.15–1.25 per era
-      return { dof: null, exposure: 1.45, contrast: 1.03, vignette: 0.36, bloom: { strength: 0.42, radius: 0.55, threshold: 0.78 }, ...per, grain: 0 };
+      return { dof: null, exposure: 1.45, contrast: 1.03, vignette: 0.36, bloom: { strength: 0.42, radius: 0.55, threshold: 0.78 }, ...per, grain: [0, 0.042, 0.040, 0.044, 0.038][era] };
     },
     // ---------------------------------------------------------------- S080 — the same locked frame today at dawn (E5)
     // Cut in on the tail swell (246.06). Pre-sunrise: no direct sun, the sky is the light (blue-grey → soft peach); 248.10
@@ -1362,8 +1348,7 @@ export default async function create(ctx) {
       seaFar.setLamps(FISH.map((p) => ({ position: setRoot.localToWorld(p.clone()), color: 0xE2A458, intensity: 26 })));
       sea.object3D.visible = false; seaFar.object3D.visible = true; seaFar.update(T0, camera); seaFar.uniforms.uNdc.value.z = -0.5;   // water: only between the horizon and screen y 0.75
       dbgLog('S080');
-      setGrain(T0, 0.13);
-      return { dof: null, exposure: lerp(1.32, 1.46, up), temp: lerp(0.02, 0.1, up), saturation: 0.92, contrast: 1.0, vignette: 0.32, grain: 0, bloom: { strength: 0.42, radius: 0.62, threshold: 0.76 } };
+      return { dof: null, exposure: lerp(1.32, 1.46, up), temp: lerp(0.02, 0.1, up), saturation: 0.92, contrast: 1.0, vignette: 0.32, grain: 0.035, bloom: { strength: 0.42, radius: 0.62, threshold: 0.76 } };
     },
     // ---------------------------------------------------------------- S018 — lab window → heavy-lift rise + pull-back → veiled moon
     S018(tl, u, T0) {
@@ -1415,21 +1400,20 @@ export default async function create(ctx) {
       { const q = setRoot.localToWorld(V3(P.x, 0, QUAY18)).project(camera); SEA18.object3D.visible = (1 - q.y) / 2 < 1.004; }   // the coping edge has left the frame bottom: no water in shot
       SEA18.update(T0, camera);
       dbgLog('S018');
-      setGrain(T0, 0.13);
-      return { dof: null, exposure: 1.55, temp: -0.12, saturation: 0.9, contrast: 1.05, vignette: 0.34, grain: 0, bloom: { strength: 0.5, radius: 0.55, threshold: 0.72 } };
+      return { dof: null, exposure: 1.55, temp: -0.12, saturation: 0.9, contrast: 1.05, vignette: 0.34, grain: 0.035, bloom: { strength: 0.5, radius: 0.55, threshold: 0.72 } };
     },
   };
   setups.default = setups.S046;
 
   return {
     scene, camera,
-    post: { exposure: 1.4, bloom: { strength: 0.4, radius: 0.55, threshold: 0.8 }, vignette: 0.34, grain: 0 },
+    post: { exposure: 1.4, bloom: { strength: 0.4, radius: 0.55, threshold: 0.8 }, vignette: 0.34, grain: 0.035 },
     setShot(shot, tl, u, T0) {
       const r = (setups[shot.id] || setups.default)(tl, u, T0, shot);
       const hx = (typeof window !== 'undefined' && window.__HX) || '';      // profiling switch (tools only): hide components
       if (hx) {
         const H = (k, o) => { if (hx.includes(k) && o) o.visible = false; };
-        H('sea', sea.object3D); H('sea', seaFar.object3D); H('sky', sky.object3D); H('city', cityG); H('ch', chG); H('grain', grainQuad); H('ships', shipsE[1]); H('ships', shipsE[2]); H('ships', shipsE[3]); H('ships', shipsE[4]); H('ships', shipsE[5]);
+        H('sea', sea.object3D); H('sea', seaFar.object3D); H('sky', sky.object3D); H('city', cityG); H('ch', chG); H('ships', shipsE[1]); H('ships', shipsE[2]); H('ships', shipsE[3]); H('ships', shipsE[4]); H('ships', shipsE[5]);
         if (hx.includes('figs')) { for (const f of Object.values(figs)) f.root.visible = false; mig.root.visible = child.root.visible = rest.root.visible = false; for (const c of Object.values(crowds)) c.visible = false; }
         if (hx.includes('shadow')) key.castShadow = false;
         if (hx.includes('terrain')) terrain.visible = false;

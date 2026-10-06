@@ -18,7 +18,6 @@ import { Figure } from '../lib/figure.js';
 const Figure_blend = (a, b, t) => Figure.blend(a, b, t);
 import { handPose, blendHandChannels } from '../lib/hand.js';
 import { rng, noise1, fbm1, clamp, lerp, smoothstep, ease } from '../engine/util.js';
-import { LOWRES_LAYER } from '../engine/post.js';
 
 const DBG = !!(typeof location !== 'undefined' && new URLSearchParams(location.search).get('chdbg'));
 const OFF = new Set(((typeof location !== 'undefined' && new URLSearchParams(location.search).get('chx')) || '').split(',').filter(Boolean)); // perf A/B switches
@@ -269,37 +268,8 @@ export default async function create(ctx) {
   const std = (o) => new THREE.MeshStandardMaterial({ roughness: 0.8, metalness: 0, ...o });
   const add = (geo, mat, cast = true, recv = true, parent = scene) => { const m = new THREE.Mesh(geo, mat); m.castShadow = cast; m.receiveShadow = recv; parent.add(m); return m; };
 
-  // ---------------------------------------------------------------- film grain, module-side (review fix)
-  // engine/post.js hashes `uv*res + frame*17.13`: at the chapel's frame numbers (f4190–f5273) float32 has no fractional bits
-  // left and the engine grain prints a regular screen-door / vertical-stripe pattern over every frame (lib/ISSUES.md
-  // [sea_deck], [pier_waiting review]). Engine grain = 0; an equivalent grain is drawn in the engine's half-res additive layer
-  // (merged after the DOF, so bokeh keeps its grain), luminance-weighted from the main scene target, integer pixel hash +
-  // wrapped frame seed. Same recipe as pier_waiting.
-  const grainSrc = { tex: null };
-  const grainMat = new THREE.ShaderMaterial({
-    uniforms: { tScene: { value: null }, uSeed: { value: 0 }, uAmt: { value: 0.0 }, uExp: { value: 1 } },
-    vertexShader: /* glsl */ `varying vec2 vUv; void main(){ vUv = position.xy * 0.5 + 0.5; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
-    fragmentShader: /* glsl */ `varying vec2 vUv; uniform sampler2D tScene; uniform float uSeed, uAmt, uExp;
-      uint hh(uint x){ x ^= x >> 16; x *= 0x7feb352du; x ^= x >> 15; x *= 0x846ca68bu; x ^= x >> 16; return x; }
-      void main(){
-        uvec2 p = uvec2(gl_FragCoord.xy); uint h1 = hh(p.x + hh(p.y + hh(uint(uSeed) + 7u))); uint h2 = hh(h1 ^ 0x9e3779b9u);
-        float g = float(h1 & 0xffffu) / 65535.0 + float(h2 & 0xffffu) / 65535.0 - 1.0;
-        vec3 c = texture2D(tScene, vUv).rgb * uExp;
-        float L = max(dot(c, vec3(0.2126, 0.7152, 0.0722)), 0.0);
-        float w = pow(L + 0.0015, 0.55) * (1.0 - 0.5 * smoothstep(0.6, 2.5, L));
-        gl_FragColor = vec4(vec3(g * uAmt * w), 1.0);
-      }`,
-    transparent: true, depthTest: false, depthWrite: false, fog: false,
-    blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor,
-  });
-  const grainQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), grainMat);
-  grainQuad.frustumCulled = false; grainQuad.renderOrder = 1e9; grainQuad.layers.set(LOWRES_LAYER);
-  grainQuad.onBeforeRender = () => { grainMat.uniforms.tScene.value = grainSrc.tex; };
-  const grainProbe = new THREE.Mesh(new THREE.PlaneGeometry(1e-4, 1e-4), new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false, depthTest: false }));
-  grainProbe.frustumCulled = false; grainProbe.renderOrder = -1e9;
-  grainProbe.onBeforeRender = (r) => { const rt = r.getRenderTarget(); grainSrc.tex = rt ? rt.texture : null; };
-  scene.add(grainQuad, grainProbe);
-  const GRAIN = 0.036;                              // CT_CHAPEL grain 1.1 (bible §2.4), engine display-space amount
+  // film grain: the engine's integer-hash grain (engine/post.js) at the CT_CHAPEL amount (post.grain 0.038); the old
+  // module-side half-res grain quad (a workaround for the float-hash stripes) is gone (integration pass).
 
   // ================================================================ materials
   const lam = (m, color) => new THREE.MeshLambertMaterial({ map: m.map, normalMap: m.normalMap, normalScale: m.normalScale, color: color ?? m.color, side: m.side });
@@ -1171,13 +1141,6 @@ export default async function create(ctx) {
         console.warn('DBG ray', hits.map((h) => `${h.object.name || h.object.type}:${h.object.material && h.object.material.type} d=${h.distance.toFixed(2)} p=${h.point.toArray().map((v) => v.toFixed(2)).join(',')} n=${h.face && h.face.normal.toArray().map((v) => v.toFixed(2)).join(',')}`).join(' | ')); }
       if (OFF.has('nodof')) r.dof = null;
       if (LOOK0.post && LOOK0.post[shot.id]) Object.assign(r, LOOK0.post[shot.id]);   // look-dev overrides (?chlook=)
-      { // module grain (see grainMat): replaces the engine grain; nested views (no post chain) get none
-        const g = shot.nested || OFF.has('nograin') ? 0 : (r.grain ?? GRAIN);
-        grainQuad.visible = grainProbe.visible = g > 0;
-        grainMat.uniforms.uAmt.value = g; grainMat.uniforms.uExp.value = r.exposure ?? 1;
-        grainMat.uniforms.uSeed.value = Math.round(T * 24) % 977;
-        r.grain = 0;
-      }
       const d = r.dof;
       dustWide.update(T, { camera, focus: d ? d.focus : null, fstop: d ? d.fstop : 8 });
       dustNear.update(T, { camera, focus: d ? d.focus : null, fstop: d ? d.fstop : 8 });
