@@ -15,8 +15,8 @@ import * as FX from '../lib/fx.js';
 import * as TX from '../lib/textures.js';
 import { applyEnv } from '../lib/env.js';
 import { loadCharacter, loadCharacterHand, loadCrowd } from '../lib/cast.js';
-import { LOWRES_LAYER } from '../engine/post.js';
 import { simulateCoat } from './_sea_deck_coat.js';
+import { dressNavigator, buildCuffFlap, smoothNailFolds } from './ship_cabin.js';   // (integration) shared NAVIGATOR dressing / turned-back cuff
 
 // ------------------------------------------------------------------------------------------ palette (bible.json)
 const P = {
@@ -394,7 +394,7 @@ function coatMaterial() {
         if (gl_FrontFacing) diffuseColor.rgb = COAT_LINING;`);  // lining: the side that faced him (it lands on the boy)
   };
   const dbgLining = new URLSearchParams(location.search).get('sdcoat') === 'dbg';
-  m.defines = { COAT_LINING: dbgLining ? 'vec3(0.0, 1.0, 0.0)' : 'mix(diffuseColor.rgb, vec3(0.5, 0.46, 0.38), 0.7)' };
+  m.defines = { COAT_LINING: dbgLining ? 'vec3(0.0, 1.0, 0.0)' : 'mix(diffuseColor.rgb, vec3(0.3, 0.27, 0.22), 0.7)' };   // (integration) a mid-tone lining: the held coat reads as cloth, not a pale board
   m.customProgramCacheKey = () => 'coat_cloth2' + (dbgLining ? 'dbg' : '');
   return { material: m };
 }
@@ -442,37 +442,9 @@ export default async function create(ctx) {
   camera.userData.H = ctx.H;
   scene.fog = new THREE.FogExp2(0x1a2438, 0.0);
 
-  // ---- film grain, module-side (review). engine/post.js hashes `uv*res + frame*17.13`: past f ≈ 1000 float32 runs out of
-  // fractional bits and its grain turns into regular stripes (S008 sky, S075's right edge; lib/ISSUES.md [sea_deck]). The
-  // engine grain is set to 0 and an equivalent grain is drawn in the engine's half-res additive layer instead (merged AFTER
-  // the depth of field, so bokeh keeps its grain; half-float, signed values), weighted by the luminance of the main scene
-  // target (captured by a tiny probe mesh in the main pass), integer hash of the pixel + a wrapped frame seed. Same method
-  // as pier_waiting's review fix.
-  const grainSrc = { tex: null };
-  const grainMat = new THREE.ShaderMaterial({
-    uniforms: { tScene: { value: null }, uSeed: { value: 0 }, uAmt: { value: 0.0 }, uExp: { value: 1 } },
-    vertexShader: /* glsl */ `varying vec2 vUv; void main(){ vUv = position.xy * 0.5 + 0.5; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
-    fragmentShader: /* glsl */ `varying vec2 vUv; uniform sampler2D tScene; uniform float uSeed, uAmt, uExp;
-      uint hh(uint x){ x ^= x >> 16; x *= 0x7feb352du; x ^= x >> 15; x *= 0x846ca68bu; x ^= x >> 16; return x; }
-      void main(){
-        uvec2 p = uvec2(gl_FragCoord.xy); uint h1 = hh(p.x + hh(p.y + hh(uint(uSeed) + 7u))); uint h2 = hh(h1 ^ 0x9e3779b9u);
-        float g = float(h1 & 0xffffu) / 65535.0 + float(h2 & 0xffffu) / 65535.0 - 1.0;
-        vec3 c = texture2D(tScene, vUv).rgb * uExp;
-        float L = max(dot(c, vec3(0.2126, 0.7152, 0.0722)), 0.0);
-        float w = pow(L + 0.0015, 0.55) * (1.0 - 0.5 * smoothstep(0.6, 2.5, L));
-        gl_FragColor = vec4(vec3(g * uAmt * w), 1.0);
-      }`,
-    transparent: true, depthTest: false, depthWrite: false, fog: false,
-    blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor,
-  });
-  const grainQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), grainMat);
-  grainQuad.frustumCulled = false; grainQuad.renderOrder = 1e9; grainQuad.layers.set(LOWRES_LAYER);
-  grainQuad.onBeforeRender = () => { grainMat.uniforms.tScene.value = grainSrc.tex; };
-  const grainProbe = new THREE.Mesh(new THREE.PlaneGeometry(1e-4, 1e-4), new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false, depthTest: false }));
-  grainProbe.frustumCulled = false; grainProbe.renderOrder = -1e9;
-  grainProbe.onBeforeRender = (r) => { const rt = r.getRenderTarget(); grainSrc.tex = rt ? rt.texture : null; };
-  scene.add(grainQuad, grainProbe);
-  const GRAIN = 0.042;                                       // CT_NAV grain 1.15 (relative), as the engine display-space amount
+  // film grain: the engine's integer-hash grain (engine/post.js) through post only — CT_NAV 0.042 (integration pass: the
+  // module-side half-res grain quad of the review is gone; nested views get no grain from the engine)
+  const GRAIN = 0.042;
 
   // ---- sky, sea (hero + cheap background instance), coasts, shore lights, cumulus cards
   const sky = createSky({ preset: 'night' });
@@ -549,6 +521,8 @@ export default async function create(ctx) {
   const comp = await loadCharacter('COMPANION', { lod: 'mid' });         // curled asleep (S067, < 1/3 frame height)
   const handR = await loadCharacterHand('NAVIGATOR', 'R', { cuffTurned: true, lod: 'close' });
   const handL = await loadCharacterHand('NAVIGATOR', 'L', { lod: 'close' });
+  // (integration) wrapped head-cloth over skull + ears, short beard, weathered skin (shared with ship_cabin)
+  if (!OFF.has('dress')) { dressNavigator(navC, { ear: 0.85 }); dressNavigator(navJ, { ear: 0.85 }); }
   for (const f of [navC, navJ]) ship.add(f.root);
   scene.add(handR.root, handL.root); // (review) world-space placeWrist (S045 is solved in world space)
   // (review) close-up hands as ship_cabin S011: the salt crust reads as fine crystals in the creases (not rust-brown
@@ -556,21 +530,24 @@ export default async function create(ctx) {
   for (const h of [handR, handL]) {
     const mat = h.skinMat, U = mat && mat.userData.fzUniforms;
     if (!U) continue;
-    if (U.uSalt) U.uSalt.value = 0.45;
-    if (U.uNail) U.uNail.value.set(P.P19).lerp(new THREE.Color(0x7a6858), 0.45);
+    if (U.uSalt) U.uSalt.value = 0.32;                    // (integration) fine glints, not warts
+    mat.color.set(0x8f6346); if ('sheen' in mat) mat.sheen = Math.min(mat.sheen ?? 0, 0.12);
+    if (U.uDetail) U.uDetail.value = 0.45;
+    if (U.uNail) U.uNail.value.set(0x9a7056).lerp(new THREE.Color(0x8a7462), 0.3);
+    smoothNailFolds(h);
     const ob = mat.onBeforeCompile;
     if (ob && !mat.userData.sdNail) {
       mat.userData.sdNail = true;
       mat.onBeforeCompile = (sh, r) => { ob(sh, r); sh.fragmentShader = sh.fragmentShader
         .replace('mix(uNail, vec3(0.97, 0.92, 0.88), 0.55)', 'mix(uNail, vec3(0.97, 0.92, 0.88), 0.15)')
-        .replace('vec3(0.94, 0.9, 0.86), smoothstep(0.8, 0.93, nt)', 'uNail * vec3(1.1, 1.05, 1.0), smoothstep(0.8, 0.93, nt)'); };
+        .replace('vec3(0.94, 0.9, 0.86), smoothstep(0.8, 0.93, nt)', 'uNail * vec3(1.06, 1.03, 1.0), smoothstep(0.8, 0.93, nt)'); };
       mat.customProgramCacheKey = () => 'skin2_deck_nail'; mat.needsUpdate = true;
     }
   }
-  for (const h of [handR, handL]) for (const m of h.cuffMats) { m.color.multiplyScalar(0.62); if ('sheen' in m) m.sheen = Math.min(m.sheen, 0.25); } // faded indigo #2E3F5C under a hard moon (S011's cuff is lit by a 1950 K lamp)
+  for (const h of [handR, handL]) for (const m of h.cuffMats) { m.color.multiplyScalar(0.62).lerp(new THREE.Color(0x2a2e36), 0.5); if ('sheen' in m) m.sheen = Math.min(m.sheen, 0.25); } // faded indigo #2E3F5C under a hard moon (S011's cuff is lit by a 1950 K lamp)
   // (review) jacket sleeves continuing the close-up cuffs up the forearms (same cloth / build as ship_cabin S011) and the
   // padded coat sleeve pushed up and bunched below the elbow (S045: "the wide sleeve of his night coat pushed up")
-  const mJSleeve = TX.mat('indigo', { repeat: [6, 3.5], tex: { salt: 0.2, seed: 12 }, side: THREE.DoubleSide, color: 0x7d8597 });
+  const mJSleeve = TX.mat('indigo', { repeat: [6, 3.5], tex: { salt: 0.2, seed: 12 }, side: THREE.DoubleSide, color: 0x4a5160 });
   const sleeveFor = (h, len, r0, r1, y0, seed) => {
     const g = new THREE.CylinderGeometry(r1, r0, len, 40, 20, true); g.translate(0, len / 2 + y0, 0);
     const pp = g.attributes.position, sr = util.rng(seed * 31 + 7), ph = [sr() * 6.3, sr() * 6.3, sr() * 6.3];
@@ -583,6 +560,8 @@ export default async function create(ctx) {
     const m = new THREE.Mesh(g, mJSleeve); m.castShadow = m.receiveShadow = true; m.scale.set(0.86, 1, 1); h.byName.forearm.add(m); return m;
   };
   sleeveFor(handR, 0.2, 0.051, 0.057, 0.11, 1); sleeveFor(handL, 0.2, 0.05, 0.056, 0.11, 2);
+  // (integration) the right cuff is the turned-back flap with the patch on its INSIDE (ship_cabin's buildCuffFlap: S011 = S045)
+  const flapD = buildCuffFlap(handR, { seed: 808, tint: 0x434e66 }); flapD.hideLib(true);
   const helm = await loadCrowd('navigator', [{ pos: [XS + 3.1, POOP_Y, -0.35], rotY: Math.PI / 2 + 0.3, pose: 'stand', seed: 2 }], { castShadow: false });
   ship.add(helm);
   // S045: the sleeves are "pushed up" — the figure's sleeve ends (coat, jacket, forearm) are discarded in an 11 cm capsule around
@@ -718,22 +697,29 @@ export default async function create(ctx) {
     S67.nav = V3(chest.x, POOP_Y, chest.z);
     S67.boyC = atDepth(0.69, 0.78, 5.0);                     // same depth as the navigator: the throw runs along his body axis
     S67.flame = atDepth(0.38, 0.36, 5.95);
+    // (integration) he kneels beside the boy, a little behind his line and left of his knees (the coat goes left → right)
+    { const k = atDepth(+(Q.get('s67kx') || 0.47), 0.6, +(Q.get('s67kd') || 5.45)); S67.navK = V3(k.x, POOP_Y, k.z); }
     S67.hook = S67.flame.clone().add(V3(0, 0.32, 0));
     S67.navChest = chest;
   }
   // the boy: curled asleep on his LEFT side, rolled a little back (chest toward the lens), head screen-right, knees drawn
   // up, the lower arm folded under his cheek, the upper hand at his chin (it pulls the collar); shivering until the coat lands
+  const LEGK = +(Q.get('sdlegk') || 1);
   const boyRig = new THREE.Group(); ship.add(boyRig); boyRig.add(comp.root);
   boyRig.rotation.y = Math.atan2(-S67.F.x, -S67.F.z);           // rig +Z → toward the lens, rig +X → screen-right
-  comp.root.rotation.set(-0.55, 0, -Math.PI / 2);                 // rolled ~30° back: the drawn-up knees read from the low lens
+  // (integration) curled on his left side, his front turned up toward the high side of the lens (rolled ~50° back) and turned
+  // a little toward frame left, so the drawn-up knees, the bowed head and the hands tucked under the chin read as a curl in the
+  // frame (from the low lens a side-on curl foreshortened into "a plank")
+  const BR = (Q.get('s67br') || '-0.85,0.0,-1.5708').split(',').map(Number);
+  comp.root.rotation.set(BR[0], BR[1], BR[2]);
   const boyPose = (T, pull = 0, shiver = 1) => {
     comp.pose({
-      'hips.x': 0.05, 'spine.x': 0.22, 'chest.x': 0.2, 'neck.x': 0.3, 'head.x': 0.12, 'head.z': -0.06,
-      'legL.upper.x': 1.6, 'legR.upper.x': 1.4, 'legL.lower.x': 2.0, 'legR.lower.x': 1.8, 'legL.upper.z': 0.04, 'legR.upper.z': -0.06,
-      'legL.foot.x': 0.4, 'legR.foot.x': 0.3,
-      'armL.upper.x': 1.4, 'armL.upper.z': 0.02, 'armL.upper.y': 0.1, 'armL.lower.x': 2.0, 'armL.hand.x': 0.25, 'armL.clav.z': 0.05,
-      'armR.upper.x': 0.95 + 0.22 * pull, 'armR.upper.y': 0.35, 'armR.upper.z': 0.04, 'armR.lower.x': 2.05 + 0.18 * pull, 'armR.hand.x': 0.35, 'armR.clav.z': 0.1,
-      handL: ['relaxed', { curl: 0.8 }], handR: ['relaxed', { curl: 0.92 }],
+      'hips.x': 0.12, 'spine.x': 0.34, 'chest.x': 0.26, 'neck.x': 0.36, 'head.x': 0.3, 'head.z': -0.08, 'head.y': 0.1,
+      'legL.upper.x': 1.75 * LEGK, 'legR.upper.x': 1.55 * LEGK, 'legL.lower.x': 2.25, 'legR.lower.x': 2.05, 'legL.upper.z': 0.06, 'legR.upper.z': -0.04, 'legR.upper.y': 0.1,
+      'legL.foot.x': 0.45, 'legR.foot.x': 0.35,
+      'armL.upper.x': 1.25, 'armL.upper.z': 0.05, 'armL.upper.y': 0.25, 'armL.lower.x': 2.35, 'armL.hand.x': 0.4, 'armL.clav.z': 0.05,
+      'armR.upper.x': 1.05 + 0.18 * pull, 'armR.upper.y': 0.42, 'armR.upper.z': 0.04, 'armR.lower.x': 2.3 + 0.12 * pull, 'armR.hand.x': 0.45, 'armR.clav.z': 0.1,
+      handL: ['relaxed', { curl: 0.85 }], handR: ['relaxed', { curl: 0.95 }],
     });
     comp.tremble(T, shiver);
     comp.breathe(T, 0.8, 0.28);
@@ -785,49 +771,43 @@ export default async function create(ctx) {
       { a: B('legL.upper'), b: B('legL.lower'), r: 0.085 }, { a: B('legL.lower'), b: B('legL.foot'), r: 0.06 },
       { a: B('legR.upper'), b: B('legR.lower'), r: 0.085 }, { a: B('legR.lower'), b: B('legR.foot'), r: 0.06 },
     ].map((c) => ({ a: A(c.a), b: A(c.b), r: c.r }));
-    // the navigator's legs and torso while he holds the coat (it hangs in front of him before the throw)
-    const N0 = S67.nav.clone().addScaledVector(navF, 0.08);
-    caps.push({ a: A(N0.clone().add(V3(0, 0.95, 0))), b: A(N0.clone().add(V3(0, 1.45, 0))), r: 0.17 });
-    for (const sg of [-1, 1]) caps.push({ a: A(N0.clone().addScaledVector(navL, 0.1 * sg).add(V3(0, 0.1, 0))), b: A(N0.clone().addScaledVector(navL, 0.1 * sg).add(V3(0, 0.9, 0))), r: 0.09 });
+    // (integration) the coat is LAID, not thrown: he kneels on his right knee beside the boy, holds the coat by the collar in both
+    // hands all the way, lets it open in the wind over the boy's hips and lowers the collar onto his top shoulder (214.25 →
+    // te 0.52), then lets go; the body and hem settle over him from shoulder to hip, the folds running left → right.
+    const NK = S67.navK, nkF = S67.boyC.clone().sub(NK).setY(0).normalize(), nkL = V3(nkF.z, 0, -nkF.x);
+    S67.nkF = nkF; S67.nkL = nkL; S67.nkYaw = Math.atan2(nkF.x, nkF.z);
+    // his kneeling body (static colliders: the coat hangs in front of him before he lays it)
+    const K0 = NK.clone().addScaledVector(nkF, 0.05);
+    caps.push({ a: A(K0.clone().add(V3(0, 0.55, 0))), b: A(K0.clone().addScaledVector(nkF, 0.12).add(V3(0, 1.15, 0))), r: 0.17 });
+    caps.push({ a: A(K0.clone().addScaledVector(nkL, 0.11).add(V3(0, 0.5, 0))), b: A(K0.clone().addScaledVector(nkL, 0.11).addScaledVector(nkF, 0.42).add(V3(0, 0.52, 0))), r: 0.09 });   // left thigh (forward)
+    caps.push({ a: A(K0.clone().addScaledVector(nkL, -0.11).add(V3(0, 0.5, 0))), b: A(K0.clone().addScaledVector(nkL, -0.11).add(V3(0, 0.08, 0))), r: 0.09 });                          // right thigh (down)
     const boxes = [{ c: A(plat.position), h: [0.95, platH / 2, 0.45], yaw: plat.rotation.y }, { c: A(coil67.position.clone().add(V3(0, 0.12, 0))), h: [0.3, 0.12, 0.3], yaw: 0 }];
-    // collar landing: across his neck / top shoulder, centred a little toward his back
-    const Lc = neck.clone().addScaledVector(along, -0.12).addScaledVector(acrossL, -0.09); Lc.y = chestB.y + 0.17;
-    const sL = 0.22;
+    // collar landing: across his top shoulder / neck (toward his back), a little above the surface
+    const Lc = neck.clone().addScaledVector(along, -0.1).addScaledVector(acrossL, -0.04); Lc.y = chestB.y + 0.16;
+    const hipTop = hips.clone().addScaledVector(along, 0.05); hipTop.y = chestB.y + 0.42;
     const UP = V3(0, 1, 0);
-    const stepOf = (te) => 0.15 * sstep(0.06, 0.3, te);
-    const holdAx = UP.clone().cross(navF.clone().addScaledVector(S67.F, 0.8).normalize()).normalize(); // (the lining faces the boy: it lands on him)
-    // the two hands' grip points (collar) through hold → shake → fling (ship-local)
+    const kneelOf = (te) => sstep(-0.25, 0.2, te);                                     // he is going down onto his right knee at frame 0
     const handPath = (te) => {
-      const Nn = S67.nav.clone().addScaledVector(navF, stepOf(te));
-      const c0 = Nn.clone().addScaledVector(navF, 0.3).addScaledVector(UP, 1.28), c1 = Nn.clone().addScaledVector(navF, 0.32).addScaledVector(UP, 1.48), c2 = Nn.clone().addScaledVector(navF, 0.48).addScaledVector(UP, 1.1);
-      const k1 = sstep(0.08, 0.17, te), k2 = sstep(0.16, 0.23, te);
-      const c = c0.clone().lerp(c1, k1).lerp(c2, k2);
-      const sp = lerp(lerp(0.12, 0.21, k1), 0.26, k2);
-      // while he holds it the coat's outer side is turned ~40° toward the lens (it reads as the brown coat, not its
-      // pale lining edge-on); the fling squares it to the throw
-      const ax = holdAx.clone().lerp(navL, k2).normalize();
-      return { c, sp, ax, N: Nn };
+      const kn = kneelOf(te);
+      const c0 = NK.clone().addScaledVector(nkF, 0.34).addScaledVector(UP, lerp(1.3, 1.0, kn));           // gathered at his chest
+      const k1 = sstep(0.12, 0.34, te), k2 = sstep(0.3, 0.52, te);
+      const c = c0.clone().lerp(hipTop, k1).lerp(Lc, k2); c.y += 0.06 * Math.sin(Math.PI * k1) * (1 - k2);
+      const sp = lerp(lerp(0.11, 0.2, k1), 0.22, k2);
+      const ax = nkL.clone().lerp(acrossL, sstep(0.05, 0.4, te)).normalize();   // (orientation: the brown outside ends up facing the lens)
+      return { c, sp, ax, kn };
     };
-    const REL = 0.23, LAND = 0.45;                                                    // release / collar landing (real time)
-    const rel = handPath(REL);
-    const driveAt = (te) => {
-      // the collar keeps its speed to the landing (the body and hem, slowed by the air, trail behind it toward his feet),
-      // then holds 50 ms so it comes to rest before it is released onto his shoulder
-      const t = clamp((te - REL) / (LAND - REL)), e = t * (0.85 + 0.15 * t);
-      const c = rel.c.clone().lerp(Lc, e); c.y += 0.08 * Math.sin(Math.PI * t);
-      const ax = navL.clone().lerp(acrossL, sstep(0, 0.8, t)).normalize(), sp = lerp(rel.sp, sL, e);
-      return { c, ax, sp };
-    };
-    S67.handPath = handPath; S67.driveAt = driveAt; S67.Lc = Lc; S67.stepOf = stepOf; S67.REL = REL;
+    const REL = 0.52;                                                                 // the collar touches his shoulder: release (214.25)
+    S67.handPath = handPath; S67.Lc = Lc; S67.REL = REL; S67.kneelOf = kneelOf;
     const nu = COAT_NU, nv = COAT_NV;
     // simulated lazily on S067's first frame (≈ 4 s; processes that never render S067 — e.g. a nested view — skip it)
     S67.runSim = () => simulateCoat({
       nu, nv, W: COAT_W, H: COAT_H, pinCu: 1 / 3,
-      init: (cu, cv) => { const h = handPath(0); const x = cu * COAT_W / 2 * 0.62, y = cv * COAT_H; const p = h.c.clone().addScaledVector(h.ax, x).add(V3(0, -y * 0.97, 0)).addScaledVector(navF, 0.03 + 0.04 * Math.sin(cu * 9)); return [p.x, p.y, p.z]; },
-      pins: (te) => { if (te >= REL) return null; const h = handPath(te); const l = h.c.clone().addScaledVector(h.ax, h.sp), r = h.c.clone().addScaledVector(h.ax, -h.sp); return [[r.x, r.y, r.z], [l.x, l.y, l.z]]; },
-      drive: (te) => { if (te < REL || te > 0.8) return null; const d = driveAt(te); const l = d.c.clone().addScaledVector(d.ax, d.sp), r = d.c.clone().addScaledVector(d.ax, -d.sp); return { L: [l.x, l.y, l.z], R: [r.x, r.y, r.z] }; },
-      capsules: caps, boxes, floorY: POOP_Y, wind: A(S67.R.clone().multiplyScalar(-0.8).add(V3(0, 0.15, 0))),
-      t0: -0.8, t1: 1.9, fps: 48, dt: 1 / 480, iters: 8, bend: 0.25, dragN: 2.6, dragT: 0.25,
+      init: (cu, cv) => { const h = handPath(-0.8); const x = cu * COAT_W / 2 * 0.5, y = cv * COAT_H; const p = h.c.clone().addScaledVector(h.ax, x).add(V3(0, -y * 0.9, 0)).addScaledVector(nkF, 0.04 + 0.05 * Math.sin(cu * 9) + 0.12 * cv); return [p.x, p.y, p.z]; },
+      // after the release the collar stays where it was laid (it rests on his shoulder): pinned, so the body cannot flip over
+      pins: (te) => { const h = handPath(Math.min(te, REL)); const sag = te > REL ? 0.012 * sstep(REL, REL + 0.15, te) : 0; const l = h.c.clone().addScaledVector(h.ax, h.sp).add(V3(0, -sag, 0)), r = h.c.clone().addScaledVector(h.ax, -h.sp).add(V3(0, -sag, 0)); return [[r.x, r.y, r.z], [l.x, l.y, l.z]]; },
+      drive: () => null,
+      capsules: caps, boxes, floorY: POOP_Y, wind: A(S67.R.clone().multiplyScalar(-(+(Q.get('s67wind') || 0.45))).add(V3(0, 0.05, 0))),
+      t0: -0.8, t1: 1.9, fps: 48, dt: 1 / 480, iters: 8, bend: +(Q.get('s67bend') || 0.15), dragN: 2.2, dragT: 0.25,
     });
     S67.sim = null; S67.simMs = 0;
     const n = (nu + 1) * (nv + 1);
@@ -993,7 +973,7 @@ export default async function create(ctx) {
       debugCam();
       envUpdate(T, T, { lampI: 7, seaLamp: 30, pose });
       spray.update(T);
-      return post({ exposure: 1.2, temp: -0.04, contrast: 1.07, saturation: 0.9, bloom: { strength: 0.55, radius: 0.5, threshold: 0.65 }, vignette: 0.36, grain: 0.038, dof: null,
+      return post({ exposure: 1.2, temp: -0.04, contrast: 1.07, saturation: 0.9, bloom: { strength: 0.55, radius: 0.5, threshold: 0.65 }, vignette: 0.36, dof: null,
         shadowTint: [0.44, 0.49, 0.6], highTint: [0.58, 0.52, 0.45] });
     },
 
@@ -1031,57 +1011,64 @@ export default async function create(ctx) {
       // focus: the shore (∞) until 0.3 s, rack to the eye by 1.33 s (81.62 '某个人一面'), ≥ 1 beat
       const rk = ease.inOutSine(clamp((tl - 0.3) / 1.03));
       const focus = 1 / lerp(1 / 4000, 1 / depthOf(camera, eye), rk);
-      return post({ dof: { focus, fstop: 2.0, maxCoc: 1.6 }, exposure: 1.35, temp: -0.08, contrast: 1.06, bloom: { strength: 0.6, radius: 0.6, threshold: 0.55 }, vignette: 0.42, grain: 0.04 });
+      return post({ dof: { focus, fstop: 2.0, maxCoc: 1.6 }, exposure: 1.35, temp: -0.08, contrast: 1.06, bloom: { strength: 0.6, radius: 0.6, threshold: 0.55 }, vignette: 0.42 });
     },
 
-    // ---------------------------------------------------------------- S045 CU 100 mm: cuff/patch → tilt up to his eye, the shore light in it
+    // ---------------------------------------------------------------- S045 (integration restage) 85 mm: the cuff turned back, the patch touched → tilt to his eye, the shore light in it
+    // 0–0.3 s (145.14 '有人只想'): his LEFT index + middle fingertips hook the edge of the RIGHT cuff (frame 0 = S044's palm
+    // register (0.45, 0.60), the hand ≈ 35 % of frame height) and turn it back the last few centimetres — the hand-sewn patch
+    // is on the cuff's INSIDE (buildCuffFlap); 0.32–0.92 s the pads rest on it with real contact, the thumb rubs once. The
+    // hands are keyed by the moon from upper right and kicked warm by the stern lantern from frame right (≈ 30/255, the patch
+    // the brightest mid-tone). 0.82 s (145.9) the camera starts to tilt up (drifting back a little), arriving on his eye by
+    // 1.62 s (146.7 '某个', the eyes lift). End: MCU, his face almost a silhouette against the deep-blue sea and the moon road
+    // — moon rim on brow / nose / beard edge only, head-cloth over skull and ear — catch-light in the near eye from 2.46 s
+    // (147.54 '一面'); the shore light at (0.40, 0.46) a ≈ 4 %-of-frame-height bokeh, the brightest thing in frame (→ S046).
     S045(tl, u, T) {
       reset(); useSea(true);
       const pose = poseShip(T, 0.45);
-      sky.set({ preset: 'night', cloudCover: 0.34, stars: 0.8 });
-      cam.lens(camera, 100);
+      sky.set({ preset: 'night', cloudCover: 0.3, stars: 0.6 });
+      cam.lens(camera, 85);
       const f = navC; f.root.visible = true;
-      // at the starboard rail of the poop, facing forward along it
       f.root.position.set(-11.0, POOP_Y, innerBeam(-11.0, POOP_Y) - 0.45); f.root.rotation.set(0, Math.PI / 2, 0);
       ship.updateMatrixWorld(true);
-      const lookUp = ease.inOutSine(clamp((tl - 1.6) / 0.85));
-      const tx = clamp((tl - 1.6) / 1.4), tilt = (1 - Math.pow(1 - tx, 3)) * sstep(0, 0.12, tx); // soft start, eased out by 3.0 s: eye in frame by 2.4 s
-      // start high (31° down) nearly frontal (15° to his left), arc to the 50° left-facing three-quarter (looking aft-starboard:
-      // the shore, as S022) while it tilts up. (Review: a side-on start was tried so the left fingers would point up-frame like
-      // S044's palm, but his left forearm then fills the foreground; the frontal start keeps the hands clean.)
+      const lookUp = ease.inOutSine(clamp((tl - 1.3) / 0.6));                          // the eyes lift, done by ~1.9 s
+      const tx = clamp((tl - 0.82) / 0.8), tilt = ease.inOutSine(tx);                    // 145.9 → 146.7
+      const tyaw = ease.inOutSine(clamp((tl - 0.82) / 0.55));                            // the arc leads the tilt: sea in frame early
       const Fs = dirW(V3(-0.966, 0, 0.259)).setY(0).normalize(), Fe = dirW(V3(-0.643, 0, 0.766)).setY(0).normalize();
-      const F = Fs.clone().lerp(Fe, tilt).normalize();
+      const F = Fs.clone().lerp(Fe, tyaw).normalize();
       const pS = THREE.MathUtils.degToRad(-31), pE = pitchForHorizon(camera, 0.465);
       const vS = Fs.clone().multiplyScalar(Math.cos(pS)).add(V3(0, Math.sin(pS), 0)).normalize();
       const H = navPatch(f, T, tl, lookUp, vS);
-      setJunkCheap(!Q.get('sdstd'));                                    // the defocused deck behind the hands / sea behind the face
+      setJunkCheap(!Q.get('sdstd'));
       ship.updateMatrixWorld(true);
-      if (OFF.has('coat')) f.setLayerVisible('outercoat', false);
       if (OFF.has('fig')) for (const k of Object.keys(f.layers)) f.setLayerVisible(k, false);
-      if (OFF.has('hands')) handR.root.visible = handL.root.visible = false;
-      if (OFF.has('sleeves')) for (const m of sleeves) m.visible = false;
-      if (OFF.has('ship')) for (const c of ship.children) if (c !== f.root && c.isMesh) c.visible = false;
-      if (OFF.has('sea')) { sea.object3D.visible = seaLo.object3D.visible = false; }
-      if (OFF.has('lamp')) lamp.light.visible = false;
-      const eye = f.eye(), handC = H.leftC.clone().lerp(H.patch, 0.6); // registered (0.45, 0.60): the left fingers on the patch
+      const handC = H.leftC.clone().lerp(H.patch, 0.6);
       const tgt = handC.clone().lerp(eyeS(f), tilt);
-      frameAt(camera, tgt, lerp(0.45, 0.60, tilt), lerp(0.60, 0.44, tilt), lerp(1.75, 1.6, tilt), yawOf(F), lerp(pS, pE, tilt));
+      frameAt(camera, tgt, lerp(0.45, 0.60, tilt), lerp(0.60, 0.44, tilt), lerp(1.5, 2.15, tilt), yawOf(F), lerp(pS, pE, tilt));
       cam.handheld(camera, T, 0.1, 45);
-      if (Q.get('sdlog')) { const pr = (v) => { const p = v.clone().project(camera); return [(p.x * 0.5 + 0.5).toFixed(3), (0.5 - p.y * 0.5).toFixed(3)]; }; console.log('S045', tl.toFixed(2), 'patch', pr(H.patch), 'tipL', pr(handL.tip('index', new THREE.Vector3())), 'handL', pr(handC), 'wristR', pr(handR.root.position), 'elbowR', pr(f.worldPos('armR.lower')), 'elbowL', pr(f.worldPos('armL.lower')), 'reachR', f.worldPos('armR.hand').distanceTo(handR.root.position).toFixed(3), 'reachL', f.worldPos('armL.hand').distanceTo(handL.root.position).toFixed(3)); }
+      if (Q.get('sdlog')) { const pr = (v) => { const p = v.clone().project(camera); return [(p.x * 0.5 + 0.5).toFixed(3), (0.5 - p.y * 0.5).toFixed(3)]; }; console.log('S045', tl.toFixed(2), 'patch', pr(H.patch), 'handC', pr(handC), 'eye', pr(eyeS(f))); }
       for (const a of parts.lampArm) a.visible = false;
-      placeShoreLight(shore, azOf(rayDir(camera, 0.40, 0.46)), 4, 11, 14);
+      placeShoreLight(shore, azOf(rayDir(camera, 0.40, 0.46)), 4, 16, 9);
       placeCoast(coastT, azOf(rayDir(camera, 0.33, 0.46)), 0.8);
-      // hard moon from upper right, fixed in the ship: behind the lens on the right while on the hands (keys the salt and
-      // the patch), a side kicker on cheek / ear / head-cloth at the end; the stern lantern on its hook aft-port of him, low
-      // and frame right: the warm side of the hands, a low warm fill under the face at the end
-      setMoon(azOf(Fs) + 100, 42, handC.clone().lerp(eye, 0.5), 1.25, 1.3); moon.color.set(0xcfdcf0);
-      lamp.object3D.position.copy(f.root.position.clone().add(V3(-0.37, 1.37, -0.96)));
-      catch1.object3D.visible = true; catch1.object3D.position.copy(eyeS(f)); catch1.set(1.1 * sstep(2.3, 2.5, tl));
+      // moon: upper right, in front of the lens (behind him) — a top key on the hands, a rim on his face, its road on the sea
+      // behind his head; the stern lantern low at frame right: the warm side of the hands, a faint warm under the jaw
+      const camAz = azOf(Fe);
+      setMoon(camAz + 24, 30, handC.clone().lerp(eyeS(f), 0.5), lerp(2.2, 1.6, tilt), 1.3); moon.color.set(0xcfdcf0);
+      lamp.object3D.position.copy(f.root.position.clone().add(V3(-0.42, 1.3, -0.82)));
+      catch1.object3D.visible = true; catch1.object3D.position.copy(eyeS(f)); catch1.material.depthTest = false; catch1.set(1.4 * sstep(2.3, 2.5, tl));
+      // a cool moonlight key from over the lens' right shoulder on the hands and the patch (the patch faces the lens); during
+      // the tilt it swings to a thin cool sky rim from behind-left on brow, nose and beard (he faces the shore, screen-left)
+      { const cv = camera.position.clone().sub(handC).normalize(), kd = cv.clone().add(V3(0, 0.55, 0)).addScaledVector(rayDir(camera, 1, 0.5).cross(V3(0, 1, 0)).normalize(), 0.0).normalize();
+        const rimD = rayDir(camera, 0.12, 0.5).negate().negate().add(V3(0, 0.35, 0)).normalize();   // from the far side, frame left
+        const eye = eyeS(f), dirL = kd.clone().lerp(rimD, sstep(0.35, 0.85, tilt)).normalize();
+        glowLight.color.set(0xb0c2e2); glowLight.position.copy(handC.clone().lerp(eye, tilt)).addScaledVector(dirL, 20); glowLight.target.position.copy(handC.clone().lerp(eye, tilt)); glowLight.target.updateMatrixWorld();
+        glowLight.intensity = lerp(+(Q.get('s45k') || 1.05), +(Q.get('s45r') || 2.2), sstep(0.35, 0.85, tilt)); }
+      hemi.intensity = lerp(0.9, 0.55, tilt);
       dbgPivot = Q.get("sdpiv") === "patch" ? H.patch : tgt; debugCam();
-      envUpdate(T, T, { lampI: 0.45, seaLamp: 3, pose, swing: 0.6 });
-      const rk = ease.inOutSine(clamp((tl - 1.6) / 0.8));
+      envUpdate(T, T, { lampI: lerp(1.2, 0.18, sstep(0.3, 1.0, tilt)) + 0.5 * Math.sin(Math.PI * tilt), seaLamp: 3, pose, swing: 0.6 });   // warm kicker on the hands and the coat mid-tilt, faint on the face
+      const rk = ease.inOutSine(clamp((tl - 0.9) / 0.7));
       const focus = lerp(depthOf(camera, H.patch), depthOf(camera, eyeS(f)), rk);
-      return post({ dof: { focus, fstop: 2.2, maxCoc: 1.5 }, exposure: 1.4, temp: -0.07, saturation: lerp(0.9, 0.8, tilt), contrast: 1.06, bloom: { strength: 0.5, radius: 0.6, threshold: 0.6 }, vignette: 0.42, grain: 0.042 });
+      return post({ dof: { focus, fstop: lerp(2.8, 5.6, tilt), maxCoc: 1.5 }, exposure: lerp(2.0, 1.4, tilt) + 0.5 * Math.sin(Math.PI * tilt), temp: -0.06, saturation: lerp(0.92, 0.82, tilt), contrast: 1.06, bloom: { strength: 0.5, radius: 0.6, threshold: 0.6 }, vignette: 0.42 });
     },
 
     // ---------------------------------------------------------------- S067 MS 50 mm handheld: the coat unfurls over the boy (48→24 fps at 1.3 s)
@@ -1098,7 +1085,7 @@ export default async function create(ctx) {
       const pull = ease.inOutSine(clamp((tl - 1.55) / 0.3));
       coat.visible = true; coatAt(te, pull);
       comp.root.visible = true; plat.visible = true; coil67.visible = true; boyPose(Te, pull, lerp(1.0, 0.15, sstep(0.95, 1.35, tl)));
-      navJ.root.visible = true; navThrow(navJ, Te, te, tl);
+      navJ.root.visible = true; navKneel(navJ, Te, te, tl);
       ship.updateMatrixWorld(true);
       // camera: handheld shoulder rig, slightly high; the operator frames on the lantern (world-level, no roll) so its cage
       // centre sits at (0.38, 0.36) — the light match from S066
@@ -1111,7 +1098,7 @@ export default async function create(ctx) {
       // navigator's back; the lantern warms the bulwark and his profile; amber spill from the open hatch as low fill
       // moon key from upper right, behind the lens' right shoulder (a moon in front would only rim them: its road on the
       // swell falls below the bulwark from this height): silver on the coat's folds, the boy's face, the navigator's back
-      setMoon(camAz + 128, 38, WL(S67.boyC).lerp(WL(S67.nav), 0.5), 0.6, 2.8);
+      setMoon(camAz + 128, 38, WL(S67.boyC).lerp(WL(S67.navK), 0.5), 0.6, 2.8);
       for (const a of parts.lampArm) a.visible = false;
       lamp.object3D.position.copy(S67.hook); railHook.visible = true; railHook.position.copy(S67.hook); railHook.rotation.y = yawOf(S67.F); railHook.userData.post.scale.y = S67.hook.y - POOP_Y + 0.04;
       lamp.body.userData.shellBase = 0.2;                                      // horn panes glow soft amber, not white
@@ -1121,8 +1108,8 @@ export default async function create(ctx) {
       envUpdate(T, Te, { lampI: 2.4, seaLamp: 9, pose });
       if (Q.get('sdlog')) { const pr = (v) => { const p = v.clone().project(camera); return [(p.x * 0.5 + 0.5).toFixed(3), (0.5 - p.y * 0.5).toFixed(3)]; };
         console.log('S067', tl.toFixed(2), 'te', te.toFixed(3), 'lamp', pr(lamp.flameWorld()), 'navChest', pr(navJ.worldPos('chest')), 'boy', pr(WL(S67.boyC)), 'collar', pr(WL(S67.Lc)), 'boyLog', JSON.stringify(S67.boyLog), 'simMs', S67.simMs.toFixed(0)); }
-      const focus = depthOf(camera, WL(S67.boyC).lerp(WL(S67.nav).add(V3(0, 1.2, 0)), 0.3));
-      return post({ dof: { focus, fstop: 2.8, maxCoc: 1.2 }, exposure: 1.4, temp: -0.04, contrast: 1.05, bloom: { strength: 0.5, radius: 0.6, threshold: 0.65 }, vignette: 0.4, grain: 0.042 });
+      const focus = depthOf(camera, WL(S67.boyC).lerp(WL(S67.navK).add(V3(0, 0.8, 0)), 0.35));
+      return post({ dof: { focus, fstop: 2.8, maxCoc: 1.2 }, exposure: 1.4, temp: -0.04, contrast: 1.05, bloom: { strength: 0.5, radius: 0.6, threshold: 0.65 }, vignette: 0.4 });
     },
 
     // ---------------------------------------------------------------- S075 MCU 100 mm locked: pre-dawn, he turns to the first light (screen-right)
@@ -1133,12 +1120,12 @@ export default async function create(ctx) {
       const f = navJ; f.root.visible = true;
       // at the PORT rail of the poop, facing aft (screen-left = home); camera on the poop looking to port
       f.root.position.set(-11.0, POOP_Y, -(innerBeam(-11.0, POOP_Y) - 0.32)); f.root.rotation.set(0, -Math.PI / 2, 0);
-      const turn = ease.inOutSine(clamp((tl - 1.0) / 0.55));
+      const turn = ease.inOutSine(clamp((tl - 0.66) / 0.52));                    // (integration) starts 234.8, the face is turned on 235.0
       // locked-off: the camera is solved from the END pose so his eye lands at (0.33, 0.40) — the S076 dissolve anchor
       navTurn(f, T, 1); ship.updateMatrixWorld(true);
       const eyeEnd = f.eye();
       const F = dirW(V3(0, 0, -1)).setY(0).normalize();
-      frameAt(camera, eyeEnd, 0.33, 0.40, 5.6, yawOf(F), pitchForHorizon(camera, 0.47));
+      frameAt(camera, eyeEnd, 0.33, 0.40, +(Q.get('s75d') || 3.7), yawOf(F), pitchForHorizon(camera, 0.55));   // MCU: head ≈ 40 % of frame height, horizon 0.55
       navTurn(f, T, turn);
       ship.updateMatrixWorld(true);
       const neck = f.worldPos('neck').add(V3(0, 0.12, 0));
@@ -1150,17 +1137,17 @@ export default async function create(ctx) {
       const skyB = { preset: 'predawn', sunAz: sAz, sunElev: -2.5, sunGlowWidth: 8, sunSharp: 70, sunGlow: 1.6, moonAz: camAz - 150, moonElev: 12, cloudCover: 0.26, stars: 0.15 };
       sky.set(skyB);
       setMoon(camAz - 150, 12, neck, 0.0, 1.5);
-      sky.blend(skyA, skyB, 0.62 + 0.1 * clamp(u)); sky.uniforms.uSkyExposure.value = 0.62;   // 234–235.6 s: between P02 and P20 (bible §2.3)
+      sky.blend(skyA, skyB, 0.66 + 0.1 * clamp(u)); sky.uniforms.uSkyExposure.value = 0.66;   // 234–235.6 s: between P02 and P20 (bible §2.3)
       lamp.object3D.visible = false; for (const a of parts.lampArm) a.visible = false;
       // the first light: low, from the right horizon in front of him once he has turned (rakes the front of his profile;
       // the cheek toward the lens stays in the blue sky fill)
       const kd = dirFromAz(camAz + 64, 7);
       glowLight.color.set(0xdcb4a0); glowLight.position.copy(neck).addScaledVector(kd, 30); glowLight.target.position.copy(neck); glowLight.target.updateMatrixWorld();
-      glowLight.intensity = 1.4 + 3.8 * turn;
+      glowLight.color.set(0xe8b8a0); glowLight.intensity = 1.2 + 4.2 * turn;      // a cool-peach rim lands on his cheek as he turns
       hemi.color.set(0x4a5f86); hemi.groundColor.set(0x10151f); hemi.intensity = 0.75;
       dbgPivot = neck; debugCam();
       envUpdate(T, T, { lampI: 0, seaLamp: 0, pose });
-      return post({ dof: { focus: depthOf(camera, neck), fstop: 2.0, maxCoc: 1.4 }, exposure: 1.2, temp: -0.07, contrast: 1.05, saturation: 0.88, bloom: { strength: 0.4, radius: 0.6, threshold: 0.75 }, vignette: 0.34, grain: 0.04 });
+      return post({ dof: { focus: depthOf(camera, neck), fstop: 2.0, maxCoc: 1.4 }, exposure: 1.2, temp: -0.07, contrast: 1.05, saturation: 0.88, bloom: { strength: 0.4, radius: 0.6, threshold: 0.75 }, vignette: 0.34 });
     },
 
     // ---------------------------------------------------------------- named nested view: the swinging horn stern lamp over the night sea
@@ -1235,7 +1222,6 @@ export default async function create(ctx) {
     f.root.updateMatrixWorld(true);
     const fw = fwdOf(f), lf = V3(fw.z, 0, -fw.x), up = V3(0, 1, 0), dn = V3(0, -1, 0);
     const upW = dirW(up);
-    const settle = ease.outCubic(clamp(tl / 0.15));
     const W_R = toW(f, 0.13, 1.1, 0.27);
     // wrist → elbow across his waist: square to the lens (screen-left) so the cuff band reads side-on, as in S011
     const Rv0 = vS.clone().cross(V3(0, 1, 0)).normalize();
@@ -1243,24 +1229,31 @@ export default async function create(ctx) {
     const fdR = aR.clone().negate().addScaledVector(upW, 0.05).normalize();
     const n0 = upW.clone().addScaledVector(aR, -upW.dot(aR)).normalize();
     handR.pose('relaxed', { curl: 0.55 });
-    const placeR = (phi) => { const pn = n0.clone().applyAxisAngle(aR, phi); handR.placeWrist(W_R, fdR, pn); handR.root.updateMatrixWorld(true); return pn; };
-    placeR(0);
+    const pnR = n0.clone().applyAxisAngle(aR, 0.35); handR.placeWrist(W_R, fdR, pnR); handR.root.updateMatrixWorld(true);
+    // the patch is sewn on the cuff's inside where it faces the lens once the cuff is turned back
+    const Cw = W_R.clone().addScaledVector(vS, -1.5);
+    const aP = flapD.angleToward(Cw); flapD.uniforms.uPatchA.value = aP;
+    const sMid = 0.5 * (flapD.uniforms.uS0.value + flapD.uniforms.uS1.value);
+    flapD.setFold(Math.PI, aP);
+    const patch = flapD.worldAt(aP, sMid);
     const axis = () => V3(0, 1, 0).applyQuaternion(handR.root.quaternion);
     const radial = (p) => { const r = p.clone().sub(handR.root.position), ax = axis(); return r.addScaledVector(ax, -r.dot(ax)); };
-    const r0 = radial(patchWorld()).normalize();
-    const want = vS.clone().negate().addScaledVector(upW, 0.25).normalize(); want.addScaledVector(aR, -want.dot(aR)).normalize();
-    const phi = Math.atan2(aR.dot(r0.clone().cross(want)), r0.dot(want)) + lerp(-0.28, 0, settle);  // the last of the inward roll as the shot opens
-    const pnR = placeR(phi);
-    const patch = patchWorld(), nP = radial(patch).normalize(), Rout = radial(patch).length(), ax = axis();
-    // left hand (S011 solve): finger axis = a screen direction (down-left) + a component along the view ray so it rises off the cuff
+    const nP = radial(patch).normalize(), Rout = radial(patch).length(), ax = axis();
+    // the fold: 0 → 0.3 s the last third of the turn-back; the pinched side (screen-top) leads
+    const al = lerp(0.8 * Math.PI, Math.PI, ease.outCubic(clamp(tl / 0.3)));
     const Rv = vS.clone().cross(V3(0, 1, 0)).normalize(), Uv = Rv.clone().cross(vS).normalize();
+    let aPin = aP + 1.0; { const eA = flapD.worldAt(aP + 1.0, flapD.LF), eB = flapD.worldAt(aP - 1.0, flapD.LF); if (eB.dot(Uv) > eA.dot(Uv)) aPin = aP - 1.0; }
+    flapD.setFold(al, aPin);
+    // left hand (S011 solve): finger axis = a screen direction (down-left) + a component along the view ray
     const sd = Rv.clone().multiplyScalar(-Math.cos(0.62)).addScaledVector(Uv, -Math.sin(0.62));
     const kV = (0.22 - sd.dot(nP)) / Math.min(-0.2, vS.dot(nP));
     const lfd = sd.clone().addScaledVector(vS, kV).normalize();
     const lpn = nP.clone().negate().addScaledVector(lfd, nP.dot(lfd)).normalize();
-    handL.setChannels({ wrist: [0.06, 0.0], thumb: [0.3, 0.35, 0.2, 0.25, 0.1], index: [0.16, 0.24, 0.16, 0.04], middle: [0.14, 0.26, 0.16, -0.01], ring: [0.42, 0.72, 0.42, -0.05], little: [0.55, 0.85, 0.5, -0.1] });
-    const rub = 0.005 * Math.sin(Math.PI * clamp((tl - 0.6) / 0.45));
-    const target = patch.clone().addScaledVector(ax, -0.012 + rub).addScaledVector(Rv, 0.004).addScaledVector(Uv, 0.013); // pads on the upper-right corner: the patch shows below-left of the fingertips
+    const CH_REST = { wrist: [0.06, 0.0], thumb: [0.3, 0.35, 0.2, 0.25, 0.1], index: [0.2, 0.16, 0.06, 0.04], middle: [0.18, 0.18, 0.07, -0.01], ring: [0.42, 0.72, 0.42, -0.05], little: [0.55, 0.85, 0.5, -0.1] };
+    // the thumb rubs once across the patch edge (0.55–0.9 s)
+    const rubT = Math.sin(Math.PI * clamp((tl - 0.55) / 0.35));
+    handL.setChannels({ ...CH_REST, thumb: [0.3 + 0.22 * rubT, 0.35 + 0.15 * rubT, 0.2, 0.25, 0.1] });
+    const target = patch.clone().addScaledVector(ax, -0.019).addScaledVector(Rv, 0.004);   // pads on the wrist-side edge: most of the patch shows
     handL.placeWrist(target.clone().addScaledVector(lfd, -0.16).addScaledVector(nP, 0.03), lfd, lpn);
     const pads = () => { handL.root.updateMatrixWorld(true); return [handL.tip('index', new THREE.Vector3()), handL.tip('middle', new THREE.Vector3())]; };
     const gap = (q) => radial(q).length() - Rout;
@@ -1283,7 +1276,22 @@ export default async function create(ctx) {
       handL.root.position.add(tg.sub(m2));
     }
     { const [pi, pm] = pads(); handL.root.position.addScaledVector(nP, PAD - 0.5 * (gap(pi) + gap(pm))); }
-    handL.root.position.addScaledVector(nP, 0.012 * (1 - settle)).addScaledVector(lfd, -0.01 * (1 - settle)); handL.root.updateMatrixWorld(true);
+    // the hook: until 0.3 s the index + middle fingertips are curled under the cuff's edge, carrying it over; → 0.42 s onto the patch
+    const kRel = sstep(0.26, 0.42, tl);
+    if (kRel < 1) {
+      const posB = handL.root.position.clone(), qB = handL.root.quaternion.clone();
+      const HOOK = { wrist: [0.12, 0.04], thumb: [0.45, 0.4, 0.25, 0.25, 0.3], index: [0.55, 0.85, 0.5, 0.0], middle: [0.5, 0.9, 0.55, 0.0], ring: [0.7, 1.05, 0.5, -0.02], little: [0.78, 1.1, 0.55, -0.05] };
+      handL.setChannels(HOOK);
+      const pdir = lfd.clone().addScaledVector(nP, -0.6).normalize(); handL.placeWrist(posB, pdir, nP.clone().negate().addScaledVector(pdir, nP.dot(pdir)).normalize());
+      handL.root.updateMatrixWorld(true);
+      const edge = flapD.worldAt(aPin, flapD.LF * 0.96);
+      const tipM = handL.tip('index', new THREE.Vector3()).lerp(handL.tip('middle', new THREE.Vector3()), 0.5);
+      handL.root.position.add(edge.sub(tipM)); handL.root.updateMatrixWorld(true);
+      const posA = handL.root.position.clone(), qA = handL.root.quaternion.clone(), ch = {};
+      for (const k of Object.keys(CH_REST)) ch[k] = HOOK[k].map((x, i) => x + (CH_REST[k][i] - x) * kRel);
+      handL.setChannels(ch); handL.root.position.copy(posA).lerp(posB, kRel); handL.root.quaternion.copy(qA).slerp(qB, kRel);
+    }
+    handL.root.updateMatrixWorld(true);
     // the figure's arms reach the close-up wrists (its own hands hidden, forearms trimmed: see setSleeveClip)
     f.reach('R', handR.root.position.clone(), { pole: dirW(dn.clone().addScaledVector(lf, -0.7).addScaledVector(fw, -0.4).normalize()), palm: pnR, fingers: fdR });
     f.reach('L', handL.root.position.clone(), { pole: dirW(dn.clone().addScaledVector(lf, 0.9).addScaledVector(fw, -0.3).normalize()), palm: lpn, fingers: lfd });
@@ -1291,37 +1299,40 @@ export default async function create(ctx) {
     handR.root.visible = handL.root.visible = true;
     f.breathe(T, 0.9, 0.22);
     setSleeveClip(f, true, [handR.root.position, handL.root.position]);
-    if (Q.get('sdlog')) console.log('S045 roll', 'phi', phi.toFixed(2), 'pn.up', pnR.dot(upW).toFixed(2), 'nP.want', nP.dot(want).toFixed(2), 'gap', pads().map((q) => (gap(q) * 1000).toFixed(1)).join('/'));
     return { patch, nP, leftC: handL.root.position.clone().lerp(handL.tip('middle', new THREE.Vector3()), 0.5) };
   }
-  // the coat (S067, review): his hands carry the sim's collar pins (hold → shake → fling, release at te 0.25 s), follow
-  // through toward the boy, come back to rest; then his left fingers go to his right cuff (tl 1.88–2.1 s)
-  function navThrow(f, Te, te, tl) {
-    const H = S67.handPath(Math.min(te, S67.REL));
-    const Nn = S67.nav.clone().addScaledVector(S67.navF, S67.stepOf(te));
-    f.root.position.copy(Nn); f.root.rotation.set(0, S67.navYaw, 0);
-    const lean = sstep(0.12, 0.3, te) * (1 - sstep(0.5, 1.1, te));
-    f.pose('stand', { weight: 0.45 * sstep(0.06, 0.3, te) });
-    f.pose({ 'spine.x': 0.1 * lean, 'chest.x': 0.16 * lean, 'neck.x': 0.18, 'head.x': 0.12, 'hips.x': 0.04 * lean }, { add: true });
+  // the coat (S067, integration): kneeling on his right knee beside the boy, both hands keep the coat by the collar until it
+  // touches the boy's shoulder (te 0.52 = 214.25), let go and come back to rest on his raised left knee; then (te 1.2–1.39 =
+  // 215.1–215.3) the right wrist comes up and his left fingertips go into the turned-back right cuff, held to the cut.
+  function navKneel(f, Te, te, tl) {
+    const H = S67.handPath(Math.min(te, S67.REL)), kn = S67.kneelOf(te), P = f.P;
+    f.root.position.copy(S67.navK); f.root.rotation.set(0, S67.nkYaw, 0);
+    const thL = P.hipJY - P.kneeY, hipY = P.kneeR * 0.9 + Math.cos(0.14) * thL;
+    const KR = { 'hips.py': hipY - P.hipJY, 'legR.upper.x': 0.14, 'legR.lower.x': 1.62, 'legR.foot.x': 0.95, 'legR.upper.z': -0.02,
+      'legL.upper.x': 1.42, 'legL.lower.x': 1.4, 'legL.foot.x': 0.02, 'legL.upper.z': 0.1, 'spine.x': 0.16, 'chest.x': 0.12, 'neck.x': 0.2, 'head.x': 0.15 };
+    f.pose(f.blend('stand', KR, kn));
+    const lay = sstep(0.05, 0.3, te) * (1 - sstep(0.62, 1.05, te));
+    f.pose({ 'spine.x': 0.22 * lay, 'chest.x': 0.16 * lay, 'hips.x': 0.08 * lay, 'spine.y': -0.12 * lay }, { add: true });
     f.root.updateMatrixWorld(true);
-    const fwL = S67.navF, lfL = S67.navL, UP = V3(0, 1, 0);
-    const at = (dx, y, dz) => Nn.clone().addScaledVector(lfL, dx).addScaledVector(fwL, dz).setY(POOP_Y + y);
-    // grip points: the pins while holding; after release they follow through low toward the boy, then settle at rest
-    let c = H.c.clone(), sp = H.sp, ax = H.ax.clone();
-    if (te > S67.REL) {
-      const k1 = sstep(S67.REL, 0.4, te), k2 = sstep(0.5, 1.05, te);
-      c = c.lerp(at(0, 1.05, 0.36), k1).lerp(at(0, 0.98, 0.2), k2);
-      sp = lerp(lerp(sp, 0.24, k1), 0.16, k2);
-      ax = lfL.clone();
+    const fwL = S67.nkF, lfL = S67.nkL, UP = V3(0, 1, 0);
+    const at = (dx, y, dz) => S67.navK.clone().addScaledVector(lfL, dx).addScaledVector(fwL, dz).setY(POOP_Y + y);
+    let wR, wL;
+    if (te < S67.REL + 0.04) {
+      wR = H.c.clone().addScaledVector(H.ax, -H.sp).addScaledVector(UP, 0.035).addScaledVector(fwL, -0.05);
+      wL = H.c.clone().addScaledVector(H.ax, H.sp).addScaledVector(UP, 0.035).addScaledVector(fwL, -0.05);
+    } else {
+      const rel = S67.handPath(S67.REL), k1 = sstep(S67.REL + 0.04, 0.95, te);
+      const r0 = rel.c.clone().addScaledVector(rel.ax, -rel.sp).addScaledVector(UP, 0.035), l0 = rel.c.clone().addScaledVector(rel.ax, rel.sp).addScaledVector(UP, 0.035);
+      wR = r0.lerp(at(0.02, 0.66, 0.36), k1); wL = l0.lerp(at(0.16, 0.6, 0.4), k1);
+      // the cuff beat: right wrist lifted in front of his chest, left fingertips into the turned-back cuff (215.3, held)
+      const kc = sstep(1.12, 1.36, te);
+      wR.lerp(at(-0.06, 0.74, 0.3), kc); wL.lerp(at(0.02, 0.78, 0.26), kc);
     }
-    // grip point → wrist: the wrist sits a little above and behind the cloth in his fist
-    const wrist = (side) => c.clone().addScaledVector(ax, side * sp).addScaledVector(UP, 0.035).addScaledVector(fwL, -0.055);
-    const cuff = sstep(1.18, 1.4, te);
-    const wR = wrist(-1).lerp(at(-0.04, 1.03, 0.3), cuff), wL = wrist(1).lerp(at(-0.08, 1.06, 0.33), cuff);
     f.reach('R', WL(wR), { pole: dirW(V3(0, -1, 0).addScaledVector(lfL, -0.7).addScaledVector(fwL, -0.2)) });
     f.reach('L', WL(wL), { pole: dirW(V3(0, -1, 0).addScaledVector(lfL, 0.7).addScaledVector(fwL, -0.2)) });
-    f.hands.L.pose(te < S67.REL + 0.02 ? 'grip' : cuff > 0.4 ? 'touch' : 'relaxed', { radius: 0.018, curl: 0.45 }); f.hands.R.pose(te < S67.REL + 0.02 ? 'grip' : 'relaxed', { radius: 0.018, curl: 0.5 });
-    const lookP = te < 1.1 ? WL(S67.Lc).lerp(WL(S67.head), sstep(0.35, 0.75, te)) : WL(at(-0.06, 1.0, 0.33));
+    const kc = sstep(1.12, 1.36, te);
+    f.hands.L.pose(te < S67.REL + 0.02 ? 'grip' : kc > 0.5 ? 'touch' : 'relaxed', { radius: 0.018, curl: 0.45 }); f.hands.R.pose(te < S67.REL + 0.02 ? 'grip' : 'relaxed', { radius: 0.018, curl: 0.5 });
+    const lookP = te < 1.1 ? WL(S67.Lc).lerp(WL(S67.head), sstep(0.5, 0.9, te)) : WL(at(-0.04, 0.74, 0.3));
     f.lookAt(lookP, 0.85);
     f.breathe(Te, 1.0, 0.25);
   }
@@ -1340,19 +1351,13 @@ export default async function create(ctx) {
   // ------------------------------------------------------------------------------------------
   return {
     scene, camera,
-    post: { exposure: 1.2, contrast: 1.05, saturation: 0.9, vignette: 0.38, grain: 0.04, shadowTint: [0.45, 0.5, 0.6], highTint: [0.57, 0.52, 0.46], bloom: { strength: 0.45, radius: 0.55, threshold: 0.75 } },
+    post: { exposure: 1.2, contrast: 1.05, saturation: 0.9, vignette: 0.38, grain: GRAIN, shadowTint: [0.45, 0.5, 0.6], highTint: [0.57, 0.52, 0.46], bloom: { strength: 0.45, radius: 0.55, threshold: 0.75 } },
     setShot(shot, tl, u, T) {
       const fn = setups[shot.id] || setups.default;
       const tS = performance.now();
       const r = fn(tl, u, T, shot) || {};
       if (Q.get('sdtime')) console.log('setShot', shot.id, (performance.now() - tS).toFixed(1), 'ms');
-      { // module grain (see grainMat): replaces the engine grain; nested views (no post chain) get none
-        const g = shot.nested || DBG ? 0 : (r.grain ?? GRAIN);
-        grainQuad.visible = grainProbe.visible = g > 0;
-        grainMat.uniforms.uAmt.value = g; grainMat.uniforms.uExp.value = r.exposure ?? 1.2;
-        grainMat.uniforms.uSeed.value = Math.round(T * 24) % 977;
-        r.grain = 0;
-      }
+      if (!shot.nested) r.grain = GRAIN;                         // one era grain for every navigator shot
       // lights that contribute nothing are switched off (an unlit shadow-casting moon would still render its shadow map)
       for (const l of [moon, glowLight, hatchLight, hemi]) l.visible = l.intensity > 1e-3;
       clipDefine(sleeveU.uClipOn.value > 0.5); // flips only at S045's boundaries (no per-frame recompiles)

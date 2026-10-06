@@ -571,7 +571,7 @@ export default async function create(ctx) {
   // upper louvred openings: dark timber slats with the sky between
   const louvreMat = (() => {
     const c = canvas(64, 256), g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, 64, 256);
-    g.fillStyle = '#000'; for (let k = 0; k < 14; k++) g.fillRect(0, k * 256 / 14, 64, 256 / 14 * 0.62); g.fillRect(29, 0, 6, 256);
+    g.fillStyle = '#8a8a8a'; for (let k = 0; k < 14; k++) g.fillRect(0, k * 256 / 14, 64, 256 / 14 * 0.62); g.fillRect(29, 0, 6, 256);   // (integration) low-contrast slats: the black/white stripes read as an artefact at the S055 frame edge
     return new THREE.MeshBasicMaterial({ map: ctex(c), color: new THREE.Color(0.022, 0.026, 0.038), side: THREE.DoubleSide, fog: false });
   })();
   for (const x of CH.aisleWinX) for (const side of [1, -1]) { const m = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 3.0), louvreMat); m.position.set(x, 7.5, side * (CH.south + 0.3)); scene.add(m); }
@@ -755,7 +755,12 @@ export default async function create(ctx) {
   if (!OFF.has('nosmooth')) { smoothShading(M.layers.qipao, LOOK_URL.smoothM ?? 40); smoothShading(Lm.layers.shirt, LOOK_URL.smoothL ?? 30); }
   // the pale dove-grey linen must not read as bare skin under the 3200 K sun: a touch cooler than #BDB6AB, visible folds + slub
   for (const k of Object.keys(M.materials)) if (/^qipao$/.test(k)) { const m = M.materials[k], U = m.userData.fzUniforms || {};
-    m.color.set(0xadaeae); if (U.uFold) U.uFold.value *= 2.6; if (U.uMottle) U.uMottle.value = 0.13; }
+    m.color.set(LOOK_URL.qipaoCol ?? 0x9c9ea2); if (U.uFold) U.uFold.value *= 2.6; if (U.uMottle) U.uMottle.value = 0.13; }
+  // (integration) dove-grey silk-linen, not a white blouse: mid grey with a faint cool cast (the petals then read as coloured
+  // light on grey cloth instead of blooming on white); the collar band matches; the centre-front buttons (which read as a
+  // shirt's button placket) are hidden — the qipao closes at the right-side 大襟, out of these angles
+  if (M.materials.collarX) M.materials.collarX.color.set(LOOK_URL.qipaoCol ?? 0x9c9ea2);
+  if (M.layers['qipao.buttons']) M.layers['qipao.buttons'].visible = false;
   // LONELY: sparse silver-white hair, not a white cap
   for (const f of [Lm]) for (const k of Object.keys(f.materials)) if (/^hair/.test(k) && f.materials[k].color) { const m = f.materials[k], U = m.userData.fzUniforms || {}; m.color.multiplyScalar(0.6); if (U.uGrey) U.uGrey.value = Math.min(U.uGrey.value, 0.78); }
   // airmail letter: pale-blue onionskin, folded in thirds then in half (8.5 × 9 cm), fold softened
@@ -803,13 +808,13 @@ export default async function create(ctx) {
   // ================================================================ foreground plate for S057: the low window's bottom tier with the GLASSPANEL
   const panelPw = glassPanelCanvas('then');
   const plate = new THREE.Group(); scene.add(plate);
-  const plateGlassMat = glassMat(ctex(panelPw.glass), 0.3); plateGlassMat.uniforms.uSat.value = 0.62; plateGlassMat.uniforms.uTint.value.setRGB(1.0, 0.9, 0.82);
+  const plateGlassMat = glassMat(ctex(panelPw.glass), 0.2); plateGlassMat.uniforms.uSat.value = 0.42;   // (integration) petals −30 % and desaturated: the quarry is the clearest shape on the right third plateGlassMat.uniforms.uTint.value.setRGB(1.0, 0.9, 0.82);
   const PLATE_S = 0.44;                        // plate scale (cheat, ruling 2): the 6 × 9 cm quarry reads ~9 % of frame height
   {
     const pg = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.9), plateGlassMat); plate.add(pg);
     // neighbouring panels of the same window (continue the glass beyond the frame edge)
     const nb = paintWindow(58, 360, 540, { shape: 'rect', variant: 2 });
-    const nbm = glassMat(ctex(nb.glass), 0.24); nbm.uniforms.uSat.value = 0.6; nbm.uniforms.uTint.value.setRGB(1.0, 0.9, 0.82); plate.userData.nbm = nbm;
+    const nbm = glassMat(ctex(nb.glass), 0.15); nbm.uniforms.uSat.value = 0.42; nbm.uniforms.uTint.value.setRGB(1.0, 0.9, 0.82); plate.userData.nbm = nbm;
     for (const [dx, dy] of [[0.6, 0], [0, 0.9], [0.6, 0.9], [0, -0.9], [0.6, -0.9]]) { const m = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.9), nbm); m.position.set(dx, dy, 0); plate.add(m); }
     // the stone reveal (left edge of the window) — dark, soft
     const rev = new THREE.Mesh(new THREE.BoxGeometry(0.035, 2.8, 0.04), new THREE.MeshBasicMaterial({ color: 0x0c0b0a, fog: false })); rev.position.set(-0.3 - 0.012, 0.4, 0.01); plate.add(rev);
@@ -818,10 +823,10 @@ export default async function create(ctx) {
     const dia = new THREE.Shape(); dia.moveTo(0, -qh / 2); dia.lineTo(qw / 2, 0); dia.lineTo(0, qh / 2); dia.lineTo(-qw / 2, 0); dia.closePath();
     const dg = new THREE.ShapeGeometry(dia); const uvs = dg.attributes.uv, pp = dg.attributes.position;
     for (let i = 0; i < pp.count; i++) uvs.setXY(i, 0.5 - pp.getX(i) / qw, 0.5 + pp.getY(i) / qh);
-    const rim = new THREE.Mesh(dg, new THREE.MeshBasicMaterial({ color: new THREE.Color(0.11, 0.1, 0.09), fog: false })); rim.scale.setScalar(1.13); rim.position.set(qx, qy, 0.0006); plate.add(rim);
+    const rim = new THREE.Mesh(dg, new THREE.MeshBasicMaterial({ color: new THREE.Color(0.40, 0.30, 0.18), fog: false })); rim.scale.setScalar(1.2); rim.position.set(qx, qy, 0.0006); plate.add(rim); plate.userData.rim = rim;   // (integration) a thin candle glint on the lead cames outlines the lozenge
     const dark = new THREE.Mesh(dg, new THREE.MeshBasicMaterial({ color: new THREE.Color(0.008, 0.009, 0.013), fog: false })); dark.position.set(qx, qy, 0.001); plate.add(dark);
-    const face = new THREE.Mesh(dg, new THREE.MeshBasicMaterial({ map: refl.rt.texture, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0, fog: false }));
-    face.position.set(qx, qy, 0.002); plate.add(face); plate.userData.face = face; plate.userData.quarry = V3(qx, qy, 0);
+    const face = new THREE.Mesh(dg, new THREE.MeshBasicMaterial({ map: refl.rt.texture, color: new THREE.Color(0.72, 0.84, 1.0), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0, fog: false }));   // moon-silver (cool against the warm chapel)
+    face.position.set(qx, qy, 0.002); plate.add(face); plate.userData.face = face; plate.userData.quarry = V3(qx, qy, 0); plate.userData.dark = dark;
   }
   plate.scale.setScalar(PLATE_S); plate.visible = false;
 
@@ -1012,17 +1017,21 @@ export default async function create(ctx) {
       const cpos = V3(e.x + 0.2 * W, e.y - 0.06 * Hh, e.z + D);
       cam.place(camera, cpos, cpos.clone().add(V3(0, 0, -1))); cam.lens(camera, 100);
       // foreground plate (cheat, ruling 2): quarry centre at screen (0.70, 0.45), 2.95 m from the lens → CoC ≈ 5 px
-      const dq = 2.95, Wq = dq * 36 / 100, Hq = Wq / ctx.aspect;
+      // (integration) the plate 3.2 m out (was 2.95) and f/3.5: the quarry's CoC ≈ 2–3 px while her profile stays sharp; scaled up
+      // so the quarry keeps its ~9.5 % of frame height
+      const dq = +(LOOK.dq57 ?? 3.2), Wq = dq * 36 / 100, Hq = Wq / ctx.aspect, ps = PLATE_S * dq / 2.95;
       const qW = cpos.clone().add(V3((0.70 - 0.5) * Wq, (0.5 - 0.45) * Hq, -dq));
-      plate.position.copy(qW).sub(plate.userData.quarry.clone().multiplyScalar(PLATE_S)); plate.rotation.set(0, 0, 0);
+      plate.scale.setScalar(ps); plate.position.copy(qW).sub(plate.userData.quarry.clone().multiplyScalar(ps)); plate.rotation.set(0, 0, 0);
+      plate.userData.rim.material.color.setRGB(0.40, 0.30, 0.18).multiplyScalar(0.85 + 0.15 * noise1(T * 1.3, 11));
       skyFill.position.set(e.x + 0.5, e.y + 0.25, e.z + 2.0);
       // the restorer's reflection: fades up with the light shift 0–0.3 s ('我听不懂' 180.94), strongest ~15 % by 2 s
-      plate.userData.face.material.opacity = smoothstep(0.0, 0.32, tl) * (0.22 + 0.14 * smoothstep(0.3, 2.0, tl));
+      plate.userData.face.material.opacity = +(LOOK.face57 ?? 0.42) * smoothstep(0.02, 1.48, tl);   // (integration) fades in 180.94 → 182.4, cool, readable
+      { const k = +(LOOK.qs57 ?? 1.55); plate.userData.face.scale.setScalar(k); plate.userData.dark.scale.setScalar(k); plate.userData.rim.scale.setScalar(1.12 * k); }   // the quarry enlarged against its neighbours (the petals read half as large around it)
       renderReflection(T, Math.sin(tl * 0.9));
       { const fm = plate.userData.face; const big = OFF.has('faceq'); fm.scale.setScalar(big ? 3 : 1); fm.material.blending = big ? THREE.NormalBlending : THREE.AdditiveBlending; if (big) fm.material.opacity = 1; }
       plate.updateMatrixWorld(true); dbgP('eye', e); dbgP('letter', letter.position); dbgP('quarry', qW);
       for (const m of aisleMats) m.uniforms.uInt.value = 0.22;            // the north aisle window behind her head stays a soft glow
-      return { ...POST_DAY, temp: 0.04, saturation: 0.95, dof: { focus: D, fstop: 2.8, maxCoc: 1.8 }, exposure: 1.05 };
+      return { ...POST_DAY, temp: 0.04, saturation: 0.95, dof: { focus: D, fstop: +(LOOK.fs57 ?? 3.5), maxCoc: 1.8 }, exposure: 1.05 };
     },
     // ---- S058 BR2 182.92–186.08 '却懂你颤抖的双肩': MCU 75 mm from her right rear 45°, slightly high, barely perceptible push;
     //      shoulder line at (0.66, 0.50) ~28→30 % of frame width (T19 A-frame for S059); tremble starts 0.85 s ('颤抖'), peaks
@@ -1050,38 +1059,46 @@ export default async function create(ctx) {
       const tgt = S.clone().addScaledVector(side, -(0.66 - 0.5) * W).add(V3(0, 0.12 * Hh, 0));
       cam.place(camera, cpos, tgt); cam.lens(camera, 75);
       dbgP('shoulderL', M.worldPos('armL.upper')); dbgP('shoulderR', M.worldPos('armR.upper')); dbgP('head', M.worldPos('head')); dbgP('candle', candles[1].object3D.position.clone().add(V3(0, 0.12, 0)));
-      return { ...POST_DAY, temp: lerp(0.08, -0.14, k), saturation: lerp(0.98, 0.84, k), exposure: lerp(1.0, 1.3, k), dof: { focus: cpos.distanceTo(S), fstop: 2.4 } };
+      // (integration) the blue hour must leave her shoulders readable into the T19 cut (S058 ended near-black, S059 opens ~2 stops up)
+      blueKey.intensity *= lerp(1, LOOK.blueEnd58 ?? 2.4, smoothstep(2.4, 3.1, tl));
+      return { ...POST_DAY, temp: lerp(0.08, -0.14, k), saturation: lerp(0.98, 0.84, k), exposure: lerp(1.0, LOOK.e58 ?? 1.55, k), dof: { focus: cpos.distanceTo(S), fstop: 2.4 } };
     },
     // ---- S069 CH4 217.71–219.71 '不过无数个今晚': MS 50 mm, eye level, locked with a ≤2 % push; blue hour, candles; opens on
     //      her last step along row 7 (T21: left → right, downward), she sits beside LONELY at 0.81 s ('数'), his hands loosen
     //      at 1.1 s; holds on the two sleeves side by side at (0.42, 0.62) = A-frame of the 12-frame dissolve into S070
     S069(tl, u, T) {
+      // (integration rebuild) 75 mm, three-quarter from behind-left at seated eye height, ~10 % push: she is already lowering
+      // into the seat at f0 (the downward motion carried from S068's sweet), sits beside him on '数' (218.52 = 0.81 s), his
+      // hands loosen on the cap (218.9); the shot ends on the two touching sleeves — her dove-grey short sleeve, his white
+      // cotton — filling the lower centre, the contact at (0.42, 0.62), the band ~30 % of frame height (A frame of the S070
+      // dissolve). A cool clerestory top light on shoulders and sleeves; the votive wall flagged down (it pulled the eye).
       lightSet({ sun: false, bounce: false, night: true, candles: [2] }); daylight(1);
       show({ M: true, Lm: true, bag: false });
       const t = clamp(tl, 0, 3);
-      // the last step along row 7 in the legroom (facing south, +z = screen left → right), turn to face east, sit down
-      // (seated contact on '数' 218.52 = 0.81 s); his hands loosen on the cap at 1.1 s; 1.53–2.0 s stillness on the sleeves
-      const zSeat = CH.lonelyZ - 0.42, xWalk = ROW7 + 0.44, xSeat = ROW7 + 0.05;
-      const walkT = clamp(t / 0.6), sitT = ease.inOutSine(clamp((t - 0.3) / 0.51)), turnT = ease.inOutSine(clamp((t - 0.14) / 0.6));
-      const zz = lerp(zSeat - 0.28, zSeat, ease.outSine(walkT));
-      M.root.position.set(lerp(xWalk, xSeat, sitT), 0, zz); M.root.rotation.set(0, lerp(0, Math.PI / 2, turnT), 0);
-      const chW = M.preset('walk', { phase: 0.3 + 0.45 * walkT, stride: lerp(0.7, 0.15, walkT) }), chS = M.preset('sit_chair', { seat: 0.447, feet: 0.03, lean: 0.06, hands: 'none' });
+      const zSeat = CH.lonelyZ - 0.42, xWalk = ROW7 + 0.36, xSeat = ROW7 + 0.05;
+      const walkT = clamp((t + 0.25) / 0.55), sitT = ease.inOutSine(clamp((t + 0.06) / 0.87)), turnT = ease.inOutSine(clamp((t + 0.25) / 0.55));
+      const zz = lerp(zSeat - 0.16, zSeat, ease.outSine(walkT));
+      M.root.position.set(lerp(xWalk, xSeat, sitT), 0, zz); M.root.rotation.set(0, lerp(0.35, Math.PI / 2, turnT), 0);
+      const chW = M.preset('walk', { phase: 0.55 + 0.3 * walkT, stride: lerp(0.35, 0.1, walkT) }), chS = M.preset('sit_chair', { seat: 0.447, feet: 0.03, lean: 0.06, hands: 'none' });
       M.pose(Figure_blend(chW, chS, sitT));
-      M.pose({ 'armL.clav.y': 0.08, 'armR.clav.y': 0.08, 'neck.x': lerp(0.12, 0.2, sitT), 'head.x': lerp(0.05, 0.12, sitT) }, { add: true });
+      M.pose({ 'armL.clav.y': 0.08, 'armR.clav.y': 0.08, 'armR.upper.z': -0.05 * sitT, 'neck.x': lerp(0.12, 0.2, sitT), 'head.x': lerp(0.05, 0.12, sitT) }, { add: true });
       M.breathe(T, 0.8, 0.22);
       letterHold(M, T, { grip: 0.3 });
       M.lookAt(V3(12, 1.2, zSeat - 0.3), 0.4 * sitT);
-      seatLonely(Lm, T, { loosen: smoothstep(1.02, 1.5, t) });
-      // camera: rear three-quarter from the aisle side behind row 8, a little above seated eye level, locked with a ≤2 % push;
-      // the two sleeves' contact (her right short sleeve / his left cotton sleeve) registered at (0.42, 0.62) for the S070 dissolve
+      seatLonely(Lm, T, { loosen: smoothstep(1.02, 1.4, t) });
       const Cw = V3(ROW7 + 0.02, 0.98, (zSeat + CH.lonelyZ) / 2);
-      const cpos = V3(-5.2, 1.36, 4.12).lerp(Cw, 0.015 * ease.inOutSine(clamp(t / 2.0)));
+      const ang = (LOOK.ang69 ?? 30) * D2R, d0 = LOOK.d69 ?? 2.45;
+      const back = V3(-Math.cos(ang), 0, -Math.sin(ang));                        // behind-left (north-west of the pair)
+      const cpos = Cw.clone().addScaledVector(back, d0); cpos.y = LOOK.h69 ?? 1.12;
+      cpos.lerp(Cw, 0.1 * ease.inOutSine(clamp(t / 2.0)));                      // ~10 % push
       const fwd = Cw.clone().sub(cpos), D = fwd.length(); fwd.normalize();
-      const right = V3(-fwd.z, 0, fwd.x).normalize(), W = D * 36 / 50, Hh = W / ctx.aspect;
+      const right = V3(-fwd.z, 0, fwd.x).normalize(), W = D * 36 / 75, Hh = W / ctx.aspect;
       const tgt = Cw.clone().addScaledVector(right, (0.5 - 0.42) * W).add(V3(0, (0.62 - 0.5) * Hh, 0));
-      cam.place(camera, cpos, tgt); cam.lens(camera, 50);
+      cam.place(camera, cpos, tgt); cam.lens(camera, 75);
+      blueKey.intensity = (LOOK.blue69 ?? 1.1);                                  // the clerestory: cool top light on shoulders and sleeves (+1 stop)
+      if (candleLights[2]) candleLights[2].intensity *= (LOOK.cand69 ?? 0.4);   // the votive wall flagged down ~1 stop (it pulled the eye)
       dbgP('contact', Cw); dbgP('sleeveM', M.worldPos('armR.lower')); dbgP('sleeveL', Lm.worldPos('armL.lower')); dbgP('lonely', Lm.worldPos('chest')); dbgP('mother', M.worldPos('chest')); dbgP('candle S', candles[candles.length - 1].object3D.position.clone().add(V3(0, 0.12, 0)));
-      return { ...POST_NIGHT, dof: { focus: D, fstop: 3.2 } };
+      return { ...POST_NIGHT, exposure: LOOK.e69 ?? 1.15, dof: { focus: D, fstop: 2.8 } };
     },
     // ---- view_chapel (corridor pane P4, S066): the mother on the pew from her right rear, residual coloured light at blue
     //      hour, shoulders trembling softly; self-contained, reads at 480–640 px

@@ -213,3 +213,16 @@ target; S018's first second remains the heaviest stretch of the module.
 * City far rows are still procedural boxes; near shophouses have no balconies or signage geometry; ships remain simple.
 * Guards / extras are lo-LOD crowd recolours (no collars or badges at this size); flags ≈ 12 px, colours only (by design).
 * S080's skylight band brightens ground and water only (no vertical surfaces); in stills it reads as the light coming up.
+
+## Integration fixes (2026-10-06, whole-film QA pass)
+
+- **Grain:** the in-scene multiplicative grain quad and the `grain: 0` overrides are gone; per-era amounts go through post:
+  S046 E1 navigator 0.042 · E2 map office 0.040 · E3 migrant 0.044 · E4 chapel era 0.038; S018 and S080 modern 0.035.
+  S046 is otherwise untouched (director: the best shot of its section).
+- **S018 (minor):** the city's lit windows are ≈ a third fewer (`uLit` 0.72) and the whole city is held ~40 % down for the
+  first second (ramping up 0.55–1.5 s as the rise reveals it), so her lit lab window — S017's candle carried over — is the
+  one anchor at frame 0; the rise and the moon end frame are unchanged. *Not done:* a closer start (her window ~25 % of frame
+  height) — it would change the reviewed light-cut register with S017.
+- **S080:** re-checked under the centred S080 → S081 dissolve (it now runs 6 frames past its out frame, u > 1).
+
+### Timing (1280×536, 6 consecutive frames, load ≈ 10): S018 1.51 s/frame (max 1.75).

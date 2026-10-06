@@ -714,17 +714,35 @@ export default async function create(ctx) {
     // handle (front face of the base): two leather tabs + rattan-wrapped cane bar, hand-sweat dark, frayed
     handleG.position.set(0, 0.085, -D / 2 - 0.012);
     for (const sx of [-0.068, 0.068]) { const tab = box(0.022, 0.05, 0.012, leather, sx, 0.0, 0.006, handleG); }
-    const barT = (() => { const W = 512, c = canvas(W, 64), g = c.getContext('2d'), r = util.rng(66); g.fillStyle = '#4e3524'; g.fillRect(0, 0, W, 64);
-      for (let x = 0; x < W; x += 9) { g.fillStyle = `rgba(${90 + r() * 40},${62 + r() * 24},${38 + r() * 14},0.9)`; g.save(); g.translate(x, 0); g.transform(1, 0, 0.35, 1, 0, 0); g.fillRect(0, 0, 7, 64); g.restore(); }
-      for (let k = 0; k < 120; k++) { g.strokeStyle = `rgba(150,110,70,${0.2 + r() * 0.3})`; g.lineWidth = 0.7; g.beginPath(); const x = r() * W, y = r() * 64; g.moveTo(x, y); g.lineTo(x + (r() - 0.5) * 8, y + (r() - 0.5) * 10); g.stroke(); }
-      return ctex(c); })();
-    const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.0115, 0.0115, 0.15, 20, 1), new THREE.MeshStandardMaterial({ map: barT, roughness: 0.58, color: hex('#b09a86') }));   // (review: ×1.45 so the sweat-dark wrap reads)
+    // integration: the SAME helical rattan wrap as map_office S048's new handle (≈ 36 turns ROUND the bar — the old texture
+    // ran its bands along the bar and read as a smooth wooden dowel, newer than the new one), now sweat-darkened, polished
+    // where the fingers sat, frayed strip ends and one broken binding near the right tab
+    const barT = (() => { const Wu = 256, Hv = 1024, c = canvas(Wu, Hv), g = c.getContext('2d'), r = util.rng(66); g.fillStyle = '#2e1e12'; g.fillRect(0, 0, Wu, Hv);
+      const N = 36, bh = Hv / N;
+      for (let k = -1; k <= N; k++) {
+        const y0 = k * bh, worn = Math.exp(-(((k - N * 0.5) / (N * 0.28)) ** 2)), sh = (0.7 + 0.18 * r()) * (1 - 0.35 * worn);
+        const grd = g.createLinearGradient(0, y0, 0, y0 + bh);
+        grd.addColorStop(0, `rgb(${Math.round(92 * sh)},${Math.round(62 * sh)},${Math.round(36 * sh)})`); grd.addColorStop(0.4, `rgb(${Math.round(128 * sh + 30 * worn)},${Math.round(90 * sh + 20 * worn)},${Math.round(52 * sh + 10 * worn)})`);
+        grd.addColorStop(1, `rgb(${Math.round(78 * sh)},${Math.round(52 * sh)},${Math.round(30 * sh)})`);
+        g.save(); g.transform(1, bh / Wu, 0, 1, 0, 0); g.fillStyle = grd; g.fillRect(0, y0 + 1.0, Wu, bh - 2.0);
+        for (let f = 0; f < 7; f++) { g.strokeStyle = `rgba(${r() < 0.5 ? '170,128,80' : '30,18,10'},${0.15 + r() * 0.25})`; g.lineWidth = 0.8; const yy = y0 + 3 + r() * (bh - 6); g.beginPath(); g.moveTo(0, yy); g.lineTo(Wu, yy); g.stroke(); }
+        g.restore();
+      }
+      // the broken binding (two strips lifted near one end) + frayed fibre ends
+      g.fillStyle = '#1a1009'; g.fillRect(0, Hv * 0.86, Wu, bh * 0.7);
+      for (let k = 0; k < 60; k++) { g.strokeStyle = `rgba(160,120,74,${0.35 + r() * 0.4})`; g.lineWidth = 0.9; const x = r() * Wu, y = Hv * (0.85 + r() * 0.05); g.beginPath(); g.moveTo(x, y); g.lineTo(x + (r() - 0.5) * 10, y + 6 + r() * 14); g.stroke(); }
+      const t = ctex(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; return t; })();
+    const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.0115, 0.0115, 0.15, 32, 1), new THREE.MeshStandardMaterial({ map: barT, roughness: 0.42, color: hex('#ffffff') }));
     bar.rotation.z = Math.PI / 2; bar.position.set(0, -0.012, -0.008); bar.castShadow = true; handleG.add(bar);
     caseG.userData.bar = bar;
     // contents: folded shirt (museum colour, hem corner cut), comb on its unwrapped red-brown cloth, sleeve + letter under the shirt
-    const shirtM = TX.mat('shirt', { repeat: [1.2, 1.2], tex: { tone: 'shirtMuseum', creases: 0.5 }, color: hex('#c8ccd2') });
+    const shirtM = TX.mat('shirt', { repeat: [1.2, 1.2], tex: { tone: 'shirtMuseum', creases: 0.8 }, color: hex('#b4bfcc') });
     const shirt = new THREE.Group(); shirt.position.set(0.04, t + 0.02, 0.01); caseInner.add(shirt); caseG.userData.shirt = shirt;
     { const sb = new THREE.Mesh(new THREE.BoxGeometry(0.30, 0.03, 0.22), shirtM); sb.castShadow = sb.receiveShadow = true; shirt.add(sb);
+      // integration: it read as a flat grey board — a folded collar (two soft flaps) and one horn button on the top fold
+      const colM = shirtM.clone(); colM.color = hex('#a7b2be');
+      for (const sx of [-1, 1]) { const f = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.006, 0.045), colM); f.position.set(-0.11 + sx * 0.03, 0.018, -0.06); f.rotation.set(0.08, sx * 0.55, sx * 0.06); f.castShadow = true; shirt.add(f); }
+      const btn = new THREE.Mesh(new THREE.CylinderGeometry(0.0055, 0.0055, 0.002, 16), new THREE.MeshStandardMaterial({ color: 0x4a3c30, roughness: 0.35 })); btn.position.set(-0.08, 0.0165, -0.01); shirt.add(btn);
       for (const z of [-0.035, 0.04]) { const ridge = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.29, 8), shirtM); ridge.rotation.z = Math.PI / 2; ridge.position.set(0, 0.015, z); shirt.add(ridge); }
       const cut = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.032, 3), lining); cut.rotation.y = 0.5; cut.position.set(0.15, 0.0, 0.11); shirt.add(cut); }
     const comb = new THREE.Group(); caseInner.add(comb); caseG.userData.comb = comb;
@@ -735,7 +753,8 @@ export default async function create(ctx) {
       for (let k = 34; k >= 0; k--) { const x = -cw / 2 + cw * k / 34; sh.lineTo(x, -ch * 0.38 + (k === 9 || k === 22 ? 0.006 : 0)); sh.lineTo(x - cw / 34 * 0.5, -ch * 0.38); sh.lineTo(x - cw / 34 * 0.5, -0.004); }
       sh.lineTo(-cw / 2, 0);
       const cm = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 0.005, bevelEnabled: false }), new THREE.MeshStandardMaterial({ color: hex(C.comb).multiplyScalar(0.8), roughness: 0.45 }));
-      cm.rotation.x = -Math.PI / 2; cm.position.set(0, 0.002, 0.012); cm.castShadow = true; comb.add(cm); }
+      cm.rotation.x = -Math.PI / 2; cm.position.set(0, 0.002, 0.012); cm.castShadow = true; comb.add(cm);
+      cm.material.color.set('#c9a36a'); cm.material.roughness = 0.38; }   // integration: boxwood (it read as a yellow half-disc)
   }
   // --- letter textures
   const letterS = letterStrokes(util.rng(1907));
@@ -744,6 +763,9 @@ export default async function create(ctx) {
     drawPaper(g, W, H, k, 0, 0, util.rng(5)); drawStrokes(g, letterS, k, 0, 0, 1);
     return ctex(c);
   })();
+  // integration (S052): the front's brushwork blurred and at half contrast — crisp pseudo-hanzi read as real-but-wrong characters
+  const letterTexSoft = (() => { const src = letterTex.image, c = canvas(src.width, src.height), g = c.getContext('2d');
+    g.filter = 'blur(16px)'; g.drawImage(src, 0, 0); g.filter = 'none'; g.globalAlpha = 0.5; g.fillStyle = '#e4d9c0'; g.fillRect(0, 0, c.width, c.height); return ctex(c); })();
   const letterBackTex = (() => {    // back: blank paper, mirrored show-through of the brushwork, pressed jasmine in the margin fold
     const k = 90, W = Math.round(LET.w * k), H = Math.round(LET.h * k), c = canvas(W, H), g = c.getContext('2d');
     drawPaper(g, W, H, k, 0, 0, util.rng(6), { rules: false, mirror: true, foxing: 0.8 });
@@ -825,13 +847,15 @@ export default async function create(ctx) {
       for (let k = 0; k < 3; k++) { g.lineWidth = 0.8; g.beginPath(); g.moveTo(L * (0.2 + k * 0.15), 0); g.lineTo(L * (0.45 + k * 0.15), (k % 2 ? 1 : -1) * wd * 0.55); g.stroke(); }
       g.restore();
     };
-    for (let q = 0; q < 8; q++) petal(q / 8 * Math.PI * 2 + 0.2 + (r() - 0.5) * 0.25, 150 + r() * 30, 44 + r() * 10, 0.42, [168, 138, 90]);
-    for (let q = 0; q < 6; q++) petal(q / 6 * Math.PI * 2 + 0.55 + (r() - 0.5) * 0.3, 105 + r() * 20, 36 + r() * 8, 0.5, [150, 118, 74]);
+    // integration: a soft drop shadow under the petals (raking lamp) + more opaque, lighter-edged petals — it read as a burn stain
+    g.save(); g.filter = 'blur(6px)'; g.globalAlpha = 0.35; g.fillStyle = 'rgb(70,52,30)'; g.beginPath(); g.arc(cx + 10, cy + 12, 160, 0, 6.283); g.fill(); g.restore();
+    for (let q = 0; q < 8; q++) petal(q / 8 * Math.PI * 2 + 0.2 + (r() - 0.5) * 0.25, 150 + r() * 30, 46 + r() * 10, 0.86, [170, 138, 90]);
+    for (let q = 0; q < 6; q++) petal(q / 6 * Math.PI * 2 + 0.55 + (r() - 0.5) * 0.3, 105 + r() * 20, 38 + r() * 8, 0.9, [146, 114, 70]);
     const cg = g.createRadialGradient(cx, cy, 0, cx, cy, 34); cg.addColorStop(0, 'rgba(78,58,34,0.95)'); cg.addColorStop(1, 'rgba(110,84,50,0)');
     g.fillStyle = cg; g.beginPath(); g.arc(cx, cy, 34, 0, 6.283); g.fill();
     g.strokeStyle = 'rgba(88,68,40,0.8)'; g.lineWidth = 7; g.lineCap = 'round'; g.beginPath(); g.moveTo(cx + 6, cy + 10); g.quadraticCurveTo(cx + 34, cy + 110, cx + 18, cy + 236); g.stroke();
     const t = ctex(c);
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(0.034, 0.034), new THREE.MeshStandardMaterial({ map: t, transparent: true, roughness: 0.8, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -3 }));
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(0.042, 0.042), new THREE.MeshStandardMaterial({ map: t, transparent: true, roughness: 0.8, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -3 }));
     m.rotation.x = Math.PI / 2; m.rotation.z = 0.5;
     // back face of the sheet is local −Y after the −90° X rotation: place just below
     m.position.set((LET.w / 2 - JAS.x) / 100, -0.0006, (JAS.y - LET.h / 2) / 100);
@@ -896,6 +920,17 @@ export default async function create(ctx) {
         vec3 c = core * vec3(1.0, 0.78, 0.5) + ring * 1.1; c = max(c - 0.12 * dot(ring, vec3(0.33)), 0.0);
         gl_FragColor = vec4(c * uI * smoothstep(1.0, 0.9, r), 1.0); }` }));
   caustic.rotation.x = -Math.PI / 2; caustic.renderOrder = 29; br1.add(caustic);
+  // S054 (integration): the pastel ring parked in screen space for the light cut into S055 (muted ruby → amber → cobalt)
+  const haloRingU = { uI: { value: 0 } };
+  const haloRing = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.2), new THREE.ShaderMaterial({ uniforms: haloRingU, transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending,
+    vertexShader: 'varying vec2 vP; void main(){ vP = position.xy / 0.1; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+    fragmentShader: `varying vec2 vP; uniform float uI;
+      void main(){ float r = length(vP), a = atan(vP.y, vP.x);
+        vec3 ring = vec3(0.62, 0.20, 0.22) * exp(-pow((r - 0.62) / 0.07, 2.0)) + vec3(0.72, 0.52, 0.18) * exp(-pow((r - 0.52) / 0.07, 2.0)) + vec3(0.18, 0.30, 0.62) * exp(-pow((r - 0.42) / 0.07, 2.0));
+        float arc = 0.55 + 0.45 * cos(a - 0.8);                                   // brighter toward the upper right
+        vec3 c = ring * arc + vec3(1.0, 0.85, 0.65) * 0.12 * exp(-r * r / 0.05);
+        gl_FragColor = vec4(c * uI * smoothstep(1.0, 0.85, r), 1.0); }` }));
+  haloRing.renderOrder = 31; haloRing.visible = false; br1.add(haloRing);
   br1.add(magnifier);
   for (const o of [lf, jasmine, blotter, lampLight, hemi, benchBounce, moonWL.light]) o.layers.enable(2);   // visible to magCam (S054)
 
@@ -910,9 +945,9 @@ export default async function create(ctx) {
   const DBGP = {};   // name → world point, printed with ?off=pts
   // per-shot visibility / prop state (pure function of the shot's flags)
   const state = (s) => {
-    faceFill.visible = false; lampG.visible = !s.noLampBody; shelfLight.visible = !!s.fig;
+    faceFill.visible = false; faceFill.color.set('#ffd9b8'); faceFill.angle = 0.55; letterM.map = letterTex; lampG.visible = !s.noLampBody; shelfLight.visible = !!s.fig;
     wallWash.visible = !!s.wash; coolFill.visible = !!s.cool; if (s.cool) coolFill.intensity = s.cool;
-    for (const m of [shardB.material, shardC.material]) m.envMapIntensity = 0.7;
+    for (const m of [shardB.material, shardC.material]) { m.envMapIntensity = 0.7; m.clearcoatRoughness = 0.08; }
     setMoon(s.br1 ? [0.3, -0.8, -0.52] : [-0.32, -0.78, -0.53]);   // PRE1 moon SE high, BR1 late SW (was only set by BR1 shots: impure)
     moonWL.light.visible = !s.noMoon; hemi.intensity = s.hemi ?? 0.15; lampLight.castShadow = !s.noLampShadow; benchBounce.visible = !s.noBounce;
     { const tb = props.getObjectByName('tube'); if (tb) tb.visible = !s.noTube; }
@@ -922,7 +957,7 @@ export default async function create(ctx) {
     show(joinBowl, s.join !== false); show(loose, s.loose !== false); show(shardAholder, s.A !== false);
     show(trayBowl, s.tray !== false); restored.material = s.cheapTray ? cheapTray : s.trayNoA ? trayMats.noA : trayMats.full;
     show(br1, !!s.br1); show(caseG, s.case !== false); show(letter, s.letter !== false); show(sleeve, !!s.sleeve);
-    show(magnifier, !!s.mag); show(caustic, !!s.mag); show(tweezers, !!s.tweezers); show(pencilHand, !!s.pencilHand); show(pencilLoose, !!s.pencilLoose);
+    show(magnifier, !!s.mag); show(caustic, !!s.mag); haloRing.visible = false; show(tweezers, !!s.tweezers); show(pencilHand, !!s.pencilHand); show(pencilLoose, !!s.pencilLoose);
     show(pencilFig, !!s.pencilFig); patchMesh.visible = !!s.patch;
     pageM.map = s.ticked ? ledgerPages.ticked : ledgerPages.plain; ledger.visible = !s.noLedger; const cr = scene.getObjectByName('cradle'); if (cr) cr.visible = !s.noLedger;
     // defaults for every shared prop a shot may move (setShot is pure: frames render out of order)
@@ -951,10 +986,10 @@ export default async function create(ctx) {
     S012(tl, u, T) {
       state({ handR: true, handL: false, tray: false, loose: false, A: false, cool: 0.35 });
       setLamp(lamp.head, lamp.aim, 0.42, 2.2, 0.85);
-      const k = ks([[0, 0], [0.55, 0.62], [1.2, 1.0]], tl, ease.inOutCubic);           // approach progress
+      const k = ks([[0, 0], [0.55, 0.55], [1.15, 0.97], [1.2, 1.0]], tl, ease.inOutCubic);           // approach progress
       const twist = 0.04 * Math.sin(clamp((tl - 0.5) / 0.55) * Math.PI);               // one tiny corrective twist
-      shardCpivot.rotation.set(0, (1 - k) * 15 * D2R, 0);                                // C slid back along the rim (≈2 cm)
-      shardCpivot.position.set(0, (1 - k) * 0.005, 0);
+      shardCpivot.rotation.set(0, (1 - k) * 26 * D2R, 0);                                // integration: C held ≈ 3.5 cm off along the rim, lifted, so the join reads
+      shardCpivot.position.set(0, (1 - k) * 0.012 - (tl > 1.2 ? 0.0008 * Math.exp(-(tl - 1.2) * 30) : 0), 0);   // 2-frame settle on 碎
       shardC.rotation.set(0, 0, twist);
       joinBowl.updateMatrixWorld(true);
       const GP = 86;                                                                     // grip on C's lip, 22° (≈3 cm) from the joint
@@ -978,7 +1013,7 @@ export default async function create(ctx) {
       placeB(setups._s012beta);
       const joint = joinBowl.localToWorld(bowlPt(63, 0.11));
       const fw = V(-0.549, -0.707, -0.445).normalize();                                 // 45° down, looking north-west
-      const d = lerp(0.86, 0.83, ease.inOutSine(clamp(u)));   // fingertip ≈ S011's scale (≈12 % of frame height)
+      const d = lerp(1.32, 0.84, ease.outCubic(clamp(tl / 1.1)));   // integration: frame 0 on S011's scale (fingertip ≈ 12 % of frame height), easing in to the CU
       const upv = V(0, 1, 0).sub(fw.clone().multiplyScalar(fw.y)).normalize();
       const tgt = grip.clone().addScaledVector(upv, 0.004);
       cam.place(camera, tgt.clone().addScaledVector(fw, -d), tgt); cam.lens(camera, 75);
@@ -1011,11 +1046,18 @@ export default async function create(ctx) {
         const cR = V(1, 0, 0).applyQuaternion(camera.quaternion), cU = V(0, 1, 0).applyQuaternion(camera.quaternion);
         setups._s013lamp = V(-0.30, BY + 0.20, -0.56).addScaledVector(cR, -0.16).addScaledVector(cU, 0.10); setups._s013aim = V(0.08, BY + 0.03, -0.66);
       }
-      setLamp(setups._s013lamp, setups._s013aim, 0.6, 1.1, 0.9); benchBounce.intensity = 0;   // (the bounce point light made a 2nd glint)
-      for (const m of [shardB.material, shardC.material]) m.envMapIntensity = 0.22;   // the env's bright patch sat on the moon disc as a fixed 'eye' glint
+      // integration: the slider starts inside the lamp's warm raking pool (frame 0 within ≈ 0.3 stop of S012's end, it was a
+      // full stop down and blue-grey); the cool window stays as fill on the far side
+      setLamp(setups._s013lamp, setups._s013aim, 0.6, lerp(2.3, 1.6, smoothstep(0.3, 1.6, tl)), 0.9); benchBounce.intensity = 0;   // (the bounce point light made a 2nd glint)
+      hemi.intensity = 0.55;
+      { // the warm raking pool at the start of the slide (the crack's first ≈ 0.6 s), fading as the move climbs into the lamp's own light
+        const p0 = joinBowl.localToWorld(bowlPt(63, 0.092)), n0 = joinBowl.localToWorld(bowlPt(63, 0.092).setX(bowlPt(63, 0.092).x * 1.5).setZ(bowlPt(63, 0.092).z * 1.5)).sub(p0).normalize();
+        faceFill.visible = true; faceFill.color.set('#ffc890'); faceFill.angle = 0.5; faceFill.position.copy(p0).addScaledVector(n0, 0.35).add(V(0, 0.22, 0)); faceFill.target.position.copy(p0); faceFill.target.updateMatrixWorld();
+        faceFill.intensity = 1.1 * (1 - smoothstep(0.5, 1.3, tl)); }
+      for (const m of [shardB.material, shardC.material]) { m.envMapIntensity = 0.22; m.clearcoatRoughness = 0.32; }   // the env's bright patch sat on the moon disc as a fixed 'eye' glint; integration: a broader, softer glaze highlight (no hot 'eye' / flare blob)
       camAt(p, n);
       // perf: no DOF pass — at f/14 with maxCoc 0.6 it added ≈0.2 s for ≤ 1 px of blur; the glaze falls off with the light instead
-      return { dof: null, exposure: 0.95 };
+      return { dof: null, exposure: 1.0, temp: -0.06, bloom: { strength: 0.22, threshold: 1.25, radius: 0.4 } };   // highlight, not a flare
     },
     // S014 — MCU 75 mm, eye level slightly to the side (profile from her right, window frame right), locked + ~2 % push.
     // Reads the LOOSE foot-ring shard A under the head magnifier (director ruling), 1.03 s turns it to show the foot ring,
@@ -1024,7 +1066,9 @@ export default async function create(ctx) {
       state({ fig: true, loupe: true, A: false, join: false, loose: false, cheapTray: true, noLampBody: true, pencilFig: true, wash: true });
       // review: key moved west of her face and a little north (the articulated arm pulled in): frame upper left, lights the
       // camera side of her face 4:1 instead of rim-lighting a mask; the shard and ledger stay in the pool
-      setLampE(V(-0.85, BY + 0.95, -1.2), V(0.02, BY + 0.16, -0.84), 0.62, 2.4, 0.9);
+      // integration: the 3500 K lamp is BEHIND the shard toward frame right (south-east of her face): the porcelain glows, the
+      // face is lost profile with only a warm edge (it was a fully lit pink profile mask)
+      setLampE(V(0.42, BY + 0.62, -0.62), V(0.0, BY + 0.30, -1.0), 0.6, 2.0, 0.9);
       loupe.visible = true; loupe.userData.visor.rotation.x = 0;
       poseSeated({ lean: 0.55, neck: 0.22, head: 0.2, yaw: -0.45 });   // (review) turned toward the ledger / lamp: a true profile from the 18° camera
       R.breathe(T, 0.6);
@@ -1040,11 +1084,13 @@ export default async function create(ctx) {
       shardAholder.quaternion.setFromEuler(new THREE.Euler(lerp(-0.4, -1.75, turn), 0, lerp(0.2, 0.05, turn)));
       // right hand with the pencil: hovering over the ledger, 1.57 s lands, two quick strokes
       const land = ks([[1.35, 0], [1.57, 1]], tl, ease.inOutCubic), stroke = clamp((tl - 1.57) / 0.4);
-      const nib = LEDGER.clone().add(V(0.03 + 0.03 * Math.sin(stroke * Math.PI * 2) * (stroke < 1 ? 1 : 0) + 0.035 * stroke, lerp(0.05, 0.008, land), 0.07));
+      const nib = ledger.localToWorld(V(0.06 + 0.02 * Math.sin(stroke * Math.PI * 2) * (stroke < 1 ? 1 : 0) + 0.03 * stroke, lerp(0.05, 0.012, land), 0.0));
       R.reach('R', nib.clone().add(V(-0.05, 0.07, -0.08)), { palm: V(0.3, -0.85, 0.2).normalize(), fingers: V(0.25, -0.55, 0.75).normalize() });
       R.hold('R', pencilFig, { socket: 'pen', grip: ['write'] }); pencilFig.position.set(0, -0.012, 0);
       R.lookAt(tl < 1.42 ? aPos : nib, 0.85);
-      faceFill.visible = true; faceFill.position.set(-0.05, BY + 0.06, -0.92); faceFill.target.position.copy(eye); faceFill.intensity = 0.45;
+      faceFill.visible = false;
+      // integration: the ledger sits close by her right side (the reach crossed 70 % of the frame as a grey tube)
+      ledger.position.set(-0.36, BY + 0.075, -1.22); ledger.rotation.set(-0.30, 0.5, 0, 'YXZ'); ledger.updateMatrixWorld(true); placeCradle(scene.getObjectByName('cradle'));
       // camera: west of her, looking east and a little south (window at frame right), slight push
       // eye at frame ≈ (0.40, 0.33); 2.0 m → 1.96 m push
       // review: yawed 18° toward the SE corner (was 8°, which faced a blank stretch of wall → black void): the east-wall
@@ -1053,7 +1099,7 @@ export default async function create(ctx) {
       const eye2 = R.eye(), tgt = eye2.clone().addScaledVector(right, 0.11).add(V(0, -0.065, 0));
       const dist = lerp(2.45, 2.4, ease.inOutSine(clamp(u)));
       cam.place(camera, tgt.clone().addScaledVector(f, -dist), tgt); cam.lens(camera, 75);
-      return { dof: { focus: cam.distTo(camera, eye), fstop: 2.8 }, exposure: 1.15 };
+      return { dof: { focus: cam.distTo(camera, aPos), fstop: 2.8 }, exposure: 1.15 };   // focus on the shard under the loupe
     },
     // S015 — 90°-ish overhead INSERT, 100 mm, locked. T07 A-frame for S016: bowl centre (0.50, 0.52), rim Ø ≈ 80 % of frame
     // height, ~15° from vertical tilted from the 6 o'clock side, side A (boat) toward 12 o'clock, MISSING at 3 o'clock.
@@ -1067,7 +1113,7 @@ export default async function create(ctx) {
       tray.updateMatrixWorld(true);
       const c = trayBowl.localToWorld(V(0, 0.066, 0));    // rim circle centre
       const upW = V(-0.7071, 0, -0.7071);                  // frame up (NW)
-      const tilt = 15 * D2R, dist = 1.262;
+      const tilt = 24 * D2R, dist = 1.30;   // integration: 15° hid the outer plum band; at 24° it reads along the near (6 o'clock) lip
       const dir = V(0, -Math.cos(tilt), 0).addScaledVector(upW, Math.sin(tilt)).normalize();   // looks down and toward 12 o'clock
       camera.up.copy(upW); camera.position.copy(c).addScaledVector(dir, -dist); camera.lookAt(c); camera.up.set(0, 1, 0);
       cam.lens(camera, 100);
@@ -1162,13 +1208,17 @@ export default async function create(ctx) {
       const lp = letterInner.localToWorld(V(0, 0, 0));
       const read = ks([[0.6, 0], [1.9, 1], [2.1, 1], [2.25, 0.55], [2.45, 0.9]], tl);
       const gazeAt = lp.clone().add(V(lerp(-0.05, 0.04, read), 0, lerp(0.07, -0.06, read)));
-      const lift = ks([[2.85, 0], [3.25, 1]], tl, ease.inOutSine);
-      const far = R.eye().add(V(0.35, -0.02, 1.2));
-      R.lookAt(gazeAt.clone().lerp(far, lift * 0.55), 0.9);
+      // integration: 160.92 → 161.6 the inward lift of the eyes — the head rises ≈ 14° and turns ≈ 10° toward the window (frame
+      // right, past the lamp), held to the end; the pencil stays frozen mid-air
+      const lift = ks([[2.92, 0], [3.6, 1]], tl, ease.inOutSine);
+      const far = gazeAt.clone().add(V(0.07, 0.13, 0.09));   // ≈ 14° above her reading line, a little toward the window
+      R.lookAt(gazeAt.clone().lerp(far, lift), 0.95);
       // right hand + pencil: tick at 0.52 on the ledger row, then follows the reading, stops mid-air at 1.96
       const tick = ks([[0.3, 0], [0.52, 1], [0.62, 0]], tl, ease.inOutSine);
+      // integration: the ledger lies beside her right hand (the reach to it was a straight 70 cm plank of an arm)
+      ledger.position.set(-0.44, BY + 0.075, -1.08); ledger.rotation.set(-0.30, 0.35, 0, 'YXZ'); ledger.updateMatrixWorld(true); placeCradle(scene.getObjectByName('cradle'));
       const rowP = ledger.localToWorld(V(0.11, 0.012, -0.012));
-      const follow = gazeAt.clone().add(V(-0.06, 0.08, 0.02));
+      const follow = rowP.clone().add(V(0.05, 0.06, 0.03));
       const hov = tl < 0.62 ? rowP.clone().add(V(0, 0.03 * (1 - tick), 0)) : rowP.clone().add(V(0, 0.03, 0)).lerp(follow, ks([[0.62, 0], [1.0, 1]], tl));
       const stopT = Math.min(tl, 1.96);
       const nib = tl < 1.0 ? hov : follow.clone().add(V(0, 0, -0.03 * ks([[1.0, 0], [1.96, 1]], stopT)));
@@ -1183,7 +1233,7 @@ export default async function create(ctx) {
       // camera: she at ≈(0.44, 0.48); push 2.30 → 2.10 m with a 12-frame ease-in
       const eye = R.eye();
       const yaw = 18 * D2R, f = V(Math.cos(yaw), -0.015, Math.sin(yaw)).normalize(), right = V(-Math.sin(yaw), 0, Math.cos(yaw));   // (review: was 4°)
-      const tgt = eye.clone().addScaledVector(right, 0.09).add(V(0, -0.012, 0));
+      const tgt = eye.clone().addScaledVector(right, 0.09).add(V(0, -0.075, 0));   // integration: framed a little lower so the letter in the lamp pool reads at the bottom
       const pushK = clamp((tl - 0.5) / (4.58 - 0.5)) * 0.95 + 0.05 * smoothstep(0, 0.5, tl) * clamp(tl / 0.5);
       const dist = lerp(2.95, 2.75, pushK);
       cam.place(camera, tgt.clone().addScaledVector(f, -dist), tgt); cam.lens(camera, 75);
@@ -1196,7 +1246,7 @@ export default async function create(ctx) {
       state({ pre: false, br1: true, case: false, letter: true, patch: true, noLampBody: true });
       setMoon([0.3, -0.8, -0.52]);
       layBR1();
-      const lower = ks([[0, 0], [0.4, 1]], tl, ease.inOutSine);
+      const lower = ks([[0, 0.72], [0.3, 1]], tl, ease.inOutSine);   // integration: opens already near the contracted pool (it flashed 3 stops after S050)
       const bw = letterInner.localToWorld(V((LET.broken[0] - LET.w / 2) / 100, 0, (LET.broken[1] - LET.h / 2) / 100));
       setLampE(lamp.head.clone().lerp(bw.clone().add(V(-0.22, 0.06, 0.16)), lower), bw.clone().add(V(0.0, 0, -0.012)), lerp(0.75, 0.15, lower), lerp(1.0, 1.5, lower), 0.7);
       // column direction on the bench (page "down" = world −Z after the 180° yaw): camera looks west, right = north
@@ -1225,9 +1275,11 @@ export default async function create(ctx) {
       const fl = ks([[0.2, 0], [0.9, 1]], tl, ease.inOutSine);
       letterInner.rotation.set(0, 0, Math.PI * fl);
       letterInner.position.set(0, (LET.w / 200) * Math.sin(fl * Math.PI) + 0.002 * Math.sin(fl * Math.PI), 0);   // rolls over its low edge (never through the table)
-      curlU.value = -0.012 * Math.sin(fl * Math.PI);
+      curlU.value = -0.036 * Math.sin(fl * Math.PI);   // integration: the sheet bends as it turns (≥ 20°), not a rigid board
+      letterM.map = letterTexSoft;                       // the front's brushwork soft and low-contrast (illegible, ruling 4)
       letter.updateMatrixWorld(true);
       setLampE(BLOT.clone().add(V(0.20, 0.34, 0.20)), BLOT.clone().add(V(-0.03, 0, 0)), 0.42, 1.7, 0.9);
+      // (the warm 2800 K glove bounce is aimed at the right glove after it is placed, below)
       // tweezers: tips under the west edge (local +x), follow it up to ~70° while it lifts, release, withdraw to the right
       const edgeAt = (ang) => { const q = V(LET.w / 200 - 0.004, -0.0012, 0.035); const c = Math.cos(ang), sn = Math.sin(ang);
         return letter.localToWorld(V(q.x * c - q.y * sn, q.x * sn + q.y * c + (LET.w / 200 + 0.002) * Math.sin(ang), q.z)); };
@@ -1237,6 +1289,8 @@ export default async function create(ctx) {
       handR.pose('write'); handR.hold(tweezers, 'pen'); tweezers.position.set(0, -0.075, 0); tweezers.rotation.set(0, 0, 0);
       placeArm(handR, tipT.clone().add(V(-0.06, 0.035, -0.02)), V(0.25, -0.9, 0.1), 'pen');
       { const tw = handR.sockets.pen.localToWorld(V(0, -0.075, 0)); handR.root.position.add(tipT.clone().sub(tw)); handR.root.updateMatrixWorld(true); }
+      { const gp = handR.root.getWorldPosition(new THREE.Vector3());   // warm 2800 K bounce on the right glove only (it dropped to blue-grey in shadow)
+        faceFill.visible = true; faceFill.color.set('#ffcf9e'); faceFill.position.copy(gp).add(V(0.0, 0.22, 0.12)); faceFill.target.position.copy(gp); faceFill.target.updateMatrixWorld(); faceFill.angle = 0.32; faceFill.intensity = 0.62; }
       // left fingertips rest on the blotter just beyond the sheet's left (east) edge, ready to receive it (an arm to the far
       // edge lay across the whole sheet from her POV)
       const far = letter.localToWorld(V(-LET.w / 200 - 0.018, 0.0, 0.045));
@@ -1287,79 +1341,84 @@ export default async function create(ctx) {
     // flower (170.82 "没说完"); 1.93–2.71 rack flower (in the glass) → her eye (172.92 "欢"); 4.09 she tilts it 15°: the rim
     // breaks the lamp into a soft pastel ring at upper right (174.3) = the light anchor into S055's lancet (0.72, 0.30).
     S054(tl, u, T) {
-      state({ pre: false, br1: true, case: false, letter: true, fig: true, mag: true, noLampBody: true, noLedger: true });
+      // Integration rebuild (BR1's turn: she stops identifying and starts READING). Low across the sheet from its far side,
+      // 100 mm, ~1.7 m: the magnifier in her LEFT hand fills ≈ 35 % of the frame height at the lower centre, showing the
+      // magnified pressed jasmine + the broken stroke (what she reads), her gloved fingers on the handle lower right; her face
+      // bowed just beyond it, three-quarter, keyed only from above/behind by the lowered lamp (no frontal fill — the mask never
+      // reads), her eye-line down into the glass. 170.82 the glass settles over the flower; 172.14 → 172.92 a real rack from
+      // the glass to her eye (f/2.2); 174.3 she tilts it 15° and the rim throws a soft pastel ring at frame (0.72, 0.30) —
+      // the light anchor into S055's lancet.
+      state({ pre: false, br1: true, case: false, letter: true, fig: true, mag: true, noLampBody: true, noLedger: true, hemi: 0.42, wash: true, cool: 0.3 });
       setMoon([0.3, -0.8, -0.52]);
       layBR1(); letterInner.rotation.set(0, 0, Math.PI);
       letter.updateMatrixWorld(true);
       const jw = jasmine.getWorldPosition(new THREE.Vector3());
-      poseSeated({ lean: 0.72, hipBend: 0.25, spine: 0.24, chest: 0.28, neck: 0.40, head: 0.30, dz: 0.09, yaw: -0.12 });
+      poseSeated({ lean: 0.7, hipBend: 0.22, spine: 0.22, chest: 0.26, neck: 0.36, head: 0.28, dz: 0.08, yaw: 0.0 });
       R.breathe(T, 0.3);
-      R.lookAt(jw, 1);
       R.root.updateMatrixWorld(true);
-      const eye = R.eye();
-      // camera: from the midpoint flower–eye, 18° south of west, 13° up; slow 5 cm push
-      const Mid = jw.clone().lerp(eye, 0.5), e = 17 * D2R, az = 20 * D2R;
-      const back = V(-Math.cos(e) * Math.cos(az), Math.sin(e), Math.cos(e) * Math.sin(az));
-      const dist = lerp(2.0, 1.95, ease.inOutSine(clamp(u)));
-      frameAt(Mid.clone().addScaledVector(back, dist), eye, 0.60, 0.24, 100);
-      camera.updateProjectionMatrix(); camera.updateMatrixWorld();
-      // magnifier: between eye and flower (42 % up from the flower), glass normal = bisector of (to camera, to her eye) so
-      // both see it as a disc; descends 0.3–0.6 from above-right; 4.09 s tilted 15° about its handle axis
+      const eye0 = R.eye();
+      // the glass: held low over the flower, 70 % of the way up to her eye; it slides in 0.3–0.6 s from frame left (170.82)
       const dsc = ks([[0.3, 0], [0.6, 1]], tl, ease.outCubic), tilt = ks([[4.09, 0], [4.3, 1]], tl, ease.inOutSine);
-      const Lc = jw.clone().lerp(eye, 0.42).add(V(0.0, 0.10 * (1 - dsc), 0.05 * (1 - dsc)));
-      const toC = camera.position.clone().sub(Lc).normalize(), toE = eye.clone().sub(Lc).normalize();
-      const nrm = toC.clone().add(toE).normalize();
-      magnifier.position.copy(Lc); magnifier.quaternion.setFromUnitVectors(V(0, 0, 1), nrm);
-      { // roll so the handle (local −Y) points down toward her left hand
-        const want = V(0.3, -1, -0.12); want.sub(nrm.clone().multiplyScalar(want.dot(nrm))).normalize();
+      const Lc = jw.clone().lerp(eye0, 0.7).add(V(0.0, 0.2 * (1 - dsc), -0.05 * (1 - dsc)));   // lowered into place from above frame on 170.82
+      R.lookAt(jw, 0.9); R.root.updateMatrixWorld(true);
+      const eye = R.eye();
+      // camera: from her LEFT (east), near paper height, 100 mm at ≈ 1.4 m — an ECU of her bowed profile and the glass: she
+      // faces frame left, the lens lower left of her eye, the dark room behind her head (frame right) for the ring
+      const az = 10 * D2R, el = 3 * D2R;
+      const back = V(Math.cos(el) * Math.cos(az), Math.sin(el), Math.cos(el) * Math.sin(az));
+      const Mid = Lc.clone().lerp(eye, 0.5);
+      const dist = lerp(1.95, 1.9, ease.inOutSine(clamp(u)));
+      frameAt(Mid.clone().addScaledVector(back, dist), eye, 0.56, 0.31, 100);
+      camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+      // the glass faces the camera (a full disc), rolled so the handle points down-right to her left hand
+      const toC = camera.position.clone().sub(Lc).normalize();
+      magnifier.position.copy(Lc); magnifier.quaternion.setFromUnitVectors(V(0, 0, 1), toC);
+      { const want = V(0.25, -1, 0.35); want.sub(toC.clone().multiplyScalar(want.dot(toC))).normalize();
         const cur = V(0, -1, 0).applyQuaternion(magnifier.quaternion);
-        const ang = Math.atan2(cur.clone().cross(want).dot(nrm), cur.dot(want));
-        magnifier.quaternion.premultiply(new THREE.Quaternion().setFromAxisAngle(nrm, ang));
-      }
+        const ang = Math.atan2(cur.clone().cross(want).dot(toC), cur.dot(want));
+        magnifier.quaternion.premultiply(new THREE.Quaternion().setFromAxisAngle(toC, ang)); }
       magnifier.rotateY(15 * D2R * tilt);
       magnifier.updateMatrixWorld(true);
-      // her LEFT hand fist round the handle (thumb toward the glass); two IK passes put the grip socket on the handle
-      const hA = handle.localToWorld(V(0, 1, 0)).sub(handle.localToWorld(V(0, 0, 0))).normalize();   // handle axis → glass
-      const gripW = handle.localToWorld(V(0, -0.015, 0));
+      // her LEFT hand round the handle (two IK passes put the grip socket on it)
+      const hA = handle.localToWorld(V(0, 1, 0)).sub(handle.localToWorld(V(0, 0, 0))).normalize();
+      const gripW = handle.localToWorld(V(0, -0.02, 0));
       let fL = Lc.clone().sub(SHO.L); fL.sub(hA.clone().multiplyScalar(fL.dot(hA))).normalize();
       const pL = new THREE.Vector3().crossVectors(fL, hA).normalize();
       R.hands.L.pose('grip', { radius: 0.0072 });
       let wT = gripW.clone().addScaledVector(fL, -0.05).addScaledVector(pL, -0.03);
       for (let k = 0; k < 2; k++) { R.reach('L', wT, { palm: pL, fingers: fL }); R.root.updateMatrixWorld(true); const sg = R.hands.L.sockets.grip.getWorldPosition(new THREE.Vector3()); wT.add(gripW.clone().sub(sg)); }
       R.reach('L', wT, { palm: pL, fingers: fL });
-      // right forearm rests on the bench at her side, gloved fingertips by the sheet's near corner, never touching the flower
-      // (a right hand over the flower crosses the lens from this side)
-      const fR = V(0.30, -0.12, 0.95).normalize();
-      R.hands.R.pose('relaxed', { curl: 0.45 });
-      R.reach('R', V(-0.25, BY + 0.035, -1.10), { palm: V(0.1, -1, 0), fingers: fR });
+      // right gloved fingertips hover 5 mm above the sheet beside the flower, never touching (below frame mostly)
+      R.hands.R.pose('relaxed', { curl: 0.35 });
+      R.reach('R', jw.clone().add(V(-0.07, 0.03, -0.05)), { palm: V(0.1, -1, 0), fingers: V(0.35, -0.2, 0.9).normalize() });
       R.root.updateMatrixWorld(true);
-      // lowered lamp, upper left beyond her (west-north-west of the flower): pool on the sheet, warm bounce up into her face
-      setLampE(jw.clone().add(V(-0.56, 0.24, -0.02)), jw.clone().add(V(0.02, 0, 0.0)), 0.36, 1.6, 0.95);   // rakes the sheet, her face at the cone's edge
-      faceFill.visible = true; faceFill.position.copy(jw).add(V(0.02, 0.02, 0.02)); faceFill.target.position.copy(eye); faceFill.intensity = 0.035;
-      // magnified view in the glass: what her eye sees — a virtual camera between glass and eye looking at the flower
+      // the lowered lamp: above and BEHIND her head (north), raking the sheet; top / edge light on her hair, brow and the rim of
+      // the glass; the camera-side face stays dark
+      setLampE(eye.clone().add(V(-0.38, 0.30, -0.16)), jw.clone().add(V(0.0, 0, 0.02)), 0.55, 1.7, 0.95);
+      faceFill.visible = false; benchBounce.intensity *= 0.25;   // no warm up-light into the face from the sheet
+      // in the glass: the magnified flower + the broken stroke, seen from above (what her eye sees), oriented like the frame
       const lc = scr(magnifier.position), rr = 0.0375;
       let ru = 0; for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2, q = scr(magnifier.localToWorld(V(Math.cos(a) * rr, Math.sin(a) * rr, 0))); ru = Math.max(ru, Math.abs(q[0] - lc[0]), Math.abs(q[1] - lc[1]) * ctx.H / ctx.W); }
       magU.uC.value.set(lc[0], 1 - lc[1]); magU.uR.value.set(ru, ru * ctx.W / ctx.H);
-      const mc = Lc.clone().addScaledVector(toE, 0.07), dF = mc.distanceTo(jw);
-      magCam.position.copy(mc); magCam.up.copy(V(0, 1, 0).applyQuaternion(camera.quaternion)); magCam.lookAt(jw.clone().add(V(-0.004, 0, 0.004)));
-      magCam.fov = 2 * Math.atan(0.022 / dF) / D2R; magCam.aspect = 1; magCam.updateProjectionMatrix(); magCam.updateMatrixWorld();
+      const fwdC = camera.getWorldDirection(new THREE.Vector3()); fwdC.y = 0; fwdC.normalize();
+      magCam.position.copy(jw).add(V(0, 0.075, 0)).addScaledVector(fwdC, -0.03);
+      magCam.up.copy(fwdC); magCam.lookAt(jw.clone().add(V(0.004, 0, 0)).addScaledVector(fwdC, 0.006));
+      magCam.fov = 2 * Math.atan(0.018 / 0.075) / D2R; magCam.aspect = 1; magCam.updateProjectionMatrix(); magCam.updateMatrixWorld();
       const prevRT = ctx.renderer.getRenderTarget();
       ctx.renderer.setRenderTarget(magRT); ctx.renderer.setClearColor(0x05070b, 1); ctx.renderer.clear(); ctx.renderer.render(scene, magCam);
       ctx.renderer.setRenderTarget(prevRT);
-      { const ndc = jw.clone().project(camera); magU.uDepth.value = 0.5 * ndc.z + 0.5; }
-      // halo (brightest on the rim's screen-upper-right arc) + a faint spectral caustic on the paper
+      { const ndc = magnifier.position.clone().project(camera); magU.uDepth.value = 0.5 * ndc.z + 0.5; }
+      // the pastel ring (174.3): parked at frame (0.72, 0.30), at her eye's depth so it is crisp-soft in the rack's focus
       const hI = smoothstep(4.09, 4.3, tl) * (0.92 + 0.08 * Math.sin(T * 3.0));
-      { const c0 = scr(magnifier.position); let best = -1e9, ba = 0;
-        for (let k = 0; k < 24; k++) { const a = k / 24 * Math.PI * 2, q = scr(magnifier.localToWorld(V(Math.cos(a) * 0.04, Math.sin(a) * 0.04, 0))); const sc = (q[0] - c0[0]) * 2.39 - (q[1] - c0[1]); if (sc > best) { best = sc; ba = a; } }
-        haloU.uA.value = ba; }
-      haloU.uI.value = 0.42 * hI;
-      // caustic: the glass focuses the lamp (upper left / WNW) onto the sheet on the far side, frame right of the flower
-      caustic.position.copy(jw).add(V(0.085, 0.0012, 0.05)); caustic.rotation.set(-Math.PI / 2, 0, 0.6); caustic.scale.setScalar(lerp(0.7, 1.15, hI));
-      caustic.material.uniforms.uI.value = 0.75 * hI;
+      { const dEye = cam.distTo(camera, eye), ray = V(0.72 * 2 - 1, 1 - 0.30 * 2, 0.5).unproject(camera).sub(camera.position).normalize();
+        haloRing.position.copy(camera.position).addScaledVector(ray, dEye / ray.dot(camera.getWorldDirection(new THREE.Vector3())));
+        haloRing.quaternion.copy(camera.quaternion); haloRing.scale.setScalar(dEye * 0.24); haloRing.visible = hI > 0.002; }
+      haloU.uI.value = 0; haloRingU.uI.value = 0.42 * hI;
+      caustic.visible = false;
       const rack = ks([[1.93, 0], [2.71, 1]], tl, ease.inOutSine);
-      DBGP.eye = eye; DBGP.jasmine = jw; DBGP.lens = magnifier.position.clone(); DBGP.rimUR = magnifier.localToWorld(V(Math.cos(haloU.uA.value) * 0.045, Math.sin(haloU.uA.value) * 0.045, 0));
+      DBGP.eye = eye; DBGP.jasmine = jw; DBGP.lens = magnifier.position.clone(); DBGP.ring = haloRing.position.clone();
       DBGP.gripL = R.hands.L.sockets.grip.getWorldPosition(new THREE.Vector3()); DBGP.handle = gripW;
-      return { dof: { focus: lerp(cam.distTo(camera, jw), cam.distTo(camera, eye), rack), fstop: 2.4 }, exposure: 0.95 };
+      return { dof: { focus: lerp(cam.distTo(camera, magnifier.position), cam.distTo(camera, eye), rack), fstop: 2.2 }, exposure: 1.3, bloom: { strength: 0.35, threshold: 0.85 } };
     },
     };
   setups.default = setups.S012;

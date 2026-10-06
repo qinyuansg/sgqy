@@ -279,3 +279,45 @@ re-aim the camera / add fill / change exposure via URL params) — debug only, n
   fresh stub on the table), cold rice without steam, the bangle on the LEFT wrist, the bowl pattern (side A boat to 12 o'clock in
   S016; side B's cracked-ice window toward the S042 probe), weather locks CH1 dry / CH2 damp + heavy cloud / CH3 rain.
 - Performance: see the table above (all ≤ 1.54 s mean, ≤ 2.23 s max under load).
+
+## Integration fixes (whole-film QA, 2026-10-06)
+
+Survey: `out/fix_restoration_lab_old_home_map_office/` (`shots/S016.jpg` …, `cuts/S015-S016.jpg` …); working renders in
+`out/fix_rl_oh_mo_wip/oh1`–`oh5`. Director for this group: S016 must reveal the EMPTY bench across the table; in S017 the
+restorer's reflection must NOT sit on the empty seat — the point is waiting.
+
+| finding | fix |
+|---|---|
+| **S017 blocker** — the restorer's reflection sat exactly on the empty bench (a second person opposite her) | Her reflection moved to the **upper right (head ≈ (0.80, 0.30))**, nearer the glass (`GHOST_D` 6.2 → 4.4 m: head ≈ 25 % of frame height, larger than the home figures), just left of the right muntin; only **head + shoulder** read (the ghost plate gets an alpha gradient that fades her body out below the shoulder line), a warm 3500 K rim from behind-left (`ghostKey`), face dark; opacity 0.42, still under the candle; S017's exposure +0.2 stop (the S016 → S017 step was ≈ 1 stop). The home plate is pushed in (40 → 50 mm, `HOME17` solved: candle flame on S018's anchor (0.44, 0.47), the empty bench at (0.68, 0.70)) so the wife is large enough for the 69.6 s breath to read, and the lattice moon in the plate falls on the **empty bench + bowl** (MOON_16 / MOON_16C) instead of her. |
+| **S016** — '失' never revealed the empty bench; the wife's hands read as an orange wooden manikin hand | The end framing is re-solved (`C16.b`, wider grid, ≈ 47° down as the shot list writes, was 60°): measured rim (0.57, 0.40), flame (0.32, 0.33), the **empty bench's moonlit seat from x ≈ 0.78 to 0.93** at the right with the lattice on it, her hands are solved just off the left edge (a sliver of the sleeve remains) — the QA's option "crop the hands out and let S017 introduce her". Focus now travels from the rim to the **empty bench** (shot list) at f/2.2, so her hands are soft; their skin is toned for this shot only (`handTone`: 45 % desaturated, −25 %). Frame 0 uses S015's new 24° tilt; bloom 0.28 / 0.98 so the rim glaze no longer blooms into a steel halo. |
+| **S019** — the woman ≈ 12 % of frame height, bowl a speck, door jamb an orange neon outline | `CAM19` dollied in along the bowl's own ray (6.5 → 3.6 m; same orientation, so the moon/sky lock with S018 holds and the bowl stays at (0.30, 0.78)): she is ≈ 40 % of frame height, the bowl ≈ 4 % of the width with her hand on its rim at 74.18 and lifting at 74.6 in the lower-middle region (S020 hand-off). The door spill is a lower, softer candle light on the threshold and step (`doorGlow` 1.6 → 0.95 at y 0.42), the room card behind the door at half strength — no neon jambs. |
+| **S035** — the cuff read as a black basket-weave purse, front-lit lower face, no glance | The cuff is soft indigo cotton (fine weave ×7, lighter dye, a sagging creased tube instead of a rigid cylinder), the patch with its white running stitches faces the lens, needle thicker with a warm glint, thimble brighter brass. The candle moved **side-back at frame right** (beyond her, toward the window): only the mouth corner, chin and cheek edge catch it, the camera-side face is in shadow; the lap fill keeps the work readable (0.15). At 119.5 the head turns ≈ 24° toward the door at frame left and lifts with it, then the rack to the niche lamp (sharp at 120.31) as before. |
+| **S040→S041** (two findings) — 2.7–3.8× scale pop on the glove | S041 now **opens on S040's last framing**: the glove (back of the right hand, fingers up) ≈ 75 % of frame height at (0.38, 0.57), 0.55 m from the lens, the soft warm permit-card glow behind it; 0.5–1.3 s focus passes through it into the reflection while it drifts soft off the bottom-left and fades (the mirror twin is off); the case glow behind is 2 stops down and off-centre so the eaves read by 135.48. |
+| **S041** — flat featureless grey cloud plane, bowl a speck, she sits on a dark block | CH2 deck has structure (cover 0.82, scale 0.1, darker bellies #0d111b, lit edges #74809c round the moon glow); the step is wet (roughness 0.34); the niche lamp's spill reaches the bowl (0.6); the bowl is larger via the new CAM19; she is turned toward the sea at screen right and a little away from the lens (yaw +0.2; was −0.45, which turned her face to the camera), so her face reads as a profile in shadow. |
+| **S042** — a foot slides in at mid-height, shins like pillars, toes poke through the sole | The probe tilts 9.5° down (was 4.2°): only feet, ankles and a hand's width of shin. The step down is from ABOVE: the foot crosses the threshold out of frame, then drops and lands heel first ≈ (0.50, 0.70) on '等' 139.02. The toe digits sit +2 mm on the stone and the '雨' wiggle is a 3–4 mm curl **up**. |
+| Grain | home **0.040** everywhere (S041 no longer ramps 0.035 → 0.04); nested views get no grain. |
+
+**Not fixed / deviations**
+- S042: the bowl's rim band is the library porcelain texture (`TX.porcelain`), whose 1 cm band reads as separate blossoms at the
+  probe's distance — a lib-side fix (a continuous branch) is needed; logged here, not in my files.
+- S041: the seat is still the granite block on the step (re-staging her on the step edge would break the S019/S041 composition
+  lock and the S042 shoe cut-in); it now shares the wet step's sheen.
+- S019: the sky is the module's own CH1 sky (moon locked to S018 via `CAM19_REF`); no extra −0.3 stop grade was applied because
+  the S018 end frame changed in the harbor_eras pass — checked on the cut pair instead.
+- S016: the bowl lands at (0.57, 0.40) rather than the QA's (0.65, 0.55) — the solver trades it for the bench reveal and the hands.
+
+Debug knobs added: `ohdbg` (prints the solved S016 end framing), `ohd19` (CAM19 distance), `oh42p` (S042 probe pitch),
+`oh35b`/`oh35r` (S035 candle offsets).
+
+**Measured after the integration fixes** (1280×536, `out/check/map_office/mo_render.mjs`, 3 frames per shot at u ≈ 0.25/0.5/0.75, mean of the frames after each shot's first (shader compile), shared 4-core box, 1-min load ≈ 3–4):
+
+| shot | s/frame |
+|---|---|
+| S016 | 1.65 |
+| S017 | 1.00 |
+| S019 | 2.00 |
+| S035 | 1.70 |
+| S041 | 1.45 |
+| S042 | 1.57 |
+
+All within the 2.5 s cap.

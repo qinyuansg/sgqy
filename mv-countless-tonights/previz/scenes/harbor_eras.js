@@ -1360,7 +1360,9 @@ export default async function create(ctx) {
       // comes out on 73.35 (tl 2.65) — the shot list's "veiled moon enters the top third" — and reaches S019's values on the cut
       const veil = 1 - smoothstep(2.58, 2.86, tl);
       sky.uniforms.uMoonIntensity.value = SKY18.moonIntensity * (1 - veil); sky.uniforms.uMoonHalo.value = SKY18.moonHalo * (1 - 0.55 * veil);
-      cityU.uLit.value = 1; cityU.uWin.value = 1.25;
+      // (integration) fewer lit windows (≈⅓) and the city held ~40 % down for the first second, so her lit window (S017's candle
+      // carried over) is the one anchor at frame 0; the city comes up as the rise reveals it
+      cityU.uLit.value = +(Q.get('lit18') || 0.72); cityU.uWin.value = 1.25 * lerp(+(Q.get('w18') || 0.6), 1, smoothstep(0.55, 1.5, tl));
       cityU.uSkyAmb.value.setRGB(0.012, 0.016, 0.03); cityU.uGndAmb.value.setRGB(0.004, 0.004, 0.006); cityU.uKeyCol.value.setRGB(0.05, 0.058, 0.07); cityU.uStreet.value.setRGB(0.075, 0.045, 0.024); cityU.uFogCol.value.setRGB(0.028, 0.038, 0.06); cityU.uFogDen.value = 0.0006;
       cityU.uKeyDir.value.copy(moonW).setY(0).normalize().multiplyScalar(Math.cos(32 * D2R)).setY(Math.sin(32 * D2R));
       // moonlight (lighting cheat: the moon's azimuth, raised to 32°) from behind the building → the south facade stays dark

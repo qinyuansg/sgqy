@@ -294,7 +294,7 @@ export default async function create(ctx) {
     const dC = V(A[0] - B[0], 0, A[1] - B[1]).normalize(), up = V(0, 1, 0), xC = new THREE.Vector3().crossVectors(dC, up);
     const basis = new THREE.Matrix4().makeBasis(xC, dC, up);
     const cuff = new THREE.Group(); coat.add(cuff); cuff.quaternion.setFromRotationMatrix(basis);
-    const c0 = V(A[0], 0, A[1]); c0.y = Hc(A[0], A[1]) - 0.019; cuff.position.copy(c0).addScaledVector(dC, 0.012);
+    const c0 = V(A[0], 0, A[1]); c0.y = Hc(A[0], A[1]) - 0.0125; cuff.position.copy(c0).addScaledVector(dC, 0.004);   // (integration 2) resting on the board, not hanging past the slab's rounded corner (the rim read as a hook)
     const tube = new THREE.CylinderGeometry(0.047, 0.048, 0.075, 40, 6, true); tube.scale(1, 1, 0.48); tube.translate(0, 0.0375, 0);
     { const pa = tube.attributes.position; for (let i = 0; i < pa.count; i++) { const x = pa.getX(i), y = pa.getY(i), z = pa.getZ(i); const a = Math.atan2(z, x);
       pa.setXYZ(i, x * (1 + 0.03 * Math.sin(a * 5 + y * 60)), y, z * (1 + 0.05 * Math.sin(a * 3 + 1))); } tube.computeVertexNormals(); }
@@ -302,13 +302,20 @@ export default async function create(ctx) {
     mesh(tube, std({ color: 0x1f1d1b, roughness: 0.95, side: THREE.BackSide }), cuff, 0, 0, 0, false, true);
     const rim = mesh(new THREE.TorusGeometry(0.047, 0.0045, 8, 48), mCoatAged, cuff, 0, 0.075, 0); rim.rotation.x = Math.PI / 2; rim.scale.set(1, 0.48, 1);
     // worn patch 18 × 8 mm, ~1 cm in from the cuff edge, on the upper face: paler, raised nap, a little sheen
-    const wc = canvas(128, 64), wg = wc.getContext('2d'), wr = util.rng(23);
-    // a soft-edged rubbed ellipse (paler, flattened nap) + pills of lifted fibre
-    wg.filter = 'blur(6px)'; wg.fillStyle = 'rgba(130,127,120,0.95)'; wg.beginPath(); wg.ellipse(64, 32, 55, 24, 0, 0, 6.283); wg.fill(); wg.filter = 'none';
-    for (let k = 0; k < 900; k++) { const a = wr() * 6.283, rr = Math.sqrt(wr()); const x = 64 + Math.cos(a) * 54 * rr, y = 32 + Math.sin(a) * 23 * rr;
-      const v = 128 + wr() * 52; wg.fillStyle = `rgba(${v},${v - 2},${v - 6},${0.35 + 0.5 * wr()})`; wg.fillRect(x, y, 1 + wr() * 2.2, 1 + wr() * 1.5); }
-    const wornM = new THREE.MeshStandardMaterial({ map: ctex(wc), transparent: true, roughness: 0.9, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 });
-    const worn = mesh(new THREE.PlaneGeometry(0.02, 0.0095), wornM, cuff, 0, 0.075 - 0.011, 0.0247, false, true);   // upper face of the flattened tube
+    const wc = canvas(256, 112), wg = wc.getContext('2d'), wr = util.rng(23);
+    // (integration 2) a rubbed, elongated abrasion — not a round pale dot (it read as a pearl button): several overlapping soft
+    // lobes along the cuff edge, a ragged fuzzy outline, flattened nap with lifted pills and stray fibres, only ~1 stop paler
+    wg.filter = 'blur(7px)';
+    for (let k = 0; k < 7; k++) { const x = 52 + k * 25 + (wr() - 0.5) * 12, y = 56 + (wr() - 0.5) * 16, rx = 22 + wr() * 18, ry = 13 + wr() * 9;
+      wg.fillStyle = `rgba(${118 + wr() * 10},${119 + wr() * 8},${116 + wr() * 8},${0.38 + 0.25 * wr()})`; wg.beginPath(); wg.ellipse(x, y, rx, ry, (wr() - 0.5) * 0.5, 0, 6.283); wg.fill(); }
+    wg.filter = 'none';
+    for (let k = 0; k < 1400; k++) { const a = wr() * 6.283, rr = Math.sqrt(wr()); const x = 128 + Math.cos(a) * 112 * rr, y = 56 + Math.sin(a) * 40 * rr;
+      const v = 104 + wr() * 46, al = (0.25 + 0.5 * wr()) * (1 - rr * rr * 0.7); wg.fillStyle = `rgba(${v},${v},${v - 4},${al})`;
+      if (k % 3) wg.fillRect(x, y, 1 + wr() * 2.4, 1 + wr() * 1.6); else { wg.beginPath(); wg.arc(x, y, 0.9 + wr() * 1.4, 0, 6.283); wg.fill(); } }
+    wg.strokeStyle = 'rgba(150,150,146,0.5)'; wg.lineWidth = 0.7;
+    for (let k = 0; k < 40; k++) { const x = 30 + wr() * 196, y = 20 + wr() * 72, a = wr() * 6.28, L = 4 + wr() * 9; wg.beginPath(); wg.moveTo(x, y); wg.lineTo(x + Math.cos(a) * L, y + Math.sin(a) * L); wg.stroke(); }
+    const wornM = new THREE.MeshStandardMaterial({ map: ctex(wc), color: new THREE.Color(0.78, 0.78, 0.78), transparent: true, roughness: 0.9, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 });
+    const worn = mesh(new THREE.PlaneGeometry(0.026, 0.0115), wornM, cuff, 0, 0.075 - 0.011, 0.0247, false, true);   // (the soft outline fades inside: the abrasion itself ≈ 20 × 8 mm)   // upper face of the flattened tube
     // (cuff frame: x around the cuff, y along the sleeve axis, z up — the plane's own axes: 20 mm around, 9.5 mm along)
     coat.userData.worn = worn;
     coat.position.set(0.0, 0.0125, 0.0);
@@ -420,7 +427,7 @@ export default async function create(ctx) {
   {
     const c = g3[1].contents;
     const MY = 1.42;
-    const mMount = new THREE.MeshStandardMaterial({ color: 0x8e98a2, roughness: 0.12, metalness: 0, transparent: true, opacity: 0.32, envMap: env, envMapIntensity: 1.4, depthWrite: false });
+    const mMount = new THREE.MeshStandardMaterial({ color: 0x8e98a2, roughness: 0.12, metalness: 0, transparent: true, opacity: 0.1, envMap: env, envMapIntensity: 0.45, depthWrite: false });   // (integration 2) clear acrylic, faint (it read as a white glyph)
     const ring = mesh(new THREE.TorusGeometry(0.045, 0.0035, 8, 40), mMount, c, 0, MY + 0.02, 0.33, false, false); ring.rotation.x = Math.PI / 2; ring.renderOrder = 6;
     const stem = mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.08, 8), mMount, c, 0, MY - 0.02, 0.33, false, false); stem.renderOrder = 6;
     const shelf = mesh(box(0.3, 0.012, 0.22), mAcrylic, c, 0, MY - 0.066, 0.3, false, false); shelf.renderOrder = 6;
@@ -461,27 +468,65 @@ export default async function create(ctx) {
     const handle = mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.16, 12), std({ color: 0x4e3524, roughness: 0.6 }), caseG, 0, H - 0.03, D / 2 + 0.03); handle.rotation.z = Math.PI / 2;
     for (const x of [-0.085, 0.085]) mesh(box(0.02, 0.04, 0.035), leather, caseG, x, H - 0.03, D / 2 + 0.014);
     // PROP_SHIRT, museum state: the same folded 30×22 block as pier_waiting, faded #8392A0, folds paler, cut hem corner up
+    // (integration 2) the construction is pier_waiting's S031 shirt, part for part (T13: the same object, the same composition):
+    // the soft slab, the mended stand collar as an open elliptical band leaning out (taller at the back), the shaded neck
+    // opening, the raised 对襟 placket with its opening line, edge seams and four cloth knot buttons with loops, the shoulder
+    // seams, the soft ridges of the sleeves folded back underneath, the hinged last third with the cut hem triangle — in the
+    // museum state: faded, the fold lines whitened
     shirtG = new THREE.Group(); shirtG.name = 'shirt'; caseG.add(shirtG); shirtG.position.set(0.0, 0.013, -0.005);
-    const shirtM = TX.mat('shirt', { repeat: [3.2, 2.4], tex: { seed: 21, creases: 0.45, tone: 'shirtMuseum' }, color: new THREE.Color(0.84, 1.0, 1.32) });
-    const bg = new THREE.BoxGeometry(0.3, 0.032, 0.22, 24, 3, 18), N = TX.makeNoise(61), bpp = bg.attributes.position;
-    for (let i = 0; i < bpp.count; i++) { let x = bpp.getX(i), y = bpp.getY(i), z = bpp.getZ(i); const e = Math.max(Math.abs(x) / 0.15, Math.abs(z) / 0.11), tt = (y + 0.016) / 0.032;
-      const bulge = 1 + 0.035 * Math.sin(Math.PI * tt); x *= bulge; z *= bulge; if (y > 0) y -= 0.009 * smoothstep(0.7, 1.0, e) - 0.0016 * N.fbm(x * 3 + 0.5, z * 3 + 0.5, 2, 3); bpp.setXYZ(i, x, y, z); }
-    bg.computeVertexNormals();
-    mesh(bg, shirtM, shirtG, 0, 0.016, 0);
-    const seam = std({ color: 0x6b7987, roughness: 0.95 }), pale = std({ color: 0x8c98a4, roughness: 0.95 });
-    for (let k = 0; k < 3; k++) mesh(box(0.29, 0.0012, 0.003), seam, shirtG, 0, 0.006 + k * 0.009, 0.1125, false);
-    for (let k = 0; k < 3; k++) mesh(box(0.003, 0.0012, 0.2), seam, shirtG, 0.1525, 0.006 + k * 0.009, 0, false);
-    const cpts = []; for (let k = 0; k <= 24; k++) { const a = Math.PI * (k / 24); cpts.push(V(-0.06 + Math.cos(a) * 0.05, 0.0, -0.075 - Math.sin(a) * 0.028)); }
-    const collar = mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(cpts), 32, 0.0075, 8, false), std({ color: 0x7d8b9a, roughness: 0.85 }), shirtG, 0, 0.034, 0, false); collar.scale.y = 0.8;
-    const neck = mesh(new THREE.CircleGeometry(0.044, 24, 0, Math.PI), std({ color: 0x75838f, roughness: 0.95 }), shirtG, -0.06, 0.0322, -0.075, false); neck.rotation.x = -Math.PI / 2; neck.scale.set(1, 0.6, 1);
-    mesh(box(0.011, 0.0015, 0.15), std({ color: 0x7f8d9b, roughness: 0.9 }), shirtG, -0.06, 0.033, 0.03, false);
-    for (let k = 0; k < 4; k++) { const b = mesh(new THREE.SphereGeometry(0.0042, 8, 6), std({ color: 0x5a6878, roughness: 0.9 }), shirtG, -0.06, 0.035, -0.035 + k * 0.037, false); b.scale.y = 0.6; }
-    // pale fold lines (fibres whitened along the folds)
-    for (const z of [-0.035, 0.04]) mesh(box(0.28, 0.0012, 0.004), pale, shirtG, 0, 0.0325, z, false);
-    const flap = new THREE.Group(); flap.position.set(0.15, 0.032, 0); shirtG.add(flap);
-    mesh(box(0.1, 0.008, 0.214), shirtM, flap, -0.05, 0.004, 0, true);
-    const notch = mesh(new THREE.ShapeGeometry(new THREE.Shape([new THREE.Vector2(0, 0), new THREE.Vector2(0.04, 0), new THREE.Vector2(0, 0.03)])), std({ color: 0x2f405a, roughness: 0.95, side: THREE.DoubleSide }), flap, -0.004, 0.0085, 0.105, false);
-    notch.rotation.x = -Math.PI / 2; notch.rotation.z = Math.PI;
+    const shirtM = TX.mat('shirt', { repeat: [3.2, 2.4], tex: { seed: 21, creases: 0.6, tone: 'shirtMuseum' }, color: new THREE.Color(0.84, 1.0, 1.32) });
+    {
+      const bg = new THREE.BoxGeometry(0.3, 0.032, 0.22, 24, 3, 18), N = TX.makeNoise(61), bpp = bg.attributes.position;
+      for (let i = 0; i < bpp.count; i++) { let x = bpp.getX(i), y = bpp.getY(i), z = bpp.getZ(i); const e = Math.max(Math.abs(x) / 0.15, Math.abs(z) / 0.11), tt = (y + 0.016) / 0.032;
+        const bulge = 1 + 0.035 * Math.sin(Math.PI * tt); x *= bulge; z *= bulge; if (y > 0) y -= 0.009 * smoothstep(0.7, 1.0, e) - 0.0016 * N.fbm(x * 3 + 0.5, z * 3 + 0.5, 2, 3); bpp.setXYZ(i, x, y, z); }
+      bg.computeVertexNormals();
+      mesh(bg, shirtM, shirtG, 0, 0.016, 0);
+      const dark = std({ color: 0x66768a, roughness: 0.92 }), seam = std({ color: 0x6b7987, roughness: 0.95 }), pale = std({ color: 0x95a1ad, roughness: 0.95 });
+      for (let k = 0; k < 3; k++) mesh(box(0.29, 0.0012, 0.003), seam, shirtG, 0, 0.006 + k * 0.009, 0.1125, false);   // fold layers on the front face
+      for (let k = 0; k < 3; k++) mesh(box(0.003, 0.0012, 0.2), seam, shirtG, 0.1525, 0.006 + k * 0.009, 0, false);
+      const CX = -0.06, CZ = -0.07, RX = 0.046, RZ = 0.026;
+      const collarM = TX.mat('shirt', { repeat: [0.8, 0.25], tex: { seed: 23, creases: 0.2, tone: 'shirtMuseum' }, color: new THREE.Color(0.74, 0.88, 1.16), side: THREE.DoubleSide });
+      {
+        const segs = 44, rows = [0, 0.35, 0.7, 1], pos = [], idx = [], gap = 0.16;
+        for (let i = 0; i <= segs; i++) {
+          const th = gap + (2 * Math.PI - 2 * gap) * (i / segs), dx = Math.sin(th), dz = Math.cos(th);
+          const back = 0.5 - 0.5 * Math.cos(th), hh = 0.022 * (0.55 + 0.45 * back), lean = 0.95 + 0.25 * (1 - back);
+          for (const t of rows) { const out = t * hh * Math.sin(lean) + 0.0025 * Math.sin(t * Math.PI), up = t * hh * Math.cos(lean) - 0.004 * t * t;
+            pos.push(CX + dx * (RX + out), 0.0335 + up, CZ + dz * (RZ + out * RZ / RX)); }
+        }
+        const Rn = rows.length;
+        for (let i = 0; i < segs; i++) for (let j = 0; j < Rn - 1; j++) { const a0 = i * Rn + j, b0 = a0 + Rn; idx.push(a0, b0, a0 + 1, a0 + 1, b0, b0 + 1); }
+        const cgm = new THREE.BufferGeometry(); cgm.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); cgm.setIndex(idx);
+        const uv = []; for (let i = 0; i <= segs; i++) for (const t of rows) uv.push(i / segs * 4, t); cgm.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+        cgm.computeVertexNormals();
+        mesh(cgm, collarM, shirtG, 0, 0, 0, true);
+        const top = []; for (let i = 0; i <= segs; i++) { const k = i * Rn + Rn - 1; top.push(V(pos[k * 3], pos[k * 3 + 1], pos[k * 3 + 2])); }
+        mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(top), 48, 0.0018, 5, false), collarM, shirtG, 0, 0, 0, false);
+      }
+      { const ng = new THREE.CircleGeometry(1, 32), np = ng.attributes.position, nc = new Float32Array(np.count * 3);
+        for (let i = 0; i < np.count; i++) { const y = np.getY(i), r = Math.hypot(np.getX(i), y), k = 0.62 + 0.38 * (0.5 + 0.5 * y) * (1 - 0.35 * r); nc[i * 3] = nc[i * 3 + 1] = nc[i * 3 + 2] = k; }
+        ng.setAttribute('color', new THREE.BufferAttribute(nc, 3));
+        const neck = mesh(ng, std({ map: shirtM.map, color: new THREE.Color(0.72, 0.84, 1.08), vertexColors: true, roughness: 0.95 }), shirtG, CX, 0.0332, CZ, false); neck.rotation.x = -Math.PI / 2; neck.scale.set(RX * 0.98, RZ * 0.98, 1); neck.receiveShadow = false; }
+      const PL0 = CZ + RZ - 0.002, PL1 = 0.104, plM = TX.mat('shirt', { repeat: [0.3, 2.0], tex: { seed: 29, creases: 0.15, tone: 'shirtMuseum' }, color: new THREE.Color(0.8, 0.96, 1.26) });
+      mesh(new RoundedBoxGeometry(0.024, 0.004, PL1 - PL0, 2, 0.0015), plM, shirtG, CX, 0.0325, (PL0 + PL1) / 2, false);
+      mesh(box(0.0012, 0.0012, PL1 - PL0), std({ color: 0x3c4652, roughness: 0.95 }), shirtG, CX, 0.0348, (PL0 + PL1) / 2, false);
+      for (const sx of [-0.0115, 0.0115]) mesh(box(0.0007, 0.0008, PL1 - PL0), seam, shirtG, CX + sx, 0.0346, (PL0 + PL1) / 2, false);
+      for (let k = 0; k < 4; k++) { const z = PL0 + 0.016 + k * 0.034;
+        const kn = mesh(new THREE.SphereGeometry(0.0042, 10, 8), dark, shirtG, CX - 0.004, 0.0362, z, false); kn.scale.set(1, 0.7, 1);
+        const lp = mesh(new THREE.TorusGeometry(0.0045, 0.0011, 5, 12, Math.PI * 1.3), dark, shirtG, CX + 0.003, 0.0352, z, false); lp.rotation.x = -Math.PI / 2; }
+      for (const sx of [-1, 1]) { const sg = mesh(box(0.075, 0.0008, 0.0011), seam, shirtG, CX + sx * (RX + 0.03), 0.0336, CZ - 0.022, false); sg.rotation.y = sx * 0.55; }
+      const ridge = (x0, z0, x1, z1, r = 0.0045) => { const c = new THREE.CatmullRomCurve3([V(x0, 0, z0), V((x0 + x1) / 2, 0.0015, (z0 + z1) / 2), V(x1, 0, z1)]); const m = mesh(new THREE.TubeGeometry(c, 12, r, 8, false), shirtM, shirtG, 0, 0.031, 0, false); m.scale.y = 0.55; return m; };
+      ridge(-0.14, -0.035, -0.095, -0.085); ridge(-0.02, -0.088, 0.03, -0.03); ridge(-0.145, 0.05, 0.03, 0.065, 0.0035);
+      ridge(0.0, 0.02, 0.07, 0.085, 0.0022); ridge(-0.13, 0.0, -0.085, 0.09, 0.002); ridge(0.02, -0.02, 0.1, -0.06, 0.0018);
+      for (const [x, z, r] of [[-0.12, -0.05, 0.6], [0.0, -0.06, -0.55]]) { const c = mesh(box(0.07, 0.0012, 0.0025), seam, shirtG, x, 0.0318, z, false); c.rotation.y = r; }
+      // museum state: the folds whitened along the fold lines (fibres broken)
+      for (const z of [-0.035, 0.04]) mesh(box(0.27, 0.0008, 0.0035), pale, shirtG, 0.01, 0.0328, z, false);
+      const flap = new THREE.Group(); flap.position.set(0.15, 0.032, 0); shirtG.add(flap);
+      mesh(box(0.1, 0.008, 0.214), shirtM, flap, -0.05, 0.004, 0, true);
+      mesh(box(0.006, 0.01, 0.214), shirtM, flap, -0.002, -0.001, 0, true);   // rounded fold edge
+      const notch = mesh(new THREE.ShapeGeometry(new THREE.Shape([new THREE.Vector2(0, 0), new THREE.Vector2(0.04, 0), new THREE.Vector2(0, 0.03)])), std({ color: 0x46525e, roughness: 0.95, side: THREE.DoubleSide }), flap, -0.004, 0.0085, 0.105, false);
+      notch.rotation.x = -Math.PI / 2; notch.rotation.z = Math.PI;
+    }
     // PROP_KEEPSAKE museum state: the boxwood comb on its unwrapped, flat-laid cloth (creases), on the shirt's top-right corner
     combG = new THREE.Group(); combG.name = 'comb'; caseG.add(combG);
     const clothM = TX.mat('cotton', { repeat: [0.5, 0.5], tex: { tone: [112, 74, 66], seed: 33, creases: 0.9 }, color: hex('#b9a8a0') });
@@ -522,7 +567,7 @@ export default async function create(ctx) {
       const geo = new THREE.PlaneGeometry(0.12, 0.18); const uv = geo.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setX(i, s < 0 ? uv.getX(i) * 0.5 : 0.5 + uv.getX(i) * 0.5);
       mesh(geo, passM, leaf, s * 0.06, 0, 0, true, true); }
     const easel = mesh(box(0.2, 0.006, 0.05), mAcrylic, passG, 0, -0.093, 0.01, false, false); easel.renderOrder = 6;
-    passG.position.set(0.48, DECK3 + 0.1, 0.42); passG.rotation.x = -0.18; passG.rotation.y = -0.15;
+    passG.position.set(0.33, DECK3 + 0.085, 0.42); passG.rotation.x = -0.42; passG.rotation.y = -0.15;   // (integration 2) closer to the case and reclined: its edge with two empty photo corners shows at the right of S030
     caseG.position.set(-0.12, DECK3, 0.36);
     caseG.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
   }
@@ -543,6 +588,7 @@ export default async function create(ctx) {
     inspLamp.position.set(G3.w / 2 - 0.06, 1.25, G3.d - 0.18);
   }
   const inspLight = new THREE.SpotLight(0xffd6a6, 0, 1.6, 0.62, 0.7, 2); scene.add(inspLight, inspLight.target);
+  inspLight.shadow.mapSize.set(1024, 1024); inspLight.shadow.bias = -0.0002; inspLight.shadow.normalBias = 0.003; inspLight.shadow.camera.near = 0.05; inspLight.shadow.camera.far = 1.6;   // (S030 only: the raking lamp's fold shadows)
 
   // ======================================================================================================== LIGHTS
   const moon = new THREE.DirectionalLight(0xc8d2db, 1.6);                     // P04 moonlight silver
@@ -562,6 +608,8 @@ export default async function create(ctx) {
   const mirLight = new THREE.PointLight(0xffd2a0, 0, 0.5, 2); mirLight.visible = false; scene.add(mirLight);   // mirror passes only: light on the glass side of a hand
   // (integration) the moon pools' first bounce, from under the floor (lights walls, cases, columns, ceiling — not the floor)
   const poolBounce = new THREE.PointLight(0x8ea2c6, 0, 14, 2); poolBounce.visible = false; scene.add(poolBounce);
+  // (integration 2) the hooded inspection lamp's spill on a face: a narrow warm spot that lights chin and lips only (S029)
+  const chinSpot = new THREE.SpotLight(0xffc896, 0, 1.2, 0.09, 0.6, 2); chinSpot.visible = false; scene.add(chinSpot, chinSpot.target);
   function setShadowRes(n) { if (moon.shadow.mapSize.x !== n) { moon.shadow.mapSize.set(n, n); if (moon.shadow.map) { moon.shadow.map.dispose(); moon.shadow.map = null; } } }
   function setMoon(dir, I, bounds) {
     moon.intensity = I;
@@ -589,6 +637,37 @@ export default async function create(ctx) {
   archGlow.layers.set(L_MIR); archGlow.renderOrder = 899; archGlow.visible = false; scene.add(archGlow);
 
   // ======================================================================================================== FIGURES
+  // Taubin (λ|μ) smoothing of a skinned shell, on a private copy of its position/normal arrays (the lib caches and shares hand
+  // geometry between instances; restPos/restNrm stay the original attributes, so procedural cloth detail does not swim)
+  function smoothShell(m, iters = 5, lam = 0.55, mu = -0.58) {
+    if (!m || !m.geometry || !m.geometry.index) { console.log('DBG smoothShell: no index', !!(m && m.geometry)); return; }
+    const g0 = m.geometry, n = g0.attributes.position.count, P = new Float32Array(g0.attributes.position.array), I = g0.index.array;
+    const key = new Map(), wid = new Int32Array(n); let nw = 0;
+    for (let i = 0; i < n; i++) { const k = `${Math.round(P[i * 3] * 2e5)},${Math.round(P[i * 3 + 1] * 2e5)},${Math.round(P[i * 3 + 2] * 2e5)}`; let w = key.get(k); if (w === undefined) { w = nw++; key.set(k, w); } wid[i] = w; }
+    const nb = Array.from({ length: nw }, () => new Set()), ec = new Map();
+    for (let t = 0; t < I.length; t += 3) for (let e = 0; e < 3; e++) { const a = wid[I[t + e]], b = wid[I[t + (e + 1) % 3]]; if (a === b) continue; nb[a].add(b); nb[b].add(a); const k = a < b ? a * nw + b : b * nw + a; ec.set(k, (ec.get(k) || 0) + 1); }
+    const fixed = new Uint8Array(nw); for (const [k, c] of ec) if (c === 1) { fixed[Math.floor(k / nw)] = 1; fixed[k % nw] = 1; }
+    const W = new Float32Array(nw * 3), cnt = new Uint16Array(nw);
+    for (let i = 0; i < n; i++) { const w = wid[i]; if (cnt[w]++) continue; W[w * 3] = P[i * 3]; W[w * 3 + 1] = P[i * 3 + 1]; W[w * 3 + 2] = P[i * 3 + 2]; }
+    const tmp = new Float32Array(nw * 3), nbA = nb.map((s) => Int32Array.from(s));
+    for (let it = 0; it < iters * 2; it++) { const f = it % 2 ? mu : lam;
+      for (let w = 0; w < nw; w++) { const L = nbA[w]; if (fixed[w] || !L.length) { tmp.set(W.subarray(w * 3, w * 3 + 3), w * 3); continue; }
+        let x = 0, y = 0, z = 0; for (const q of L) { x += W[q * 3]; y += W[q * 3 + 1]; z += W[q * 3 + 2]; } const k = 1 / L.length;
+        tmp[w * 3] = W[w * 3] + f * (x * k - W[w * 3]); tmp[w * 3 + 1] = W[w * 3 + 1] + f * (y * k - W[w * 3 + 1]); tmp[w * 3 + 2] = W[w * 3 + 2] + f * (z * k - W[w * 3 + 2]); }
+      W.set(tmp); }
+    const NW = new Float32Array(nw * 3), a = V(), b = V(), c = V(), fn = V();
+    for (let t = 0; t < I.length; t += 3) { const [p, q, r] = [wid[I[t]], wid[I[t + 1]], wid[I[t + 2]]];
+      a.fromArray(W, p * 3); b.fromArray(W, q * 3).sub(a); c.fromArray(W, r * 3).sub(a); fn.crossVectors(b, c);
+      for (const v of [p, q, r]) { NW[v * 3] += fn.x; NW[v * 3 + 1] += fn.y; NW[v * 3 + 2] += fn.z; } }
+    const N = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) { const w = wid[i]; P[i * 3] = W[w * 3]; P[i * 3 + 1] = W[w * 3 + 1]; P[i * 3 + 2] = W[w * 3 + 2];
+      fn.fromArray(NW, w * 3).normalize(); N[i * 3] = fn.x; N[i * 3 + 1] = fn.y; N[i * 3 + 2] = fn.z; }
+    const g = new THREE.BufferGeometry();
+    for (const [k, at] of Object.entries(g0.attributes)) g.setAttribute(k, at);
+    g.setAttribute('position', new THREE.BufferAttribute(P, 3)); g.setAttribute('normal', new THREE.BufferAttribute(N, 3)); g.setIndex(g0.index);
+    g.computeBoundingBox(); g.computeBoundingSphere(); m.geometry = g;
+    if (Q.get('dbgsmooth')) console.log('DBG smoothShell', n, nw, I.length / 3, Array.from(fixed).reduce((x, y) => x + y, 0));
+  }
   const toned = new Set();
   const toneGlove = (m, k) => { if (m && m.color && !toned.has(m)) { toned.add(m); m.color.multiplyScalar(k); } };
   const R = await loadCharacter('RESTORER', { lod: 'hi' });
@@ -608,8 +687,18 @@ export default async function create(ctx) {
   // hand frame: Z across the hand, X palm normal), warm white #E9E4DA toned down, a stronger weave relief and seams
   handR.root.scale.set(0.88, 1.0, 0.82);
   if (handR.meshes.glove) { const gm = handR.meshes.glove.material; gm.color.set('#E9E4DA').multiplyScalar(0.5); toned.add(gm);
-    const fz = gm.userData && gm.userData.fzUniforms; if (fz) { if (fz.uWAmp) fz.uWAmp.value *= 2.6; if (fz.uWeave) fz.uWeave.value = 0.0021; if (fz.uMottle) fz.uMottle.value = 0.07; if (fz.uFold) fz.uFold.value *= 1.4; }
-    gm.sheen = 0.35; gm.roughness = 0.95; }
+    // (integration 2) a fine knit (1.4 mm loops, faint) + fibre speckle, not a coarse net; the soft cotton sheen at the rim
+    const fz = gm.userData && gm.userData.fzUniforms; if (fz) { if (fz.uWAmp) fz.uWAmp.value *= 1.7; if (fz.uWeave) fz.uWeave.value = 0.0014; if (fz.uMottle) fz.uMottle.value = 0.06; if (fz.uFold) fz.uFold.value *= 1.2; }
+    gm.sheen = 0.55; gm.sheenRoughness = 0.7; gm.roughness = 0.95;
+    { const ob = gm.onBeforeCompile, key0 = gm.customProgramCacheKey ? gm.customProgramCacheKey() : 'glove';
+      gm.onBeforeCompile = (sh, r) => { if (ob) ob(sh, r);
+        sh.fragmentShader = sh.fragmentShader.replace('diffuseColor.rgb *= 1.0 - 0.18 * seamLine;',
+          'diffuseColor.rgb *= (1.0 - 0.16 * seamLine) * (1.0 + 0.07 * fzNoise(rp * 1900.0) * fzAA(0.0011, fzFw)) * (1.0 + 0.05 * fzNoise(rp * 260.0));'); };
+      gm.customProgramCacheKey = () => key0 + '_mgcotton'; gm.needsUpdate = true; }
+    // the lib glove's wrinkle rings round every finger joint read as a jointed mannequin under the pin spot's rake: a Taubin
+    // smoothing of a private copy of the shell keeps the shape, the seams (aux) and the rest-space texture, drops the rings
+    smoothShell(handR.meshes.glove, 6);
+  }
   { const sl = new THREE.Mesh(new THREE.CylinderGeometry(0.052, 0.044, 0.36, 28, 1, false), mWool); sl.position.y = 0.04 + 0.18; sl.castShadow = sl.receiveShadow = true; handR.root.add(sl); handR.root.userData.sleeve = sl; }
   handR.root.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
   scene.add(handR.root); handR.root.visible = false;
@@ -624,6 +713,15 @@ export default async function create(ctx) {
   eraScene.add(navHand.root); navHand.root.visible = false;
   // review: at ECU the salt read as plain warm skin — stronger crust (the lib's per-vertex salt map, back + finger gaps + edges)
   navHand.root.traverse((o) => { const fz = o.isMesh && o.material && o.material.userData && o.material.userData.fzUniforms; if (fz && fz.uSalt) fz.uSalt.value = Math.max(1.6, fz.uSalt.value * 2.8); });
+  // (integration 2) we see his PALM (it faces the glass): the lib puts the crust on the back. A salt floor on this instance's
+  // shader brings dried salt into the palm creases, the finger gaps and the edges (patches + crystals), weathered and greyed
+  { const sm = navHand.meshes.skin && navHand.meshes.skin.material;
+    if (sm) { const ob = sm.onBeforeCompile, key0 = sm.customProgramCacheKey ? sm.customProgramCacheKey() : 'skin';
+      sm.userData.fzUniforms.uSaltFloorMG = { value: 0.5 };
+      sm.onBeforeCompile = (sh, r) => { if (ob) ob(sh, r); sh.uniforms.uSaltFloorMG = sm.userData.fzUniforms.uSaltFloorMG;
+        sh.fragmentShader = sh.fragmentShader.replace('uniform float uAge, uSalt,', 'uniform float uSaltFloorMG; uniform float uAge, uSalt,')
+          .replace('float saltM = clamp(vAux.y * uSalt, 0.0, 1.0);', 'float saltM = clamp(max(vAux.y, uSaltFloorMG * (0.55 + 0.45 * fzNoise(rp * 140.0))) * uSalt, 0.0, 1.0);'); };
+      sm.customProgramCacheKey = () => key0 + '_mgsalt'; sm.color.multiplyScalar(0.82); sm.needsUpdate = true; } }
   // (integration) the first trace of the other hand (S001 3.0 s): 7 faceted salt crystals (0.7–1.4 mm, 2–4 px at 1280) behind
   // the glass in the wiped band, each catching the pin spot for a few frames — not round glow dots
   const glints = []; { const cr = util.rng(57);
@@ -717,6 +815,16 @@ export default async function create(ctx) {
     hide.forEach((o, i) => { o.visible = vis[i]; });
     return rt.texture;
   }
+  // (integration 2) a second, half-res era pass with some objects hidden (S071: the viewer's body/sleeve alone, as a soft under-layer)
+  const rtHand2 = ctx.makeRT(Math.round(ctx.W / 2), Math.round(ctx.H / 2));
+  function eraPass2(hide) {
+    camera.updateMatrixWorld();
+    const vis = hide.map((o) => o.visible); hide.forEach((o) => { o.visible = false; });
+    const r = ctx.renderer, prev = r.getRenderTarget();
+    r.setRenderTarget(rtHand2); r.setClearColor(0x000000, 0); r.clear(true, true, true); r.render(eraScene, camera); r.setRenderTarget(prev); r.setClearColor(0x000000, 1);
+    hide.forEach((o, i) => { o.visible = vis[i]; });
+    return rtHand2.texture;
+  }
   // the era scene into rtHand (RGBA, alpha = coverage)
   function eraPass() {
     if (OFF.has('era')) return rtHand.texture;
@@ -767,7 +875,8 @@ export default async function create(ctx) {
   const OV_COMMON = `varying vec3 vW; varying vec2 vUv; varying vec3 vN;
     uniform mat4 uProjM; uniform vec2 uRes; uniform sampler2D tMir, tEra, tEra2, tSmudge, uNoiseT, tDust2; uniform float uMir, uMirFres, uEra, uEraFres, uEra2, uEra2Depth, uAspect, uEdgeSoft, uDepthK, uEra2Occ, uEraSoft, uEra2Over, uEra2Low; uniform vec4 uEra2Xf; uniform vec2 uEra2Fade; uniform sampler2D tEra2B; uniform vec2 uEra2BY;
     uniform vec3 uEraO, uEraU, uEraV, uEraTint, uDustCol, uStreakCol; uniform int uWipeN; uniform vec2 uWipeP[6]; uniform float uWipeL[6];
-    uniform float uWipeProg, uWipeW, uWipeSoft, uMaskFloor, uMaskFloor2, uDust, uDustTop, uDustLod, uGlint, uDust2, uStreak; uniform vec2 uDustRep, uDustLit; uniform vec4 uDust2K, uStreakL, uEraUV; uniform vec2 uEraFB; uniform float uEraComp;
+    uniform float uWipeProg, uWipeW, uWipeSoft, uMaskFloor, uMaskFloor2, uDust, uDustTop, uDustLod, uGlint, uDust2, uStreak; uniform vec2 uDustRep, uDustLit; uniform vec4 uDust2K, uStreakL, uEraUV; uniform vec2 uEraFB; uniform float uEraComp; uniform vec4 uEra2Tint, uMirPR; uniform float uEra2BLow, uEraFX;
+    vec3 era2Tint(vec3 c){ return mix(c, vec3(dot(c, vec3(0.3, 0.55, 0.15))), uEra2Tint.w) * uEra2Tint.rgb; }
     float wipeMask(vec2 p){
       if (uWipeN < 2) return 0.0;
       vec2 sc = vec2(uAspect, 1.0); p *= sc; float lim = uWipeProg * uWipeL[5]; float d = 1e9;
@@ -790,11 +899,13 @@ export default async function create(ctx) {
         vec3 P = cameraPosition + rd * max(t, 0.0); vec3 l = P - uEraO;
         vec2 euv = vec2(0.5 + 0.5 * dot(l, uEraU) / dot(uEraU, uEraU), 0.5 + 0.5 * dot(l, uEraV) / dot(uEraV, uEraV));
         float inb = t > 0.0 ? smoothstep(0.0, uEraSoft, euv.x) * smoothstep(1.0, 1.0 - uEraSoft, euv.x) * smoothstep(0.0, uEraSoft, euv.y) * smoothstep(1.0, 1.0 - uEraSoft, euv.y) : 0.0;
-        inb *= smoothstep(uEraFB.x, uEraFB.y, euv.y);
+        inb *= smoothstep(uEraFB.x, uEraFB.y, euv.y) * (1.0 - uEraFX * smoothstep(0.6, 0.95, euv.x));
         vec3 ec = texture2D(tEra, clamp(clamp(euv, 0.0, 1.0) * uEraUV.xy + uEraUV.zw, 0.0, 1.0)).rgb; ec /= 1.0 + uEraComp * dot(ec, vec3(0.3, 0.55, 0.15));   // highlight roll-off (moon glitter)
         col += ec * inb * uEra * uEraTint * mix(uMaskFloor, 1.0, wm) * mix(1.0, 0.45 + 14.0 * fr, uEraFres);
       }
-      if (uMir > 0.0) { vec3 r = texture2D(tMir, vec2(1.0 - s.x, s.y)).rgb; r = (any(isnan(r)) || any(isinf(r))) ? vec3(0.0) : clamp(r, 0.0, 64.0); col += r * uMir * mix(1.0, fr / 0.04, uMirFres) * (1.0 - uEra2Occ * texture2D(tEra2, s).a); }
+      if (uMir > 0.0) { vec2 sm = s; float mk = 1.0;
+        if (uMirPR.w > 0.0) { vec2 dd = (s - uMirPR.xy) * vec2(uRes.x / uRes.y, 1.0); mk = exp(-dot(dd, dd) / (uMirPR.z * uMirPR.z)); sm = 2.0 * uMirPR.xy - s; }   // (S001) point-mirrored about the contact: the fingertip meets its reflection
+        vec3 r = texture2D(tMir, vec2(1.0 - sm.x, sm.y)).rgb; r = (any(isnan(r)) || any(isinf(r))) ? vec3(0.0) : clamp(r, 0.0, 64.0); col += r * uMir * mk * mix(1.0, fr / 0.04, uMirFres) * (1.0 - uEra2Occ * texture2D(tEra2, s).a); }
       if (uDust > 0.0) {   // dust film on the glass, lit along its upper edge by the warm pin spot; cleared where wiped
         vec4 sm = textureLod(tSmudge, vUv * uDustRep, uDustLod);
         float lit = mix(1.0, smoothstep(0.15, 1.0, vUv.y) * 1.7 + 0.2, uDustTop);
@@ -818,7 +929,8 @@ export default async function create(ctx) {
                               // real scene behind the glass keeps its own blur inside the reflection's silhouette
         vec2 s2 = s * uEra2Xf.xy + uEra2Xf.zw;
         vec4 h = texture2D(tEra2, s2) * (uEra2Xf.w != 0.0 ? smoothstep(0.0, 0.06, s2.y) * smoothstep(1.0, 0.94, s2.y) : 1.0);
-        col += h.rgb * uEra2Low * mix(uMaskFloor2, 1.0, wm) * smoothstep(uEra2Fade.x, uEra2Fade.y, s.y);
+        if (uEra2BLow > 0.0) h.rgb += texture2D(tEra2B, s2).rgb * uEra2BLow * (1.0 - h.a);   // (S071) the figure as a soft under-layer, the hand over it
+        col += era2Tint(h.rgb) * uEra2Low * mix(uMaskFloor2, 1.0, wm) * smoothstep(uEra2Fade.x, uEra2Fade.y, s.y);
       }
       gl_FragColor = vec4(col * edge, 1.0);
     }`,
@@ -829,7 +941,7 @@ export default async function create(ctx) {
       if (uEra2BY.y > uEra2BY.x) h = mix(h, texture2D(tEra2B, s2), smoothstep(uEra2BY.x, uEra2BY.y, s.y));
       h *= (uEra2Xf.w != 0.0 ? smoothstep(0.0, 0.06, s2.y) * smoothstep(1.0, 0.94, s2.y) : 1.0);
       float k = mix(uMaskFloor2, 1.0, wm) * edge * smoothstep(uEra2Fade.x, uEra2Fade.y, s.y);
-      gl_FragColor = vec4(h.rgb * uEra2 * k, clamp(h.a * uEra2Over * edge * smoothstep(uEra2Fade.x, uEra2Fade.y, s.y) * min(uEra2 / 0.9, 1.0), 0.0, 1.0));
+      gl_FragColor = vec4(era2Tint(h.rgb) * uEra2 * k, clamp(h.a * uEra2Over * edge * smoothstep(uEra2Fade.x, uEra2Fade.y, s.y) * min(uEra2 / 0.9, 1.0), 0.0, 1.0));
     }`,
     // ROLE 2 depth (era layer mirror depth)
     `void main(){
@@ -859,6 +971,7 @@ export default async function create(ctx) {
       tDust2: { value: dustFilm }, uDust2: { value: 0 }, uDust2K: { value: new THREE.Vector4(0.35, 1.0, 0.5, 0.06) }, uDustLit: { value: new THREE.Vector2(0.3, 0.7) },
       uEraComp: { value: 0 }, uEraUV: { value: new THREE.Vector4(1, 1, 0, 0) }, uEraFB: { value: new THREE.Vector2(-1, 0) },
       uStreak: { value: 0 }, uStreakL: { value: new THREE.Vector4(-0.7, 0.7, 0.0, 0.05) }, uStreakCol: { value: new THREE.Color(0.55, 0.62, 0.75) },
+      uEra2Tint: { value: new THREE.Vector4(1, 1, 1, 0) }, uMirPR: { value: new THREE.Vector4(0, 0, 1, 0) }, uEra2BLow: { value: 0 }, uEraFX: { value: 0 },
     };
     const mk = (role) => new THREE.ShaderMaterial({ uniforms: U, vertexShader: OV_VERT, fragmentShader: OV_COMMON + OV_FRAG[role], transparent: true,
       depthTest: true, depthWrite: role === 2, colorWrite: role !== 2,
@@ -878,7 +991,7 @@ export default async function create(ctx) {
       },
       reset() { U.uMir.value = 0; U.uEra.value = 0; U.uEra2.value = 0; U.uEra2Over.value = 0; U.uEra2Low.value = 0; U.uDust.value = 0; U.uGlint.value = 0; U.uWipeN.value = 0; U.uMaskFloor.value = 1; U.uMaskFloor2.value = 1; U.uEraFres.value = 0.3; U.uMirFres.value = 1; U.uEraTint.value.setRGB(1, 1, 1); U.uDustLod.value = 0; U.uDepthK.value = 1; U.uEra2Occ.value = 0; U.uEraSoft.value = 0.06; U.uEra2Xf.value.set(1, 1, 0, 0); U.uEra2Fade.value.set(-2, -1); U.tEra2B.value = null; U.uEra2BY.value.set(0, 0);
         U.uDustCol.value.setRGB(1.0, 0.86, 0.66); U.uDustTop.value = 0.6; U.uDustRep.value.set(1, 1); U.uMaskFloor.value = 1; U.uEra2Depth.value = 0.02; U.tEra2.value = null; U.tMir.value = null; U.tEra.value = null;
-        U.uDust2.value = 0; U.uDust2K.value.set(0.35, 1.0, 0.5, 0.06); U.uDustLit.value.set(0.3, 0.7); U.uStreak.value = 0; U.uEraUV.value.set(1, 1, 0, 0); U.uEraFB.value.set(-1, 0); U.uEraComp.value = 0; U.uStreakL.value.set(-0.7, 0.7, 0.0, 0.05); U.uStreakCol.value.setRGB(0.55, 0.62, 0.75); },
+        U.uDust2.value = 0; U.uDust2K.value.set(0.35, 1.0, 0.5, 0.06); U.uDustLit.value.set(0.3, 0.7); U.uStreak.value = 0; U.uEraUV.value.set(1, 1, 0, 0); U.uEraFB.value.set(-1, 0); U.uEraComp.value = 0; U.uStreakL.value.set(-0.7, 0.7, 0.0, 0.05); U.uStreakCol.value.setRGB(0.55, 0.62, 0.75); U.uEra2Tint.value.set(1, 1, 1, 0); U.uMirPR.value.set(0, 0, 1, 0); U.uEra2BLow.value = 0; U.uEraFX.value = 0; },
       sync() { low.visible = U.uEra.value > 0 || U.uMir.value > 0 || U.uDust.value > 0 || U.uGlint.value > 0 || U.uEra2Low.value > 0 || U.uDust2.value > 0 || U.uStreak.value > 0; main.visible = dep.visible = U.uEra2.value > 0; },
     };
     return api;
@@ -941,9 +1054,9 @@ export default async function create(ctx) {
     compass.visible = !o.future; future.visible = !!o.future; g1Deck.material = o.future ? mLinen : g1Velvet;
     g1Spot.visible = true; g1Spot.intensity = o.g1Spot ?? 2.2 * 6;
     g2Light.intensity = o.g2 ?? 0; g2Light.visible = !!o.g2; g3Spot.intensity = 0; g3Spot.visible = false; torch.intensity = 0; torch.visible = false; torchCone.object3D.visible = false;
-    inspLamp.visible = false; inspLight.intensity = 0; inspLight.visible = false;
+    inspLamp.visible = false; inspLight.intensity = 0; inspLight.visible = false; inspLight.castShadow = false;
     fillA.intensity = 0; fillA.visible = false; warmFill.intensity = 0; warmFill.visible = false; futTop.intensity = 0; futTop.visible = false;
-    poolBounce.intensity = 0; poolBounce.visible = false; mirLight.intensity = 0; mirLight.visible = false;
+    poolBounce.intensity = 0; poolBounce.visible = false; mirLight.intensity = 0; mirLight.visible = false; chinSpot.intensity = 0; chinSpot.visible = false;
     hemi.intensity = o.hemi ?? 0.2; hemi.color.set(0x2a3d60); hemi.groundColor.set(0x1c140e);
     setShadowRes(o.shadowRes || 2048); setMoon(o.moon || MOON_CH1, o.moonI ?? 1.6, o.bounds);
     moon.visible = o.moonI !== 0;
@@ -954,10 +1067,14 @@ export default async function create(ctx) {
     scene.background.set('#020305');
     { const eg = scene.getObjectByName('g1edges'), em = eg.userData.m;
       eg.visible = true;
-      if (o.future) { em.blending = THREE.NormalBlending; em.color.set(0x3a4541); em.opacity = 0.8; eg.children.forEach((c) => c.scale.set(c.geometry.parameters.width > 0.1 ? 1 : 2.2, c.geometry.parameters.height > 0.1 ? 1 : 2.2, c.geometry.parameters.depth > 0.1 ? 1 : 2.2)); }
+      if (o.future) { em.blending = THREE.AdditiveBlending; em.color.setRGB(0.42, 0.45, 0.44); em.opacity = 1; eg.children.forEach((c) => c.scale.set(c.geometry.parameters.width > 0.1 ? 1 : 1.3, c.geometry.parameters.height > 0.1 ? 1 : 1.3, c.geometry.parameters.depth > 0.1 ? 1 : 1.3)); }   // (integration 2) the polished edges catch the top light
       else { em.blending = THREE.AdditiveBlending; em.color.setRGB(0.1, 0.13, 0.12); em.opacity = 1; eg.children.forEach((c) => c.scale.set(1, 1, 1)); } }
     mBrick.visible = !o.future; mLining.color.setRGB(o.lining ?? 1, o.lining ?? 1, o.lining ?? 1);                                                // the future: the brick panels lime-washed over
-    mWall.color.set(o.future ? '#a9a296' : '#2c3850'); mWallS.color.set(o.future ? '#a9a296' : '#2c3850');
+    mWall.color.set(o.future ? '#cfc8bc' : '#2c3850'); mWallS.color.set(o.future ? '#cfc8bc' : '#2c3850');
+    // (integration 2) CT_FUTURE: pale lime-wash walls, a pale scrubbed floor and ceiling (the night museum's blacks never show)
+    mTeak.color.set(o.future ? '#d9d4cc' : '#b9a18a'); mCeil.color.set(o.future ? '#b8b0a4' : '#3b3530');
+    // the future: the wall cases behind G1 relined in pale linen (their dark velvet printed a black slab behind the hood)
+    if (o.future) mVitBack.emissive.setRGB(0.3, 0.285, 0.26); else mVitBack.emissive.setRGB(0, 0, 0);   // (a uniform: no program switch between shots)
     S.mirror = null;
   }
   const lightsOnlyMirror = [];
@@ -980,6 +1097,23 @@ export default async function create(ctx) {
 
   // ======================================================================================================== NESTED ERA VIEWS
   function nested(key, view, tl, u, T, rt) { if (OFF.has('nested') || NONEST) return rt.texture; return ctx.renderNested(key, view, tl, u, T, rt, rt.width / rt.height); }
+  // (integration 2) a named view drawn through OUR lens: the other module's setShot runs unchanged (its staging, lights and
+  // timing); only its final draw into our RT is intercepted and made with `viewCam`, posed by fn(theirCamera, viewCam)
+  // relative to their camera (the corridor uses the same technique). Used by S026 (view_home_hand from table height).
+  const viewCam = new THREE.PerspectiveCamera(30, 1, 0.03, 60);
+  function nestedVia(key, view, tl, u, T, rt, fn) {
+    if (OFF.has('nested') || NONEST) return rt.texture;
+    const r = ctx.renderer, orig = r.render;
+    r.render = function (s, c) {
+      if (r.getRenderTarget() === rt && c.isPerspectiveCamera) {
+        c.updateMatrixWorld(true); viewCam.layers.mask = c.layers.mask; viewCam.near = c.near; viewCam.far = c.far; viewCam.aspect = rt.width / rt.height;
+        fn(c, viewCam); viewCam.updateProjectionMatrix(); viewCam.updateMatrixWorld(true);
+        return orig.call(this, s, viewCam);
+      }
+      return orig.call(this, s, c);
+    };
+    try { return ctx.renderNested(key, view, tl, u, T, rt, rt.width / rt.height); } finally { r.render = orig; }
+  }
 
   // ======================================================================================================== SHOT SETUPS
   // S001 hand choreography (screen coords of the index pad on the glass, from the opening camera): the fingertip enters from
@@ -999,6 +1133,9 @@ export default async function create(ctx) {
   };
   const toScreenOpen = (p) => { const w = MC_OPEN.target.distanceTo(MC_OPEN.pos) * 36 / MC_OPEN.mm, h = w / ctx.aspect; return [0.5 + (p.x - MC_OPEN.target.x) / w, 0.5 - (p.y - MC_OPEN.target.y) / h]; };
   const toPaneUV = (p) => [(p.x - (G1.x - G1.w / 2)) / G1.w, (p.y - G1.plinthH) / G1.h];
+  // (integration 2) the resting hand lies nearly flat on the glass (fingers almost straight: a curled glove creased into a
+  // jointed mannequin hand at every knuckle under the pin spot)
+  const REST1 = () => blendHandChannels(handPose('flat', { spread: 0.12 }, handR.dims), handPose('relaxed', { curl: 0.3 }, handR.dims), 0.3);
   // her right hand on the glass at wipe progress s, micro tremor amplitude k (m); returns her palm centre (world)
   function herHandOnGlass(s, T, k = 0.0004, lift = 0) {
     handR.root.visible = true;
@@ -1006,7 +1143,7 @@ export default async function create(ctx) {
     const tip = glassPt(tp.fx, tp.fy).add(V(0, 0, 0.0035 + lift));
     tip.x += k * util.noise1(T * 3.1, 11); tip.y += k * util.noise1(T * 2.7, 12);
     const fd = V(-Math.cos(tp.ang), Math.sin(tp.ang), -0.3).normalize();    // fingertips on the glass, the forearm coming back toward the lens
-    if (s < 0.7) handR.pose('wipe'); else handR.setChannels(blendHandChannels(handPose('wipe', {}, handR.dims), handPose('relaxed', { curl: 0.32 }, handR.dims), ease.inOutSine(clamp((s - 0.7) / 0.3))));
+    if (s < 0.7) handR.pose('wipe'); else handR.setChannels(blendHandChannels(handPose('wipe', {}, handR.dims), REST1(), ease.inOutSine(clamp((s - 0.7) / 0.3))));
     placeHandAt(handR, tip, fd, V(0.0, 0.25, -1), 'index');
     return handR.sockets.palm.getWorldPosition(V());
   }
@@ -1020,33 +1157,38 @@ export default async function create(ctx) {
   // (integration) the hook's wipe: index + middle pads on the glass, the hand ~35° off the pane, fingers leading to the left along
   // an arc (0.78, 0.52) → (0.455, 0.42), 1.23–4.5 s (decelerating); 4.6–6.4 s the hand turns upright and lays its palm to the
   // glass, ending exactly in the rest pose herHandOnGlass(1) (the T01 registration of S002 / S071)
-  const WIPE_PTS = [[0.80, 0.37], [0.715, 0.305], [0.63, 0.255], [0.55, 0.222], [0.475, 0.205]];
+  // (integration 2) the arc the QA asked for: contact (0.78, 0.52) on 1.23 s → (0.47, 0.42); the band (≈ 15 % of frame height)
+  // crosses the frame where his hand will rise (6.6 s) and passes under her resting palm, so he appears IN the wiped glass
+  const WIPE_PTS = [[0.80, 0.505], [0.715, 0.468], [0.63, 0.44], [0.55, 0.422], [0.475, 0.412]];
   const wipeAt = (w) => { const f = clamp(w) * (WIPE_PTS.length - 1), i = Math.min(WIPE_PTS.length - 2, Math.floor(f)), t = f - i; const a = WIPE_PTS[i], b = WIPE_PTS[i + 1]; return [lerp(a[0], b[0], t), lerp(a[1], b[1], t)]; };
-  const WIPE_W = 0.026, WIPE_SOFT = 0.012, WIPE_DX = 0.02, WIPE_DY = 0.012;  // band half-width (pane heights), edge; centre between the index + middle pads
+  const WIPE_W = 0.03, WIPE_SOFT = 0.012, WIPE_DX = 0.02, WIPE_DY = 0.004;  // band half-width (pane heights), edge; centre between the index + middle pads
   function setG1Wipe(prog, widen = 0) { ovG1.setWipe(WIPE_PTS.map((q) => toPaneUV(glassPt(q[0] + WIPE_DX, q[1] + WIPE_DY))), WIPE_W + widen, WIPE_SOFT + widen * 0.4, prog); }
   const T35 = 35 * D2R, TREST = Math.atan(0.3);
+  // two-finger wipe: index + middle extended (their pads on the glass), ring and little softly curled back, thumb relaxed
+  const WIPE2 = { wrist: [0.0, 0.0], thumb: [0.22, 0.36, 0.14, 0.16, 0.12], index: [0.1, 0.1, 0.04, -0.03], middle: [0.1, 0.1, 0.04, 0.02], ring: [0.42, 0.55, 0.26, 0.05], little: [0.55, 0.62, 0.3, 0.09] };
   function herHandWipe(w, r, T, k = 0.0003, lift = 0, xoff = 0) {
     handR.root.visible = true;
     const rest = tipPath(1), wp = wipeAt(w), rr = ease.inOutSine(clamp(r));
     const fx = lerp(wp[0], rest.fx, rr), fy = lerp(wp[1], rest.fy, rr);
     const ang = lerp(lerp(1.08, 1.3, w), Math.PI / 2 + 0.03, rr), tilt = lerp(T35, TREST, rr);   // fingers up-left: the band trails to the right, clear of the hand
-    const tip = glassPt(fx, fy).add(V(xoff, 0, 0.0035 + lift));
+    const tip = glassPt(fx, fy).add(V(xoff, 0, 0.0035 + lift + 0.006 * Math.sin(Math.PI * rr)));   // she re-places the hand (lifted ~6 mm) as it turns upright
     tip.x += k * util.noise1(T * 3.1, 11); tip.y += k * util.noise1(T * 2.7, 12);
     const fd = V(-Math.cos(ang) * Math.cos(tilt), Math.sin(ang) * Math.cos(tilt), -Math.sin(tilt)).normalize();
     const n0 = V(0, 0, -1).addScaledVector(fd, fd.z).normalize();                // palm toward the glass, square to the fingers
     const palmN = n0.lerp(V(0, 0.25, -1).normalize(), rr).normalize();
-    handR.setChannels(blendHandChannels(handPose('wipe', {}, handR.dims), handPose('relaxed', { curl: 0.32 }, handR.dims), rr));
+    handR.setChannels(blendHandChannels(WIPE2, REST1(), rr));
     placeHandAt(handR, tip, fd, palmN, 'index');
     return handR.sockets.palm.getWorldPosition(V());
   }
   // her glove's faint front-surface reflection: a mirror pass of the glove alone about a plane through the contact point, tilted
   // 8° (a cheat: square to the lens the reflection hides behind the hand) so the reflected fingers meet the real ones at the pad
   function gloveReflection(contact, strength, focus) {
-    const tl8 = 8 * D2R, n = V(0, Math.sin(tl8), Math.cos(tl8));
-    mirLight.position.copy(contact).add(V(0.03, -0.035, -0.035)); mirLight.color.set(0xffd2a0); mirLight.distance = 0.4;
+    const n = V(0, 0, 1);   // (integration 2) the true glass plane; the shader point-mirrors it about the contact (uMirPR)
+    mirLight.position.copy(contact).add(V(0.03, -0.035, -0.035)); mirLight.color.set(0xffe8d0); mirLight.distance = 0.4;
     const mt = mirrorPass(contact, n, rtMir, { hide: [compass, future, g2, g3Grp, guard.root, room, g1.object3D], mirFill: 0.0, boost: [[mirLight, 0.045]] });
     if (!mt) return;
-    ovG1.U.tMir.value = blur(mt, rtMirB, Math.min(6, cocPx(camera.position.z - G1F + 0.06, focus, 100, 4) * 0.375 + 0.6)); ovG1.U.uMir.value = strength; ovG1.U.uMirFres.value = 0.0;
+    ovG1.U.tMir.value = blur(mt, rtMirB, Math.min(3, cocPx(camera.position.z - G1F + 0.015, focus, 100, 4) * 0.3)); ovG1.U.uMir.value = strength; ovG1.U.uMirFres.value = 0.0;
+    const cs = scr(contact); ovG1.U.uMirPR.value.set(cs[0], 1 - cs[1], 0.07, 1);
   }
   // the navigator's left hand behind the glass at mirror depth d (m), rise r (0 low … 1 in place), palm toward the glass,
   // centred on HER palm (rel = screen offset), ~8 % larger than hers
@@ -1073,9 +1215,9 @@ export default async function create(ctx) {
       saltG.forEach((g, k) => { const q = pts[k % pts.length]; g.object3D.visible = (o.salt ?? 1) > 0.01; g.object3D.position.copy(q);
         const tw = Math.max(0, util.noise1(T * 2.6 + k * 7.1, 40 + k)); g.set((0.75 + 7.0 * Math.pow(tw, 3)) * (o.salt ?? 1)); }); }
     // his own night: cool moon from the upper right, a warm low ship-lamp glow from the lower left
-    eraMoon.intensity = 2.2; eraMoon.color.set(0x9fb4dc); eraMoon.position.copy(p).add(V(0.7, 1.1, 0.5)); eraMoon.target.position.copy(p); eraMoon.target.updateMatrixWorld();   // his night's moon, from the upper right
+    eraMoon.intensity = 1.9; eraMoon.color.set(0xc2cad8); eraMoon.position.copy(p).add(V(0.7, 1.1, 0.5)); eraMoon.target.position.copy(p); eraMoon.target.updateMatrixWorld();   // his night's moon, from the upper right
     eraKey.visible = true; eraKey.color.set(0xb8c8ea); eraKey.position.copy(p).add(V(0.35, 0.5, -0.6)); eraKey.target.position.copy(p); eraKey.target.updateMatrixWorld(); eraKey.intensity = 1.6; eraKey.angle = 0.6; eraKey.penumbra = 0.8; eraKey.distance = 0;   // (integration) cool moon RIM from behind him: the margins outside her glove read
-    eraLamp.visible = true; eraLamp.color.set(0xffa860); eraLamp.position.copy(p).add(V(-0.34, -0.2, 0.12)); eraLamp.intensity = 0.05 * util.flicker(T, 3); eraLamp.distance = 2;   // the ship lamp, low and warm
+    eraLamp.visible = true; eraLamp.color.set(0xffa860); eraLamp.position.copy(p).add(V(-0.34, -0.2, 0.12)); eraLamp.intensity = 0.11 * util.flicker(T, 3); eraLamp.distance = 2;   // the ship lamp, low and warm
     eraHemi.intensity = 0.1;
     return p;
   }
@@ -1109,14 +1251,17 @@ export default async function create(ctx) {
   function seaPlane(tl, u, T, strength, focus, mm, N, off = null, o = {}) {
     const P = o.plane || SEA;
     const tex0 = nested('sea_deck', 'view_shiplamp', tl, u, T, rtSea);
-    const b = o.blurOverride >= 0 ? o.blurOverride : seaBlur(P, camera.position.z, focus, mm, N);
+    const b = Math.min(o.blurCap ?? 14, o.blurOverride >= 0 ? o.blurOverride : seaBlur(P, camera.position.z, focus, mm, N));
     eraPlane(ovG1, blur(tex0, rtBlur[560], b), strength, off ? P.c.clone().add(off) : P.c, P.U, P.Vv);
     ovG1.U.uEraSoft.value = 0.16;                                             // a soft vignette: the plate's edges never read inside the pane
-    ovG1.U.uEraUV.value.set(1, 0.68, 0, 0.32); ovG1.U.uEraFB.value.set(0.0, 0.28); ovG1.U.uEraComp.value = 0.9;   // (integration) the plate's upper 68 % (lamp, swell, moon road); the lit rail at its foot faded out
+    ovG1.U.uEraUV.value.set(1, 0.68, 0, 0.32); ovG1.U.uEraFB.value.set(0.0, 0.28); ovG1.U.uEraComp.value = 2.6;   // (integration) the plate's upper 68 % (lamp, swell, moon road); the lit rail at its foot faded out
   }
   // S002's end optics (the S003 hidden cut starts from them): focus = glass + 0.95 m (S002 rack + recede), f/5.6, 100 mm
   const S2_FOCUS_END = (S2END.pos.z - G1F) + 0.95;
-  const S2_SEA_BLUR = seaBlur(SEA, S2END.pos.z, S2_FOCUS_END, 100, 5.6);
+  // (integration 2) the sea is held readable (swell, lantern glints, a fine moon road — not navy blobs): its blur is capped as if
+  // the lens were stopped down for the reflection; S003 frame 0 starts from the same cap
+  const SEA_CAP = 2.2;
+  const S2_SEA_BLUR = Math.min(SEA_CAP, seaBlur(SEA, S2END.pos.z, S2_FOCUS_END, 100, 5.6));
   const S2_MIR_BLUR = Math.min(10, cocPx((S2END.pos.z - G1F) + 2.25, S2_FOCUS_END, 100, 5.6) * 0.5 + 0.8);
 
   const dustFor = (ov, focus, dGlass, mm, N, k) => { ov.U.uDust.value = k; ov.U.uDustLod.value = Math.log2(1 + cocPx(dGlass, focus, mm, N) * 0.5); };
@@ -1134,13 +1279,15 @@ export default async function create(ctx) {
       camera.rotateOnWorldAxis(V(0, 1, 0), (0.35 - (0.5 + 0.5 * q.x)) * hf * 0.98); camera.rotateX((0.5 - (0.5 - 0.5 * q.y)) * vf * 0.98); }
     camera.updateMatrixWorld();
     const r = V(0.63 * 2 - 1, 0, 0.5).unproject(camera).sub(camera.position).setY(0).normalize();
-    IL.gStop = IL.cam.clone().setY(0).addScaledVector(r, 12.0);
+    IL.gStop = IL.cam.clone().setY(0).addScaledVector(r, 8.3);              // (integration 2) ~4.3 m beyond her (was 12 m): ~65 % of frame height, the nod reads
     const side = V(-r.z, 0, r.x);                                             // screen-right in plan
     IL.gStart = IL.gStop.clone().addScaledVector(side, 1.05).addScaledVector(r, 0.3);
     camera.position.copy(c0); camera.quaternion.copy(q0); if (mm0) cam.lens(camera, mm0);
   }
   function interlude(tl, u, T, id) {
     reset({ moon: MOON_CH1, moonI: 2.3, hemi: 0.3, g3: true, bounds: { x0: -2, x1: 13, y0: 0, y1: 6, z0: -7, z1: 7.6 } });
+    nightGallery({ hemi: 0.2, bounce: 16, at: [4.6, -0.3, -3.0], dist: 11 });   // under the floor by the guard's columns, ~4 m from her face
+    hemi.groundColor.set(0x4a4038);   // the teak's warm bounce under coats and chins   // (integration 2) the gallery's night level (walls, columns, her coat never 0); low hemi: no flat fill on faces
     const T0 = SHOT_T0.S028, t = T - T0;                                      // interlude clock: tl of S028 (S029 = +2.833)
     g3[2].door.rotation.y = G3C_OPEN;
     // the restorer: leaning into the open case, left forearm resting along the deck edge, right glove on the shirt
@@ -1176,8 +1323,10 @@ export default async function create(ctx) {
     void gv;
     // left hand behind his back, torch in the right, beam on the floor
     guard.pose({ 'armL.upper.x': -0.32, 'armL.upper.z': 0.05, 'armL.lower.x': 1.35, 'armL.lower.y': 0.8, 'armR.upper.x': 0.32, 'armR.lower.x': 0.55, handL: ['relaxed', { curl: 0.7 }], handR: ['grip', { radius: 0.015 }] }, { add: true });
-    const gnod = Math.sin(clamp((t - 1.48) / 0.5) * Math.PI);
-    guard.pose({ 'neck.x': 0.07 * gnod, 'head.x': 0.06 * gnod }, { add: true });
+    // (integration 2) a real, small nod (~15°): 0.35 s down, its bottom exactly on the vocal accent 103.37 (t 1.58), 0.25 s
+    // held, 0.45 s back up
+    const gnod = t < 1.23 ? 0 : t < 1.58 ? ease.inOutSine((t - 1.23) / 0.35) : t < 1.83 ? 1 : t < 2.28 ? 1 - ease.inOutSine((t - 1.83) / 0.45) : 0;
+    guard.pose({ 'neck.x': 0.12 * gnod, 'head.x': 0.14 * gnod }, { add: true });
     guard.root.updateMatrixWorld(true);
     // his free (left) hand behind his back: IK to the small of the back, palm out, fingers across
     { const L2W = (x, y, z) => V(x, y, z).transformDirection(guard.root.matrixWorld);
@@ -1186,10 +1335,13 @@ export default async function create(ctx) {
     // torch: SpotLight + cone from the hand, aimed at the floor ~1.6 m ahead
     const hand = guard.socket('R', 'grip').getWorldPosition(V());
     const fwdG = V(Math.sin(yaw), 0, Math.cos(yaw));
-    const tgtT = hand.clone().addScaledVector(fwdG, 0.55).setY(0.02);
-    torch.visible = true; torchCone.object3D.visible = true; torch.position.copy(hand); torch.target.position.copy(tgtT); torch.target.updateMatrixWorld();
-    torch.intensity = 6; torch.angle = 0.3; torch.distance = 8;
-    torchCone.update(T, { origin: hand, dir: tgtT.clone().sub(hand), intensity: 0.025 });
+    // the beam dips with his nod (the floor pool slides ~0.3 m toward her); it appears only once his hand clears the column
+    const toHer = IL.her.clone().sub(gp).setY(0).normalize();
+    const tgtT = hand.clone().addScaledVector(fwdG, 0.55).addScaledVector(toHer, 0.3 * gnod).setY(0.02);
+    const tOn = smoothstep(0.2, 0.45, t);
+    torch.visible = tOn > 0; torchCone.object3D.visible = tOn > 0; torch.position.copy(hand); torch.target.position.copy(tgtT); torch.target.updateMatrixWorld();
+    torch.intensity = 6 * tOn; torch.angle = 0.3; torch.distance = 8;
+    torchCone.update(T, { origin: hand, dir: tgtT.clone().sub(hand), intensity: 0.013 * tOn });
     // practicals at G3c: the dim case light and the hooded inspection lamp (only into the case; warm on her lower face)
     inspLamp.visible = true; inspLight.visible = true;
     inspLight.position.copy(caseG.localToWorld(V(0.36, 0.34, 0.12))); inspLight.target.position.copy(caseG.localToWorld(V(-0.04, 0.04, -0.04))); inspLight.target.updateMatrixWorld();
@@ -1199,13 +1351,16 @@ export default async function create(ctx) {
       // he walks out of the dark into the pool (it lights him as he arrives, then leaves with him); from the doorway side, so
       // his face is half-lit, not a pale front-lit mask
       const inPool = smoothstep(0.15, 0.85, ease.outSine(w1)) * (1 - smoothstep(0.6, 1.6, leave));
-      fillA.visible = true; fillA.color.set(0x9aaccc); fillA.position.copy(gp).addScaledVector(toCam, 0.45).add(V(0.5, 1.75, 0.6)); fillA.intensity = 2.1 * (0.12 + 0.88 * inPool); fillA.distance = 2.6; }
-    for (const s of shafts) s.object3D.visible = true; for (const s of shafts) s.update(T, { intensity: 0.06 });
+      // (integration 2) a moon rim from the doorway side (south, behind him to the right): head and shoulders half-lit, so the nod
+      // reads as a silhouette change; the torch spill from below does the rest
+      void toCam; fillA.visible = true; fillA.color.set(0xa8b8d4); fillA.position.copy(gp).add(V(0.35, 1.95, 1.25)); fillA.intensity = 3.0 * (0.15 + 0.85 * inPool); fillA.distance = 3.0;
+      const gh = guard.worldPos('head'); mirLight.visible = true; mirLight.color.set(0xc4d0e4); mirLight.position.copy(gh).add(V(0.25, 0.35, 0.55)); mirLight.intensity = 0.9 * (0.2 + 0.8 * inPool); mirLight.distance = 1.6; }   // the moon edge on his head + shoulders (the nod reads as a silhouette change)
+    for (const s of shafts) s.object3D.visible = true; for (const s of shafts) s.update(T, { intensity: 0.022 });
     // the case's warm light falling back on her (front / cheek): she is lit by what she studies
     warmFill.visible = true; warmFill.color.set(0xffd0a0); warmFill.position.copy(caseG.localToWorld(V(-0.05, 0.2, 0.22))); warmFill.intensity = 0.1; warmFill.distance = 0.9;   // bounce off the shirt (chin)
     const herShoulder = R.worldPos('armL.upper').add(V(0, 0.02, 0)), eye = R.eye();
     // a cold moon edge on her back / shoulder / hair from the doorways behind (narrow spot, keeps the floor dark)
-    futTop.visible = true; futTop.color.set(0xc8d2db); futTop.position.copy(herShoulder).add(V(1.3, 1.6, 2.2));   // from the doorways behind her (SE): an edge, not a front fill toward the west-side lens futTop.target.position.copy(herShoulder).add(V(0, 0.05, 0)); futTop.target.updateMatrixWorld();
+    futTop.visible = true; futTop.color.set(0xc8d2db); futTop.position.copy(herShoulder).add(V(1.3, 1.6, 2.2)); futTop.target.position.copy(herShoulder).add(V(0, 0.05, 0)); futTop.target.updateMatrixWorld();   // from the doorways behind her (SE): an edge, not a front fill toward the west-side lens
     futTop.intensity = 4.0; futTop.angle = 0.16; futTop.penumbra = 0.7; futTop.distance = 0;
     if (id === 'S028') {
       frameAt(IL.cam, IL.shoulder, 0.35, 0.50, 50);
@@ -1214,30 +1369,41 @@ export default async function create(ctx) {
       DBGP.shoulder = herShoulder; DBGP.guard = gp.clone().setY(1.0);
       return { dof: { focus, fstop: 2.0, maxCoc: 1.4 }, exposure: 1.6, bloom: { strength: 0.3, threshold: 0.86 } };
     }
+    // (integration 2) S029 her face low-key: the case's warm spill only on chin and lips (a narrow hooded spot), eyes and cheek in
+    // shadow; the moon edge from the doorways behind lifts her brow, ear and hair, so the look-up on 104.99 reads in the rim
+    warmFill.intensity = 0.02;
+    { const e = R.eye(), fwdH = V(Math.sin(R.root.rotation.y), 0, Math.cos(R.root.rotation.y));
+      const chin = e.clone().add(V(0, -0.072, 0)).addScaledVector(fwdH, 0.012);
+      // from the case side (north, in front of her face, low): the warm spill rims her lower profile (lips, chin) as seen from the
+      // west lens; her near cheek stays in shadow — no lit mask
+      chinSpot.visible = true; chinSpot.color.set(0xffc896); chinSpot.position.copy(chin).addScaledVector(fwdH, 0.42).add(V(0.06, -0.16, 0)); chinSpot.target.position.copy(chin); chinSpot.target.updateMatrixWorld();
+      chinSpot.intensity = 0.5; chinSpot.angle = 0.11; chinSpot.penumbra = 0.75; chinSpot.distance = 1.0;
+      futTop.position.copy(e).add(V(1.0, 1.1, 2.0)); futTop.target.position.copy(e).add(V(0.05, 0.08, 0.06)); futTop.target.updateMatrixWorld(); futTop.intensity = 1.8; futTop.angle = 0.1; }
     {
       // same side, tighter: 2.3 m from her eye, pushed to G3's glass line (z −6.22) so the guard stays in the background right
-      const zc = -6.22, dz = IL.eye0.z - zc, dx = Math.sqrt(Math.max(2.3 * 2.3 - dz * dz, 1));
+      const zc = -6.22, dz = IL.eye0.z - zc, dx = Math.sqrt(Math.max(3.0 * 3.0 - dz * dz, 1));   // (integration 2) 3.0 m (was 2.3): head ~38 % of frame height
       const p29 = V(IL.eye0.x - dx, IL.eye0.y + 0.04, zc); frameAt(p29, IL.eye0, 0.32, 0.42, 75); }
     const fr = ease.inOutSine(clamp((tl - 0.98) / 0.8));
     const focus = lerp(cam.distTo(camera, eye), cam.distTo(camera, gp.clone().setY(1.5)), fr);
     DBGP.eye = eye; DBGP.guard = gp.clone().setY(1.0);
-    return { dof: { focus, fstop: 2.0, maxCoc: 1.4 }, exposure: 1.5, bloom: { strength: 0.3, threshold: 0.86 } };
+    return { dof: { focus, fstop: 2.0, maxCoc: 1.4 }, exposure: 2.3, bloom: { strength: 0.3, threshold: 0.86 } };
   }
   // ---------------------------------------------------------------------------------------------- FUTURE (S070 / S071 / S078)
   // CT_FUTURE: the same gallery, softer & higher-key, silver-white with a trace of warmth, lowest contrast; no sci-fi teal
   function futureLook(o = {}) {
-    reset({ future: true, moon: MOON_FUT, moonI: o.dawn ? 0.6 : 0.3, hemi: o.dawn ? 0.9 : 3.0, g3: false, shadowRes: 1024, bounds: { x0: -3, x1: 3, y0: 0, y1: 3, z0: 1, z1: 7.6 } });
+    reset({ future: true, moon: MOON_FUT, moonI: o.dawn ? 0.6 : 0.3, hemi: o.hemi ?? (o.dawn ? 1.3 : 4.2), g3: false, shadowRes: 1024, bounds: { x0: -3, x1: 3, y0: 0, y1: 3, z0: 1, z1: 7.6 } });
     hemi.color.set(0xe6e5e2); hemi.groundColor.set(0x948a7e);
     g1Spot.intensity = 0; g1Spot.visible = false;
     futTop.visible = true; futTop.color.set(0xf6f1e8); futTop.position.set(G1.x + 0.5, 3.8, G1.z + 0.9); futTop.target.position.set(G1.x, DECK1, G1.z); futTop.target.updateMatrixWorld();
     futTop.intensity = 7; futTop.angle = 0.7; futTop.penumbra = 1.0; futTop.distance = 0;
     fillA.visible = true; fillA.color.set(0xe8ecf2); fillA.position.set(G1.x - 1.2, 1.9, G1.z + 1.6); fillA.intensity = 1.6; fillA.distance = 5;   // soft side light (models the wool)
-    room.userData.skyM.color.setRGB(o.dawn ? 1.3 : 0.9, o.dawn ? 1.3 : 0.95, o.dawn ? 1.3 : 1.0); if (o.dawn) room.userData.skyM.map = room.userData.skyDawn;
+    room.userData.skyM.color.setRGB(o.dawn ? 1.3 : 0.85, o.dawn ? 1.3 : 0.88, o.dawn ? 1.3 : 0.92); room.userData.skyM.map = room.userData.skyDawn;   // (integration 2) the future's sky is the not-yet-dawn blue-grey in every shot (night sky read black)
     warmFill.visible = true; warmFill.color.set(0xffd9b8); warmFill.position.set(G1.x + 1.6, 1.2, G1.z + 2.6); warmFill.intensity = o.dawn ? 1.4 : 0.6; warmFill.distance = 5;
-    scene.background.set('#0e1013');
+    scene.background.set('#4a4a48');
   }
-  const futurePost = (r) => ({ contrast: 0.9, saturation: 0.8, lift: [0.035, 0.035, 0.034], gamma: [1.0, 1.0, 1.0], temp: 0.03, tint: 0.0,
-    shadowTint: [0.5, 0.5, 0.52], highTint: [0.53, 0.52, 0.5], grain: 0.025, vignette: 0.22, bloom: { strength: 0.18, threshold: 0.92, radius: 0.6 }, ...r });
+  // (integration 2) CT_FUTURE: lowest contrast, slightly high-key, raised blacks, silver-white with a trace of warmth; future grain 0.030
+  const futurePost = (r) => ({ contrast: 0.85, saturation: 0.8, lift: [0.06, 0.06, 0.058], gamma: [1.0, 1.0, 1.0], temp: 0.03, tint: 0.0,
+    shadowTint: [0.5, 0.5, 0.52], highTint: [0.53, 0.52, 0.5], grain: 0.030, vignette: 0.22, bloom: { strength: 0.18, threshold: 0.92, radius: 0.6 }, ...r });
   // the future viewer as a virtual image behind G1's south glass (a reflection composited as seen; never resolves)
   function futureViewer(tl, T, o) {
     fut.root.visible = true; eraKey.visible = true; navHand.root.visible = false; for (const g of glints) g.object3D.visible = false;
@@ -1292,7 +1458,7 @@ export default async function create(ctx) {
   // from the doorway side. k fades them (S002: the hand leaves)
   const G3GLOW_INTRO = 5, S2MIR = 0.3;
   function introGloveLights(rset, k = 1) {
-    futTop.visible = k > 0.001; futTop.color.set(0xffcf9c); futTop.position.set(-0.1, 1.5, G1F + 0.05); futTop.target.position.set(0.06, 1.14, G1F + 0.02); futTop.target.updateMatrixWorld();
+    futTop.visible = k > 0.001; futTop.color.set(0xffcf9c); futTop.position.set(-0.36, 1.42, G1F + 0.07); futTop.target.position.set(0.06, 1.14, G1F + 0.02); futTop.target.updateMatrixWorld();   // (integration 2) from the upper LEFT: it rakes ACROSS the fingers (knit, side seams), not along them (joint creases)
     futTop.intensity = lerp(0.17, 0.1, ease.inOutSine(clamp(rset))) * k; futTop.angle = 0.5; futTop.penumbra = 0.9; futTop.distance = 0;
     warmFill.visible = true; warmFill.color.set(0xffc890); warmFill.position.set(0.02, 1.62, G1F + 0.12); warmFill.intensity = 0.03; warmFill.distance = 0.9;
     fillA.visible = k > 0.001; fillA.color.set(0x9db0d0); fillA.position.set(0.42, 1.05, G1F + 0.35); fillA.intensity = 0.035 * k; fillA.distance = 0.9;   // cool moon edge (doorway side)
@@ -1300,11 +1466,13 @@ export default async function create(ctx) {
   // the far torch sweep (S002 19.5 s): the guard far beyond G1 swings his beam right → left once (sw 0 → 1)
   function torchSweep(sw, T) {
     if (!(sw > 0 && sw < 1)) return;
-    const env = Math.sin(Math.PI * sw), a = lerp(0.95, -0.95, ease.inOutSine(sw));
-    const o = V(1.3, 1.05, -5.6), tgt = o.clone().add(V(Math.sin(a) * 2.6, -1.05, 1.2 + Math.cos(a) * 0.6));
+    // (integration 2) he stands off frame right in the far gallery (≈9 m beyond G1); the beam sweeps across the north wall and the
+    // G3 cases (its pool on the wall is what reads through and around the hood — the floor there is hidden by G1's deck)
+    const env = Math.sin(Math.PI * sw), a = ease.inOutSine(sw);
+    const o = V(3.8, 1.02, -4.0), tgt = V(lerp(2.8, -2.8, a), 1.25 + 0.15 * Math.sin(Math.PI * a), G3F);   // the beam crosses the view (end-on it read as a lit disc); its pool slides over the G3 glass
     torch.visible = true; torch.position.copy(o); torch.target.position.copy(tgt); torch.target.updateMatrixWorld();
-    torch.intensity = 14 * env; torch.angle = 0.32; torch.penumbra = 0.85; torch.distance = 10;
-    torchCone.object3D.visible = true; torchCone.update(T, { origin: o, dir: tgt.clone().sub(o), intensity: 0.035 * env });
+    torch.intensity = 30 * env; torch.angle = 0.22; torch.penumbra = 0.85; torch.distance = 12;
+    torchCone.object3D.visible = true; torchCone.update(T, { origin: o, dir: tgt.clone().sub(o), intensity: 0.07 * env });
   }
 
   // (integration) the moonlit gallery night (S023–S030, S040): the base is the corridor's level (mean 6–10 %, ≤ 40 % of pixels
@@ -1349,8 +1517,11 @@ export default async function create(ctx) {
       const kr = ease.inOutSine(clamp((tl - 6.6) / 4.4));
       const d = lerp(0.26, 0.02, kr) - 0.008 * ease.inOutSine(clamp((tl - 11) / 2.25));
       const vis = 0.25 + 0.75 * smoothstep(6.6, 8.5, tl);
-      const rise = ease.outSine(clamp((tl - 6.6) / 4.4));
-      if (tl > 6.5) navHandAt(d, rise, T, herPalm, undefined, { salt: smoothstep(7.5, 8.6, tl), drop: 0.3 });
+      // (integration 2) he rises a hand's width to the RIGHT of hers, through the wiped band (readable by 8.5 s), then searches
+      // left into near-coincidence behind her palm while advancing — stops one finger short on 11.0 s
+      const rise = ease.outCubic(clamp((tl - 6.6) / 3.0));
+      const offX = 0.1 * (1 - ease.inOutSine(clamp((tl - 8.4) / 2.6)));
+      if (tl > 6.5) navHandAt(d, rise, T, herPalm, [0.008 + offX, -0.022], { salt: smoothstep(7.2, 8.4, tl), drop: 0.24 });
       // salt crystals (2.75–4.2 s): a cluster in the cleared band x 0.55–0.70, each catching the light for a few frames
       const gOn = tl > 2.6 && tl < 6.6;
       for (let k = 0; k < glints.length; k++) {
@@ -1362,15 +1533,15 @@ export default async function create(ctx) {
       }
       // focus: the glass surface → from 6.6 (≥ 1 beat) into the glass after his hand, at most ~11 cm deep (her glove ≤ ~6 px)
       const rack = ease.inOutSine(clamp((tl - 6.6) / 2.2));
-      const focus = fGlass + rack * Math.min(0.48 * d + 0.006, 0.105) + lerp(0.004, 0, rack);
+      const focus = fGlass + rack * Math.min(0.4 * d + 0.006, 0.08) + lerp(0.004, 0, rack);
       if (tl > 6.5 || gOn) {
         const eraTex = eraPass();
-        ovG1.U.tEra2.value = eraTex; ovG1.U.uEra2.value = tl > 6.5 ? 0.9 * vis : 0.9; ovG1.U.uMaskFloor2.value = 0.45;
+        ovG1.U.tEra2.value = eraTex; ovG1.U.uEra2.value = tl > 6.5 ? 0.9 * vis : 0.9; ovG1.U.uMaskFloor2.value = 0.32; ovG1.U.uEra2Tint.value.set(1.0, 0.95, 0.84, 0.55);
         ovG1.U.uEra2Over.value = 0.85;   // his hand hides what lies behind the glass (else the depth proxy kept the compass sharp inside it)
         ovG1.U.uEra2Depth.value = tl > 6.5 ? Math.max(d, 0.006) : 0.006;
       }
       // her glove's faint reflection on the pane meets the fingertip at the contact point (strongest while she wipes)
-      if (tl > 0.9) gloveReflection(contact, 0.2 * smoothstep(0.9, 1.4, tl) * (1 - 0.55 * ease.inOutSine(clamp((tl - 4.6) / 1.8))), focus);
+      if (tl > 0.9) gloveReflection(contact, 0.15 * smoothstep(0.9, 1.4, tl) * (1 - 0.55 * ease.inOutSine(clamp((tl - 4.6) / 1.8))), focus);
       ovG1.U.uDustLod.value = Math.log2(1 + cocPx(fGlass, focus, 100, 4) * 0.5);
       ovG1.U.uGlint.value = 0;
       DBGP.herPalm = herPalm; DBGP.contact = contact;
@@ -1411,8 +1582,8 @@ export default async function create(ctx) {
       // film stays on the glass, softening as the focus goes deep
       const open = ease.inOutSine(clamp((tl - 3.7) / 3.2));
       setG1Wipe(1);
-      ovG1.U.uMaskFloor.value = lerp(0.2, 1.0, open); ovG1.U.uMaskFloor2.value = 0.45;
-      seaPlane(tl, u, T, ease.inOutSine(clamp((tl - 2.9) / 3.6)), Math.max(focus, fGlass + 0.3 * rack), 100, 5.6);   // nothing at the S001 seam; opens with the pull-back
+      ovG1.U.uMaskFloor.value = lerp(0.2, 1.0, open); ovG1.U.uMaskFloor2.value = lerp(0.32, 0.6, open); ovG1.U.uEra2Tint.value.set(1.0, 0.95, 0.84, 0.55);
+      seaPlane(tl, u, T, ease.inOutSine(clamp((tl - 2.9) / 3.6)), Math.max(focus, fGlass + 0.3 * rack), 100, 5.6, null, { blurCap: lerp(14, SEA_CAP, open) });   // nothing at the S001 seam; opens with the pull-back
       ovG1.U.uDust2.value = 0.09 * (1 - 0.45 * open); ovG1.U.uDust2K.value.set(0.42, 0.3, 0.5, 0.05);
       ovG1.U.uDustLit.value.set(lerp(0.33, 0.45, open), lerp(0.64, 1.0, open)); ovG1.U.uDustTop.value = 0.88;
       ovG1.U.uDustLod.value = Math.log2(1 + cocPx(fGlass, focus, 100, 5.6) * 0.5);
@@ -1431,6 +1602,8 @@ export default async function create(ctx) {
       // far background (19.5 s): the guard's torch swings once right → left far beyond the case — a soft beam, a moving pool on
       // the far floor and the cases, never brighter than ~10 %
       torchSweep(clamp((tl - 5.85) / 0.85), T);
+      // (integration 2) beyond the glass the quiet museum: the doorway moon shafts in the air of the gallery as we pull back
+      for (const sh of shaftsI) { sh.object3D.visible = tl > 3.5; sh.update(T, { intensity: 0.022 * smoothstep(3.5, 6.5, tl) }); }
       return { dof: { focus, fstop: 5.6, maxCoc: 1.5 }, exposure: 1.3, bloom: { strength: 0.32, threshold: 0.86 } };
     },
     // ---------------------------------------------------------------------------------------------- S003 CU 75 mm
@@ -1453,7 +1626,9 @@ export default async function create(ctx) {
       // ruling 1: the era image follows the shot list's layout — it slides toward frame LEFT with the angle change and leaves
       // past the hood's left edge by ~1.8 s, gone by 2.9 s
       const kc = smoothstep(0.0, 0.6, tl);
-      seaPlane(tl + 7.875, u, T, 1.0, focus, 75, 5.6, V(-14.0 * ease.inOutSine(clamp((tl - 0.45) / 1.9)), 0, 0), { plane: SEA3, blurOverride: lerp(S2_SEA_BLUR, seaBlur(SEA3, camera.position.z, focus, 75, 5.6), kc) });
+      seaPlane(tl + 7.875, u, T, lerp(1.0, 0.7, a), focus, 75, 5.6, V(-14.0 * ease.inOutSine(clamp((tl - 0.45) / 1.9)), 0, 0), { plane: SEA3, blurOverride: lerp(S2_SEA_BLUR, Math.min(SEA_CAP, seaBlur(SEA3, camera.position.z, focus, 75, 5.6)), kc) });
+      ovG1.U.uEraComp.value = lerp(2.6, 5.0, smoothstep(0.3, 1.2, tl)); ovG1.U.uEraFX.value = 0.75 * smoothstep(0.2, 1.0, tl);   // (integration 2) the moon road sliding through the pane stays a fine glitter, not a white patch
+      for (const sh of shaftsI) { sh.object3D.visible = true; sh.update(T, { intensity: 0.022 * (1 - 0.5 * a) }); }   // as S002's end
       // the dust film and the wiped band continue from S002 (they leave the frame with the arc)
       setG1Wipe(1); ovG1.U.uDust2.value = 0.09 * 0.55 * (1 - 0.4 * a); ovG1.U.uDust2K.value.set(0.42, 0.3, 0.5, 0.05);
       ovG1.U.uDustLit.value.set(0.45, 1.0); ovG1.U.uDustTop.value = 0.88;
@@ -1559,7 +1734,7 @@ export default async function create(ctx) {
       if (tl <= T1) cx = (tl - T1) * v;
       else if (tl < T2) { const Tt = T2 - T1, s = (tl - T1) / Tt; cx = Tt * v * (s * s * s - 2 * s * s + s) + 2.2 * (-2 * s * s * s + 3 * s * s); }
       else cx = 2.2 + 0.012 * ease.inOutSine(clamp((tl - T2) / 0.8));
-      nightGallery({ hemi: 0.5, bounce: 15, at: [cx, -0.3, -4.6], dist: 10 });
+      nightGallery({ hemi: 0.6, bounce: 19, at: [cx, -0.3, -4.6], dist: 10 });
       const pos = V(cx, 1.47, G3PZ + d);
       cam.lens(camera, 40); cam.place(camera, pos, pos.clone().add(V(0, -0.02, -1)));
       camera.updateMatrixWorld();
@@ -1572,15 +1747,20 @@ export default async function create(ctx) {
         ov.U.uStreak.value = 0.035; ov.U.uStreakL.value.set(0.707, -0.707, -0.2 + 0.05 * (cx - G3.xs[i]), 0.04); ov.U.uStreakCol.value.setRGB(0.55, 0.63, 0.8);
         if (sx < -0.45 || sx > 1.45) continue;
         const str = 0.25 + 0.35 * (1 - smoothstep(0.0, 0.5, Math.abs(sx - 0.5)));
-        const tex = nested(views[i][0], views[i][1], tl, u, T, rtEra[i]);
+        // (integration 2) G3c: view_pier drawn through a lens ~0.45 m lower (their own staging): the crate and her knees read
+        // under the case on her lap (from their eye height she read as standing at a counter)
+        const tex = i === 2 ? nestedVia(views[i][0], views[i][1], tl, u, T, rtEra[i], (c, vc) => {
+          const f = c.getWorldDirection(V()), tg = c.position.clone().addScaledVector(f, 3.1), fh = V(f.x, 0, f.z).normalize();
+          vc.position.copy(tg).addScaledVector(fh, -3.0).add(V(0, -0.2, 0)); vc.fov = c.fov; vc.up.set(0, 1, 0); vc.lookAt(tg.clone().add(V(0, -0.12, 0)));
+        }) : nested(views[i][0], views[i][1], tl, u, T, rtEra[i]);
         const D = 1.6, z = d + D, c = cocPx(z, d + D, 40, 4);
         const img = blur(tex, rtBlur.pane[i], 0.8 + c * 0.3);
-        eraPlane(ov, img, str, V(G3.xs[i], i === 0 ? 1.5 : 1.62, G3PZ - D), V(0.82, 0, 0), V(0, 1.23, 0));
+        eraPlane(ov, img, str, V(G3.xs[i], i === 0 ? 1.38 : 1.62, G3PZ - D), V(0.82, 0, 0), V(0, 1.23, 0));   // (integration 2) the cabin plate 0.12 m lower: his head inside the pane
         ov.U.uEraFres.value = 0.2;
       }
       // her reflection: she walks behind the dolly at the same pace (true mirror): a dark silhouette with a silver edge from the
       // doorways behind her (no front light — the reflection shows the side of her that faces the glass)
-      const hx = cx + 0.35;
+      const hx = cx - 0.85;   // (integration 2) a little behind the dolly on its left: her reflection rides at x ≈ 0.40
       if (tl < T2 + 0.2) walkAt(hx, G3PZ + d + 1.25, Math.PI / 2, hx + 10, { stride: 1.25 });
       else { standAt(hx, G3PZ + d + 1.25, Math.PI * 0.9, { weight: 0.2 }); }
       R.lookAt(V(hx + 1, 1.4, G3PZ), 0.5); R.root.updateMatrixWorld(true);
@@ -1600,8 +1780,9 @@ export default async function create(ctx) {
       // (integration) the gallery night level (mean ~7 %), her profile low-key: the moon from behind her (SSE) edges her ear, cheek
       // and hair, the case light falls on the mount (not on her eye), her reflection stays darker than the candle
       reset({ moon: MOON_CH1, moonI: 3.0, g3: true, g3glow: 0.4, lining: 0.35, bounds: { x0: -3, x1: 9, y0: 0, y1: 4, z0: -7, z1: 7.6 } });
-      nightGallery({ hemi: 0.45, bounce: 7, at: [0.8, -0.3, -4.0], dist: 10 });
-      g3[1].glow.visible = false;
+      nightGallery({ hemi: 0.22, bounce: 9, at: [-2.6, -0.3, -6.4], dist: 7 });   // the bounce lights the north wall beyond her (G3a, pilasters), not her face   // (integration 2) low hemi: no flat fill on her face
+      hemi.groundColor.set(0x5c4430);                                          // the warm teak bounce is broad (sky/ground fill), not a point under her chin (it banded her eyes)
+      g3[1].glow.material.color.copy(g3[1].glowC).multiplyScalar(0.5);         // a dim warm bed behind the plate (the case's 3000 K, turned down)
       setRShadow(false);                                                       // (her head's moon shadow printed a black disc on G3b's back panel)                                              // the era image sits over dark velvet (no light-box panel)
       // she stops close in front of G3b and leans in to ~15 cm from the glass: her own reflection lands on the empty mount
       const pose25 = (t, TT, live) => {
@@ -1640,49 +1821,74 @@ export default async function create(ctx) {
       // moonlight edge on her ear and collar (the doorways behind her), warm teak bounce from below
       // (review) from behind her, the doorway side (SSW): an edge on ear, hair and collar — it was a cold front fill that blew the
       // profile out into a bright mask
-      fillA.visible = true; fillA.color.set(0xb4c0d2); fillA.position.copy(eye).add(V(-0.55, 0.4, 0.9)); fillA.intensity = 0.16; fillA.distance = 3.0;   // back rim from the SSW doorway, ~1 stop under
-      warmFill.visible = true; warmFill.color.set(0xffc690); warmFill.position.copy(eye).add(V(0.12, -0.35, 0.1)); warmFill.intensity = 0.05; warmFill.distance = 0.9;   // teak bounce under her chin
+      fillA.visible = true; fillA.color.set(0xb4c0d2); fillA.position.copy(eye).add(V(-0.55, 0.4, 0.9)); fillA.intensity = 0.3; fillA.distance = 3.0;   // back rim from the SSW doorway (the silver edge of ear, hair, collar)
+      warmFill.visible = true; warmFill.color.set(0xffc690); warmFill.position.copy(eye).add(V(0.2, 0.04, -0.25)); warmFill.intensity = 0.02; warmFill.distance = 0.8;   // (integration 2) the case's faint warm spill off the glass, at eye level from the glass side
       g3Spot.visible = true; g3Spot.position.set(G3.xs[1], G3.top - 0.05, G3.back + 0.45); g3Spot.target.position.set(G3.xs[1], DECK3, G3.back + 0.3); g3Spot.target.updateMatrixWorld(); g3Spot.intensity = 0.35; g3Spot.angle = 0.3;
       // the case's dimmed 3000 K glow spilling out onto her face front — what her reflection on the mount is made of
       inspLight.visible = true; inspLight.color.set(0xffc890); inspLight.position.copy(bracketPos).add(g3[1].contents.position).add(V(0.05, 0.3, 0.2)); inspLight.target.position.copy(bracketPos).add(g3[1].contents.position); inspLight.target.updateMatrixWorld();
-      inspLight.intensity = 0.14; inspLight.angle = 0.35; inspLight.penumbra = 0.8; inspLight.distance = 1.4;
+      inspLight.intensity = 0.14; inspLight.angle = 0.35; inspLight.penumbra = 0.8; inspLight.distance = 0.42;   // (integration 2) dies before her face: the mount only
+      // the glass: a soft moon sheen and the reflected arch of a moonlit doorway behind her (cool, upper right of the pane)
+      ovG3[1].U.uStreak.value = 0.03; ovG3[1].U.uStreakL.value.set(0.707, -0.707, 0.25, 0.06); ovG3[1].U.uStreakCol.value.setRGB(0.5, 0.58, 0.74);
+      { camera.updateMatrixWorld(); const hit = rayZ(0.86, 0.26, G3PZ), rd = hit.clone().sub(camera.position).normalize(); rd.z = -rd.z;
+        archGlow.visible = true; archGlow.position.copy(hit).addScaledVector(rd, 5.0); archGlow.scale.set(1.6, 2.6, 1); archGlow.lookAt(archGlow.position.clone().sub(rd)); archGlow.material.color.setRGB(0.45, 0.52, 0.7); }
       // (review) the lights are set BEFORE the mirror pass — it used to render with them still off, so her reflection was black
-      const mt = mirrorPass(V(0, 1.6, G3PZ), V(0, 0, 1), rtMir, { hide: [g3Grp], mirFill: 0.2, boost: [[inspLight, 0.26]] });
-      ovG3[1].U.tMir.value = blur(mt, rtMirB, Math.min(9, Math.max(3.5, cocPx(dRef, focus, 75, 2.8) * 0.375 + 0.5))); ovG3[1].U.uMir.value = 0.06; ovG3[1].U.uMirFres.value = 0.3;   // darker than the candle (continuity note)
+      // (integration 2) the gallery's moonlit doorways in the glass behind her dim reflection (it stays a dark shape, darker than the
+      // candle) and the doorway shafts in the soft background: the frame reads as a night room, not a black void
+      for (const sh of shafts) { sh.object3D.visible = true; sh.update(T, { intensity: 0.05 }); }
+      const mt = mirrorPass(V(0, 1.6, G3PZ), V(0, 0, 1), rtMir, { hide: [g3Grp], mirFill: 0.25, boost: [[inspLight, 0.1]] });
+      ovG3[1].U.tMir.value = blur(mt, rtMirB, Math.min(9, Math.max(3.5, cocPx(dRef, focus, 75, 2.8) * 0.375 + 0.5))); ovG3[1].U.uMir.value = 0.17; ovG3[1].U.uMirFres.value = 0.3;   // darker than the candle (continuity note)
       DBGP.eye = eye; DBGP.mount = bracketPos.clone().add(g3[1].contents.position); DBGP.refl = V(eye.x, eye.y, 2 * G3PZ - eye.z);
-      return { dof: { focus, fstop: 2.8, maxCoc: 1.4 }, exposure: 1.45, bloom: { strength: 0.3, threshold: 0.86 } };
+      return { dof: { focus, fstop: 2.8, maxCoc: 1.4 }, exposure: 3.0, bloom: { strength: 0.3, threshold: 0.86 } };
     },
     // ---------------------------------------------------------------------------------------------- S026 INSERT 100 mm locked
     // 93.25–96.917. Through G3b: the wife's left hand with the silver bangle straightens the chopsticks (old_home view_home_hand,
     // screen-mapped); the face stays a warm blur; focus face → hand 0.07–0.9; her glove's reflection approaches the glass
     // without touching; the full-band stop 95.95 (tl 2.70) freezes the hand.
     S026(tl, u, T) {
+      // (integration 2) through the glass, at the gallery's level: the home plate ~1 stop down (it read as a direct shot inside the
+      // home), a dusty pane with a diagonal moon sheen and the faint reflected doorway arch at upper right; only her gloved
+      // fingertip enters at lower right (its reflection the brighter of the pair); old_home's hand drawn through a lens at table
+      // height (the hand along the chopsticks, the bangle clear, not a claw from the top edge) and re-timed on the song
       reset({ moon: MOON_CH1, moonI: 1.4, hemi: 0.15, g3: true, bounds: { x0: -2, x1: 2, y0: 0, y1: 3, z0: -7, z1: 0 } });
-      // review: the lens yawed 24° from the west so the real fingertip and its true reflection separate on screen (square to the
-      // glass they overlapped into one soft blob); the reflection approaches from the left and stops a sliver short
+      nightGallery({ hemi: 0.3, bounce: 2.5, at: [0.3, -0.3, -4.0], dist: 8 });
+      // review: the lens yawed 24° from the west so the real fingertip and its true reflection separate on screen
       const tgt = V(0.04, 1.30, G3PZ), yaw = 24 * D2R;
       const pos = tgt.clone().add(V(0.05 - Math.sin(yaw) * 0.745, 0.06, Math.cos(yaw) * 0.745));
       cam.place(camera, pos, tgt); cam.lens(camera, 100);
       const dGl = cam.distTo(camera, tgt), DH = 0.6, fH = dGl + DH / Math.cos(yaw);   // the home plate's mirror depth: in front of the back panel (0.68 m), or the depth write fails its test
-      // the home hand: screen-mapped era layer (main role, full res), pre-blurred for the face → hand rack
-      const tex = nested('old_home', 'view_home_hand', tl, u, T, rtEraW);
+      // the action re-timed on the song (old_home's clock t: reach 0–0.3, straighten 0.3–0.9, a fine nudge peaking at 1.21):
+      // settle 93.6–94.3, the first nudge 94.46–95.2, one last ~2 mm nudge ending exactly on the band stop 95.95 (tl 2.70), frozen
+      const tw = tl < 0.35 ? 0 : tl < 1.05 ? 0.9 * (tl - 0.35) / 0.7 : tl < 1.21 ? 0.9 : tl < 1.95 ? 1.09 + 0.24 * (tl - 1.21) / 0.74
+        : tl < 2.45 ? 1.4 : tl < 2.70 ? 1.09 + 0.12 * ease.inOutSine((tl - 2.45) / 0.25) : 1.21;
+      const tex = nestedVia('old_home', 'view_home_hand', tw, u, T, rtEraW, (c, vc) => {
+        // from the empty seat, higher and closer over the table (≈50° down): the back of her hand lies along the chopsticks with
+        // the bangle on the wrist, her forearm leaving toward the top left; her face stays above frame (old_home: bowl
+        // (0.03, 0.82, −0.04), candle (−0.2, 0.82, 0.2), their lens on the empty-seat side)
+        const f = c.getWorldDirection(V()), h = V(-f.x, 0, -f.z).normalize(), piv = V(-0.06, 0.9, 0.05).addScaledVector(h, -0.09), e1 = 42 * D2R, d = 0.95;
+        vc.position.copy(piv).addScaledVector(h, Math.cos(e1) * d).add(V(0, Math.sin(e1) * d, 0)); vc.fov = c.fov * 1.32; vc.up.set(0, 1, 0);
+        vc.lookAt(piv); vc.updateMatrixWorld(true);
+      });
       const rack = ease.inOutSine(clamp((tl - 0.07) / 0.83));
       const eraT = blur(tex, rtBlur[640], lerp(5.0, 0.0, rack));
       g3[1].glow.visible = false;                                              // B over dark velvet (no light-box panel)
-      // the plate as old_home solved it (candle (0.30, 0.35), bowl (0.62, 0.55), hand + bangle (0.56, 0.58), face at the top edge);
-      // the top band (her face) always takes a 7 px blur: the face never resolves while the hand comes sharp
-      ovG3[1].U.tEra2.value = eraT; ovG3[1].U.tEra2B.value = blur(tex, rtBlur.hand, 7.0); ovG3[1].U.uEra2BY.value.set(0.88, 0.98);
-      ovG3[1].U.uEra2.value = 0.32; ovG3[1].U.uEra2Depth.value = DH; ovG3[1].U.uDepthK.value = 4;
-      dustFor(ovG3[1], fH, dGl, 100, 4, 0.022); ovG3[1].U.uDustTop.value = 0.0; ovG3[1].U.uDustCol.value.setRGB(0.75, 0.8, 0.9);
-      // her glove: the real fingertip enters lower right, out of focus; its reflection approaches its own tip, ~1 cm short
+      // the top band (her face, if it shows) always takes a 7 px blur: the face never resolves while the hand comes sharp
+      ovG3[1].U.tEra2.value = eraT; ovG3[1].U.tEra2B.value = blur(tex, rtBlur.hand, 7.0); ovG3[1].U.uEra2BY.value.set(0.82, 0.95);
+      ovG3[1].U.uEra2.value = 0.1; ovG3[1].U.uEra2Depth.value = DH; ovG3[1].U.uDepthK.value = 8;
+      // the glass itself: dust film, a diagonal moon sheen, the reflected arch of a moonlit doorway at upper right
+      dustFor(ovG3[1], fH, dGl, 100, 4, 0.05); ovG3[1].U.uDustTop.value = 0.0; ovG3[1].U.uDustCol.value.setRGB(0.7, 0.76, 0.88);
+      ovG3[1].U.uStreak.value = 0.045; ovG3[1].U.uStreakL.value.set(0.707, -0.707, 0.15, 0.05); ovG3[1].U.uStreakCol.value.setRGB(0.5, 0.58, 0.74);
+      { camera.updateMatrixWorld(); const hit = rayZ(0.82, 0.22, G3PZ), rd = hit.clone().sub(camera.position).normalize(); rd.z = -rd.z;
+        archGlow.visible = true; archGlow.position.copy(hit).addScaledVector(rd, 4.0); archGlow.scale.set(1.3, 2.0, 1); archGlow.lookAt(archGlow.position.clone().sub(rd));
+        archGlow.material.color.setRGB(0.5, 0.58, 0.75); }
+      // her glove: only the index fingertip enters at lower right, out of focus and dim; its reflection approaches its own tip
       const appr = ease.inOutSine(clamp((tl - 0.5) / 2.0));
       handR.root.visible = true; handR.pose('point');
-      const tipS = rayZ(lerp(0.95, 0.755, appr), lerp(0.82, 0.715, appr), G3PZ + lerp(0.05, 0.011, appr));   // its reflection ≈ (0.80, 0.78) → (0.72, 0.70)
-      placeHandAt(handR, tipS, V(-0.45, 0.45, -0.75).normalize(), V(0.2, -0.4, -0.85), 'index');
-      fillA.visible = true; fillA.color.set(0xc0cad8); fillA.position.copy(tipS).add(V(0.3, 0.3, 0.4)); fillA.intensity = 1.0; fillA.distance = 1.6;   // moonlight off the floor pools on her glove
+      const tipS = rayZ(lerp(1.02, 0.975, appr), lerp(0.97, 0.93, appr), G3PZ + lerp(0.05, 0.011, appr));
+      placeHandAt(handR, tipS, V(-0.6, 0.45, -0.66).normalize(), V(0.2, -0.4, -0.85), 'index');
+      fillA.visible = true; fillA.color.set(0xc0cad8); fillA.position.copy(tipS).add(V(0.3, 0.3, 0.4)); fillA.intensity = 0.25; fillA.distance = 1.6;   // moonlight off the floor pools on her glove
       warmFill.color.set(0xc6d0de); warmFill.position.copy(tipS).add(V(-0.06, 0.07, 0.004)); warmFill.distance = 0.35; warmFill.intensity = 0;   // (mirror pass only)
-      const mt = mirrorPass(V(0, 1.6, G3PZ), V(0, 0, 1), rtMir, { hide: [g3Grp], mirFill: 0.6, boost: [[warmFill, 0.07]] });
-      ovG3[1].U.tMir.value = blur(mt, rtMirB, 1.2); ovG3[1].U.uMir.value = 0.32; ovG3[1].U.uMirFres.value = 0.0;
+      const mt = mirrorPass(V(0, 1.6, G3PZ), V(0, 0, 1), rtMir, { hide: [g3Grp], mirFill: 0.5, boost: [[warmFill, 0.06]] });
+      ovG3[1].U.tMir.value = blur(mt, rtMirB, 1.2); ovG3[1].U.uMir.value = 0.13; ovG3[1].U.uMirFres.value = 0.0;   // faint: the fingertip's reflection, not a second glove
       return { dof: { focus: fH, fstop: 4, maxCoc: 1.5 }, exposure: 1.3, bloom: { strength: 0.3, threshold: 0.82 } };
     },
     // ---------------------------------------------------------------------------------------------- S028 MS 50 mm locked
@@ -1702,14 +1908,15 @@ export default async function create(ctx) {
       const fwd = CL(0, 0, -1).sub(CL(0, 0, 0)).normalize();
       const tgt = CL(0.0, 0.06, -0.012);
       const push = 1 - 0.08 * ease.inOutSine(clamp((tl - 0.0) / 2.0));
-      const off = V(0, 1.6, 0).addScaledVector(fwd, -0.29).multiplyScalar(push);
+      const off = V(0, 1.6, 0).addScaledVector(fwd, -0.29).multiplyScalar(push * 1.06);   // (integration 2) 6 % wider: the handle at the bottom edge, the pass at the right edge
       cam.place(camera, tgt.clone().add(off), tgt); cam.lens(camera, 75);
       // dim 3000 K case light, then the hooded inspection lamp swings in from frame right (raking the folds)
-      g3Spot.visible = true; g3Spot.position.copy(CL(0.0, 1.9, 0.05)); g3Spot.target.position.copy(CL(0, 0, 0)); g3Spot.target.updateMatrixWorld(); g3Spot.intensity = 0.55; g3Spot.angle = 0.7;
+      g3Spot.visible = true; g3Spot.position.copy(CL(0.0, 1.9, 0.05)); g3Spot.target.position.copy(CL(0, 0, 0)); g3Spot.target.updateMatrixWorld(); g3Spot.intensity = 1.8; g3Spot.angle = 0.7;   // (integration 2) frame 0 reads before the lamp swings in
       const sw = ease.inOutSine(clamp((tl - 0.8) / 0.3));
       inspLamp.visible = true; inspLight.visible = true;
-      inspLight.position.copy(CL(lerp(0.75, 0.42, sw), 0.32, lerp(-0.1, 0.0, sw))); inspLight.target.position.copy(CL(-0.06, 0.03, -0.06)); inspLight.target.updateMatrixWorld();
-      inspLight.intensity = 0.85 * sw; inspLight.angle = 0.6; inspLight.distance = 2.0; inspLight.color.set(0xffdcb4);
+      // (integration 2) low from frame right (≈15°): it rakes across the cotton (folds, ridges, the collar band)
+      inspLight.position.copy(CL(lerp(0.85, 0.55, sw), 0.2, lerp(-0.1, -0.02, sw))); inspLight.target.position.copy(CL(-0.08, 0.035, -0.03)); inspLight.target.updateMatrixWorld();   // ≈15°, no shadow map (the case's own wall would shade the whole shirt)
+      inspLight.intensity = 2.4 * sw; inspLight.angle = 0.5; inspLight.penumbra = 0.6; inspLight.distance = 2.0; inspLight.color.set(0xffdcb4);
       // her gloved right hand: enters from the bottom-left at 1.2, palm flat on the collar fold stroking left → right;
       // at 1.63 (cut) the palm centre passes (0.42, 0.42), mid-stroke. Fingers toward the upper right, the sleeve from lower left
       const enter = ease.outCubic(clamp((tl - 1.2) / 0.3));
@@ -1739,8 +1946,9 @@ export default async function create(ctx) {
       frameAt(pos, stamp, 0.60, 0.50, 100);
       // the hand: palm toward the glass (north), fingers up and gently curled, a finger-width (≈1.6 cm) from it
       handR.root.visible = true; handR.pose('relaxed', { curl: 0.62 });
-      const hp = rayZ(0.37, 0.79, G3PZ + 0.035);
-      handR.placeWrist([0, 0, 0], V(0.12, 1, -0.32).normalize(), V(0.1, 0.25, -1)); handR.root.updateMatrixWorld(true);
+      // (integration 2) the forearm leaves toward the lower left: the dark-grey coat cuff enters from the bottom-left edge
+      const hp = rayZ(0.37, 0.73, G3PZ + 0.035);
+      handR.placeWrist([0, 0, 0], V(0.27, 1, -0.32).normalize(), V(0.1, 0.25, -1)); handR.root.updateMatrixWorld(true);
       const palm = handR.sockets.palm.getWorldPosition(V());
       handR.root.position.add(hp.clone().sub(palm)); handR.root.position.x += 0.0004 * util.noise1(T * 5, 3); handR.root.updateMatrixWorld(true);
       g3Spot.visible = true; g3Spot.position.set(G3.xs[2], G3.top - 0.05, G3.back + 0.45); g3Spot.target.position.copy(passG.getWorldPosition(V())); g3Spot.target.updateMatrixWorld(); g3Spot.intensity = 0.36; g3Spot.angle = 0.55;
@@ -1749,8 +1957,11 @@ export default async function create(ctx) {
       const mt = mirrorPass(V(0, 1.6, G3PZ), V(0, 0, 1), rtMir, { hide: [g3Grp], mirFill: 0.6 });
       ovG3[2].U.tMir.value = blur(mt, rtMirB, 2.0); ovG3[2].U.uMir.value = 0.08 + 0.05 * u; ovG3[2].U.uMirFres.value = 0.0;
       const dH = cam.distTo(camera, hp), dS = cam.distTo(camera, stamp);
-      const focus = dH + 0.012 + 0.3 * Math.exp(-Math.pow((tl - 0.81) / 0.32, 2)) * (dS - dH);
-      dustFor(ovG3[2], focus, cam.distTo(camera, V(hp.x, hp.y, G3PZ)), 100, 2.8, 0.01); ovG3[2].U.uDustTop.value = 0.0; ovG3[2].U.uDustCol.value.setRGB(0.7, 0.75, 0.85);
+      // (integration 2) the focus breathes ~0.5 s around 134.6 most of the way to the pass: the faded violet ring and the four empty
+      // photo corners surface, then the glove takes the focus back; dust and a moon sheen on the glass between them
+      const focus = dH + 0.012 + 0.8 * Math.exp(-Math.pow((tl - 0.81) / 0.24, 2)) * (dS - dH);
+      dustFor(ovG3[2], focus, cam.distTo(camera, V(hp.x, hp.y, G3PZ)), 100, 2.8, 0.035); ovG3[2].U.uDustTop.value = 0.0; ovG3[2].U.uDustCol.value.setRGB(0.7, 0.75, 0.85);
+      ovG3[2].U.uStreak.value = 0.03; ovG3[2].U.uStreakL.value.set(0.707, -0.707, 0.35, 0.05); ovG3[2].U.uStreakCol.value.setRGB(0.5, 0.58, 0.74);
       return { dof: { focus, fstop: 2.8, maxCoc: 1.5 }, exposure: 1.25, bloom: { strength: 0.25, threshold: 0.9 } };
     },
     // ---------------------------------------------------------------------------------------------- S070 INSERT 100 mm (future)
@@ -1760,8 +1971,10 @@ export default async function create(ctx) {
       futureLook();
       coat.updateMatrixWorld(true);
       const worn = coat.userData.worn.getWorldPosition(V());     // the worn patch (18 × 8 mm, ~1 cm in from the cuff edge)
-      const back = ease.inOutCubic(clamp((tl - 1.69) / 1.25)) * 0.92 + 0.08 * ease.inOutSine(clamp((tl - 2.71) / 0.96));
-      const p0 = V(worn.x + 0.05, worn.y + 0.75, worn.z + 1.95), p1 = V(MC_OPEN.pos.x, 1.2, G1F + 4.35);   // review: the end frame holds the whole glass cover (it cut off at 1.34 m, so no glass read)
+      const back = ease.inOutCubic(clamp((tl - 1.69) / 1.02)) * 0.92 + 0.08 * ease.inOutSine(clamp((tl - 2.71) / 0.96));
+      // (integration 2) frame 0 looks down onto the cuff (≈40°, the worn abrasion faces the lens: it read as a dot at 21°); the
+      // main pull-back lands frontal on the S001 axis on 段 (222.42, tl 2.71), then drifts
+      const p0 = V(worn.x + 0.04, worn.y + 0.95, worn.z + 1.15), p1 = V(MC_OPEN.pos.x, 1.2, G1F + 4.35);   // 1.5 m: the cuff ≈ 40 % of frame height   // review: the end frame holds the whole glass cover (it cut off at 1.34 m, so no glass read)
       const pos = p0.clone().lerp(p1, back);
       const t0 = worn, t1 = V(G1.x, 1.19, G1.z);
       camera.position.copy(pos); cam.lens(camera, 100);
@@ -1773,17 +1986,21 @@ export default async function create(ctx) {
     // 223.375–226.29. The opening camera EXACTLY (MC_OPEN, focus on the glass): the future viewer's reflection fades up as
     // they step into place (0.13–0.6), raises the right hand palm to the glass (0.79–2.29) to the T01 point (0.50, 0.55).
     S071(tl, u, T) {
-      futureLook();
+      futureLook({ hemi: 2.2 });   // (integration 2) the room a little lower than S070's end: the reflection must still read over it
       cam.place(camera, MC_OPEN.pos, MC_OPEN.target); cam.lens(camera, MC_OPEN.mm);
       const fGlass = camera.position.z - G1F;
       const step = ease.inOutSine(clamp((tl - 0.13) / 0.5)), rise = ease.outCubic(clamp((tl - 0.79) / 1.5));
       futureViewer(tl, T, { stand: G1F - 0.24, step, rise, profile: false });
-      const eraTex = eraPass();
-      ovG1.U.tEra2.value = blur(eraTex, rtBlur.hand, 2.2); ovG1.U.uEra2Low.value = 0.27 * step;   // post-DOF, pre-blurred (no depth proxy: the room behind keeps its own blur)
+      // (integration 2) two layers: the raised hand alone (the T01 registration, softly sharp) over the viewer's body as a very soft
+      // pale under-layer — the sleeve no longer reads as a grey tube across the top of the pane; the face a pale blur
+      const bodyTex = eraPass2([futHandL.root]);
+      fut.root.visible = false; const eraTex = eraPass(); fut.root.visible = true;
+      ovG1.U.tEra2.value = blur(eraTex, rtBlur.hand, 2.2); ovG1.U.uEra2Low.value = 0.85 * step;   // post-DOF, pre-blurred (no depth proxy: the room behind keeps its own blur)
+      ovG1.U.tEra2B.value = blur(bodyTex, rtBlur[640], 9.0); ovG1.U.uEra2BLow.value = 0.75; ovG1.U.uEra2Tint.value.set(1.04, 1.03, 1.0, 0.25);
       ovG1.U.uEra2Fade.value.set(0.04, 0.34);                                  // the reflection thins out low on the pane, over the bright linen (hides the sleeve opening)
       // the faint present: dust sparkle + the room behind the lens, barely
       dustFor(ovG1, fGlass + 0.004, fGlass, 100, 4, 0.012); ovG1.U.uDustRep.value.set(1.6, 1.33); ovG1.U.uDustTop.value = 0.2; ovG1.U.uDustCol.value.setRGB(0.95, 0.93, 0.9);
-      return futurePost({ dof: { focus: fGlass + 0.004, fstop: 4.0, maxCoc: 1.6 }, exposure: 1.15 });
+      return futurePost({ dof: { focus: fGlass + 0.004, fstop: 4.0, maxCoc: 1.6 }, exposure: 0.88 });
     },
     // ---------------------------------------------------------------------------------------------- S078 MCU 75 mm (future)
     // 240.0–242.04. Dissolve-in from S077 (her profile eye (0.33, 0.40)): the future viewer's reflection in profile, facing

@@ -5,6 +5,10 @@ Module `scenes/map_office.js`. Shots **S021** (CH1), **S044** (CH2), **S047** an
 > **Review pass (art director + DP, 2026-10-05):** the light, the map drawing, the pen grip, the moths, S044's push and
 > S048's handle and staging changed after the notes below were written. Where they conflict with the **Review** section at
 > the end of this file, the Review section is current.
+>
+> **Integration pass (2026-10-06):** the louvre-stripe key, the 32 mm ruler, the vertical coast and the in-scene grain quad
+> described below are GONE. The kerosene lamp is the key again, the stripes are a soft accent, the ruler is slim, the coast
+> turns, and grain comes from the engine. See **Integration fixes** at the end — it supersedes everything above it.
 
 Contact sheet (all shots at u = 0.5): `out/check/map_office/sheet.jpg`.
 
@@ -353,3 +357,47 @@ cached hands and figure).
 URL knobs, all inert by default:
 - `mlamp` (lamp intensity), `mlx` (lamp x), `mhemi` (fill), `mexp` / `mtemp` / `msat` / `mst` (CT_MAP grade), `mpen` (moon pool penumbra)
 - `moff=lamp,moon,nrm,moth` (in addition to the existing switches)
+
+
+## Integration fixes (whole-film QA, 2026-10-06)
+
+Survey: `out/fix_restoration_lab_old_home_map_office/` (`shots/S021.jpg` … `cuts/S020-S021.jpg` …), plus working renders in
+`out/fix_rl_oh_mo_wip/mo1`–`mo6` (desk) and `mo4`/`mo5` (S048). Director: the stripes must not dominate; the map, the ruler
+and the wet ink line read first; S047 reads as paper with a wet glossy line; the ruler must not read as a redaction bar.
+
+| finding | fix |
+|---|---|
+| S021 / S044 / S047 blocker: louvre stripes ~8:1 over the whole frame, map unreadable | **Kerosene lamp is the key** again: 2200 K spot at (0.78, TY+0.40, −0.30), decay 1, aimed 0.45 frame-widths left of centre so the cone's penumbra evens out the near side, 2.4 (debug `mlamp`). The moon through the louvres is a **soft accent pool at the upper right**: 13-board cookie (≈ 8 cm pitch, ≈ 10 bands across S021), 11 px blur (penumbra ≈ ⅓ pitch), spot 0.075 rad, penumbra 1.0, aimed at frame (0.95, 0.14) of each shot (`moonAt`), 1.0 (S021) / 0.55 (S044) / 0.45 (S047, one soft band edge). Measured contrast in the band ≈ 1.3–1.5:1 (S021), ≤ 1.25:1 (S044/S047). Hemi fill #5c6870 0.55. Grade: exposure 1.0, contrast 1.14, saturation 0.56, temp −0.2 (warm paper, not orange), S047 sat 0.58 / temp −0.16. |
+| Ruler a pure-black bar ~9 % of frame height (redaction bar) | Slim **12.5 mm** ebony rule (≈ 3.7 % of S021's height, 5–6 % in S044, 0.67–0.85 in S047 with paper below), ebony lifted to a visible brown figure (#76604e base, roughness 0.28, env 1.3), **brass edges 2.6 mm, low metalness, lamp-lit** → the drawing edge is a bright gold line under the ink (matches S020's lit edge). |
+| Ink a 1–2 px hairline / matte black rod with a dotted highlight | Line widths 3.2 mm (S021, 4–5 px at 960), 2.6 mm (S044), 1.6 mm (S047). New wet sheen in the ink shader: a warm kerosene highlight strip on the lamp side of the dome, strongest at the nib and fading over ≈ 0.8 s of travel behind it (`uWet`/`uWetLen`), broken by a ≈ 4 cm non-periodic pooling noise (no dotted rod); flatter dome (bump ×0.45), roughness 0.34, env 0.8. A travelling glint (`setGlint`, `uGlintX`). Program key `inkStrip7`. |
+| Map: coast a black hair, hachures fur / dune blotches, village a grid of boxes | **The coast turns** (`bayY`, `landD` smooth-max, `coastPolyline`): in S021 the shore runs horizontal at y ≈ 0.59 from the left edge to the harbour-village mark (0.29, 0.58), then turns south and crosses the line at x 0.30 (measured nib (0.300, 0.651) vs coast 0.298 at 78.32) — the same shape as S022's real coast. The **sea is washed grey-blue**, deeper along the shore; coastline a 1.5 mm sepia line; waterlining follows the turning shore. Hachures at 27 % alpha (map) and, in the S047 macro, one stroke in three, ≤ 0.2 mm wide at 20 % — sparse printed strokes; fibre normal 0.1 (macro) / 0.15 (map), fibre overlay 0.22. The S021 village = pitched-roof blocks + jetty + a firm harbour-light ring and dot; the S044 fishing village is organic (varied sizes/angles, gaps, a lane, pitched roofs with a dark lee half). |
+| S020→S021 / S021→S022 cuts | IN: the ruler's bright brass edge + ink at y 0.65–0.66 now matches S020's lit horizontal. OUT: in the last 0.3 s (80.0–80.29) a kerosene glint runs back along the wet line from the nib (x 0.70) to the coast crossing (0.30, 0.65), so the eye arrives at the village mark (0.29, 0.58) where S022's shore light appears; the left palm stays below the ruler. |
+| S021 at 掌: left arm crosses the line and the pen hand | The left hand slides right **below** the ruler and presses flat on the land under the fresh line: palm (0.47, 0.94), fingers toward frame right (thumb kept near the index, `PRESS21`), forearm from the bottom edge; the fingertips rest on the ruler's lower edge, never on the wet line; the pen hand finishes at x 0.70. |
+| S044 end / S044→S045 | Push 0.74 → 0.62 m frame width (1.19×). End palm measured **(0.450, 0.600)**, fingers toward the top, fingertips ≥ 0.08 below the top edge, hand ≈ 38 % of frame height across the knuckles (S045 register). |
+| S044 black marks on the pressed fingernails | Not a decal: the close LOD's nail trenches mesh as dark crescents. The pressing (left) hand is now the `lod:'macro'` sculpt (cleaner, the crescents shrink to a hairline; ≈ +7 s scene build, sculpted live). Lamp shadow normalBias 0.0035. |
+| S047: lower 30 % a dead black slab, pen a white plastic tube | Slim ruler (above); steel blades metalness 0.95 / roughness 0.25. |
+| S048 grip: mitten fist on top of the bar | The 'rattan' curl tightened (radius 11.2 → 8.6 mm on 关) so the fingers wrap the bar; the end camera moved to her **front quarter near bar height** (`B.pos` = bar + (0.15, 0.012, 0.45)) — the knuckle row, the wrap and the thumb over the index read; bar measured y 0.655–0.663, x 0.301–0.719 (S049 register). Blanch on 关 kept. |
+| S048 tilt: doubled threshold line, floating shoe, shoes merged | She is turned 32° (was 17°) so the two shoes read as a pair ≈ 9 cm apart; focus now follows strip → shoes → **the case face as it passes** (no unreadable blur band) → knuckles. |
+| Grain (S021/S044/S047/S048, notes #7) | In-scene grain quad, `setGrain` and every `grain: 0` deleted; per-era grain through post: map office **0.040** (S021/S044/S047), migrant threshold **0.044** (S048). |
+
+**Not fixed / deviations**
+- S021: the QA's palm position (0.58, 0.86) cannot hold a spread hand below a ruler at 0.66–0.70 in a 33 cm-tall frame (the hand
+  is ≈ 19 cm long); the palm sits at (0.47, 0.94), fingers along the ruler's lower edge.
+- The relief still reads a little as soft tone ("dunes") at S021's 80 cm frame width (sub-pixel hachures average to tone); it
+  is now light enough that the coast, sea wash, village, river and line read first.
+- S048: the close library hand is still a little smooth (mitten-like) at the CU; the "skirt hem → blouse hem" rise is "shoes →
+  case → hand" because the case hangs between her and the lens (side-on staging, director ruling).
+
+
+Debug knobs added: `mmoon` (moon accent), `mlamp` now defaults to 2.4, `mhl=close|macro` (left hand LOD), `mrot`, `mbx`, `mby` (S048).
+
+**Measured after the integration fixes** (1280×536, `out/check/map_office/mo_render.mjs`, 3 frames per shot at u ≈ 0.25/0.5/0.75, mean of the frames after each shot's first (shader compile), shared 4-core box, 1-min load ≈ 3–4):
+
+| shot | s/frame |
+|---|---|
+| S021 | 0.70 |
+| S044 | 0.89 |
+| S047 | 0.67 |
+| S048 | 1.03 |
+
+All within the 2.5 s cap.

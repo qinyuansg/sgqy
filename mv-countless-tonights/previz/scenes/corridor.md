@@ -18,10 +18,10 @@ beyond it). Corridor x ∈ [−44, 0], z ∈ [−2.7, 2.7], 5.2 m high.
   the edge-on niches still read as warm bokeh).
 - Moon: one shadowed DirectionalLight whose ortho frustum is fitted per shot to the region of interest (2048 map).
   S027 02:10 due south 60°; S061 04:00 SSW az 215 / 40° (see Review); S066 04:30 SW 42° (bible §3.3).
-- End screen (x = 0): dark timber screen with a low dado (0.46 m), clear glass to 2.2 m, wavy cylinder glass above,
+- End screen (x = 0; *integration: now a solid end wall with a 2.5 m glazed opening, see below*): dark timber screen with a low dado (0.46 m), clear glass to 2.2 m, wavy cylinder glass above,
   a pair of glazed doors on the north side, posts at z ±1.0 / ±1.85 / ±2.7 (a 2.0 m centre bay, no mullion on the axis).
 
-## The five windows of the eras
+## The five windows of the eras (*positions / cases superseded by "Integration fixes"*)
 - **P1–P4 vitrines** (1.1 × 0.6 × 2.3 m glass on a 0.4 m plinth, velvet-lined, frameless), free-standing, staggered
   N/S: P1 (−7.3, z −1.0, N) old horn stern lantern · P2 (−5.1, +1.0, S) brass candlestick + stub (back corner of the deck) ·
   P3 (−2.9, −1.0, N) the waiting shed's enamel shade · P4 (−0.75, +1.2, S) PROP_GLASSPANEL on a dim lightbox. P1–P3 are
@@ -96,7 +96,7 @@ six sizes (the bbox changes every frame of a dolly).
 - Scar: a small pale capsule on the dorso-radial side of the right index finger's middle phalanx, visible once the glove
   is off. Post: exposure 1.2, temp −0.1, f/2.8, focus mirror (2.6 m) → bay (≈ 5.8 m) → hands.
 
-### S066 — 40 mm signature dolly (204.667–213.208, f 4912–5116)
+### S066 — signature dolly (204.667–213.208, f 4912–5116) — *superseded: see "Integration fixes" (32 mm, 1.15 m, x −17 → −1.9)*
 - Camera at 1.45 m on the centre line, 1.43 m/s from x −12.5, constant to tl 7.25 (211.92), quadratic ease-out to rest
   at x −1.51 by 8.12 (212.79), then a 10-frame hold; 1.5° down (see Deviations). MSAA.
 - 04:30 moon SW at 42° from behind right: one barred pool per window bay crossing the frame about once per bar.
@@ -222,3 +222,115 @@ perf*/r*`), debug overviews (`rv2/dbg`) and the nested views as received (`rv8/v
 
 ### Remaining weaknesses
 See "Known weaknesses" above.
+
+## Integration fixes (2026-10-06, whole-film QA pass — supersedes the numbers above where they differ)
+Findings taken from `qa/findings_by_module.json` (module `corridor`): S066 blocker (spectacle reads as a dark cramped room),
+S061 major (quarry face / hands over his back / glove clock), S027 minor (bench + harbour points, doorway). Continued from a
+colleague's interrupted partial pass (a7b2a26: niches on both walls, spill shader, 35 mm / 1.15 m camera, wider panes);
+everything was re-verified and most of it rebuilt. Survey: `out/fix_corridor/{shots,cuts}` (+ S026/S028/S060/S062/S065/S067),
+dev renders `out/fix_corridor/w/`.
+
+### Set (all three shots)
+- **Roof shadow leak fixed.** The ceiling plane did not cast shadows: the moon came in over the south wall's top and lit the
+  north wall's upper half and the end bulkhead as one flat grey veil (the real reason the old frames were murky). The ceiling now
+  casts + a shadow-only roof slab; walls are lit by the moon pools / panes / niches / a deep-blue fill only.
+- **End wall instead of a full-width screen** (director: the end bay small, warm and luminous at the vanishing point): solid
+  panelled flanks (lime render, timber dado, framed panel, timber architrave) leave a 2.5 m glazed opening on the axis
+  (`OPEN_HW` 1.25); the screen inside it keeps posts at ±0.62, the 0.46 dado, clear glass to 2.16 and wavy glass above. The
+  bay portal covers only the opening. No night_window shot looks west at the screen, so nothing else changes.
+- **Moon shafts**: every arched window has a volumetric shaft (`FX.windowShaft`, half-res layer, window cookie = the glazing
+  bars, re-aimed per shot by `setShafts`): S066 0.036, S027 0.014, off in S061.
+- **P1–P3 are see-through cases** (smoked glass back, opacity 0.62, instead of the velvet back; depth 0.36 m; glass 2.1 m on a
+  0.36 m plinth): the corridor's perspective stays readable through them and each era floats in the glass as light. Museum
+  objects re-fitted (lantern 0.8×, candlestick, enamel shade 0.7×). P4 (the S061 case) keeps its velvet + lightbox, moved to
+  z = +1.45 (was 1.2) so it no longer sits on the vanishing point beside the opening; S061 re-solves from it.
+- **Minor niches**: a soft warm point + halo (S066) or the long-lens bokeh disc (S027) — `nicheUpdate(..., disc)`; the points
+  stand 0.14–0.22 m off the wall (they were half-clipped by it), their recess washes ×2.6 in S066; dozens recede on both walls.
+- More warm harbour points (44, 18 of them due east, 1900–2400 K): S027's 135 mm sees 6–10 in the bay window near y 0.5.
+
+### S066 — rebuilt as the spectacle
+- **Long and grand**: 32 mm at 1.15 m on the centre line, tilt −1° → +0.4° at rest. **Deviation: the move starts at x −17**
+  (shot list −12.5) at a constant **1.97 m/s** (ruling ≈1.4), the shot list's ease-out from 211.92 to rest at 212.79, rest x −1.9
+  (posts frame the pair). From −12.5 a 32 mm lens at 1.15 m sees only ~7 m of corridor (the floor from 4.9 m, the end wall 38 %
+  × 70 % of the frame — a room with a door); from −17 four arched bays, their pools and both walls of niches recede to an end
+  bay ≈13 % of the frame wide. Tests from −20 / −28 read even longer but need > 2.4 m/s. One continuous, perfectly smooth move.
+- **Moon pools on the beat**: moon 235° / 36° (bible SW ~42°, 6° lower so the pool crosses the axis from the window's arch); the
+  pools pass under the lens at 206.34 / 208.37 / 210.41 (beats 206.356 / 208.376 / 210.419), the fourth settles just ahead of
+  the lens at rest. Moon 9.0, hemi 4 (deep-blue fill), floor reflection 2.6.
+- **Panes re-placed along the longer path** (bible order kept, now close to the bible's x): P1 (−10.9, N), P2 (−7.9, S), P3 (−4.9,
+  N) at ±1.65 toed 38°, P4 (−0.75, +1.45, 60°); each ≈4.4 m ahead on its line, at ≈0.18 / 0.82 / 0.16 / 0.76 of the frame,
+  sweeping through about a third of it as we pass. Strength envelope ×1.8 (surfaces, swells on its line, settles).
+- **Era framings through our own lens** (`renderEra` / `eraCamFrom`): the other module's named view runs its setShot unchanged;
+  only its final draw into our RT uses `eraCam`, posed relative to its own camera (or, for old_home's fixed set, absolute).
+  P1 sea_deck `view_shiplamp` view offset [0.38, 0.44, 1.35] (lamp in the upper third, the moon road on the swell, less deck) +
+  a soft highlight ceiling (no glitter "confetti"); P2 old_home `view_home_rain` from low south of the step: her profile
+  silhouette under the eave against the warm doorway, the bowl on the step, + **3–5 cm backlit rain streaks** composited in
+  the pane (three depth layers, lit by the image's own light and the door lamp); P3 pier_waiting `view_pier` orbited 25° and
+  backed off to 5.5 m: she sits on her case under the shed's bulbs, the crowd beyond (no longer a "vendor at a counter"); P4
+  chapel `view_chapel` widened (3.4 m, 30°): the mother's back on the pew under the window, pink → dove grey, petals ×1.0.
+- **Light spill ×2** onto boards, walls and ceiling (P1 sea-blue shimmer + the swinging lamp, P2 candle amber + rain sparkle,
+  P3 bulb pools, P4 petals): the floor changes colour pane by pane; the bay lamp spills warm onto the end (5.0, range 16 m).
+- Exposure 1.35, bloom 0.5/0.7, FXAA (was MSAA: no figure in the corridor needs it; with the shafts' frustum culling it took the heaviest range from 4.41 to
+  3.17 s/frame under the same load). Means (960 px): 19 % at frame 0, 18–25 % through the panes, 13 % at P4, 10 % at rest
+  (S065 out 11.7 %, S067 in 11.3 %); < 10 % pixels 21–43 % while travelling.
+- End at rest: the pair from behind through the opening's glass between the ±0.62 posts, the lamp and the harbour lights, and
+  **a faint reflection of the corridor behind the lens on that glass** (a quarter-res planar mirror, 0 → 10 % over 210.5–211.9:
+  the moonlit windows and warm niche points as a veil — they are seen THROUGH real glass); the
+  S067 light match is recomputed for the new lens/rest: reading lamp measured at (0.38, 0.39) on f5116 vs the stern lantern
+  (0.38, 0.37) on f5117.
+
+### S061
+- **Quarry reflection = a moonlit silhouette**: the clear quarry is ×1.3 larger (7.8 × 11.7 cm) with the mirror minified ×2.0, so
+  her whole head fits; a second tiny render of her figure alone gives a mask: the quarry shows a cool sheen of the moonlit
+  corridor behind her, her head a darker shape on it (face plane ≈ 2 stops under), only the moon's rim (rim spot 9.0 from
+  behind-right) and the eye glint bright — it reads as a head in the glass, never as a lit mask. The lift of her eyes on 还
+  is a larger head motion (she studies the panel 0.34 m low, then looks up to the bay at 1.58 m).
+- **Hands under his silhouette**: the settle is 4.2° (was 3.4°) and the hands work 6 cm lower (H.y 1.215): his head rides at
+  y ≈ 0.2 and his shoulders/back at ≈ 0.3–0.75; the gloves come off at y ≈ 0.75–0.97 in x 0.15–0.5 (the left glove's pull-off
+  reaches 0.62 for ~6 frames at 194.2, over his lower back), the end fist at ≈ (0.32, 0.88). (At 8.5 cm lower the right glove's
+  tug left the frame bottom.) (The QA's "lens 8 cm
+  lower" was tried in the maths and rejected: the frame is anchored on the quarry 2 m away, so a lower lens re-pitches up and
+  the far back drops.)
+- Glove clock (colleague's WARP61, verified on frames): right glove 192.7–193.6 (three fingertip tugs, cuff slid off), left
+  193.9–194.4, folded 194.6, grip + turn 194.97.
+
+### S027
+- Readable night: moon 7.0, hemi 6, exposure 1.85, faint haze 0.014 → mean ≈ 14 % (was 9.3 %); S026 out 9 %, S028 in 5.5 %
+  (the gallery's own) — both cuts inside 1.5 stops. The bay's reading lamp is truly off (its shade/bulb emissive scaled with the lights inside our render);
+  the bay window at the vanishing point carries 6–10 warm harbour points at y ≈ 0.5 over the empty bench / sill line.
+- Her silhouette still crosses the x = −10 doorway's warm reveal on 99.5. **Not done: "small (10–12 % of frame height) at
+  (0.30, 0.52)"** — at 135 mm from x −44 the frame is 3.8 m tall at the doorway (34 m), so a 1.65 m figure is ≥ 35 % anywhere
+  in the corridor, and a north-wall opening at x 0.30 would lie beyond the end wall; seeing her deeper in the gallery is
+  geometrically impossible through a side doorway at 4.5° (see Deviations).
+
+### Grain, determinism, debug
+- Grain only through post (modern 0.035 in all three shots; nested views get none); no module grain quads, no `grain: 0`.
+- Pure per-frame state: shafts, pane visibility, lamp emissive, bay lamp range, niche wash are reset in `hideFigure()` or
+  restored in `finally`. Debug-only setups: `shot.dbg.s66 / s27 = { tl, x, mm, eye, tilt, hemi, moon, shaft, pg, sg, expo, off: [...] }`
+  and `DBG_ERA` (four framings of one era view side by side); `?cor=` switches unchanged.
+
+### Performance (1280 × 536, `render.mjs --every 1 --range`, 24 frames after the first, corridor-only shot file)
+Measured while three other fixers rendered on the same 4 cores (load average 7–8 throughout), so these are ~1.5–2× pessimistic.
+| shot | range | s/frame | max |
+|---|---|---|---|
+| S066 | 4995–5019 (P2/P3/P4 + bay, the heaviest) | 3.17 | 5.95 |
+| S066 | 4914–4938 (P1/P2 + far panes; MSAA build) | 3.73 | 6.12 |
+| S066 | 5085–5109 (rest + glass reflection) | 2.28 | 3.48 |
+| S061 | 4640–4664 (hands + quarry + bay) | 2.66 | 3.87 |
+| S027 | 2400–2424 | 2.00 | 3.34 |
+S061 is 2.66 under load 7.4 (the colleague measured 1.71 for the same staging at load 2–6; the new mask pass is a ≈50 × 75 px
+render of one figure). Determinism: S061 f4631 renders bit-identical across runs (RMSE 0); S066 f5014 differs by RMSE 0.2 %
+only because pier_waiting.js / old_home.js were saved by their fixers between the two runs (P3 / P2 are their views).
+
+
+### Remaining weaknesses (integration)
+- S066 P2: the bowl sits low in the pane (≈10 % of its height, not the QA's 25 % at the centre) — the profile framing was chosen
+  so her silhouette, the warm doorway and the rain read together; the drop into the bowl at 207.07 is small at 960 px. Her
+  coat reads pale through the moon shaft that crosses P2.
+- S066 P4: the mother's blouse still reads lavender-pink with the petal colour on it (chapel's costume; our hue pull helps).
+- S066 at rest: the screen's dado is below the 32 mm frame from x −1.9 (visible until ≈211.6); posts + glass reflection carry
+  "through real glass". The start at x −17 / 1.97 m/s is a conscious deviation from the shot list's −12.5 / ≈1.4 m/s.
+- S027: her silhouette is ≈35 % of frame height and the doorway sits at x ≈ 0.20 (geometry of a 135 mm from the west end).
+- The era framings depend on the other modules' named views (relative orbit for pier/chapel, absolute pose for old_home's fixed
+  set, view offset for sea_deck); a large restaging of those views would need the `PANES[].ov / rect` values retuned
+  (`DBG_ERA` shows four candidates side by side).

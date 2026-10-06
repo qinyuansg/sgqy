@@ -44,8 +44,7 @@ World: metres, Y up, +X east, +Z south (sky.js azimuths are compass bearings). T
   the wide/dawn shots S079/S081) and drawn as a full-screen background quad without depth write (the DOF treats it as
   infinitely far, which is what it is). The harbour light points stay in the main scene (crisp, depth-tested).
   This alone took the module from 2.5 s to ~1.0 s per frame.
-- **Film grain is drawn by the module** (half-res additive layer, luminance-weighted integer hash, engine `grain: 0`):
-  the engine's grain degenerates into vertical stripes past f ≈ 2100 (review).
+- ~~Film grain is drawn by the module~~ — superseded: the engine's fixed integer-hash grain at 0.035 (see *Integration fixes*).
 - **One shadow light per shot:** the lamp at night; the window light at dawn (S077, S079, S081). The cube reflection is
   captured once in `create()`.
 - S064 hides the full figures and uses three `loadCharacterHand(...,{lod:'close'})` hands with added sleeves.
@@ -330,3 +329,100 @@ under load 9–10 because the encoder's back-pressure is included — `perf/timi
 S060 `c60x/c60y/c60z/pox/poy/poz/por/pgr`; S064 `b64/d64/h64/hx64/hz64/fa64`; S072 `c72x/c72z`; S073/S074 `ct/cy`
 (call head turn/yaw); S077 `c77y`; S081 `hz81/sg81/ss81/sr81/fs81/rk81/ry81/sx81` (horizon colour, sun glow, sharpness,
 sea reflection, f-stop, reflection strength, ray, sky exposure).
+
+## Integration fixes (2026-10-06, whole-film QA pass)
+
+Findings from `previz/qa/findings_by_module.json` (night_window + the shared grain findings), reviewed against the brief
+("让人记住一个人终于坐到了另一个人身旁"), the director's direction for this group and the survey `out/survey_v2`. This pass
+continued a colleague's partial commit (a7b2a26: grain, seats, S060 case, S062–S065 restage); everything was re-verified.
+Verification renders: `out/fix_night_window_chapel_harbor_eras/` (`s1/` = survey of these shots + neighbours: `shots/`,
+`cuts/`; `it*/` = iteration frames; `tools/rq.mjs` = render.mjs + `--qs` query switches + `--logs`).
+
+### Global
+- **Grain:** the module-side half-res grain quad/probe and `grain: 0` are gone; the engine's integer-hash grain at CT_MODERN
+  0.035 (base post). Nested views (`view_bay_back`) get none (engine).
+- **Seats (colleague, kept):** bench x 3.00–3.38, seats z ±0.34 (68 cm apart: a small gap between the shoulders), a 36 cm
+  leg room between bench and sill, cups 14.2 cm apart on the sill in front of the gap (his south = screen-right).
+- **GUARD hair:** salt-and-pepper, darker base, less sheen (`uGrey` 0.3) — it read as a pale cap.
+- **Dawn table:** the paling starts visibly in S074 (DAWN 0.55 at 233.9) and is P20 (1.0) by the S077 cut (237.1).
+
+### Per shot
+- **S059 (major):** 65 mm from 3.3 m (shoulders ≈ S058's width at (0.665, 0.50)); window frames flagged to dark timber;
+  187.3–187.7 the phone's cold light rims his right cheek, ear and glasses (a short-range 6500 K source under the jaw; the
+  screen never faces the lens; the screen's own spill no longer lights the SE sill). Exposure 1.3: f0 mean 16.9/255 =
+  S058's corrected end (16.9). *Not done:* the thermos is still below this MCU frame (it is in S062/S063/S077).
+- **S060 (blocker):** worn navy flip case (no chrome), the thumb hovers over the dial key (188.71) and draws back (190.03);
+  the camera tilts down with the phone (it never leaves frame); the cover closes and the glow dies over 4 frames ending
+  exactly 190.6; the phone lies face down on his right thigh under his resting hand, case back visible beside the hand;
+  the lamp is a narrow pool on hand and case, the SE sill/apron beside his knee flagged (they read as a bright plane). End
+  frame mean ≈ 3.5/255: the scripted darkness S061 sees.
+- **S062 / S063 (blocker):** coverage from the room side behind them (≈ 87° to the window): she enters from screen-left with
+  the two cups (moon edge from the corridor), steps over the low bench into the leg room in front of HER seat, sets his cup
+  down on '手' (197.15) in front of the gap, then hers, and **sits down beside him** on the band entry (198.22) — side by
+  side, same depth, shoulders level, a gap; button 199.3, shoulders drop 200.15; then stillness with the steam rising
+  between them against the dark mullion. Window frames ×0.62, framing tilted up so the lamp shade sits inside the frame.
+  Faces never frontal (backs + lost profiles against the harbour). Mean ≈ 28/255 (11 %).
+- **S064 (major):** her left hand rests on its side, loosely closed (rolled −0.8 rad, curl 1.5, thumb along the index) ~6 cm
+  from her cup — not palm-up/begging; the worn spot faces the lens and reads lighter than the melton at (0.42, 0.62) with
+  the focus breath at 201.6; his hands are whole at f0 and carry the cup down and back out of frame low right; cobalt line
+  2.1 mm; FXAA (MSAA cost ≈ 1 s/frame here for no visible gain); the close-up hands receive but no longer cast the lamp
+  shadow (the cups keep their contact shadows).
+- **S065 (blocker):** from behind them at eye level, 75 mm: he lifts his head from the cup and turns to her (202.9) — his face
+  turns into the lamp, a warm side light on his profile; she is turned to him in lost profile and nods (0.4 s down to 203.5,
+  0.5 s up); both exhale (203.9, shoulders drop); stillness over '千年啊'. No frontal faces.
+- **S072–S074 (blocker): the call.** A right-ear call seen from his right always puts the hand across his face, so the call is
+  covered from his LEFT and the phone is on the far side of his head:
+  - S072 (40 mm, from her end of the bay in front of her knees): the match-cut hand is already rising with the phone at f0
+    (from S071's raised hand), he dials with the screen's cold light on his face (screen away from us), the phone goes to
+    the far ear (227.46), the screen stays lit a moment (a cold halo behind the jaw); she is out of frame (deviation: the
+    shot list's soft profile at left cannot be in this angle).
+  - S073 (50 mm, her point of view, she hidden): his face three-quarter toward camera-left, eyes down, the head ≈ half the
+    frame height (not a giant head), lamp flagged to an edge, a cool edge from the E pane along brow/nose/lips; held breath
+    229.82.
+  - S074 (50 mm, room side north-west, the S063 geometry): answered on 230.63 — his head lifts and he turns to her, his
+    profile coming round into the lamp light (the easing reads in the profile and the shoulders); her smile on the cheek
+    line in lost profile (232.27); she turns to the window (233.07). The raised hand at his far ear reads beside his head.
+  - The ear pose: elbow out to his right side (a "down" pole folded the forearm across his chest — it read as a fist under
+    the chin), fingers up the phone's back (they stuck out behind his head), the phone steeper along the jaw.
+- **S077 (major):** camera from the room's south corner (2.62, 1.38, 1.83), 40 mm, her eye at (0.33, 0.40) (T25); the thermos is
+  carried in his grip socket with explicit poses: lifted, the cap twisted off into his left hand (237.54), she lifts her cup
+  off the sill and holds it out within his reach, he tilts the thermos (mouth 25° below horizontal, 5 cm above her rim) and
+  the tea stream runs on 238.26, then his own cup on the sill (238.97), cap on, back by his hip; both profiles to the
+  window by 239.6. Window light ×1.7 as the key, lamp down to an accent; pale P20 sky.
+- **S081 (minor):** camera 3 cm higher (rims open to an ellipse, his chip at 2 o'clock); the reflected pair cooler, darker and
+  desaturated (head-and-shoulder silhouettes, not orange smudges); a tighter sun glow (sharpness 400) so his steam rises
+  against a darker sky. *Not done:* putting the centre muntin behind his steam needs ≈ 0.6 m of camera shift at this
+  framing (the QA's 4 cm moves it < 1 cm) — kept the T26 framing.
+- **S079:** unchanged (re-checked in the survey with the centred S078 dissolve).
+
+### Deviations added by this pass
+- S072/S073 are covered from her end of the bay (the axis is crossed for the two call singles; S074 restores the two-shot
+  geometry); she is out of frame in S072.
+- S077: she holds her cup out to receive the tea (from any room-side angle his body hides a pour onto the sill in front of
+  the gap); she keeps it in both hands to the end of the shot (back on the sill by S079, after the S078 time cut).
+- S059: thermos not in frame.
+
+### Debug added
+`?ray=x,y` logs the first meshes under a screen point; `?ct ?cb ?b72 ?b73 ?b74 ?pex ?pey ?pez ?fy ?phz` (call), `?ox77 ?oy77
+?oz77 ?lh77 ?mm77 ?c77x/y/z ?wl77` (S077), `?pz60 ?ty60 ?lk60 ?dk60 ?hm60` (S060), `?kg59 ?e59` (S059), `?hg` (hair grey).
+
+### Timing (1280×536, `tools/rq.mjs --frame-list`, 6 consecutive frames per shot, mean after the first; machine shared with
+three other fixers' renders, 1-min load 7–11 on 4 cores — roughly 2–2.5× the idle cost)
+
+| shot | mean s/frame | max |
+|---|---|---|
+| S059 | 2.09 | 2.25 |
+| S060 | 2.29 | 2.38 |
+| S062 | 1.97 | 2.60 |
+| S063 | 1.41 | 1.60 |
+| S064 | 2.6 (load 10.4; 1.7 when he is out of frame) | 2.97 |
+| S065 | 1.55 | 1.69 |
+| S072 | 1.87 | 2.00 |
+| S073 | 1.75 | 1.96 |
+| S074 | 1.49 | 1.62 |
+| S077 | 2.12 | 2.50 |
+| S079 | 1.19 | 1.33 |
+| S081 | 1.95 | 2.48 |
+
+All within the 2.5 s/frame budget except S064's first second under this load (three close-up hands + DOF + the lamp shadow;
+≈ 1.7 without the shadow pass).

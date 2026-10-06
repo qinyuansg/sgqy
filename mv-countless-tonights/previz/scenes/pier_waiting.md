@@ -318,3 +318,107 @@ The machine was shared with 3–5 other render agents (load 8–15 on 4 cores) t
   glass in S037 (−0.45), fill off in S037/S068, S068 crowd all far-LOD and without the queue/waiting extras behind the heads
   (−0.75, also a cleaner background). Added costs: module grain (≈ 0.05), lanterns (glow sprites, negligible), lid bounce light in
   S020/S043/view_pier (≈ 0.25), larger `maxCoc` (none measurable).
+
+## Integration fixes (whole-film QA pass, 2026-10-06)
+
+Source: `qa/findings_by_module.json` (pier_waiting + the multi-module grain findings) and the director's direction for V2.
+Survey: `out/fix_pier_waiting/` (`shots/`, `cuts/`, `cuts_page_*.jpg`; `r0/` = the state found at the start of this pass,
+`r1/` = mid-pass), sync-point frames `out/fix_pier_waiting/sync/` + `sync_sheet.jpg`, probes `out/fix_pier_waiting/p*/`
+(`probe.mjs`, `probe_cpu.mjs`, `run.sh`: one page, many `frame:flags` jobs; `key_value` flags feed `window.__PWO` overrides that the
+set-ups read for tuning — never set in a normal render). A colleague's partial edits (commit a7b2a26) were continued and re-verified.
+
+### Global
+* **Grain:** the module grain quad / probe and the `grain: 0` override are gone; CT_MIG returns `grain: 0.044` through the post
+  (`MIG_POST`, S076 included); nested `view_pier` gets none (engine).
+* **Black frames (S039, all three survey frames):** a family member of the crowd stood 0.37 m from S039's lens. Nobody is placed
+  within 0.95 m of the camera any more (and what they carry is skipped with them); crowd normals are renormalised (zero → +Y).
+* **Crowd = mixed 1920s–30s civilians:** 12 variants (4 baked + 8 sculpted live at `lo`): women in 大襟 jackets / headscarves /
+  print blouses and long skirts, a student in a pale long gown, a porter with a carrying pole and two baskets, an old man in a
+  faded gown, children (some walking with their mothers, two standing by women in the queue), a bare-headed man in a pale shirt;
+  bundles tied on the back, arm baskets, sacks on the shoulder, cases. No caps on civilians (in silhouette they read as uniforms);
+  the only uniforms are the two officials at the gate posts (the third, on the quay, removed). Cloth vertex colours ≈ 1.2× lighter
+  so the queue is not one block of black coats; a short-reach lamp over the queue in S036/S038 shows their clothes in colour.
+* **Steamer:** unfogged dark hull + superstructure, one row of warm 2000 K portholes (the brightest, warmest points), a sparse lit
+  row above; re-berthed at 150 m for S036/S038 so hull, portholes, superstructure, funnel and rigging all sit inside the end-door
+  opening against the dusk sky.
+* **Case:** two scales — on her lap (S020/S043/S032/view_pier, also the carried clone) ≈ 45 × 15.5 × 30 cm (cheat; at the bible's
+  58 × 21 × 38 it read as a lectern), the full bible size in the top-down inserts S031/S033 so they register with S030's museum case.
+  The upturned crate is darker (it read as a pedestal under the case).
+
+### Per shot
+* **S020 (major):** new shared S020/S043 rig: it opens ≈ 50° off her right-front, looking down ≈ 13°, so the case lies across her
+  thighs with her knees and shins under it (floor-bounce fill), her bowed head is a dark crown + braid with the 2400 K lamp at her
+  left as a rim (no frontal light, no fringe "blindfold" band: the face is in its own shadow), the open seaward floor behind; the
+  push arcs square to the case and ends on the lid-edge/letter-crease line at y 0.66 (measured 0.663 → S021 ruler 0.673). Her right
+  hand descends onto the letter with a relaxed, straight wrist from frame 0 (forearm visible; the 90° bent wrist and its plank-like
+  stub are gone; elbow kept low at her side).
+* **S043 (blocker):** opens on S020's end framing and pushes on to ≈ 1.4× while tilting down (face never in frame). Only the last half
+  fold opens (keyframe), flipped by her right hand on 等沉默 (0–0.34 s): a 17 × 8 cm sheet (≈ 28 % of frame width) with the 4 × 3 cm
+  grey-blue scrap of the shirt lying in it — a frayed, slightly pillowed cotton triangle, not a flat grey blade. Her fingertips lift its
+  far corner ≈ 1 cm into the light on 听见 (1.305 s), hold to 1.55, lay it down; the left hand flips the flap back on its crease
+  1.6–1.84 and lifts clear; the whole right palm presses on 141.8 (1.925 s). A weak paper bounce opens the shadow her body threw on
+  the lid. End line measured at y 0.658 (S044 ruler 0.673).
+* **S031 (direction S030→S031):** the folded shirt reads as a Chinese shirt: the mended stand collar in the darker cloth (#55667A)
+  with a lighter mend and running stitches, a throat knot button, the neck opening showing the back panel in the body cloth (no dark
+  hole), the centre-front opening with facings and four horizontal knotted-cord frog buttons (盘扣), shoulder seams. Same layout as
+  S030 (collar left of centre near the top edge, opening down from it, last third at the right); the last third settles from 0.3 rad
+  (it stood up like a board at the cut). *For museum_gallery:* S030's collar band / frog buttons should follow this layout
+  (`shirtG` in `create()`, collar centre (−0.06, −0.07) in the block's frame).
+* **S032 (blocker):** a lost profile. Camera ≈ 35° behind her left shoulder, 100 mm, head ≈ 35 % of frame height at (0.62, 0.38);
+  frame 0 she looks toward the gate (back of the head, braid), on 乡音 she turns back over her left shoulder to screen left and the
+  face appears only as a dark profile with a warm 2400 K edge on brow, nose and lips (key beyond her, upper left; no light from the
+  lens side, environment 0.45, hemi 0.08). Background: the blue-hour town windows (×8), the families lit by their own lamps (short
+  reach), three hurricane lanterns as bokeh, nine defocused travellers (bundle, basket, carrying pole, a child …) crossing left →
+  right for the whole shot. The silent word is a small chin movement in silhouette plus a breath.
+* **S033 (minor):** the comb bundle shows its spine / teeth through the cloth and ≈ 70 % of it stays in view; her fingertips press its
+  near edge on 念; the key moved to her right so her lifting arm no longer shadows the shirt and collar; exposure 0.86 (keeps the cut
+  from S032 within ≈ 1.3 stops).
+* **S034 (minor):** forearms come in diagonally from the lower right, the floral sleeve hems 7.5 cm above the wrists; the packet is
+  soft crumpled translucent paper (emission halved, shapes of the sweets inside, red string cross with knot and ends).
+* **S036 (major crowd / minor steamer):** the mixed crowd and the 150 m steamer (above); the clasp in the foreground at (0.23, 0.62);
+  the elder at the frame edge in the key's falloff, looking down at the hands (fill / environment / sky light lowered on her side).
+* **S037 (minor):** the stamp lifts 2.06–2.36 s; the violet mark holds 0.58 s (14 frames) before the cut; the clerk's nails are plain
+  (no white free edge); the bulb's reflection on the glass moved to the upper left, clear of his fingers.
+* **S038 (major):** she really walks: from right by the railing (left elbow bent, clasp at chest height) ≈ 0.85 m toward the gate,
+  the shoulder distance growing 0.59 → 1.11 m so both arms reach full extension on 一站 (128.23); the case swings with air under it
+  (frame lowered); the camera tracks 0.8 m right, panned so the left gate leaf swings at the right edge (projected x 0.89 → 0.82
+  from 126.19); the elder's face turned down to the hands, in shadow; the "orange stick" was her bare forearm reading as a prop —
+  it now reads as the arm of a clasp; no orphan luggage near the lens.
+* **S039 (minor, was black):** renders again (crowd fix); the floral sleeve reads as print (the coarse normal map that drew checks is
+  gone); the elder's hand is darker and older (age 1.0, #AE7C5C); a stronger cool backlight from the gate.
+* **S068 (major):** the handover at lap height: they sit 0.58 m apart, her elbow stays down at her side, her right hand travels low
+  from the opened packet on her lap to his palm resting open on his bundle (≈ y 0.62–0.67) and leaves the piece there on 面; no arm
+  above shoulder height; the boy smaller (0.84 × 0.9), cap brim low. No bounce into the faces any more: the lamp behind them gives
+  rims, a lantern on the planks in front (off screen, short reach) models the hands, the sweet and his coat; both faces are dark 3/4
+  shapes turned to each other; her smile is a head tilt across 千. Hair roughness 0.9 (no hot spot).
+* **S076 (major):** blue-grey pre-dawn haze with only a thin cool-peach band at the right horizon (mean ≈ 30 % vs 45 % before, 28 %
+  for S075); she is a profile silhouette in the mist with a dawn edge on brow, nose, lips and chin from far beyond-right (the key had
+  been accidentally commented out mid-pass — restored); the camera-side fill only lifts the white rail, the shed's bulb environment no
+  longer lights her face; left hand on the rail near her body.
+* **view_pier:** lid bounce halved (her bowed face stays a soft dark shape in the G3c pane and corridor P3); checked in S024 / S066.
+
+### Sync points (frames in `out/fix_pier_waiting/sync/`)
+S020 1811 / 1829 / 1838 · S031 2648 / 2663 · S032 2686 / 2696 / 2739 · S033 2768 / 2791 · S034 2814 / 2830 · S036 2914 / 2944 ·
+S037 2977 / 2990 / 3014 · S038 3029 / 3078 · S039 3129 / 3185 / 3191 / 3210 · S043 3365 / 3388 / 3403 · S068 5183 / 5198 / 5213 ·
+S076 5654 / 5674 — all land on their events.
+
+### Performance (1280 × 536, one page, 8 consecutive frames per shot after the first; the machine was shared, load 4–12)
+| shot | wall s/frame | CPU-s/frame | | shot | wall s/frame | CPU-s/frame |
+|---|---|---|---|---|---|---|
+| S020 | 1.49 | 3.25 | | S036 | 1.39 | 3.62 |
+| S031 | 1.30 | 3.38 | | S037 | 2.33 | 4.50 |
+| S032 | 1.10 | 2.88 | | S038 | 2.50 (load 8) / 1.8 | 3.75 |
+| S033 | 1.57 | 3.25 | | S039 | 1.49 | 2.38 |
+| S034 | 1.64 | 4.25 | | S043 | 1.4–1.7 (load 4) / 2.9 (load 10) | ≈ 5 |
+| S068 | 1.86 | 4.50 | | S076 | 0.98 | 1.88 |
+
+All ≤ 2.5 s/frame wall except under the heaviest contention. S043 is the heaviest (the lid + both close hands fill the frame); its haze
+cone is skipped once the push is close and the floor-bounce light is off (knees never in frame); the case maps use 2× anisotropy.
+
+### Still weak / not done
+* Faceless heads: the faces are now kept as dark shapes with edges (S020, S032, S068, S076) — readable emotion is carried by head
+  turn, posture and hands; the elder's face at the left edge of S036/S038 is dim but not fully hidden.
+* The crowd is still 'lo' sculpts with mitten hands and frozen walk phases; at the sharpest (S038's queue) it reads as travellers
+  with bundles rather than distinct individuals.
+* S034's forearms remain long bare shapes (3/4 sleeves are the MIGRANT costume lock everywhere); S039's two hands are close in tone.
+* S030 (museum_gallery) and S031 now share layout but not every detail of the collar (each module draws its own block).

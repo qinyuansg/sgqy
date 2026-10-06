@@ -108,6 +108,7 @@ export default async function create(ctx) {
 
   // ================================================================== materials
   const mPlaster = TX.mat('plaster_museum', { repeat: [0.6, 0.6], color: hex('#d2ccc0') });
+  const PLASTER_COL = mPlaster.color.clone();
   const mFrame = std({ color: hex(C.frame).multiplyScalar(0.86), roughness: 0.6, metalness: 0 });
   const FRAME_COL = mFrame.color.clone();
   const mSill = std({ color: hex('#e2ddd2'), roughness: 0.45, metalness: 0 });
@@ -385,7 +386,7 @@ export default async function create(ctx) {
     {
       const cv = canvas(128, 64), g = cv.getContext('2d'); g.fillStyle = C.phoneCase; g.fillRect(0, 0, 128, 64);
       const r = rng(41);
-      for (let i = 0; i < 60; i++) { g.strokeStyle = `rgba(150,160,180,${0.05 + r() * 0.12})`; g.lineWidth = 0.6; g.beginPath(); const x = r() * 128, y = r() * 64; g.moveTo(x, y); g.lineTo(x + (r() - 0.5) * 14, y + (r() - 0.5) * 4); g.stroke(); }
+      for (let i = 0; i < 60; i++) { g.strokeStyle = `rgba(160,170,190,${0.10 + r() * 0.2})`; g.lineWidth = 0.6; g.beginPath(); const x = r() * 128, y = r() * 64; g.moveTo(x, y); g.lineTo(x + (r() - 0.5) * 14, y + (r() - 0.5) * 4); g.stroke(); }
       g.strokeStyle = 'rgba(175,182,198,0.95)'; g.lineWidth = 1.6; g.beginPath(); g.moveTo(128, 9); g.lineTo(117, 13); g.lineTo(112, 21); g.lineTo(104, 24); g.moveTo(117, 13); g.lineTo(121, 22); g.stroke();
       g.fillStyle = 'rgba(160,168,186,0.55)'; g.beginPath(); g.moveTo(128, 0); g.lineTo(119, 0); g.lineTo(128, 8); g.fill();
       const backTex = ctex(cv);
@@ -432,7 +433,9 @@ export default async function create(ctx) {
     sleeve(hGL, mJacket, 0.054, 0.063, 0.10, 0.3); sleeve(hGR, mJacket, 0.054, 0.063, 0.10, 0.3);
     sleeve(hRL, mCoat, 0.052, 0.062, 0.10, 0.46);   // (integration) longer: its far end left the S064 frame at the lower-left corner
   }
-  for (const h of insertHands) { h.root.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); scene.add(h.root); h.root.visible = false; }
+  // (integration, perf) the close-up hands receive the lamp shadow but do not cast into it: their dense meshes in the shadow pass
+  // cost ≈ 1 s/frame in S064; the cups still cast their contact shadows on the sill
+  for (const h of insertHands) { h.root.traverse((o) => { if (o.isMesh) { o.castShadow = !!q.get('hcast'); o.receiveShadow = true; } }); scene.add(h.root); h.root.visible = false; }
   // the worn spot (bible #5A5E62 on the #3C4045 melton) is ~1/3 stop lighter than the cloth: under the lamp at 100 mm it
   // vanished at 960 px. Lifted a touch for the insert (the abrasion's pilled fibres catch the light) — ?wornred=1 shows it red
   for (const c of hRL.meshes.cuffs || []) { const u = c.material.userData.fzUniforms; if (u && u.uWearColor) u.uWearColor.value.set(q.get('wornred') ? '#ff0000' : '#74787c'); }
@@ -453,7 +456,7 @@ export default async function create(ctx) {
     G.bone('head').add(faceGlasses);
   }
   const hangGlasses = G.accessories.glasses_cord;
-  { const hm = G.materials.hair; if (hm) { hm.color.set('#2c2825'); if (hm.sheenColor) hm.sheenColor.set('#5a534c'); const u = hm.userData.fzUniforms; if (u && u.uGrey) u.uGrey.value = 0.5; } }   // (integration) salt-and-pepper, darker at the temples — not a pale cap
+  { const hm = G.materials.hair; if (hm) { hm.color.set('#2a2622'); hm.roughness = 0.75; if (hm.sheenColor) hm.sheenColor.set('#3e3934'); hm.sheen = 0.35; const u = hm.userData.fzUniforms; if (u && u.uGrey) u.uGrey.value = +(q.get('hg') || 0.3); } }   // (integration) salt-and-pepper, darker at the temples — not a pale cap
   // (integration) NaN guard for the figure materials: figure_mat's bump perturbation normalises a zero vector where a
   // sub-pixel sliver of a swept trim (coat.trim) has degenerate screen derivatives — one NaN pixel, spread by the bloom chain,
   // blacked out f4884 (S065) at 960 px. Fall back to the unperturbed normal there (no visible change elsewhere).
@@ -522,14 +525,14 @@ export default async function create(ctx) {
   scene.traverse((o) => { if (o.isLight) o.layers.enable(REF_LAYER); });
   const glassUniforms = {
     uCube: { value: cubeRT.texture }, uRefl: { value: 1.0 }, uTint: { value: new THREE.Vector3(1, 1, 1) }, uNoise: { value: TX.noiseTexture() },
-    uRefTex: { value: refRT.texture }, uRefRect: { value: new THREE.Vector4(0, 0, 1, 1) }, uRefK: { value: 0 }, uRes: { value: new THREE.Vector2(ctx.W, ctx.H) },
+    uRefTex: { value: refRT.texture }, uRefRect: { value: new THREE.Vector4(0, 0, 1, 1) }, uRefK: { value: 0 }, uRefTint: { value: new THREE.Vector3(1, 1, 1) }, uRes: { value: new THREE.Vector2(ctx.W, ctx.H) },
   };
   const glassMat = (wavy) => new THREE.ShaderMaterial({
     transparent: true, depthWrite: false,
     blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
     uniforms: { ...glassUniforms, uWavy: { value: wavy } },
     vertexShader: /* glsl */ `varying vec3 vW; varying vec3 vN; void main(){ vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; vN = normalize(mat3(modelMatrix) * normal); gl_Position = projectionMatrix * viewMatrix * w; }`,
-    fragmentShader: /* glsl */ `uniform samplerCube uCube; uniform sampler2D uNoise, uRefTex; uniform float uRefl, uWavy, uRefK; uniform vec3 uTint; uniform vec4 uRefRect; uniform vec2 uRes;
+    fragmentShader: /* glsl */ `uniform samplerCube uCube; uniform sampler2D uNoise, uRefTex; uniform float uRefl, uWavy, uRefK; uniform vec3 uTint, uRefTint; uniform vec4 uRefRect; uniform vec2 uRes;
       varying vec3 vW; varying vec3 vN;
       void main(){
         vec3 V = normalize(vW - cameraPosition); vec3 N = normalize(vN); if (dot(N, V) > 0.0) N = -N;
@@ -543,7 +546,7 @@ export default async function create(ctx) {
           vec2 s = gl_FragCoord.xy / uRes;
           vec2 r = (s - uRefRect.xy) / (uRefRect.zw - uRefRect.xy) + (Np.zy - N.zy) * vec2(0.6, 0.4);
           float m = smoothstep(0.0, 0.12, r.x) * smoothstep(1.0, 0.88, r.x) * smoothstep(0.0, 0.1, r.y) * smoothstep(1.0, 0.9, r.y);
-          col += texture2D(uRefTex, vec2(1.0 - r.x, r.y)).rgb * uRefK * m;
+          vec3 rc = texture2D(uRefTex, vec2(1.0 - r.x, r.y)).rgb; rc = mix(vec3(dot(rc, vec3(0.3, 0.55, 0.15))), rc, 0.45); col += rc * uRefTint * uRefK * m;
         }
         gl_FragColor = vec4(col, 0.05 + 0.04 * uWavy);
       }`,
@@ -563,12 +566,12 @@ export default async function create(ctx) {
 
   // ================================================================== time-of-night: sky / exterior / window light
   // dawn progress d: 0 = night … 1 = predawn (P20) … 2 = dawn (P21/P22); keyed to the song (bible §2.3 dawn table)
-  const DAWN = [[186, 0], [215, 0], [226.3, 0.16], [233.9, 0.36], [237.1, 0.86], [240.0, 1.0], [242.0, 1.18], [246.0, 1.42], [249.3, 1.58], [256.9, 1.86]];
+  const DAWN = [[186, 0], [215, 0], [226.3, 0.2], [233.9, 0.55], [237.1, 1.0], [240.0, 1.08], [242.0, 1.18], [246.0, 1.42], [249.3, 1.58], [256.9, 1.86]];   // (integration) the paling starts visibly in S074 and reaches P20 by the S077 cut
   const dawnAt = (T) => keys(DAWN, T, ease.linear);
   const SKY_N = { preset: 'night', ...SKY_BASE, exposure: 0.85 };
   const SKY_P = { preset: 'predawn', ...SKY_BASE, sunAz: 114, sunElev: -7, moonIntensity: 0, moonHalo: 0, stars: 0.12, exposure: 1.0, cloudCover: 0.3 };
   const SKY_D = { preset: 'dawn', ...SKY_BASE, sunAz: 116, sunElev: -1.2, sunDisc: 0, moonIntensity: 0, moonHalo: 0, stars: 0, exposure: 1.0, cloudCover: 0.32, sunGlow: 0.85, sunGlowWidth: 9 };
-  const SKY_D81 = { ...SKY_D, horizon: [q.get('hz81') ? '#' + q.get('hz81') : '#6f7d9c', 0.55], haze: ['#8e98b0', 0.5], hazeAmt: 0.14, zenith: ['#4a6690', 0.62], sunColor: ['#EBB894', 1.0], sunGlow: +(q.get('sg81') || 1.8), sunSharp: +(q.get('ss81') || 140), sunGlowWidth: 9,
+  const SKY_D81 = { ...SKY_D, horizon: [q.get('hz81') ? '#' + q.get('hz81') : '#6f7d9c', 0.55], haze: ['#8e98b0', 0.5], hazeAmt: 0.14, zenith: ['#4a6690', 0.62], sunColor: ['#EBB894', 1.0], sunGlow: +(q.get('sg81') || 2.0), sunSharp: +(q.get('ss81') || 400), sunGlowWidth: 9,
     cloudLit: ['#e9c2aa', 0.6], cloudDark: ['#687090', 0.36], cloudCover: 0.3 };
   let dNow = 0;
   function setTime(T, d = dawnAt(T)) {
@@ -628,7 +631,7 @@ export default async function create(ctx) {
     gloves.visible = true; thermos.visible = true; thermosLid.position.set(0, 0.19, 0); thermosLid.rotation.set(0, 0, 0); if (thermosLid.parent !== thermos) thermos.add(thermosLid);
     stream.visible = false; cupG.visible = cupR.visible = true; steamG.object3D.visible = steamR.object3D.visible = true;
     G.root.visible = R.root.visible = true; for (const h of insertHands) h.root.visible = false;
-    glassUniforms.uRefK.value = 0; rayShaft.object3D.visible = false;
+    glassUniforms.uRefK.value = 0; glassUniforms.uRefTint.value.set(1, 1, 1); rayShaft.object3D.visible = false;
     lampGrp.visible = true; lampGlow.object3D.visible = true; ceilMesh.visible = true;
     lampKey.castShadow = true; winLight.castShadow = false;
     lampKey.intensity = 2.6; lampKey.angle = 0.8; lampKey.color.copy(K2700); shadeMat.emissiveIntensity = 0.32; lampGlow.set(0.2); fill.intensity = 2.0; kick.intensity = 0; kick.distance = 1.6; bounce.intensity = 0.18;
@@ -637,7 +640,7 @@ export default async function create(ctx) {
     moonEdge.position.set(-3.5, 3.4, 2.2); moonEdge.target.position.set(3.4, 1.0, 0); moonEdge.angle = 0.5; moonEdge.penumbra = 1.0;
     for (const g of glassMeshes) g.visible = true;
     lightPts.material.uniforms.uPxK.value = ctx.H / 536;
-    mFrame.color.copy(FRAME_COL); mSill.color.set('#e2ddd2'); seaU.uReflect.value = 1;
+    mFrame.color.copy(FRAME_COL); mSill.color.set('#e2ddd2'); mPlaster.color.copy(PLASTER_COL); seaU.uReflect.value = 1;
     phone.userData.cover.rotation.x = 0;
   }
   function steamUpdate(T, kG, kR, light, wind = [0.012, -0.004]) {
@@ -754,7 +757,12 @@ export default async function create(ctx) {
     G.breathe(T, 1.0);
     putWorld(thermos, THERMOS_POS, 0.4);
     phoneGlow(glowK);
-    phoneLight.intensity = 0.16 * glowK; phoneLight.distance = 0.9;             // the screen's cold light up onto his face
+    phoneLight.intensity = 0.05 * glowK; phoneLight.distance = 0.32;            // the screen's own spill: hand and lap only (it lit the SE sill into a bright patch)
+    { // its cold light up onto his right cheek, ear and the rim of the glasses (a short-range source under his jaw, 6500 K)
+      const hb = G.bone('head'); hb.updateWorldMatrix(true, false);
+      const jaw = V(-0.075, -0.06, 0.07).applyMatrix4(hb.matrixWorld);           // head space: right side, below and in front of the ear
+      kick.color.copy(K6500); kick.intensity = +(q.get('kg59') || 0.03) * glowK; kick.distance = 0.3; kick.position.copy(jaw);
+    }
     steamUpdate(T, 0, 0, 1);
     const shM = G.worldPos('armL.upper').lerp(G.worldPos('armR.upper'), 0.5);
     const face = Math.atan2(Math.sin(Math.PI / 2 + YAW_G), -Math.cos(Math.PI / 2 + YAW_G)) / D2R;   // his facing bearing (≈103°)
@@ -763,11 +771,11 @@ export default async function create(ctx) {
     aim(cp, shM, 0.665, 0.50, 65);
     // the cool blue-hour air on his shoulders (rhymes with the cool light on her shoulders at the end of S058): moonlight
     // from the corridor arches behind the camera, kept off his head (it read as a white cap)
-    fill.color.set('#8fa8d4'); fill.intensity = 19.0; fill.angle = 0.3; fill.penumbra = 1; fill.position.copy(cp).add(V(-0.6, 0.3, 0.5)); fill.target.position.copy(shM).add(V(0, -0.3, 0));
+    fill.color.set('#8fa8d4'); fill.intensity = 19.0; fill.angle = 0.24; fill.penumbra = 1; fill.position.copy(cp).add(V(-0.6, 0.1, 0.5)); fill.target.position.copy(shM).add(V(0, -0.38, 0));
     lampKey.intensity = 0.8; lampKey.target.position.set(3.45, 0.45, -0.45); lampUp.intensity = 0.06; bounce.intensity = 0.08;
     mFrame.color.copy(FRAME_COL).multiplyScalar(0.42);                      // the frames read as dark timber against the night
     dbgPts = { shM, shL: G.worldPos('armL.upper'), shR: G.worldPos('armR.upper'), head: G.eye(V(0, 0, 0)), thermos: THERMOS_POS.clone().add(V(0, 0.12, 0)), lamp: LAMP_HEAD, phone: phone.getWorldPosition(V(0, 0, 0)) };
-    return { dof: { focus: dist(shM), fstop: 2.8 } };
+    return { dof: { focus: dist(shM), fstop: 2.8 }, exposure: +(q.get('e59') || 1.3) };   // (integration) ≈ S058's corrected end level
   };
 
   // ---------------- S060: over his right shoulder, high, 100 mm, slow ~20 cm push: thumb hovers over the dial key (188.71 =
@@ -776,7 +784,7 @@ export default async function create(ctx) {
   // frame: the closed navy case on his thigh under his resting hand, lit only by the lamp's warm edge and the harbour —
   // the darkness S061 sees from the corridor. 2.45–2.75 his left hand takes off the glasses (onto the cord).
   // (integration) before: the phone dropped out of the frame bottom and the shot ended on a bright warm sill.
-  const S60 = { cx: +(q.get('c60x') || -0.75), cy: +(q.get('c60y') || 1.5), cz: +(q.get('c60z') || -0.35), ry: +(q.get('por') || 1.5708), dk: +(q.get('dk60') || 0.58) };
+  const S60 = { cx: +(q.get('c60x') || -0.75), cy: +(q.get('c60y') || 1.5), cz: +(q.get('c60z') || -0.35), ry: +(q.get('por') || 1.5708), dk: +(q.get('dk60') || 1.0) };
   const PH60_OFF = V(+(q.get('pox') || 0.02), +(q.get('poy') || 0.009), +(q.get('poz') || 0.0));
   const COVER_OPEN = -2.75;
   setups.S060 = (tl, u, T) => {
@@ -789,7 +797,7 @@ export default async function create(ctx) {
     const flip = ramp(tl, 2.0, 2.36);
     const eye = G.eye(V(0, 0, 0));
     const read = W(G, -0.05, 0.95, 0.44);                                   // ~33 cm below/in front of his eyes
-    const thighP = PHONE_THIGH().add(V(0, 0.035, 0));
+    const thighP = PHONE_THIGH().add(V(0, +(q.get('ty60') || 0.06), 0));        // (integration) on top of the trouser cloth, not sunk into it
     const ph = read.clone().lerp(thighP, flip);
     const toEye = eye.clone().sub(read).normalize();
     const palm = toEye.clone().lerp(V(0, -1, 0), flip).normalize();         // screen (out of the palm) toward his eyes … then face down
@@ -802,7 +810,7 @@ export default async function create(ctx) {
     const rest = ramp(tl, 2.3, 2.5);
     const hold = { ...GR60, thumb: [lerp(0.15, +(q.get('th0') || 0.42), hov) + trem, lerp(0.35, +(q.get('th1') || 0.05), hov), lerp(0.05, +(q.get('th2') || 0.05), hov), lerp(0.1, +(q.get('th3') || 0.12), hov) + trem, 0.2] };
     G.hands.R.setChannels(rest > 0 ? blendHandChannels(hold, handPose('relaxed', { curl: 0.55 }), rest) : hold);
-    putLocal(phone, G.hands.R.sockets.palm, PH60_OFF, new THREE.Euler(0, S60.ry, 0));
+    putLocal(phone, G.hands.R.sockets.palm, PH60_OFF.clone().add(V(0, 0, +(q.get('pz60') || 0.07) * rest)), new THREE.Euler(0, S60.ry, 0));   // at rest the hand lies on the near half of the case: the cracked corner shows
     phone.userData.cover.rotation.x = lerp(COVER_OPEN, 0, easeIO(ramp(tl, 2.06, 2.392)));   // the cover closes over the screen as it goes down
     const gl = ramp(tl, 2.38, 2.55) * (1 - ramp(tl, 2.6, 2.85));
     G.reach('L', W(G, 0.115, 0.62, 0.30).lerp(G.eye(V(0, 0, 0)).add(leftOf(G).multiplyScalar(0.06)), gl), { palm: V(0, -1, 0).lerp(leftOf(G).negate(), gl).normalize(), fingers: fwdOf(G) });
@@ -819,12 +827,15 @@ export default async function create(ctx) {
     const down = easeIO(ramp(tl, 1.82, 2.5));
     const aimAt = read.clone().lerp(thighP, down);
     aim(camP, aimAt, lerp(0.58, 0.56, down), lerp(0.60, 0.70, down), 100);
-    lampKey.intensity = lerp(1.3, 0.9, down); lampKey.angle = 0.42; lampKey.target.position.copy(W(G, 0.0, 0.7, 0.4)); fill.intensity = 0.0; bounce.intensity = 0.05; lampUp.intensity = 0.04;
-    mFrame.color.copy(FRAME_COL).multiplyScalar(0.45); mSill.color.set('#e2ddd2').multiplyScalar(0.55);   // the sill / jamb flagged down (they were the brightest things at the end)
+    // as the frame comes down onto his lap the lamp is a narrow pool on his hand and the case (the bench beside him read as a bright plane)
+    lampKey.intensity = lerp(1.3, +(q.get('lk60') || 3.4), down); lampKey.angle = lerp(0.42, 0.13, down); lampKey.penumbra = 0.9; lampKey.target.position.copy(W(G, 0.0, 0.7, 0.4).lerp(thighP, down)); fill.intensity = 0.0; bounce.intensity = 0.05 * (1 - down); lampUp.intensity = 0.04 * (1 - down);
+    mFrame.color.copy(FRAME_COL).multiplyScalar(0.45); mSill.color.set('#e2ddd2').multiplyScalar(lerp(0.55, 0.16, down));   // the sill / jamb flagged down (the SE sill beside his knee was the brightest thing at the end)
+    mPlaster.color.copy(PLASTER_COL).multiplyScalar(0.3);                      // and the SE apron beside his knee (a bright diagonal wall in the end frame)
     phoneLight.intensity *= 2.2;
     // the lamp's warm edge on his hand and the case from the left (the reading lamp is at his front-left)
     // (the lamp's own, shadowed light is blocked by his body here: an unshadowed warm source on the lamp's bearing stands in for it)
-    { const toLamp = LAMP_HEAD.clone().sub(thighP).normalize(); kick.color.set('#ffc08a'); kick.intensity = +(q.get('kk60') || 0.22) * down; kick.distance = 1.1; kick.position.copy(thighP).addScaledVector(toLamp, 0.5); }
+    hemi.color.set('#5a6f96'); hemi.intensity = lerp(0.06, +(q.get('hm60') || 0.22), down);   // the harbour's faint cool light through the bay onto his lap
+    { const toLamp = LAMP_HEAD.clone().sub(thighP).normalize(); kick.color.set('#ffc08a'); kick.intensity = +(q.get('kk60') || 0.06) * down; kick.distance = 0.55; kick.position.copy(thighP).addScaledVector(toLamp, 0.28); }   // a small warm edge on the hand and case only
     dbgPts = { phone: phone.getWorldPosition(V(0, 0, 0)), thumb: thumbTip, head: G.eye(V(0, 0, 0)), thigh: thighP, shR: G.worldPos('armR.upper'), elR: G.worldPos('armR.lower'), wrR: G.worldPos('armR.hand') };
     const dark = smoothstep(2.392, 2.75, tl);                                  // the eye adjusts to the darkness the screen leaves
     return { dof: { focus: dist(flip > 0.5 ? phone.getWorldPosition(V(0, 0, 0)) : thumbTip), fstop: 2.8 }, exposure: 1.15 * lerp(1, S60.dk, dark) };
@@ -839,7 +850,7 @@ export default async function create(ctx) {
   const R_ENTER = V(2.03, 0, -0.92), R_BEHIND = V(2.76, 0, -0.40), R_LEG = V(3.555, 0, -0.30);
   const R_LEG_HEAD = Math.PI / 2 - 0.2;                             // in the leg room facing the window, a little toward him
   const W_HEAD = Math.atan2(R_BEHIND.x - R_ENTER.x, R_BEHIND.z - R_ENTER.z);
-  const C62 = { a: V(0.42, 1.44, -0.66), b: V(0.46, 1.42, -0.20), la: V(3.42, 1.14, -0.20), lb: V(3.45, 1.10, -0.03), mm: 35 };   // truck L→R 0.46 m: 98° → 93° bearing
+  const C62 = { a: V(0.42, 1.44, -0.66), b: V(0.46, 1.42, -0.20), la: V(3.42, 1.19, -0.20), lb: V(3.45, 1.15, -0.03), mm: 35 };   // (integration) tilted up a touch: the lamp shade sits inside the frame   // truck L→R 0.46 m: 98° → 93° bearing
   for (const [k, n] of [['a', 'c62a'], ['b', 'c62b'], ['la', 'c62la'], ['lb', 'c62lb']]) if (q.get(n)) C62[k].fromArray(q.get(n).split(',').map(Number));
   if (q.get('c62mm')) C62.mm = +q.get('c62mm');
   function restCarry(sides = 'LR') {
@@ -910,6 +921,7 @@ export default async function create(ctx) {
     moonEdge.position.set(-2.4, 3.1, -2.2); moonEdge.target.position.copy(R.worldPos('chest')); moonEdge.angle = 0.32; moonEdge.penumbra = 1;
     moonEdge.intensity = lerp(60.0, 14.0, ramp(tl, 0.6, 1.7));
     fill.intensity = 2.4;
+    mFrame.color.copy(FRAME_COL).multiplyScalar(0.62);                       // the cream frames were the brightest verticals in the frame
     const fp = cupG.getWorldPosition(V(0, 0, 0));
     dbgPts = { Rh: R.eye(V(0, 0, 0)), ge: G.eye(V(0, 0, 0)), cupG: fp, lamp: LAMP_HEAD, R: R.worldPos('chest'), G: G.worldPos('chest') };
     if (q.get('pts')) console.log('S062 reach', tl.toFixed(2), 'shoulder→cupG', R.worldPos('armR.upper').distanceTo(gripAt(CUP_G)).toFixed(3), 'cup err', fp.distanceTo(tl < 2.15 ? fp : CUP_G).toFixed(3));
@@ -978,6 +990,7 @@ export default async function create(ctx) {
     cam.lens(camera, C62.mm); cam.place(camera, C62.b, C62.lb);
     moonEdge.position.set(-2.4, 3.1, -2.2); moonEdge.target.position.copy(SEAT_R).add(V(0, 1.0, 0)); moonEdge.angle = 0.32; moonEdge.penumbra = 1; moonEdge.intensity = 14.0;
     fill.intensity = 2.4;
+    mFrame.color.copy(FRAME_COL).multiplyScalar(0.62);
     dbgPts = { Rh: R.eye(V(0, 0, 0)), ge: G.eye(V(0, 0, 0)), cupR: CUP_R, cupG: CUP_G, gloves: GLOVES_POS, lamp: LAMP_HEAD };
     return { dof: { focus: (dist(R.eye(V(0, 0, 0))) + dist(G.eye(V(0, 0, 0)))) / 2, fstop: 4 } };
   };
@@ -1002,7 +1015,7 @@ export default async function create(ctx) {
   // the back of the hand on the sill's edge, the fingers softly half-closed ~5 cm from the cup, the forearm angled in from
   // lower left with the elbow off the sill (the old forearm laid flat along the sill, fingers splayed, read as begging).
   // A grazing warm kick off the sill lifts the worn spot from the dark melton; the focus breathes onto it at 201.6.
-  const S64 = { bear: +(q.get('b64') || 298), d: +(q.get('d64') || 2.05), h: +(q.get('h64') || 0.25), wx: +(q.get('wx64') || 3.77), wz: +(q.get('wz64') || -0.235), fa: +(q.get('fa64') || 150), roll: +(q.get('rl64') || 0.15), fy: +(q.get('fy64') || 0.16), curl: +(q.get('cu64') || 1.8), wf: +(q.get('wf64') || -0.32) };
+  const S64 = { bear: +(q.get('b64') || 298), d: +(q.get('d64') || 2.05), h: +(q.get('h64') || 0.25), wx: +(q.get('wx64') || 3.77), wz: +(q.get('wz64') || -0.275), fa: +(q.get('fa64') || 136), roll: +(q.get('rl64') || -0.8), fy: +(q.get('fy64') || 0.16), curl: +(q.get('cu64') || 1.5), wf: +(q.get('wf64') || -0.32) };
   setups.S064 = (tl, u, T) => {
     setTime(T); resetProps();
     seatedPair({ gLean: 0.42, gBow: 0.3 });
@@ -1010,7 +1023,7 @@ export default async function create(ctx) {
     for (const h of insertHands) h.root.visible = true;
     putWorld(cupR, CUP_R, 0);
     // her left hand at rest: palm up, a soft half-closed hand, the back of the hand on the sill edge, forearm sloping down-back
-    { const hp = handPose('relaxed', { curl: S64.curl }); hp.wrist = [S64.wf, 0.04]; hRL.setChannels(hp); }   // the wrist bent back: the hand lies on the sill, the forearm slopes down to the elbow below its edge
+    { const hp = handPose('relaxed', { curl: S64.curl }); hp.wrist = [S64.wf, 0.04]; hp.thumb = [0.55, 0.45, 0.35, 0.4, 0.1]; hRL.setChannels(hp); }   // thumb resting along the curled index (it stood up like a thumbs-up)   // the wrist bent back: the hand lies on the sill, the forearm slopes down to the elbow below its edge
     const fa = S64.fa * D2R;
     const Fh = V(Math.sin(fa), S64.fy, -Math.cos(fa)).normalize();                          // forearm axis ≈ SSE toward her cup, rising to the wrist on the sill edge
     const Nh = V(0, 1, 0).applyAxisAngle(Fh, S64.roll).normalize();                         // palm up, rolled a little so the cuff's ulnar side turns up toward the lens
@@ -1025,7 +1038,7 @@ export default async function create(ctx) {
     // his two hands close around the cup (0–0.42 s), lift it a little and carry it down and back toward his lap — out of
     // frame low right by 202.3 (tl 1.48)
     const close = ramp(tl, 0.0, 0.42), lift = ramp(tl, 0.42, 1.6);
-    const lap = SEAT_G.clone().add(V(0.30, 0.66, 0.02));
+    const lap = SEAT_G.clone().add(V(0.22, 0.56, 0.12));                     // down and back toward his lap: out of frame low right
     const cupPos = CUP_G.clone().lerp(lap, easeIO(lift)); cupPos.y += 0.035 * Math.sin(Math.PI * Math.min(1, lift * 1.6));
     putWorld(cupG, cupPos, chipYawFor(CUP_G));
     const towardHim = lap.clone().sub(CUP_G); towardHim.y = 0; towardHim.normalize();
@@ -1045,7 +1058,7 @@ export default async function create(ctx) {
     kick.color.set('#ffd2a0'); kick.intensity = +(q.get('k64') || 0.16); kick.distance = 0.6; kick.position.copy(wornP).add(V(-0.16, 0.05, -0.1));
     dbgPts = { cupR: CUP_R.clone().add(V(0, 0.035, 0)), cupG: cupPos.clone().add(V(0, 0.035, 0)), worn: wornP, wrist };
     const fb = ramp(tl, 0.6, 0.93);
-    return { dof: { focus: lerp(dist(g), dist(wornP), fb), fstop: 4 }, aa: 'msaa' };
+    return { dof: { focus: lerp(dist(g), dist(wornP), fb), fstop: 4 } };   // (integration) FXAA: MSAA cost ≈1 s/frame here (3 close hands) for no visible gain at the 2.1 mm cobalt line
   };
 
   // two seated, guard holding his cup in the lap (after S064)
@@ -1106,19 +1119,19 @@ export default async function create(ctx) {
   function earTargets() {
     const hb = G.bone('head'); hb.updateWorldMatrix(true, false);
     const hu = G.P.hu;
-    const d = V(0, -0.9, 0.44).normalize();                            // ear → down along the jaw line, head space
+    const d = V(0, -0.95, +(q.get('phz') || 0.3)).normalize();          // ear → down along the jaw line, head space (integration: steeper, so the far-side phone's foot does not reach round to the chin)
     const Xp = d.clone().negate(), Yp = V(1, 0, 0), Zp = new THREE.Vector3().crossVectors(Xp, Yp);
     const c = V(-(0.356 * hu + 0.0072), 0.31 * hu, -0.075 * hu).addScaledVector(d, 0.04);
     const Mphone = hb.matrixWorld.clone().multiply(_mEar.makeBasis(Xp, Yp, Zp).setPosition(c));
     const palmPos = c.clone().add(V(-0.0165, 0, 0)).addScaledVector(d, 0.045).applyMatrix4(hb.matrixWorld);
-    return { Mphone, palmPos, palmN: V(1, 0, 0.12).normalize().transformDirection(hb.matrixWorld), fing: V(0, 0.3, -0.95).normalize().transformDirection(hb.matrixWorld) };
+    return { Mphone, palmPos, palmN: V(1, 0, 0.12).normalize().transformDirection(hb.matrixWorld), fing: V(0, +(q.get('fy') || 0.85), -0.4).normalize().transformDirection(hb.matrixWorld) };   // (integration) fingers up the phone's back, not splayed out behind the head
   }
-  function guardPhoneEar(k) {
+  function guardPhoneEar(k, poleAt = null) {
     // k: 0 = face down on the thigh … 0.45 = up in front of him, screen up … 1 = at his right ear
-    const thigh = PHONE_THIGH().add(V(0, 0.035, 0)), front = W(G, -0.07, 0.80, 0.33);
+    const thigh = PHONE_THIGH().add(V(0, 0.035, 0)), front = W(G, -0.06, 0.88, 0.36);
     const a = easeIO(clamp(k / 0.45, 0, 1)), b = easeIO(clamp((k - 0.45) / 0.55, 0, 1));
     const palmF = dirW(G, 0.15, 0.8, -0.6).normalize(), fingF = dirW(G, 0.45, 0.1, 1).normalize();
-    const poleF = dirW(G, -0.45, -0.85, 0.35).normalize(), poleE = dirW(G, -0.2, -1, 0.3).normalize();
+    const poleF = dirW(G, -0.45, -0.85, 0.35).normalize(), poleE = poleAt ? dirW(G, ...poleAt).normalize() : dirW(G, +(q.get('pex') || -0.85), +(q.get('pey') || -0.3), +(q.get('pez') || -0.4)).normalize();   // (integration) elbow out to his right side at shoulder height: the forearm stays behind his head from her side (a 'down' pole folds it forward across his chest, which read as a fist under the chin), and the raised elbow is the call's silhouette from the room side
     if (k < 0.45) {
       G.reach('R', thigh.lerp(front, a), { palm: V(0, -1, 0).lerp(palmF, a).normalize(), fingers: fingF, pole: poleF });
       G.hands.R.setChannels(PHONE_GRIP); phoneInHand(PH_OFF);
@@ -1140,136 +1153,241 @@ export default async function create(ctx) {
       putLocal(phone, sock, _pF.clone().lerp(_pE, b), new THREE.Euler().setFromQuaternion(_qF.clone().slerp(_qE, b)));
     } else putLocal(phone, sock, _pE, new THREE.Euler().setFromQuaternion(_qE));
   }
-  // ---------------- S072: cold tea (no steam): phone rises (226.32 = tl 0.03), thumb press (226.98 = 0.69), at the right ear (227.46 = 1.17)
+  // ---------------- the call (S072–S074), integration rebuild. A right-ear call seen from his right side always puts the hand
+  // and phone between his face and the lens (the old BAY_3Q call shots: his palm across his face). So the call is covered
+  // from his LEFT, where the phone at his right ear is on the FAR side of his head: S072 / S073 from her end of the bay
+  // (in front of her knees / beside her — her point of view; she is a soft dark edge at the left in S072, out of frame in
+  // S073), S074 back on the room side north-west of them (he screen-right, she screen-left, the S063 geometry) as he turns
+  // to her when the call is answered. While he waits he looks down and to his left, toward the sill in front of her ("eyes
+  // lowered to screen-left"), which turns his face three-quarter to the S072/S073 lens. Low key: the lamp (right behind
+  // these lenses) is flagged to a soft edge, the paling SE window behind him gives his head its silhouette, the phone's
+  // cold light is on his face while he dials.
+  const CALL = { turn: +(q.get('ct') || 0.15), bow: +(q.get('cb') || 0.16), lean: 0.34, tilt: 0.03 };
+  const C72 = { b: +(q.get('b72') || 17), d: +(q.get('d72') || 1.22), h: +(q.get('h72') || 1.22), mm: +(q.get('mm72') || 40) };
+  function callCam(ge, o, sx, sy, push, tl, dur) {
+    const bb = o.b * D2R;
+    const cp = V(ge.x + Math.sin(bb) * o.d, o.h, ge.z - Math.cos(bb) * o.d);
+    aim(cp.lerp(ge, push * ramp(tl, 0, dur)), ge, sx, sy, o.mm);
+    return cp;
+  }
+  // low-key call light: the lamp is flagged to a soft edge (it sits behind the north lenses), a cool edge from the SE window
+  // behind him, the corridor's moonlight on the backs
+  function callLight(ge, lamp = 0.5) {
+    lampKey.intensity = 1.3 * lamp; lampKey.angle = 0.5; lampKey.penumbra = 1.0; lampKey.target.position.copy(ge).add(V(0.3, -0.2, 0.25));
+    fill.intensity = 0.25; lampUp.intensity = 0.05; bounce.intensity = 0.07; shadeMat.emissiveIntensity = 0.26;
+    kick.color.set('#9fb0cc'); kick.intensity = +(q.get('kc') || 0.07); kick.distance = 1.0; kick.position.copy(ge).add(V(0.12, 0.08, 0.55));   // the paling SE window behind him
+    moonEdge.position.set(-2.4, 3.1, -1.6); moonEdge.target.position.set(3.2, 1.05, 0); moonEdge.angle = 0.3; moonEdge.penumbra = 1; moonEdge.intensity = 9.0;
+    mFrame.color.copy(FRAME_COL).multiplyScalar(0.5);
+  }
+  function callSeat(o) {
+    guardBase({ lean: o.lean, bow: o.bow, turn: o.turn, tilt: o.tilt ?? 0 });
+    if (o.twist) G.pose({ 'chest.y': o.twist * 0.6, 'spine.y': o.twist * 0.4 }, { add: true });
+    putWorld(gloves, GLOVES_POS, 0.5); putWorld(thermos, THERMOS_POS, 0.4);
+    putWorld(cupG, CUP_G, chipYawFor(CUP_G)); putWorld(cupR, CUP_R, 0);
+  }
+  // ---------------- S072: cold tea (no steam). MATCH CUT from S071's raised hand: his right hand is already rising with the
+  // phone at f0 (226.29), up in front of his chest by 226.6 — the screen's cold light on his face (screen away from us) — a
+  // small in-breath, the thumb press (226.98 = tl 0.69), then the phone goes to his right ear (227.46 = 1.17), on the far side
+  // of his head; he waits, eyes down to screen-left. She is a soft dark edge at the left, looking out of the window.
   setups.S072 = (tl, u, T) => {
     setTime(T); resetProps();
-    const inb = pulse(tl, 0.42, 0.95);
-    // review: the phone now really sits at his right ear (it stood up behind his skull like a slab); he settles a little to his
-    // right as he waits — from BAY_3Q the call reads as hand + phone on the near ear against the window (a right-ear call
-    // always puts the arm between his face and this lens; his face is S073's)
-    const away = ramp(tl, 0.8, 1.75);
-    seatedPair({ gLean: lerp(0.38, 0.36, away), gBow: lerp(0.30, CALL_POSE.gBow, ramp(tl, 0.8, 1.4)), gTurn: CALL_POSE.gTurn * away, gTilt: CALL_POSE.gTilt * away, gYaw: CALL_POSE.gYaw * away, rTurn: 0.1, rBow: -0.03 });
-    putWorld(cupG, CUP_G, chipYawFor(CUP_G)); putWorld(cupR, CUP_R, 0);
-    const k = tl < 0.03 ? 0 : tl < 0.6 ? 0.45 * ramp(tl, 0.03, 0.6) : tl < 0.8 ? 0.45 : 0.45 + 0.55 * ramp(tl, 0.8, 1.17);
-    G.lookAt(k < 0.6 ? phone.getWorldPosition(V(0, 0, 0)) : W(G, -0.3, 0.55, 0.9), k < 0.6 ? 0.5 * (1 - away) : 0.3);
+    const inb = pulse(tl, 0.42, 0.95), wait = ramp(tl, 0.85, 1.6);
+    callSeat({ lean: lerp(0.42, CALL.lean, wait), bow: lerp(0.42, CALL.bow, wait), turn: lerp(0.25, CALL.turn, wait), tilt: CALL.tilt * wait });
+    restBase({ lean: 0.15, turn: -0.35, bow: 0.02, shoulders: 0.03 });
+    // phone: k 0 thigh … 0.45 in front of him … 1 at the ear; at f0 it is already lifting (k ≈ 0.12)
+    const k = tl < 0.55 ? lerp(+(q.get('k72') || 0.33), 0.45, easeIO(clamp(tl / 0.42, 0, 1))) : tl < 0.8 ? 0.45 : 0.45 + 0.55 * ramp(tl, 0.8, 1.17);   // at f0 the hand is most of the way up and still rising (the rise continues S071's raised hand across the match cut)
+    G.lookAt(k < 0.6 ? phone.getWorldPosition(V(0, 0, 0)) : W(G, 0.3, 0.1, 0.95), k < 0.6 ? 0.55 : 0.25);
     guardPhoneEar(k);
     const press = pulse(tl, 0.6, 0.8);
     if (k <= 0.45) G.hands.R.setChannels({ ...PHONE_GRIP, thumb: [0.1 + 0.5 * press, 0.25 - 0.15 * press, 0.05, 0.1 + 0.1 * press, 0.2] });
     G.reach('L', W(G, 0.115, 0.6, 0.30), { palm: V(0, -1, 0), fingers: fwdOf(G) }); G.hands.L.pose('relaxed', { curl: 0.8 });
     restHandsLap();
-    R.lookAt(V(8, 1.1, 0.9), 0.6);
+    R.lookAt(V(9, 1.0, 4.0), 0.6);                                                 // out of the SE window
     G.breathe(T, 1 + 1.6 * inb); R.breathe(T + 0.7);
     steamUpdate(T, 0, 0, 1);
-    phoneGlow(smoothstep(0.25, 0.42, tl) * (1 - smoothstep(1.0, 1.2, tl)));
     const ge = G.eye(V(0, 0, 0));
-    const cp = V(+(q.get("c72x") || 2.32), 1.30, +(q.get("c72z") || 2.0)).lerp(ge, 0.02 * ramp(tl, 0, 2.75));
-    aim(cp, ge, 0.64, 0.45, 75);
-    faceBounce(ge, 0.06);
-    logFace('S072', G);
-    dbgPts = { ge, re: R.eye(V(0, 0, 0)), phone: phone.getWorldPosition(V(0, 0, 0)) };
-    return { dof: { focus: dist(ge), fstop: 2.8 }, saturation: 0.8 };
+    callCam(ge, C72, 0.62, 0.38, 0.02, tl, 2.75);
+    callLight(ge);
+    phoneGlow(smoothstep(0.1, 0.3, tl) * (1 - smoothstep(1.45, 1.75, tl)));            // the screen stays lit a moment at his ear: a cold halo behind his jaw
+    phoneLight.intensity *= +(q.get('pl72') || 5.0); phoneLight.distance = 0.7;      // its cold light on his face and fingers
+    logFace('S072', G); logFace('S072 R', R);
+    dbgPts = { ge, re: R.eye(V(0, 0, 0)), phone: phone.getWorldPosition(V(0, 0, 0)), hand: G.worldPos('armR.hand') };
+    return { dof: { focus: dist(ge), fstop: 2.8 }, saturation: 0.84, exposure: +(q.get('e72') || 1.2) };
   };
 
-  // the lamp's light bounced off the white SE frames and sill beside him: a soft warm fill for his face when he is turned
-  // away from the lamp (the call, S072–S074); position = most of the way from his face toward the SE window corner
-  function faceBounce(face, k, from = V(3.86, 1.02, 0.86)) { kick.color.set('#ffcf9c'); kick.intensity = k; kick.distance = 1.8; kick.position.copy(face).lerp(from, 0.85); }
-  const CALL_POSE = { gLean: 0.37, gBow: 0.14, gTurn: +(q.get('ct') || -0.22), gTilt: -0.03, gYaw: +(q.get('cy') || 0) };   // = S072's end pose (turned away, phone at the right ear)
-
-  // ---------------- S073: CU 100 mm, his eyes, waiting through the full-band stop (229.1); held breath (229.82).
-  // From her side of the bench (she is out of frame), as the shot list frames it: his face 3/4 toward camera-left, the phone
-  // at his right ear on the FAR side (case edge just showing beyond his head), the lamp from screen-right, the SE window's
-  // harbour points soft behind him. (Review: the phone used to fall off the ear at 229.82 — a pose() after the reach reset
-  // the arm — and the eyes sat high under a cropped crown.)
+  // ---------------- S073: the held breath in the full-band stop (229.1 cut, 229.82 held breath). CU from her end of the bench
+  // (she is out of frame — her point of view), his face three-quarter toward camera-left, eyes down to screen-left, the phone
+  // at his right ear on the far side (only the case edge beyond his cheek); the head ~half the frame height, not a giant head.
+  // (Before: 100 mm, the head filling the frame, evenly lit orange.)
+  const C73 = { b: +(q.get('b73') || 352), d: +(q.get('d73') || 1.65), h: +(q.get('h73') || 1.2), mm: +(q.get('mm73') || 50) };
   setups.S073 = (tl, u, T) => {
     setTime(T); resetProps();
     R.root.visible = false;
-    const held = tl > 0.78;
-    seatedPair({ ...CALL_POSE, gLean: 0.32, gBow: 0.02, gTurn: 0.78, gTilt: -0.05 });
-    if (held) G.pose({ 'neck.x': 0.012 * smoothstep(0.78, 1.0, tl) }, { add: true });   // (pose() resets the IK: before the reach)
-    putWorld(cupG, CUP_G, 0); putWorld(cupR, CUP_R, 0);
-    G.lookAt(W(G, 0.3, 0.8, 1.0), 0.3);
+    const held = smoothstep(0.78, 1.0, tl);
+    callSeat({ ...CALL, turn: +(q.get('t73') || 0.42), bow: CALL.bow - 0.04 + 0.02 * held });
+    G.lookAt(W(G, 0.3, 0.1, 0.95), 0.25);
     guardPhoneEar(1);
     G.reach('L', W(G, 0.115, 0.6, 0.30), { palm: V(0, -1, 0), fingers: fwdOf(G) }); G.hands.L.pose('relaxed', { curl: 0.8 });
-    G.breathe(held ? 229.82 : T, held ? 0.4 : 1);
+    G.breathe(held > 0 ? 229.82 : T, lerp(1, 0.3, held));
     steamUpdate(T, 0, 0, 1);
     const ge = G.eye(V(0, 0, 0));
-    aim(V(3.62, 1.24, -0.98), ge, 0.52, 0.42, 100);
-    lampKey.color.set('#ffd8b0'); lampKey.intensity = 1.5; lampKey.target.position.copy(ge);
-    kick.intensity = 0.02; kick.distance = 1.2; kick.position.copy(ge).add(V(0.25, 0.12, -0.3));
+    callCam(ge, C73, 0.56, 0.42, 0.0, tl, 1.58);
+    callLight(ge, +(q.get('l73') || 0.32));
+    kick.color.set('#9fb2d2'); kick.intensity = +(q.get('kf73') || 0.12); kick.distance = 0.9; kick.position.copy(ge).add(V(0.5, 0.12, -0.12));   // the paling sky through the E pane: a cool edge along brow, nose and lips
     logFace('S073', G);
-    dbgPts = { ge, phone: phone.getWorldPosition(V(0, 0, 0)) };
-    return { dof: { focus: dist(ge), fstop: 2.4 }, saturation: 0.76, temp: -0.1, exposure: 1.2 };
+    if (q.get('pts')) { const L = (n) => G.root.worldToLocal(G.worldPos(n)).toArray().map((x) => x.toFixed(2)).join(','); console.log('ARM73 sh', L('armR.upper'), 'el', L('armR.lower'), 'wr', L('armR.hand'), 'head', L('head'), 'phone', G.root.worldToLocal(phone.getWorldPosition(V(0, 0, 0))).toArray().map((x) => x.toFixed(2)).join(',')); }
+    dbgPts = { ge, phone: phone.getWorldPosition(V(0, 0, 0)), head: G.worldPos('head') };
+    return { dof: { focus: dist(ge), fstop: 2.4 }, saturation: 0.82, temp: -0.06, exposure: +(q.get('e73') || 1.4) };
   };
 
-  // ---------------- S074: answered on 这人间 (230.63): his face eases; her smile (232.27 = tl 1.64); she looks out (233.07 = 2.44)
+  // ---------------- S074: answered on 这人间 (230.63 = tl 0.0): his head lifts, the brows ease, and he turns to her (0–1.2 s) —
+  // his face comes round into the lamp light, a warm side light on his profile; a murmur (1.0–1.6); her small smile
+  // (232.27 = 1.64), carried by her cheek line in lost profile; then she turns to the window (233.07 = 2.44), leaving the
+  // moment to him, and his eyes drop again. Two-shot 50 mm from the room side north-west of them (he screen-right, she
+  // screen-left: the S063 geometry), ~2 % push. The sky begins to pale.
+  const C74 = { b: +(q.get('b74') || 276), d: +(q.get('d74') || 2.65), h: +(q.get('h74') || 1.28), mm: +(q.get('mm74') || 50) };
   setups.S074 = (tl, u, T) => {
     setTime(T); resetProps();
-    const e1 = ramp(tl, 0.0, 1.2), smile = ramp(tl, 1.5, 1.9), out = ramp(tl, 2.44, 3.0);
-    seatedPair({ ...CALL_POSE, gLean: 0.37 - 0.06 * e1, gBow: CALL_POSE.gBow - 0.16 * e1, gTurn: CALL_POSE.gTurn - 0.12 * e1, gTilt: CALL_POSE.gTilt + 0.03 * e1, rTurn: lerp(-0.62, 0.12, out), rBow: lerp(0.05, -0.03, out) });
-    const mur = tl > 1.0 && tl < 1.6 ? 0.015 * Math.sin((tl - 1.0) * 21) : 0;
-    G.pose({ 'head.x': mur, 'armL.clav.z': -0.03 * e1, 'armR.clav.z': -0.03 * e1 }, { add: true });
-    R.pose({ 'head.z': -0.05 * smile * (1 - out), 'head.x': -0.02 * smile }, { add: true });
-    putWorld(cupG, CUP_G, chipYawFor(CUP_G)); putWorld(cupR, CUP_R, 0);
-    G.lookAt(W(G, -0.3, 0.55 + 0.45 * e1, 0.9), 0.3);
-    guardPhoneEar(1);
+    const e1 = ramp(tl, 0.0, 1.2), smile = ramp(tl, 1.5, 1.9), out = ramp(tl, 2.44, 3.0), back = ramp(tl, 2.6, 3.2);
+    callSeat({ lean: CALL.lean - 0.05 * e1, bow: lerp(CALL.bow, 0.04, e1) + 0.1 * back, turn: lerp(CALL.turn, +(q.get('tt74') || 1.25), e1) - 0.25 * back, twist: 0.18 * e1 * (1 - 0.5 * back) });
+    G.pose({ 'armL.clav.z': -0.05 * e1, 'armR.clav.z': -0.03 * e1, 'chest.x': 0.02 * e1 }, { add: true });
+    restBase({ lean: 0.15, turn: lerp(+(q.get('rt74') || -1.0), 0.15, out), bow: lerp(0.06, -0.03, out), tilt: -0.05 * smile * (1 - out), shoulders: 0.03 });
+    R.pose({ 'chest.y': -0.15 * (1 - out), 'spine.y': -0.08 * (1 - out) }, { add: true });
+    const mur = tl > 1.0 && tl < 1.6 ? 0.012 * Math.sin((tl - 1.0) * 21) : 0;
+    if (mur) { const hb = G.bone('head'); hb.quaternion.multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(mur, 0, 0))); G.root.updateMatrixWorld(true); }
+    guardPhoneEar(1, [-0.8, -0.55, -0.1]);                                       // elbow forward-down: from the room side the hand at his far ear reads beside his head
     G.reach('L', W(G, 0.115, 0.6, 0.30), { palm: V(0, -1, 0), fingers: fwdOf(G) }); G.hands.L.pose('relaxed', { curl: 0.8 });
     restHandsLap();
-    R.lookAt(out > 0.5 ? V(8, 1.1, 0.9) : G.eye(V(0, 0, 0)), 0.6);
+    R.lookAt(out > 0.5 ? V(8, 1.1, -0.6) : G.eye(V(0, 0, 0)), 0.6);
     G.breathe(T); R.breathe(T + 0.7);
     steamUpdate(T, 0, 0, 1);
-    const mid = G.eye(V(0, 0, 0)).lerp(R.eye(V(0, 0, 0)), 0.5);
-    const cp = V(2.42, 1.30, 1.52).lerp(mid, 0.02 * ramp(tl, 0, 3.29));
-    aim(cp, mid, 0.50, 0.45, 50);
-    faceBounce(G.eye(V(0, 0, 0)), 0.05); logFace('S074', G);
-    dbgPts = { ge: G.eye(V(0, 0, 0)), re: R.eye(V(0, 0, 0)), gloves: GLOVES_POS, cupG: CUP_G };
-    return { dof: { focus: dist(mid), fstop: 5.6 }, saturation: 0.82 };
+    const ge = G.eye(V(0, 0, 0)), re = R.eye(V(0, 0, 0)), mid = ge.clone().lerp(re, 0.5);
+    callCam(mid, C74, 0.50, 0.45, 0.02, tl, 3.29);
+    callLight(ge, 1.0);
+    lampKey.target.position.copy(ge).add(V(0.0, -0.1, 0.0));                     // his face turns into the lamp: a warm side light
+    kick.intensity = 0.04;
+    logFace('S074 G', G); logFace('S074 R', R);
+    dbgPts = { ge, re, gloves: GLOVES_POS, cupG: CUP_G };
+    return { dof: { focus: (dist(ge) + dist(re)) / 2, fstop: 4 }, saturation: 0.84, exposure: +(q.get('e74') || 1.15) };
   };
 
   // ---------------- S077: first light — cap off (237.54 = tl 0.46), pour hers (238.26 = 1.18), his (238.97 = 1.89), heads to the window (239.6 = 2.52)
+  // (integration rebuild) The thermos is carried in his right hand's grip socket, so it is always in the hand; each phase gives
+  // a desired mouth position + axis: upright on the bench → upright in front of his chest (cap twisted off into his left hand)
+  // → upright beside her cup → tilted ~115° (mouth 25° below horizontal, 5 cm above her rim) → the stream → back up → his cup
+  // → cap on → down. He leans and turns into the reach (her cup is 0.7 m in front of his shoulder).
+  const _qa77 = new THREE.Quaternion(), _qb77 = new THREE.Quaternion(), _m77 = new THREE.Matrix4();
+  function thermosQuat(a, side, out) { const Y = a.clone().normalize(); const X = side.clone().sub(Y.clone().multiplyScalar(side.dot(Y))).normalize(); const Z = new THREE.Vector3().crossVectors(X, Y); return out.setFromRotationMatrix(_m77.makeBasis(X, Y, Z)); }
+  // her cup in S077: she lifts it from the sill and holds it out toward him (0.35–0.85) to receive the tea, then draws it back
+  // to her chest in both hands (1.6–1.95) and keeps it there (the steam rises from her hands)
+  const OFFER77 = V(+(q.get('ox77') || 3.70), +(q.get('oy77') || 0.86), +(q.get('oz77') || 0.12)), HOLD77 = () => W(R, -0.03, 0.80, 0.27);
+  function herCup77(tl) {
+    if (tl < 1.6) return CUP_R.clone().lerp(OFFER77, ramp(tl, 0.35, 0.85));
+    return OFFER77.clone().lerp(HOLD77(), ramp(tl, 1.6, 1.95));
+  }
+  function pourState(tl) {
+    const UP = V(0, 1, 0);
+    const sh = G.worldPos('armR.upper');
+    const hOf = (C) => { const h = C.clone().sub(sh); h.y = 0; return h.normalize(); };
+    const TH = 0.224, CUPH = 0.068;
+    const bench = { M: THERMOS_POS.clone().add(V(0, TH, 0)), a: UP.clone(), side: V(-1, 0, -0.3).normalize() };
+    const front = { M: W(G, -0.04, 0.92 + TH, 0.30), a: UP.clone(), side: dirW(G, 0, 0, -1) };
+    const near = (C) => { const h = hOf(C); return { M: C.clone().add(V(0, CUPH + 0.12 + TH * 0.0, 0)).addScaledVector(h, -0.11).add(V(0, TH * 0.0, 0)), a: UP.clone(), side: h.clone().negate() }; };
+    const pour = (C) => { const h = hOf(C); const a = h.clone().multiplyScalar(Math.cos(25 * D2R)).addScaledVector(UP, -Math.sin(25 * D2R)); return { M: C.clone().add(V(0, CUPH + 0.05, 0)).addScaledVector(h, -0.012), a, side: UP.clone() }; };
+    const mix = (A, B, k) => ({ M: A.M.clone().lerp(B.M, k), a: A.a.clone().lerp(B.a, k).normalize(), side: A.side.clone().lerp(B.side, k).normalize() });
+    const herC = herCup77(tl), nH = near(herC), pH = pour(herC), nG = near(CUP_G), pG = pour(CUP_G);
+    let st;
+    if (tl < 0.12) st = bench;
+    else if (tl < 0.5) st = mix(bench, front, ramp(tl, 0.12, 0.42));
+    else if (tl < 1.0) st = mix(front, nH, ramp(tl, 0.55, 0.98));
+    else if (tl < 1.56) st = mix(nH, pH, ramp(tl, 1.0, 1.16) * (1 - ramp(tl, 1.5, 1.56) * 0));
+    else if (tl < 1.7) st = mix(pH, nH, ramp(tl, 1.56, 1.66));
+    else if (tl < 1.78) st = mix(nH, nG, ramp(tl, 1.66, 1.78));
+    else if (tl < 2.14) st = mix(nG, pG, ramp(tl, 1.78, 1.88));
+    else if (tl < 2.3) st = mix(pG, front, ramp(tl, 2.14, 2.3));
+    else st = mix(front, bench, ramp(tl, 2.36, 2.62));
+    st.M.y += 0;                                                                  // (mouth position)
+    return st;
+  }
+  // ---------------- S077: first light — cut on the 237.09 accent; cap twisted off (237.54 = tl 0.46) into his left hand; the
+  // tea into her cup (238.26 = 1.18 … 1.56), then his own (238.97 = 1.89 … 2.14); new steam where the tea lands; cap on, the
+  // thermos back by his hip; both profiles turn to the window by 239.6 (2.52). The east window is now the key (pale P20 sky,
+  // a thin P21 line); the lamp is down to a warm accent. Her eye registered at (0.33, 0.40) = S076's profile (T25 match).
   setups.S077 = (tl, u, T) => {
     setTime(T); resetProps();
     winLight.castShadow = true; lampKey.castShadow = false;
-    const look = ramp(tl, 2.45, 2.95);
-    seatedPair({ gLean: 0.38, gBow: 0.16 * (1 - look), gTurn: 0.3 * (1 - look) - 0.05, rTurn: lerp(-0.45, 0.12, look), rBow: 0.03 * (1 - look) });
-    putWorld(cupG, CUP_G, chipYawFor(CUP_G)); putWorld(cupR, CUP_R, 0);
+    const look = ramp(tl, 2.22, 2.55);
+    const reachH = ramp(tl, 0.55, 0.95) * (1 - ramp(tl, 1.62, 1.8)), reachG = ramp(tl, 1.62, 1.8) * (1 - ramp(tl, 2.14, 2.3));
+    guardBase({ lean: 0.38 + +(q.get('lh77') || 0.1) * reachH + 0.3 * reachG, bow: 0.18 * (1 - look), turn: (0.35 * reachH + 0.15 * reachG) * (1 - look) + 0.05 * (1 - look), yaw: 0 });
+    G.pose({ 'chest.y': 0.22 * reachH + 0.06 * reachG, 'spine.y': 0.14 * reachH + 0.04 * reachG, 'armR.clav.y': 0.25 * (reachH + reachG) }, { add: true });
+    const offer = ramp(tl, 0.35, 0.85) * (1 - ramp(tl, 1.6, 1.95));
+    restBase({ lean: 0.16 + 0.12 * offer, turn: lerp(-0.45, 0.12, look), bow: 0.03 * (1 - look), shoulders: 0.03 });
+    R.pose({ 'chest.y': -0.12 * offer }, { add: true });
+    putWorld(gloves, GLOVES_POS, 0.5);
+    putWorld(cupG, CUP_G, chipYawFor(CUP_G));
     putWorld(phone, W(G, -0.12, SEAT_Y + 0.17, 0.2), Math.PI / 2 + YAW_G); phone.rotation.x = Math.PI;
-    // thermos in his right hand: pick up (0–0.3), cap off by the left hand (0.2–0.46), pour hers (1.18–1.6), his (1.89–2.15), cap on (2.2), down (2.5)
-    const pick = ramp(tl, 0.0, 0.3) * (1 - ramp(tl, 2.25, 2.6));
-    const capOff = ramp(tl, 0.2, 0.46) * (1 - ramp(tl, 2.05, 2.25));
-    const toHer = ramp(tl, 0.55, 1.1) * (1 - ramp(tl, 1.6, 1.85)), toHis = ramp(tl, 1.6, 1.85) * (1 - ramp(tl, 2.15, 2.3));
-    const tiltHer = ramp(tl, 1.0, 1.18) * (1 - ramp(tl, 1.52, 1.62)), tiltHis = ramp(tl, 1.75, 1.89) * (1 - ramp(tl, 2.08, 2.18));
-    const up = W(G, -0.12, 0.92, 0.32);
-    const overHer = CUP_R.clone().add(V(-0.07, 0.17, 0.10)), overHis = CUP_G.clone().add(V(-0.07, 0.17, 0.10));
-    const tp = THERMOS_POS.clone().lerp(up, pick); tp.lerp(overHer, toHer); tp.lerp(overHis, toHis);
-    const tilt = Math.max(tiltHer, tiltHis);
-    if (thermos.parent !== scene) scene.add(thermos);
-    thermos.position.copy(tp); thermos.rotation.set(0, 0.4, 0);
-    thermos.rotateOnWorldAxis(V(-0.45, 0, 0.9).normalize(), -1.75 * tilt);
+    const st = pourState(tl);
+    // right hand: grip socket at 11 cm up the body, on the 'side' face (his side when upright, the top when pouring)
+    const Y = st.a.clone(), X = st.side.clone().sub(Y.clone().multiplyScalar(st.side.dot(Y))).normalize();
+    const base = st.M.clone().addScaledVector(Y, -0.224);
+    const gripW = base.clone().addScaledVector(Y, 0.11).addScaledVector(X, 0.046);
+    const Zf = new THREE.Vector3().crossVectors(Y, X);
+    const held = tl > 0.12 && tl < 2.62;
+    if (held) {
+      G.hands.R.pose('grip', { radius: 0.041 });
+      reachSocket(G, 'R', gripW, { palm: X.clone().negate(), fingers: Zf, elbowOut: 0.55 }, 'grip');
+      const sock = G.hands.R.sockets.grip; sock.updateWorldMatrix(true, false);
+      const sy = V(0, 1, 0).transformDirection(sock.matrixWorld), flip = sy.dot(Y) < 0;
+      putLocal(thermos, sock, V(0, flip ? 0.11 : -0.11, 0), new THREE.Euler(flip ? Math.PI : 0, 0, 0));
+      // pull the base so its side faces where we asked (socket frame decides the roll): good enough at this size
+    } else {
+      putWorld(thermos, THERMOS_POS, 0.4);
+      const hk = tl < 0.12 ? ramp(tl, 0, 0.12) : 1 - ramp(tl, 2.62, 2.8);
+      G.reach('R', W(G, -0.115, 0.6, 0.30).lerp(gripW, hk), { palm: V(0, -1, 0).lerp(X.clone().negate(), hk).normalize(), fingers: fwdOf(G) }); G.hands.R.pose('relaxed', { curl: 0.8 });
+    }
     thermos.updateMatrixWorld(true);
-    const grip = thermos.localToWorld(V(-0.045, 0.11, 0.0));
-    if (pick > 0.02) { G.hands.R.pose('grip', { radius: 0.04 }); G.reach('R', grip, { palm: thermos.localToWorld(V(1, 0.11, 0)).sub(grip).normalize(), fingers: V(0.2, 0, -1).normalize(), elbowOut: 0.6 }); }
-    else { G.reach('R', W(G, -0.115, 0.6, 0.30), { palm: V(0, -1, 0), fingers: fwdOf(G) }); G.hands.R.pose('relaxed', { curl: 0.8 }); }
-    if (capOff > 0.02) {
-      const lidW = thermos.localToWorld(V(0, 0.19, 0)).lerp(W(G, 0.12, 0.72, 0.36), easeIO(capOff)).add(V(0, 0.06 * Math.sin(Math.PI * capOff), 0));
-      putWorld(thermosLid, lidW, capOff * 2.5);
-      G.hands.L.pose('grip', { radius: 0.044 });
-      G.reach('L', lidW.clone().add(V(0, 0.035, 0)), { palm: V(0, -1, 0), fingers: dirW(G, 0.3, -0.3, 1) });
-    } else { G.reach('L', W(G, 0.115, 0.6, 0.30), { palm: V(0, -1, 0), fingers: fwdOf(G) }); G.hands.L.pose('relaxed', { curl: 0.8 }); }
-    restHandsLap();
-    const pourHer = tl > 1.18 && tl < 1.6, pourHis = tl > 1.89 && tl < 2.15;
+    // the cap-lid: twisted off (0.2–0.4, two turns) and lifted into his left hand (0.4–0.5), held at his left knee; back on 2.14–2.3
+    const capOff = ramp(tl, 0.4, 0.5) * (1 - ramp(tl, 2.12, 2.28)), twist = ramp(tl, 0.2, 0.4) * (1 - ramp(tl, 2.12, 2.28));
+    if (capOff > 0.01) {
+      const lidOn = thermos.localToWorld(V(0, 0.19, 0)), lidHeld = W(G, 0.14, 0.74, 0.34);
+      const lidW = lidOn.clone().lerp(lidHeld, easeIO(capOff)).add(V(0, 0.07 * Math.sin(Math.PI * capOff), 0));
+      putWorld(thermosLid, lidW, 0);
+      G.hands.L.pose('grip', { radius: 0.045 });
+      G.reach('L', lidW.clone().add(V(0, 0.04, 0)), { palm: V(0, -1, 0), fingers: dirW(G, 0.3, -0.3, 1) });
+    } else {
+      if (thermosLid.parent !== thermos) thermos.add(thermosLid);
+      thermosLid.position.set(0, 0.19, 0); thermosLid.rotation.set(0, twist * Math.PI * 4, 0);
+      if (twist > 0.01 && tl < 0.45) { G.hands.L.pose('grip', { radius: 0.045 }); G.reach('L', thermos.localToWorld(V(0, 0.235, 0)), { palm: V(0, -1, 0).lerp(dirW(G, -0.5, -0.5, 0.2), 0.3).normalize(), fingers: dirW(G, 0.3, -0.3, 1) }); }
+      else { G.reach('L', W(G, 0.115, 0.6, 0.30), { palm: V(0, -1, 0), fingers: fwdOf(G) }); G.hands.L.pose('relaxed', { curl: 0.8 }); }
+    }
+    { // her hands: the right hand round the cup, the left under it
+      const cpos = herCup77(tl), lift = ramp(tl, 0.3, 0.42);
+      if (tl < 0.3) { restHandsLap(); putWorld(cupR, CUP_R, 0); R.reach('R', W(R, -0.04, 0.6, 0.27).lerp(gripAt(CUP_R).add(V(-0.06, 0.02, -0.02)), ramp(tl, 0.12, 0.3)), { palm: V(0, -1, 0.2).normalize(), fingers: fwdOf(R) }); }
+      else {
+        holdCup(R, 'R', cupR);
+        reachSocket(R, 'R', gripAt(cpos), { palm: dirW(R, 1, 0, 0.35), fingers: dirW(R, -0.2, 0, 1) });
+        R.hands.L.pose('relaxed', { curl: 0.35 });
+        R.reach('L', cpos.clone().add(V(0, -0.012, 0)).addScaledVector(dirW(R, 0, 0, 1), -0.06).lerp(W(R, 0.05, 0.6, 0.25), 1 - lift), { palm: V(0, 1, 0).lerp(V(0, -1, 0), 1 - lift).normalize(), fingers: dirW(R, -0.6, 0, 0.8) });
+      }
+    }
+    const pourHer = tl > 1.16 && tl < 1.56, pourHis = tl > 1.88 && tl < 2.14;
     if (pourHer || pourHis) {
-      const spout = thermos.localToWorld(V(0, 0.225, 0)), dst = (pourHer ? CUP_R : CUP_G).clone().add(V(0, 0.055, 0));
+      const spout = thermos.localToWorld(V(0, 0.226, 0)), C = pourHer ? herCup77(tl) : CUP_G, dst = C.clone().add(V(0, 0.056, 0));
+      dst.x = lerp(dst.x, spout.x, 0.3); dst.z = lerp(dst.z, spout.z, 0.3);
       stream.visible = true; stream.position.copy(spout).lerp(dst, 0.5); stream.scale.set(1, spout.distanceTo(dst), 1);
       stream.quaternion.setFromUnitVectors(V(0, 1, 0), spout.clone().sub(dst).normalize());
     }
-    G.lookAt(tl < 2.45 ? (toHis > 0.5 ? CUP_G : CUP_R) : V(8, 1.1, 1.6), tl < 2.45 ? 0.55 : 0.6);
-    R.lookAt(tl < 2.45 ? thermos.getWorldPosition(V(0, 0, 0)) : V(8, 1.15, 1.2), 0.6);
+    G.lookAt(look > 0.5 ? V(8, 1.2, 1.4) : (tl > 1.66 ? CUP_G : herCup77(tl)).clone().add(V(0, 0.05, 0)), 0.6);
+    R.lookAt(look > 0.5 ? V(8, 1.25, 1.0) : (tl > 1.66 ? CUP_G : herCup77(tl)).clone().add(V(0, 0.08, 0)), 0.55);
     G.breathe(T); R.breathe(T + 0.7);
-    steamUpdate(T, smoothstep(1.89, 2.5, tl), smoothstep(1.18, 1.8, tl), 1.5);
+    steamUpdate(T, smoothstep(1.92, 2.5, tl), smoothstep(1.2, 1.8, tl), 1.5);
     const re = R.eye(V(0, 0, 0));
-    const cp = V(1.95, +(q.get("c77y") || 1.38), 2.15).lerp(re, 0.03 * ramp(tl, 0, 2.92));   // (review) 1.56 lifted the cups but lost the dawn sky: kept low
-    aim(cp, re, 0.33, 0.40, 50);
-    fill.intensity = 1.2;
+    const cp = V(+(q.get('c77x') || 2.62), +(q.get('c77y') || 1.38), +(q.get('c77z') || 1.83)).lerp(re, 0.03 * ramp(tl, 0, 2.92));   // (integration) from the room's south corner: the cups and the pour sit in clear air right of his shoulder
+    aim(cp, re, 0.33, 0.40, +(q.get('mm77') || 40));
+    // the window leads: lamp down to a warm accent, a cool 6500 K edge on both profiles from screen-right
+    lampKey.intensity = 1.0; lampUp.intensity = 0.05; shadeMat.emissiveIntensity = 0.2; lampGlow.set(0.1); fill.intensity = 0.5;
+    winLight.intensity *= +(q.get('wl77') || 1.7); kick.intensity = 0;
+    if (q.get('pts')) { const sp = thermos.localToWorld(V(0, 0.226, 0)); console.log('S077 spout', tl.toFixed(2), scr(sp), 'grip err', G.hands.R.sockets.grip.getWorldPosition(V(0, 0, 0)).distanceTo(gripW).toFixed(3), 'spout→cupR', sp.distanceTo(CUP_R.clone().add(V(0, 0.068, 0))).toFixed(3)); }
     dbgPts = { re, ge: G.eye(V(0, 0, 0)), cupR: CUP_R, cupG: CUP_G };
     return { dof: { focus: (dist(re) + dist(G.eye(V(0, 0, 0)))) / 2, fstop: 5.6 } };
   };
@@ -1296,7 +1414,7 @@ export default async function create(ctx) {
 
   // ---------------- S081: FINAL — the two cups on the sill, fresh steam, the brightening SE window, the pair reflected in
   // the darker pane (approved through-view + reflection layering); a ray of morning light enters the steam on the last chord
-  const S81 = { bear: +(q.get('b81') || 102), d: +(q.get('d81') || 1.06), h: +(q.get('h81') || 0.07), ex: +(q.get('e81') || 0.7) };
+  const S81 = { bear: +(q.get('b81') || 102), d: +(q.get('d81') || 1.06), h: +(q.get('h81') || 0.10), ex: +(q.get('e81') || 0.7), sx: +(q.get('sx81l') || 0.0) };
   setups.S081 = (tl, u, T) => {
     setTime(T); resetProps();
     winLight.castShadow = true; lampKey.castShadow = false;
@@ -1308,6 +1426,7 @@ export default async function create(ctx) {
     const mid = CUP_G.clone().lerp(CUP_R, 0.5).add(V(0, 0.036, 0));
     const bb = S81.bear * D2R, dir = V(Math.sin(bb), 0, -Math.cos(bb));
     const cp = mid.clone().addScaledVector(dir, -S81.d); cp.y += S81.h;
+    cp.add(V(dir.z, 0, -dir.x).multiplyScalar(S81.sx));                          // (integration) 4 cm to camera-left: the centre muntin goes behind his cup's steam
     aim(cp, mid, 0.51, 0.63, 75);
     putWorld(cupG, CUP_G, chipYawFor(CUP_G)); putWorld(cupR, CUP_R, 0.9);
     // reflection layer: the seated pair seen from the window side (mirrored in the glass shader) → the darker left pane
@@ -1324,7 +1443,7 @@ export default async function create(ctx) {
     for (const g of glassMeshes) g.visible = true;
     bgQuad.visible = true; lightPts.visible = true; [cupG.visible, cupR.visible, phone.visible] = vis;
     G.root.visible = R.root.visible = false;                  // the people are beside / behind the camera
-    glassUniforms.uRefK.value = +(q.get('rk81') || 0.2); glassUniforms.uRefRect.value.set(REF_RECT[0], REF_RECT[1], REF_RECT[2], REF_RECT[3]);
+    glassUniforms.uRefK.value = +(q.get('rk81') || 0.26); glassUniforms.uRefTint.value.set(0.55, 0.66, 0.9);   // (integration) cooler, darker head-and-shoulder silhouettes, not orange smudges glassUniforms.uRefRect.value.set(REF_RECT[0], REF_RECT[1], REF_RECT[2], REF_RECT[3]);
     mFrame.color.copy(FRAME_COL).multiplyScalar(0.5);                         // the muntins read dark against the morning (backlit)
     // daylight now leads: the lamp is still on but small; cool sky fill from the darker NE/E panes, 4300 K window key
     lampKey.intensity = 0.7; lampUp.intensity = 0.05; hemi.color.set('#9aaac4'); hemi.intensity = +(q.get('hm81') || 0.1); glassUniforms.uRefl.value = 0.15;
@@ -1390,6 +1509,7 @@ export default async function create(ctx) {
       renderExterior(T, shot.nested ? 0.5 : extK, !!shot.nested);
       if (OFF.has('noext')) bgMat.uniforms.tBg.value = null;
       if (OFF.has('nodof')) p.dof = null;
+      if (q.get('ray')) { const [sx, sy] = q.get('ray').split(',').map(Number); const rc = new THREE.Raycaster(); camera.updateMatrixWorld(true); rc.setFromCamera(new THREE.Vector2(sx * 2 - 1, 1 - sy * 2), camera); const hits = rc.intersectObjects(scene.children, true).filter((h) => h.object.visible && h.object.isMesh).slice(0, 3); console.log('RAY', hits.map((h) => `${h.object.name || h.object.type}/${h.object.material && (h.object.material.name || h.object.material.type)} d=${h.distance.toFixed(2)} p=${h.point.toArray().map((v) => v.toFixed(2)).join(',')}`).join(' | ')); }
       if (q.get('pts') && dbgPts) { const o = {}; for (const [k, v] of Object.entries(dbgPts)) o[k] = scr(v); console.log('PTS', shot.id, tl.toFixed(2), JSON.stringify(o), 'cam', camera.position.toArray().map((x) => +x.toFixed(3)).join(',')); }
       return p;
     },

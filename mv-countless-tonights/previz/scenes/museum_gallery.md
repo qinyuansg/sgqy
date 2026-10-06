@@ -365,3 +365,60 @@ S002 470:484 new 1.14 / old 1.08 s, S024 new 1.77 / old 1.77 s, S026 new 1.53 / 
 
 Six consecutive frames of S002 (476–481), S024 (2116–2121) and S026 (2276–2281), taken from the perf clips (`consec/`), show no
 flicker. The dolly, the lantern swing and the glove approach are all continuous.
+
+## Integration fixes (whole-film QA, `qa/findings_by_module.json`; survey `out/fix_museum_gallery/r2`, before = `r0`)
+
+Pass started by a colleague (commit a7b2a26: dust film, moon 12°, pilasters, night bounce, S003 seam, glints) and finished here.
+Global rules applied: engine grain only (no module grain quads; CT_MODERN 0.035 in the base post, CT_FUTURE 0.030 in
+`futurePost`); faces lit low-key; night readable; dissolves re-checked against the engine's centred/end alignment (S070 'end',
+S078/S079 centred — S070 holds its macro frame 0 through the S069 dissolve).
+
+### New shared tools in the module
+* `smoothShell(mesh, iters)` — Taubin smoothing of a private copy of a skinned shell (the lib caches hand geometry; restPos/restNrm
+  stay the originals so cloth detail does not swim). Used on the close-up glove: the wrinkle rings round every finger joint read as
+  a jointed mannequin under the pin spot.
+* `nestedVia(key, view, …, fn)` — draws another module's named view through our own lens, posed relative to theirs (their
+  setShot, staging and lights run unchanged; only the final draw into our RT is intercepted — the corridor's technique). S026
+  (old_home `view_home_hand` from above the table) and S024 G3c (pier `view_pier` 0.2 m lower).
+* Pane overlay: `uEra2Tint` (tint + desaturation of the screen-space era layer), `uMirPR` (point-mirrored, radially masked
+  reflection about a screen point — the fingertip meeting its reflection), `uEra2BLow` (a soft under-layer under the low-role era
+  layer), `uEraFX` (fade of the era plate's right part).
+* `chinSpot` (narrow warm spot: the hooded lamp's spill on chin and lips only), `eraPass2(hide)` (half-res second era pass).
+* Bug fixed on the way: two inline comments had swallowed code (S030's lamp target, the interlude's moon-edge target) — the lamp
+  pointed at the world origin.
+
+### Findings → what changed
+| finding | fix |
+|---|---|
+| S001 blocker (hook does not read) | dust film lit along the top, a ≈15 %-high clean band on the arc (0.80, 0.50) → (0.47, 0.41) from 1.23 s; two-finger wipe pose (index + middle pads on the glass, ring/little curled, hand 35° off the pane) held to 4.5 s, then laid flat on the glass (nearly straight fingers — no knuckle creases); slimmer glove, smoothed shell, fine knit + fibre speckle, cotton sheen, side rake from the upper left; her fingertip meets its own (point-mirrored) reflection at the contact; 7 faceted salt crystals glint in the band from 2.75 s; far hood edges hidden |
+| S001 dead stretch 4.5–10.5 s | his hand rises from below frame at 6.6 s a hand's width RIGHT of hers, through the wiped band (readable ≈ 8.5 s), then searches left into near-coincidence while advancing 26 → 2 cm, stops one finger short at 11.0 s; the rack follows him but caps at 8 cm (her glove ≤ ≈ 5 px CoC); salt now on his palm (a salt floor in this instance's skin shader) + crystals on his margins; weathered sepia tint, moon rim, warmer ship lamp |
+| S002 readability | sea plate blur capped (lens 'stopped down' for the reflection): lantern on its bracket, swell texture, fine moon glitter (highlight compression 2.6); the far torch re-staged off frame right sweeping across the far gallery (no hard wedge, no end-on disc); the doorway moon shafts in the gallery air during the pull-back |
+| S002 → S003 hidden cut | S003 frame 0 uses S002's end plate, blur cap and mirror camera (colleague) — re-checked: no jump; S003's moon road no longer flares into a white patch (compression → 5, right-part fade) |
+| S024 blocker | (colleague: lit room, pilasters, pools, eased end on G3c) + cabin plate 0.12 m lower (head inside the pane), G3c drawn through a lower lens (she reads seated, crate under the case), north-wall bounce up, her reflection walks at x ≈ 0.40; black ≤ 26 % |
+| S023–S029 grade | `nightGallery()` everywhere in CH1B/interlude. Mean luma (r0 → r2/final): S023 8.6–12 % (kept), S024 7–12 % with ≤ 26 % of pixels below 4 % (was ≤ 36 %), S025 2.6–3 % → 5.1–6.0 % (glow bed, doorway reflections, shafts, exposure), S026 25–27 % → 9.0–9.2 % (S025 → S026 now +0.85 stop instead of +3), S028 10 % → 5.5–5.9 % (the guard's wall is now in shadow behind him, his rim reads), S029 4.5 % → ≈ 4 % (a dark foreground silhouette by design: lit lower face + rim-lit guard), S030 frame 0 2.8 % → 7 %, end 23 % → 29 % (the lamp swings in) |
+| S028/S029 guard | stop at 8.3 m from the lens (≈ 4.3 m beyond her, ~60 % of frame height); a real nod (≈ 15°, 0.35 s down with its bottom on 103.37, 0.25 s held, 0.45 s up) with the torch dipping; moon rim on head/shoulders; torch + cone appear only once his hand clears the column (t ≥ 0.2–0.45 s) at half intensity; S029 left hand stays behind his back |
+| S025/S029 faces | S025: low hemi with a warm teak ground colour (broad bounce, no eye band), the case lamp dies before her face, back rim from the SSW doorway, her reflection dim on the mount; S029: 3.0 m (head ≈ 38 %), warm spill only on lips/chin from the case side, the near cheek in shadow, moon edge on hair/brow |
+| S026 readability | the pane is in the shot (dust, diagonal moon sheen, reflected doorway arch), home plate ≈ 1.5 stops down, only the glove's fingertip in the lower-right corner, its reflection faint; old_home's hand seen from above the table (bangle on the wrist, hand along the chopsticks, face above frame); the action re-timed on the song through old_home's clock: settle 93.6–94.3, nudge 94.46–95.2, last nudge ending exactly on 95.95, frozen to the cut |
+| S030 shirt | the folded shirt is now pier_waiting's S031 construction part for part (stand collar band, neck opening, 对襟 placket with knot buttons and loops, shoulder seams, folded-back sleeve ridges, the hinged last third with the cut triangle), museum-faded with whitened fold lines; the lamp rakes from frame right at ≈ 15°; frame 6 % wider (handle at the bottom edge); the pass moved nearer and reclined (its edge with the photo corners at the right edge) |
+| S040 minor | focus breathes ≈ 0.5 s to ~80 % toward the pass around 134.6 (violet ring + four empty corners read), dust + moon sheen on the glass, the coat cuff enters from the bottom left |
+| S070/S071 future | CT_FUTURE: pale lime-wash walls, pale floor and ceiling, wall-case backs relined pale (emissive), not-yet-dawn sky in every future shot, contrast 0.85, lift 0.06, grain 0.030; S070 frame 0 a closer high macro (worn abrasion faces the lens, elongated, fuzzy, ~1 stop paler), cuff seated on the board, pull-back lands on 222.42, the hood's edges two thin bright lines; S071 the raised hand over a very soft pale body layer (no grey sleeve tube), the room a little lower so the reflection reads |
+| grain (multi-module findings) | nothing module-side to delete (this module never drew its own grain); future grain 0.025 → 0.030 |
+
+### Not done / kept
+* S030 → S031 and S039 → S040 depend on pier_waiting's frames (edited in parallel); checked against its current r2 frames.
+* S026: the hand still comes from above the bowl (old_home's IK pose); our lens shows it along the chopsticks with the bangle.
+* S024 → S025: the dolly ends on G3c and S025 opens at G3b (she walks back) — the shot list's transition note ("横移停在 G3b")
+  should be updated by the shot-list owner (not this module).
+* S002: her reflection stays a faint, soft silhouette at the top right (it never reads as a triangle any more, but it is subtle).
+
+### Performance (1280 × 536, `out/fix_museum_gallery/q.mjs`, steady-state frames; the machine ran 3–4 other fixers' renders, load 9–12 on 4 cores)
+Interleaved A/B against the pre-integration module (de99e29, served through the same harness, `abOld.log` / `abNew.log`), same load:
+S001 2.47 → 3.08 s (+ her glove's reflection mirror pass and the salt shader), S024 4.55 → 2.65 s, S025 3.15 → 2.34 s, S026 4.35 → 3.12 s
+(the old/new differences other than S001 are load noise). Final module alone (`perf.log`): S001 1.94, S002 2.40, S024 ≈ 2.7–6.0 (very
+noisy under load 12), S025 2.3–4.4, S026 3.1–3.4, S028 2.56, S029 2.87, S030 2.38, S040 3.15, S070 2.48, S071 1.98, S078 1.56 s/frame.
+The review pass measured the same shots at 1.1–2.3 s under load 3–7; the A/B ratios say this pass adds ≈ +0.2 s idle to S001 only.
+
+Sync frames checked (`out/fix_museum_gallery/perf/`, `sync_a.jpg`, `sync_b.jpg`): S001 1.23 touch · 3.0 salt · 4.5 stop · 6.6 rack ·
+8.5 his hand in the band · 11.0 one finger short; S002 15.14 coincidence · 15.56 tremor · 17.49 recede · 19.5 torch; S003 22.9 sea
+gone; S023 86.06 into the pool; S024 86.9 / 88.28 / 89.36 centred; S026 94.46 nudge · 95.95 frozen; S028 102.17 enters · 103.37 nod
+bottom; S029 104.99 / 105.3 / 106.9; S030 108.67 / 109.5; S040 134.6 focus breath; S070 221.4 / 222.42; S071 225.66 T01.

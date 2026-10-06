@@ -255,3 +255,34 @@ light-set switches were merged so S058 compiles twice instead of three times. At
 - `crane.mjs` — projects key points through the crane path without rendering.
 
 The contact sheet is `out/check/chapel/sheet.jpg`.
+
+## Integration fixes (2026-10-06, whole-film QA pass)
+
+Findings from `previz/qa/findings_by_module.json` (chapel + the shared grain finding). Renders:
+`out/fix_night_window_chapel_harbor_eras/` (`s1/` survey with neighbours, `ch*/` iterations).
+
+- **Grain:** the module grain quad/probe and `grain: 0` are gone; engine integer-hash grain at CT_CHAPEL 0.038 (base post;
+  no per-shot overrides). Nested `view_chapel` gets none (engine).
+- **S057 (major) — the diamond quarry reads:** the foreground panels are 30 % darker and desaturated (uInt 0.3 → 0.2 / 0.24 →
+  0.15, saturation 0.62 → 0.42); the clear quarry is enlarged 1.55× against its neighbours (the petals read half as large
+  around it) and outlined by a thin flickering candle glint on its lead cames; inside, the restorer's mirrored face is
+  moon-silver (cool tint against the warm chapel), fading in from 180.94 to 182.4 (opacity 0.42); the plate moved to 3.2 m
+  (was 2.95) and f/3.5 so its blur is ≈ 2–3 px while her profile stays sharp. The quarry stays registered at (0.70, 0.45).
+- **S069 (major) — rebuilt:** 75 mm, three-quarter from behind-left at seated eye height (1.12 m), ~10 % push; she is already
+  lowering into the seat at f0 (the downward motion from S068's sweet), seated on '数' (218.52); the shot ends on the two
+  touching sleeves filling the lower centre at the (0.42, 0.62) register (A frame of the 12-frame S070 dissolve, which now
+  completes ON the cut: align 'end'); cool clerestory top light on shoulders and sleeves (blue key 1.1), the votive wall
+  flagged down ~1.3 stops (it pulled the eye), mean ≈ 43/255 (17 %). *Not visible from this angle:* his hands loosening on
+  the cap (behind his body).
+- **S058 → S059 (major, chapel side):** the blue hour lifts her shoulders into the T19 cut (blue key ×2.4 over the last 0.7 s,
+  exposure 1.55 at the end): S058's last frame 16.9/255 = S059's first frame 16.9 (was 9 → 40).
+- **MOTHER's costume (minor):** dove-grey (`#9C9EA2`, a faint cool cast) instead of near-white, collar band matched, the
+  centre-front buttons (which read as a shirt placket) hidden; the petals now read as coloured light on grey cloth.
+  *Still weak:* the library qipao's short sleeves and the side-on collar remain blouse-like in the S057 profile.
+- **S055 (minor):** the upper louvres' slats are low-contrast (the black/white stripes at the left edge mid-crane read as an
+  artefact). *Not done:* moving the crane path / starting the pan earlier — tried (heading/pitch keys 175.4–176.9), the
+  middle frames still look at the south wall from this path and S056's continuity depends on it; kept the reviewed move.
+
+### Timing (1280×536, 6 consecutive frames, mean after the first; load 8–10.5 on 4 cores)
+S055 1.29 (max 1.48) · S057 1.87 (2.10) · S058 2.9 (6.1 = the pre-existing shader compile at the night light-set switch,
+f4443) · S069 1.46 (1.58).

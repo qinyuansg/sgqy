@@ -384,3 +384,52 @@ typical target (one close hi figure + shadowed key + DOF, or the second glass pa
 - **Neighbours (not edited):** map_office's S048 end bar sits ≈ 0.65 (fine); no open issues found on the S011, S016 or
   S055 side of the cuts. Note for whoever reviews cut pairs: judge positions on single frames — `montage` tiles misled this
   review twice (apparent off-centre bowl in S016, apparent "jumping" glass in S054; both were fine on the frames).
+
+## Integration fixes (whole-film QA, 2026-10-06)
+
+Survey: `out/fix_restoration_lab_old_home_map_office/` (`shots/S012.jpg` …, `cuts/S011-S012.jpg` …); working renders in
+`out/fix_rl_oh_mo_wip/rl0`–`rl7`. Director for this group: BR1's turn ("she starts reading the person") must land — S050 the
+inward lift of her eyes, S052 the pressed jasmine reads as a flower, S054 a real rack toward her face/eye-line and the
+rainbow halo placed for the S055 light cut; S012→S013 exposure/colour jump fixed; faces not masks (S014 low-key profile).
+
+| finding | fix |
+|---|---|
+| **S054 blocker** — static high 3/4 wide, lit mask face, lollipop magnifier beside the face, jasmine invisible, no focus move, ring at (0.75, 0.69) | **Rebuilt.** 100 mm from her LEFT (east), near paper height, ≈ 1.9 m: an ECU of her bowed **lost profile** (face dark, keyed only from above/behind by the lowered lamp — it rakes the sheet and edges her hair, brow and nose line; no face fill, the sheet's warm up-bounce cut to 25 %), her eye-line down into the glass. The magnifier (≈ 28 % of frame height, lower centre) is lowered into place from above the frame on **170.82** and settles over the flower; the glass shows the **magnified pressed jasmine + the broken stroke** (what she reads; `magCam` from above the flower). **172.14 → 172.92** a real rack from the glass to her eye (f/2.2). **174.3** she tilts the glass 15° and a soft pastel ring (muted ruby / amber / cobalt, `haloRing`) lands at **(0.72, 0.30)** in the dark beyond her head and holds into the S055 cut (the lancet's brightest cluster upper right). Her right gloved fingertips hover above the sheet. |
+| **S052** — jasmine read as an orange-brown burn; crisp pseudo-hanzi on the front; rigid board flip; blue-grey glove | Jasmine card 3.4 → 4.2 cm, petals 0.8–0.9 opaque with lighter edges and a soft drop shadow under them (raking lamp) — it reads as a pressed flower at (0.58, 0.46); the front's brushwork is a **soft, half-contrast** copy for this shot (`letterTexSoft`, illegible); the sheet **bends** as it turns (`uCurl` ×3, > 20°); a warm 2800 K bounce aimed at the right glove keeps it warm-white. |
+| **S050** — she never lifts her eyes; plank arm to the ledger; letter out of frame | **160.92 → 161.6** the inward lift: the gaze rises ≈ 14° above her reading line and turns a little toward the window (frame right), held to the end, pencil frozen mid-air; the face stays in the low-key side light. The ledger lies beside her right hand (no 70 cm reach); the framing sits a little lower so the letter in the lamp pool reads at the bottom. |
+| **S049** — the aged handle read NEWER than S048's (smooth dowel); flat slab contents | The aged bar now carries **the same helical rattan wrap** as S048's new handle (36 turns round the bar), sweat-darkened, polished where the fingers sat, frayed strip ends and a broken binding — "the same object, decades later". Comb: boxwood #C9A36A; shirt grey-blue with stronger creases, a folded collar and one horn button. |
+| **S012→S013** grade jump (91 → 45 /255, warm → blue-grey) and a flare blob | S013 opens inside a warm raking pool (a second warm spot on the crack's first ≈ 0.6 s, fading as the move climbs into the lamp's own light; lamp 2.3 → 1.6, hemi 1.1 → 0.55): frame 0 is warm and within ≈ ⅓ stop of S012's end. Bloom threshold 1.25 / strength 0.22 and the shards' clearcoat roughness 0.08 → 0.32 for this shot (restored in `state()`), so the glaze highlight is a soft highlight, not a lens-flare blob or an 'eye' beside the crescent. |
+| **S014** — fully lit pink profile mask; arm tube across 70 % of the frame | The 3500 K lamp is **behind the shard toward frame right**: the porcelain and the loupe glow, the face is a dark lost profile with a warm edge; no face fill; the ledger sits close by her right side (the writing arm stays low); focus on the shard. |
+| **S011→S012** fingertip match loose (S012 glove ≈ 3× larger) | S012's frame 0 is on S011's scale (camera 1.32 m → eases in to the 0.84 m CU by 1.1 s, `ease.outCubic`), pinch at the frame centre on the same 30° diagonal from the upper right; shard C is held ≈ 3.5 cm off along the rim and lifted 12 mm so the join on **碎 57.2 s** reads, with a 2-frame settle. |
+| **S015→S016** plum band invisible on both sides | Both sides now **24°** from vertical from the 6 o'clock side (old_home C16.a matches); old_home S016 frame 0's rim bloom cut. |
+| **S050→S051** 3-stop flash on the cut | S051 opens with the lamp already 72 % lowered (contracted pool), finishing at 0.3 s. |
+
+**Not fixed / deviations**
+- S054: the QA keyframe (paper-level lens, jasmine in the bottom band AND the eye through the glass at 100 mm) is not a
+  physically consistent frame at this bench (the VFOV is 8.6° and the bench stands against the window wall); the rebuild keeps
+  every beat (glass in on 170.82, the flower read in the glass, the rack to her eye-line, the ring at (0.72, 0.30)) in a
+  lost-profile ECU instead. The magnified eye "mole below the left eye" is not modelled (faceless figure).
+- S012: the held piece is still rim shard C against the glued B+E half (the library shard layout); it now reads as a separate
+  piece being seated, but the half-bowl remains the larger shape.
+- S015/S016: the outer plum band is the library porcelain texture; at 24° it reads as a thin band on the near lip, not a bold one.
+- S051: the faded vermilion column rule in the macro patch is unchanged (minor).
+- S050: the ear (library head) still reads dark at 960 px.
+
+Debug: `?off=pts` prints the registered points (now also `ring`, `lens`).
+
+**Measured after the integration fixes** (1280×536, `out/check/map_office/mo_render.mjs`, 3 frames per shot at u ≈ 0.25/0.5/0.75, mean of the frames after each shot's first (shader compile), shared 4-core box, 1-min load ≈ 3–4):
+
+| shot | s/frame |
+|---|---|
+| S012 | 0.95 |
+| S013 | 0.93 |
+| S014 | 0.93 |
+| S015 | 0.81 |
+| S049 | 1.05 |
+| S050 | 0.83 |
+| S051 | 0.53 |
+| S052 | 0.71 |
+| S053 | 0.55 |
+| S054 | 0.75 |
+
+All within the 2.5 s cap.

@@ -34,7 +34,7 @@ const TY = 0.80;                                  // table top
 const MAPW = 90, MAPH = 70;                        // cm
 const mw = (mx, my, y = TY) => V(mx / 100 - MAPW / 200, y, my / 100 - MAPH / 200);   // map cm → world
 const LINE_W = 0.0020;                             // ruling-pen line width (m) — a bold ruling, reads at 16 px/cm
-const RULER = { w: 0.032, t: 0.006, brass: 0.0022 };
+const RULER = { w: 0.0125, t: 0.0045, brass: 0.0026 };   // integration: a slim 12.5 mm ebony rule (≈ 3.7 % of S021's frame height; the 32 mm one read as a redaction bar)
 const INK_GAP = 0.0020;                            // paper between the brass edge and the ink (blade thickness)
 
 // the coast (map cm): x of the coastline as a function of y — one spline + a small hand-drawn wobble
@@ -46,7 +46,35 @@ function coastX(my) {
   const t = clamp((my - p1[0]) / (p2[0] - p1[0]), 0, 1), t2 = t * t, t3 = t2 * t;
   const m1 = (p2[1] - p0[1]) / (p2[0] - p0[0]) * (p2[0] - p1[0]), m2 = (p3[1] - p1[1]) / (p3[0] - p1[0]) * (p2[0] - p1[0]);
   const x = (2 * t3 - 3 * t2 + 1) * p1[1] + (t3 - 2 * t2 + t) * m1 + (-2 * t3 + 3 * t2) * p2[1] + (t3 - t2) * m2;
-  return x + 0.16 * Math.sin(my * 1.7 + 0.4) + 0.1 * Math.sin(my * 4.1 + 1.3);
+  return x + 0.2 * Math.sin(my * 1.1 + 0.4) + 0.07 * Math.sin(my * 2.9 + 1.3);   // integration: gentler wobble (the old 4.1 cm⁻¹ term read as a hair)
+}
+// Integration pass: the coast TURNS. In S021's frame the shore runs horizontal at frame y ≈ 0.59 from the left edge to the
+// harbour-village mark (x 0.30), then turns south and crosses the ruler line at x 0.30 — the same shape as S022's real coast
+// (a low horizontal silhouette at y 0.58, x 0–0.48, the shore light at (0.30, 0.58)), and still "from the sea into the land".
+// The sea is the bay south of bayY(x) and west of coastX(y); everything else is land.
+const BAY_Y0 = 38.25;
+function bayY(mx) { return BAY_Y0 + 0.2 * Math.sin(mx * 0.8 + 0.7) + 0.08 * Math.sin(mx * 2.1 + 1.9) - 0.6 * smoothstep(20, 4, mx); }
+function landD(mx, my) {          // signed land distance (cm, > 0 = land): smooth max of the two shore constraints (rounded corner)
+  const a = mx - coastX(my), b = bayY(mx) - my, k = 2.4;
+  const h = clamp(0.5 + 0.5 * (a - b) / k, 0, 1);
+  return lerp(b, a, h) + k * h * (1 - h);
+}
+function coastAt(my) {           // x (map cm) where the shore crosses row my (sea → land)
+  let lo = coastX(my) - 9, hi = coastX(my) + 9;
+  for (let i = 0; i < 40; i++) { const m = (lo + hi) / 2; if (landD(m, my) > 0) hi = m; else lo = m; }
+  return (lo + hi) / 2;
+}
+function coastPolyline() {        // zero contour of landD, west → corner → south (sea on the left of travel)
+  const bis = (f, lo, hi) => { let flo = f(lo); for (let i = 0; i < 36; i++) { const m = (lo + hi) / 2, fm = f(m); if ((fm > 0) === (flo > 0)) { lo = m; flo = fm; } else hi = m; } return (lo + hi) / 2; };
+  const cx = coastX(BAY_Y0), cy = BAY_Y0, R = 3.0, pts = [];
+  for (let x = -1.5; x <= cx - R; x += 0.12) pts.push([x, bis((y) => landD(x, y), cy - 7, cy + 7)]);
+  const P0 = [cx - R, cy + R];
+  for (let k = 1; k < 40; k++) { const th = -Math.PI / 2 + (k / 40) * (Math.PI / 2), dx = Math.cos(th), dy = Math.sin(th);
+    const r = bis((r) => landD(P0[0] + dx * r, P0[1] + dy * r), 0, 10); pts.push([P0[0] + dx * r, P0[1] + dy * r]); }
+  for (let y = cy + R; y <= MAPH + 1.5; y += 0.12) pts.push([bis((x) => landD(x, y), cx - 9, cx + 15), y]);
+  // sea-side normals (tangent rotated +90°), smoothed so the waterlining offsets never cusp at the corner
+  const nrm = pts.map((p, i) => { const a = pts[Math.max(0, i - 3)], b = pts[Math.min(pts.length - 1, i + 3)], tx = b[0] - a[0], ty = b[1] - a[1], l = Math.hypot(tx, ty) || 1; return [-ty / l, tx / l]; });
+  return { pts, nrm };
 }
 // registration constants (map cm) used by both the map drawing and the cameras
 const S021 = { lineY: 40.36, markY: 37.68 };                 // line row (ruler edge) and harbour-village mark row
@@ -137,7 +165,7 @@ function mapDrawing() {
   const PEAKS = [[57, 21, 4.6, 95, 80], [46, 7, 3.4, 45, 40], [75, 35, 4.2, 130, 85], [67, 63, 3.3, 85, 50],
     [83, 11, 3.2, 60, 60], [86, 52, 3.0, 70, 90], [39, 24, 1.6, 22, 18], [44, 45, 1.5, 30, 14]];
   const H = (x, y) => {
-    const dist = x - coastX(y);
+    const dist = landD(x, y);                                    // integration: signed distance to the turning shore
     if (dist < 0) return 0;
     const plainW = 2.6 + 8.2 * Math.exp(-((y - 56.6) ** 2) / 20) + 1.6 * Math.exp(-((y - 37.7) ** 2) / 5);
     const rise = smoothstep(plainW, plainW + 9, dist);
@@ -161,9 +189,11 @@ function mapDrawing() {
     let x = vx0 + 0.5 + (3 - ri) * 0.35 + r() * 0.4;
     const n = 6 + ri;
     for (let k = 0; k < n; k++) {
-      const w = 0.62 + r() * 0.35, d = 0.48 + r() * 0.18, a = (r() - 0.5) * 0.12;
-      houses.push({ x, y: ry + (r() - 0.5) * (ri === 3 ? 0.06 : 0.18), w, d, a });
-      x += w + 0.22 + r() * 0.35 + (k === 2 ? 0.55 : 0);          // a lane
+      // integration: an organic fishing village (it read as a grid of boxes): varied sizes and angles, gaps, a lane; the lowest
+      // row stays on the line (the line cuts through it)
+      const w = 0.5 + r() * 0.55, d = 0.42 + r() * 0.3, a = (r() - 0.5) * (ri === 3 ? 0.22 : 0.6), skip = ri < 3 && r() < 0.22;
+      if (!skip) houses.push({ x, y: ry + (r() - 0.5) * (ri === 3 ? 0.08 : 0.55), w, d, a });
+      x += w + 0.15 + r() * 0.6 + (k === 2 ? 0.7 : 0);          // a lane
     }
   });
   for (const hs of houses) vill.push([hs.x - hs.w / 2, hs.y - hs.d / 2, hs.x + hs.w / 2, hs.y + hs.d / 2]);
@@ -197,7 +227,7 @@ function mapDrawing() {
     const L = 0.3 * (0.9 + 0.2 * rl) * (1.15 - 0.3 * smoothstep(0.5, 2.5, gm));   // straight pen dashes, shorter where steep
     const ux = -gx / gm, uy = -gy / gm;
     const mx = px + ux * L * 0.5, my = py + uy * L * 0.5, ex = px + ux * L, ey = py + uy * L;
-    if (ex - coastX(ey) < 1.2 || inVillage(ex, ey)) continue;
+    if (landD(ex, ey) < 1.2 || inVillage(ex, ey)) continue;
     const w = lerp(0.002, 0.026, Math.pow(tg, 1.3)) * (0.85 + 0.3 * rw), a = 0.55 + 0.4 * tg;
     hach.push([px, py, mx, my, ex, ey, w, a]);
   }
@@ -210,12 +240,15 @@ function mapDrawing() {
   { const pts = []; for (let y = 30; y <= 66; y += 0.5) pts.push([coastX(y) + 2.6 + 0.25 * Math.sin(y * 0.4), y]);
     ops.push({ k: 'line', pts, w: 0.018, c: INK, a: 0.55, dash: [0.45, 0.3], off: 0.09 }); ops.push({ k: 'line', pts, w: 0.018, c: INK, a: 0.55, dash: [0.45, 0.3], off: -0.09 }); }
   // ---- coastline + waterlining (sea otherwise blank)
-  { const pts = []; for (let y = 1.0; y <= MAPH - 1.0; y += 0.12) pts.push([coastX(y), y]);
-    ops.push({ k: 'line', pts, w: 0.12, c: INK2, a: 1.0 });
-    [[0.16, 0.62, 0.022], [0.34, 0.48, 0.019], [0.56, 0.36, 0.016], [0.84, 0.25, 0.014], [1.2, 0.15, 0.012]].forEach(([o, a, w]) => ops.push({ k: 'line', pts: pts.map(([x, y]) => [x - o - 0.03 * Math.sin(y * 0.9 + o * 9), y]), w, c: INK, a }));
+  { const { pts, nrm } = coastPolyline();
+    // integration: the sea is washed grey-blue (deeper along the shore, as on a hand-tinted survey sheet), the land stays warm
+    // paper; the coastline is a firm sepia line (no longer a black hair), waterlining follows the turning shore
+    ops.unshift({ k: 'sea', pts, c: '104,124,140' });
+    ops.push({ k: 'line', pts, w: 0.15, c: '74,52,36', a: 0.92 });
+    [[0.16, 0.6, 0.022], [0.34, 0.46, 0.019], [0.56, 0.34, 0.016], [0.84, 0.24, 0.014], [1.2, 0.15, 0.012]].forEach(([o, a, w]) =>
+      ops.push({ k: 'line', pts: pts.map(([x, y], i) => { const q = o + 0.03 * Math.sin((x + y) * 0.9 + o * 9); return [x + nrm[i][0] * q, y + nrm[i][1] * q]; }), w, c: '70,84,96', a }));
     // beach stipple in front of both villages
     for (let k = 0; k < 1100; k++) { const y = 52.6 + r() * 7.6, x = coastX(y) + 0.15 + Math.pow(r(), 1.4) * 1.9; ops.push({ k: 'dot', x, y, rad: 0.018 + r() * 0.012, c: INK, a: 0.55 }); }
-    for (let k = 0; k < 160; k++) { const y = S021.markY - 1.0 + r() * 2.0, x = coastX(y) + 0.1 + Math.pow(r(), 1.4) * 0.8; ops.push({ k: 'dot', x, y, rad: 0.016, c: INK, a: 0.5 }); }
   }
   // ---- houses (outline + diagonal hatch)
   ops.push({ k: 'houses', list: houses, c: INK2 });
@@ -224,11 +257,12 @@ function mapDrawing() {
   for (let k = 0; k < 6; k++) { const y = 53.6 + k * 1.0 + (r() - 0.5) * 0.3; boats.push({ x: coastX(y) + 0.75 + r() * 0.5, y, L: 0.95 + r() * 0.25, a: (r() - 0.5) * 0.35 }); }
   ops.push({ k: 'boats', list: boats, c: INK2 });
   // ---- S021 mark: filled little blocks + jetty + a tiny ring (harbour light)
-  ops.push({ k: 'mark', x: hm.x, y: hm.y, list: markHouses, c: INK2 });
+  const ring = [-0.7, 0.72];       // integration: the harbour light sits just off the corner of the turning shore (frame ≈ (0.30, 0.60))
+  ops.push({ k: 'mark', x: hm.x, y: hm.y, list: markHouses, ring, c: INK2 });
   // ---- neatline
   ops.push({ k: 'rect', x0: 2.0, y0: 2.0, x1: MAPW - 2.0, y1: MAPH - 2.0, w: 0.11, c: INK2, a: 0.9 });
   ops.push({ k: 'rect', x0: 2.35, y0: 2.35, x1: MAPW - 2.35, y1: MAPH - 2.35, w: 0.025, c: INK2, a: 0.8 });
-  return { ops, houses, boats, hm, H };
+  return { ops, houses, boats, hm, ring, H };
 }
 
 // render the drawing into a 2D context: k px/cm, origin offset (ox, oy) cm
@@ -238,7 +272,15 @@ function drawOps(g, ops, k, ox = 0, oy = 0, clip = null) {
   g.lineCap = 'round'; g.lineJoin = 'round';
   const minW = 0.75;
   for (const o of ops) {
-    if (o.k === 'hach') {
+    if (o.k === 'sea') {                  // integration: grey-blue wash over the bay, deeper along the shore
+      const P = (pts) => { g.beginPath(); pts.forEach(([x, y], i) => (i ? g.lineTo(X(x), Y(y)) : g.moveTo(X(x), Y(y)))); };
+      g.save();
+      P(o.pts); g.lineTo(X(-3), Y(MAPH + 3)); g.lineTo(X(-3), Y(o.pts[0][1])); g.closePath();
+      g.fillStyle = `rgba(${o.c},0.30)`; g.fill(); g.clip();
+      g.lineCap = g.lineJoin = 'round';
+      for (const [w, a] of [[3.2, 0.06], [2.0, 0.07], [1.1, 0.08], [0.5, 0.09]]) { P(o.pts); g.strokeStyle = `rgba(${o.c},${a})`; g.lineWidth = w * 2 * k; g.stroke(); }
+      g.restore();
+    } else if (o.k === 'hach') {
       for (const [x0, y0, x1, y1, w, a] of o.list) {
         if (!inClip(x0, y0)) continue;
         g.strokeStyle = `rgba(${o.c},${a.toFixed(3)})`; g.lineWidth = Math.max(minW * 0.8, w * k);
@@ -246,13 +288,14 @@ function drawOps(g, ops, k, ox = 0, oy = 0, clip = null) {
       }
     } else if (o.k === 'hach2') {
       g.fillStyle = `rgb(${o.c})`;
-      const macro = k >= 80;                                                      // S047 patch: fewer, fainter dashes (no merged 'fur')
-      for (const [x0, y0, x1, y1, x2, y2, w, a] of o.list) {
+      const macro = k >= 80;                                                      // S047 patch: sparse printed strokes (no merged 'fur')
+      for (const [x0, y0, x1, y1, x2, y2, w0_, a] of o.list) {
         if (!inClip(x0, y0)) continue;
-        if (macro) { const hs = Math.sin(x0 * 12.9898 + y0 * 78.233) * 43758.5453; if (hs - Math.floor(hs) > 0.5) continue; }
+        if (macro) { const hs = Math.sin(x0 * 12.9898 + y0 * 78.233) * 43758.5453; if (hs - Math.floor(hs) > 0.3) continue; }
+        const w = macro ? Math.min(w0_, 0.02) * 0.9 + 0.006 : w0_;             // macro: ≈ 0.2 mm printed strokes
         const dx = x2 - x0, dy = y2 - y0, l = Math.hypot(dx, dy) || 1, nx = -dy / l, ny = dx / l;
         const w0 = w * 0.5, w1 = w * 0.42, w2 = w * 0.12;                         // tapered wedge, blunt uphill end
-        g.globalAlpha = macro ? a * 0.8 : a;
+        g.globalAlpha = macro ? a * 0.2 : a * 0.27;                              // integration: lighter relief, the line and coast read first
         g.beginPath();
         g.moveTo(X(x0 + nx * w0), Y(y0 + ny * w0)); g.lineTo(X(x1 + nx * w1), Y(y1 + ny * w1)); g.lineTo(X(x2 + nx * w2), Y(y2 + ny * w2));
         g.lineTo(X(x2 - nx * w2), Y(y2 - ny * w2)); g.lineTo(X(x1 - nx * w1), Y(y1 - ny * w1)); g.lineTo(X(x0 - nx * w0), Y(y0 - ny * w0));
@@ -278,12 +321,11 @@ function drawOps(g, ops, k, ox = 0, oy = 0, clip = null) {
         if (!inClip(hs.x, hs.y)) continue;
         g.save(); g.translate(X(hs.x), Y(hs.y)); g.rotate(hs.a);
         const w = hs.w * k, d = hs.d * k;
+        // integration: a pitched roof in plan — the lee half filled dark, the lit half a light wash, a firm ridge and outline
+        g.fillStyle = `rgba(${o.c},0.22)`; g.fillRect(-w / 2, -d / 2, w, d / 2);
+        g.fillStyle = `rgba(${o.c},0.82)`; g.fillRect(-w / 2, 0, w, d / 2);
         g.strokeStyle = `rgba(${o.c},0.95)`; g.lineWidth = Math.max(minW, 0.03 * k); g.strokeRect(-w / 2, -d / 2, w, d);
-        g.save(); g.beginPath(); g.rect(-w / 2, -d / 2, w, d); g.clip();
-        g.lineWidth = Math.max(minW * 0.7, 0.012 * k); g.strokeStyle = `rgba(${o.c},0.7)`;
-        for (let s = -w; s < w + d; s += 0.11 * k) { g.beginPath(); g.moveTo(-w / 2 + s, -d / 2); g.lineTo(-w / 2 + s - d, d / 2); g.stroke(); }
-        g.restore();
-        g.lineWidth = Math.max(minW * 0.8, 0.018 * k); g.beginPath(); g.moveTo(-w / 2, 0); g.lineTo(w / 2, 0); g.stroke();   // ridge line
+        g.lineWidth = Math.max(minW * 0.8, 0.022 * k); g.beginPath(); g.moveTo(-w / 2, 0); g.lineTo(w / 2, 0); g.stroke();   // ridge line
         g.restore();
       }
     } else if (o.k === 'boats') {
@@ -298,12 +340,18 @@ function drawOps(g, ops, k, ox = 0, oy = 0, clip = null) {
       }
     } else if (o.k === 'mark') {
       if (!inClip(o.x, o.y, 2)) continue;
-      g.fillStyle = `rgba(${o.c},0.95)`;
-      for (const [dx, dy] of o.list) g.fillRect(X(o.x + dx) - 0.17 * k, Y(o.y + dy) - 0.14 * k, 0.34 * k, 0.28 * k);
-      g.strokeStyle = `rgba(${o.c},0.95)`; g.lineWidth = Math.max(minW, 0.07 * k);
-      g.beginPath(); g.moveTo(X(o.x - 0.2), Y(o.y + 0.25)); g.lineTo(X(o.x - 1.25), Y(o.y + 0.35)); g.stroke();      // jetty
-      g.beginPath(); g.moveTo(X(o.x - 1.25), Y(o.y + 0.35)); g.lineTo(X(o.x - 1.3), Y(o.y + 0.75)); g.stroke();
-      g.lineWidth = Math.max(minW, 0.03 * k); g.beginPath(); g.arc(X(o.x - 1.3), Y(o.y + 0.9), 0.14 * k, 0, 6.283); g.stroke();   // harbour light
+      // integration: a village that reads at S021's distance — pitched-roof blocks, a jetty and a firm harbour-light ring + dot
+      for (const [dx, dy] of o.list) {
+        const x = X(o.x + dx * 1.25), y = Y(o.y + dy * 1.25), w = 0.42 * k, d = 0.32 * k;
+        g.fillStyle = `rgba(${o.c},0.35)`; g.fillRect(x - w / 2, y - d / 2, w, d / 2);
+        g.fillStyle = `rgba(${o.c},0.95)`; g.fillRect(x - w / 2, y, w, d / 2);
+        g.strokeStyle = `rgba(${o.c},0.95)`; g.lineWidth = Math.max(minW, 0.035 * k); g.strokeRect(x - w / 2, y - d / 2, w, d);
+      }
+      g.strokeStyle = `rgba(${o.c},0.95)`; g.lineWidth = Math.max(minW, 0.08 * k);
+      const [rx, ry] = o.ring;
+      g.beginPath(); g.moveTo(X(o.x - 0.05), Y(o.y + 0.3)); g.lineTo(X(o.x + rx * 0.72), Y(o.y + ry * 0.66)); g.stroke();      // jetty into the bay
+      g.lineWidth = Math.max(minW, 0.06 * k); g.beginPath(); g.arc(X(o.x + rx), Y(o.y + ry), 0.3 * k, 0, 6.283); g.stroke();   // harbour light: ring + dot
+      g.fillStyle = `rgba(${o.c},0.95)`; g.beginPath(); g.arc(X(o.x + rx), Y(o.y + ry), 0.11 * k, 0, 6.283); g.fill();
     } else if (o.k === 'rect') {
       g.strokeStyle = `rgba(${o.c},${o.a})`; g.lineWidth = Math.max(minW, o.w * k);
       g.strokeRect(X(o.x0), Y(o.y0), (o.x1 - o.x0) * k, (o.y1 - o.y0) * k);
@@ -327,7 +375,7 @@ function paperBase(g, W, H, k, ox, oy, seed, fibreCanvas = null) {
   g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
   g.drawImage(lc, 0, 0, lw * 8, lh * 8);
   if (fibreCanvas) {     // macro: visible fibres in the colour too
-    g.save(); g.globalCompositeOperation = 'overlay'; g.globalAlpha = 0.45;
+    g.save(); g.globalCompositeOperation = 'overlay'; g.globalAlpha = 0.22;
     const tw = 6.4 * k; for (let y = -((oy * k) % tw); y < H; y += tw) for (let x = -((ox * k) % tw); x < W; x += tw) g.drawImage(fibreCanvas, x, y, tw, tw);
     g.restore();
   }
@@ -343,20 +391,9 @@ export default async function create(ctx) {
   const envDesk = envTexture(ctx.renderer, 'candle_interior', { warmth: 1.3 });
   const envGate = envTexture(ctx.renderer, 'moon_exterior', {});
 
-  // ---- film grain in-scene (engine grain hash degenerates at frame numbers > ~1500, lib/ISSUES.md [sea_deck])
-  const grainMat = new THREE.ShaderMaterial({
-    uniforms: { uSeed: { value: 0 }, uAmt: { value: 0.15 } },
-    vertexShader: /* glsl */ `void main(){ gl_Position = vec4(position.xy, 0.0, 1.0); }`,
-    fragmentShader: /* glsl */ `uniform float uSeed, uAmt;
-      uint hh(uint x){ x ^= x >> 16; x *= 0x7feb352du; x ^= x >> 15; x *= 0x846ca68bu; x ^= x >> 16; return x; }
-      void main(){ uvec2 p = uvec2(gl_FragCoord.xy); uint h1 = hh(p.x + hh(p.y + hh(uint(uSeed) + 7u))); uint h2 = hh(h1 ^ 0x9e3779b9u);
-        float g = float(h1 & 0xffffu) / 65535.0 + float(h2 & 0xffffu) / 65535.0 - 1.0;
-        gl_FragColor = vec4(vec3(g * uAmt), 1.0); }`,
-    transparent: true, depthTest: false, depthWrite: false, fog: false,
-    blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.DstColorFactor, blendDst: THREE.OneFactor,
-  });
-  const grainQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), grainMat); grainQuad.frustumCulled = false; grainQuad.renderOrder = 1e9; scene.add(grainQuad);
-  const setGrain = (T, amt) => { grainMat.uniforms.uSeed.value = Math.round(T * 24) % 977; grainMat.uniforms.uAmt.value = amt; };
+  // Integration pass: film grain comes from the engine only (integer-hash grain, engine/post.js). The old in-scene grain quad
+  // is gone; the per-era amount is returned through post (map office 0.040, migrant threshold 0.044).
+  const GRAIN_MAP = 0.040, GRAIN_MIG = 0.044;
 
   // ================================================================ DESK SET
   const desk = new THREE.Group(); desk.name = 'desk'; scene.add(desk);
@@ -369,7 +406,7 @@ export default async function create(ctx) {
   const mapTex = ctex(mapCanvas);
   if (new URLSearchParams(location.search).has('mdump')) window.__MO = { mapCanvas, get patchCanvas() { return patchCanvas; } };
   const fibN = fib.normal.clone(); fibN.repeat.set(MAPW / 6.4, MAPH / 6.4); fibN.needsUpdate = true;
-  const mapM = new THREE.MeshStandardMaterial({ map: mapTex, normalMap: fibN, normalScale: new THREE.Vector2(0.35, 0.35), roughness: 0.82, metalness: 0 });
+  const mapM = new THREE.MeshStandardMaterial({ map: mapTex, normalMap: fibN, normalScale: new THREE.Vector2(0.15, 0.15), roughness: 0.82, metalness: 0 });
   const mapMesh = new THREE.Mesh(new THREE.PlaneGeometry(MAPW / 100, MAPH / 100), mapM);
   mapMesh.rotation.x = -Math.PI / 2; mapMesh.position.set(0, TY + 0.0006, 0); mapMesh.receiveShadow = true; desk.add(mapMesh);
   // linen backing edge (2 mm proud of the paper, visible only at the map edge)
@@ -382,7 +419,7 @@ export default async function create(ctx) {
   const patchTex = ctex(patchCanvas);
   const fibN2 = fib.normal.clone(); fibN2.repeat.set(PATCH.w / 6.4, PATCH.h / 6.4); fibN2.needsUpdate = true;
   const patchMesh = new THREE.Mesh(new THREE.PlaneGeometry(PATCH.w / 100, PATCH.h / 100),
-    new THREE.MeshStandardMaterial({ map: patchTex, normalMap: fibN2, normalScale: new THREE.Vector2(0.55, 0.55), roughness: 0.8, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+    new THREE.MeshStandardMaterial({ map: patchTex, normalMap: fibN2, normalScale: new THREE.Vector2(0.1, 0.1), roughness: 0.8, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));   // integration: fibre relief low (it read as fur)
   patchMesh.rotation.x = -Math.PI / 2; patchMesh.position.copy(mw(PATCH.x0 + PATCH.w / 2, PATCH.y0 + PATCH.h / 2, TY + 0.0007)); patchMesh.receiveShadow = true; desk.add(patchMesh);
   // ---- teak drafting table
   const teak = TX.mat('teak', { repeat: [1.6, 1], tex: { seed: 41, planks: 4 }, color: hex('#8a6a55') });
@@ -394,13 +431,14 @@ export default async function create(ctx) {
   {
     // review: the ruler read as a dead black slab. Ebony keeps its near-black (#1E1A17) but with a visible figure — dark
     // brown streaks and fine pores — so the louvre stripes and the lamp read across it; the brass edges are flush with the top.
-    const ebonyT = (() => { const W = 2048, Hh = 96, c = canvas(W, Hh), g = c.getContext('2d'), rr = rng(77); g.fillStyle = '#4a3e35'; g.fillRect(0, 0, W, Hh);
+    const ebonyT = (() => { const W = 2048, Hh = 96, c = canvas(W, Hh), g = c.getContext('2d'), rr = rng(77); g.fillStyle = '#76604e'; g.fillRect(0, 0, W, Hh);
       for (let k = 0; k < 220; k++) { g.strokeStyle = `rgba(${rr() < 0.55 ? '74,58,46' : '6,5,4'},${0.18 + rr() * 0.35})`; g.lineWidth = 0.6 + rr() * 2.2; const y = rr() * Hh, ph = rr() * 6; g.beginPath(); g.moveTo(0, y); for (let x = 0; x <= W; x += 24) g.lineTo(x, y + 3.5 * Math.sin(x * 0.004 + ph) + 1.2 * Math.sin(x * 0.03 + k)); g.stroke(); }
       for (let k = 0; k < 2600; k++) { g.fillStyle = `rgba(4,3,2,${0.3 + rr() * 0.4})`; g.fillRect(rr() * W, rr() * Hh, 2 + rr() * 6, 0.8); }
       return ctex(c); })();
-    const ebony = new THREE.MeshStandardMaterial({ map: ebonyT, color: hex('#ffffff'), roughness: 0.34, metalness: 0, envMap: envDesk, envMapIntensity: 0.9 });
-    const brassM = new THREE.MeshStandardMaterial({ color: hex('#d9b06a'), roughness: 0.36, metalness: 0.45, envMap: envDesk, envMapIntensity: 1.5 });
-    const bevelM = new THREE.MeshStandardMaterial({ color: hex('#f3d9a2'), roughness: 0.34, metalness: 0.6, envMap: envDesk, envMapIntensity: 2.0 });
+    const ebony = new THREE.MeshStandardMaterial({ map: ebonyT, color: hex('#ffffff'), roughness: 0.28, metalness: 0, envMap: envDesk, envMapIntensity: 1.3 });
+    // integration: the brass edges are lit by the lamp (mostly diffuse brass, low metalness) so the drawing edge reads as a bright gold line
+    const brassM = new THREE.MeshStandardMaterial({ color: hex('#e8bf78'), roughness: 0.4, metalness: 0.25, envMap: envDesk, envMapIntensity: 1.2 });
+    const bevelM = new THREE.MeshStandardMaterial({ color: hex('#f6dcaa'), roughness: 0.32, metalness: 0.35, envMap: envDesk, envMapIntensity: 1.6 });
     const body = new THREE.Mesh(new THREE.BoxGeometry(RL, RULER.t, RULER.w - 2 * RULER.brass), ebony); body.position.set(0, RULER.t / 2, 0); body.castShadow = body.receiveShadow = true; ruler.add(body);
     for (const s of [-1, 1]) {
       const e = new THREE.Mesh(new THREE.BoxGeometry(RL, RULER.t * 1.0, RULER.brass), brassM);
@@ -424,8 +462,10 @@ export default async function create(ctx) {
     const bottle = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.032, 0.05, 24), glassM); bottle.position.set(0.56, TY + 0.025, 0.20); desk.add(bottle);
     const inkIn = new THREE.Mesh(new THREE.CylinderGeometry(0.027, 0.029, 0.035, 24), new THREE.MeshStandardMaterial({ color: 0x0b0d14, roughness: 0.1 })); inkIn.position.set(0.56, TY + 0.018, 0.20); desk.add(inkIn);
   }
-  const LAMP = V(+(QS0.get('mlx') || 0.62), TY + 0.27, -0.28);           // flame (kerosene lamp on the desk at frame right, beyond the map's right edge: low and raking —
-                                                    // it models the hands' lamp-side flanks but stays dim on the flat paper, so the louvre stripes key the frame)
+  // integration: the kerosene lamp is the KEY again (director: the map, the ruler and the wet line read first). It stands on the
+  // desk at frame right beyond the map edge, flame ≈ 40 cm up, so it rakes the paper warm but evenly (decay 1, aimed left of
+  // centre so the penumbra evens out the near side); the moon through the louvres is only a soft cool accent at upper right.
+  const LAMP = V(+(QS0.get('mlx') || 0.78), TY + 0.40, -0.30);
   {
     const brassL = TX.mat('brass', { tex: { tone: 'then', patina: 0.2, polish: 0.7 }, roughness: 1, metalness: 1, envMap: envDesk });
     const font = new THREE.Mesh(new THREE.LatheGeometry([V(0.0, 0), V(0.07, 0.0), V(0.075, 0.02), V(0.05, 0.08), V(0.06, 0.13), V(0.055, 0.17), V(0.02, 0.19), V(0, 0.19)].map((p) => new THREE.Vector2(p.x, p.y)), 32), brassL);
@@ -465,7 +505,7 @@ export default async function create(ctx) {
       const c = uvOf(M), e = uvOf(M.clone().addScaledVector(side, span));
       let r = Math.hypot(e[0] - c[0], e[1] - c[1]);
       const blur = r * 0.5;                                                          // penumbra (2 cm flame × (1 − f) / f at the paper)
-      const dark = QS.has('mothdbg') ? 1 : 0.9 * clamp(0.55 + 1.2 * noise1(T * 0.7, 9 + m), 0.25, 1);
+      const dark = QS.has('mothdbg') ? 1 : 0.42 * clamp(0.55 + 1.2 * noise1(T * 0.7, 9 + m), 0.25, 1);   // integration: a faint passing shadow, not a stain
       mothG.save(); mothG.filter = `blur(${blur.toFixed(1)}px)`; mothG.translate(c[0], c[1]); mothG.rotate(head);
       mothG.fillStyle = `rgba(0,0,0,${dark.toFixed(3)})`;
       mothG.beginPath(); mothG.ellipse(-r * 0.45, 0, r * 0.55, r * 0.42, -0.3, 0, 6.283); mothG.ellipse(r * 0.45, 0, r * 0.55, r * 0.42, 0.3, 0, 6.283); mothG.fill();
@@ -476,30 +516,30 @@ export default async function create(ctx) {
   }
 
   // ---- lights (desk)
-  const lampL = new THREE.SpotLight(K2200, 2.0, 0, 0.95, 0.85, 2);
+  const lampL = new THREE.SpotLight(K2200, 2.0, 0, 0.95, 0.9, 1);
   lampL.position.copy(LAMP); lampL.target.position.set(0.0, TY, 0.02); lampL.map = mothTex;
   lampL.castShadow = true; lampL.shadow.mapSize.set(1024, 1024); lampL.shadow.camera.near = 0.05; lampL.shadow.camera.far = 2.5;
-  lampL.shadow.bias = -0.0002; lampL.shadow.normalBias = 0.002; lampL.shadow.radius = 3;
+  lampL.shadow.bias = -0.0002; lampL.shadow.normalBias = 0.0035; lampL.shadow.radius = 3;
   scene.add(lampL, lampL.target);
   // moon through vertical louvre boards: bar cookie, light travelling toward frame lower-left (−X, +Z), 38° elevation
   const louvre = (() => {
     const W = 1024, c = canvas(W, W), g = c.getContext('2d');
     g.fillStyle = '#000'; g.fillRect(0, 0, W, W);
-    const n = 36, per = W / n;                       // ≈ 4 cm stripe period on the desk (shot list: "about 4 cm apart")
-    g.filter = 'blur(2.5px)';                         // hard moon (bible §3.2 map office 10:1, hard): ≈ 4 mm penumbra
+    const n = 13, per = W / n;                       // integration: ≈ 8 cm pitch (≈ 10 across S021), penumbra ≈ ⅓ pitch
+    g.filter = 'blur(11px)';
     g.fillStyle = '#fff';
-    for (let k = 0; k < n; k++) g.fillRect(k * per + per * 0.29, -20, per * 0.42, W + 40);
+    for (let k = -1; k <= n; k++) g.fillRect(k * per + per * 0.28, -40, per * 0.44, W + 80);
     g.filter = 'none';
     const t = ctex(c, { srgb: true }); return t;
   })();
   const MOON_DIR = V(-0.70, -0.60, 0.40).normalize();
-  const moonL = new THREE.SpotLight(MOON, 1.0, 0, 0.09, +(QS0.get('mpen') || 0.8), 0);   // review: a soft-edged pool of stripes on the action, not a uniform field
+  const moonL = new THREE.SpotLight(MOON, 1.0, 0, 0.075, +(QS0.get('mpen') || 1.0), 0);   // integration: a soft accent pool at the frame's upper right
   moonL.map = louvre;
   moonL.castShadow = true; moonL.shadow.mapSize.set(1024, 1024); moonL.shadow.camera.near = 4.0; moonL.shadow.camera.far = 7.5;
   moonL.shadow.bias = -0.0002; moonL.shadow.normalBias = 0.002; moonL.shadow.radius = 2;
   scene.add(moonL, moonL.target);
   const aimMoon = (target, I) => { moonL.target.position.copy(target); moonL.position.copy(target).addScaledVector(MOON_DIR, -6); moonL.intensity = I; moonL.target.updateMatrixWorld(); };
-  const hemi = new THREE.HemisphereLight(hex('#56666a'), hex('#2a2a24'), +(QS0.get('mhemi') || 0.85)); scene.add(hemi);   // moonlit lime-wash walls: cold grey-green fill (CT_MAP)
+  const hemi = new THREE.HemisphereLight(hex('#5c6870'), hex('#2e2a24'), +(QS0.get('mhemi') || 0.55)); scene.add(hemi);   // moonlit lime-wash walls: cool grey fill (shadow side stays readable)
   const deskLights = [lampL, moonL];
 
   // ================================================================ INK LINES (procedural wet iron-gall strip)
@@ -508,17 +548,19 @@ export default async function create(ctx) {
     const halfW = width / 2, geoHalf = halfW * 2.2;
     const geo = new THREE.PlaneGeometry(len + 2 * geoHalf * (new URLSearchParams(location.search).has('inkdbg') ? 4 : 1), 2 * geoHalf * (new URLSearchParams(location.search).has('inkdbg') ? 4 : 1), 64, 1);
     const U = { uEnd: { value: 0 }, uLen: { value: len }, uHalfW: { value: halfW }, uGeo: { value: geoHalf }, uSeed: { value: seed * 0.137 }, uNoise: { value: noiseT },
-      uBleed: { value: 0.35 }, uNib: { value: 1 }, uBump: { value: 0.4 } };
+      uBleed: { value: 0.35 }, uNib: { value: 1 }, uBump: { value: 0.4 },
+      uWet: { value: 0 }, uWetLen: { value: 0.07 }, uGlintX: { value: -9 }, uGlintA: { value: 0 }, uGlintW: { value: 0.012 } };
     const INKDBG = new URLSearchParams(location.search).has('inkdbg');
     if (INKDBG) U.uHalfW.value *= 4, U.uGeo.value *= 4;
-    const m = new THREE.MeshStandardMaterial({ color: INKDBG ? hex('#ff0000') : hex(C.ink), emissive: INKDBG ? hex('#ff0000') : hex('#000000'), roughness: 0.26, metalness: 0, envMap: envDesk, envMapIntensity: 1.4, transparent: true, depthWrite: false,
+    const m = new THREE.MeshStandardMaterial({ color: INKDBG ? hex('#ff0000') : hex(C.ink), emissive: INKDBG ? hex('#ff0000') : hex('#000000'), roughness: 0.34, metalness: 0, envMap: envDesk, envMapIntensity: 0.8, transparent: true, depthWrite: false,
       polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 });
     m.onBeforeCompile = (sh) => {
       Object.assign(sh.uniforms, U);
       sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec2 vInk;').replace('#include <uv_vertex>', '#include <uv_vertex>\nvInk = uv;');
       sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
         varying vec2 vInk; uniform float uEnd, uLen, uHalfW, uGeo, uSeed, uBleed, uNib, uBump; uniform sampler2D uNoise;
-        float inkA; vec2 inkD;`)
+        uniform float uWet, uWetLen, uGlintX, uGlintA, uGlintW;
+        float inkA; vec2 inkD; float inkXm, inkS, inkEnd, inkN;`)
         .replace('#include <map_fragment>', `#include <map_fragment>
         {
           float xm = vInk.x * (uLen + 2.0 * uGeo) - uGeo;           // metres along the line (0 = start)
@@ -545,9 +587,21 @@ export default async function create(ctx) {
           // review: a shallow wet dome (it read as a glossy rod), irregular pooling instead of periodic beads
           float nD = texture2D(uNoise, vec2(xm * 160.0 + uSeed, 0.37)).a;
           float bead = 0.75 + 0.6 * nD + 1.4 * pool;
-          float dhdy = -2.0 * s * bead * 0.9;                                       // across (tangent-space y = frame up)
+          float dhdy = -2.0 * s * bead * 0.45;                                      // across (tangent-space y = frame up)
           float dhdx = 0.9 * (texture2D(uNoise, vec2(xm * 160.0 + uSeed + 0.004, 0.37)).a - nD) / 0.004 * 0.28 * (1.0 - s * s) - pool * 1.2 * sign(xm - endm) * (1.0 - s * s);
           inkD = vec2(uBump * 2.2 * dhdx, uBump * dhdy) * smoothstep(1.0, 0.7, r);   // shallow across, beads + pooled end along
+          inkXm = xm; inkS = s; inkEnd = endm; inkN = nD;
+        }`)
+        .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+        {
+          // integration: wet iron-gall sheen — a warm kerosene highlight strip on the lamp side of the dome, strongest at the
+          // nib and fading over ≈ 0.8 s of travel behind it, plus one travelling glint (uGlintX, metres along the line)
+          float behind = max(inkEnd - inkXm, 0.0);
+          float nLow = texture2D(uNoise, vec2(inkXm * 26.0 + uSeed, 0.71)).a;            // ≈ 4 cm wet-pool variation along the line (non-periodic)
+          float band = smoothstep(0.34, 0.02, abs(inkS - 0.32)) * (0.3 + 0.7 * smoothstep(0.42, 0.6, nLow));   // a wet sheen with irregular pooling, not a dotted rod highlight
+          float wet = uWet * (0.05 + 0.95 * exp(-behind / uWetLen));
+          float gl = uGlintA * exp(-pow((inkXm - uGlintX) / uGlintW, 2.0));
+          totalEmissiveRadiance += vec3(1.0, 0.76, 0.5) * (wet + gl) * band * 0.9;
         }`)
         .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
         {
@@ -555,7 +609,7 @@ export default async function create(ctx) {
           normal = normalize(normal - inkD.x * tX - inkD.y * tY);
         }`);
     };
-    m.customProgramCacheKey = () => 'inkStrip6';
+    m.customProgramCacheKey = () => 'inkStrip7';
     const mesh = new THREE.Mesh(geo, m); mesh.rotation.x = -Math.PI / 2; mesh.receiveShadow = true; mesh.renderOrder = 3;
     mesh.userData.U = U; mesh.userData.len = len; mesh.userData.geoHalf = geoHalf;
     return mesh;
@@ -563,11 +617,13 @@ export default async function create(ctx) {
   // a line from world (x0, z) of length len; set progress via setInk(mesh, xEnd)
   const inkLine = (x0, z, len, seed, width = LINE_W) => { const m = makeInk(len, seed, width); m.position.set(x0 + len / 2, TY + 0.00085, z); desk.add(m); m.userData.x0 = x0; return m; };
   const setInk = (m, xEnd, nib = 1) => { m.userData.U.uEnd.value = clamp((xEnd - m.userData.x0) / m.userData.len, 0, 1); m.userData.U.uNib.value = nib; };
+  const setGlint = (m, { wet = 1, wetLen = 0.07, glintX = -9, glint = 0, glintW = 0.012 } = {}) => { const U = m.userData.U;   // glintX: world x
+    U.uWet.value = wet; U.uWetLen.value = wetLen; U.uGlintX.value = glintX - m.userData.x0; U.uGlintA.value = glint; U.uGlintW.value = glintW; };
 
   // ================================================================ RULING PEN
   const pen = new THREE.Group(); pen.name = 'pen';        // origin = nib tip, +Y = toward the handle top, ±X = the two blades
   {
-    const steel = new THREE.MeshStandardMaterial({ color: 0xd2d6dc, metalness: 0.55, roughness: 0.3, envMap: envDesk, envMapIntensity: 1.6 });   // brushed: reads against the ebony from above
+    const steel = new THREE.MeshStandardMaterial({ color: 0xc4c8ce, metalness: 0.95, roughness: 0.25, envMap: envDesk, envMapIntensity: 1.5 });   // integration: polished steel (it read as a white plastic tube)
     const ebonyH = new THREE.MeshStandardMaterial({ color: 0x141110, roughness: 0.3, envMap: envDesk, envMapIntensity: 0.7 });
     const blade = (s) => {
       const sh = new THREE.Shape(); sh.moveTo(0, 0); sh.quadraticCurveTo(0.0032, 0.010, 0.0028, 0.022); sh.lineTo(0.0022, 0.034); sh.lineTo(-0.0022, 0.034); sh.lineTo(-0.0028, 0.022); sh.quadraticCurveTo(-0.0032, 0.010, 0, 0);
@@ -587,7 +643,7 @@ export default async function create(ctx) {
 
   // ================================================================ MAPHAND hands (close-up) + frock-coat sleeves
   const handR = await loadCharacterHand('MAPHAND', 'R', { lod: 'close' });
-  const handL = await loadCharacterHand('MAPHAND', 'L', { lod: 'close' });
+  const handL = await loadCharacterHand('MAPHAND', 'L', { lod: QS0.get('mhl') || 'macro' });   // integration: macro sculpt — the close LOD's nail trenches read as black marks at S044's end
   desk.add(handR.root, handL.root);
   const woolM = TX.mat('wool_coat', { repeat: [2, 2], color: hex('#3a3634') });
   function addSleeve(h, seed) {           // tapered, softly creased frock-coat sleeve continuing the hand's cuff stub up to the elbow
@@ -693,19 +749,21 @@ export default async function create(ctx) {
   };
   const PEN_PALM = V(-0.55, -0.8, 0.1);   // writing hand: palm faces the paper and the body's midline
   const PRESS = { wrist: [-0.30, 0], thumb: [-0.55, -0.3, -0.05, 0.02, 0.1], index: [0.0, 0.03, 0.01, 0.17], middle: [0.0, 0.03, 0.01, 0.02], ring: [0.0, 0.04, 0.02, -0.13], little: [0.02, 0.05, 0.03, -0.28] };
+  // S021 press below the ruler: fingers spread but the thumb kept near the index so no digit reaches the wet line
+  const PRESS21 = { wrist: [-0.28, 0], thumb: [-0.18, -0.12, -0.02, 0.02, 0.1], index: [0.0, 0.03, 0.01, 0.12], middle: [0.0, 0.03, 0.01, 0.02], ring: [0.0, 0.04, 0.02, -0.1], little: [0.02, 0.05, 0.03, -0.22] };
   const HOLD_RULER = { wrist: [-0.05, 0.05], thumb: [0.15, 0.1, 0.1, 0.12, 0.2], index: [0.28, 0.42, 0.22, 0.06], middle: [0.3, 0.46, 0.25, 0.0], ring: [0.36, 0.55, 0.3, -0.05], little: [0.45, 0.62, 0.33, -0.12] };
   const blendCh = (a, b, t) => { const o = {}; for (const k of Object.keys(a)) o[k] = a[k].map((x, i) => lerp(x, b[k][i], t)); return o; };
   // left hand: fingertips on the ruler (hold) → lift, travel over the wet line → spread and pressed flat on the map (press).
   // The move interpolates the PALM socket from where it sits in the hold placement to the press target (no reference jump).
   const HOLD_PALM = V(0.1, -1, 0.2), PRESS_PALM = V(0, -1, 0);
-  function leftHand(k, pHold, holdFingers, pPress, pressFingers, press = 0) {
+  function leftHand(k, pHold, holdFingers, pPress, pressFingers, press = 0, lift = 0.055, pressPose = PRESS) {
     handL.setChannels(HOLD_RULER);
     placeHand(handL, tipRefs('middle'), pHold, HOLD_PALM, holdFingers);
     if (k <= 0) return;
     const palm0 = handL.sockets.palm.getWorldPosition(V());
-    handL.setChannels(blendCh(HOLD_RULER, PRESS, smoothstep(0.05, 0.85, k)));
+    handL.setChannels(blendCh(HOLD_RULER, pressPose, smoothstep(0.05, 0.85, k)));
     const e = ease.inOutCubic(k);
-    const p = palm0.clone().lerp(pPress, e); p.y += Math.sin(Math.PI * k) * 0.055 - press;
+    const p = palm0.clone().lerp(pPress, e); p.y += Math.sin(Math.PI * k) * lift - press;
     placeHand(handL, palmRefs, p, HOLD_PALM.clone().lerp(PRESS_PALM, e), holdFingers.clone().lerp(pressFingers, e));
   }
 
@@ -845,18 +903,20 @@ export default async function create(ctx) {
   const dbg = (...a) => { if (DBG) console.warn('[map_office]', ...a); };
 
   // ---- lamp & moon levels (shared by the desk shots)
-  function deskLight(T, { lamp = 1, moon = 1, aim = V(0, TY, 0), moths = true } = {}) {
+  // integration: lamp = key (aimed left of the frame centre so its penumbra evens out the near side); moon = a soft cool pool of
+  // wide louvre bands parked at the frame's upper right (≤ 1.6:1 over the lamp in S021, ≤ 1.3:1 in S044/S047)
+  function deskLight(T, { lamp = 1, moon = 1, aim = V(0, TY, 0), fw = 0.8, moonAt = [0.46, -0.36], moths = true } = {}) {
     const fl = flicker(T, 3);
-    lampL.intensity = +(QS.get('mlamp') || 0.15) * lamp * (0.985 + 0.015 * (fl - 0.92) / 0.1);   // kerosene: steady (no candle flicker), a breath of life
-    lampL.target.position.copy(aim); lampL.target.updateMatrixWorld();
-    aimMoon(aim, 2.5 * moon);
+    lampL.intensity = +(QS.get('mlamp') || 2.4) * lamp * (0.985 + 0.015 * (fl - 0.92) / 0.1);   // kerosene: steady (no candle flicker), a breath of life
+    lampL.target.position.copy(aim).add(V(-0.45 * fw, 0, 0.06 * fw)); lampL.target.updateMatrixWorld();
+    aimMoon(aim.clone().add(V(moonAt[0] * fw, 0, moonAt[1] * fw / 2.39)), +(QS.get('mmoon') || 1.0) * moon);
     flyMoths(T, moths && !OFF.has('moth'));
   }
-  const EXP_MAP = +(QS0.get('mexp') || 1.7);
+  const EXP_MAP = +(QS0.get('mexp') || 1.0);
   const mapPost = (o = {}) => ({
-    exposure: EXP_MAP, contrast: 1.26, saturation: +(QS0.get('msat') || 0.7), temp: +(QS0.get('mtemp') || -0.2), tint: -0.03,
-    shadowTint: QS0.has('mst') ? QS0.get('mst').split(',').map(Number) : [0.44, 0.5, 0.5], highTint: [0.55, 0.52, 0.48], lift: [0.004, 0.007, 0.008],
-    vignette: 0.42, grain: 0, aberration: 0.4, bloom: { strength: 0.22, radius: 0.5, threshold: 0.9 }, ...o,
+    exposure: EXP_MAP, contrast: 1.14, saturation: +(QS0.get('msat') || 0.56), temp: +(QS0.get('mtemp') || -0.2), tint: -0.02,
+    shadowTint: QS0.has('mst') ? QS0.get('mst').split(',').map(Number) : [0.44, 0.49, 0.54], highTint: [0.56, 0.52, 0.47], lift: [0.006, 0.008, 0.011],
+    vignette: 0.36, grain: GRAIN_MAP, aberration: 0.4, bloom: { strength: 0.2, radius: 0.5, threshold: 0.92 }, ...o,
   });
 
   // ================================================================ SHOT SETUPS
@@ -868,7 +928,7 @@ export default async function create(ctx) {
     S021(tl, u, T) {
       useSet('desk'); patchMesh.visible = false; penGrip = 0.048;
       const W0 = 0.80, H0 = 50 / 36 * W0;                       // frame width at the paper → camera height for 50 mm
-      const coastW = mw(coastX(S021.lineY), S021.lineY);
+      const coastW = mw(coastAt(S021.lineY), S021.lineY);       // where the turning shore crosses the line row
       const cx = coastW.x + 0.2 * W0, cz = mw(0, S021.lineY).z - 0.16 * (W0 / 2.39);
       const h = H0 * lerp(1, 0.97, ease.inOutSine(clamp(u, 0, 1)));
       cam.lens(camera, 50); placeTop(camera, cx, cz, h);
@@ -876,25 +936,30 @@ export default async function create(ctx) {
       const fw = W0, fh = W0 / 2.39, F = (fx, fy) => V(cx + (fx - 0.5) * fw, TY, cz + (fy - 0.5) * fh);
       const edgeZ = F(0, 0.66).z;
       setRuler(F(0.06, 0).x, edgeZ);
-      // ink: from x 0.12 to 0.62
-      const x0 = F(0.12, 0).x, xe = F(0.62, 0).x;
-      if (!setups._ink21) setups._ink21 = inkLine(x0, edgeZ - 0.0012 - INK_GAP, xe - x0, 21, 0.0024);
+      // ink: from x 0.12 to 0.70 (integration: 3.2 mm wet line, reads 4–5 px at 960)
+      const IW = 0.0032, x0 = F(0.12, 0).x, xe = F(0.70, 0).x, lz = edgeZ - IW / 2 - INK_GAP;
+      if (!setups._ink21) setups._ink21 = inkLine(x0, lz, xe - x0, 21, IW);
       for (const m of inks()) m.visible = m === setups._ink21;
-      const px = pchip([[0.2, 0.12], [1.278, 0.30], [2.9, 0.62]], tl);
-      const nibX = F(px, 0).x, down = tl < 0.2 ? 0 : 0;   // pen already on paper at frame 0 (head handle)
+      const px = pchip([[0.2, 0.12], [1.278, 0.30], [2.9, 0.70]], tl);
+      const nibX = F(px, 0).x;                                  // pen already on paper at frame 0
       setInk(setups._ink21, tl < 0.2 ? x0 + 0.0001 : nibX, tl < 2.95 ? 1 : 0.6);
-      const nib = V(nibX, TY + 0.0009 + down, edgeZ - 0.0012 - INK_GAP);
+      // wet sheen travels with the nib; in the last 0.3 s (80.0–80.29, the 3 % push turns the highlight) a kerosene glint runs
+      // back along the wet line to the coast crossing (0.30, 0.65) — the eye arrives where S022's shore light appears
+      const back = smoothstep(2.92, 3.24, tl);
+      setGlint(setups._ink21, { wet: 1.0, glintX: lerp(xe, coastW.x, ease.inOutSine(back)), glint: 2.2 * smoothstep(2.88, 3.0, tl) });
+      const nib = V(nibX, TY + 0.0009, lz);
       const lean = lerp(0.0, 0.1, smoothstep(0.2, 0.6, tl)) * (1 - smoothstep(2.8, 3.1, tl));    // pen leans into the stroke
       const axis = V(0.34 + lean, 0.70, 0.60).normalize();
       penHand(nib, axis, V(0, 0, 1), bestRoll('S021b', V(0.40, 0.70, 0.60).normalize(), V(0, 0, 1), PEN_PALM));
-      // left hand: fingertips on the ruler at the far left → lift (2.0) → sweep up-right over the line → press (2.598)
+      // left hand (integration): fingertips on the ruler's left end → lift (1.98) → slides right BELOW the ruler → on 掌
+      // (2.598) presses flat on the land under the fresh line, palm ≈ (0.46, 0.86), forearm from the bottom edge — it never
+      // crosses the wet line or the pen hand, and the harbour-village mark (0.30, 0.58) stays clear
       const rulerTop = TY + 0.0008 + RULER.t;
-      const pHold = F(0.05, 0.735).setY(rulerTop + 0.002), pPress = F(0.62, 0.45).setY(TY + 0.0013);
-      leftHand(smoothstep(1.98, 2.598, tl), pHold, V(0.3, -0.4, -1), pPress, V(0.42, 0, -1), 0.0006 * smoothstep(2.6, 2.72, tl));
-      deskLight(T, { aim: V(cx, TY, cz) });
-      setGrain(T, 0.16);
+      const pHold = F(0.05, 0.676).setY(rulerTop + 0.002), pPress = F(0.47, 0.93).setY(TY + 0.0013);
+      leftHand(smoothstep(1.98, 2.598, tl), pHold, V(0.3, -0.4, -1), pPress, V(0.92, 0, -0.39), 0.0006 * smoothstep(2.6, 2.72, tl), 0.03, PRESS21);
+      deskLight(T, { aim: V(cx, TY, cz), fw, moon: 1.0, moonAt: [0.6, -0.5] });
       if (DBG && Math.abs(tl - 1.278) < 0.03) { const f3 = (v) => v.toArray().map((x) => x.toFixed(3)).join(','); dbg('S021 pen', 'nib', f3(nib), 'penO', f3(pen.localToWorld(V())), 'penTop', f3(pen.localToWorld(V(0, 0.14, 0))), 'pinch', f3(handR.sockets.pinch.getWorldPosition(V())), 'idx', f3(handR.tip('index', V())), 'thumb', f3(handR.tip('thumb', V())), 'wrist', f3(handR.root.getWorldPosition(V()))); }
-      if (DBG && Math.abs(tl - 1.278) < 0.03) dbg('S021 nib frame', toFrame(nib), 'coast', toFrame(coastW), 'mark', toFrame(mw(drawing.hm.x, drawing.hm.y)), 'palm', toFrame(pPress));
+      if (DBG && (Math.abs(tl - 1.278) < 0.03 || tl > 3.2)) dbg('S021', tl.toFixed(2), 'nib frame', toFrame(nib), 'coast', toFrame(coastW), 'mark', toFrame(mw(drawing.hm.x, drawing.hm.y)), 'ring', toFrame(mw(drawing.hm.x + drawing.ring[0], drawing.hm.y + drawing.ring[1])), 'palm', toFrame(handL.sockets.palm.getWorldPosition(V())), 'tips', ['thumb', 'index', 'middle', 'little'].map((n) => toFrame(handL.tip(n, V())).map((v) => v.toFixed(3)).join(',')).join(' '));
       return mapPost({ dof: null });
     },
 
@@ -904,7 +969,7 @@ export default async function create(ctx) {
     // spreads above it at 2.272 s (144.48 掌), palm (0.45, 0.60) ≈ 45 % of frame height (→ S045 left hand).
     S044(tl, u, T) {
       useSet('desk'); patchMesh.visible = false; penGrip = 0.048;
-      const W0 = 0.64, W1 = 0.52, h0 = 75 / 36 * W0, h1 = 75 / 36 * W1;   // review: 1.28× push; the end hand (≈ 45 % of frame height, fingertips inside the frame) matches S045's first frame
+      const W0 = 0.74, W1 = 0.62, h0 = 75 / 36 * W0, h1 = 75 / 36 * W1;   // integration: 1.19× push; the end hand is ≈ 38 % of frame height across the knuckles, fingertips well inside the frame (S045 register)
       const vx = coastX(S044.lineY) + 2.4;
       const villL = Math.min(...drawing.houses.filter((hs) => Math.abs(hs.y - (S044.lineY - 0.31)) < 0.3).map((hs) => hs.x - hs.w / 2));
       const lineZ = mw(0, S044.lineY).z;
@@ -921,24 +986,25 @@ export default async function create(ctx) {
       const edgeZ = lineZ;
       setRuler(F0(0.10, 0).x, edgeZ);
       const x0 = F0(0.30, 0).x, xv = mw(villL, 0).x, xe = F0(0.80, 0).x;
-      if (!setups._ink44) setups._ink44 = inkLine(x0, edgeZ - 0.0011 - INK_GAP, xe - x0, 44, 0.0022);
+      const IW = 0.0026, lz = edgeZ - IW / 2 - INK_GAP;
+      if (!setups._ink44) setups._ink44 = inkLine(x0, lz, xe - x0, 44, IW);
       for (const m of inks()) m.visible = m === setups._ink44;
       const nx = pchip([[0.3, x0], [0.712, xv], [1.65, xe]], tl);
       setInk(setups._ink44, tl < 0.3 ? x0 + 0.0001 : nx, tl < 1.7 ? 1 : 0.6);
+      setGlint(setups._ink44, { wet: 1.0 });
       // pen: lowers 0–0.3, draws, lifts 1.7 and leaves to frame right
       const lift = tl < 0.3 ? (1 - smoothstep(0.0, 0.3, tl)) * 0.012 : smoothstep(1.7, 2.05, tl) * 0.09;
       const away = smoothstep(1.72, 2.2, tl) * 0.28;
-      const nib = V(nx + away, TY + 0.0009 + lift, edgeZ - 0.0011 - INK_GAP);
+      const nib = V(nx + away, TY + 0.0009 + lift, lz);
       const lean = lerp(0.0, 0.1, smoothstep(0.3, 0.6, tl));
       penHand(nib, V(0.34 + lean, 0.70, 0.60).normalize(), V(0, 0, 1), bestRoll('S021b', V(0.40, 0.70, 0.60).normalize(), V(0, 0, 1), PEN_PALM));
       handR.root.visible = tl < 2.3;
       // left hand: on the ruler left of the pen → over the wet line → spread flat above it (heel ≥ 1 cm clear)
       const rulerTop = TY + 0.0008 + RULER.t;
-      const pHold = F0(0.17, 0.725).setY(rulerTop + 0.002), pPress = F1(0.45, 0.60).setY(TY + 0.0013);
-      leftHand(smoothstep(1.9, 2.272, tl), pHold, V(0.3, -0.4, -1), pPress, V(0.12, 0, -1), 0.0006 * smoothstep(2.28, 2.4, tl));
-      deskLight(T, { aim: V(cx, TY, cz) });
-      setGrain(T, 0.16);
-      if (DBG && (Math.abs(tl - 0.712) < 0.03 || tl > 2.6)) dbg('S044', tl.toFixed(2), 'nib', toFrame(nib), 'palm', toFrame(handL.sockets.palm.getWorldPosition(V())), 'village', toFrame(mw(vx, S044.vY)));
+      const pHold = F0(0.17, 0.676).setY(rulerTop + 0.002), pPress = F1(0.45, 0.60).setY(TY + 0.0013);
+      leftHand(smoothstep(1.9, 2.272, tl), pHold, V(0.3, -0.4, -1), pPress, V(0.1, 0, -1), 0.0006 * smoothstep(2.28, 2.4, tl), 0.06);
+      deskLight(T, { aim: V(cx, TY, cz), fw: W, moon: 0.55 });
+      if (DBG && (Math.abs(tl - 0.712) < 0.03 || tl > 2.6)) dbg('S044', tl.toFixed(2), 'nib', toFrame(nib), 'palm', toFrame(handL.sockets.palm.getWorldPosition(V())), 'village', toFrame(mw(vx, S044.vY)), 'line', toFrame(V(x0, TY, lz)), 'tips', ['thumb', 'index', 'middle', 'little'].map((n) => toFrame(handL.tip(n, V())).map((v) => v.toFixed(3)).join(',')).join(' '));
       return mapPost({ dof: { focus: h - 0.018 * smoothstep(1.9, 2.3, tl), fstop: 8 }, exposure: EXP_MAP * 1.02 });
     },
 
@@ -952,19 +1018,22 @@ export default async function create(ctx) {
       const cx = mw(S047.cx, 0).x, cz = lineZ - 0.16 * (Wf / 2.39);
       cam.lens(camera, 100); placeTop(camera, cx, cz, h);
       const F = (fx, fy) => V(cx + (fx - 0.5) * Wf, TY, cz + (fy - 0.5) * Wf / 2.39);
-      setRuler(F(-0.6, 0).x, lineZ + 0.0009);
+      // integration: a 1.2 mm blue-black line centred on y 0.66; the slim ruler's brass edge just below it, its ebony body
+      // ends at y ≈ 0.85 (paper below) — the lower third is no longer a dead black slab
+      const IW = 0.0016, lz = lineZ;
+      setRuler(F(-0.6, 0).x, lz + IW / 2 + 0.0011);
       const x0 = F(0.30, 0).x, xe = F(0.92, 0).x;
-      if (!setups._ink47) { setups._ink47 = inkLine(x0, lineZ - LINE_W * 0.5 + 0.0003, xe - x0, 47); setups._ink47.userData.U.uBleed.value = 0.55; }
+      if (!setups._ink47) { setups._ink47 = inkLine(x0, lz, xe - x0, 47, IW); setups._ink47.userData.U.uBleed.value = 0.45; }
       for (const m of inks()) m.visible = m === setups._ink47;
       const nx = pchip([[0.015, x0], [0.95, xe]], tl);
       setInk(setups._ink47, nx, tl < 0.975 ? 1 : 0.5);
+      setGlint(setups._ink47, { wet: 1.0, wetLen: 0.05 });
       const lift = smoothstep(0.975, 1.1, tl) * 0.03, away = smoothstep(0.98, 1.2, tl) * 0.08;
-      const nib = V(nx + away, TY + 0.0009 + lift, lineZ - LINE_W * 0.5 + 0.0003);
+      const nib = V(nx + away, TY + 0.0009 + lift, lz);
       penHand(nib, V(0.40, 0.70, 0.60).normalize(), V(0, 0, 1), bestRoll('S047', V(0.40, 0.70, 0.60).normalize(), V(0, 0, 1), PEN_PALM));
       handR.root.visible = true; handL.root.visible = false;
-      deskLight(T, { aim: V(cx, TY, cz), lamp: 1.0, moon: 1.0 });
-      setGrain(T, 0.14);
-      return mapPost({ dof: { focus: h, fstop: 8 }, saturation: 0.6, temp: -0.28 });   // BR1: greyed, low saturation
+      deskLight(T, { aim: V(cx, TY, cz), fw: Wf, lamp: 1.0, moon: 0.45, moonAt: [0.55, -0.6] });
+      return mapPost({ dof: { focus: h, fstop: 8 }, saturation: 0.58, temp: -0.16 });   // BR1: greyed, low saturation
     },
 
     // ---------------------------------------------------------------------------------------------------------- S048
@@ -976,7 +1045,7 @@ export default async function create(ctx) {
       queue.position.set(0.06 * tl - 0.08, 0, 0);       // the queue shuffles on, soft beyond the doorway
       handR.root.visible = false; handL.root.visible = false;
       // her: standing on the sill just behind the strip, facing +X, weight forward a little; breathing
-      mig.root.position.set(0.02, SILL.y, -0.22); mig.root.rotation.set(0, Math.PI / 2 - 0.3, 0);   // gate-local; review: turned 17° toward the gate opening → the far shoe steps out from behind the near one (a pair reads), soles stay registered
+      mig.root.position.set(0.02, SILL.y, -0.22); mig.root.rotation.set(0, Math.PI / 2 - +(QS.get('mrot') || 0.56), 0);   // integration: opened to ≈ 32° so the two shoes read as a pair (≈ 9 cm apart on screen), still side-on to the line   // gate-local; review: turned 17° toward the gate opening → the far shoe steps out from behind the near one (a pair reads), soles stay registered
       // review: plain contrapposto stand — the extra leg/foot channels de-registered the library sole (skinned to the foot only)
       // from the shoe upper (a grey blade under the far shoe)
       mig.pose('stand', { weight: 0.25 }); mig.pose({ 'armL.upper.x': 0.3, 'armL.upper.z': 0.08, 'armL.lower.x': 1.35, 'armL.lower.y': 0.4, handL: 'relaxed' }, { add: true }); mig.breathe(T, 0.8);   // left forearm across her waist (out of the hand CU)
@@ -984,7 +1053,7 @@ export default async function create(ctx) {
       const tight = smoothstep(1.47, 1.64, tl);
       const grip = mig.root.localToWorld(V(-0.25, 0.71, 0.05));   // wrist: the case rides clear of her right thigh
       mig.reach('R', grip, { palm: V(0, 0.05, -1), fingers: V(0.05, -1, 0.06) });
-      migHandR.pose('rattan', { radius: lerp(0.0124, 0.009, tight), wrist: 0.14 * tight });
+      migHandR.pose('rattan', { radius: lerp(0.0112, 0.0086, tight), wrist: 0.14 * tight });   // integration: fingers wrap deeper round the Ø23 bar (tips under/behind it)
       if (skinBase) migHandR.skinMat.color.copy(skinBase).lerp(hex('#f2e4dc'), 0.72 * tight);   // blood pushed out of the grip
       mig.lookAt(G(2.5, 1.5, -0.5), 0.3);
       mig.root.updateMatrixWorld(true);
@@ -993,7 +1062,7 @@ export default async function create(ctx) {
       // camera: low lock → rise + tilt + push → lock on the hand
       const barW = caseG.userData.bar.getWorldPosition(V());
       const A = { pos: G(0.05, 0.12, 0.78), target: G(0.05, 0.065, -0.2) };
-      const B = { pos: barW.clone().add(V(0.0, 0.04, 0.47)), target: barW.clone().add(V(0, 0.0, 0)) };
+      const B = { pos: barW.clone().add(V(+(QS.get('mbx') || 0.15), +(QS.get('mby') || 0.012), 0.45)), target: barW.clone().add(V(0, 0.0, 0)) };   // integration: from her front-quarter, near bar height — the curl of the fingers round the bar and the thumb over the index read
       const m = ease.inOutSine(clamp((tl - 0.567) / (1.027 - 0.567), 0, 1));
       cam.lens(camera, 50);
       cam.place(camera, A.pos.clone().lerp(B.pos, m), A.target.clone().lerp(B.target, m));
@@ -1005,16 +1074,18 @@ export default async function create(ctx) {
       camera.rotateX(corr);
       camera.updateMatrixWorld(true);
       const knuck = migHandR.fingerBones.middle[0].getWorldPosition(V()).lerp(barW, 0.5);   // between the knuckle row (the fingers hook over the bar from our side) and the bar
-      const focusD = lerp(lerp(camera.position.distanceTo(strip), camera.position.distanceTo(G(0.08, 0.05, -0.18)), smoothstep(0.2, 0.55, tl)), camera.position.distanceTo(knuck), smoothstep(0.6, 1.0, tl));
+      // integration: focus follows the rise — strip → shoes → the case face as it passes (no unreadable blur band) → knuckles
+      const dCase = camera.position.distanceTo(barW.clone().add(V(0, -0.16, 0.105)));
+      const fLow = lerp(camera.position.distanceTo(strip), camera.position.distanceTo(G(0.08, 0.05, -0.18)), smoothstep(0.2, 0.55, tl));
+      const focusD = lerp(lerp(fLow, dCase, smoothstep(0.58, 0.78, tl)), camera.position.distanceTo(knuck), smoothstep(0.84, 1.02, tl));
       if (DBG && tl > 2.3) { const cp = camera.position; dbg('S048 focus', focusD.toFixed(3), 'wrist', cp.distanceTo(migHandR.root.getWorldPosition(V())).toFixed(3), 'mcp', cp.distanceTo(migHandR.fingerBones.middle[0].getWorldPosition(V())).toFixed(3), 'pip', cp.distanceTo(migHandR.fingerBones.middle[1].getWorldPosition(V())).toFixed(3), 'bar', cp.distanceTo(barW).toFixed(3)); }
-      setGrain(T, 0.18);
       if (DBG) dbg('S048 geo', 'hroot', migHandR.root.getWorldPosition(V()).toArray().map((v) => v.toFixed(3)), 'hvis', migHandR.root.visible, migHandR.root.parent && migHandR.root.parent.name, 'target', grip.toArray().map((v) => v.toFixed(3)), 'root', mig.root.getWorldPosition(V()).toArray().map((v) => v.toFixed(3)), 'eye', mig.eye().toArray().map((v) => v.toFixed(3)), 'toeL', mig.worldPos('footL').toArray().map((v) => v.toFixed(3)), 'grip', g.toArray().map((v) => v.toFixed(3)), 'handL', mig.worldPos('handL').toArray().map((v) => v.toFixed(3)), 'rotY', mig.root.rotation.y.toFixed(3), 'parent', mig.root.parent && mig.root.parent.name);
       if (DBG && tl < 0.05) dbg('S048 layers', Object.keys(mig.layers).join(' '), 'footR', mig.worldPos('footR').toArray().map((v) => v.toFixed(3)).join(','), 'footL', mig.worldPos('footL').toArray().map((v) => v.toFixed(3)).join(','));
       if (DBG && (tl < 0.05 || Math.abs(tl - 1.05) < 0.03 || tl > 2.3)) dbg('S048', tl.toFixed(2), 'strip', toFrame(strip), 'barL', toFrame(caseG.localToWorld(V(-0.075, 0, 0))), 'barR', toFrame(caseG.localToWorld(V(0.075, 0, 0))));
       return {
         dof: { focus: focusD, fstop: 5.6 }, exposure: 1.08, contrast: 1.0, saturation: 0.72, temp: -0.02,
         shadowTint: [0.47, 0.5, 0.56], highTint: [0.57, 0.53, 0.46], lift: [0.012, 0.012, 0.014],
-        vignette: 0.38, grain: 0, bloom: { strength: 0.42, radius: 0.6, threshold: 0.8 },
+        vignette: 0.38, grain: GRAIN_MIG, bloom: { strength: 0.42, radius: 0.6, threshold: 0.8 },
       };
     },
   };
@@ -1023,7 +1094,7 @@ export default async function create(ctx) {
 
   return {
     scene, camera,
-    post: { exposure: 1.0, grain: 0 },
+    post: { exposure: 1.0, grain: GRAIN_MAP },
     setShot(shot, tl, u, T) {
       handR.root.visible = true; handL.root.visible = true;
       const p = (setups[shot.id] || setups.default)(tl, u, T, shot);
