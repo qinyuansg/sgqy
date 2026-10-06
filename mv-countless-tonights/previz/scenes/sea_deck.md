@@ -176,3 +176,38 @@ figure cache, hands) — paid once.
 brighter · pull back · orbit around the shot's subject point; `&sdpiv=patch` pivots S045 on the patch) · `?sdcoat=dbg` (S067 coat lining
 painted green) · `?sd8k=<0..1>` (S008 short-wave height) · `?sdoff=sea,dof,cloud,foam,hatch,coat` · `?sdon=shadow` (restore the moon shadow map) · `?sdlog=1` (projected
 registration points to the console).
+
+## Integration fixes (integration QA pass, 2026-10-06)
+
+Source: `previz/qa/findings_by_module.json` (sea_deck + the three shared grain findings) and the director's notes for the
+navigator group. Verify renders: `out/fix_ship_cabin_sea_deck/` (survey, 960 px) and the iteration stills in
+`out/check/sea_deck/integ/`. Dev params (default off): `?s45k=…&s45r=…` (S045 cool key / rim), `?s67kx=…&s67kd=…` (kneel spot),
+`?s67br=x,y,z` (boy roll), `?s67bend=…&s67wind=…` (coat sim), `?sdlegk=…`, `?s75d=…&s75a=…`, `?sdoff=dress`.
+
+**Grain (all shots).** The module grain quad / probe (half-res additive layer) and every per-shot `grain` override are gone;
+`setShot` returns the CT_NAV era grain `0.042` through post for every non-nested shot (the engine's integer-hash grain), nested
+`view_shiplamp` gets none. One grain from S005 to S075, matching the corridor / lab cuts (S066 → S067, S045 | S046 | S050).
+
+**Shared with ship_cabin** (`import { dressNavigator, buildCuffFlap, smoothNailFolds } from './ship_cabin.js'`): both navigator
+variants (`navC` night coat, `navJ` jacket) wear the wrapped head-cloth over the skull and ears (ear 0.85), the short
+salt-bleached beard, weathered skin, faded indigo jacket and dark 交领 band; the close-up right hand's cuff is the turned-back
+flap with the patch on its INSIDE (= S011); the close-up salt hands have smoothed nail folds, `uSalt` 0.32 (fine glints, not
+warts), `uDetail` 0.45, skin #8F6346, desaturated sleeve / cuff indigo.
+
+| shot | QA finding (severity) | fix |
+|---|---|---|
+| S045 | blocker: nothing turns the cuff back or touches the patch; hands 13/255; tilt late, whipping through the coat; lit bald profile | 85 mm. 0–0.3 s: his LEFT index + middle fingertips are hooked under the edge of the RIGHT cuff (frame 0) and turn it back the last part of the way — the patch shows on its inside; 0.26–0.42 s they come over onto the patch and rest there with solved contact (pads ≤ 1 mm) to 0.92 s, the thumb rubbing once (0.55–0.9 s). The hands are keyed by a cool moonlight key from over the lens' right shoulder and kicked warm by the stern lantern from frame right (≈ 50/255; the patch the brightest mid-tone). The tilt starts at 145.9 (tl 0.82) with the arc leading, so the sea enters the frame early, a warm lantern lift on the coat mid-tilt, and arrives on his eye at 146.7 (tl 1.62) as his eyes lift; the camera drifts back so the end is an MCU (head ≈ 60 % of frame height): his face almost a silhouette against the deep-blue sea — head-cloth over skull and ear, beard edge, a thin cool sky rim from behind-left on brow / nose — the catch-light in the near eye from 2.46 s (depth-test off so the brow cannot hide it), the shore light at (0.40, 0.46) a soft round ≈ 4 %-of-frame-height bokeh (f/5.6 at the end), the brightest thing in frame (→ S046) |
+| S067 | major: corpse-like boy, rigid board coat, no contact, upright slab | rebuilt as a laying, not a throw: he is going down onto his RIGHT knee beside the boy at frame 0 (kneeling by 213.6), holds the coat by the collar in both hands all the way (a sim pin path: gathered at his chest → over the boy's hips, opening → his top shoulder) and lowers the collar onto the boy's shoulder on 214.25 (te 0.52), lets go; the collar stays where it was laid (pinned in the sim, so the body cannot flip over — it did) and the softer cloth (bend 0.07, a little wind toward the hem) settles over him shoulder → hip with the brown outside to the lens, the lining a darker sliver; his hands come back to his raised left knee; 214.9 the boy's collar tug; 215.1–215.3 his right wrist comes up and the left fingertips go to the turned-back cuff, held to the cut, rim-lit by the lantern. The boy is curled on his left side, rolled back ~50° so the drawn-up knees, the bowed head and the hands tucked at his chin read as a curl from the low lens. Lantern cage (0.38, 0.36) on frame 0 unchanged (S066 light match) |
+| S075 | minor: MS not MCU, black sea band, uniform lavender, turn late | 100 mm MCU (head ≈ 45 % of frame height), horizon at 0.55 with the deep-blue swell visible below it; sky blend pulled back toward P02 with a stronger narrow first light at frame right; he now turns AWAY from the lens (to his own right, ~180°: feet / shoulders / head) so mid-turn we see the back of his head, never a frontal mask, and ends in a true right profile (eye at (0.33, 0.40) for the S076 dissolve) with a cool-peach rim from the right horizon; the turn runs 234.6 → 235.0 so the face is round to the first light on 235.0 |
+| S008 | minor: cumulus bases sit on the horizon like rock islands | bases lifted ≈ 3.5° (frame y ≈ 0.28–0.32, horizon 0.42), undersides feathered (no flat base), a thin stratus band with warm underlight low over the horizon; stars down to 0.05 (S007's sky has none) |
+| S022 | minor: square halo round the shore light; module grain | the shore light is a camera-facing radial billboard of constant pixel size (was a GL point sprite); the square was the bloom of an 11× point: softer, larger core (4.2×, 19 px) and S022 bloom 0.32 / threshold 0.8 — a round glow; grain removed |
+| S043–S076 (grain) | major/minor: module grain quads | removed (above) |
+
+**Not fixed / deviations**
+* S045: the left fingers still come from upper frame right pointing down-left (S011's composition) rather than S044's flat
+  palm with the fingers up — the match is position + size; the patch is small at 85 mm (≈ 4 % of frame width).
+* S067: the coat is still a single-layer sim sheet (no padding); over the drawn-up knees it can read a little flat. The
+  navigator kneels a little right of the shot list's (0.26, 0.50) (≈ 0.45, 0.55, QA's ~(0.42, 0.55)). The boy's face is
+  partly hidden by his arms rather than by the collar.
+* S075: no rail strip at the bottom — with the horizon at 0.55 and the head at 45 % of frame height the rail cap (behind
+  him) falls below the frame; the swell fills the bottom instead.

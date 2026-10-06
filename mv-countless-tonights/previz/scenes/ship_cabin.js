@@ -1169,7 +1169,7 @@ export default async function create(ctx) {
       lampSpot.angle = 0.6; lampSpot.penumbra = 1.0;
       lamp.object3D.updateMatrixWorld(true);
       lampSpot.target.position.copy(lamp.body.worldToLocal(eye.clone().add(V(0.0, 0.04, 0.06))));
-      lampSpot.intensity = +(Q7.lk || 1.7) * flk(T); lamp.light.intensity = LAMP_PT * 0.9 * flk(T);
+      lampSpot.intensity = +(Q7.lk || 2.4) * flk(T); lamp.light.intensity = LAMP_PT * 1.6 * flk(T);
       for (const o of chartRoll) o.visible = false;   // the cream roller end was the brightest blob at lower left
       // the open hatch: a cool dusk top light on the head-cloth, shoulders and the chart below (no shadow)
       hatchSky.visible = true; hatchSky.color.setHex(0x6f8cc4); hatchSky.angle = 0.3; hatchSky.penumbra = 0.9;
@@ -1178,7 +1178,7 @@ export default async function create(ctx) {
       hemi.intensity = 0.12; hemi.color.setHex(0x4a62a0);
       // the lantern's bounce on the hatch coaming / trimmer undersides: the passage stays readable (≥ 25/255)
       const pass = smoothstep(1.7, 2.3, tl) * (1 - smoothstep(3.1, 3.5, tl));
-      bounce.visible = true; bounce.color.setHex(0xffa860); bounce.position.set(0.12, CEIL - 0.2, -0.5); bounce.intensity = (0.03 + +(Q7.bo || 0.32) * pass) * flk(T);
+      bounce.visible = true; bounce.color.setHex(0xffa860); bounce.position.set(0.12, CEIL - 0.2, -0.5); bounce.intensity = (0.05 + +(Q7.bo || 0.42) * pass) * flk(T);
       // camera: solved on his face for the hold, then a smooth crane (Hermite on position + yaw / pitch, zero velocity at 1.6 s)
       cam.lens(camera, 32);
       const C0 = V(0.03, 1.17 + 0.012 * smoothstep(0, 1.6, tl), -0.86);
@@ -1210,7 +1210,7 @@ export default async function create(ctx) {
       const outK = smoothstep(2.3, 3.3, tl);
       sailParts.hemi.intensity = 2.6; sailParts.glow.intensity = 1.6;
       sky.set({ stars: 0, cloudCover: 0.32 }); sky.update(T);
-      return { dof: { focus, fstop: 4 }, exposure: lerp(1.12, +(Q7.ex || 1.75), outK), temp: lerp(0.0, -0.08, outK), saturation: lerp(0.86, 0.8, outK) };
+      return { dof: { focus, fstop: 4 }, exposure: lerp(+(Q7.e0 || 1.55), +(Q7.ex || 1.85), outK), temp: lerp(0.0, -0.08, outK), saturation: lerp(0.86, 0.8, outK) };
     },
     // ---------------------------------------------------------- S009 — needle settles on 午 exactly at 49.77 (tl 1.48); pivot at (0.46,0.50)
     S009(tl, u, T) {

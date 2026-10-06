@@ -109,8 +109,9 @@ function cumulusTex(rng, { lit = -1, tower = 1, w = 512, h = 384 } = {}) {
     g.filter = 'none';
     // flat base fade
     g.globalCompositeOperation = 'destination-out';
-    const bg = g.createLinearGradient(0, base - H * 0.05, 0, base + H * 0.03); bg.addColorStop(0, 'rgba(0,0,0,0)'); bg.addColorStop(1, 'rgba(0,0,0,1)');
-    g.fillStyle = bg; g.fillRect(0, base - H * 0.05, W, H);
+    // (integration) feathered undersides: the hard flat bases read as rock islands sitting on the horizon
+    const bg = g.createLinearGradient(0, base - H * 0.2, 0, base + H * 0.02); bg.addColorStop(0, 'rgba(0,0,0,0)'); bg.addColorStop(0.55, 'rgba(0,0,0,0.45)'); bg.addColorStop(1, 'rgba(0,0,0,1)');
+    g.fillStyle = bg; g.fillRect(0, base - H * 0.2, W, H);
     g.globalCompositeOperation = 'source-over';
   });
 }
@@ -366,15 +367,18 @@ function gridGeometryF(nu, nv, fn) { // grid with aF attribute (u along, v acros
 }
 
 // ------------------------------------------------------------------------------------------ the shore light (M7: 1900 K #E2A458, constant pixel size, DOF-friendly HDR)
-function shoreLight() {
+function shoreLight(viewH = 536) {
+  // (integration) a camera-facing radial billboard of constant PIXEL size (uPx = diameter in pixels of the render height):
+  // the GL point sprite it replaces printed as a square box halo around the light under SwiftShader (QA S022)
   const mat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, depthTest: true, blending: THREE.AdditiveBlending,
-    uniforms: { uCol: { value: new THREE.Color(P.P13) }, uInt: { value: 20 }, uPx: { value: 7 } },
-    vertexShader: /* glsl */ `uniform float uPx; void main(){ gl_PointSize = uPx; gl_Position = projectionMatrix * modelViewMatrix * vec4(0.0, 0.0, 0.0, 1.0); }`,
-    fragmentShader: /* glsl */ `uniform vec3 uCol; uniform float uInt; void main(){ vec2 d = gl_PointCoord * 2.0 - 1.0; float r2 = dot(d, d); if (r2 > 1.0) discard;
-      float a = exp(-r2 * 7.0) + 0.05 * exp(-r2 * 1.5); gl_FragColor = vec4(uCol * uInt * a, 1.0); }` });
-  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0], 3));
-  const pts = new THREE.Points(g, mat); pts.frustumCulled = false; pts.renderOrder = 20;
-  return { object3D: pts, material: mat };
+    uniforms: { uCol: { value: new THREE.Color(P.P13) }, uInt: { value: 20 }, uPx: { value: 7 }, uViewH: { value: viewH } },
+    vertexShader: /* glsl */ `uniform float uPx, uViewH; varying vec2 vQ; void main(){ vQ = position.xy;
+      vec4 mv = modelViewMatrix * vec4(0.0, 0.0, 0.0, 1.0); float s = uPx * 1.6 * (-mv.z) / (projectionMatrix[1][1] * uViewH);
+      mv.xy += position.xy * s; gl_Position = projectionMatrix * mv; }`,
+    fragmentShader: /* glsl */ `uniform vec3 uCol; uniform float uInt; varying vec2 vQ; void main(){ float r2 = dot(vQ, vQ) * 2.56; if (r2 > 2.56) discard;
+      float a = exp(-r2 * 7.0) + 0.05 * exp(-r2 * 1.5) * (1.0 - smoothstep(1.2, 2.56, r2)); gl_FragColor = vec4(uCol * uInt * a, 1.0); }` });
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat); m.frustumCulled = false; m.renderOrder = 20;
+  return { object3D: m, material: mat };
 }
 
 // ------------------------------------------------------------------------------------------ the coat (S067): shader-blended cloth keyframes
@@ -462,11 +466,12 @@ export default async function create(ctx) {
   const coastT = createCoast({ sky, az0: -14, az1: 2, distance: 4300, height: 48, lights: 0, seed: 9, haze: 0.16 });
   scene.add(coast8.object3D, coastT.object3D);
   for (const c of [coast8, coastT]) c.land.renderOrder = 40;
-  const shore = shoreLight(), shore2 = shoreLight(); scene.add(shore.object3D, shore2.object3D);
+  const shore = shoreLight(ctx.H), shore2 = shoreLight(ctx.H); scene.add(shore.object3D, shore2.object3D);
   const cloudG = new THREE.Group(); scene.add(cloudG);
   {
     const rr = util.rng(808);
-    const defs = [[-35, 0.5, 2500, 1.15, 1.2], [-15, 0.7, 1300, 0.8, 0.85], [10, 0.4, 1800, 1.0, 0.7], [31, 0.9, 1150, 0.7, 0.6]];
+    // (integration) bases lifted ≈ 3.5° above the sea horizon (frame y ≈ 0.28–0.32 with the horizon at 0.42)
+    const defs = [[-35, 3.4, 2500, 1.15, 1.2], [-15, 3.9, 1300, 0.8, 0.85], [10, 3.3, 1800, 1.0, 0.7], [31, 4.1, 1150, 0.7, 0.6]];
     defs.forEach(([az, el, h, tower, k], i) => {
       const tex = cumulusTex(rr, { lit: -1, tower });
       const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, fog: false, color: new THREE.Color(1, 1, 1).multiplyScalar(0.24 * k), opacity: 0.8 }));
@@ -474,6 +479,13 @@ export default async function create(ctx) {
       m.scale.set(h * 1.45, h, 1); m.position.set(Math.sin(a) * d, d * Math.tan(THREE.MathUtils.degToRad(el)) + h * 0.36, -Math.cos(a) * d); m.renderOrder = -500; m.frustumCulled = false;
       m.userData.k = k; cloudG.add(m);
     });
+    // a thin stratus band low over the horizon with the last warm underlight (the cumulus float above it)
+    const st = canvasTex(1024, 128, (g, W, H) => { g.clearRect(0, 0, W, H); const rs = util.rng(919);
+      for (let i = 0; i < 260; i++) { const x = rs() * W, y = H * (0.45 + 0.22 * (rs() - 0.5)), w = 40 + rs() * 160, h = 3 + rs() * 7; const gr = g.createRadialGradient(x, y, 1, x, y, w * 0.5);
+        gr.addColorStop(0, `rgba(${110 + rs() * 30},${110 + rs() * 25},${140 + rs() * 20},0.16)`); gr.addColorStop(1, 'rgba(100,110,140,0)'); g.fillStyle = gr; g.save(); g.translate(x, y); g.scale(1, h / w); g.beginPath(); g.arc(0, 0, w * 0.5, 0, Math.PI * 2); g.fill(); g.restore(); }
+      g.globalCompositeOperation = 'source-atop'; const wg = g.createLinearGradient(0, H * 0.3, 0, H * 0.7); wg.addColorStop(0, 'rgba(90,100,135,0.6)'); wg.addColorStop(1, 'rgba(222,150,110,0.85)'); g.fillStyle = wg; g.fillRect(0, 0, W, H); });
+    const stM = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: st, transparent: true, depthWrite: false, fog: false, color: new THREE.Color(0.32, 0.32, 0.32), opacity: 0.85 }));
+    { const d = 7600, a = THREE.MathUtils.degToRad(-12); stM.scale.set(9000, 420, 1); stM.position.set(Math.sin(a) * d, d * Math.tan(THREE.MathUtils.degToRad(1.6)), -Math.cos(a) * d); stM.renderOrder = -499; stM.frustumCulled = false; stM.userData.k = 1; cloudG.add(stM); }
   }
 
   // ---- lights
@@ -807,7 +819,7 @@ export default async function create(ctx) {
       pins: (te) => { const h = handPath(Math.min(te, REL)); const sag = te > REL ? 0.012 * sstep(REL, REL + 0.15, te) : 0; const l = h.c.clone().addScaledVector(h.ax, h.sp).add(V3(0, -sag, 0)), r = h.c.clone().addScaledVector(h.ax, -h.sp).add(V3(0, -sag, 0)); return [[r.x, r.y, r.z], [l.x, l.y, l.z]]; },
       drive: () => null,
       capsules: caps, boxes, floorY: POOP_Y, wind: A(S67.R.clone().multiplyScalar(-(+(Q.get('s67wind') || 0.45))).add(V3(0, 0.05, 0))),
-      t0: -0.8, t1: 1.9, fps: 48, dt: 1 / 480, iters: 8, bend: +(Q.get('s67bend') || 0.15), dragN: 2.2, dragT: 0.25,
+      t0: -0.8, t1: 1.9, fps: 48, dt: 1 / 480, iters: 8, bend: +(Q.get('s67bend') || 0.07), dragN: 2.2, dragT: 0.25,
     });
     S67.sim = null; S67.simMs = 0;
     const n = (nu + 1) * (nv + 1);
@@ -938,7 +950,7 @@ export default async function create(ctx) {
       // in perspective); at 35 % they only roughen the long swell, which carries the weight
       setSwell(1.35, +(Q.get('sd8k') || 0.22));
       const pose = poseShip(T, 1);
-      sky.set({ preset: 'dusk', sunAz: -46, sunElev: -2.5, cloudCover: 0.42, cloudScale: 0.07, cloudDensity: 0.8, moonAz: 120, moonElev: 14, stars: 0.18 });
+      sky.set({ preset: 'dusk', sunAz: -46, sunElev: -2.5, cloudCover: 0.42, cloudScale: 0.07, cloudDensity: 0.8, moonAz: 120, moonElev: 14, stars: 0.05 });
       cam.lens(camera, 28);
       // high, steady heavy-lift aerial: slow constant pull-back + rise; registered: ship (0.55,0.64), horizon y≈0.42, light (0.10,0.44)
       const e = clamp(u) * 0.85 + ease.inOutSine(clamp(u)) * 0.15;
@@ -998,7 +1010,7 @@ export default async function create(ctx) {
       const R = V3(-F.z, 0, F.x);
       // shore light at (0.30, 0.58) on the low coast spanning x 0..0.48
       placeCoast(coastT, azOf(rayDir(camera, 0.48, 0.58)) - 2.0, 1.0);
-      placeShoreLight(shore, azOf(rayDir(camera, 0.30, 0.58)), 4, 11, 14);
+      placeShoreLight(shore, azOf(rayDir(camera, 0.30, 0.58)), 4, 4.2, 19);   // (integration) softer, larger core: the bloom of an 11× point printed a square box halo
       // light: hard moon from upper right (behind him, in depth) rims the head; the stern lantern low right warms his cheek
       // (review) the moon comes from upper right, a little behind the lens: a hard silver kicker that draws his cheekbone,
       // ear, jaw and the head-cloth's folds (the profile front stays in shadow, sky 3 stops over him); the stern lantern
@@ -1011,7 +1023,7 @@ export default async function create(ctx) {
       // focus: the shore (∞) until 0.3 s, rack to the eye by 1.33 s (81.62 '某个人一面'), ≥ 1 beat
       const rk = ease.inOutSine(clamp((tl - 0.3) / 1.03));
       const focus = 1 / lerp(1 / 4000, 1 / depthOf(camera, eye), rk);
-      return post({ dof: { focus, fstop: 2.0, maxCoc: 1.6 }, exposure: 1.35, temp: -0.08, contrast: 1.06, bloom: { strength: 0.6, radius: 0.6, threshold: 0.55 }, vignette: 0.42 });
+      return post({ dof: { focus, fstop: 2.0, maxCoc: 1.6 }, exposure: 1.35, temp: -0.08, contrast: 1.06, bloom: { strength: 0.32, radius: 0.75, threshold: 0.8 }, vignette: 0.42 });
     },
 
     // ---------------------------------------------------------------- S045 (integration restage) 85 mm: the cuff turned back, the patch touched → tilt to his eye, the shore light in it
@@ -1120,7 +1132,7 @@ export default async function create(ctx) {
       const f = navJ; f.root.visible = true;
       // at the PORT rail of the poop, facing aft (screen-left = home); camera on the poop looking to port
       f.root.position.set(-11.0, POOP_Y, -(innerBeam(-11.0, POOP_Y) - 0.32)); f.root.rotation.set(0, -Math.PI / 2, 0);
-      const turn = ease.inOutSine(clamp((tl - 0.66) / 0.52));                    // (integration) starts 234.8, the face is turned on 235.0
+      const turn = ease.inOutSine(clamp((tl - 0.47) / 0.5));                     // (integration) 234.6 → 235.0: the face is round to the first light on '你' (235.0)
       // locked-off: the camera is solved from the END pose so his eye lands at (0.33, 0.40) — the S076 dissolve anchor
       navTurn(f, T, 1); ship.updateMatrixWorld(true);
       const eyeEnd = f.eye();
@@ -1130,6 +1142,7 @@ export default async function create(ctx) {
       ship.updateMatrixWorld(true);
       const neck = f.worldPos('neck').add(V3(0, 0.12, 0));
       const camAz = azOf(F);
+      if (Q.get('sdlog')) { const hb = f.bone('head'); hb.updateWorldMatrix(true, false); const hf = V3(0, 0, 1).transformDirection(hb.matrixWorld); const cf = new THREE.Vector3(); camera.getWorldDirection(cf); const cr = cf.clone().cross(V3(0, 1, 0)).normalize(); console.log('S075', tl.toFixed(2), 'headFwd·camFwd', hf.dot(cf).toFixed(2), '·camRight', hf.dot(cr).toFixed(2)); }
       // (review) the first light sits at the RIGHT horizon (the warm band just past frame right), the sky above still night
       // blue; the moon is behind the camera, low
       const sAz = camAz + 9;                                   // the warm band just inside frame right
@@ -1141,9 +1154,9 @@ export default async function create(ctx) {
       lamp.object3D.visible = false; for (const a of parts.lampArm) a.visible = false;
       // the first light: low, from the right horizon in front of him once he has turned (rakes the front of his profile;
       // the cheek toward the lens stays in the blue sky fill)
-      const kd = dirFromAz(camAz + +(Q.get('s75a') || 96), 6);                       // from the right horizon, a little behind him: a rim, not a key
+      const kd = dirFromAz(camAz + +(Q.get('s75a') || 108), 6);                       // from the right horizon, a little behind him: a rim, not a key
       glowLight.color.set(0xdcb4a0); glowLight.position.copy(neck).addScaledVector(kd, 30); glowLight.target.position.copy(neck); glowLight.target.updateMatrixWorld();
-      glowLight.color.set(0xe8b8a0); glowLight.intensity = 1.0 + 3.2 * turn;      // a cool-peach rim lands on his cheek as he turns
+      glowLight.color.set(0xe8b8a0); glowLight.intensity = 0.8 + 2.4 * turn;      // a cool-peach rim lands on his cheek as he turns
       hemi.color.set(0x4a5f86); hemi.groundColor.set(0x10151f); hemi.intensity = 0.75;
       dbgPivot = neck; debugCam();
       envUpdate(T, T, { lampI: 0, seaLamp: 0, pose });
@@ -1341,9 +1354,10 @@ export default async function create(ctx) {
     // (review) turns to his own LEFT through the camera side, ~150°: from a left profile (home, screen-left) to a right
     // profile turned a little toward the lens (the first light, screen-right) — the T25 echo / S076 dissolve pose.
     // The feet pivot ~60°, the shoulders and head follow (no strained neck-only turn).
-    f.root.rotation.y = -Math.PI / 2 + 1.12 * turn;
+    // (integration) he turns AWAY from the lens (to his own right): mid-turn we see the back of his head, never a frontal mask
+    f.root.rotation.y = -Math.PI / 2 - 1.12 * turn;
     f.pose('stand', { weight: lerp(-0.25, 0.2, turn) });
-    f.pose({ 'spine.y': lerp(0.0, 0.18, turn), 'chest.y': lerp(0.0, 0.38, turn), 'neck.y': lerp(0.05, 0.62, turn), 'head.y': lerp(0.12, 0.85, turn),
+    f.pose({ 'spine.y': lerp(0.0, -0.18, turn), 'chest.y': lerp(0.0, -0.38, turn), 'neck.y': lerp(0.05, -0.62, turn), 'head.y': lerp(0.12, -0.86, turn),
       'head.x': lerp(-0.06, -0.1, turn), 'neck.x': -0.03, 'head.z': 0.03 * Math.sin(Math.PI * turn) }, { add: true });
     f.breathe(T, 0.8, 0.2);
   }

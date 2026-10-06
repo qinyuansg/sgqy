@@ -239,3 +239,62 @@ Checked and fine: T03 registration (camera / chart layout untouched), T05 pivot 
 2.5 / glint 4.7, look-up 1.61 / sail 3.77, needle dead at f1194, pads settle at f1272), no NaN / black frames, no
 z-fighting (decal 0.4 mm proud + polygon offset), consecutive frames differ only by grain and the lamp's slow swing.
 Cross-module: S012's opening pinch is off its registered position (see Known weaknesses) — for the restoration_lab owner.
+
+## Integration fixes (integration QA pass, 2026-10-06)
+
+Source: `previz/qa/findings_by_module.json` (ship_cabin + the shared grain findings), the director's notes for the navigator
+group (faces never frontal pink masks, S007 legible all the way, S010 eye-line + catch-light). Verify renders:
+`out/fix_ship_cabin_sea_deck/` (survey of S004–S012 / S021–S023 / S044–S046 / S066–S068 / S074–S076, 960 px) and the iteration
+stills in `out/check/ship_cabin/integ/`. Lab: `out/check/ship_cabin/integ/lab_shots.json` (`LAB_HEAD`: the dressed head from 8
+angles). Dev params (all default off): `?s5=bd:…`, `?s6=kd:…,wf:…,bo:…`, `?s7=lk:…,hs:…,lx:…,lz:…,yw:…,ex:…,bo:…`,
+`?s10=th:…,d:…,pd:…,bk:…,wf:…,lk:…,ll:…,cl:…,ex:…`, `?s11=wf:…`, `?off=dress,nail,nailsm,macroL,ds,flatL` (A/B probes).
+
+**Grain (all shots).** The module's half-res grain quad + luminance probe and the `grain: 0` override are gone. Every shot
+returns the CT_NAV era grain through post (`grain: 0.042`) and the engine's integer-hash grain draws it; nested views
+(`view_cabin`) get none from the engine.
+
+**Shared NAVIGATOR dressing — `dressNavigator(fig, { ear })` (exported; sea_deck uses it too).** The library 'headcloth' is a
+smooth shell high on the forehead and above the ears: in close-ups it read as a beret on a bald pink mannequin with a big crisp
+ear. Built once per figure, module-side:
+* a **wrapped indigo head-cloth**: a spherical max-radius map of the head mesh around the head centre (dilated ±3 bins and
+  blurred so it drapes over the ear instead of following it), hem low on the forehead with the two wraps crossing over it (an X
+  of folds and a slight dip at the centre), over ≈ 80 % of the ear, tilted wrap layers round the back, the **topknot bump at
+  the crown-back**, a knot and two short tails at the occiput; parented to the head bone; the library hair layer is hidden;
+* a **short salt-bleached beard**: a skinned overlay of the head layer's jaw / chin / upper-lip triangles, 0.5–2.4 mm proud,
+  dark brown with lighter tips, feathered into the skin with stochastic alpha (lips and upper cheeks bare);
+* **weathered skin** #8F6346 (less saturated, almost no pink sheen), a faded indigo jacket #283043 (it read royal blue under
+  the cool hatch/moon light) and a darker **交领 collar band** #161D2B (the library cross-collar trim is cut in the jacket's own
+  colour, so the jacket read as a crew-neck sweater).
+
+**`buildCuffFlap(hand)` (exported; S011 + sea_deck S045).** Replaces the library's static `cuffTurned` roll (the patch printed on
+its outside read as a laundry label): a sleeve tube + a 4.6 cm FLAP hinged 6 cm above the wrist; `setFold(α)` α = 0 hangs over
+the wrist like a plain cuff (outside = faded indigo), α = π is turned back over the sleeve so the flap's INNER face — with the
+hand-sewn PROP_PATCH (#7D9CBB plain weave, off-white running stitches, one uneven corner with the double knot, rubbed centre,
+4.3 × 4.3 cm) — faces out. The pinched side leads the fold. The patch is drawn in the flap's shader on the inner face only, at
+an angle set per shot so it faces the lens. **`smoothNailFolds(hand)`** (exported): the close-up salt hands' nail-plate border
+is a jagged surface-nets edge whose normals flip under a grazing practical — the "black squiggles / insects" on the
+fingertips; the normals (and a little of the positions) of the nail border are Laplacian-smoothed in place. Close-up hands:
+skin #8F6346, nails close to the skin colour, `uDetail` 0.35 (creases as faint hairlines).
+
+| shot | QA finding (severity) | fix |
+|---|---|---|
+| S010 | blocker: bald pink mask, no eye, T05 fails, no strands | **restaged as a low-key eye-line CU**: he leans in to the barred stern window (eye ≈ 0.45 m from it), camera three-quarter behind his LEFT shoulder (115° from his facing), 100 mm, ~1 m; the barred window — deep dusk sky over the sea horizon, three soft dark bars — fills frame left behind his profile, so brow, nose, beard read as a near-silhouette edge with a thin cool rim (the window is the key); the lantern is a faint warm graze on cheek / neck / head-cloth from behind-left; **the eye is the window's catch-light exactly at (0.46, 0.50)** (T05 = the needle pivot; measured 0.460, 0.50) and the 51.39 '回' blink is that catch-light going out for 4 frames (f1234–1237); nine loose hair strands escape the head-cloth hem at the temple and move in the draught against the window. Cheat (ruling 2): the window behind his profile is a defocused plate — the real 55 × 40 cm opening cannot sit behind a 100 mm three-quarter face |
+| S007 | major (figure): frontal warm mask, beret + sweater | dressed (head-cloth / beard / 交领 / faded jacket); turned 18° toward the lantern, which is cheated behind-left of him just out of frame (short lighting: the near cheek and most of the face in shadow, warm on brow, nose ridge, cheekbone, head-cloth); a cool dusk top light from the open hatch on the head-cloth, shoulders and chart; camera 25 cm below his eye line looking up a little; 20 cm further from beam A (his head no longer clipped by it); the cream chart roller hidden |
+| S007 | major (timing): near-black passage, sail early & static, starry royal-blue sky | new crane (Hermite on position + yaw/pitch, zero velocity at 1.6 s): from 1.61 s it tilts up hard while easing aft under the hatch, so the dusk opening enters the frame top at ≈ 1.9 s and fills it by 2.83 s (43.0); the lantern's bounce lights the coaming / trimmer undersides through the passage (the darkest passage frame now reads as warm wood around a blue opening); out on deck it tilts to the lower panels of the sail, which fills the frame on 3.77 s (43.94 '帆') and keeps sliding down as the crane rises to the cut; sky = S008's dusk without stars (P01 → P03) |
+| S011 | major: grey label patch outside the cuff, no fold, insect cracks | the cuff is `buildCuffFlap`; cut in mid-gesture: 0–0.17 s the left thumb + index, pinching the cuff's top edge in frame (so the hand never hides the patch), turn it the last part of the way back — the pale-blue patch swings into view on its inside — 0.17–0.27 s they let go and the index + middle pads settle on the patch at 53.0, then nothing moves; a little cool window light keeps the patch #7D9CBB pale blue under the lantern; nails/cracks fixed (above); the camera is shifted so the pads' contact sits at the S012 registration (measured 0.501, 0.52), fingers to lower left ~30° |
+| S006 | major: thumb a defocused pink blob over 40 % of the frame | camera 1.45× further back (the dial and star ring still fill the frame), the focus racks to the thumb by 2.6 s so it is sharp as it enters on '刻' and back to the ring for the glint's rest on 午 (4.7 s); brown salt skin, warm chart bounce instead of the cool fill. The thumb still enters from screen left (see below) |
+| S005 | minor: emissive orange weight, blind-like window stripes, invisible corner lift | 镇纸 as dull cast brass #8E7348 (env 0.22, metalness 0.55); the barred-window spot replaced by ONE soft vertical dusk-blue band at frame right (x 0.78–0.95) with two thin bar shadows along it (light × albedo in the chart shader); the gust curl lifts ≈ 5 cm (fold 12.5 cm, 2.35 rad) and reads on 32.77 |
+| S009 | minor: needle barely moves | 8° off south at frame 0, 2.5 damped cycles (±4° by 0.6 s, ±1.3° by 1.1 s), envelope → 0 with zero slope: dead still from f1194 (49.77 '南'); pivot (0.46, 0.50) unchanged |
+| S005–S021 | minor: module grain | removed (above) |
+
+**view_cabin** — the `mid` navigator is dressed too (head-cloth, beard); framing, lamp and window unchanged.
+
+**Not fixed / deviations (and why)**
+* S006: the thumb is ≈ 30–35 % of frame height, not ≤ 15 %: a 2 cm thumb in a 100 mm macro of a 15 cm dial cannot be smaller
+  without losing the ECU; it still enters from screen left (staging from the lens side puts the hand between lens and dial).
+* S007: kept the shot list's 32 mm MCU (head ≈ 50 % of frame height) rather than QA's 40 mm MS: the cabin is 2 m long and the
+  camera is already at the stern wall; the hatch opening is not in frame at frame 0 (it is above the camera) — it enters as
+  soon as the tilt starts.
+* S010: the window behind his profile is a cheated plate (ruling 2); a faceless head has no eye, so the eye-line + catch-light
+  carry the shot.
+* S011: the patch is 4.3 × 4.3 cm on a 4.6 cm turn-back (bible 4.5 × 6 cm) — a 6 cm patch needs a 6 cm cuff turn-back.
