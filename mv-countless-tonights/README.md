@@ -12,8 +12,8 @@
 
 | 内容 | 位置 |
 |---|---|
-| 预演成片（1080p，含原曲）| `delivery/` 下的 `.mp4`（大文件不入 git，见下文） |
-| 在线分镜页（81 镜画面 + 时码 + 歌词 + 调度 + 提示词，可与样片联动）| claude.ai Artifact「无数个今晚 分镜」 |
+| 预演成片（含原曲完整 4:16.82）| `delivery/countless_tonights_previz_1080p_master.mp4`（1920×1080，585 MB）· `delivery/countless_tonights_previz_720p.mp4`（28 MB）· `delivery/countless_tonights_previz_review_720p.mp4`（审片版：画幅遮幅内烧录镜号 / 时码 / 歌词）——视频文件体积大，不入 git |
+| 在线分镜页（81 镜画面 + 时码 + 歌词 + 调度 + 提示词，内嵌样片并与镜头联动）| claude.ai Artifact「无数个今晚 分镜」：https://claude.ai/artifact/KRz8ovirwi5Gj2aGyxhE9C ；页面源文件 `delivery/storyboard/` |
 | 原始简报（逐字保留）| `brief/treatment_zh.md` |
 | 导演备忘（锁定的人物、时代、技术约定）| `brief/directors_notes.md` |
 | 制作圣经（色彩、光线、摄影语言、人物 / 道具 / 场景设定、跨时代转场语法、考证与敏感性准则）| `bible/production_bible.md`、`bible/bible.json` |

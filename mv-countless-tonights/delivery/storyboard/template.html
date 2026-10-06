@@ -1,0 +1,256 @@
+<title>无数个今晚 分镜</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&family=Noto+Sans+SC:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a night-dark production storyboard — sticky song map on top, one row per shot (frame left, notes right), stacks on phones.
+   Single deliberate dark look (the film is a night film); every colour is set explicitly. */
+:root {
+  --night: #0a1120;        /* 暮色深蓝 page ground */
+  --deck: #101a2d;         /* raised surface */
+  --rule: #223150;         /* hairlines */
+  --moon: #d8dee8;         /* 月光银 text */
+  --dim: #8d99ae;          /* secondary text */
+  --brass: #b99b68;        /* 低饱和铜金 accent */
+  --cobalt: #3d67b0;       /* 青花 cobalt */
+  --porcelain: #e9eef6;    /* 青花白 */
+  --dawn: #e2b48a;         /* the only warm note: the ending */
+  --f-display: "Noto Serif SC", "Songti SC", "STSong", "SimSun", serif;
+  --f-body: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: dark;
+}
+html { background: var(--night); }
+body { background: var(--night); color: var(--moon); font: 15px/1.7 var(--f-body); }
+.wrap { max-width: 1240px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 80px; }
+a { color: var(--brass); }
+h1, h2, h3 { text-wrap: balance; margin: 0; font-weight: 600; }
+.mast { display: grid; gap: 14px; padding-block: 12px 26px; border-bottom: 1px solid var(--rule); }
+.eyebrow { font: 500 12px/1 var(--f-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--brass); }
+.mast h1 { font: 600 clamp(34px, 6vw, 58px)/1.1 var(--f-display); letter-spacing: .04em; color: var(--porcelain); }
+.thesis { font: 400 clamp(17px, 2.2vw, 21px)/1.6 var(--f-display); color: var(--moon); max-width: 40em; }
+.facts { display: flex; flex-wrap: wrap; gap: 8px 22px; font: 13px/1.5 var(--f-mono); color: var(--dim); font-variant-numeric: tabular-nums; }
+.facts b { color: var(--moon); font-weight: 500; }
+.note { color: var(--dim); font-size: 13.5px; max-width: 62em; }
+
+/* song map */
+.map { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--night); padding-block: 12px 10px; border-bottom: 1px solid var(--rule); }
+.bar { display: flex; height: 34px; gap: 2px; }
+.seg { position: relative; flex: 1 1 0; min-width: 0; background: var(--deck); border: 0; padding: 0; cursor: pointer; color: var(--dim); font: 500 11px/34px var(--f-mono); letter-spacing: .06em; overflow: hidden; white-space: nowrap; text-overflow: clip; }
+.seg:hover, .seg:focus-visible { background: #17233b; color: var(--moon); outline: none; }
+.seg.on { color: var(--porcelain); background: #1b2a48; }
+.seg i { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(185,155,104,.45); }
+.seg .lbl { position: relative; padding-inline: 5px; }
+.playhead { position: absolute; top: 12px; height: 34px; width: 2px; background: var(--dawn); pointer-events: none; display: none; }
+.tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+.chip { border: 1px solid var(--rule); background: transparent; color: var(--dim); border-radius: 999px; padding: 4px 11px; font: 13px/1.4 var(--f-body); cursor: pointer; }
+.chip:hover, .chip:focus-visible { color: var(--moon); border-color: #34476e; outline: none; }
+.chip[aria-pressed="true"] { color: var(--night); background: var(--brass); border-color: var(--brass); }
+.search { flex: 1 1 200px; min-width: 0; max-width: 320px; background: var(--deck); border: 1px solid var(--rule); color: var(--moon); border-radius: 6px; padding: 6px 10px; font: 14px var(--f-body); }
+.search:focus-visible { outline: 2px solid var(--brass); outline-offset: 1px; }
+.count { font: 12px var(--f-mono); color: var(--dim); margin-left: auto; }
+
+/* player */
+.player { display: grid; gap: 10px; margin-top: 22px; }
+.player video { width: 100%; max-width: 100%; aspect-ratio: 2.39 / 1; background: #000; border: 1px solid var(--rule); }
+
+/* sections + shots */
+.sec-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; margin-top: 46px; padding-bottom: 10px; border-bottom: 1px solid var(--rule); scroll-margin-top: 120px; }
+.sec-h h2 { font: 600 22px/1.3 var(--f-display); color: var(--porcelain); }
+.sec-h .tc { font: 13px var(--f-mono); color: var(--brass); font-variant-numeric: tabular-nums; }
+.sec-h p { margin: 0; color: var(--dim); font-size: 13px; flex-basis: 100%; }
+.shot { display: grid; grid-template-columns: minmax(0, 46fr) minmax(0, 54fr); gap: 22px; padding-block: 22px; border-bottom: 1px solid #172338; scroll-margin-top: 120px; }
+.shot.now .frame img { outline: 2px solid var(--dawn); outline-offset: 2px; }
+.frame { display: grid; gap: 8px; align-content: start; }
+.frame button { padding: 0; border: 0; background: none; cursor: pointer; display: block; }
+.frame img { width: 100%; aspect-ratio: 2.39 / 1; object-fit: cover; display: block; background: #05080f; }
+.frame .cap { font: 12px var(--f-mono); color: var(--dim); }
+.info { min-width: 0; display: grid; gap: 10px; align-content: start; }
+.idline { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; font: 13px/1.4 var(--f-mono); font-variant-numeric: tabular-nums; color: var(--dim); }
+.idline .sid { color: var(--brass); font-weight: 500; font-size: 15px; letter-spacing: .04em; }
+.idline .dur { color: var(--moon); }
+.lyric { font: 400 22px/1.5 var(--f-display); color: var(--porcelain); }
+.lyric.none { color: var(--dim); font-size: 15px; font-style: normal; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { font: 12px/1.6 var(--f-body); border: 1px solid var(--rule); border-radius: 4px; padding: 0 7px; color: var(--dim); }
+.tag.era { border-color: #2c4a80; color: #a9c0e8; }
+.action { margin: 0; color: var(--moon); }
+.trans { font-size: 13px; color: var(--dim); }
+.trans b { color: var(--brass); font-weight: 500; }
+.ruling { font-size: 13px; color: var(--dawn); }
+details { border-top: 1px dashed var(--rule); padding-top: 8px; }
+summary { cursor: pointer; color: var(--brass); font-size: 13.5px; list-style-position: outside; }
+summary:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+.pgrid { display: grid; gap: 12px; margin-top: 10px; }
+.pblock { background: var(--deck); border: 1px solid var(--rule); border-radius: 6px; padding: 10px 12px; min-width: 0; }
+.pblock h4 { margin: 0 0 6px; display: flex; justify-content: space-between; gap: 10px; font: 500 12px/1.6 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
+.pblock p { margin: 0; font-size: 13.5px; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }
+.copy { border: 1px solid var(--rule); background: transparent; color: var(--brass); border-radius: 4px; font: 12px var(--f-body); padding: 1px 8px; cursor: pointer; text-transform: none; letter-spacing: 0; }
+.copy:focus-visible { outline: 2px solid var(--brass); }
+.empty { color: var(--dim); padding: 40px 0; text-align: center; }
+footer { margin-top: 50px; color: var(--dim); font-size: 13px; display: grid; gap: 6px; }
+@media (max-width: 760px) {
+  .shot { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .seg .lbl { display: none; }
+  .lyric { font-size: 19px; }
+}
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <div class="eyebrow">Music video · Storyboard &amp; previz · 2.39:1 · 24 fps</div>
+    <h1>无数个今晚</h1>
+    <p class="thesis">千年，不过是无数个普通人，舍不得结束的今晚。</p>
+    <div class="facts" id="facts"></div>
+    <p class="note">每一镜的画面是预演（previz）渲染：真实的镜头、光线与时间，人物为无五官的雕塑式造型。每镜附有用于 AI 生成正片的关键帧与运动提示词（中英双语）。点击上方歌曲结构跳转段落；点击画面在样片中定位。</p>
+  </header>
+
+  <nav class="map" aria-label="歌曲结构">
+    <div class="bar" id="bar"></div>
+    <div class="playhead" id="playhead"></div>
+    <div class="tools">
+      <span class="eyebrow" style="letter-spacing:.1em">时代</span>
+      <div id="eras" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+      <input class="search" id="q" type="search" placeholder="搜索歌词、动作、提示词…" aria-label="搜索镜头">
+      <span class="count" id="count"></span>
+    </div>
+  </nav>
+
+  <section class="player" id="player" hidden>
+    <video id="vid" controls preload="metadata" playsinline poster="frames/S081.jpg"></video>
+    <div class="note">预演样片（压缩预览版，含原曲）。播放时上方歌曲结构与当前镜头同步高亮；点击任一镜头画面可从该镜开始播放。</div>
+  </section>
+
+  <main id="list"></main>
+
+  <footer>
+    <div>镜头总数 <span id="nshots"></span> · 歌曲完整保留 4:16.82 · 片名、字幕与演职员文字后期统一添加。</div>
+    <div>Previz frames are stylised placeholders for the final photoreal film; prompts follow the production bible's locked descriptors.</div>
+  </footer>
+</div>
+
+<script id="data" type="application/json">__DATA__</script>
+<script>
+(function () {
+  var D = JSON.parse(document.getElementById('data').textContent);
+  var FPS = 24, TOTAL = 6164, DUR = 256.824;
+  var SEC_ZH = { INTRO: '前奏', V1: '主歌一', GAP1: '过门', PRE1: '预副歌', CH1: '副歌一', INTERLUDE: '间奏', V2: '主歌二', CH2: '副歌二', BR1: '桥段一', BR2: '桥段二', CH3: '副歌三', CH4: '终副歌', OUTRO: '尾声', TAIL: '尾奏' };
+  var ERA_ZH = { modern: '当下', navigator: '航海人', home: '旧日家中', migrant: '迁徙', maphand: '地图之手', chapel: '礼拜堂', future: '未来', multi: '多时代' };
+  var TR_ZH = { cut: '切', match_cut: '匹配剪辑', dissolve: '叠化', light: '光线转场', reflection: '反射转场', fade_in: '淡入' };
+  var SIZE_ZH = { ECU: '大特写', CU: '特写', MCU: '近景', MS: '中景', MWS: '中远景', WS: '远景', EWS: '大远景', INSERT: '插入' };
+  function tc(f) { var s = Math.floor(f / FPS); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0') + ':' + String(f % FPS).padStart(2, '0'); }
+  function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+  function secOf(id) { return D.sections.find(function (s) { return s.id === id; }) || { id: id, start: 0, end: 0, desc: '' }; }
+  // section key used for grouping: CH1A/CH1B → CH1 etc.
+  function secKey(s) { return s.replace(/[AB]$/, ''); }
+
+  document.getElementById('facts').innerHTML =
+    '<span>演唱 <b>qinyuansg</b></span><span>时长 <b>4:16.82</b></span><span>帧数 <b>6164</b></span><span>镜头 <b>' + D.shots.length + '</b></span><span>画幅 <b>2.39:1</b></span>';
+  document.getElementById('nshots').textContent = D.shots.length;
+
+  // song map
+  var bar = document.getElementById('bar');
+  D.sections.forEach(function (s) {
+    var b = el('button', 'seg'); b.type = 'button'; b.style.flexGrow = String(Math.max(0.01, s.end - s.start)); b.dataset.sec = s.id;
+    b.title = (SEC_ZH[s.id] || s.id) + '  ' + tc(Math.round(s.start * FPS)) + '–' + tc(Math.round(s.end * FPS));
+    b.setAttribute('aria-label', b.title);
+    D.shots.forEach(function (sh) { var t = sh.in / FPS; if (t > s.start + 0.01 && t < s.end) { var i = el('i'); i.style.left = ((t - s.start) / (s.end - s.start) * 100) + '%'; b.appendChild(i); } });
+    var l = el('span', 'lbl', SEC_ZH[s.id] || s.id); b.appendChild(l);
+    b.addEventListener('click', function () { var h = document.getElementById('sec-' + s.id); if (h) h.scrollIntoView(); });
+    bar.appendChild(b);
+  });
+
+  // era filter
+  var eraBox = document.getElementById('eras'), activeEra = 'all';
+  var eras = ['all'].concat(Object.keys(ERA_ZH).filter(function (e) { return D.shots.some(function (s) { return s.era === e; }); }));
+  eras.forEach(function (e) {
+    var c = el('button', 'chip', e === 'all' ? '全部' : ERA_ZH[e]); c.type = 'button'; c.setAttribute('aria-pressed', e === 'all' ? 'true' : 'false');
+    c.addEventListener('click', function () { activeEra = e; Array.prototype.forEach.call(eraBox.children, function (x) { x.setAttribute('aria-pressed', 'false'); }); c.setAttribute('aria-pressed', 'true'); apply(); });
+    eraBox.appendChild(c);
+  });
+
+  function copyBtn(text) {
+    var b = el('button', 'copy', '复制'); b.type = 'button';
+    b.addEventListener('click', function () {
+      var done = function () { b.textContent = '已复制'; setTimeout(function () { b.textContent = '复制'; }, 1400); };
+      try { navigator.clipboard.writeText(text).then(done, function () { selectText(b); }); } catch (e) { selectText(b); }
+    });
+    return b;
+  }
+  function selectText(b) { var p = b.closest('.pblock').querySelector('p'); var r = document.createRange(); r.selectNodeContents(p); var s = getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent = '已选中'; }
+  function pblock(label, text) {
+    if (!text) return null;
+    var d = el('div', 'pblock'); var h = el('h4'); h.appendChild(el('span', null, label)); h.appendChild(copyBtn(text)); d.appendChild(h); d.appendChild(el('p', null, text)); return d;
+  }
+
+  // shot rows grouped by section
+  var list = document.getElementById('list'), rows = [], lastSec = null;
+  D.shots.forEach(function (s) {
+    var key = secKey(s.sec);
+    if (key !== lastSec) {
+      lastSec = key; var sc = secOf(key);
+      var h = el('div', 'sec-h'); h.id = 'sec-' + key;
+      h.appendChild(el('h2', null, SEC_ZH[key] || key));
+      h.appendChild(el('span', 'tc', tc(Math.round(sc.start * FPS)) + ' – ' + tc(Math.round(sc.end * FPS))));
+      list.appendChild(h);
+    }
+    var r = el('article', 'shot'); r.id = s.id;
+    var fr = el('div', 'frame');
+    var fb = el('button'); fb.type = 'button'; fb.setAttribute('aria-label', '在样片中播放 ' + s.id);
+    var img = el('img'); img.src = 'frames/' + s.id + '.jpg'; img.alt = s.id + ' 画面：' + (s.lyric || '无歌词') ; img.loading = 'lazy'; img.width = 768; img.height = 321;
+    fb.appendChild(img); fb.addEventListener('click', function () { seek(s.in / FPS); });
+    fr.appendChild(fb);
+    fr.appendChild(el('div', 'cap', 'previz · ' + s.scene));
+    r.appendChild(fr);
+    var inf = el('div', 'info');
+    var idl = el('div', 'idline');
+    idl.appendChild(el('span', 'sid', s.id));
+    idl.appendChild(el('span', null, tc(s.in) + ' – ' + tc(s.out)));
+    idl.appendChild(el('span', 'dur', ((s.out - s.in) / FPS).toFixed(2) + ' s'));
+    idl.appendChild(el('span', null, (SEC_ZH[key] || key) + (s.ref ? ' · 简报 ' + s.ref : '')));
+    inf.appendChild(idl);
+    inf.appendChild(el('div', 'lyric' + (s.lyric ? '' : ' none'), s.lyric ? '「' + s.lyric + '」' : '（无歌词）'));
+    var tg = el('div', 'tags');
+    if (s.era) tg.appendChild(el('span', 'tag era', ERA_ZH[s.era] || s.era));
+    if (s.size) tg.appendChild(el('span', 'tag', (SIZE_ZH[s.size] || s.size) + ' ' + s.size));
+    if (s.lens) tg.appendChild(el('span', 'tag', s.lens + ' mm'));
+    if (s.move) tg.appendChild(el('span', 'tag', s.move.length > 46 ? s.move.slice(0, 46) + '…' : s.move));
+    inf.appendChild(tg);
+    inf.appendChild(el('p', 'action', s.action));
+    if (s.emotion) inf.appendChild(el('div', 'trans', '情感：' + s.emotion));
+    var t = el('div', 'trans'); var tb = el('b', null, (TR_ZH[s.tr.type] || s.tr.type) + (s.tr.frames ? ' ' + s.tr.frames + ' 帧' : '')); t.appendChild(document.createTextNode('入点转场 ')); t.appendChild(tb); if (s.tr.on) t.appendChild(document.createTextNode('：' + s.tr.on)); inf.appendChild(t);
+    if (s.ruling) inf.appendChild(el('div', 'ruling', '导演裁定：' + s.ruling));
+    var det = el('details'); det.appendChild(el('summary', null, '生成提示词 · 参考 ' + (s.refs || []).length + ' 项'));
+    var pg = el('div', 'pgrid');
+    [['关键帧 Keyframe · EN', s.k_en], ['关键帧 · 中文', s.k_zh], ['运动 Motion · EN', s.m_en], ['运动 · 中文', s.m_zh], ['单条提示词 Prompt · EN', s.p_en], ['单条提示词 · 中文', s.p_zh], ['负面 Negative', s.neg], ['合成与后期 Post', s.post], ['参考 Refs', (s.refs || []).join('  ')]].forEach(function (x) { var b = pblock(x[0], x[1]); if (b) pg.appendChild(b); });
+    det.appendChild(pg); inf.appendChild(det);
+    r.appendChild(inf);
+    list.appendChild(r);
+    rows.push({ s: s, r: r, hay: [s.id, s.lyric, s.action, s.emotion, s.p_en, s.p_zh, s.scene, ERA_ZH[s.era] || ''].join(' ').toLowerCase() });
+  });
+
+  var q = document.getElementById('q'), count = document.getElementById('count');
+  function apply() {
+    var term = (q.value || '').trim().toLowerCase(), n = 0;
+    rows.forEach(function (x) { var ok = (activeEra === 'all' || x.s.era === activeEra) && (!term || x.hay.indexOf(term) >= 0); x.r.hidden = !ok; if (ok) n++; });
+    Array.prototype.forEach.call(document.querySelectorAll('.sec-h'), function (h) { var nx = h.nextElementSibling, any = false; while (nx && !nx.classList.contains('sec-h')) { if (!nx.hidden) any = true; nx = nx.nextElementSibling; } h.hidden = !any; });
+    count.textContent = n + ' / ' + rows.length + ' 镜';
+  }
+  q.addEventListener('input', apply); apply();
+
+  // optional animatic player (present when animatic.mp4 is published alongside)
+  var vid = document.getElementById('vid'), player = document.getElementById('player'), ph = document.getElementById('playhead');
+  var VIDEO = '__VIDEO__';
+  if (VIDEO && VIDEO.indexOf('__') !== 0) { vid.src = VIDEO; player.hidden = false; ph.style.display = 'block'; }
+  function seek(t) { if (player.hidden) return; vid.currentTime = t + 0.01; vid.play().catch(function () {}); player.scrollIntoView({ block: 'nearest' }); }
+  var cur = null;
+  vid.addEventListener('timeupdate', function () {
+    var f = Math.floor(vid.currentTime * FPS), sh = null;
+    for (var i = 0; i < D.shots.length; i++) { if (f >= D.shots[i].in && f < D.shots[i].out) { sh = D.shots[i]; break; } }
+    var w = bar.getBoundingClientRect(); ph.style.left = (bar.offsetLeft + (vid.currentTime / DUR) * w.width) + 'px';
+    if (sh && sh.id !== cur) { if (cur) { var o = document.getElementById(cur); if (o) o.classList.remove('now'); } cur = sh.id; var n = document.getElementById(cur); if (n) n.classList.add('now'); }
+    Array.prototype.forEach.call(bar.children, function (b) { var s = secOf(b.dataset.sec); b.classList.toggle('on', vid.currentTime >= s.start && vid.currentTime < s.end); });
+  });
+})();
+</script>
