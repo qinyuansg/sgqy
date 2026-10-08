@@ -1,0 +1,118 @@
+/* AI Use Case 1 — film design system (1920×1080, dark navy + electric blue,
+   matching the AGIL® Secure FastPass film). */
+
+@font-face { font-family: "Jakarta"; font-weight: 500; src: url(../fonts/plus-jakarta-sans-latin-500-normal.woff2) format("woff2"); }
+@font-face { font-family: "Jakarta"; font-weight: 600; src: url(../fonts/plus-jakarta-sans-latin-600-normal.woff2) format("woff2"); }
+@font-face { font-family: "Jakarta"; font-weight: 700; src: url(../fonts/plus-jakarta-sans-latin-700-normal.woff2) format("woff2"); }
+@font-face { font-family: "Jakarta"; font-weight: 800; src: url(../fonts/plus-jakarta-sans-latin-800-normal.woff2) format("woff2"); }
+@font-face { font-family: "InterF"; font-weight: 400; src: url(../fonts/inter-regular.woff2) format("woff2"); }
+@font-face { font-family: "InterF"; font-weight: 500; src: url(../fonts/inter-medium.woff2) format("woff2"); }
+@font-face { font-family: "InterF"; font-weight: 600; src: url(../fonts/inter-semibold.woff2) format("woff2"); }
+@font-face { font-family: "InterF"; font-weight: 700; src: url(../fonts/inter-bold.woff2) format("woff2"); }
+@font-face { font-family: "Mono"; font-weight: 400; src: url(../fonts/jetbrains-mono-latin-400-normal.woff2) format("woff2"); }
+@font-face { font-family: "Mono"; font-weight: 500; src: url(../fonts/jetbrains-mono-latin-500-normal.woff2) format("woff2"); }
+@font-face { font-family: "Mono"; font-weight: 600; src: url(../fonts/jetbrains-mono-latin-600-normal.woff2) format("woff2"); }
+
+:root {
+  --bg0: #050A16; --bg1: #0A1428;
+  --panel: #0D1830; --panel2: #12203D; --panel3: #192B50;
+  --line: rgba(143, 161, 192, .16); --line2: rgba(143, 161, 192, .30);
+  --blue: #2D5BFF; --blue2: #4D8DFF; --blue3: #8FB4FF; --blueDim: rgba(77, 141, 255, .14); --glow: rgba(77, 141, 255, .45);
+  --crit: #FF3B5C; --critDim: rgba(255, 59, 92, .16);
+  --high: #FFB020; --highDim: rgba(255, 176, 32, .15);
+  --ok: #2ED47A; --okDim: rgba(46, 212, 122, .15);
+  --muted: #7C8BA8; --mutedDim: rgba(124, 139, 168, .16);
+  --t1: #EEF3FC; --t2: #A9B7CF; --t3: #6F80A0;
+  --head: "Jakarta", "InterF", sans-serif;
+  --body: "InterF", sans-serif;
+  --mono: "Mono", "InterF", monospace;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: #000; }
+body { -webkit-font-smoothing: antialiased; text-rendering: geometricPrecision; }
+#stage {
+  position: relative; width: 1920px; height: 1080px; overflow: hidden;
+  font-family: var(--body); color: var(--t1); background: var(--bg0);
+  font-variant-numeric: tabular-nums;
+}
+#bg { position: absolute; inset: 0; background: radial-gradient(1200px 800px at 50% 42%, #0E1C3A 0%, #08122A 55%, #040914 100%); }
+#bg .grid {
+  position: absolute; inset: 0; opacity: .5;
+  background-image:
+    linear-gradient(rgba(143, 161, 192, .045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(143, 161, 192, .045) 1px, transparent 1px);
+  background-size: 64px 64px; background-position: -1px -1px;
+  -webkit-mask-image: radial-gradient(900px 600px at 50% 45%, #000 30%, transparent 100%);
+}
+#bg .vignette { position: absolute; inset: 0; background: radial-gradient(1400px 900px at 50% 50%, transparent 55%, rgba(0, 0, 0, .55) 100%); }
+
+.scene { position: absolute; inset: 0; display: none; opacity: 0; }
+.abs { position: absolute; }
+svg { display: block; overflow: visible; }
+
+/* ---------- type ---------- */
+.kicker { font-family: var(--mono); font-weight: 500; font-size: 16px; letter-spacing: .2em; text-transform: uppercase; color: var(--blue3); }
+.h-xl { font-family: var(--head); font-weight: 800; font-size: 96px; line-height: 1.02; letter-spacing: -.03em; }
+.h-l { font-family: var(--head); font-weight: 700; font-size: 60px; line-height: 1.06; letter-spacing: -.025em; }
+.h-m { font-family: var(--head); font-weight: 700; font-size: 40px; line-height: 1.12; letter-spacing: -.02em; }
+.h-s { font-family: var(--head); font-weight: 700; font-size: 28px; line-height: 1.2; letter-spacing: -.01em; }
+.lead { font-size: 28px; line-height: 1.4; color: var(--t2); }
+.body { font-size: 20px; line-height: 1.45; color: var(--t2); }
+.mono { font-family: var(--mono); }
+.label { font-family: var(--mono); font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--t3); font-weight: 500; }
+.blue { color: var(--blue2); }
+.w { display: inline-block; white-space: pre; }
+
+/* ---------- surfaces ---------- */
+.panel {
+  background: linear-gradient(180deg, rgba(20, 34, 64, .92), rgba(12, 22, 44, .92));
+  border: 1px solid var(--line); border-radius: 18px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, .45), inset 0 1px 0 rgba(255, 255, 255, .05);
+}
+.panel.flat { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04); }
+.panel.ai { border-color: rgba(77, 141, 255, .55); box-shadow: 0 0 0 1px rgba(77, 141, 255, .18), 0 0 60px rgba(45, 91, 255, .22), 0 30px 80px rgba(0, 0, 0, .45); }
+
+.chip {
+  display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px; border-radius: 9px;
+  font-family: var(--mono); font-size: 14px; font-weight: 500; letter-spacing: .02em; white-space: nowrap;
+  background: rgba(143, 161, 192, .1); color: var(--t2); border: 1px solid var(--line);
+}
+.chip.blue { background: var(--blueDim); color: var(--blue3); border-color: rgba(77, 141, 255, .35); }
+.chip.crit { background: var(--critDim); color: #FF8DA0; border-color: rgba(255, 59, 92, .4); }
+.chip.high { background: var(--highDim); color: #FFCB6B; border-color: rgba(255, 176, 32, .38); }
+.chip.ok { background: var(--okDim); color: #7BE8AC; border-color: rgba(46, 212, 122, .4); }
+.chip .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+
+.pill { display: inline-flex; align-items: center; gap: 7px; padding: 4px 10px; border-radius: 99px; font-family: var(--mono); font-size: 13px; font-weight: 600; letter-spacing: .08em; }
+.pill.crit { background: var(--critDim); color: #FF8DA0; }
+.pill.high { background: var(--highDim); color: #FFCB6B; }
+.pill.low { background: var(--mutedDim); color: #AEB9CF; }
+.pill.ok { background: var(--okDim); color: #7BE8AC; }
+.pill.blue { background: var(--blueDim); color: var(--blue3); }
+
+.icon { display: inline-block; vertical-align: middle; }
+.ibox { display: grid; place-items: center; border-radius: 14px; background: rgba(77, 141, 255, .12); color: var(--blue2); border: 1px solid rgba(77, 141, 255, .28); }
+
+.avatar { display: grid; place-items: center; border-radius: 50%; font-family: var(--head); font-weight: 700; color: #fff; flex: none; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 38px; padding: 0 16px; border-radius: 10px; font-weight: 600; font-size: 16px; background: var(--blue); color: #fff; white-space: nowrap; }
+.btn.ghost { background: rgba(143, 161, 192, .12); color: var(--t1); border: 1px solid var(--line2); }
+.btn.done { background: var(--okDim); color: #7BE8AC; border: 1px solid rgba(46, 212, 122, .4); }
+
+.cursor { position: absolute; width: 30px; height: 30px; left: 0; top: 0; z-index: 50; pointer-events: none; filter: drop-shadow(0 4px 8px rgba(0, 0, 0, .5)); }
+.ripple { position: absolute; width: 60px; height: 60px; margin: -30px 0 0 -30px; border-radius: 50%; border: 2px solid var(--blue2); opacity: 0; pointer-events: none; }
+
+/* ---------- chrome ---------- */
+#chrome { position: absolute; inset: 0; pointer-events: none; z-index: 40; }
+#chrome .kick { position: absolute; left: 120px; top: 58px; display: flex; align-items: center; gap: 14px; }
+#chrome .kick i { width: 10px; height: 10px; background: var(--blue2); border-radius: 2px; box-shadow: 0 0 12px var(--glow); }
+#chrome .bug { position: absolute; right: 120px; top: 58px; font-family: var(--mono); font-size: 14px; letter-spacing: .16em; color: var(--t3); text-transform: uppercase; }
+#chrome .bug b { color: var(--t2); font-weight: 500; }
+#chrome .note { position: absolute; right: 120px; top: 84px; font-family: var(--mono); font-size: 12px; letter-spacing: .14em; color: #55658A; text-transform: uppercase; }
+
+/* ---------- subtitles (preview / overlay) ---------- */
+#subs { position: absolute; left: 0; right: 0; bottom: 34px; display: flex; flex-direction: column; align-items: center; gap: 6px; z-index: 60; }
+#subs .en, #subs .zh { padding: 4px 16px; border-radius: 8px; background: rgba(3, 7, 16, .72); text-align: center; }
+#subs .en { font-family: var(--body); font-weight: 500; font-size: 30px; color: #F3F6FC; }
+#subs .zh { font-family: "NotoSC", var(--body); font-weight: 500; font-size: 30px; color: #DDE6F6; }

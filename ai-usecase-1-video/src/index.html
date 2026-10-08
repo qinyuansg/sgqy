@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AI Use Case 1 — AI-powered AGIL® Secure ISMS for Airports</title>
+<link rel="stylesheet" href="css/film.css">
+</head>
+<body>
+<div id="stage"><div id="bg"><div class="grid"></div><div class="vignette"></div></div></div>
+<script src="js/timeline.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/components.js"></script>
+<script src="js/moment.js"></script>
+<script src="js/scenes/s01_open.js"></script>
+<script src="js/scenes/s02_storm.js"></script>
+<script src="js/scenes/s03_pains.js"></script>
+<script src="js/scenes/s04_cost.js"></script>
+<script src="js/scenes/s05_solution.js"></script>
+<script src="js/scenes/s06_principles.js"></script>
+<script src="js/scenes/s07_shift.js"></script>
+<script src="js/scenes/m1_triage.js"></script>
+<script src="js/scenes/m2_respond.js"></script>
+<script src="js/scenes/m3_investigate.js"></script>
+<script src="js/scenes/m4_anticipate.js"></script>
+<script src="js/scenes/m5_report.js"></script>
+<script src="js/scenes/s13_capabilities.js"></script>
+<script src="js/scenes/s14_value.js"></script>
+<script src="js/scenes/s15_end.js"></script>
+<script src="js/chrome.js"></script>
+<script>
+  // Deterministic player: every frame is a pure function of t (seconds).
+  // ?t=12.5 freezes a frame; ?play=1 previews in real time; ?subs=1 shows subtitles.
+  E.init();
+  const q = new URLSearchParams(location.search);
+  if (q.get('play')) {
+    const t0 = performance.now() - (parseFloat(q.get('t') || '0') * 1000);
+    const tick = () => { E.seek(Math.min(E.total, (performance.now() - t0) / 1000)); requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+  } else {
+    E.seek(parseFloat(q.get('t') || '0'));
+  }
+</script>
+</body>
+</html>

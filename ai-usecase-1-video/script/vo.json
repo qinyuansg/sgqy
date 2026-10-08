@@ -1,0 +1,242 @@
+{
+  "title": "AI Use Case 1 — AI-powered AGIL® Secure ISMS for Airports",
+  "voice": "bf_emma",
+  "lang": "en-gb",
+  "speed": 1.0,
+  "tail": 3.6,
+  "notes": "Source of truth for narration and subtitles. `en`/`zh` are display text; `|` splits a line into subtitle cues (EN and ZH split in parallel). `say` is the spoken form fed to TTS. `pre` is the silence (s) before the line starts.",
+  "lines": [
+    {
+      "id": "v01",
+      "scene": "s01",
+      "pre": 0.8,
+      "en": "An airport never sleeps — and neither does its security.",
+      "say": "An airport never sleeps — and neither does its security.",
+      "zh": "机场从不停歇，安保亦然。"
+    },
+    {
+      "id": "v02",
+      "scene": "s01",
+      "pre": 0.35,
+      "en": "Thousands of cameras, doors and sensors report to one control room.",
+      "say": "Thousands of cameras, doors and sensors report to one control room.",
+      "zh": "成千上万的摄像头、门禁与传感器，汇聚于同一个控制室。"
+    },
+    {
+      "id": "v03",
+      "scene": "s02",
+      "pre": 1.2,
+      "en": "2 a.m. 312 alarms in the past hour.",
+      "say": "Two a.m. Three hundred and twelve alarms, in the past hour.",
+      "zh": "凌晨两点，过去一小时内触发了 312 条告警。"
+    },
+    {
+      "id": "v04",
+      "scene": "s02",
+      "pre": 0.35,
+      "en": "Most are nuisance: a door propped open by cleaners,|wind on the fence, glare on a lens.",
+      "say": "Most are nuisance: a door propped open by cleaners, wind on the fence, glare on a lens.",
+      "zh": "大多是误报：保洁员撑开的门、|风吹动的围栏、镜头上的眩光。"
+    },
+    {
+      "id": "v05",
+      "scene": "s02",
+      "pre": 0.45,
+      "en": "But a few are real — and they're buried in the noise.",
+      "say": "But a few are real. And they're buried in the noise.",
+      "zh": "但其中有几条是真的——却被淹没在噪声之中。"
+    },
+    {
+      "id": "v06",
+      "scene": "s03",
+      "pre": 1.3,
+      "en": "Operators juggle siloed systems and verify every alarm by hand.",
+      "say": "Operators juggle siloed systems, and verify every alarm by hand.",
+      "zh": "值守人员在孤立的系统间来回切换，每条告警都靠人工核实。"
+    },
+    {
+      "id": "v07",
+      "scene": "s03",
+      "pre": 0.35,
+      "en": "Tracing one person takes hours of footage.|Responses vary by shift, and auditability is patchy.",
+      "say": "Tracing one person takes hours of footage. Responses vary by shift, and auditability is patchy.",
+      "zh": "追踪一个人要翻看数小时录像。|处置因班次而异，审计留痕参差不齐。"
+    },
+    {
+      "id": "v08",
+      "scene": "s03",
+      "pre": 0.35,
+      "en": "Queues and device faults surface only after they cause trouble.",
+      "say": "Queues and device faults surface only after they cause trouble.",
+      "zh": "排队拥堵与设备故障，往往在造成影响后才被发现。"
+    },
+    {
+      "id": "v09",
+      "scene": "s04",
+      "pre": 1.0,
+      "en": "And doubt is costly: in one year, unattended-bag alerts|caused 1,280 delays at Paris airports.",
+      "say": "And doubt is costly. In one year, unattended bag alerts caused twelve hundred and eighty delays at Paris airports.",
+      "zh": "不确定的代价高昂：仅一年之内，|无人看管行李告警就在巴黎各机场造成 1,280 次延误。"
+    },
+    {
+      "id": "v10",
+      "scene": "s05",
+      "pre": 1.5,
+      "en": "AI Use Case 1 brings an AI co-pilot into the AGIL® Secure ISMS —|the platform that already unifies access control, video,|intrusion detection and identity.",
+      "say": "AI use case one brings an AI co-pilot into the Agile Secure I S M S: the platform that already unifies access control, video, intrusion detection, and identity.",
+      "zh": "AI 用例一：为 AGIL® Secure ISMS 引入 AI 副驾驶——|该平台已将门禁、视频、|入侵探测与身份管理融为一体。"
+    },
+    {
+      "id": "v11",
+      "scene": "s05",
+      "pre": 0.4,
+      "en": "It detects unusual behaviour, triages alarms in context,|investigates in plain language, recommends the response|and writes the report — and it looks ahead.",
+      "say": "It detects unusual behaviour, triages alarms in context, investigates in plain language, recommends the response, and writes the report. And it looks ahead.",
+      "zh": "它能识别异常行为，结合情境研判告警，|用自然语言调查取证，推荐处置方案，|并撰写报告——还能提前预判。"
+    },
+    {
+      "id": "v12",
+      "scene": "s06",
+      "pre": 1.0,
+      "en": "People stay in command.|Every recommendation shows its evidence,|follows the airport's own procedures, and runs securely on-premises.",
+      "say": "People stay in command. Every recommendation shows its evidence, follows the airport's own procedures, and runs securely on premises.",
+      "zh": "人始终掌握决策权。|每条建议都附有证据，|遵循机场自身的作业程序，并在本地安全运行。"
+    },
+    {
+      "id": "v13",
+      "scene": "s07",
+      "pre": 1.0,
+      "en": "Let's follow one night shift.",
+      "say": "Let's follow one night shift.",
+      "zh": "让我们跟随一个夜班。"
+    },
+    {
+      "id": "v14",
+      "scene": "m1",
+      "pre": 2.4,
+      "en": "02:14. Instead of 312 alarms,|operator Nurul sees three incidents —|ranked by risk, each with its evidence.",
+      "say": "Two fourteen. Instead of three hundred and twelve alarms, operator Noo-rool sees three incidents: ranked by risk, each with its evidence.",
+      "zh": "02:14。值守员 Nurul 看到的不再是 312 条告警，|而是 3 起事件——|按风险排序，每起都附有证据。"
+    },
+    {
+      "id": "v15",
+      "scene": "m1",
+      "pre": 0.35,
+      "en": "Nuisance alarms are grouped and explained — never silently dropped.",
+      "say": "Nuisance alarms are grouped and explained. Never silently dropped.",
+      "zh": "误报被归并并注明原因——绝不悄然丢弃。"
+    },
+    {
+      "id": "v16",
+      "scene": "m2",
+      "pre": 1.6,
+      "en": "02:15. First, the critical one:|someone tailgated through a staff door leading airside.",
+      "say": "Two fifteen. First, the critical one: someone tailgated through a staff door leading airside.",
+      "zh": "02:15，先处理最紧急的一起：|有人尾随穿过一扇通往空侧的员工门。"
+    },
+    {
+      "id": "v17",
+      "scene": "m2",
+      "pre": 0.35,
+      "en": "The AI recommends the response from the airport's own procedures.",
+      "say": "The AI recommends the response, from the airport's own procedures.",
+      "zh": "AI 依据机场自身的作业程序推荐处置方案。"
+    },
+    {
+      "id": "v18",
+      "scene": "m2",
+      "pre": 0.3,
+      "en": "Duty manager Daniel approves each step with one click.|The intruder is intercepted in under four minutes — every action logged.",
+      "say": "Duty manager Daniel approves each step with one click. The intruder is intercepted in under four minutes, every action logged.",
+      "zh": "值班经理 Daniel 一键批准每个步骤。|不到 4 分钟即完成拦截，每个动作全程留痕。"
+    },
+    {
+      "id": "v19",
+      "scene": "m3",
+      "pre": 1.6,
+      "en": "02:16. Meanwhile, an unattended bag at Gate B12.|Nurul simply asks: who left this bag?",
+      "say": "Two sixteen. Meanwhile, an unattended bag at gate B twelve. Noo-rool simply asks: who left this bag?",
+      "zh": "02:16，与此同时，B12 登机口出现一件无人看管的行李。|Nurul 只需问一句：谁留下了这个包？"
+    },
+    {
+      "id": "v20",
+      "scene": "m3",
+      "pre": 0.4,
+      "en": "In seconds, the AI traces the owner across 38 cameras to a café,|and sends her photo to the nearest patrol.",
+      "say": "In seconds, the AI traces the owner across thirty-eight cameras to a cafe, and sends her photo to the nearest patrol.",
+      "zh": "几秒之内，AI 跨 38 个摄像头追踪到失主身在一家咖啡厅，|并将她的照片发送给最近的巡逻员。"
+    },
+    {
+      "id": "v21",
+      "scene": "m3",
+      "pre": 0.5,
+      "en": "Bag reclaimed in four minutes. No gate closure.",
+      "say": "Bag reclaimed in four minutes. No gate closure.",
+      "zh": "4 分钟内行李被认领，登机口无需关闭。"
+    },
+    {
+      "id": "v22",
+      "scene": "m4",
+      "pre": 1.6,
+      "en": "05:10: the AI forecasts a 20-minute queue at Checkpoint 3|and recommends opening two more lanes.",
+      "say": "Five ten. The AI forecasts a twenty minute queue at checkpoint three, and recommends opening two more lanes.",
+      "zh": "05:10，AI 预测 3 号安检口将出现 20 分钟排队，|建议加开两条通道。"
+    },
+    {
+      "id": "v23",
+      "scene": "m4",
+      "pre": 0.35,
+      "en": "It also flags a failing camera — before it becomes a blind spot.",
+      "say": "It also flags a failing camera, before it becomes a blind spot.",
+      "zh": "它还会提前标记一台正在劣化的摄像头——赶在其变成盲区之前。"
+    },
+    {
+      "id": "v24",
+      "scene": "m5",
+      "pre": 1.6,
+      "en": "07:00, handover: every incident report is already drafted —|timeline, evidence and approvals — ready for audit.",
+      "say": "Seven a.m. Handover. Every incident report is already drafted: timeline, evidence and approvals, ready for audit.",
+      "zh": "07:00 交接班：每份事件报告均已起草完毕——|时间线、证据与审批记录齐全，随时可供审计。"
+    },
+    {
+      "id": "v25",
+      "scene": "s13",
+      "pre": 1.2,
+      "en": "Detect. Triage. Investigate. Respond. Report. Anticipate. Maintain.",
+      "say": "Detect. Triage. Investigate. Respond. Report. Anticipate. Maintain.",
+      "zh": "识别。研判。调查。处置。报告。预判。运维。"
+    },
+    {
+      "id": "v26",
+      "scene": "s13",
+      "pre": 0.3,
+      "en": "AI across the whole security lifecycle.",
+      "say": "AI, across the whole security lifecycle.",
+      "zh": "AI 贯穿安保全生命周期。"
+    },
+    {
+      "id": "v27",
+      "scene": "s14",
+      "pre": 1.2,
+      "en": "For operators, focus. For managers, the right response on every shift.|For the airport, fewer disruptions and compliance by default.",
+      "say": "For operators: focus. For managers: the right response, on every shift. For the airport: fewer disruptions, and compliance by default.",
+      "zh": "对值守人员：更专注。对管理者：每个班次都能正确处置。|对机场：更少运营中断，合规成为常态。"
+    },
+    {
+      "id": "v28",
+      "scene": "s14",
+      "pre": 0.45,
+      "en": "And because it builds on the platform airports already run,|AI arrives as an upgrade — not a rip-and-replace.",
+      "say": "And because it builds on the platform airports already run, AI arrives as an upgrade, not a rip and replace.",
+      "zh": "而且它构建于机场已在运行的平台之上，|AI 是一次升级，而非推倒重来。"
+    },
+    {
+      "id": "v29",
+      "scene": "s15",
+      "pre": 1.4,
+      "en": "AI-powered AGIL® Secure ISMS.|From alarm noise to decisive action.",
+      "say": "AI powered, Agile Secure I S M S. From alarm noise, to decisive action.",
+      "zh": "AI 赋能的 AGIL® Secure ISMS。|从告警噪声，到果断行动。"
+    }
+  ]
+}
