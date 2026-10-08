@@ -43,24 +43,24 @@ E.scene({
         <path class="path" d="M249 18 V60 H120 C90 60 90 76 120 76 H300 C318 76 322 62 340 58 H440" fill="none" stroke="#4D8DFF" stroke-width="3" stroke-linecap="round" pathLength="1" stroke-dasharray="1 1" stroke-dashoffset="1"/>
         <circle cx="249" cy="18" r="5" fill="#FFB020"/>
         <g class="end"><circle cx="440" cy="58" r="14" fill="rgba(77,141,255,.25)"/><circle cx="440" cy="58" r="6" fill="#EEF3FC"/>
-        <text x="460" y="54" font-family="InterF" font-size="13" font-weight="600" fill="#EEF3FC">Café</text><text x="460" y="70" font-family="Mono" font-size="11" fill="#8FB4FF">NOW</text></g>
+        <text x="460" y="54" font-family="InterF" font-size="13" font-weight="600" fill="#EEF3FC">Café</text><text class="mnow" x="460" y="70" font-family="Mono" font-size="11" fill="#8FB4FF">NOW</text></g>
         <circle class="dot" r="5" fill="#BFD5FF"/>
       </svg></div>`);
     s.path = E.q(s.ans, '.path'); s.endG = E.q(s.ans, '.end'); s.dot = E.q(s.ans, '.dot');
     // trace list
     const TR = [['gate', '02:08:14', 'Gate B12', 'CAM 2-031', 'Places suitcase, walks away'], ['walk', '02:10:02', 'Pier B walkway', 'CAM 2-044', 'Heading to main terminal'],
-      ['esc', '02:12:47', 'Escalator to Level 2', 'CAM 1-112', 'Going up'], ['cafe', '02:16:10', 'Café · Level 2', 'CAM 1-130', 'Seated · live']];
+      ['esc', '02:12:47', 'Escalator to Level 2', 'CAM 1-112', 'Going up'], ['cafe', '02:16:10', 'Café · Level 2', 'CAM 1-130', 'Seated <span class="lv">· live</span>']];
     s.trHd = E.add(body, `<div class="abs label" style="left:604px;top:22px">Trace · 4 sightings</div>`);
     s.tr = TR.map((r, i) => E.add(body, `
       <div class="abs" style="left:604px;top:${50 + i * 104}px;width:514px;height:94px;border-radius:12px;border:1px solid ${i === 3 ? 'rgba(77,141,255,.7)' : 'var(--line)'};background:${i === 3 ? 'rgba(45,91,255,.14)' : 'rgba(13,24,48,.8)'};display:flex;align-items:center;gap:16px;padding:0 14px 0 8px;overflow:hidden">
         <div style="width:140px;height:78px;border-radius:8px;overflow:hidden;flex:none">${C.cctvThumb(140, 78, r[0], 'th' + i)}</div>
         <div style="min-width:0">
-          <div style="display:flex;align-items:center;gap:10px"><span class="mono ${i === 3 ? 'trnow' : ''}" style="font-size:17px;color:#EEF3FC">${r[1]}</span>${i === 3 ? '<span class="pill blue" style="font-size:11px;padding:2px 8px">NOW</span>' : ''}</div>
+          <div style="display:flex;align-items:center;gap:10px"><span class="mono ${i === 3 ? 'trnow' : ''}" style="font-size:17px;color:#EEF3FC">${r[1]}</span>${i === 3 ? '<span class="pill blue tnow" style="font-size:11px;padding:2px 8px">NOW</span>' : ''}</div>
           <div style="font-weight:600;font-size:17px;margin-top:3px">${r[2]}</div>
           <div style="font-size:14px;color:#8D9BB8;margin-top:2px"><span class="mono" style="font-size:12px">${r[3]}</span> · ${r[4]}</div>
         </div>
       </div>`));
-    s.trNow = E.q(s.tr[3], '.trnow');
+    s.trNow = E.q(s.tr[3], '.trnow'); s.tnow = E.q(s.tr[3], '.tnow'); s.lv = E.q(s.tr[3], '.lv'); s.mnow = E.q(s.ans, '.mnow');
     s.ghost = MOMENT.ghost(body, 604, 50, 514, 612, 'Trace · waiting for a question');
     // dispatch card
     s.dc = E.add(body, `
@@ -110,6 +110,8 @@ E.scene({
     E.attr(s.bboxRect, 'stroke-opacity', E.f3(green > 0.5 ? 1 : 0.6 + 0.4 * Math.sin(t * 6)));
     E.fade(s.ff, E.env(t, s.tRes - 0.05, s.tRes + 1.6, 0.2), { dy: 6 });
     E.fade(s.res, E.ep(t, s.tRes + 0.15, s.tRes + 0.55), { dy: 20 });
+    const past = t >= s.tRes ? 0 : 1;
+    E.vis(s.tnow, past); E.vis(s.lv, past); E.attr(s.mnow, 'opacity', String(past));
     E.txt(s.hdpill, t >= s.tRes + 0.3 ? 'INCIDENT 2 · RESOLVED' : 'INCIDENT 2 · HIGH 71');
     E.cls(s.hdpill, 'ok', t >= s.tRes + 0.3); E.cls(s.hdpill, 'high', t < s.tRes + 0.3);
     // typing

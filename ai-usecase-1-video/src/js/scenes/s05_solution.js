@@ -3,11 +3,11 @@ E.scene({
   id: 's05',
   build(el, s) {
     const SUBS = [['door', 'Access control', 'access control'], ['camera', 'CCTV & VMS', 'video'], ['eye', 'Video analytics', 'video'],
-      ['fence', 'Intrusion detection', 'intrusion'], ['badge', 'Identity management', 'identity'], ['shield', 'Physical-security sensors', 'identity']];
-    const LIFE = [['target', 'Detect', 'detects'], ['filter', 'Triage', 'triages'], ['search', 'Investigate', 'investigates'], ['list', 'Respond', 'recommends'], ['doc', 'Report', 'writes']];
+      ['fence', 'Intrusion detection', 'intrusion'], ['badge', 'Identity management', 'identity']];
+    const LIFE = [['target', 'Detect', 'detects'], ['filter', 'Triage', 'triages'], ['search', 'Investigate', 'investigates', 1], ['list', 'Respond', 'recommends'], ['doc', 'Report', 'writes', 1]];
     const PRO = [['chart', 'Anticipate', 'Traveller-flow forecasting'], ['wrench', 'Maintain', 'Device & network health']];
     const PEOPLE = [['person', 'Control room operators'], ['shield', 'Duty managers'], ['route', 'Patrol officers'], ['search', 'Investigators'], ['badge', 'Security leadership']];
-    const tileW = 202, gap = 17.6;
+    const tileW = 246, gap = 17.5;
     el.innerHTML = `
       <div class="abs hero" style="left:120px;top:300px;transform-origin:0 0">
         <div class="kicker hk" style="display:flex;align-items:center;gap:12px;font-size:20px">${C.icon('sparkle', 24, 1.8)} AI Use Case 01</div>
@@ -24,12 +24,13 @@ E.scene({
         <div class="life" style="display:flex;align-items:center;gap:14px;margin-top:22px">
           ${LIFE.map((l, i) => `${i ? `<span class="arr" style="color:#4A5D86">${C.icon('arrow', 22)}</span>` : ''}
             <div class="lc" style="display:flex;align-items:center;gap:12px;height:66px;padding:0 20px;border-radius:14px;border:1px solid rgba(143,161,192,.25);background:rgba(143,161,192,.06);flex:1">
-              ${C.icon(l[0], 26)}<span style="font-family:var(--head);font-weight:700;font-size:23px">${l[1]}</span></div>`).join('')}
+              ${C.icon(l[0], 26)}<span style="font-family:var(--head);font-weight:700;font-size:23px">${l[1]}${l[3] ? '<sup style="color:#8FB4FF;font-size:16px;margin-left:3px">*</sup>' : ''}</span></div>`).join('')}
         </div>
         <div style="display:flex;align-items:center;gap:14px;margin-top:16px">
           <span class="label" style="width:120px">Proactive</span>
           ${PRO.map(p => `<div class="pc" style="display:flex;align-items:center;gap:12px;height:56px;padding:0 20px;border-radius:14px;border:1px solid rgba(143,161,192,.25);background:rgba(143,161,192,.06)">
               ${C.icon(p[0], 24)}<span style="font-family:var(--head);font-weight:700;font-size:21px">${p[1]}</span><span style="color:#8D9BB8;font-size:17px">· ${p[2]}</span></div>`).join('')}
+          <span class="label" style="margin-left:auto;color:#8A9BC0;text-transform:none;letter-spacing:.04em;font-size:14px">* concept extension</span>
         </div>
       </div>
       <svg class="abs links" width="1920" height="1080" style="left:0;top:0">

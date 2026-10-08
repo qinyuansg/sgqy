@@ -74,6 +74,23 @@
   };
   E.vis = (el, k) => E.css(el, { opacity: f3(clamp(k)), visibility: k <= 0.001 ? 'hidden' : 'visible' });
 
+  // headline full stops: Plus Jakarta's '.' has a wide left side-bearing; tuck it in
+  E.kernStops = root => {
+    const walk = n => {
+      if (n.nodeType === 3) {
+        if (!/\.(?=\s|$)/.test(n.nodeValue)) return;
+        const frag = document.createDocumentFragment();
+        n.nodeValue.split(/(\.)(?=\s|$)/).forEach(part => {
+          if (part === '.') { const k = document.createElement('span'); k.className = 'kp'; k.textContent = '.'; frag.appendChild(k); }
+          else if (part) frag.appendChild(document.createTextNode(part));
+        });
+        n.parentNode.replaceChild(frag, n);
+      } else if (n.nodeType === 1 && !n.classList.contains('kp')) Array.from(n.childNodes).forEach(walk);
+    };
+    walk(root);
+  };
+  const HEAD = '.h-xl,.h-l,.h-m';
+
   // split an element's text into word spans (once) for staggered reveals
   E.words = el => {
     if (el.__w) return el.__w;
@@ -84,6 +101,7 @@
       if (!p) continue;
       if (/^\s+$/.test(p)) { el.appendChild(document.createTextNode(' ')); continue; }
       const s = document.createElement('span'); s.className = 'w'; s.textContent = p; el.appendChild(s); el.__w.push(s);
+      if (el.matches && el.matches(HEAD)) E.kernStops(s);
     }
     return el.__w;
   };
@@ -121,6 +139,7 @@
       stage.appendChild(s.el);
       s.build(s.el, s);
     }
+    stage.querySelectorAll(HEAD).forEach(E.kernStops);
     E.initHooks && E.initHooks.forEach(f => f(stage));
   };
   // Scenes fade in over [start-0.05, start+inDur] and out over [end-outDur, end+0.05].

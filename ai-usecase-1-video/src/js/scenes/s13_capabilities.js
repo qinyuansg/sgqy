@@ -3,8 +3,8 @@ E.scene({
   id: 's13',
   build(el, s) {
     const LIFE = [
-      ['target', 'Detect', 'Unusual behaviour: tailgating, loitering, unattended items', 'Fragmented picture'],
-      ['filter', 'Triage', 'Context-aware alarm triage, ranked and explained', 'Alarm fatigue'],
+      ['target', 'Detect', 'Unusual behaviour: tailgating, loitering, unattended items', 'Alarm fatigue'],
+      ['filter', 'Triage', 'Context-aware alarm triage, ranked and explained', 'Fragmented picture'],
       ['search', 'Investigate', 'Plain-language video search and cross-camera tracing', 'Slow investigation'],
       ['list', 'Respond', 'SOP-grounded steps, approved by people', 'Inconsistent response'],
       ['doc', 'Report', 'Auto-drafted reports with a complete audit trail', 'Patchy auditability'],
@@ -23,7 +23,7 @@ E.scene({
       <div class="abs label lab1" style="left:120px;top:288px">Incident lifecycle</div>
       ${LIFE.map((c, i) => `
         <div class="abs panel tile" style="left:${120 + i * (W + G)}px;top:318px;width:${W}px;height:268px;padding:24px 24px">
-          ${C.ibox(c[0], 54, 27)}
+          ${C.ibox(c[0], 54, 27)}${c[1] === 'Investigate' || c[1] === 'Report' ? '<span class="chip" style="position:absolute;right:20px;top:26px;height:26px;font-size:11px;letter-spacing:.12em">CONCEPT</span>' : ''}
           <div class="h-s" style="margin-top:18px;font-size:30px">${c[1]}</div>
           <div class="body" style="margin-top:8px;font-size:18px;line-height:1.42;color:#B4C1D8">${c[2]}</div>
           <div class="label" style="position:absolute;left:24px;bottom:20px;color:#FF8DA0;text-transform:none;letter-spacing:.04em;font-size:13px">Addresses: ${c[3]}</div>

@@ -6,13 +6,13 @@ E.scene({
     s.tClick = v22.cues[1].end + 0.15;
     s.rail = MOMENT.rail(el, {
       n: 4, time: '05:10', title: 'Before the morning peak', who: ['daniel'],
-      story: { as: 'duty manager', want: 'early warning of queues and failing devices', so: 'I act before the peak, not after it' },
+      story: { as: 'duty manager', want: 'early warning of queues and failing devices', so: 'I&nbsp;act before the peak, not after it' },
       before: 'Queues and faults found too late', after: 'Forecast early, fixed before impact', gainAt: s.tClick + 0.2,
     });
     const st = MOMENT.stage(el, 'Operations outlook · Terminal 2', `<span class="chip blue" style="height:32px">${C.icon('sparkle', 15)} Forecast · next 2 h</span>`);
     const body = E.q(st, '.st-body');
     // ---- chart ----
-    const X0 = 64, X1 = 1060, Y0 = 262, Y1 = 58; // 05:00..07:00, 0..30 min
+    const X0 = 64, X1 = 1026, Y0 = 262, Y1 = 58; // 05:00..07:00, 0..30 min
     const xm = m => X0 + (X1 - X0) * m / 120, ym = v => Y0 - (Y0 - Y1) * v / 30;
     s.xm = xm; s.ym = ym;
     const A = [[10, 3.6], [20, 6], [30, 10.5], [40, 15.5], [50, 19.2], [55, 20], [65, 19.2], [80, 14.5], [100, 8.5], [120, 6]];
@@ -56,8 +56,8 @@ E.scene({
     </div>`);
     s.ap = E.q(s.rec, '.ap'); s.apt = E.q(s.rec, '.apt');
     // ---- device health ----
-    const SPm = Array.from({ length: 19 }, (_, i) => [i, 92 - (i < 10 ? i * 0.5 : 5 + (i - 10) * 1.55) + Math.sin(i * 1.7) * 0.9]);
-    const SPf = [[18, SPm[18][1]], [20, 70.8], [22, 66.4], [24, 61.5]];
+    const SPm = Array.from({ length: 19 }, (_, i) => [i, 92 - (i < 10 ? i * 0.5 : 5 + (i - 10) * 1.3) + Math.sin(i * 1.7) * 0.9]);
+    const SPf = [[18, SPm[18][1]], [20, 72.4], [22, 68.0], [24, 63.2]];
     const sx = i => 18 + i * 19.5, sy = v => 96 - (v - 50) * 1.6;
     const pth = pts => pts.map((p, i) => `${i ? 'L' : 'M'}${sx(p[0]).toFixed(1)} ${sy(p[1]).toFixed(1)}`).join(' ');
     s.dev = E.add(body, `<div class="abs panel flat" style="left:578px;top:394px;width:540px;height:268px;padding:20px 22px;border-radius:16px">
@@ -71,12 +71,12 @@ E.scene({
         <text x="18" y="${sy(70) + 14}" font-family="Mono" font-size="11" fill="#FFCB6B">usable threshold</text>
         <path class="spk" d="${pth(SPm)}" fill="none" stroke="#8FB4FF" stroke-width="2.5" pathLength="1" stroke-dasharray="1 1"/>
         <path class="spf" d="${pth(SPf)}" fill="none" stroke="#FFB020" stroke-width="2.5" stroke-dasharray="5 5"/>
-        <circle class="spx" cx="${sx(20.2).toFixed(1)}" cy="${sy(70).toFixed(1)}" r="5" fill="none" stroke="#FFB020" stroke-width="2"/>
+        <circle class="spx" cx="${sx(21.1).toFixed(1)}" cy="${sy(70).toFixed(1)}" r="5" fill="none" stroke="#FFB020" stroke-width="2"/>
         <text x="18" y="10" font-family="Mono" font-size="11" fill="#6F80A0">image sharpness · last 36 h</text>
         <text class="spl" x="${sx(21).toFixed(1)}" y="94" font-family="Mono" font-size="11" fill="#FFCB6B">forecast</text>
       </svg>
       <div class="dl1" style="font-size:16px;color:#FFCB6B;margin-top:4px">Lens fogging · likely unusable within 72 h</div>
-      <div class="dl2 mono" style="font-size:14px;color:#7BE8AC;margin-top:10px">✓ Work order WO-5531 · fix before the morning departures peak</div>
+      <div class="dl2 mono" style="font-size:14px;color:#7BE8AC;margin-top:10px">✓ WO-5531 raised · fix before the departures peak</div>
     </div>`);
     s.spk = E.q(s.dev, '.spk'); s.spf = E.q(s.dev, '.spf'); s.spx = E.q(s.dev, '.spx'); s.spl = E.q(s.dev, '.spl'); s.dl1 = E.q(s.dev, '.dl1'); s.dl2 = E.q(s.dev, '.dl2');
     s.g1 = MOMENT.ghost(body, 22, 394, 540, 268, 'AI recommendation · computing…');
@@ -122,7 +122,7 @@ E.scene({
     E.attr(s.areaA, 'opacity', E.f3(draw * (1 - mk)));
     E.attr(s.pk, 'transform', `translate(${(s.xm(55) - 98).toFixed(1)} ${(s.ym(20) - 40).toFixed(1)})`);
     E.attr(s.pk, 'opacity', E.f3(E.ep(t, s.tPk, s.tPk + 0.3) * (1 - mk)));
-    E.attr(s.pk2, 'transform', `translate(${(s.xm(55) - 88).toFixed(1)} ${(s.ym(11) - 40).toFixed(1)})`);
+    E.attr(s.pk2, 'transform', `translate(${(s.xm(55) - 88).toFixed(1)} ${(s.ym(11) + 14).toFixed(1)})`);
     E.attr(s.pk2, 'opacity', E.f3(E.ep(t, s.tClick + 0.8, s.tClick + 1.1)));
     // recommendation + approval
     E.fade(s.rec, E.ep(t, s.tRec, s.tRec + 0.45), { dy: 18 });

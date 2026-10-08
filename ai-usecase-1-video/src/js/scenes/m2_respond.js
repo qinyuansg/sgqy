@@ -29,7 +29,7 @@ E.scene({
       ['Track the unidentified person', 'Video analytics · cross-camera', 'Auto', '02:15:01 · AI tracking started'],
       ['Dispatch patrols P-1 and P-5', 'Nearest units · ETA 90 s', 'Approve', '02:15:12 · Approved by Daniel'],
       ['Notify Airport Police', 'Message drafted by AI', 'Send', '02:15:19 · Sent by Daniel'],
-      ['Intercept and verify identity', 'Patrol P-1 at Stand C3', 'Confirm', '02:17:38 · Intercepted at Stand C3'],
+      ['Intercept and verify identity', 'Patrol P-1 at Stand C3', 'Confirm', '02:17:38 · Intercepted · confirmed by Daniel'],
     ];
     s.rp = E.add(body, `<div class="abs panel ai" style="left:474px;top:20px;width:644px;height:642px;padding:20px 22px;border-radius:16px">
       <div style="display:flex;align-items:center;justify-content:space-between">
@@ -65,18 +65,19 @@ E.scene({
     s.tJump = v21.cues[1].start + 0.05;
     s.tDone5 = s.tJump + 0.9;
     s.AUD = [
+      [s.start, '02:14:05  AI triage · ranked critical (94)'],
       [s.tAuto, '02:15:01  AI tracking started · CAM 4-207'],
       [s.tClick[0], '02:15:04  Daniel approved · lock D-214, D-216'],
       [s.tClick[2], '02:15:12  Daniel approved · dispatch P-1, P-5'],
       [s.tClick[3], '02:15:19  Daniel sent · Airport Police notified'],
-      [s.tDone5, '02:17:38  P-1 intercepted subject · Stand C3'],
+      [s.tDone5, '02:17:38  Daniel confirmed · subject intercepted, Stand C3'],
     ];
     s.doneAt = [s.tClick[0], s.tAuto, s.tClick[2], s.tClick[3], s.tDone5];
     E.cue(s.tWalk + 0.9, 'beep', 0.4); E.cue(s.tWalk + 1.5, 'alert', 0.75);
     E.cue(s.tRp, 'swell', 0.45, { dur: 1.2 }); s.tSteps.forEach(t => E.cue(t, 'blip', 0.28));
     E.cue(s.tAuto, 'blipHi', 0.4);
     [s.tClick[0], s.tClick[2], s.tClick[3]].forEach(t => { E.cue(t, 'click', 0.7); E.cue(t + 0.06, 'confirm', 0.45); });
-    E.cue(s.tJump, 'whoosh', 0.5); E.cue(s.tDone5, 'success', 0.7);
+    E.cue(s.tJump, 'whoosh', 0.5); E.cue(s.tDone5, 'click', 0.7); E.cue(s.tDone5 + 0.06, 'success', 0.7);
   },
   update(t, lt, s) {
     MOMENT.updateRail(s.rail, t, s);
@@ -106,7 +107,7 @@ E.scene({
     s.evs.forEach((e, i) => E.fade(e, E.ep(t, s.tEv + i * 0.28, s.tEv + i * 0.28 + 0.35), { dx: -10, dy: 0 }));
     // tracking tile
     E.fade(s.trk, E.ep(t, s.tAuto, s.tAuto + 0.4), { dy: 12 });
-    const tx = jump ? E.lerp(250, 300, E.ep(t, s.tJump, s.tDone5)) : E.lerp(90, 250, E.p(t, s.tAuto, s.tJump));
+    const tx = jump ? E.lerp(250, 300, E.ep(t, s.tJump, s.tDone5)) : E.lerp(150, 250, E.p(t, s.tAuto, s.tJump));
     E.attr(s.tp, 'transform', `translate(${tx.toFixed(1)} 150)`);
     E.attr(s.tb, 'transform', `translate(${(tx - 18).toFixed(1)} 84)`); E.attr(s.tbr, 'width', 36); E.attr(s.tbr, 'height', 68);
     E.attr(s.tbr, 'stroke', t >= s.tDone5 ? '#2ED47A' : '#FF3B5C');
@@ -132,8 +133,10 @@ E.scene({
     if (s.lines.__t !== last3) { s.lines.__t = last3; s.lines.innerHTML = shown.slice(-3).map(a => `<div>${a[1]}</div>`).join(''); }
     // cursor: from below the panel to each button
     const bx = 474 + 644 - 22 - 52, by = (i) => 66 + 20 + 102 + i * 78 + 39;
-    const P0 = [[s.tClick[0] - 0.75, 760, 640], [s.tClick[0] - 0.1, bx, by(0)], [s.tClick[2] - 0.35, bx, by(0) + 8], [s.tClick[2] - 0.1, bx, by(2)], [s.tClick[3] - 0.3, bx, by(2) + 6], [s.tClick[3] - 0.08, bx, by(3)], [s.tClick[3] + 1.2, bx + 60, by(3) + 120]];
-    const vis = Math.min(E.ep(t, s.tClick[0] - 0.9, s.tClick[0] - 0.6), 1 - E.ep(t, s.tClick[3] + 0.7, s.tClick[3] + 1.1));
-    MOMENT.updateCursor(s.cur, t, P0, [s.tClick[0], s.tClick[2], s.tClick[3]], vis);
+    const P0 = [[s.tClick[0] - 0.75, 760, 640], [s.tClick[0] - 0.1, bx, by(0)], [s.tClick[2] - 0.35, bx, by(0) + 8], [s.tClick[2] - 0.1, bx, by(2)], [s.tClick[3] - 0.3, bx, by(2) + 6], [s.tClick[3] - 0.08, bx, by(3)],
+      [s.tClick[3] + 1.2, bx + 60, by(3) + 120], [s.tDone5 - 0.55, bx + 40, by(4) + 70], [s.tDone5 - 0.08, bx, by(4)], [s.tDone5 + 0.9, bx + 50, by(4) + 90]];
+    const vis = Math.max(Math.min(E.ep(t, s.tClick[0] - 0.9, s.tClick[0] - 0.6), 1 - E.ep(t, s.tClick[3] + 0.7, s.tClick[3] + 1.1)),
+      Math.min(E.ep(t, s.tDone5 - 0.7, s.tDone5 - 0.45), 1 - E.ep(t, s.tDone5 + 0.5, s.tDone5 + 0.9)));
+    MOMENT.updateCursor(s.cur, t, P0, [s.tClick[0], s.tClick[2], s.tClick[3], s.tDone5], vis);
   },
 });

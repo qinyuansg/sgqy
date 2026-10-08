@@ -64,6 +64,7 @@ svg { display: block; overflow: visible; }
 .label { font-family: var(--mono); font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--t3); font-weight: 500; }
 .blue { color: var(--blue2); }
 .w { display: inline-block; white-space: pre; }
+.kp { margin-left: -0.07em; }
 
 /* ---------- surfaces ---------- */
 .panel {

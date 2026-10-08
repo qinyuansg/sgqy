@@ -171,7 +171,7 @@
       <rect width="${w}" height="${h}" fill="#141C28"/>
       <rect width="${w}" height="${h * 0.38}" fill="#0B111B"/>
       <g stroke="#E5C14A" stroke-width="2" opacity=".55"><line x1="${w * 0.1}" y1="${h}" x2="${w * 0.45}" y2="${h * 0.38}"/><line x1="${w * 0.9}" y1="${h}" x2="${w * 0.6}" y2="${h * 0.38}"/></g>
-      <text x="${w * 0.72}" y="${h * 0.93}" font-family="Mono, monospace" font-size="18" fill="rgba(229,193,74,.5)" font-weight="600">C3</text>
+      <text x="${w * 0.86}" y="${h * 0.62}" font-family="Mono, monospace" font-size="18" fill="rgba(229,193,74,.5)" font-weight="600">C3</text>
       <path d="M${w * 0.18} ${h * 0.34} l120 -10 l60 0 l30 6 l-30 6 l-60 0z" fill="#26324A"/>
       <path d="M${w * 0.42} ${h * 0.26} l26 -24 h12 l-10 24z" fill="#26324A"/>
       <g class="tp">${C.person(0, 0, h * 0.34, '#6B4E3D')}</g>

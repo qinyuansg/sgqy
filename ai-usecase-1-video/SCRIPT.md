@@ -1,7 +1,7 @@
 # AI Use Case 1 — AI-powered AGIL® Secure ISMS for Airports
 ### 视频脚本与产品提炼 · Video script & product distillation
 
-> 概念视频 · 3:08 · 1920×1080 · 英文旁白 + 中英双语字幕。场景、人名与数据均为示意（画面已标注 *Illustrative scenario · simulated data*）。
+> 概念视频 · 3:09 · 1920×1080 · 英文旁白 + 中英双语字幕。场景、人名与数据均为示意（画面已标注 *Illustrative scenario · simulated data*）。
 > Concept video. Scenario, names and data are illustrative.
 
 ---
@@ -27,19 +27,19 @@
 **不确定的代价（公开数据）：** 巴黎各机场 2017 年因无人看管行李告警造成 **1,280 次延误**，每次告警排查可长达约 **45 分钟**（来源：Groupe ADP 数据，Air Journal 2018 年 1 月报道）。
 
 ### 解决方案 · Solution
-三层架构，AI 是一次**升级**而非推倒重来（画面中明确区分"已部署平台"与"本用例提出的 AI 层"）：
-1. **既有安防子系统** — 门禁、CCTV/VMS、视频分析、入侵探测、身份管理、其他物理安防传感器。
+三层架构，AI 是一次**升级**而非推倒重来（画面中明确区分"已部署平台"、"本用例提出的 AI 层"及其中的"概念延伸"能力，以 * 标注）：
+1. **既有安防子系统** — 门禁、CCTV/VMS、视频分析、入侵探测、身份管理。
 2. **AGIL® Secure ISMS（已部署平台）** — 统一运营视图，厂商中立，兼容既有系统（已在印尼 Dhoho Kediri 国际机场运行）。
 3. **AI 智能助手（AI Use Case 1 提出的新增层）** — 辅助式 AI，所有干预动作由人批准。
 
 ### 核心功能 · Core capabilities（7 项，每项对应一个痛点）
 | 阶段 | 功能 Capability | AI 做什么 What the AI does | 消除的痛点 |
 |---|---|---|---|
-| 事件全周期 | **Detect 识别** | 识别异常行为：尾随、徘徊、无人看管物品 | 态势割裂 |
-| | **Triage 研判** | 结合情境的告警分级：融合多系统告警、风险评分、给出依据 | 告警疲劳 |
-| | **Investigate 调查** | 自然语言视频检索 + 跨摄像头追踪 | 调查缓慢 |
+| 事件全周期 | **Detect 识别** | 识别异常行为：尾随、徘徊、无人看管物品 | 告警疲劳 |
+| | **Triage 研判** | 结合情境的告警分级：融合多系统告警、风险评分、给出依据 | 态势割裂 |
+| | **Investigate 调查**（概念延伸） | 自然语言视频检索 + 跨摄像头追踪 | 调查缓慢 |
 | | **Respond 处置** | 依据机场 SOP 推荐处置步骤，人一键批准 | 处置不一致 |
-| | **Report 报告** | 自动起草事件报告，完整审计轨迹 | 审计留痕参差 |
+| | **Report 报告**（概念延伸） | 自动起草事件报告，完整审计轨迹 | 审计留痕参差 |
 | 主动预防 | **Anticipate 预判** | 旅客流量预测，提前看到各区域拥堵 | 被动运营 |
 | | **Maintain 运维** | 设备与网络健康预测，故障前预警 | 被动运营 |
 
@@ -55,7 +55,7 @@
 | 时刻 | 场景 Scenario | 角色 | 用户故事 User story | 之前 → 有了 AI |
 |---|---|---|---|---|
 | 02:14 | **告警风暴 → 3 起事件**：312 条告警被融合为 3 起事件，按风险排序（尾随 94 / 无人看管行李 71 / 围界振动 08，经 AI 核实为小动物，由 Nurul 关闭），309 条无效告警按原因归组 | Nurul · 值守员 | As a control room operator, I want alarms from every system fused, ranked and explained, so that I act on real threats first. | 312 条告警人工研判 → 3 起事件，附证据排序 |
-| 02:15 | **尾随进入空侧**：AI 依据 SOP AS-07 推荐处置（锁门、追踪、派巡逻、通知警方），值班经理一键批准每个处置动作，3 分 46 秒完成拦截，全程留痕 | Daniel · 值班经理 | As a duty manager, I want responses recommended from our own SOPs, approved in one click, so that every shift gives the same, correct response. | 处置因人而异 → SOP 步骤一键批准 |
+| 02:15 | **尾随进入空侧**：AI 依据 SOP AS-07 推荐处置（锁门、追踪、派巡逻、通知警方），值班经理一键批准每个处置动作（锁门、派巡逻、通知警方、确认拦截，共 4 项），3 分 46 秒完成拦截，审计轨迹 6 条 | Daniel · 值班经理 | As a duty manager, I want responses recommended from our own SOPs, approved in one click, so that every shift gives the same, correct response. | 处置因人而异 → SOP 步骤一键批准 |
 | 02:16 | **谁留下了这个包？**：一句自然语言提问，AI 4 秒内跨 38 个摄像头追踪到行李主人在咖啡厅（02:16:08 最后目击），02:16:11 照片与位置推送给巡逻员 Arjun；02:20 行李被认领，登机口无需关闭 | Nurul · 值守员 / Arjun · 巡逻员 | As an operator, I want to search every camera in plain language, so that I find the right person in seconds, not hours. | 数小时翻录像 → 几秒定位 |
 | 05:10 | **早高峰之前**：预测 3 号安检口排队峰值 20 分钟（服务目标 15 分钟），建议 05:30 加开 5、6 号通道并调配 4 名安检员 → 峰值降至 11 分钟；CAM 4-221（机坪 C4–C5 机位）镜头起雾，预测 72 小时内画面不可用，自动生成工单，在早高峰前修复 | Daniel · 值班经理 | As a duty manager, I want early warning of queues and failing devices, so that I act before the peak, not after it. | 拥堵与故障发现太晚 → 提前预测、建议、修复 |
 | 07:00 | **交接班**：事件报告已由 AI 起草（时间线、证据、审批记录，SOP 5/5 步），主管 07:04 审阅签发；班次总结 | Grace · 安保主管 | As a head of security, I want every incident documented automatically, so that we are always audit-ready. | 报告人工整理 → 自动起草、随时可审计 |
@@ -66,7 +66,7 @@
 | 值守人员 Operators | **专注 Focus** — 更少噪声、更少屏幕、更少疲劳 | 312 条告警 → 3 起事件 |
 | 值班经理 Duty managers | **一致 Consistency** — 每个班次都按 SOP 正确处置 | SOP 5/5 步 · 一键批准 |
 | 机场 Airport | **连续 Continuity** — 更少运营中断，旅程更顺畅 | 无需关闭登机口 · 排队被化解 |
-| 安保管理层 Security leadership | **合规 Compliance** — 默认可审计（audit-ready by default） | 每个动作全程留痕 |
+| 安保管理层 Security leadership | **合规 Compliance** — 审计随时就绪（audit-ready by default） | 每个动作全程留痕 |
 | 业务 Business | **升级而非重建** — 构建于 AGIL® Secure 及机场既有系统之上，厂商中立、兼容既有系统 | AGIL® Secure 已在 Dhoho Kediri 国际机场运行 |
 
 ### 准确性说明 · Accuracy notes
@@ -93,7 +93,7 @@
 | | m3 02:16 | 遗留行李画面；自然语言提问；38 个摄像头检索进度；4 次目击轨迹 + 楼层路径图；巡逻派单卡片；"4 分钟内认领 · 无需关闭登机口" |
 | | m4 05:10 | 安检口等待时间预测曲线（峰值 22 分钟 → 批准后 11 分钟）；设备健康卡（CAM 4-221 起雾、工单） |
 | | m5 07:00 | AI 起草的事件报告（摘要、时间线、证据、审批、SOP 5/5）+ 班次总结；"已审阅"签章 |
-| 05 · Core capabilities | s13 | 7 项能力卡片，逐一随旁白点亮，每项对应 s03 中的一个痛点（Addresses: …） |
+| 05 · Core capabilities | s13 | 7 项能力卡片，逐一随旁白点亮，每项对应 s03 中的一个痛点（Addresses: …）；调查与报告标注 CONCEPT |
 | 06 · Core value | s14 | 4 类角色价值 + "升级而非推倒重来"的分层动画 |
 | End | s15 | 噪点汇聚成一条信号线；标语；白色结尾卡（AI Use Case 01 · ST Engineering） |
 

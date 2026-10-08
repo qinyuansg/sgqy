@@ -3,7 +3,7 @@
   "voice": "bf_emma",
   "lang": "en-gb",
   "speed": 1.0,
-  "tail": 3.6,
+  "tail": 5.0,
   "notes": "Source of truth for narration and subtitles. `en`/`zh` are display text; `|` splits a line into subtitle cues (EN and ZH split in parallel). `say` is the spoken form fed to TTS. `pre` is the silence (s) before the line starts. `/` inside a Chinese cue is a hand-placed line break for the two-line ZH SRT. `burn_en: false` omits the English line from the burned-in subtitles (on-screen text already shows it).",
   "lines": [
     {
@@ -98,8 +98,8 @@
       "id": "v12",
       "scene": "s06",
       "pre": 1.0,
-      "en": "People stay in command. Every recommendation shows its evidence|and follows the airport's own procedures.|And it all runs securely, on-premises.",
-      "say": "People stay in command. Every recommendation shows its evidence, and follows the airport's own procedures. And it all runs securely, on premises.",
+      "en": "People stay in command. Every recommendation shows its evidence|and follows the airport's own procedures.|And it can run securely on-premises.",
+      "say": "People stay in command. Every recommendation shows its evidence, and follows the airport's own procedures. And it can run securely, on premises.",
       "zh": "人始终掌握决策权。每条建议都附有证据，|并遵循机场自身的作业程序。|整个系统可本地部署、安全运行。"
     },
     {
@@ -220,7 +220,7 @@
       "pre": 1.2,
       "en": "For operators: focus.|For duty managers: the right response, every shift.|For the airport: fewer disruptions.|For security leaders: audit-ready, by default.",
       "say": "For operators: focus. For duty managers: the right response, every shift. For the airport: fewer disruptions. For security leaders: audit-ready, by default.",
-      "zh": "对值守人员：更专注。|对值班经理：/每个班次都能正确处置。|对机场：更少运营中断。|对安保管理层：默认可审计。"
+      "zh": "对值守人员：更专注。|对值班经理：/每个班次都能正确处置。|对机场：更少运营中断。|对安保管理层：审计随时就绪。"
     },
     {
       "id": "v28",

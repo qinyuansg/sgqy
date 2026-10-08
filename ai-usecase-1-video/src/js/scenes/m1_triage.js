@@ -73,11 +73,12 @@ E.scene({
           <div style="display:flex;align-items:center;gap:12px">${C.icon('layers', 22)}<span class="h-s" style="font-size:22px"><span class="nn">309</span> nuisance alarms — grouped and explained</span></div>
           <span class="btn ghost" style="height:36px;font-size:15px">${C.icon('eye', 16)} Review all</span>
         </div>
+        <div class="grp" style="position:absolute;left:24px;right:24px;top:72px;height:62px;border:1.5px dashed rgba(77,141,255,.35);border-radius:10px;display:flex;align-items:center;justify-content:center;gap:10px;color:#5F7BB8">${C.icon('sparkle', 16)}<span class="kicker" style="font-size:12px;color:#5F7BB8">Grouping 309 alarms by reason…</span></div>
         <div class="seg" style="display:flex;gap:4px;height:14px;margin-top:20px">${R.map(r => `<i style="flex:${r[1]};background:${r[2]};border-radius:4px;transform-origin:0 50%"></i>`).join('')}</div>
         <div class="segl" style="display:flex;gap:34px;margin-top:12px">${R.map(r => `<div style="display:flex;align-items:center;gap:10px;font-size:16px;color:#C9D5EA;white-space:nowrap"><i style="width:12px;height:12px;border-radius:3px;background:${r[2]};display:inline-block"></i><b class="mono" style="font-weight:600;color:#EEF3FC">${r[1]}</b> ${r[0]}</div>`).join('')}</div>
         <div class="foot label" style="margin-top:14px;text-transform:none;letter-spacing:.04em;font-size:14px;color:#8FB4FF">${C.icon('check', 14, 2.2)} Never silently dropped — every reason logged and reviewable</div>
       </div>`);
-    s.segs = E.qa(s.bar, '.seg i'); s.segl = E.q(s.bar, '.segl'); s.foot = E.q(s.bar, '.foot');
+    s.segs = E.qa(s.bar, '.seg i'); s.grp = E.q(s.bar, '.grp'); s.segl = E.q(s.bar, '.segl'); s.foot = E.q(s.bar, '.foot');
 
     const v14 = E.L('v14'), v15 = E.L('v15');
     s.tOn = v14.cues[0].start + 1.2;
@@ -133,6 +134,7 @@ E.scene({
     // nuisance group
     E.fade(s.bar, E.ep(t, s.tCol + 0.4, s.tCol + 0.9), { dy: 20 });
     s.segs.forEach((g, i) => E.css(g, { transform: `scaleX(${E.f3(E.ep(t, s.tBar + i * 0.18, s.tBar + 0.6 + i * 0.18, 'out'))})` }));
+    E.vis(s.grp, (1 - E.ep(t, s.tBar - 0.1, s.tBar + 0.2)) * (0.7 + 0.3 * Math.sin(t * 3.4)));
     E.fade(s.segl, E.ep(t, s.tBar + 0.4, s.tBar + 0.9), { dy: 8 });
     E.fade(s.foot, E.ep(t, s.tNever, s.tNever + 0.4), { dy: 6 });
   },

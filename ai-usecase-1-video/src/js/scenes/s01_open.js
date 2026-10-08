@@ -57,11 +57,7 @@ E.scene({
           <g class="fence" fill="none" stroke="rgba(143,161,192,.5)" stroke-width="1.6" stroke-dasharray="7 6">
             ${fence.slice(0, -1).map((p, i) => `<line class="fs" x1="${p[0]}" y1="${p[1]}" x2="${fence[i + 1][0]}" y2="${fence[i + 1][1]}"/>`).join('')}
           </g>
-          <g class="labels" font-family="Mono, monospace" font-size="13" fill="#7486A8" letter-spacing="2" stroke="#07112A" stroke-width="5" paint-order="stroke" stroke-linejoin="round">
-            <text x="300" y="178">RUNWAY 02L / 20R</text>
-            <text x="806" y="346">PIER A</text><text x="986" y="326">PIER B</text><text x="1166" y="346">PIER C</text>
-            <text x="1716" y="132" text-anchor="end">PERIMETER · 46 SECTORS</text>
-          </g>
+
           <g class="streams" fill="none" stroke="rgba(77,141,255,.22)" stroke-width="1">
             ${s.streams.map(st => `<path d="M${st.p0[0]} ${st.p0[1]} Q${st.p1[0]} ${st.p1[1]} ${st.p2[0]} ${st.p2[1]}"/>`).join('')}
           </g>
@@ -73,6 +69,11 @@ E.scene({
                 : `<circle cx="${d.x}" cy="${d.y}" r="2.6" fill="#4D8DFF"/>`).join('')}
           </g>
           <g class="pulses" fill="#BFD5FF">${s.streams.map(() => '<circle r="2.6"/>').join('')}</g>
+          <g class="labels" font-family="Mono, monospace" font-size="13" fill="#7486A8" letter-spacing="2" stroke="#07112A" stroke-width="5" paint-order="stroke" stroke-linejoin="round">
+            <text x="300" y="178">RUNWAY 02L / 20R</text>
+            <text x="806" y="346">PIER A</text><text x="986" y="326">PIER B</text><text x="1166" y="346">PIER C</text>
+            <text x="1716" y="132" text-anchor="end">PERIMETER · 46 SECTORS</text>
+          </g>
           <circle class="hubGlow" cx="${HUB[0]}" cy="${HUB[1]}" r="70" fill="url(#hubg)"/>
           <circle class="hubRing" cx="${HUB[0]}" cy="${HUB[1]}" r="16" fill="none" stroke="#8FB4FF" stroke-width="1.5"/>
           <circle class="hub" cx="${HUB[0]}" cy="${HUB[1]}" r="7" fill="#EEF3FC"/>

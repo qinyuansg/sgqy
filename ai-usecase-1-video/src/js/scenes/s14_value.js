@@ -5,7 +5,7 @@ E.scene({
     const V = [
       ['Operators', 'Focus', 'Less noise, fewer screens, less fatigue.', '312 alarms → 3 incidents'],
       ['Duty managers', 'Consistency', 'The right, SOP-based response on every shift.', '5/5 SOP steps · one-click approvals'],
-      ['Airport', 'Continuity', 'Fewer disruptions, smoother journeys.', 'No gate closure · queue averted'],
+      ['Airport', 'Continuity', 'Fewer disruptions, smoother journeys.', 'No gate closure · queue breach averted'],
       ['Security leadership', 'Compliance', 'Audit-ready by default.', 'Every action logged'],
     ];
     const W = 396, G = 32;

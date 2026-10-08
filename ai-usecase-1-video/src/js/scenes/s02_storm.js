@@ -101,7 +101,7 @@
               <span style="color:#6F80A0;font-size:18px">·</span><span style="color:#A9B7CF;font-size:18px">Alarm queue · all subsystems</span>
             </div>
             <div style="display:flex;align-items:center;gap:12px">
-              <span class="pill crit" style="font-size:13px">● LIVE</span>
+              <span class="pill crit live" style="font-size:13px">● LIVE</span>
               <span style="color:#6F80A0">${C.icon('filter', 22)}</span>
             </div>
           </div>
@@ -123,7 +123,8 @@
         }
       });
       s.clk = E.q(el, '.clk'); s.big = E.q(el, '.big'); s.q = E.q(el, '.q'); s.lapse = E.q(el, '.lapse');
-      s.left = E.q(el, '.left'); s.con = E.q(el, '.con');
+      s.left = E.q(el, '.left'); s.con = E.q(el, '.con'); s.live = E.q(el, '.live');
+      s.tCaught = rows[rows.length - 1].T + 0.2;
       s.v3 = v3; s.v5 = v5;
       rows.forEach(r => { if (r.T >= s.start) E.cue(r.T, r.real ? 'alert' : 'tick', r.real ? 0.7 : 0.18 + 0.1 * E.p(r.T, s.start, s.end)); if (r.tag) E.cue(r.tagT, 'blip', 0.35); });
       E.cue(v5.end - 0.2, 'boom', 0.55);
@@ -156,7 +157,8 @@
       else if (cur) clock = cur.clock + (t - cur.T);
       else clock = rows[0].clock;
       E.txt(s.clk, E.clock(clock));
-      E.fade(s.lapse, Math.min(E.ep(t, s.start + 0.3, s.start + 0.7), 1 - E.ep(t, s.tLapseEnd - 0.2, s.tLapseEnd + 0.2)), { dx: -6, dy: 0 });
+      E.fade(s.lapse, Math.min(E.ep(t, s.start + 0.3, s.start + 0.7), 1 - E.ep(t, s.tCaught - 0.2, s.tCaught + 0.2)), { dx: -6, dy: 0 });
+      E.vis(s.live, E.ep(t, s.tCaught, s.tCaught + 0.3));
       // headline number counts up with the narration ("312 alarms in the past hour")
       E.txt(s.big, String(Math.round(312 * E.ep(t, s.v3.start + 0.2, s.v3.end - 0.3, 'out'))));
       E.fade(s.left, E.ep(t, s.start + 0.1, s.start + 0.8), { dy: 16 });
