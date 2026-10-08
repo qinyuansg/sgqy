@@ -2,3 +2,4 @@ build/
 models/
 __pycache__/
 *.pyc
+deck/node_modules/

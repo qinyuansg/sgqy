@@ -19,6 +19,21 @@ AGIL® Secure ISMS. It walks through the **pain points**, the **solution**, the 
 
 Scenario, names and data are illustrative and labelled as such on screen.
 
+## CEO deck (PowerPoint)
+
+`deck/` builds an editable 24-slide deck that pairs with the film for a product-management review:
+executive summary → embedded film (slide 3) → challenge, pain points and personas → solution and
+design principles → the five user scenarios (persona, user story, before / with AI, pilot measure) →
+capabilities, value, why now / why us → roadmap, pilot KPIs, risks and the ask → appendix (storyboard,
+sources and accuracy notes). Theme colours, two layouts, sections and speaker notes on every slide;
+budget, pilot site and durations are bracketed placeholders.
+
+```bash
+npm install --prefix deck                     # pptxgenjs, react-icons, sharp
+node deck/make_assets.mjs build/deck-assets   # stills rendered from src/, backgrounds, 720p film copy
+node deck/build_deck.js build/deck-assets     # → build/dist/AI-UseCase1_AGIL-Secure-ISMS_CEO-deck.pptx
+```
+
 ## How it is made
 
 Everything is generated from source — no stock footage, samples or online services at render time.
