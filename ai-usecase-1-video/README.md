@@ -34,6 +34,21 @@ node deck/make_assets.mjs build/deck-assets   # stills rendered from src/, backg
 node deck/build_deck.js build/deck-assets     # → build/dist/AI-UseCase1_AGIL-Secure-ISMS_CEO-deck.pptx
 ```
 
+### Scenario walkthrough (PowerPoint)
+
+`deck/build_scenario_deck.js` tells the use case as one night in an airport security operations centre,
+scene by scene, in the style of a realistic product walkthrough: operator Nurul at her console, duty manager
+Daniel at the supervisor desk, patrol officer Arjun in the terminal, head of security Grace at the 07:00
+handover. Each slide is an illustrated scene with the AGIL® Secure ISMS panel the person is using, the AI
+co-pilot speaking in a bubble, a yellow frame on the feature that matters and a one-line takeaway. Scenes and
+panels are rendered from HTML/SVG in `deck/scenes/` (`kit.js` people and props, `scenes.js` rooms,
+`panels.js` product UI); bubbles, captions, highlights and notes are native PowerPoint objects.
+
+```bash
+NODE_PATH=deck/node_modules node deck/scenes/build_assets.mjs build/scenario-assets
+node deck/build_scenario_deck.js build/scenario-assets   # → build/dist/AI-UseCase1_Scenario-Walkthrough.pptx
+```
+
 ## How it is made
 
 Everything is generated from source — no stock footage, samples or online services at render time.

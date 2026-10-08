@@ -1,0 +1,29 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Scenario deck scenes</title>
+<link rel="stylesheet" href="../../src/css/film.css">
+<style>
+  html, body { margin: 0; background: transparent; }
+  #scene { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #04070E; font-family: InterF, sans-serif; color: #EEF3FC; }
+  #panel { position: absolute; left: 0; top: 0; padding: 48px; }
+  #panel.tight { padding: 8px; }
+  .icon { display: inline-block; vertical-align: middle; }
+</style></head>
+<body>
+<div id="scene"></div>
+<script src="../../src/js/components.js"></script>
+<script src="kit.js"></script>
+<script src="scenes.js"></script>
+<script src="panels.js"></script>
+<script>
+  // ?scene=pov&opts={...}   or   ?panel=briefing&opts={...}
+  const q = new URLSearchParams(location.search);
+  const opts = q.get('opts') ? JSON.parse(q.get('opts')) : {};
+  const root = document.getElementById('scene');
+  if (q.get('scene')) root.innerHTML = S[q.get('scene')](opts);
+  else if (q.get('panel')) {
+    root.style.background = 'transparent'; root.style.width = 'auto'; root.style.height = 'auto'; root.style.overflow = 'visible';
+    root.innerHTML = `<div id="panel" class="${opts.tight ? 'tight' : ''}">${P[q.get('panel')](opts)}</div>`;
+  }
+  window.READY = true;
+</script>
+</body></html>

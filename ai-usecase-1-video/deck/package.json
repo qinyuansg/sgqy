@@ -1,10 +1,12 @@
 {
   "name": "ai-usecase-1-deck",
   "private": true,
-  "description": "Builds the editable CEO deck (.pptx) for AI Use Case 1 from the concept film's assets",
+  "description": "Builds the editable decks for AI Use Case 1: the CEO product review and the scenario walkthrough",
   "scripts": {
     "assets": "node make_assets.mjs ../build/deck-assets",
-    "build": "node build_deck.js ../build/deck-assets ../build/dist/AI-UseCase1_AGIL-Secure-ISMS_CEO-deck.pptx"
+    "build": "node build_deck.js ../build/deck-assets ../build/dist/AI-UseCase1_AGIL-Secure-ISMS_CEO-deck.pptx",
+    "scenario:assets": "node scenes/build_assets.mjs ../build/scenario-assets",
+    "scenario:build": "node build_scenario_deck.js ../build/scenario-assets ../build/dist/AI-UseCase1_AGIL-Secure-ISMS_Scenario-Walkthrough.pptx"
   },
   "dependencies": {
     "pptxgenjs": "4.0.1",
