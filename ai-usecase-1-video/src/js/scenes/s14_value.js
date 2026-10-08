@@ -24,18 +24,18 @@ E.scene({
       <div class="abs panel flat band" style="left:120px;top:624px;width:1680px;height:208px;display:flex;align-items:center;gap:48px;padding:0 44px">
         <div class="stack" style="position:relative;width:360px;height:150px;flex:none">
           <div class="ly l0" style="position:absolute;left:0;right:0;bottom:0;height:40px;border-radius:10px;background:rgba(143,161,192,.12);border:1px solid var(--line2);display:flex;align-items:center;padding:0 16px;font-size:15px;color:#A9B7CF">Existing security subsystems</div>
-          <div class="ly l1" style="position:absolute;left:0;right:0;bottom:52px;height:40px;border-radius:10px;background:rgba(45,91,255,.14);border:1px solid rgba(77,141,255,.4);display:flex;align-items:center;padding:0 16px;font-size:15px;font-weight:600">AGIL<sup style="font-size:9px">®</sup>&nbsp;Secure ISMS · deployed</div>
+          <div class="ly l1" style="position:absolute;left:0;right:0;bottom:52px;height:40px;border-radius:10px;background:rgba(45,91,255,.14);border:1px solid rgba(77,141,255,.4);display:flex;align-items:center;padding:0 16px;font-size:15px;font-weight:600">AGIL<sup style="font-size:12px">®</sup>&nbsp;Secure ISMS · deployed</div>
           <div class="ly l2" style="position:absolute;left:0;right:0;bottom:104px;height:42px;border-radius:10px;background:linear-gradient(90deg,#2D5BFF,#4D8DFF);display:flex;align-items:center;gap:10px;padding:0 16px;font-size:15px;font-weight:700;box-shadow:0 0 30px rgba(45,91,255,.55)">${C.icon('sparkle', 18)} AI co-pilot · new layer</div>
         </div>
         <div>
-          <div class="label" style="color:#8FB4FF">Built on what airports already run</div>
+          <div class="label" style="color:#8FB4FF">Built on AGIL<sup style="font-size:11px">®</sup> Secure and existing systems</div>
           <div class="h-m" style="margin-top:12px;font-size:42px">An upgrade, not a rip-and-replace.</div>
-          <div class="body bl" style="margin-top:12px;font-size:19px;color:#A9B7CF">Vendor-neutral · works with legacy subsystems · AGIL<sup style="font-size:9px">®</sup> Secure platform operational at Dhoho Kediri International Airport, Indonesia</div>
+          <div class="body bl" style="margin-top:12px;font-size:19px;color:#A9B7CF">Vendor-neutral · works with legacy subsystems · AGIL<sup style="font-size:12px">®</sup> Secure operational at Dhoho Kediri International Airport, Indonesia</div>
         </div>
       </div>`;
     s.hd = E.q(el, '.hd'); s.cols = E.qa(el, '.col'); s.band = E.q(el, '.band'); s.l2 = E.q(el, '.l2'); s.l1 = E.q(el, '.l1'); s.l0 = E.q(el, '.l0'); s.bl = E.q(el, '.bl');
     const v27 = E.L('v27'), v28 = E.L('v28');
-    s.tC = [v27.cues[0].start, E.at('v27', 'managers') - 0.2, v27.cues[1].start, E.at('v27', 'compliance') - 0.2];
+    s.tC = v27.cues.map(c => c.start);
     s.tBand = v28.start - 0.1;
     s.tUp = E.at('v28', 'upgrade') - 0.3;
     s.tC.forEach(t => E.cue(t, 'pop', 0.4)); E.cue(s.tBand, 'pop', 0.35);

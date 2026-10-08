@@ -44,8 +44,8 @@ E.scene({
       </div>
     </div>`);
     s.sum = E.q(s.doc, '.sum'); s.stamp = E.q(s.doc, '.stamp'); s.secs = [0, 1, 2, 3].map(i => E.q(s.doc, '.s' + i));
-    const ROWS = [['312 → 3', 'alarms → incidents'], ['3 m 46 s', 'detection to interception'], ['4 min', 'bag reclaimed · no gate closure'],
-      ['1', 'queue averted · Checkpoint 3'], ['1', 'work order raised · CAM 4-221'], ['0', 'missed escalations']];
+    const ROWS = [['312 → 3', 'alarms → incidents · 01:14–02:14'], ['3 m 46 s', 'detection to interception'], ['4 min', 'bag reclaimed · no gate closure'],
+      ['1', 'queue breach averted · Checkpoint 3'], ['1', 'work order raised · CAM 4-221'], ['0', 'missed escalations']];
     s.sumCard = E.add(body, `<div class="abs panel flat" style="left:762px;top:20px;width:356px;height:642px;padding:22px 24px;border-radius:14px">
       <div class="label" style="color:#8FB4FF">Shift summary</div>
       ${ROWS.map(r => `<div class="srow" style="padding:14px 0;border-bottom:1px solid var(--line)"><div style="font-family:var(--head);font-weight:800;font-size:32px;letter-spacing:-.02em">${r[0]}</div><div style="font-size:15px;color:#A9B7CF;margin-top:2px">${r[1]}</div></div>`).join('')}

@@ -7,7 +7,7 @@ E.scene({
     s.rail = MOMENT.rail(el, {
       n: 4, time: '05:10', title: 'Before the morning peak', who: ['daniel'],
       story: { as: 'duty manager', want: 'early warning of queues and failing devices', so: 'I act before the peak, not after it' },
-      before: 'Queues and faults found too late', after: 'Forecast, recommended, fixed ahead', gainAt: s.tClick + 0.2,
+      before: 'Queues and faults found too late', after: 'Forecast early, fixed before impact', gainAt: s.tClick + 0.2,
     });
     const st = MOMENT.stage(el, 'Operations outlook · Terminal 2', `<span class="chip blue" style="height:32px">${C.icon('sparkle', 15)} Forecast · next 2 h</span>`);
     const body = E.q(st, '.st-body');
@@ -15,7 +15,7 @@ E.scene({
     const X0 = 64, X1 = 1060, Y0 = 262, Y1 = 58; // 05:00..07:00, 0..30 min
     const xm = m => X0 + (X1 - X0) * m / 120, ym = v => Y0 - (Y0 - Y1) * v / 30;
     s.xm = xm; s.ym = ym;
-    const A = [[10, 3.6], [20, 6], [30, 11], [40, 17], [50, 21], [55, 22], [65, 21], [80, 16], [100, 9], [120, 6]];
+    const A = [[10, 3.6], [20, 6], [30, 10.5], [40, 15.5], [50, 19.2], [55, 20], [65, 19.2], [80, 14.5], [100, 8.5], [120, 6]];
     const B = [[10, 3.6], [20, 6], [30, 8], [40, 10], [50, 11], [55, 11], [65, 10.5], [80, 9], [100, 6], [120, 5]];
     s.A = A; s.B = B;
     s.chart = E.add(body, `<div class="abs panel flat" style="left:22px;top:20px;width:1096px;height:356px;padding:18px 22px">
@@ -39,7 +39,7 @@ E.scene({
         <path class="act" d="M${xm(0)} ${ym(3.2)} L${xm(5)} ${ym(3.4)} L${xm(10)} ${ym(3.6)}" fill="none" stroke="#EEF3FC" stroke-width="3.5" stroke-linecap="round"/>
         <line x1="${xm(10)}" x2="${xm(10)}" y1="${Y1 - 6}" y2="${Y0}" stroke="rgba(238,243,252,.5)" stroke-dasharray="3 4"/>
         <text x="${xm(10) + 8}" y="${Y1 + 4}" font-family="Mono" font-size="12" fill="#EEF3FC">NOW 05:10</text>
-        <g class="pk"><rect rx="6" height="26" width="196" fill="#3A1420" stroke="#FF3B5C"/><text x="12" y="18" font-family="Mono" font-size="13" font-weight="600" fill="#FF8DA0">Forecast peak 22 min</text></g>
+        <g class="pk"><rect rx="6" height="26" width="196" fill="#3A1420" stroke="#FF3B5C"/><text x="12" y="18" font-family="Mono" font-size="13" font-weight="600" fill="#FF8DA0">Forecast peak 20 min</text></g>
         <g class="pk2"><rect rx="6" height="26" width="176" fill="#0F3321" stroke="#2ED47A"/><text x="12" y="18" font-family="Mono" font-size="13" font-weight="600" fill="#7BE8AC">New peak 11 min</text></g>
       </svg>
     </div>`);
@@ -56,24 +56,31 @@ E.scene({
     </div>`);
     s.ap = E.q(s.rec, '.ap'); s.apt = E.q(s.rec, '.apt');
     // ---- device health ----
-    const SP = Array.from({ length: 25 }, (_, i) => [i, 92 - (i < 12 ? i * 0.4 : 4.8 + (i - 12) * 2.6) + Math.sin(i * 1.7) * 1.2]);
+    const SPm = Array.from({ length: 19 }, (_, i) => [i, 92 - (i < 10 ? i * 0.5 : 5 + (i - 10) * 1.55) + Math.sin(i * 1.7) * 0.9]);
+    const SPf = [[18, SPm[18][1]], [20, 70.8], [22, 66.4], [24, 61.5]];
     const sx = i => 18 + i * 19.5, sy = v => 96 - (v - 50) * 1.6;
+    const pth = pts => pts.map((p, i) => `${i ? 'L' : 'M'}${sx(p[0]).toFixed(1)} ${sy(p[1]).toFixed(1)}`).join(' ');
     s.dev = E.add(body, `<div class="abs panel flat" style="left:578px;top:394px;width:540px;height:268px;padding:20px 22px;border-radius:16px">
       <div style="display:flex;align-items:center;justify-content:space-between">
         <div style="display:flex;align-items:center;gap:10px;color:#A9B7CF">${C.icon('wrench', 19)}<span class="kicker" style="font-size:14px;color:#A9B7CF">Device health</span></div>
         <span class="pill high">AT RISK</span>
       </div>
-      <div class="h-s" style="font-size:22px;margin-top:12px">CAM 4-221 · Apron Stand C3</div>
+      <div class="h-s" style="font-size:22px;margin-top:12px">CAM 4-221 · Apron Stands C4–C5</div>
       <svg width="500" height="96" viewBox="0 0 500 96" style="margin-top:6px">
         <line x1="18" x2="486" y1="${sy(70)}" y2="${sy(70)}" stroke="#FFB020" stroke-dasharray="5 5" opacity=".7"/>
-        <text x="486" y="${sy(70) - 6}" text-anchor="end" font-family="Mono" font-size="11" fill="#FFCB6B">usable threshold</text>
-        <path class="spk" d="${SP.map((p, i) => `${i ? 'L' : 'M'}${sx(p[0]).toFixed(1)} ${sy(p[1]).toFixed(1)}`).join(' ')}" fill="none" stroke="#8FB4FF" stroke-width="2.5" pathLength="1" stroke-dasharray="1 1"/>
-        <text x="18" y="94" font-family="Mono" font-size="11" fill="#6F80A0">image sharpness · last 72 h</text>
+        <text x="18" y="${sy(70) + 14}" font-family="Mono" font-size="11" fill="#FFCB6B">usable threshold</text>
+        <path class="spk" d="${pth(SPm)}" fill="none" stroke="#8FB4FF" stroke-width="2.5" pathLength="1" stroke-dasharray="1 1"/>
+        <path class="spf" d="${pth(SPf)}" fill="none" stroke="#FFB020" stroke-width="2.5" stroke-dasharray="5 5"/>
+        <circle class="spx" cx="${sx(20.2).toFixed(1)}" cy="${sy(70).toFixed(1)}" r="5" fill="none" stroke="#FFB020" stroke-width="2"/>
+        <text x="18" y="10" font-family="Mono" font-size="11" fill="#6F80A0">image sharpness · last 36 h</text>
+        <text class="spl" x="${sx(21).toFixed(1)}" y="94" font-family="Mono" font-size="11" fill="#FFCB6B">forecast</text>
       </svg>
-      <div class="dl1" style="font-size:16px;color:#FFCB6B;margin-top:4px">Lens fogging · failure likely within 72 h · sole view of Stand C3</div>
-      <div class="dl2 mono" style="font-size:14px;color:#7BE8AC;margin-top:10px">✓ Work order WO-5531 raised · fix before the 06:00 peak</div>
+      <div class="dl1" style="font-size:16px;color:#FFCB6B;margin-top:4px">Lens fogging · likely unusable within 72 h</div>
+      <div class="dl2 mono" style="font-size:14px;color:#7BE8AC;margin-top:10px">✓ Work order WO-5531 · fix before the morning departures peak</div>
     </div>`);
-    s.spk = E.q(s.dev, '.spk'); s.dl1 = E.q(s.dev, '.dl1'); s.dl2 = E.q(s.dev, '.dl2');
+    s.spk = E.q(s.dev, '.spk'); s.spf = E.q(s.dev, '.spf'); s.spx = E.q(s.dev, '.spx'); s.spl = E.q(s.dev, '.spl'); s.dl1 = E.q(s.dev, '.dl1'); s.dl2 = E.q(s.dev, '.dl2');
+    s.g1 = MOMENT.ghost(body, 22, 394, 540, 268, 'AI recommendation · computing…');
+    s.g2 = MOMENT.ghost(body, 578, 394, 540, 268, 'Device health · scanning…');
     s.cur = MOMENT.cursor(st);
     s.tFc = E.at('v22', 'forecasts') - 0.2;
     s.tPk = E.at('v22', '20-minute');
@@ -113,7 +120,7 @@ E.scene({
     const da = this.curve.call(s, above.slice(0, n)) + ` L${s.xm(above[n - 1][0]).toFixed(1)} ${s.ym(15).toFixed(1)} L${s.xm(above[0][0]).toFixed(1)} ${s.ym(15).toFixed(1)} Z`;
     E.attr(s.areaA, 'd', da);
     E.attr(s.areaA, 'opacity', E.f3(draw * (1 - mk)));
-    E.attr(s.pk, 'transform', `translate(${(s.xm(55) - 98).toFixed(1)} ${(s.ym(22) - 40).toFixed(1)})`);
+    E.attr(s.pk, 'transform', `translate(${(s.xm(55) - 98).toFixed(1)} ${(s.ym(20) - 40).toFixed(1)})`);
     E.attr(s.pk, 'opacity', E.f3(E.ep(t, s.tPk, s.tPk + 0.3) * (1 - mk)));
     E.attr(s.pk2, 'transform', `translate(${(s.xm(55) - 88).toFixed(1)} ${(s.ym(11) - 40).toFixed(1)})`);
     E.attr(s.pk2, 'opacity', E.f3(E.ep(t, s.tClick + 0.8, s.tClick + 1.1)));
@@ -125,9 +132,13 @@ E.scene({
     const bx = 22 + 22 + 60, by = 66 + 394 + 152;
     MOMENT.updateCursor(s.cur, t, [[s.tClick - 0.8, 420, 700], [s.tClick - 0.08, bx, by], [s.tClick + 0.9, bx + 40, by + 90]], [s.tClick],
       Math.min(E.ep(t, s.tClick - 0.9, s.tClick - 0.7), 1 - E.ep(t, s.tClick + 0.6, s.tClick + 0.9)));
+    E.vis(s.g1, Math.min(E.ep(t, s.start + 0.5, s.start + 1.0), 1 - E.ep(t, s.tRec, s.tRec + 0.3)) * (0.7 + 0.3 * Math.sin(t * 3.4)));
+    E.vis(s.g2, Math.min(E.ep(t, s.start + 0.6, s.start + 1.1), 1 - E.ep(t, s.tDev, s.tDev + 0.3)) * (0.7 + 0.3 * Math.sin(t * 3.4 + 1)));
     // device health
     E.fade(s.dev, E.ep(t, s.tDev, s.tDev + 0.45), { dy: 18 });
     E.attr(s.spk, 'stroke-dashoffset', E.f3(1 - E.ep(t, s.tDev + 0.2, s.tDev + 1.2, 'inOut')));
+    const fk = E.ep(t, s.tFail - 0.4, s.tFail + 0.2);
+    E.attr(s.spf, 'opacity', E.f3(fk)); E.attr(s.spx, 'opacity', E.f3(E.ep(t, s.tFail, s.tFail + 0.3))); E.attr(s.spl, 'opacity', E.f3(fk));
     E.fade(s.dl1, E.ep(t, s.tFail, s.tFail + 0.35), { dy: 6 });
     E.fade(s.dl2, E.ep(t, s.tWo, s.tWo + 0.35), { dy: 6 });
   },

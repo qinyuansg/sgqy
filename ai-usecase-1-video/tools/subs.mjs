@@ -23,7 +23,7 @@ await page.evaluate(() => document.fonts.ready);
 await page.evaluate(() => window.showCue('', ''));
 await page.screenshot({ path: path.join(dir, 'blank.png'), omitBackground: true });
 for (let i = 0; i < cues.length; i++) {
-  await page.evaluate(([en, zh]) => window.showCue(en, zh), [cues[i].en, cues[i].zh]);
+  await page.evaluate(([en, zh]) => window.showCue(en, zh), [cues[i].burn_en === false ? '' : cues[i].en, cues[i].zh]);
   await page.evaluate(() => document.fonts.ready);
   await page.screenshot({ path: path.join(dir, `c${String(i).padStart(3, '0')}.png`), omitBackground: true });
 }

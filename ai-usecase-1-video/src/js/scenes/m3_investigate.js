@@ -55,17 +55,19 @@ E.scene({
       <div class="abs" style="left:604px;top:${50 + i * 104}px;width:514px;height:94px;border-radius:12px;border:1px solid ${i === 3 ? 'rgba(77,141,255,.7)' : 'var(--line)'};background:${i === 3 ? 'rgba(45,91,255,.14)' : 'rgba(13,24,48,.8)'};display:flex;align-items:center;gap:16px;padding:0 14px 0 8px;overflow:hidden">
         <div style="width:140px;height:78px;border-radius:8px;overflow:hidden;flex:none">${C.cctvThumb(140, 78, r[0], 'th' + i)}</div>
         <div style="min-width:0">
-          <div style="display:flex;align-items:center;gap:10px"><span class="mono" style="font-size:17px;color:#EEF3FC">${r[1]}</span>${i === 3 ? '<span class="pill blue" style="font-size:11px;padding:2px 8px">NOW</span>' : ''}</div>
+          <div style="display:flex;align-items:center;gap:10px"><span class="mono ${i === 3 ? 'trnow' : ''}" style="font-size:17px;color:#EEF3FC">${r[1]}</span>${i === 3 ? '<span class="pill blue" style="font-size:11px;padding:2px 8px">NOW</span>' : ''}</div>
           <div style="font-weight:600;font-size:17px;margin-top:3px">${r[2]}</div>
           <div style="font-size:14px;color:#8D9BB8;margin-top:2px"><span class="mono" style="font-size:12px">${r[3]}</span> · ${r[4]}</div>
         </div>
       </div>`));
+    s.trNow = E.q(s.tr[3], '.trnow');
+    s.ghost = MOMENT.ghost(body, 604, 50, 514, 612, 'Trace · waiting for a question');
     // dispatch card
     s.dc = E.add(body, `
       <div class="abs" style="left:604px;top:478px;width:514px;height:184px;border-radius:16px;background:linear-gradient(180deg,#F4F7FD,#E6ECF7);color:#0A1428;padding:16px 18px;box-shadow:0 20px 50px rgba(0,0,0,.45)">
         <div style="display:flex;align-items:center;justify-content:space-between">
           <div style="display:flex;align-items:center;gap:10px"><span style="color:#2D5BFF">${C.icon('send', 18)}</span><span class="mono" style="font-size:13px;letter-spacing:.12em;color:#3A4A6B">DISPATCH · PATROL P-3</span></div>
-          <span class="mono" style="font-size:13px;color:#5B6B86">02:16:24</span>
+          <span class="mono dct" style="font-size:13px;color:#5B6B86">02:16:12</span>
         </div>
         <div style="display:flex;gap:14px;margin-top:12px;align-items:center">
           <div style="width:74px;height:86px;border-radius:10px;overflow:hidden;background:#1F2A3B;flex:none">${C.cctvThumb(74, 86, 'cafe', 'thp')}</div>
@@ -77,7 +79,7 @@ E.scene({
           </div>
         </div>
       </div>`);
-    s.acc = E.q(s.dc, '.acc');
+    s.acc = E.q(s.dc, '.acc'); s.dct = E.q(s.dc, '.dct');
 
     s.tType = v16.cues[1].start + 0.25;
     s.query = 'Who left the black suitcase at Gate B12?';
@@ -87,6 +89,9 @@ E.scene({
     s.tDc = v17.cues[1].start + 0.05;
     s.tAcc = s.tDc + 1.4;
     s.tRes = v18.start - 0.1;
+    const clockAt = tt => 2 * 3600 + 16 * 60 + (tt - s.start);
+    E.txt(s.dct, E.clock(clockAt(s.tDc)));
+    E.txt(s.trNow, E.clock(clockAt(s.tTr[3]) - 1));
     for (let i = 0; i < s.query.length; i++) if (s.query[i] !== ' ') E.cue(s.tType + i / 22, 'type', 0.22);
     E.cue(s.tEnter, 'click', 0.6); E.cue(s.tEnter + 0.05, 'scan', 0.4, { dur: 1.3 });
     s.tTr.forEach(t => E.cue(t, 'blip', 0.35)); E.cue(s.tAns + 0.9, 'chime', 0.5);
@@ -98,11 +103,11 @@ E.scene({
     // CCTV clock with a time-lapse jump at the resolution
     const jump = t >= s.tRes;
     E.txt(s.ts, jump ? E.clock(2 * 3600 + 20 * 60 + 10 + (t - s.tRes)) : E.clock(2 * 3600 + 16 * 60 + lt));
-    E.txt(s.bboxLabel, jump ? 'OWNER RETURNED' : `UNATTENDED ${E.clock(6 * 60 + 12 + lt).slice(3)}`);
+    E.txt(s.bboxLabel, jump ? 'OWNER RETURNED' : `UNATTENDED ${E.clock(7 * 60 + 46 + lt).slice(3)}`);
     const green = E.ep(t, s.tRes, s.tRes + 0.3);
     E.attr(s.bboxRect, 'stroke', green > 0.5 ? '#2ED47A' : '#FFB020');
     E.attr(s.bboxTag, 'fill', green > 0.5 ? '#2ED47A' : '#FFB020');
-    E.attr(s.bbox, 'opacity', E.f3(green > 0.5 ? 1 : 0.75 + 0.25 * Math.sin(t * 6)));
+    E.attr(s.bboxRect, 'stroke-opacity', E.f3(green > 0.5 ? 1 : 0.6 + 0.4 * Math.sin(t * 6)));
     E.fade(s.ff, E.env(t, s.tRes - 0.05, s.tRes + 1.6, 0.2), { dy: 6 });
     E.fade(s.res, E.ep(t, s.tRes + 0.15, s.tRes + 0.55), { dy: 20 });
     E.txt(s.hdpill, t >= s.tRes + 0.3 ? 'INCIDENT 2 · RESOLVED' : 'INCIDENT 2 · HIGH 71');
@@ -128,6 +133,7 @@ E.scene({
     // trace rows
     E.fade(s.trHd, E.ep(t, s.tTr[0] - 0.2, s.tTr[0] + 0.2), { dy: 0 });
     s.tr.forEach((r, i) => E.fade(r, E.ep(t, s.tTr[i], s.tTr[i] + 0.4), { dx: 24, dy: 0 }));
+    E.vis(s.ghost, Math.min(E.ep(t, s.start + 0.4, s.start + 0.9), 1 - E.ep(t, s.tTr[0] - 0.3, s.tTr[0])) * (0.7 + 0.3 * Math.sin(t * 3.4)));
     // dispatch
     E.fade(s.dc, E.ep(t, s.tDc, s.tDc + 0.5, 'out5'), { dy: 40, s: 0.96 });
     const acc = t >= s.tAcc;

@@ -2,7 +2,7 @@
 E.scene({
   id: 's07',
   build(el, s) {
-    const MOM = [['02:14', 'Alarm storm', 'Triage'], ['02:15', 'Tailgating', 'Respond'], ['02:16', 'Unattended bag', 'Investigate'], ['05:10', 'Before the peak', 'Anticipate · Maintain'], ['07:00', 'Handover', 'Report']];
+    const MOM = [['02:14', 'Alarm storm', 'Triage'], ['02:15', 'Tailgating', 'Respond'], ['02:16', 'Unattended bag', 'Investigate'], ['05:10', 'Before the morning peak', 'Anticipate · Maintain'], ['07:00', 'Handover', 'Report']];
     const PER = ['nurul', 'arjun', 'daniel', 'grace'];
     const X0 = 160, X1 = 1760, step = (X1 - X0) / 4;
     el.innerHTML = `

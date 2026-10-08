@@ -57,7 +57,7 @@ E.scene({
           <g class="fence" fill="none" stroke="rgba(143,161,192,.5)" stroke-width="1.6" stroke-dasharray="7 6">
             ${fence.slice(0, -1).map((p, i) => `<line class="fs" x1="${p[0]}" y1="${p[1]}" x2="${fence[i + 1][0]}" y2="${fence[i + 1][1]}"/>`).join('')}
           </g>
-          <g class="labels" font-family="Mono, monospace" font-size="13" fill="#5E6F92" letter-spacing="2">
+          <g class="labels" font-family="Mono, monospace" font-size="13" fill="#7486A8" letter-spacing="2" stroke="#07112A" stroke-width="5" paint-order="stroke" stroke-linejoin="round">
             <text x="300" y="178">RUNWAY 02L / 20R</text>
             <text x="806" y="346">PIER A</text><text x="986" y="326">PIER B</text><text x="1166" y="346">PIER C</text>
             <text x="1716" y="132" text-anchor="end">PERIMETER · 46 SECTORS</text>
@@ -109,10 +109,10 @@ E.scene({
     const v1 = E.L('v01'), v2 = E.L('v02');
     // camera: slow push, then dive into the hub at the cut
     const push = 1 + 0.05 * E.ep(t, 0, s.end, 'sine');
-    const dive = E.ep(t, s.end - 0.7, s.end + 0.05, 'in');
+    const dive = E.ep(t, Math.max(E.L('v02').end + 0.05, s.end - 0.5), s.end + 0.05, 'in');
     const sc = push * (1 + 2.2 * dive);
     E.attr(s.map, 'transform', `translate(${s.hub[0]} ${s.hub[1]}) scale(${E.f3(sc)}) translate(${-s.hub[0]} ${-s.hub[1]})`);
-    E.css(s.map, { opacity: E.f3(1 - dive) });
+    E.css(s.map, { opacity: E.f3(Math.max(0, 1 - dive * 1.6)) });
 
     // draw-on of airport geometry
     s.draw.forEach((d, i) => {

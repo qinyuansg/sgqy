@@ -34,8 +34,8 @@ body { -webkit-font-smoothing: antialiased; text-rendering: geometricPrecision; 
 #stage {
   position: relative; width: 1920px; height: 1080px; overflow: hidden;
   font-family: var(--body); color: var(--t1); background: var(--bg0);
-  font-variant-numeric: tabular-nums;
 }
+#stage * { text-wrap: pretty; }
 #bg { position: absolute; inset: 0; background: radial-gradient(1200px 800px at 50% 42%, #0E1C3A 0%, #08122A 55%, #040914 100%); }
 #bg .grid {
   position: absolute; inset: 0; opacity: .5;
@@ -59,7 +59,8 @@ svg { display: block; overflow: visible; }
 .h-s { font-family: var(--head); font-weight: 700; font-size: 28px; line-height: 1.2; letter-spacing: -.01em; }
 .lead { font-size: 28px; line-height: 1.4; color: var(--t2); }
 .body { font-size: 20px; line-height: 1.45; color: var(--t2); }
-.mono { font-family: var(--mono); }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.tnum { font-variant-numeric: tabular-nums; }
 .label { font-family: var(--mono); font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--t3); font-weight: 500; }
 .blue { color: var(--blue2); }
 .w { display: inline-block; white-space: pre; }
@@ -109,7 +110,7 @@ svg { display: block; overflow: visible; }
 #chrome .kick i { width: 10px; height: 10px; background: var(--blue2); border-radius: 2px; box-shadow: 0 0 12px var(--glow); }
 #chrome .bug { position: absolute; right: 120px; top: 58px; font-family: var(--mono); font-size: 14px; letter-spacing: .16em; color: var(--t3); text-transform: uppercase; }
 #chrome .bug b { color: var(--t2); font-weight: 500; }
-#chrome .note { position: absolute; right: 120px; top: 84px; font-family: var(--mono); font-size: 12px; letter-spacing: .14em; color: #55658A; text-transform: uppercase; }
+#chrome .note { position: absolute; right: 120px; top: 86px; font-family: var(--mono); font-size: 14px; letter-spacing: .12em; color: #8A9BC0; text-transform: uppercase; }
 
 /* ---------- subtitles (preview / overlay) ---------- */
 #subs { position: absolute; left: 0; right: 0; bottom: 34px; display: flex; flex-direction: column; align-items: center; gap: 6px; z-index: 60; }

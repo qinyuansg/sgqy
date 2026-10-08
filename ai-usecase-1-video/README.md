@@ -1,6 +1,6 @@
 # AI Use Case 1 — AI-powered AGIL® Secure ISMS for Airports · concept video
 
-A 3-minute product concept film (1920×1080, 30 fps, English narration, bilingual EN/中文 subtitles)
+A 3-minute (3:08) product concept film (1920×1080, 30 fps, English narration, bilingual EN/中文 subtitles)
 introducing **AI Use Case 1**: an AI co-pilot for the airport security control room, built into the
 AGIL® Secure ISMS. It walks through the **pain points**, the **solution**, the **design principles**,
 **five user-scenario moments with their user stories**, the **core capabilities** and the **core value**.
@@ -11,10 +11,10 @@ AGIL® Secure ISMS. It walks through the **pain points**, the **solution**, the 
 | Chapter | Content |
 |---|---|
 | 01 · The challenge | 312 alarms an hour, real threats buried in noise; six persona-owned pain points; the cost of doubt (Groupe ADP: 1,280 delays from unattended-bag alerts in a year) |
-| 02 · The solution | Subsystems → AGIL® Secure ISMS → AI co-pilot (Detect · Triage · Investigate · Respond · Report + Anticipate · Maintain) → people in command |
-| 03 · Design principles | Human in command · Explainable · Grounded in your SOPs · Secure by design |
+| 02 · The solution | Subsystems → AGIL® Secure ISMS (deployed platform) → AI co-pilot proposed by this use case (Detect · Triage · Investigate · Respond · Report + Anticipate · Maintain) → people in command |
+| 03 · Design principles | Human in command · Explainable · Grounded in SOPs · Secure by design |
 | 04 · User scenarios | One night shift: 02:14 triage · 02:15 tailgating response · 02:16 "who left this bag?" · 05:10 queue & device forecast · 07:00 auto-drafted report |
-| 05 · Core capabilities | Seven capabilities, each mapped to the pain it removes |
+| 05 · Core capabilities | Seven capabilities, each mapped to the pain point it addresses |
 | 06 · Core value | Focus · Consistency · Continuity · Compliance — an upgrade, not a rip-and-replace |
 
 Scenario, names and data are illustrative and labelled as such on screen.

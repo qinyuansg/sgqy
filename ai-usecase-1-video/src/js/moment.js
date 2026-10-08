@@ -4,7 +4,7 @@
   'use strict';
   const M = (window.MOMENT = {});
   const storyHTML = st =>
-    `<b style="color:#8FB4FF;font-weight:600">${/^[aeiou]/i.test(st.as) ? 'As an' : 'As a'}</b> ${st.as}, <b style="color:#8FB4FF;font-weight:600">I want</b> ${st.want}, <b style="color:#8FB4FF;font-weight:600">so that</b> ${st.so}.`;
+    `<b style="color:#8FB4FF;font-weight:600">${/^[aeiou]/i.test(st.as) ? 'As&nbsp;an' : 'As&nbsp;a'}</b> ${st.as}, <b style="color:#8FB4FF;font-weight:600">I&nbsp;want</b> ${st.want}, <b style="color:#8FB4FF;font-weight:600">so&nbsp;that</b> ${st.so}.`;
 
   // o = {n, time, title, who:[keys], story:{as,want,so}, before, after}
   M.rail = (el, o) => {
@@ -56,13 +56,16 @@
     <div class="abs panel stage" style="left:660px;top:142px;width:1140px;height:748px;overflow:hidden">
       <div style="height:66px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;border-bottom:1px solid var(--line)">
         <div style="display:flex;align-items:center;gap:12px;white-space:nowrap">
-          <span style="font-family:var(--head);font-weight:700;font-size:20px">AGIL<sup style="font-size:10px">®</sup> Secure ISMS</span>
+          <span style="font-family:var(--head);font-weight:700;font-size:20px">AGIL<sup style="font-size:14px">®</sup> Secure ISMS</span>
           <span style="color:#6F80A0">·</span><span style="color:#A9B7CF;font-size:17px">${title}</span>
         </div>
         <div class="st-right" style="display:flex;align-items:center;gap:12px">${right}</div>
       </div>
       <div class="st-body" style="position:absolute;left:0;right:0;top:66px;bottom:0"></div>
     </div>`);
+
+  // dashed placeholder shown until the real panel lands
+  M.ghost = (parent, x, y, w, h, label) => E.add(parent, `<div class="abs" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px;border:1.5px dashed rgba(77,141,255,.35);border-radius:14px;display:flex;align-items:center;justify-content:center;gap:10px;color:#5F7BB8">${C.icon('sparkle', 18)}<span class="kicker" style="font-size:13px;color:#5F7BB8">${label}</span></div>`);
 
   // animated pointer: path = [[t,x,y],...], clicks = [t,...]  (stage-local coordinates)
   M.cursor = (parent) => {

@@ -118,7 +118,7 @@ def main():
             sys.exit(f"{ln['id']}: EN has {len(en_chunks)} cues, ZH has {len(zh_chunks)}")
         spans = cue_bounds(en_chunks, dur, pauses(audio, sr))
         cues = [
-            {"en": e.strip(), "zh": z.strip(), "start": round(start + a, 3), "end": round(start + b, 3)}
+            {"en": e.strip(), "zh": z.strip(), "start": round(start + a, 3), "end": round(start + b, 3), "burn_en": ln.get("burn_en", True)}
             for (a, b), e, z in zip(spans, en_chunks, zh_chunks)
         ]
         lines.append({

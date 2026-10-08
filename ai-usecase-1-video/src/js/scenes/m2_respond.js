@@ -5,7 +5,7 @@ E.scene({
     const v19 = E.L('v16'), v20 = E.L('v17'), v21 = E.L('v18');
     s.rail = MOMENT.rail(el, {
       n: 2, time: '02:15', title: 'Tailgating to airside', who: ['daniel'],
-      story: { as: 'duty manager', want: 'responses recommended from our own SOPs, approved in one click', so: 'every shift responds the same, right way' },
+      story: { as: 'duty manager', want: 'responses recommended from our own SOPs, approved in one click', so: 'every shift gives the same, correct response' },
       before: 'Response depends on who is on shift', after: 'SOP steps, approved in one click', gainAt: v21.start + 0.6,
     });
     const st = MOMENT.stage(el, 'Incident 1 · Staff Door D-214',
@@ -53,6 +53,7 @@ E.scene({
     s.stps = E.qa(s.rp, '.stp').map(e => ({ el: e, num: E.q(e, '.num'), det: E.q(e, '.det'), don: E.q(e, '.don'), b: E.q(e, '.b') }));
     s.lines = E.q(s.rp, '.lines'); s.alog = E.q(s.rp, '.alog');
     s.banner = E.add(body, `<div class="abs" style="left:474px;top:20px;width:644px;height:0"></div>`);
+    s.ghost = MOMENT.ghost(body, 474, 20, 644, 642, 'AI response · analysing incident…');
     s.cur = MOMENT.cursor(st);
 
     s.tWalk = v19.start + 0.1;
@@ -113,6 +114,7 @@ E.scene({
     E.txt(s.ats, E.clock(Math.max(T0 + 1, clk)));
     // response panel + steps
     E.fade(s.rp, E.ep(t, s.tRp, s.tRp + 0.5), { dx: 24, dy: 0 });
+    E.vis(s.ghost, Math.min(E.ep(t, s.start + 0.4, s.start + 0.9), 1 - E.ep(t, s.tRp, s.tRp + 0.3)) * (0.7 + 0.3 * Math.sin(t * 3.4)));
     s.stps.forEach((x, i) => {
       E.fade(x.el, E.ep(t, s.tSteps[i], s.tSteps[i] + 0.35), { dx: 14, dy: 0 });
       const done = t >= s.doneAt[i];

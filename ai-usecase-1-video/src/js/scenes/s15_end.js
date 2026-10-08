@@ -19,10 +19,10 @@ E.scene({
           <div style="position:absolute;left:0;right:0;top:330px;text-align:center">
             <div class="mono" style="font-size:19px;letter-spacing:.24em;color:#2D5BFF;font-weight:600">AI USE CASE 01</div>
             <div style="font-family:var(--head);font-weight:800;font-size:86px;letter-spacing:-.035em;color:#0A1428;margin-top:20px;line-height:1.04">AI-powered AGIL<sup style="font-size:36px;vertical-align:44px">®</sup> Secure ISMS</div>
-            <div style="font-size:30px;color:#4A5873;margin-top:20px">for airports · From alarm noise to decisive action.</div>
+            <div style="font-size:30px;color:#4A5873;margin-top:20px">for Airports · From alarm noise to decisive action.</div>
           </div>
           <div style="position:absolute;left:0;right:0;top:830px;text-align:center;font-family:var(--head);font-weight:700;font-size:28px;letter-spacing:.02em;color:#0A1428">ST Engineering</div>
-          <div style="position:absolute;left:0;right:0;top:1000px;text-align:center;font-family:var(--mono);font-size:13px;letter-spacing:.1em;color:#7C8BA8">CONCEPT VIDEO · SCENARIO, NAMES AND DATA ARE ILLUSTRATIVE</div>
+          <div style="position:absolute;left:0;right:0;top:1000px;text-align:center;font-family:var(--mono);font-size:15px;letter-spacing:.1em;color:#56657F">CONCEPT VIDEO · SCENARIO, NAMES AND DATA ARE ILLUSTRATIVE</div>
         </div>
       </div>`;
     s.dotEls = Array.from(E.q(el, '.dots').children);

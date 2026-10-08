@@ -107,8 +107,8 @@
       ${[0, 1, 2, 3].map(i => `<rect x="${40 + i * 52}" y="168" width="44" height="34" rx="7" fill="#33435E"/><rect x="${40 + i * 52}" y="158" width="44" height="14" rx="5" fill="#3B4D6B"/>`).join('')}
       ${[0, 1, 2, 3].map(i => `<rect x="${w - 250 + i * 54}" y="196" width="46" height="38" rx="8" fill="#33435E"/><rect x="${w - 250 + i * 54}" y="184" width="46" height="15" rx="5" fill="#3B4D6B"/>`).join('')}
       <!-- gate sign -->
-      <rect x="${w / 2 - 34}" y="128" width="68" height="26" rx="4" fill="#0B1220" stroke="#3A4B66"/>
-      <text x="${w / 2}" y="146" text-anchor="middle" font-family="Mono, monospace" font-size="14" fill="#FFCB6B">B12</text>
+      <rect x="40" y="126" width="68" height="26" rx="4" fill="#0B1220" stroke="#3A4B66"/>
+      <text x="74" y="144" text-anchor="middle" font-family="Mono, monospace" font-size="14" fill="#FFCB6B">B12</text>
       <!-- suitcase -->
       <g class="bag" transform="translate(${w * 0.43} 228)">
         <rect x="-22" y="-56" width="44" height="58" rx="7" fill="#0A0D13" stroke="#3A4560" stroke-width="1.5"/>
@@ -171,7 +171,7 @@
       <rect width="${w}" height="${h}" fill="#141C28"/>
       <rect width="${w}" height="${h * 0.38}" fill="#0B111B"/>
       <g stroke="#E5C14A" stroke-width="2" opacity=".55"><line x1="${w * 0.1}" y1="${h}" x2="${w * 0.45}" y2="${h * 0.38}"/><line x1="${w * 0.9}" y1="${h}" x2="${w * 0.6}" y2="${h * 0.38}"/></g>
-      <text x="${w * 0.47}" y="${h * 0.62}" font-family="Mono, monospace" font-size="20" fill="rgba(229,193,74,.5)" font-weight="600">C3</text>
+      <text x="${w * 0.72}" y="${h * 0.93}" font-family="Mono, monospace" font-size="18" fill="rgba(229,193,74,.5)" font-weight="600">C3</text>
       <path d="M${w * 0.18} ${h * 0.34} l120 -10 l60 0 l30 6 l-30 6 l-60 0z" fill="#26324A"/>
       <path d="M${w * 0.42} ${h * 0.26} l26 -24 h12 l-10 24z" fill="#26324A"/>
       <g class="tp">${C.person(0, 0, h * 0.34, '#6B4E3D')}</g>

@@ -41,8 +41,8 @@
 
     const s02 = E.S('s02').start, s14 = E.S('s14').end;
     E.vis(bug, Math.min(E.ep(t, s02 + 0.3, s02 + 0.9), 1 - E.ep(t, s14 - 0.4, s14)) * 0.95);
-    const s07 = E.S('s07').start, m5 = E.S('m5').end;
-    E.vis(note, Math.min(E.ep(t, s07 + 0.3, s07 + 0.9), 1 - E.ep(t, m5 - 0.4, m5)));
+    const win = (a, b) => Math.min(E.ep(t, a + 0.3, a + 0.9), 1 - E.ep(t, b - 0.4, b));
+    E.vis(note, Math.max(win(E.S('s02').start, E.S('s02').end), win(E.S('s07').start, E.S('m5').end)));
 
     if (subs) {
       let cue = null;

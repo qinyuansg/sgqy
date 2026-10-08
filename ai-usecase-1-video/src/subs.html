@@ -13,6 +13,7 @@
 <script>
   window.showCue = (en, zh) => {
     document.querySelector('#subs .en').textContent = en;
+    document.querySelector('#subs .en').style.display = en ? 'block' : 'none';
     document.querySelector('#subs .zh').textContent = zh;
     document.getElementById('subs').style.visibility = en || zh ? 'visible' : 'hidden';
   };

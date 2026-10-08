@@ -3,10 +3,10 @@ E.scene({
   id: 's06',
   build(el, s) {
     const PR = [
-      ['hand', 'Human in command', 'AI recommends. People decide — every action approved and logged.', 'Approve · override · audit'],
+      ['hand', 'Human in command', 'AI recommends; people decide. Every intervention is approved and logged.', 'Approve · override · audit'],
       ['eye', 'Explainable', 'Every score and every suggestion shows the evidence behind it.', 'No black boxes'],
-      ['list', 'Grounded in your SOPs', "Responses follow the airport's own procedures and regulations.", 'SOP-native playbooks'],
-      ['lock', 'Secure by design', 'Zero-trust architecture. AI runs on-premises — data stays in the airport.', 'On-premises AI'],
+      ['list', 'Grounded in SOPs', "Responses follow the airport's own procedures and regulations.", 'SOP-native playbooks'],
+      ['lock', 'Secure by design', 'Zero-trust architecture. Deployable on-premises, so data stays in the airport.', 'On-premises option'],
     ];
     const W = 396, G = 32;
     el.innerHTML = `
