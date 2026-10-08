@@ -11,7 +11,7 @@ python3 tools/tts.py                              # voiceover + timeline (src/js
 node tools/cues.mjs                               # picture-locked sound cues
 node tools/render.mjs --workers "${WORKERS:-3}" --out "$BUILD/video.mp4"
 python3 tools/music.py                            # score + SFX stems
-python3 tools/mix.py                              # −14 LUFS / −1.2 dBTP mix
+python3 tools/mix.py                              # −14 LUFS mix, −3 dBTP ceiling
 ffmpeg -y -loglevel error -i "$BUILD/video.mp4" -i "$BUILD/mix.wav" -map 0:v -map 1:a -c:v copy -c:a aac -b:a 256k \
   -movflags +faststart -shortest "$BUILD/master.mp4"
 python3 tools/srt.py ${NOTO_SC_PKG:+--fonts "$NOTO_SC_PKG"}

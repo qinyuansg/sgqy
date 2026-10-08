@@ -11,6 +11,21 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BUILD = os.environ.get("BUILD", os.path.join(ROOT, "build"))
 
 
+def zh_flat(z):
+    """Remove `/` line-break hints; keep a space only between a CJK ideograph and Latin text/digits."""
+    out = []
+    for i, ch in enumerate(z):
+        if ch != "/":
+            out.append(ch); continue
+        a = z[i - 1] if i else ""
+        b = z[i + 1] if i + 1 < len(z) else ""
+        latin = lambda c: c.isascii() and (c.isalnum() or c in "®)") or c == "®"
+        cjk = lambda c: "\u4e00" <= c <= "\u9fff"
+        if (latin(a) and cjk(b)) or (cjk(a) and latin(b)):
+            out.append(" ")
+    return "".join(out)
+
+
 def ts(t):
     ms = int(round(t * 1000))
     h, ms = divmod(ms, 3600000); m, ms = divmod(ms, 60000); s, ms = divmod(ms, 1000)
@@ -68,11 +83,11 @@ def main():
             for i, c in enumerate(cues, 1):
                 f.write(f"{i}\n{ts(c['start'])} --> {ts(c['show_end'])}\n{fn(c)}\n\n")
     # "/" in a Chinese cue is a hand-placed line break for the two-line ZH SRT
-    zh_lines = lambda z: z.split("/") if "/" in z else wrap_zh(z)
+    zh_lines = lambda z: [x.strip() for x in z.split("/")] if "/" in z else wrap_zh(z)
     write("EN.srt", lambda c: "\n".join(wrap_en(c["en"])))
     write("ZH.srt", lambda c: "\n".join(zh_lines(c["zh"])))
     for c in cues:
-        c["zh"] = c["zh"].replace("/", "")
+        c["zh"] = zh_flat(c["zh"])
     write("EN-ZH.srt", lambda c: c["en"] + "\n" + c["zh"])
     json.dump(cues, open(os.path.join(BUILD, "subs", "cues.json"), "w"), ensure_ascii=False, indent=1)
     print(len(cues), "cues; max EN len", max(len(c["en"]) for c in cues), "; max ZH len", max(len(c["zh"]) for c in cues))

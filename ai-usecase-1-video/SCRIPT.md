@@ -104,34 +104,34 @@
 | 1 | 0:00.80–0:03.83 | s01 | An airport never sleeps — and neither does its security. | 机场从不停歇，安保亦然。 |
 | 2 | 0:04.18–0:07.90 | s01 | Thousands of cameras, doors and sensors report to one control room. | 成千上万的摄像头、门禁与传感器，汇聚于同一个控制室。 |
 | 3 | 0:09.10–0:12.50 | s02 | 2 a.m. 312 alarms in the past hour. | 凌晨两点，过去一小时内触发了 312 条告警。 |
-| 4 | 0:12.85–0:17.66 | s02 | Most are nuisance: a door propped open by cleaners, wind on the fence, glare on a lens. | 大多是误报：保洁员撑开的门、风吹动的围栏、镜头上的眩光。 |
-| 5 | 0:18.11–0:20.76 | s02 | But a few are real — and they're buried in the noise. | 但其中有几条是真的——却被淹没在噪声之中。 |
-| 6 | 0:22.06–0:26.37 | s03 | Operators juggle siloed systems and verify every alarm by hand. | 值守人员在孤立的系统间来回切换，每条告警都靠人工核实。 |
-| 7 | 0:26.72–0:32.68 | s03 | Tracing one person takes hours of footage. Responses vary by shift, and auditability is patchy. | 追踪一个人要翻看数小时录像。处置因班次而异，审计留痕参差不齐。 |
-| 8 | 0:33.03–0:36.37 | s03 | Queues and device faults surface only after they cause trouble. | 排队拥堵与设备故障，往往在造成影响后才被发现。 |
-| 9 | 0:37.37–0:43.95 | s04 | And doubt is costly: in one year, unattended-bag alerts caused 1,280 delays at Paris airports. | 不确定的代价高昂：仅一年之内，无人看管行李告警就在巴黎各机场造成 1,280 次延误。 |
-| 10 | 0:45.45–0:56.35 | s05 | AI Use Case 1 brings an AI co-pilot into the AGIL® Secure ISMS — the platform that already unifies access control, video, intrusion detection and identity. | AI 用例一：为 AGIL® Secure ISMS 引入 AI 副驾驶——该平台已将门禁、视频、入侵探测与身份管理融为一体。 |
-| 11 | 0:56.75–1:06.23 | s05 | It detects unusual behaviour, triages alarms in context, investigates in plain language, recommends the response and writes the report — and it looks ahead. | 它能识别异常行为，结合情境研判告警，用自然语言调查取证，推荐处置方案，并撰写报告——还能提前预判。 |
-| 12 | 1:07.23–1:15.04 | s06 | People stay in command. Every recommendation shows its evidence, follows the airport's own procedures, and runs securely on-premises. | 人始终掌握决策权。每条建议都附有证据，遵循机场自身的作业程序，并在本地安全运行。 |
-| 13 | 1:16.04–1:17.68 | s07 | Let's follow one night shift. | 让我们跟随一个夜班。 |
-| 14 | 1:20.08–1:27.65 | m1 | 02:14. Instead of 312 alarms, operator Nurul sees three incidents — ranked by risk, each with its evidence. | 02:14。值守员 Nurul 看到的不再是 312 条告警，而是 3 起事件——按风险排序，每起都附有证据。 |
-| 15 | 1:28.00–1:31.81 | m1 | Nuisance alarms are grouped and explained — never silently dropped. | 误报被归并并注明原因——绝不悄然丢弃。 |
-| 16 | 1:33.41–1:38.50 | m2 | 02:15. First, the critical one: someone tailgated through a staff door leading airside. | 02:15，先处理最紧急的一起：有人尾随穿过一扇通往空侧的员工门。 |
-| 17 | 1:38.85–1:42.73 | m2 | The AI recommends the response from the airport's own procedures. | AI 依据机场自身的作业程序推荐处置方案。 |
-| 18 | 1:43.03–1:50.23 | m2 | Duty manager Daniel approves each step with one click. The intruder is intercepted in under four minutes — every action logged. | 值班经理 Daniel 一键批准每个步骤。不到 4 分钟即完成拦截，每个动作全程留痕。 |
-| 19 | 1:51.83–1:57.96 | m3 | 02:16. Meanwhile, an unattended bag at Gate B12. Nurul simply asks: who left this bag? | 02:16，与此同时，B12 登机口出现一件无人看管的行李。Nurul 只需问一句：谁留下了这个包？ |
-| 20 | 1:58.36–2:05.16 | m3 | In seconds, the AI traces the owner across 38 cameras to a café, and sends her photo to the nearest patrol. | 几秒之内，AI 跨 38 个摄像头追踪到失主身在一家咖啡厅，并将她的照片发送给最近的巡逻员。 |
-| 21 | 2:05.66–2:08.33 | m3 | Bag reclaimed in four minutes. No gate closure. | 4 分钟内行李被认领，登机口无需关闭。 |
-| 22 | 2:09.93–2:16.07 | m4 | 05:10: the AI forecasts a 20-minute queue at Checkpoint 3 and recommends opening two more lanes. | 05:10，AI 预测 3 号安检口将出现 20 分钟排队，建议加开两条通道。 |
-| 23 | 2:16.42–2:20.12 | m4 | It also flags a failing camera — before it becomes a blind spot. | 它还会提前标记一台正在劣化的摄像头——赶在其变成盲区之前。 |
-| 24 | 2:21.72–2:29.05 | m5 | 07:00, handover: every incident report is already drafted — timeline, evidence and approvals — ready for audit. | 07:00 交接班：每份事件报告均已起草完毕——时间线、证据与审批记录齐全，随时可供审计。 |
-| 25 | 2:30.25–2:34.44 | s13 | Detect. Triage. Investigate. Respond. Report. Anticipate. Maintain. | 识别。研判。调查。处置。报告。预判。运维。 |
-| 26 | 2:34.74–2:37.30 | s13 | AI across the whole security lifecycle. | AI 贯穿安保全生命周期。 |
-| 27 | 2:38.50–2:46.29 | s14 | For operators, focus. For managers, the right response on every shift. For the airport, fewer disruptions and compliance by default. | 对值守人员：更专注。对管理者：每个班次都能正确处置。对机场：更少运营中断，合规成为常态。 |
-| 28 | 2:46.74–2:52.94 | s14 | And because it builds on the platform airports already run, AI arrives as an upgrade — not a rip-and-replace. | 而且它构建于机场已在运行的平台之上，AI 是一次升级，而非推倒重来。 |
-| 29 | 2:54.34–2:59.33 | s15 | AI-powered AGIL® Secure ISMS. From alarm noise to decisive action. | AI 赋能的 AGIL® Secure ISMS。从告警噪声，到果断行动。 |
+| 4 | 0:12.85–0:18.18 | s02 | Most are nuisance alarms: a door propped open by cleaners, wind on the fence, glare on a lens. | 大多是无效告警：保洁员撑开的门、风吹动的围栏、镜头上的眩光。 |
+| 5 | 0:18.63–0:21.28 | s02 | But a few are real — and they're buried in the noise. | 但其中有几条是真实威胁——却被淹没在噪声之中。 |
+| 6 | 0:22.58–0:26.89 | s03 | Operators juggle siloed systems and verify every alarm by hand. | 值守人员在孤立的系统间来回切换，每条告警都靠人工核实。 |
+| 7 | 0:27.24–0:33.20 | s03 | Tracing one person takes hours of footage. Responses vary by shift, and auditability is patchy. | 追踪一个人要翻看数小时录像。处置因班次而异，审计留痕参差不齐。 |
+| 8 | 0:33.55–0:36.89 | s03 | Queues and device faults surface only after they cause trouble. | 排队拥堵与设备故障，往往在造成影响后才被发现。 |
+| 9 | 0:37.89–0:44.47 | s04 | And doubt is costly: in one year, unattended-bag alerts caused 1,280 delays at Paris airports. | 不确定的代价高昂：仅一年之内，无人看管行李告警就在巴黎各机场造成 1,280 次延误。 |
+| 10 | 0:45.97–0:57.57 | s05 | AI Use Case 1 brings an AI co-pilot into the AGIL® Secure ISMS, the platform that already unifies access control, video, intrusion detection and identity management. | AI 用例一：为 AGIL® Secure ISMS引入 AI 智能助手（Copilot），该平台已将门禁、视频、入侵探测与身份管理融为一体。 |
+| 11 | 0:57.97–1:07.45 | s05 | It detects unusual behaviour, triages alarms in context, investigates in plain language, recommends the response and writes the report — and it looks ahead. | 它能识别异常行为，结合情境研判告警，用自然语言调查取证，推荐处置方案，并撰写报告——还能提前预判。 |
+| 12 | 1:08.45–1:16.87 | s06 | People stay in command. Every recommendation shows its evidence and follows the airport's own procedures. And it all runs securely, on-premises. | 人始终掌握决策权。每条建议都附有证据，并遵循机场自身的作业程序。整个系统可本地部署、安全运行。 |
+| 13 | 1:17.87–1:19.51 | s07 | Let's follow one night shift. | 让我们跟随一个夜班。 |
+| 14 | 1:21.91–1:29.48 | m1 | 02:14. Instead of 312 alarms, operator Nurul sees three incidents, ranked by risk, each with its evidence. | 02:14，值守员 Nurul 看到的不再是 312 条告警，而是 3 起事件，按风险排序，每起都附有证据。 |
+| 15 | 1:29.83–1:33.64 | m1 | Nuisance alarms are grouped and explained — never silently dropped. | 无效告警会归类合并并注明原因——绝不会被悄然丢弃。 |
+| 16 | 1:35.24–1:40.33 | m2 | 02:15. First, the critical one: someone tailgated through a staff door leading airside. | 02:15，先处理最紧急的一起：有人尾随穿过一扇通往空侧的员工门。 |
+| 17 | 1:40.68–1:44.56 | m2 | The AI recommends the response from the airport's own procedures. | AI 依据机场自身的作业程序推荐处置方案。 |
+| 18 | 1:44.86–1:52.07 | m2 | Duty manager Daniel approves each action with one click. The subject is intercepted in under four minutes — and everything is logged. | 值班经理 Daniel一键批准每个处置动作。不到 4 分钟即完成拦截，全程留痕。 |
+| 19 | 1:53.67–1:59.80 | m3 | 02:16. Meanwhile, an unattended bag at Gate B12. Nurul simply asks: who left this bag? | 02:16，与此同时，B12 登机口出现一件无人看管的行李。Nurul 只需问一句：谁留下了这个包？ |
+| 20 | 2:00.20–2:07.00 | m3 | In seconds, the AI traces the owner across 38 cameras to a café, and sends her photo to the nearest patrol. | 几秒之内，AI 跨 38 个摄像头追踪到行李主人身在一家咖啡厅，并将她的照片发送给最近的巡逻员。 |
+| 21 | 2:07.50–2:10.17 | m3 | Bag reclaimed in four minutes. No gate closure. | 4 分钟内行李被认领，登机口无需关闭。 |
+| 22 | 2:11.77–2:17.91 | m4 | 05:10. The AI forecasts a 20-minute queue at Checkpoint 3 and recommends opening two more lanes. | 05:10，AI 预测 3 号安检口将出现 20 分钟排队，建议加开两条通道。 |
+| 23 | 2:18.26–2:21.96 | m4 | It also flags a failing camera — before it becomes a blind spot. | 它还能提前发现即将故障的摄像头，避免出现监控盲区。 |
+| 24 | 2:23.56–2:30.89 | m5 | 07:00. Handover. Every incident report is already drafted: timeline, evidence and approvals — ready for audit. | 07:00，交接班。每份事件报告均已起草完毕：时间线、证据与审批记录齐全，随时可供审计。 |
+| 25 | 2:32.09–2:36.28 | s13 | Detect. Triage. Investigate. Respond. Report. Anticipate. Maintain. | 识别。研判。调查。处置。报告。预判。运维。 |
+| 26 | 2:36.58–2:39.14 | s13 | AI across the whole security lifecycle. | AI 贯穿安保全生命周期。 |
+| 27 | 2:40.34–2:49.62 | s14 | For operators: focus. For duty managers: the right response, every shift. For the airport: fewer disruptions. For security leaders: audit-ready, by default. | 对值守人员：更专注。对值班经理：每个班次都能正确处置。对机场：更少运营中断。对安保管理层：默认可审计。 |
+| 28 | 2:50.07–2:57.59 | s14 | And because it builds on AGIL® Secure and the systems airports already run, AI arrives as an upgrade — not a rip-and-replace. | 而且它构建于 AGIL® Secure及机场既有系统之上，AI 是一次升级，而非推倒重来。 |
+| 29 | 2:58.99–3:03.98 | s15 | AI-powered AGIL® Secure ISMS. From alarm noise to decisive action. | AI 赋能的AGIL® Secure ISMS。从告警噪声，到果断行动。 |
 
-总时长 Total: **3:02.93**
+总时长 Total: **3:07.58**
 <!-- VO-TABLE:END -->
 
 ---

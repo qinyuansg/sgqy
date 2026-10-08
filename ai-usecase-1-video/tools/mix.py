@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Final mix: voiceover + ducked music + sound effects → −14 LUFS, −1 dBTP.
+"""Final mix: voiceover + ducked music + sound effects → −14 LUFS, ≤ −3 dBTP (≤ −1 dBTP after AAC).
 
 Reads $BUILD/timeline.json, $BUILD/vo/*.wav, $BUILD/stems/{music,sfx}.wav.
 Writes $BUILD/mix.wav (48 kHz, 24-bit stereo) and prints loudness stats.
@@ -98,10 +98,11 @@ def main():
     sfx *= (10 ** (duck_sfx / 20))[:, None]
 
     mix = vo_st + mus + sfx
+    # −3 dBTP ceiling leaves room for AAC overshoot (deliverables measure ≤ −1 dBTP)
     mix = gain_to(mix, -14.0)
-    mix = limiter(mix, -1.2)
+    mix = limiter(mix, -3.0)
     mix = gain_to(mix, -14.0)
-    mix = limiter(mix, -1.2)
+    mix = limiter(mix, -3.0)
     sf.write(os.path.join(BUILD, "mix.wav"), mix.astype(np.float32), SR, subtype="PCM_24")
     tp = 20 * np.log10(np.abs(resample_poly(mix, 4, 1, axis=0)).max() + 1e-12)
     print(f"mix: {lufs(mix):.1f} LUFS integrated, true peak {tp:.2f} dBTP, {n/SR:.2f}s")
