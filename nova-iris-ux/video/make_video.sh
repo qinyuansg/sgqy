@@ -23,7 +23,6 @@ python3 "$HERE/audio.py" "$MOV" audio_new.wav                  # room audio + ne
 ffmpeg -v error -y -framerate 30 -i comp/%04d.png -i audio_new.wav -c:v libx264 -preset slow -crf 18 \
   -pix_fmt yuv420p -profile:v high -colorspace bt709 -color_primaries bt709 -color_trc bt709 \
   -c:a aac -b:a 192k -movflags +faststart -shortest NOVA-Iris-Concept.mp4
-python3 "$HERE/sbs.py" sbs                                     # before | after, frame-synced
-ffmpeg -v error -y -framerate 30 -i sbs/%04d.png -i audio_new.wav -c:v libx264 -preset slow -crf 20 \
-  -pix_fmt yuv420p -profile:v high -c:a aac -b:a 192k -movflags +faststart -shortest NOVA-Iris-Before-After.mp4
+python3 "$HERE/sbs.py" NOVA-Iris-Before-After.mp4 audio_new.wav   # before | after, frame-synced
+python3 "$HERE/poster.py"                                      # key-frame poster (poster.jpg)
 echo "done: $WORK/NOVA-Iris-Concept.mp4 and $WORK/NOVA-Iris-Before-After.mp4"
