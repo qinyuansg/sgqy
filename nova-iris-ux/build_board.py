@@ -898,7 +898,7 @@ def old_gauge(doc, y, good):
     el(doc, "rect", x=58, y=y, width=184, height=42, rx=9, fill="#0F2B30", fill_opacity=0.88)
     el(doc, "circle", cx=67, cy=y + 12, r=2.4, fill=col)
     T(doc, 73, y + 14.6, "Good distance — hold still" if good else "Too far — move closer", 7.6, 700, col)
-    T(doc, 236, y + 10, "43 cm" if good else "47 cm", 5.6, 600, WHITE, anchor="end", op=0.85)
+    T(doc, 236, y + 10, "43 cm" if good else "97 cm", 5.6, 600, WHITE, anchor="end", op=0.85)
     by = y + 24
     el(doc, "rect", x=66, y=by, width=48, height=3.6, rx=1.8, fill="#D95B4F")
     el(doc, "rect", x=112, y=by, width=76, height=3.6, fill="#2FBF71")
@@ -1101,7 +1101,7 @@ def sec_today(doc, y):
        20, anchor="middle")
 
     captions = [("Position face here", "“Scanning iris…” · 1.0 s"),
-                ("Look up · too far", "Countdown + 47 cm gauge · 1.3 s+"),
+                ("Look up · too far", "Countdown + 97 cm gauge · 1.3 s+"),
                 ("Look up · good distance", "43 cm, “hold still” · 0.4 s"),
                 ("Live IR face feed", "“Keep both eyes inside…” · 0.4 s"),
                 ("Iris captured", "Left / right iris photos · 0.3 s"),
@@ -1238,7 +1238,7 @@ SCENES = [
                 (2, "JOBS", "Lock-screen calm. Time, date and a clean location replace the truncated header."),
                 (3, "HUANG", "Proximity wake in under 100 ms, and a single invitation: Look up to enter.")]),
     dict(num="01", key="FIND", title="Come a little closer", draw=s_find, led=AMBER,
-         replaces="Position face here · Too far — move closer · 47 cm gauge · 00:19 countdown",
+         replaces="Position face here · Too far — move closer · 97 cm gauge · 00:19 countdown",
          pins=[(1, "MUSK", (RCX - RL - 20, RCY)), (2, "JOBS", "headline"), (3, "MUSK", "sub")],
          notes=[(1, "MUSK", "The tick ring is the distance gauge: it fills as you step in. No centimetres."),
                 (2, "JOBS", "Amber means adjust, never error. A request, not a reading."),

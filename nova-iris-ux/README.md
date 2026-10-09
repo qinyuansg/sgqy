@@ -26,7 +26,7 @@ Source: on-device recording, 9 Oct 2026, on-screen clock 16:01:15–16:01:24, tw
 | # | Screen today | On screen for |
 |---|---|---|
 | 1 | Position face here · "Scanning iris…" | 1.0 s |
-| 2 | Please look up · *Too far, move closer* · 47 cm gauge · 00:19 countdown | 1.3 s+ |
+| 2 | Please look up · *Too far, move closer* · 97 cm gauge · 00:19 countdown | 1.3 s+ |
 | 3 | Please look up · *Good distance, hold still* · 43 cm | 0.4 s |
 | 4 | Live IR face feed · "Keep both eyes inside the guides" · debug `N:1 G:00` | 0.4 s |
 | 5 | Iris captured · left/right iris photos · right eye "Not captured" | 0.3 s |
@@ -43,7 +43,7 @@ Source: on-device recording, 9 Oct 2026, on-screen clock 16:01:15–16:01:24, tw
 | State | Instruction | Replaces |
 |---|---|---|
 | 00 Ready | *Look up to enter* | (nothing today; the reader has no resting state) |
-| 01 Find | *Come a little closer* | Position face · Too far · 47 cm gauge · countdown |
+| 01 Find | *Come a little closer* | Position face · Too far · 97 cm gauge · countdown |
 | 02 Look | *Look up at the light* | Please look up · camera hint · good distance · live IR feed |
 | 03 Look | *Hold still* | Iris captured · countdown · iris photos · Not captured |
 | 04 Enter | *Welcome, Ma Lun* | Tick · Welcome + device drawing · Door Unlocked |
