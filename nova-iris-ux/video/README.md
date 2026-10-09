@@ -1,11 +1,15 @@
 # Concept video: same moment, new interface
 
+**Simplest to share:** `NOVA-Iris-Flow.mp4` is the front-end flow on its own. The Liquid Glass UI plays on a front-on mockup of the same NOVA+ reader (camera bezel with two lenses, indicator and status light, button, grey fingerprint base), drawn from proportions measured in the recording. It runs on the same 10.37 s timeline as the walk-through. A single caption line says what the person is doing, and the status light follows the state (amber, then white, then green). `flow_video.py` rebuilds it from the rendered UI frames.
+
+
 `NOVA-Iris-Concept.mp4` is the original NOVA+ reader recording with **only the screen replaced** by the Liquid Glass UI. Everything else is untouched: the device, the room, the handheld camera moves and the person's actions. The new UI reacts on the same frames the current UI did.
 
 `NOVA-Iris-Before-After.mp4` plays both versions side by side, frame-synced, with a timeline that marks when each one tells the person the door is open. `before-after-poster.jpg` shows six of those moments as stills.
 
 | File | Format |
 |---|---|
+| `NOVA-Iris-Flow.mp4` | 1080 × 1920, 30 fps, 10.37 s, UI on the reader mockup, UI sounds only |
 | `NOVA-Iris-Concept.mp4` | 1080 × 1920, 30 fps, 10.37 s, H.264 + AAC (same length and beats as the recording) |
 | `NOVA-Iris-Before-After.mp4` | 2160 × 2140, 30 fps, 10.37 s, with labels and a timeline |
 | `before-after-poster.jpg` | Today vs Concept at 0.6, 1.3, 1.5, 2.0, 3.6 and 5.0 s |

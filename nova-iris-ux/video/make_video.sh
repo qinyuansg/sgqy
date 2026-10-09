@@ -25,4 +25,5 @@ ffmpeg -v error -y -framerate 30 -i comp/%04d.png -i audio_new.wav -c:v libx264 
   -c:a aac -b:a 192k -movflags +faststart -shortest NOVA-Iris-Concept.mp4
 python3 "$HERE/sbs.py" NOVA-Iris-Before-After.mp4 audio_new.wav   # before | after, frame-synced
 python3 "$HERE/poster.py"                                      # key-frame poster (poster.jpg)
+python3 "$HERE/flow_video.py" ui_png NOVA-Iris-Flow.mp4        # UI-only flow on the reader mockup
 echo "done: $WORK/NOVA-Iris-Concept.mp4 and $WORK/NOVA-Iris-Before-After.mp4"
