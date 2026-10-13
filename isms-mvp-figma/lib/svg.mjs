@@ -6,7 +6,9 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const W = JSON.parse(fs.readFileSync(path.join(HERE, 'inter-widths.json'), 'utf8'));
+let W = JSON.parse(fs.readFileSync(path.join(HERE, 'inter-widths.json'), 'utf8'));
+// switch the measuring table + font family (e.g. Roboto for the V11 frames)
+export function useFont(family, widthsFile) { W = JSON.parse(fs.readFileSync(path.join(HERE, widthsFile), 'utf8')); T.font = family; }
 
 export const T = {
   // surfaces (dark, navy-black, like the deck)
@@ -102,7 +104,7 @@ export function text(x, y, str, o = {}) {
   // anchor is resolved here (measured with Inter widths) so Figma always gets left-aligned text boxes
   if (o.anchor === 'middle') x -= (textWidth(str, size, wt, ls) - ls) / 2;
   else if (o.anchor === 'end') x -= textWidth(str, size, wt, ls) - ls;
-  return `<text x="${f(x)}" y="${f(y)}" font-family="${T.font}" font-size="${size}" font-weight="${wt}"${ls ? ` letter-spacing="${ls}"` : ''} fill="${o.fill || T.t1}"${o.fo !== undefined ? ` fill-opacity="${o.fo}"` : ''}${o.op !== undefined ? ` opacity="${o.op}"` : ''}>${esc(str)}</text>`;
+  return `<text x="${f(x)}" y="${f(y)}" font-family="${T.font}" font-size="${size}" font-weight="${wt}"${o.italic ? ' font-style="italic"' : ''}${ls ? ` letter-spacing="${ls}"` : ''} fill="${o.fill || T.t1}"${o.fo !== undefined ? ` fill-opacity="${o.fo}"` : ''}${o.op !== undefined ? ` opacity="${o.op}"` : ''}${o.underline ? ' text-decoration="underline"' : ''}>${esc(str)}</text>`;
 }
 // rich text: runs [{t, fill, weight}] on one line
 export function rich(x, y, runs, o = {}) {
@@ -173,6 +175,11 @@ const P = {
   server: '<rect x="4" y="4" width="16" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="16" height="6.5" rx="1.5"/><path d="M7.5 7.2h.01M7.5 16.8h.01"/>',
   cpu: '<rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9.5 9.5h5v5h-5z"/><path d="M9 2.5V6M15 2.5V6M9 18v3.5M15 18v3.5M2.5 9H6M2.5 15H6M18 9h3.5M18 15h3.5"/>',
   thumbUp: '<path d="M7 11v9H4v-9zM7 11l4-7a2 2 0 0 1 2.6 2.3L13 10h5.5a2 2 0 0 1 2 2.4l-1.4 6A2.5 2.5 0 0 1 16.7 20H7"/>',
+  target: '<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"/>',
+  arrowUR: '<path d="M7 17 17 7M9 7h8v8"/>',
+  extLink: '<path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
+  cctv: '<path d="M3 7.5 15 4l1.6 5.4L4.6 13z"/><path d="m16 6.2 4.4-1.3 1 3.3-4.4 1.3"/><path d="M8 12.3 9.3 17H3.5"/><path d="M3.5 14.5v5"/>',
+  download: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
   thumbDown: '<path d="M7 13V4H4v9zM7 13l4 7a2 2 0 0 0 2.6-2.3L13 14h5.5a2 2 0 0 0 2-2.4l-1.4-6A2.5 2.5 0 0 0 16.7 4H7"/>',
 };
 export const ICONS = Object.keys(P);
