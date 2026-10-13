@@ -104,7 +104,7 @@ export function spoofInv() {
     cams: [
       { href: cctv('doorC2_clean'), label: 'Camera 1-204 · Door C2 · now', focus: [0.55, 0.55], box: box('doorC2', 'person'), boxCol: C.crit, boxLabel: 'Not the holder' },
       { href: cctv('doorA17_clean'), label: 'Camera 3-052 · A17 · 02:09', focus: [0.45, 0.55], box: box('doorA17', 'person'), boxCol: C.green, boxLabel: 'Holder' },
-      { href: asset('cctv/face_c2.jpg'), dims: [512, 512], label: 'Face crop · C2 vs holder 31%', focus: [0.5, 0.45] },
+      { href: cctv('doorC2_clean'), label: 'Appearance · 31% vs holder', zoom: 1.8, focus: [0.547, 0.6] },
     ],
     body: investigation('Card S-20931 opened T3 Door A17 at 02:09 and T1 Door C2 at 02:13. The fastest route takes 19 min and the person at C2 does not match the holder. C2 used a legacy SSID that should have been revoked.',
       '5 alarms linked into this event',
@@ -173,15 +173,15 @@ export function fightInv() {
 export function overstayInv() {
   return incident('V11-08 · Overstay · Investigation', 'overstay', {
     marker: 'B2 · Overstay',
-    ev: { time: '02:15:47', id: 'ACS-B2', code: 'OVS-012', title: 'Baggage Hall B2', lines: [['In zone since 22:36 · shift ended 01:00'], ['Card user ', { b: 'K. Lim' }, ', Card ID ', { b: 'C-11873' }]] },
+    ev: { time: '01:45:20', id: 'ACS-B2', code: 'OVS-012', title: 'Baggage Hall B2', lines: [['In zone since 22:05 · shift ended 01:00'], ['Card user ', { b: 'K. Lim' }, ', Card ID ', { b: 'C-11873' }]] },
     cams: [
       { href: cctv('baghall_clean'), label: 'Camera 4-018 · B2', focus: [0.62, 0.6], box: box('baghall', 'person'), boxCol: C.info, boxLabel: 'K. Lim · 3h 40m' },
       { href: cctv('baghall_clean'), label: 'Camera 4-019 · ULD row 3', focus: [0.8, 0.5] },
       { href: cctv('door_clean'), label: 'Camera 4-011 · B2 east door', focus: [0.7, 0.5] },
     ],
-    body: investigation('K. Lim (contractor) badged into B2 at 22:36 and has not badged out. The shift ended at 01:00, B2 is outside K. Lim’s duty zones, and there is no overtime request tonight.',
+    body: investigation('K. Lim (contractor) badged into B2 at 22:05 and has not badged out. The shift ended at 01:00, B2 is outside K. Lim’s duty zones, and there is no overtime request tonight.',
       'Airport rules triggered (4 of 5)',
-      [['22:36', 'Restricted zone in wee hours', 'Rule (i)', C.info], ['01:00', 'Outside scope of duty', 'Rule (ii)', C.info], ['01:00', 'Non-working hours', 'Rule (iii)', C.info], ['01:45', '3h 40m vs 45 min usual', 'Rule (v)', C.info]], { tag: 'AI summary' }),
+      [['00:00', 'Restricted zone in wee hours', 'Rule (i)', C.info], ['01:00', 'Outside scope of duty', 'Rule (ii)', C.info], ['01:00', 'Non-working hours', 'Rule (iii)', C.info], ['01:45', '3h 40m vs 45 min usual', 'Rule (v)', C.info]], { tag: 'AI summary' }),
   });
 }
 
@@ -248,14 +248,14 @@ export function copilotSearch() {
   // dropdown (the one new component)
   const x = 440, y = 92, w = 655;
   let d = '';
-  d += icon(F, 'sparkle', x + 18, y + 18, 20, C.copilot, 2) + text(x + 46, y + 34, 'Co-pilot', { size: 18, weight: 700, fill: C.copilot }) + text(x + w - 18, y + 34, 'From live events · 02:16', { size: 14, fill: C.t2, anchor: 'end' });
+  d += icon(F, 'sparkle', x + 18, y + 18, 20, C.copilot, 2) + text(x + 46, y + 34, 'Co-pilot', { size: 18, weight: 700, fill: C.copilot }) + text(x + w - 18, y + 34, 'From live events · 02:30', { size: 14, fill: C.t2, anchor: 'end' });
   d += text(x + 18, y + 68, 'Two critical incidents in Terminal 5 in the last hour.', { size: 18, weight: 500, fill: '#FFFFFF' });
-  d += text(x + 18, y + 92, 'One is still open and needs a decision; the other was closed as wildlife.', { size: 16, fill: C.t2 });
+  d += text(x + 18, y + 92, 'Both are closed: a forced door (Andrew Teo, 02:05) and a wildlife alarm.', { size: 16, fill: C.t2 });
   const { alertCard: ac } = { alertCard: null };
   let cy = y + 112;
   const res = [
-    { sev: 'Critical', title: 'T5 Pier B Service Door', desc: 'Door forced, no badge within 30 s', ai: 'Co-pilot · open · awaiting decision', time: '01:47 am', selected: true },
-    { sev: 'Critical', title: 'Fence Sector 15 · T5 apron', desc: 'Closed automatically: LiDAR classified wildlife', ai: 'Co-pilot · auto-closed · logged', time: '01:22 am' },
+    { sev: 'Critical', title: 'T5 Pier B Service Door', desc: 'Door forced, no badge within 30 s', ai: 'Co-pilot · closed 02:05 · Andrew Teo', time: '01:47 am', selected: true },
+    { sev: 'Critical', title: 'Fence Sector 15 · T5 apron', desc: 'Closed automatically: LiDAR classified wildlife', ai: 'Co-pilot · auto-closed · logged', time: '01:42 am' },
   ];
   for (const r of res) { const c = alertCardFn(F, x, cy, w, r); d += c.svg; cy += c.h; }
   d += text(x + 18, cy + 30, 'Sources: event log (8 events) · SOP-SEC-014 §3.2 · CAM 5-210, 5-212', { size: 13.5, fill: C.t2 });
@@ -301,7 +301,7 @@ export function incidentMgmt() {
     ['Closed', 'Warning', 'T2 Gate B12', 'Today, 02:16:04', 'UAB-112', ['Nurul A.', 'Today, 02:31:10'], 'CAM-2-031'],
     ['Closed', 'Info', 'T4 Baggage Hall B2', 'Today, 01:45:20', 'OVS-012', ['Siti K.', 'Today, 02:20:05'], 'ACS-B2'],
     ['Closed', 'Critical', 'T5 Pier B Service Door', 'Today, 01:47:02', 'TGT-209', ['Andrew Teo', 'Today, 02:05:40'], 'ACS-P5B'],
-    ['Closed', 'Critical', 'Fence Sector 15', 'Today, 01:22:10', 'PER-015', ['Auto (LiDAR)', 'Today, 01:22:40'], 'AGF-15-03'],
+    ['Closed', 'Critical', 'Fence Sector 15', 'Today, 01:42:10', 'PER-015', ['Auto (LiDAR)', 'Today, 01:42:40'], 'AGF-15-03'],
   ];
   rows.forEach(([st, sev, loc, dt, code, by, dev], i) => {
     const y = 296 + i * 56;

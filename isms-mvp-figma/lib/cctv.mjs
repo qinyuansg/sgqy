@@ -273,7 +273,7 @@ export const SCENES = {
       ${lightPool(800, 600, 360, 100, 0.10)}
       ${person(p[0], p[1], p[2], { coat: '#2A3240', pants: '#232831', pose: 'stand', vest: '#E8A425', hair: '#171516' })}`;
     const defs = `<linearGradient id="fl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#262D3A"/><stop offset="1" stop-color="#12161F"/></linearGradient>`;
-    return { svg: wrap(body, defs), osd: 'CAM 4-018  BAGGAGE HALL B2', ts: '2026-10-13  02:15:47', boxes: { person: pbox(...p) } };
+    return { svg: wrap(body, defs), osd: 'CAM 4-018  BAGGAGE HALL B2', ts: '2026-10-13  01:45:20', boxes: { person: pbox(...p) } };
   },
 
   // Perimeter Sector 7 — thermal PTZ (white-hot)

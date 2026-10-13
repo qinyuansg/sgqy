@@ -132,7 +132,10 @@ export function camTile(F, x, y, w, h, cam) {
   if (cam.box) {
     const [bx, by, bw, bh] = cam.box;
     const X = ox + bx * sc, Y = oy + by * sc, col = cam.boxCol || C.crit;
-    inner += g(F, 'BBox NEW', rect(X, Y, bw * sc, bh * sc, { r: 3, stroke: col, sw: 2 }) + (cam.boxLabel ? rect(X, Y + bh * sc + 3, textWidth(cam.boxLabel, 11, 500) + 10, 18, { r: 3, fill: col }) + text(X + 5, Y + bh * sc + 16, cam.boxLabel, { size: 11, weight: 500, fill: '#FFFFFF' }) : ''));
+    // the label sits under the box, but never past the tile's bottom or right edge
+    const lw = cam.boxLabel ? textWidth(cam.boxLabel, 11, 500) + 10 : 0;
+    const ly = Math.min(Y + bh * sc + 3, y + h - 21), lx = Math.max(x + 3, Math.min(X, x + w - lw - 3));
+    inner += g(F, 'BBox NEW', rect(X, Y, bw * sc, bh * sc, { r: 3, stroke: col, sw: 2 }) + (cam.boxLabel ? rect(lx, ly, lw, 18, { r: 3, fill: col }) + text(lx + 5, ly + 13, cam.boxLabel, { size: 11, weight: 500, fill: '#FFFFFF' }) : ''));
   }
   inner += rect(x, y, w, 31, { fill: '#000000', fo: 0.2 }) + rect(x, y, w, 31, { fill: C.panel, fo: 0.65 });
   inner += icon(F, 'cctv', x + 10, y + 7, 17, '#FFFFFF', 1.7) + text(x + 31, y + 20, cam.label, { size: 12, weight: 500, fill: '#FFFFFF' });

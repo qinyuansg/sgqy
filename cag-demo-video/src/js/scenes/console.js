@@ -106,12 +106,12 @@
     {
       id: 'm6', seg: 5, kicker: '01:45 · T4 · Baggage Hall B2', sev: 'info',
       beats: () => [{ t: S('m6').start, title: 'Your own rules,\nrunning live.', meter: { kind: 'gauge', v: 73 }, tq: L('v18').start + 0.3,
-        quote: 'K. Lim has been in B2 since 22:36. The shift ended at 01:00. Outside duty zones, no overtime.' }],
+        quote: 'K. Lim has been in B2 since 22:05. The shift ended at 01:00. Outside duty zones, no overtime.' }],
       plan: () => ({
         screens: [[S('m6').start, F.over]],
         shots: [[S('m6').start + 0.2, HEAD, 1.2], [E.C('v18', 1).start - 0.2, [900, 600, 460, 260], 1.1], [L('v19').start - 0.2, [10, 360, 520, 300], 1.3]],
         hls: [
-          { r: [908, 231, 304, 24], n: 1, label: 'In B2 since 22:36', side: 'b', dist: 150, t0: L('v18').start + 0.4, t1: E.C('v18', 1).start },
+          { r: [908, 231, 304, 24], n: 1, label: 'In B2 since 22:05', side: 'b', dist: 150, t0: L('v18').start + 0.4, t1: E.C('v18', 1).start },
           { r: [944, 735, 408, 110], n: 2, label: 'Your rules: 4 triggered', side: 'l', t0: E.C('v18', 1).start + 0.6, t1: L('v19').start },
           { r: [44, 444, 310, 116], n: 3, label: 'Rated Info: a radio check', side: 'r', t0: L('v19').start + 0.9, t1: S('m6').end + 0.1 },
         ],
@@ -135,7 +135,7 @@
     {
       id: 'm8', seg: 7, kicker: '02:30 · The duty manager asks', sev: 'ask',
       beats: () => [{ t: S('m8').start, title: 'Ask in plain\nEnglish.', label: 'CO-PILOT ANSWERS', tq: at('v22', 'English') + 0.6, cps: 44,
-        quote: 'Two critical incidents in Terminal 5 in the last hour. One is open and needs a decision; one was closed as wildlife.',
+        quote: 'Two critical incidents in Terminal 5 in the last hour. Both are closed: a forced door and a wildlife alarm.',
         persona: { k: 'daniel', act: 'Asks, in plain English', t: L('v22').start + 0.4 } }],
       plan: () => {
         const tAns = at('v22', 'English') + 0.35;
