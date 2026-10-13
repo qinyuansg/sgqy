@@ -73,7 +73,12 @@ for (const [name, cx] of [['bg2_scene_r', 1840], ['bg2_scene_l', 720]]) {
 await shoot(doc(`<div class="f" style="background:${BASE}"></div>
   ${glows([[1700, 1040, 1900, 900, '#2D5BFF', 0.55], [2050, 760, 1300, 820, '#8A5CF6', 0.50], [2350, 470, 900, 620, '#B69CFF', 0.26]], 170)}
   ${floor(1010, 0.16)}${horizonLine(1009, 300, 2560, '200,185,255', 0.55)}
-  <div class="f" style="background:linear-gradient(90deg,rgba(4,6,12,.94) 0%,rgba(4,6,12,.6) 40%,rgba(4,6,12,0) 70%)"></div>${vignette(0.45)}`), path.join(OUT, 'bg2_section.jpg'));
+  <div class="f" style="background:linear-gradient(90deg,rgba(4,6,12,.94) 0%,rgba(4,6,12,.6) 40%,rgba(4,6,12,0) 70%)"></div>${vignette(0.45)}`), path.join(OUT, 'bg3_section.jpg'));
+// cover: aurora only (the alarms-to-answer beam sits on the slide as viz_cover.png)
+await shoot(doc(`<div class="f" style="background:${BASE}"></div>
+  ${glows([[290, 150, 2300, 1300, '#2D5BFF', 0.20], [2230, 710, 1700, 1500, '#8A5CF6', 0.18], [2320, 720, 770, 770, '#B69CFF', 0.10]], 150)}
+  ${floor(1095, 0.06)}${horizonLine(1075, 900, 2560, '182,156,255', 0.25)}
+  <div class="f" style="background:linear-gradient(90deg,rgba(4,6,12,.85) 0%,rgba(4,6,12,.5) 30%,rgba(4,6,12,0) 50%)"></div>${vignette(0.45)}${hud()}`), path.join(OUT, 'bg3_cover.jpg'));
 // map slide: glow where the airport sits
 await shoot(doc(`<div class="f" style="background:${BASE}"></div>
   ${glows([[1720, 840, 2000, 1100, '#2D5BFF', 0.26], [2400, 120, 1000, 700, '#8A5CF6', 0.20], [300, 1400, 1300, 600, '#2D5BFF', 0.10]])}
@@ -122,7 +127,7 @@ await shoot(photo('image28.jpg', 7,
 // ---------- 3) alarm field: 1,248 raw alarms on the left condense into 7 incidents on the right ----------
 {
   const W = 2400, H = 1100, R = rng(4242);
-  const nodes = [[0.86, 0.12, '#D72D30'], [0.86, 0.24, '#D72D30'], [0.86, 0.38, '#D4B741'], [0.86, 0.50, '#D4B741'], [0.86, 0.62, '#D4B741'], [0.86, 0.75, '#D4B741'], [0.86, 0.88, '#4DAFBE']];
+  const nodes = [[0.86, 0.12, '#D72D30'], [0.86, 0.24, '#D72D30'], [0.86, 0.38, '#D4B741'], [0.86, 0.50, '#D4B741'], [0.86, 0.62, '#D4B741'], [0.86, 0.75, '#4DAFBE'], [0.86, 0.88, '#D4B741']];
   const pts = [];
   for (let i = 0; i < 1248; i++) {
     // gaussian-ish cloud centred left
@@ -196,22 +201,36 @@ const slideSvg = inner => `<svg class="f" viewBox="0 0 2560 1440" xmlns="http://
   GEO.stack = { cx: cx / IN, a: a / IN, b: b / IN, layers: LAYERS.map(l => l[0]) };
 }
 
-// how it works: a signal path through the six steps, brightest where the person decides
+// how it works: a signal path through the six steps, HUD rings behind each step, green once a person approves
 {
   const y = 2.75 * IN, xs = [0, 1, 2, 3, 4, 5].map(i => (1.55 + i * 2.0466) * IN), R = rng(99);
-  let b = `<defs><linearGradient id="sig" gradientUnits="userSpaceOnUse" x1="${xs[0]}" y1="0" x2="${xs[5]}" y2="0"><stop offset="0" stop-color="#4D8DFF" stop-opacity=".25"/><stop offset=".5" stop-color="#7C8CFF" stop-opacity=".9"/><stop offset=".8" stop-color="#B69CFF"/><stop offset="1" stop-color="#B69CFF" stop-opacity=".35"/></linearGradient>
-    <filter id="bl" filterUnits="userSpaceOnUse" x="0" y="0" width="2560" height="1440"><feGaussianBlur stdDeviation="10"/></filter>
-    <radialGradient id="hal"><stop offset="0" stop-color="#B69CFF" stop-opacity=".55"/><stop offset="1" stop-color="#B69CFF" stop-opacity="0"/></radialGradient></defs>`;
-  b += `<line x1="${xs[0]}" y1="${y}" x2="${xs[5]}" y2="${y}" stroke="url(#sig)" stroke-width="14" filter="url(#bl)"/>`;
-  b += `<line x1="${xs[0]}" y1="${y}" x2="${xs[5]}" y2="${y}" stroke="url(#sig)" stroke-width="3"/>`;
+  let b = `<defs><linearGradient id="sig" gradientUnits="userSpaceOnUse" x1="${xs[0]}" y1="0" x2="${xs[4]}" y2="0"><stop offset="0" stop-color="#4D8DFF" stop-opacity=".45"/><stop offset=".6" stop-color="#7C8CFF"/><stop offset="1" stop-color="#B69CFF"/></linearGradient>
+    <filter id="bl" filterUnits="userSpaceOnUse" x="0" y="0" width="2560" height="1440"><feGaussianBlur stdDeviation="9"/></filter>
+    <radialGradient id="hal"><stop offset="0" stop-color="#B69CFF" stop-opacity=".5"/><stop offset="1" stop-color="#B69CFF" stop-opacity="0"/></radialGradient></defs>`;
+  const seg = (x0, x1, stroke) => `<line x1="${x0}" y1="${y}" x2="${x1}" y2="${y}" stroke="${stroke}" stroke-width="12" stroke-opacity=".5" filter="url(#bl)"/><line x1="${x0}" y1="${y}" x2="${x1}" y2="${y}" stroke="${stroke}" stroke-width="3.5"/>`;
+  b += seg(xs[0], xs[4], 'url(#sig)') + seg(xs[4], xs[5], '#2ED47A');
+  // HUD ring behind each disc: tick ring plus two bright arcs at seeded angles
+  for (const [k, cx] of xs.entries()) {
+    const r = 0.72 * IN;
+    b += `<circle cx="${cx}" cy="${y}" r="${r}" fill="none" stroke="#FFFFFF" stroke-opacity=".16" stroke-width="1.5"/>`;
+    for (let a = 0; a < 72; a++) {
+      const t = a / 72 * Math.PI * 2, l = a % 6 === 0 ? 10 : 5;
+      b += `<line x1="${cx + Math.cos(t) * r}" y1="${y + Math.sin(t) * r}" x2="${cx + Math.cos(t) * (r - l)}" y2="${y + Math.sin(t) * (r - l)}" stroke="#FFFFFF" stroke-opacity="${a % 6 === 0 ? 0.22 : 0.14}" stroke-width="1.5"/>`;
+    }
+    for (let j = 0; j < 2; j++) {
+      const a0 = R() * Math.PI * 2, a1 = a0 + 0.61, p = a => [cx + Math.cos(a) * (r + 6), y + Math.sin(a) * (r + 6)];
+      const [x0, y0] = p(a0), [x1, y1] = p(a1);
+      b += `<path d="M${x0} ${y0} A${r + 6} ${r + 6} 0 0 1 ${x1} ${y1}" fill="none" stroke="${k === 5 ? '#2ED47A' : '#B69CFF'}" stroke-opacity=".75" stroke-width="2.5" stroke-linecap="round"/>`;
+    }
+  }
   // packets travelling along the path
-  for (let i = 0; i < 46; i++) {
-    const x = xs[0] + R() * (xs[5] - xs[0]), len = 20 + R() * 60, dy = (R() - 0.5) * 10;
-    b += `<line x1="${x - len}" y1="${y + dy}" x2="${x}" y2="${y + dy}" stroke="#DCD3FF" stroke-opacity="${0.25 + R() * 0.5}" stroke-width="2" stroke-linecap="round"/><circle cx="${x}" cy="${y + dy}" r="2.6" fill="#FFFFFF" opacity=".85"/>`;
+  for (let i = 0; i < 12; i++) {
+    const x = xs[0] + 0.9 * IN + R() * (xs[5] - xs[0] - 1.8 * IN), len = 26;
+    b += `<line x1="${x - len}" y1="${y}" x2="${x}" y2="${y}" stroke="#FFFFFF" stroke-opacity=".85" stroke-width="3" stroke-linecap="round"/>`;
   }
   // the human step: halo and ripples
   b += `<circle cx="${xs[4]}" cy="${y}" r="${1.05 * IN}" fill="url(#hal)"/>`;
-  for (const [r, o] of [[0.7, 0.45], [0.84, 0.28], [0.98, 0.14]]) b += `<circle cx="${xs[4]}" cy="${y}" r="${r * IN}" fill="none" stroke="#B69CFF" stroke-opacity="${o}" stroke-width="2"/>`;
+  for (const [r, o] of [[0.85, 0.4], [1.05, 0.24], [1.3, 0.12]]) b += `<circle cx="${xs[4]}" cy="${y}" r="${r * IN}" fill="none" stroke="#B69CFF" stroke-opacity="${o}" stroke-width="2"/>`;
   await shoot(doc(slideSvg(b), { transparent: true, noise: false }), path.join(OUT, 'viz_flow.png'), 2560, 1440, { transparent: true });
 }
 
@@ -234,13 +253,13 @@ const slideSvg = inner => `<svg class="f" viewBox="0 0 2560 1440" xmlns="http://
   for (const [a0, a1, col] of [[-2.6, -1.5, '#B69CFF'], [0.2, 1.1, '#4D8DFF'], [2.0, 2.6, '#B69CFF']]) b += `<g filter="url(#gl)">${arc(a0, a1, col, 10)}</g>${arc(a0, a1, col, 4)}`;
   // links to the six guarantees (left and right columns)
   const ends = [];
-  for (const yy of [2.33, 3.98, 5.63]) { ends.push([4.95, yy]); ends.push([8.38, yy]); }
+  for (const yy of [2.33, 3.98, 5.63]) { ends.push([4.62, yy]); ends.push([8.7, yy]); }
   for (const [ex, ey] of ends) {
     const X = ex * IN, Y = ey * IN, ang = Math.atan2(Y - cy, X - cx), px = cx + Math.cos(ang) * r0 * 1.17, py = cy + Math.sin(ang) * r0 * 1.17;
-    b += `<line x1="${X}" y1="${Y}" x2="${px}" y2="${py}" stroke="#B69CFF" stroke-opacity=".35" stroke-width="2"/><circle cx="${X}" cy="${Y}" r="6" fill="#B69CFF"/><circle cx="${px}" cy="${py}" r="5" fill="#B69CFF" opacity=".8"/>`;
+    b += `<line x1="${X}" y1="${Y}" x2="${px}" y2="${py}" stroke="#B69CFF" stroke-opacity=".45" stroke-width="2"/><circle cx="${px}" cy="${py}" r="5" fill="#B69CFF" opacity=".8"/>`;
   }
   await shoot(doc(slideSvg(b), { transparent: true, noise: false }), path.join(OUT, 'viz_trust.png'), 2560, 1440, { transparent: true });
-  GEO.trust = { cx: 6.667, cy: 4.3, r: 1.45, rows: [2.33, 3.98, 5.63], left: 4.95, right: 8.38 };
+  GEO.trust = { cx: 6.667, cy: 4.3, r: 1.45, rows: [2.33, 3.98, 5.63], left: 4.31, right: 9.01, d: 0.62 };
 }
 
 // roadmap: a luminous timeline from today to the vision
@@ -251,7 +270,9 @@ const slideSvg = inner => `<svg class="f" viewBox="0 0 2560 1440" xmlns="http://
     <radialGradient id="vg"><stop offset="0" stop-color="#B69CFF" stop-opacity=".5"/><stop offset="1" stop-color="#B69CFF" stop-opacity="0"/></radialGradient></defs>
     <ellipse cx="${10.2 * IN}" cy="${y}" rx="${2.6 * IN}" ry="${0.9 * IN}" fill="url(#vg)"/>
     <line x1="${x0}" y1="${y}" x2="${x1}" y2="${y}" stroke="url(#tl)" stroke-width="16" stroke-opacity=".7" filter="url(#bl)"/>
-    <line x1="${x0}" y1="${y}" x2="${x1}" y2="${y}" stroke="url(#tl)" stroke-width="3.5"/>`;
+    <line x1="${x0}" y1="${y}" x2="${x1}" y2="${y}" stroke="url(#tl)" stroke-width="3.5"/>
+    ${[[0.32, 0.4], [0.46, 0.24], [0.6, 0.12]].map(([r, o]) => `<circle cx="${0.97 * IN}" cy="${y}" r="${r * IN}" fill="none" stroke="#FFFFFF" stroke-opacity="${o}" stroke-width="2"/>`).join('')}
+    ${(() => { const R = rng(503); return Array.from({ length: 40 }, () => { const px = (10.6 + R() * 2.1) * IN, py = y + (R() - 0.5) * 0.5 * IN; return `<circle cx="${px}" cy="${py}" r="${2 + R() * 3}" fill="#B69CFF" opacity="${0.25 + R() * 0.5}"/>`; }).join(''); })()}`;
   await shoot(doc(slideSvg(b), { transparent: true, noise: false }), path.join(OUT, 'viz_timeline.png'), 2560, 1440, { transparent: true });
 }
 

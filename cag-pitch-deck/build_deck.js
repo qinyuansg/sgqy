@@ -55,7 +55,7 @@ const SEV = { Critical: [RED, INK], Warning: [GOLD, NAVY], Info: [TEAL, NAVY] };
 const RR = pres.shapes.ROUNDED_RECTANGLE, RECT = pres.shapes.RECTANGLE, OVAL = pres.shapes.OVAL, LINE = pres.shapes.LINE;
 const SW = 13.333, SH = 7.5, MX = 0.6, RX = SW - MX;
 // type scale (pt): nothing on a visible slide goes below TS.micro
-const TS = { display: 66, section: 54, title: 34, scene: 32, lead: 20, body: 16, small: 14, micro: 11 };
+const TS = { display: 72, section: 52, title: 36, scene: 32, lead: 20, body: 16, small: 14, micro: 12 };
 const GEO = JSON.parse(fs.readFileSync(A('visuals.json'), 'utf8'));
 const SEC = { open: 'Opening', demo: 'Live demo: one night, seven scenarios', platform: 'Platform, trust and value', close: 'Next steps', appx: 'Appendix: presenter only' };
 
@@ -101,7 +101,7 @@ function T(s, text, o) {
 const shadow = (blur = 18, op = 0.55, off = 6) => ({ type: 'outer', color: '000000', blur, offset: off, angle: 90, opacity: op });
 // glass panel: translucent navy, hairline border, and a short "edge light" along the top-left edge
 function card(s, x, y, w, h, o = {}) {
-  const r = o.r ?? 0.14;
+  const r = o.r ?? 0.12;
   s.addShape(RR, {
     x, y, w, h, rectRadius: r,
     fill: { color: o.fill || CARD, transparency: o.tr ?? 30 },
@@ -151,14 +151,18 @@ async function iconDisc(s, name, x, y, d, o = {}) {
   const k = o.k || 0.5;
   s.addImage({ data: await icon(name, o.hex || HEX.lav), x: x + d * (1 - k) / 2, y: y + d * (1 - k) / 2, w: d * k, h: d * k, altText: '' });
 }
-// the live-demo cue: names the V11 screen the audience is about to see
-function live(s, x, y, where) {
-  const h = 0.44, seg = 0.42 + tw('LIVE', 12, true, 1) + 0.2, w = seg + 0.22 + tw(where, 14, false) + 0.26;
-  s.addShape(RR, { x, y, w, h, rectRadius: h / 2, fill: { color: CARD, transparency: 5 }, line: { color: RED, width: 1, transparency: 20 }, objectName: 'Live demo cue' });
-  s.addShape(RR, { x, y, w: seg, h, rectRadius: h / 2, fill: { color: RED }, line: { type: 'none' }, objectName: 'Live badge' });
-  s.addShape(OVAL, { x: x + 0.18, y: y + h / 2 - 0.055, w: 0.11, h: 0.11, fill: { color: INK }, line: { type: 'none' }, objectName: 'Live dot' });
-  T(s, 'LIVE', { x: x + 0.36, y, w: seg - 0.36, h, fontSize: 12, bold: true, charSpacing: 1, valign: 'middle', objectName: 'Live label' });
-  T(s, where, { x: x + seg + 0.2, y, w: w - seg - 0.24, h, fontSize: 14, valign: 'middle', objectName: 'Live demo path' });
+// the live-demo tag: names the V11 screen the audience is about to see; only the dot is red
+function live(s, x, y, where, o = {}) {
+  const h = 0.4, lab = 'LIVE', w = 0.42 + tw(lab, 12, true, 1.5) + 0.28 + tw(where, 14, false) + 0.26;
+  if (o.right) x -= w;
+  s.addShape(RR, { x, y, w, h, rectRadius: h / 2, fill: { color: CARD, transparency: 8 }, line: { color: INK, width: 0.75, transparency: 70 }, objectName: 'Live demo tag' });
+  s.addShape(OVAL, { x: x + 0.14, y: y + h / 2 - 0.12, w: 0.24, h: 0.24, fill: { color: RED, transparency: 60 }, line: { type: 'none' }, objectName: 'Live dot halo' });
+  s.addShape(OVAL, { x: x + 0.2, y: y + h / 2 - 0.06, w: 0.12, h: 0.12, fill: { color: RED }, line: { type: 'none' }, objectName: 'Live dot' });
+  const lx = x + 0.42;
+  T(s, lab, { x: lx, y, w: tw(lab, 12, true, 1.5) + 0.05, h, fontSize: 12, bold: true, charSpacing: 1.5, valign: 'middle', objectName: 'Live label', free: true });
+  const dx = lx + tw(lab, 12, true, 1.5) + 0.13;
+  s.addShape(LINE, { x: dx, y: y + 0.1, w: 0, h: h - 0.2, line: { color: INK, width: 0.75, transparency: 75 }, objectName: 'Live divider' });
+  T(s, where, { x: dx + 0.13, y, w: w - (dx + 0.13 - x) - 0.1, h, fontSize: 14, valign: 'middle', objectName: 'Live demo path', free: true });
   return w;
 }
 // small caps label used above lists and inside panels
@@ -167,6 +171,28 @@ const label = (s, text, x, y, w, col = MUTED, o = {}) => T(s, text, Object.assig
 async function graded(file) {
   const buf = await sharp(A(file)).modulate({ saturation: 0.72, brightness: 0.96 }).tint({ r: 150, g: 170, b: 230 }).jpeg({ quality: 88 }).toBuffer();
   return 'image/jpeg;base64,' + buf.toString('base64');
+}
+
+// scene chips: the slide 8 map numbers in their severity colours; 'ask' / 'report' / 'platform' as icon discs
+const SCN_SEV = { 1: 'Critical', 2: 'Critical', 3: 'Warning', 4: 'Warning', 5: 'Warning', 6: 'Info', 7: 'Warning' };
+const CHIP_ICON = { ask: 'LuMessageSquare', report: 'LuFileCheck', platform: 'LuNetwork' };
+async function chips(s, x, y, list, o = {}) {
+  const d = o.d || 0.3, gap = o.gap ?? 0.06;
+  for (const c of list) {
+    if (typeof c === 'number') {
+      const [fill, ink] = SEV[SCN_SEV[c]];
+      s.addText(String(c), { shape: OVAL, x, y, w: d, h: d, fill: { color: fill }, line: { color: INK, width: 1 }, color: ink, bold: true, fontSize: 12, align: 'center', valign: 'middle', margin: 0, objectName: 'Scene chip ' + c });
+      x += d + gap;
+    } else if (CHIP_ICON[c]) {
+      await iconDisc(s, CHIP_ICON[c], x, y, d, { k: 0.55, lw: 1 });
+      x += d + gap;
+    } else {
+      const w = tw(c, 14, false) + 0.05;
+      T(s, c, { x: x + 0.04, y, w, h: d, fontSize: 14, color: MUTED, valign: 'middle' });
+      x += w + 0.1;
+    }
+  }
+  return x;
 }
 
 // ---------- V11 screenshots ----------
@@ -180,8 +206,9 @@ async function shot(frame, r, dispW) {
 // a V11 screen in a slim glass bezel inside viewfinder corners; returns a frame-px → slide-inch mapper
 async function device(s, frame, x, y, w, alt, o = {}) {
   const r = [0, 0, FRAME_W(frame), 1069], pad = 0.06, iw = w - 2 * pad, ih = iw * r[3] / r[2], h = ih + 2 * pad;
-  if (o.brackets !== false) brackets(s, x - 0.14, y - 0.14, w + 0.28, h + 0.28, { tr: 25 });
-  s.addShape(RR, { x, y, w, h, rectRadius: 0.1, fill: { color: NAVY }, line: { color: LAV, width: 1, transparency: 55 }, shadow: shadow(30, 0.65, 10), objectName: 'Display bezel' });
+  if (o.brackets !== false) brackets(s, x - 0.14, y - 0.14, w + 0.28, (o.bh ?? h) + 0.28, { tr: 25 });
+  s.addShape(RR, { x, y, w, h, rectRadius: 0.1, fill: { color: NAVY }, line: { color: INK, width: 0.75, transparency: 80 }, shadow: shadow(30, 0.65, 10), objectName: 'Display bezel' });
+  s.addShape(LINE, { x: x + 0.2, y, w: w - 0.4, h: 0, line: { color: INK, width: 1, transparency: 60 }, objectName: 'Bezel highlight' });
   s.addImage({ data: await shot(frame, r, iw), x: x + pad, y: y + pad, w: iw, h: ih, altText: alt, objectName: 'V11 screen ' + frame.slice(0, 6) });
   const map = (fx, fy) => [x + pad + fx / r[2] * iw, y + pad + fy / r[3] * ih];
   return { x, y, w, h, map };
@@ -192,11 +219,16 @@ async function lens(s, dev, frame, r, x, y, w, o = {}) {
   if (dev) {
     const [a, b] = dev.map(r[0], r[1]), [c, d] = dev.map(r[0] + r[2], r[1] + r[3]);
     s.addShape(RECT, { x: a, y: b, w: c - a, h: d - b, fill: { type: 'none' }, line: { color: LAV, width: 1.25, transparency: 25 }, objectName: 'Zoom source' });
+    // connector between the nearest corners of source and lens
+    const sc = [[a, b], [c, b], [a, d], [c, d]], lc = [[x, y], [x + w, y], [x, y + h], [x + w, y + h]];
+    let best = null;
+    for (const p of sc) for (const q of lc) { const dd = Math.hypot(p[0] - q[0], p[1] - q[1]); if (!best || dd < best[0]) best = [dd, p, q]; }
+    if (best[0] > 0.12) s.addShape(LINE, { x: Math.min(best[1][0], best[2][0]), y: Math.min(best[1][1], best[2][1]), w: Math.abs(best[2][0] - best[1][0]), h: Math.abs(best[2][1] - best[1][1]), flipH: (best[2][0] - best[1][0]) * (best[2][1] - best[1][1]) < 0, line: { color: LAV, width: 0.75, transparency: 45 }, objectName: 'Zoom connector' });
   }
   s.addShape(RR, { x: x - 0.05, y: y - 0.05, w: w + 0.1, h: h + 0.1, rectRadius: 0.1, fill: { color: LAV, transparency: 80 }, line: { type: 'none' }, objectName: 'Zoom glow' });
   s.addShape(RR, { x, y, w, h, rectRadius: 0.07, fill: { color: NAVY }, line: { color: LAV, width: 1.75 }, shadow: shadow(30, 0.75, 10), objectName: 'Zoom lens' });
   s.addImage({ data: await shot(frame, r, iw), x: x + pad, y: y + pad, w: iw, h: ih, altText: o.alt || '', objectName: 'Zoom ' + (o.name || frame.slice(0, 6)) });
-  if (o.n) marker(s, o.nAt === 'tl' ? x + 0.06 : x + w - 0.06, y + 0.06, o.n);
+  if (o.n) marker(s, o.nAt === 'tl' ? x : x + w, y, o.n);
   const map = (fx, fy) => [x + pad + (fx - r[0]) / r[2] * iw, y + pad + (fy - r[1]) / r[3] * ih];
   return { x, y, w, h, map };
 }
@@ -234,21 +266,21 @@ function ab(frame, needle, i = 0, o = {}) {
 // ---------- layouts ----------
 // Layouts carry only a background and placeholders: no footer text, logo or slide number.
 const ph = (name, type, x, y, w, h, o) => ({ placeholder: { options: Object.assign({ name, type, x, y, w, h, margin: 0, valign: 'top', align: 'left', color: INK }, o), text: '' } });
-const KICK = { fontSize: 12, bold: true, color: LAV };
+const KICK = { fontSize: 13, bold: true, color: LAV };
 pres.defineSlideMaster({
-  title: 'COVER', background: { path: A('bg2_cover.jpg') },
+  title: 'COVER', background: { path: A('bg3_cover.jpg') },
   objects: [
-    ph('kicker', 'body', 0.6, 2.0, 8.5, 0.4, Object.assign({}, KICK, { fontSize: 13 })),
-    ph('title', 'title', 0.6, 2.5, 7.9, 2.4, { fontSize: TS.display, bold: true, lineSpacingMultiple: 0.9 }),
-    ph('body', 'body', 0.6, 5.0, 6.6, 0.95, { fontSize: TS.lead, color: MUTED }),
+    ph('kicker', 'body', 0.6, 2.0, 8.5, 0.4, KICK),
+    ph('title', 'title', 0.6, 2.45, 7.9, 2.3, { fontSize: TS.display, bold: true, lineSpacingMultiple: 0.88 }),
+    ph('body', 'body', 0.6, 4.95, 6.0, 0.9, { fontSize: TS.lead, color: MUTED, lineSpacingMultiple: 1.1 }),
   ],
 });
 pres.defineSlideMaster({
-  title: 'SECTION', background: { path: A('bg2_section.jpg') },
+  title: 'SECTION', background: { path: A('bg3_section.jpg') },
   objects: [
-    ph('kicker', 'body', 0.6, 2.3, 9, 0.4, Object.assign({}, KICK, { fontSize: 13 })),
-    ph('title', 'title', 0.6, 2.78, 9.8, 1.0, { fontSize: TS.section, bold: true, lineSpacingMultiple: 0.92 }),
-    ph('body', 'body', 0.6, 4.0, 7.2, 1.0, { fontSize: TS.lead, color: MUTED }),
+    ph('kicker', 'body', 0.6, 2.45, 9, 0.4, KICK),
+    ph('title', 'title', 0.6, 2.85, 9.8, 0.95, { fontSize: TS.section, bold: true, lineSpacingMultiple: 0.92 }),
+    ph('body', 'body', 0.6, 3.95, 7.2, 0.9, { fontSize: TS.lead, color: MUTED, lineSpacingMultiple: 1.1 }),
   ],
 });
 pres.defineSlideMaster({
@@ -263,23 +295,23 @@ for (const [name, bg, x] of [['SCENE_R', 'bg2_scene_r.jpg', 0.6], ['SCENE_L', 'b
 }
 pres.defineSlideMaster({
   title: 'MAP', background: { path: A('bg2_map.jpg') },
-  objects: [ph('kicker', 'body', 0.6, 0.55, 6.5, 0.3, KICK), ph('title', 'title', 0.6, 0.88, 5.6, 1.05, { fontSize: TS.title, bold: true, lineSpacingMultiple: 0.95 })],
+  objects: [ph('kicker', 'body', 0.6, 0.55, 6.5, 0.3, KICK), ph('title', 'title', 0.6, 0.88, 5.6, 1.1, { fontSize: TS.title, bold: true, lineSpacingMultiple: 0.95 })],
 });
 pres.defineSlideMaster({
   title: 'PHOTO', background: { path: A('bg2_problem.jpg') },
-  objects: [ph('kicker', 'body', 0.6, 1.2, 7, 0.35, Object.assign({}, KICK, { fontSize: 13 })),
+  objects: [ph('kicker', 'body', 0.6, 1.2, 7, 0.35, KICK),
     ph('title', 'title', 0.6, 1.65, 6.4, 2.6, { fontSize: 52, bold: true, lineSpacingMultiple: 0.92 }), ph('body', 'body', 0.6, 4.45, 5.6, 1.3, { fontSize: TS.lead, color: MUTED })],
 });
 pres.defineSlideMaster({
   title: 'CLOSE', background: { path: A('bg2_close.jpg') },
   objects: [
-    ph('kicker', 'body', 0.6, 3.4, 9, 0.35, Object.assign({}, KICK, { fontSize: 13 })),
-    ph('title', 'title', 0.6, 3.85, 11.5, 1.65, { fontSize: 50, bold: true, lineSpacingMultiple: 0.95 }), ph('body', 'body', 0.6, 5.7, 10, 0.95, { fontSize: TS.lead, color: MUTED })],
+    ph('kicker', 'body', 0.6, 3.4, 9, 0.35, KICK),
+    ph('title', 'title', 0.6, 3.85, 11.5, 1.65, { fontSize: 52, bold: true, lineSpacingMultiple: 0.92 }), ph('body', 'body', 0.6, 5.7, 10, 0.95, { fontSize: TS.lead, color: MUTED })],
 });
 pres.defineSlideMaster({
-  title: 'APPENDIX', background: { color: INK },
+  title: 'APPENDIX', background: { path: A('bg2_content.jpg') },
   objects: [
-    ph('kicker', 'body', 0.6, 0.42, 10.5, 0.3, { fontSize: 12, bold: true, color: BLUE }), ph('title', 'title', 0.6, 0.74, 11.6, 0.72, { fontSize: 32, bold: true, color: NAVY }),
+    ph('kicker', 'body', 0.6, 0.55, 10.5, 0.3, KICK), ph('title', 'title', 0.6, 0.88, 11.6, 0.72, { fontSize: 32, bold: true }),
   ],
 });
 
@@ -295,31 +327,55 @@ async function scene(d) {
     s.addShape(LINE, { x: tx + i * (sg + 0.06), y: 0.36, w: sg, h: 0, line: { color: i === cur ? LAV : INK, width: i === cur ? 3 : 2, transparency: i === cur ? 0 : i < cur ? 55 : 85 }, objectName: 'Night progress ' + k });
   }
   s.addText(d.kicker, { placeholder: 'kicker', charSpacing: 1.5 });
-  fit(d.kicker + ' kicker', d.kicker, 12, true, 4.9, 0.3);
+  fit(d.kicker + ' kicker', d.kicker, 13.5, true, 4.9, 0.3);
+  // severity mirrors V11; the priority it proves follows as small caps
   let px = tx;
-  if (d.sev) px += pill(s, px, 0.95, d.sev.toUpperCase(), SEV[d.sev][0], SEV[d.sev][1]) + 0.1;
-  if (d.ask) pill(s, px, 0.95, d.ask.toUpperCase(), LAV, LAV, { tr: 86, line: LAV, ltr: 45 });
+  if (d.sev) px += pill(s, px, 0.95, d.sev.toUpperCase(), SEV[d.sev][0], SEV[d.sev][1], { pt: 12 }) + 0.14;
+  if (d.ask) T(s, d.ask.toUpperCase(), { x: px, y: 0.95, w: tx + w - px, h: 0.3, fontSize: 12, bold: true, color: MUTED, charSpacing: 0.5, valign: 'middle' });
   fit(d.kicker + ' title', d.title, TS.scene, true, 4.9, 0.95, 1.0);
   s.addText(runs(d.title), { placeholder: 'title', charSpacing: -0.5 });
-  // what Co-pilot says (the same words are on the V11 screen): fixed card, 3 lines max
+  // what Co-pilot says (the same words are on the V11 screen): fixed card, 3 lines max, meter in the header
   const cy = 2.45, qw = w - 0.5, plain = typeof d.quote === 'string' ? d.quote : d.quote.map(r => r.text).join('');
-  fit(d.kicker + ' quote', plain, 16, false, qw, 3 * 0.27, 1.2);
-  card(s, tx, cy, w, 1.5, { fill: CARD, tr: 12, line: LAV, ltr: 62, lw: 1, name: 'Co-pilot insight' });
-  s.addImage({ data: await icon('LuSparkles', HEX.lav), x: tx + 0.25, y: cy + 0.2, w: 0.22, h: 0.22, altText: '' });
-  label(s, d.quoteLabel || (d.conf ? `CO-PILOT  ·  ${d.conf}` : 'CO-PILOT'), tx + 0.56, cy + 0.18, 4.2, LAV);
-  T(s, d.quote, { x: tx + 0.25, y: cy + 0.54, w: qw, h: 0.86, fontSize: 16, lineSpacingMultiple: 1.0 });
+  fit(d.kicker + ' quote', plain, 16.5, false, qw, 3 * 0.29, 1.2);
+  card(s, tx, cy, w, 1.55, { fill: CARD, tr: 12, line: LAV, ltr: 62, lw: 1, edge: LAV, name: 'Co-pilot insight' });
+  s.addImage({ data: await icon('LuSparkles', HEX.lav), x: tx + 0.25, y: cy + 0.19, w: 0.22, h: 0.22, altText: '' });
+  label(s, d.quoteLabel || 'CO-PILOT', tx + 0.56, cy + 0.17, d.meter ? 1.4 : 4.2, LAV);
+  if (d.meter) meter(s, d.meter, tx + w - 0.22, cy + 0.3);
+  T(s, d.quote, { x: tx + 0.25, y: cy + 0.55, w: qw, h: 0.92, fontSize: 16, lineSpacingMultiple: 1.05 });
   // watch for: numbered like the tags on the screen, one line each
-  label(s, 'WATCH FOR', tx, 4.16, 2);
+  label(s, 'WATCH FOR', tx, 4.3, 2);
   for (const [i, [lead, rest]] of d.watch.entries()) {
-    const y = 4.55 + i * 0.47;
-    marker(s, tx + 0.17, y + 0.15, i + 1, { d: 0.32, pt: 13 });
-    fit(d.kicker + ' watch ' + (i + 1), lead + ' ' + rest, 16, false, w - 0.52, 0.3);
-    T(s, [{ text: lead + ' ', options: { bold: true } }, { text: rest, options: { color: MUTED } }], { x: tx + 0.52, y: y - 0.01, w: w - 0.52, h: 0.32, fontSize: 16 });
+    const y = 4.66 + i * 0.56;
+    marker(s, tx + 0.17, y + 0.16, i + 1, { d: 0.34, pt: 14 });
+    fit(d.kicker + ' watch ' + (i + 1), lead + ' ' + rest, 17.2, false, w - 0.54, 0.3);
+    T(s, [{ text: lead + ' ', options: { bold: true } }, { text: rest, options: { color: MUTED } }], { x: tx + 0.54, y: y - 0.02, w: w - 0.54, h: 0.34, fontSize: 17 });
   }
-  live(s, tx, 6.02, d.live);
-  await d.visual(s, right ? 5.95 : 0.6);
+  const vx = right ? 5.95 : 0.6;
+  await d.visual(s, vx);
+  live(s, d.liveX ?? vx, 0.5, d.live);
   s.addNotes(d.notes);
   return s;
+}
+// Co-pilot meters, right-aligned at (xr, cy): a confidence gauge, or an SOP step bar
+function meter(s, m, xr, cy) {
+  if (m.kind === 'gauge') {
+    const d = 0.4, x = xr - d, col = m.col || LAV;
+    s.addShape(pres.shapes.BLOCK_ARC, { x, y: cy - d / 2, w: d, h: d, angleRange: [0, 359.9], arcThicknessRatio: 0.2, fill: { color: INK, transparency: 82 }, line: { type: 'none' }, objectName: 'Gauge track' });
+    s.addShape(pres.shapes.BLOCK_ARC, { x, y: cy - d / 2, w: d, h: d, angleRange: [270, (270 + 3.6 * m.v) % 360], arcThicknessRatio: 0.2, fill: { color: col }, line: { type: 'none' }, objectName: 'Gauge value' });
+    const vw = tw(m.v + '%', 15, true) + 0.04;
+    T(s, m.v + '%', { x: x - 0.1 - vw, y: cy - 0.17, w: vw, h: 0.34, fontSize: 15, bold: true, valign: 'middle', align: 'right' });
+    const lab = m.label || 'CONFIDENCE', lw2 = tw(lab, 12, true, 1.5) + 0.05;
+    T(s, lab, { x: x - 0.18 - vw - lw2, y: cy - 0.15, w: lw2, h: 0.3, fontSize: 12, bold: true, color: m.col ? col : MUTED, charSpacing: 1.5, valign: 'middle', align: 'right' });
+  } else {
+    const sw = 0.26, gap = 0.05, n = m.n, x0 = xr - n * sw - (n - 1) * gap;
+    for (let i = 0; i < n; i++) {
+      const st = i < m.done ? 'done' : i < m.done + (m.await || 0) ? 'await' : 'todo';
+      s.addShape(RR, { x: x0 + i * (sw + gap), y: cy - 0.04, w: sw, h: 0.08, rectRadius: 0.04, fill: st === 'done' ? { color: LAV } : { type: 'none' },
+        line: st === 'done' ? { type: 'none' } : st === 'await' ? { color: LAV, width: 1.25 } : { color: INK, width: 1, transparency: 75 }, objectName: 'SOP step ' + (i + 1) });
+    }
+    const lw2 = tw(m.label, 12, true, 1) + 0.05;
+    T(s, m.label, { x: x0 - 0.14 - lw2, y: cy - 0.15, w: lw2, h: 0.3, fontSize: 12, bold: true, color: LAV, charSpacing: 1, valign: 'middle', align: 'right' });
+  }
 }
 
 // ---------- slides ----------
@@ -332,9 +388,9 @@ async function build() {
   s.addText('AGIL® SECURE ISMS V11  ·  AI CO-PILOT', { placeholder: 'kicker', charSpacing: 1.5 });
   s.addText([{ text: 'From alarms', options: { breakLine: true } }, { text: 'to answers', options: { color: LAV } }], { placeholder: 'title', charSpacing: -1.5 });
   s.addText('AI-orchestrated airport security, shown live on the system your teams already use.', { placeholder: 'body' });
-  fit('cover body', 'AI-orchestrated airport security, shown live on the system your teams already use.', TS.lead, false, 6.6, 0.95);
+  fit('cover body', 'AI-orchestrated airport security, shown live on the system your teams already use.', TS.lead, false, 6.0, 0.9, 1.1);
   s.addShape(LINE, { x: 0.6, y: 6.28, w: 0.5, h: 0, line: { color: LAV, width: 2 }, objectName: 'Rule' });
-  T(s, 'Live demonstration for Changi Airport Group  ·  October 2026', { x: 0.6, y: 6.45, w: 8, h: 0.3, fontSize: TS.small, color: MUTED });
+  T(s, 'Prepared for Changi Airport Group  ·  October 2026', { x: 0.6, y: 6.45, w: 8, h: 0.3, fontSize: TS.small, color: MUTED });
   s.addNotes([
     'Good morning, and thank you for having us.',
     'Picture 2:14 in the morning at Changi. A staff door is tailgated, a fence is climbed and a bag is left at a gate, and each one is buried in more than a thousand alarms.',
@@ -346,28 +402,29 @@ async function build() {
   s.addText('WHY WE ARE HERE', { placeholder: 'kicker', charSpacing: 1.5 });
   s.addText('Built on your four priorities', { placeholder: 'title', charSpacing: -0.5 });
   const PRI = [
-    ['LuSparkles', 'AI-powered\nAGIL® Secure', 'Correlation, co-pilot, automation, search, reports', 'Incidents explained, SOPs filled in', ['SCENES 1, 5–7\nASK · REPORT']],
-    ['LuLuggage', 'Advanced\nvideo analytics', 'Left-behind bags linked to owners, no face recognition', 'A Gate B12 bag linked to its owner', ['SCENES 3, 4']],
-    ['LuFence', 'AGIL Fence,\nfully unified', 'Fence alarms in one workflow, off the legacy platform', 'A fence climb verified by LiDAR and thermal', ['SCENE 2']],
-    ['LuNetwork', 'Multi-site\ngovernance', 'One baseline across every site and vendor', 'Site context in V11, federated platform', ['PLATFORM']],
+    ['LuSparkles', 'AI-powered\nAGIL® Secure', 'Correlation, automation and reports', 'Seven incidents explained, SOPs ready', [1, 5, 6, 7, 'ask', 'report']],
+    ['LuLuggage', 'Advanced\nvideo analytics', 'Bag-to-owner links, no face recognition', 'A Gate B12 bag linked to its owner', [3, 4]],
+    ['LuFence', 'AGIL Fence,\nfully unified', 'Fence alarms in one workflow', 'A fence climb verified by LiDAR and thermal', [2]],
+    ['LuNetwork', 'Multi-site\ngovernance', 'One baseline across every site and vendor', 'Site context in V11, federated platform', ['platform', 'Platform']],
   ];
   const cw = (SW - 2 * MX - 3 * 0.25) / 4;
   for (const [i, [ic, ttl, asked, see, tags]] of PRI.entries()) {
     const x = MX + i * (cw + 0.25), y = 1.85, h = 4.95, iw = cw - 0.56;
-    card(s, x, y, cw, h, { tr: 25, shadow: true, name: 'Priority ' + (i + 1) });
-    T(s, '0' + (i + 1), { x: x + 0.28, y: y + 0.26, w: 1, h: 0.5, fontSize: 28, bold: true, color: LAV });
-    s.addImage({ data: await icon(ic, HEX.lav), x: x + cw - 0.74, y: y + 0.32, w: 0.42, h: 0.42, altText: '' });
+    card(s, x, y, cw, h, { tr: 25, name: 'Priority ' + (i + 1) });
+    await iconDisc(s, ic, x + 0.28, y + 0.28, 0.62, { k: 0.5 });
+    T(s, 'PRIORITY ' + (i + 1), { x: x + cw - 1.6, y: y + 0.42, w: 1.32, h: 0.3, fontSize: 12, bold: true, color: MUTED, charSpacing: 1.5, align: 'right', valign: 'middle' });
     fit('priority title ' + i, ttl, 20, true, iw, 0.68);
-    T(s, runs(ttl), { x: x + 0.28, y: y + 0.98, w: iw, h: 0.7, fontSize: 20, bold: true, lineSpacingMultiple: 0.98 });
+    T(s, runs(ttl), { x: x + 0.28, y: y + 1.05, w: iw, h: 0.7, fontSize: 20, bold: true, lineSpacingMultiple: 0.98 });
     label(s, 'YOU ASKED FOR', x + 0.28, y + 1.86, iw);
-    fit('priority asked ' + i, asked, 16, false, iw, 0.82);
+    fit('priority asked ' + i, asked, 16, false, iw, 0.56);
     T(s, asked, { x: x + 0.28, y: y + 2.16, w: iw, h: 0.84, fontSize: 16, color: MUTED });
     s.addShape(LINE, { x: x + 0.28, y: y + 3.1, w: iw, h: 0, line: { color: INK, width: 0.75, transparency: 85 }, objectName: 'Divider' });
     label(s, 'LIVE TODAY', x + 0.28, y + 3.22, iw, LAV);
     fit('priority see ' + i, see, 16, false, iw, 0.56);
     T(s, see, { x: x + 0.28, y: y + 3.52, w: iw, h: 0.84, fontSize: 16 });
-    s.addShape(LINE, { x: x + 0.28, y: y + h - 0.6, w: iw, h: 0, line: { color: INK, width: 0.75, transparency: 85 }, objectName: 'Divider' });
-    for (const t of tags) { const tl = nlines(t, 12.6, true, iw); label(s, runs(t), x + 0.28, y + h - 0.47 - (tl - 1) * 0.13, iw, LAV, { fontSize: 12, charSpacing: 1, h: 0.26 * tl }); }
+    label(s, 'SEE IT IN', x + 0.28, y + h - 0.8, iw);
+    const ex = await chips(s, x + 0.28, y + h - 0.47, tags);
+    if (ex > x + cw - 0.2) WARN.push('priority chips overflow ' + i);
   }
   s.addNotes([
     'When we last met, you shared four priorities. An AI-powered AGIL Secure. Video analytics that respect privacy. AGIL Fence, fully unified. And one governance model across all your sites.',
@@ -385,10 +442,10 @@ async function build() {
   const Q = [['Real alarm, or another nuisance?', 'A', 1.35], ['Is the fence alarm related?', 'B', 2.13], ['Which camera covers D-214?', 'A', 2.91],
     ['Who left the bag at B12?', 'B', 3.69], ['Which SOP applies here?', 'A', 4.47], ['Who do I call first?', 'B', 5.25]];
   for (const [q, col, y] of Q) {
-    const w = tw(q, 16, false) + 0.84, x = col === 'A' ? 6.9 : RX - 0.1 - w;
-    s.addShape(RR, { x, y, w, h: 0.56, rectRadius: 0.28, fill: { color: NAVY, transparency: 18 }, line: { color: INK, width: 0.75, transparency: 70 }, shadow: shadow(16, 0.55, 5), objectName: 'Operator question' });
-    s.addShape(OVAL, { x: x + 0.24, y: y + 0.22, w: 0.12, h: 0.12, fill: { color: RED }, line: { type: 'none' }, objectName: 'Alarm dot' });
-    T(s, q, { x: x + 0.5, y, w: w - 0.6, h: 0.56, fontSize: 16, valign: 'middle', objectName: 'Operator question text' });
+    const w = tw(q, 17, false) + 0.86, x = col === 'A' ? 6.9 : RX - 0.1 - w;
+    s.addShape(RR, { x, y, w, h: 0.6, rectRadius: 0.3, fill: { color: NAVY, transparency: 10 }, line: { color: INK, width: 0.75, transparency: 70 }, shadow: shadow(16, 0.55, 5), objectName: 'Operator question' });
+    s.addShape(OVAL, { x: x + 0.23, y: y + 0.23, w: 0.14, h: 0.14, fill: { color: RED }, line: { type: 'none' }, objectName: 'Alarm dot' });
+    T(s, q, { x: x + 0.5, y, w: w - 0.6, h: 0.6, fontSize: 17, valign: 'middle', objectName: 'Operator question text' });
   }
   T(s, 'Figures from tonight’s demo scenario.', { x: MX, y: 6.62, w: 6, h: 0.28, fontSize: 12, color: MUTED });
   s.addNotes([
@@ -400,8 +457,7 @@ async function build() {
   // 4 ── same console, now with Co-pilot
   s = pres.addSlide({ masterName: 'CONTENT', sectionTitle: SEC.open });
   s.addText('THE ANSWER', { placeholder: 'kicker', charSpacing: 1.5 });
-  s.addText('The same V11 console. Now it thinks with you', { placeholder: 'title', charSpacing: -0.5 });
-  fit('slide4 title', 'The same V11 console. Now it thinks with you', TS.title, true, 12.1, 0.72, 1.0);
+  s.addText('Same V11 console. Now with answers.', { placeholder: 'title', charSpacing: -0.5 });
   {
     const F = 'V11-01-home-real-time-alerts';
     const dv = await device(s, F, 6.53, 1.95, 6.2, 'AGIL Secure V11 home screen: Real Time Alerts with Co-pilot lines, the airport in 3D with incident pins, and the search bar');
@@ -458,22 +514,22 @@ async function build() {
 
   // 6 ── tonight's cast
   s = pres.addSlide({ masterName: 'CONTENT', sectionTitle: SEC.open });
-  s.addText('TONIGHT’S NIGHT SHIFT', { placeholder: 'kicker', charSpacing: 1.5 });
+  s.addText('ON SHIFT TONIGHT', { placeholder: 'kicker', charSpacing: 1.5 });
   s.addText('Four people. One Co-pilot', { placeholder: 'title', charSpacing: -0.5 });
-  const CAST = [['nurul', 'Nurul', 'Control room operator', 'Works 7 incidents, not 1,248 raw alarms.', 'Every scene'],
-    ['daniel', 'Daniel', 'Duty security manager', 'Asks in plain English; answers cite sources.', '02:30 · Ask'],
-    ['arjun', 'Arjun', 'Patrol officer', 'Gets the follower’s photo on his phone.', 'Scenes 1, 3'],
-    ['grace', 'Grace', 'Head of security', 'Signs off the AI-drafted report at 07:00.', '07:00 · Handover']];
+  const CAST = [['nurul', 'Nurul', 'Control room operator', 'Works 7 incidents, not 1,248 raw alarms.', [1, 2, 3, 4, 5, 6, 7]],
+    ['daniel', 'Daniel', 'Duty security manager', 'Asks in plain English; answers cite sources.', ['ask', '02:30 · Ask']],
+    ['arjun', 'Arjun', 'Patrol officer', 'Gets the follower’s photo on his phone.', [1, 3]],
+    ['grace', 'Grace', 'Head of security', 'Signs off the AI-drafted report at 07:00.', ['report', '07:00 · Handover']]];
   for (const [i, [key, nm, role, line, tag]] of CAST.entries()) {
     const x = MX + i * (cw + 0.25), y = 1.85, h = 4.95, iw = cw - 0.56;
-    card(s, x, y, cw, h, { tr: 25, shadow: true, name: 'Persona ' + nm });
+    card(s, x, y, cw, h, { tr: 25, name: 'Persona ' + nm });
     s.addImage({ data: await graded(`persona_${key}.jpg`), x: x + 0.08, y: y + 0.08, w: cw - 0.16, h: 2.3, sizing: { type: 'cover', w: cw - 0.16, h: 2.3 }, altText: `${nm}, ${role.toLowerCase()}, seen from behind at work`, objectName: 'Portrait ' + nm });
     brackets(s, x + 0.2, y + 0.2, cw - 0.4, 2.06, { col: INK, tr: 35, arm: 0.18, lw: 1.25 });
     T(s, nm, { x: x + 0.28, y: y + 2.6, w: iw, h: 0.42, fontSize: 22, bold: true });
     T(s, role, { x: x + 0.28, y: y + 3.04, w: iw, h: 0.3, fontSize: 15, color: LAV, bold: true });
     fit('cast ' + nm, line, 16, false, iw, 0.56);
     T(s, line, { x: x + 0.28, y: y + 3.45, w: iw, h: 0.86, fontSize: 16, color: MUTED });
-    label(s, tag.toUpperCase(), x + 0.28, y + h - 0.47, iw, LAV, { fontSize: 12, charSpacing: 1 });
+    await chips(s, x + 0.28, y + h - 0.5, tag, { d: 0.26, gap: 0.05 });
   }
   s.addNotes([
     'Tonight you will meet four people. Nurul runs the V11 console. Daniel, the duty manager, asks Co-pilot questions in plain English. Arjun is on patrol with the responder app. And Grace, head of security, signs off the report at the seven o’clock handover.',
@@ -484,11 +540,11 @@ async function build() {
   pres.addSection({ title: SEC.demo });
   s = pres.addSlide({ masterName: 'SECTION', sectionTitle: SEC.demo });
   s.addText('LIVE DEMO', { placeholder: 'kicker', charSpacing: 1.5 });
-  T(s, '02:14', { x: 5.73, y: 0.35, w: 7.0, h: 2.4, fontSize: 160, bold: true, color: LAV, transparency: 86, charSpacing: -4, align: 'right', objectName: 'Night clock' });
+  T(s, '02:14', { x: 6.9, y: 0.55, w: 5.83, h: 2.25, fontSize: 160, bold: true, color: LAV, transparency: 86, charSpacing: -4, align: 'right', objectName: 'Night clock' });
   s.addText('Let’s run a night shift, live', { placeholder: 'title', charSpacing: -1 });
   s.addText('Seven scenarios on the real V11 system. The numbered tags on each slide match the screen, in order.', { placeholder: 'body' });
   fit('divider body', 'Seven scenarios on the real V11 system. The numbered tags on each slide match the screen, in order.', TS.lead, false, 7.2, 1.0);
-  pill(s, 0.6, 5.75, '●  OVER TO THE LIVE SYSTEM', LAV, LAV, { tr: 86, line: LAV, ltr: 40, pt: 12, h: 0.44, padX: 0.5, cs: 1.5 });
+  live(s, 0.6, 5.15, 'Over to the V11 console');
   s.addNotes([
     'Now let us see it on the real system. My colleague is at the V11 console, and every slide that follows shows the screen you are about to see.',
     'The numbered tags on each slide match what happens on screen, in the same order.',
@@ -499,18 +555,31 @@ async function build() {
   s.addText('02:14  ·  ONE NIGHT AT THE AIRPORT', { placeholder: 'kicker', charSpacing: 1.5 });
   s.addText(runs('Seven incidents.\nAlready ranked.'), { placeholder: 'title', charSpacing: -0.5 });
   label(s, 'RANKED BY CO-PILOT', MX, 2.02, 2.2);
-  { let cx2 = MX + 2.15; for (const [t, sv] of [['2 CRITICAL', 'Critical'], ['4 WARNING', 'Warning'], ['1 INFO', 'Info']]) cx2 += pill(s, cx2, 2.0, t, SEV[sv][0], SEV[sv][1], { h: 0.3 }) + 0.08; }
+  { let cx2 = MX + 2.32; for (const [t, sv] of [['2 CRITICAL', 'Critical'], ['4 WARNING', 'Warning'], ['1 INFO', 'Info']]) cx2 += pill(s, cx2, 2.0, t, SEV[sv][0], SEV[sv][1], { h: 0.3, pt: 12 }) + 0.08; }
   {
-    const mw = 12.4, mh = mw / GEO.twin.aspect, mx0 = SW - mw + 0.35, my0 = 0.45;
+    const mw = 12.4, mh = mw / GEO.twin.aspect, mx0 = SW - mw + 0.35, my0 = 0.68;
     s.addImage({ path: A('viz_twin.png'), x: mx0, y: my0, w: mw, h: mh, altText: 'The airport as a 3D digital twin: five terminals, two runways and the north perimeter fence', objectName: 'Airport twin' });
     const at = ([fx, fy]) => [mx0 + fx * mw, my0 + fy * mh];
+    const rx = GEO.twin.ring.rx * mw, ry = GEO.twin.ring.ry * mh, d = 0.36, LIFT = { 7: 0.75, 4: 0.5 };
+    // keep-out boxes for every pin (head halo, stem, ground ring), then place each tag where it clears all of them
+    const boxes = [];
+    for (const p of GEO.twin.pins) {
+      const [bx, by] = at(p.base), [hx, hy] = at(p.head), hy2 = hy - (LIFT[p.n] ?? 0.32), r = d / 2 + 0.08;
+      boxes.push([hx - r, hy2 - r, hx + r, hy2 + r], [bx - 0.03, hy2, bx + 0.03, by], [bx - rx * 1.6, by - ry * 1.6, bx + rx * 1.6, by + ry * 1.6]);
+    }
+    const overlap = (b, pad = 0.06) => boxes.reduce((n, o) => n + Math.max(0, Math.min(b[2], o[2] + pad) - Math.max(b[0], o[0] - pad)) * Math.max(0, Math.min(b[3], o[3] + pad) - Math.max(b[1], o[1] - pad)), 0);
     for (const l of GEO.twin.labels) {
       const [lx, ly] = at(l.at);
-      s.addText(l.id, { shape: RR, x: lx - 0.22, y: ly - 0.15, w: 0.44, h: 0.3, rectRadius: 0.08, fill: { color: CARD, transparency: 10 }, line: { color: INK, width: 0.5, transparency: 70 }, color: INK, fontSize: TS.micro, bold: true, align: 'center', valign: 'middle', margin: 0, objectName: 'Terminal ' + l.id });
+      // nearest candidate that clears every pin; failing that, the one that overlaps least
+      const cands = [[0, 0.4], [0.48, 0.18], [-0.48, 0.18], [0.52, -0.12], [-0.52, -0.12], [0, 0], [0, 0.62], [0.78, 0.3], [-0.78, 0.3], [0.82, -0.25], [-0.82, -0.25], [0, -0.55], [1.05, 0.05], [-1.05, 0.05]]
+        .map(([dx, dy]) => [lx + dx - 0.25, ly + dy - 0.15, lx + dx + 0.25, ly + dy + 0.15]);
+      const spot = cands.find(b => overlap(b) === 0) || cands.reduce((a, b) => (overlap(b) < overlap(a) ? b : a));
+      if (overlap(spot) > 0) WARN.push(`terminal tag ${l.id} overlaps a pin by ${overlap(spot).toFixed(3)} sq in`);
+      boxes.push(spot);
+      s.addText(l.id, { shape: RR, x: spot[0], y: spot[1], w: 0.5, h: 0.3, rectRadius: 0.08, fill: { color: CARD, transparency: 10 }, line: { color: INK, width: 0.5, transparency: 70 }, color: INK, fontSize: 12, bold: true, align: 'center', valign: 'middle', margin: 0, objectName: 'Terminal ' + l.id });
     }
-    const rx = GEO.twin.ring.rx * mw, ry = GEO.twin.ring.ry * mh;
     for (const p of [...GEO.twin.pins].sort((a, b) => a.base[1] - b.base[1])) {
-      const col = SEV[p.sev][0], [bx, by] = at(p.base), [hx, hy] = at(p.head), d = 0.36, lift = p.n === 7 ? 0.75 : p.n === 4 ? 0.5 : 0.32;
+      const col = SEV[p.sev][0], [bx, by] = at(p.base), [hx, hy] = at(p.head), lift = LIFT[p.n] ?? 0.32;
       s.addShape(OVAL, { x: bx - rx * 1.6, y: by - ry * 1.6, w: rx * 3.2, h: ry * 3.2, fill: { color: col, transparency: 70 }, line: { color: col, width: 1.25 }, objectName: 'Pin ring ' + p.n });
       s.addShape(LINE, { x: bx, y: hy - lift + d / 2, w: 0, h: by - (hy - lift + d / 2), line: { color: col, width: 1.5 }, objectName: 'Pin stem ' + p.n });
       s.addShape(OVAL, { x: hx - d / 2 - 0.08, y: hy - lift - d / 2 - 0.08, w: d + 0.16, h: d + 0.16, fill: { color: col, transparency: 65 }, line: { type: 'none' }, objectName: 'Pin halo ' + p.n });
@@ -522,16 +591,16 @@ async function build() {
     ['Identity spoofing', '02:13  ·  T1 Door C2', 'Warning'], ['Overstay in a restricted zone', '01:45  ·  T4 Baggage Hall B2', 'Info'],
     ['Watchlist person loitering', '02:12  ·  T1 Departure Row K', 'Warning']];
   for (const [i, [nm, sub, sev]] of MAP.entries()) {
-    const y = 2.55 + i * 0.54;
+    const y = 2.55 + i * 0.57;
     s.addText(String(i + 1), { shape: OVAL, x: MX, y: y + 0.03, w: 0.38, h: 0.38, fill: { color: SEV[sev][0] }, line: { color: INK, width: 1 }, color: SEV[sev][1], bold: true, fontSize: 14, align: 'center', valign: 'middle', margin: 0, objectName: 'Scene pin ' + (i + 1) });
     T(s, nm, { x: MX + 0.56, y: y - 0.04, w: 4.6, h: 0.3, fontSize: 17, bold: true });
-    T(s, sub, { x: MX + 0.56, y: y + 0.27, w: 4.6, h: 0.24, fontSize: 13, color: MUTED });
+    T(s, sub, { x: MX + 0.56, y: y + 0.27, w: 4.6, h: 0.26, fontSize: 14, color: MUTED });
   }
-  live(s, MX, 6.45, 'Home  ›  Real Time Alerts');
+  live(s, RX, 0.5, 'Home  ›  Real Time Alerts', { right: true });
   s.addNotes([
     'It is 2:14 in the morning, and seven situations are unfolding across the airport, from a tailgated staff door in Terminal 3 to a fence climb on the north perimeter.',
     'Before anyone touches a button, Co-pilot has ranked them: two Critical, four Warning and one Info. At 2:30 the duty manager asks a question, and by seven o’clock the report is ready for handover.',
-    'We start with the most urgent.',
+    'The numbers you see here follow each incident through the rest of the demo. We start with the most urgent.',
   ].join('\n'));
 
   // 9–19 ── scenes: device at y DY; markers sit beside or on the bezel, never on the UI they point at
@@ -543,10 +612,10 @@ async function build() {
   const DY = 1.12, DW = 6.78;
 
   await scene({
-    kicker: 'SCENE 1  ·  02:14  ·  T3 STAFF DOOR D-214', step: '1', sev: 'Critical', ask: 'Priority 1 · Correlation', conf: '94% CONFIDENCE',
+    kicker: 'SCENE 1  ·  02:14  ·  T3 STAFF DOOR D-214', step: '1', sev: 'Critical', ask: 'Priority 1 · Correlation', meter: { kind: 'gauge', v: 94 },
     title: '5 alarms. 1 incident.\nExplained.',
     quote: 'Two people, one badge at D-214. The follower has no credential and is heading airside to Pier C.',
-    watch: [['Co-pilot line:', '5 linked alarms, 94%'], ['Evidence:', 'follower boxed “No badge”'], ['Linked alarms:', 'badge, door, LiDAR, video']],
+    watch: [['Co-pilot line:', '5 linked alarms, 94%'], ['Evidence:', 'follower boxed “No badge”'], ['Linked:', 'badge, door, LiDAR, video']],
     live: 'Real Time Alerts  ›  Staff Door D-214',
     visual: async (s, vx) => {
       const dv = await device(s, F02, vx, DY, DW, 'V11 Active Alarms for Staff Door D-214 on the Investigation tab: AI summary, linked alarms and camera evidence');
@@ -562,15 +631,15 @@ async function build() {
   });
 
   await scene({
-    side: 'left', kicker: 'SCENE 1  ·  02:17  ·  RESPOND', step: '1', sev: 'Critical', ask: 'Priority 1 · Automation',
+    side: 'left', kicker: 'SCENE 1  ·  02:17  ·  RESPOND', step: '1', sev: 'Critical', ask: 'Priority 1 · Automation', meter: { kind: 'steps', n: 4, done: 1, await: 1, label: 'STEP 2 OF 4' },
     title: 'Co-pilot prepares.\nYou approve.',
     quote: 'SOP-SEC-014 pre-filled. Step 1 done: the follower is verified on three cameras. Step 2 needs your approval.',
-    watch: [['Done by Co-pilot:', 'step 1, follower tracked'], ['Your approval:', 'lock D-214'], ['Dispatch:', 'Arjun gets the photo']],
+    watch: [['Done by Co-pilot:', 'follower tracked'], ['Your approval:', 'lock D-214'], ['Dispatch:', 'Arjun gets the photo']],
     live: 'SOP Flow  ›  Lock',
     visual: async (s, vx) => {
       const dv = await device(s, F03, vx, DY, DW, 'V11 SOP Flow for D-214 with the Critical Action step and door buttons; the 3D Locate view shows D-214 locked by the operator');
       hl(s, dv, ab(F03, 'Done by Co-pilot', 0, { pad: 8 }), 1, { side: 'r', edge: true });
-      await lens(s, dv, F03, [916, 698, 428, 126], 0.78, 4.95, 4.1, { n: 2, alt: 'Critical Action Required: lock D-214 and switch on hard anti-passback, with Lock, Secure and Normal buttons' });
+      await lens(s, dv, F03, [916, 698, 428, 126], 0.66, 4.85, 4.25, { n: 2, alt: 'Critical Action Required: lock D-214 and switch on hard anti-passback, with Lock, Secure and Normal buttons' });
       hl(s, dv, ab(F03, 'Dispatch patrol'), 3, { side: 'r', edge: true });
     },
     notes: [
@@ -582,33 +651,34 @@ async function build() {
 
   await scene({
     kicker: 'SCENE 1  ·  02:18  ·  ESCALATE', step: '1', sev: 'Critical', ask: 'Priority 1 · Automation',
-    title: 'Escalated in one click,\nalready filled in',
+    title: 'One click to escalate.\nNothing to retype.',
     quote: 'Category, severity and remarks are pre-filled from the investigation. Edit anything, then create the incident.',
-    watch: [['Category:', 'unauthorised airside entry'], ['Severity:', 'Critical, from the evidence'], ['Remarks:', 'drafted, and editable']],
+    watch: [['Category:', 'unauthorised entry'], ['Severity:', 'Critical, from evidence'], ['Remarks:', 'drafted, editable']],
     live: 'Escalate  ›  Create Incident',
     visual: async (s, vx) => {
-      const dv = await device(s, F10, vx, DY, DW, 'V11 Escalate Event dialog with Category, Severity and Remarks pre-filled by Co-pilot');
-      const ln = await lens(s, dv, F10, [391, 488, 618, 222], 6.55, 4.62, 5.6, { alt: 'Escalate Event form: Category Unauthorised airside entry, Severity Critical, Remarks drafted by Co-pilot' });
+      const dv = await device(s, F10, vx, DY, DW, 'V11 Escalate Event dialog with Category, Severity and Remarks pre-filled by Co-pilot', { brackets: false });
+      const ln = await lens(s, dv, F10, [391, 488, 618, 222], 6.34, 4.62, 6.0, { alt: 'Escalate Event form: Category Unauthorised airside entry, Severity Critical, Remarks drafted by Co-pilot' });
       hl(s, ln, [397, 492, 296, 70], 1, { side: 'l', box: false });
       hl(s, ln, [706, 492, 296, 70], 2, { side: 'r', box: false });
       hl(s, ln, [397, 596, 608, 106], 3, { side: 'r', box: false });
+      brackets(s, 5.81, 0.98, 7.06, 6.9 - 0.98, { tr: 25 });
     },
     notes: [
-      'Escalating used to mean retyping everything into another form. Now the Escalate dialog your team already uses comes pre-filled: the category, the severity and the remarks, all drafted from the investigation.',
-      'The operator checks it, edits anything they want, and creates the incident. One click.',
+      'One click to escalate, and nothing to retype. The Escalate dialog your team already uses comes pre-filled: the category, the severity and the remarks, all drafted from the investigation.',
+      'The operator checks it, edits anything they want, and creates the incident.',
     ].join('\n'),
   });
 
   await scene({
-    side: 'left', kicker: 'SCENE 2  ·  02:15  ·  FENCE SECTOR 5', step: '2', sev: 'Critical', ask: 'Priority 3 · AGIL Fence', conf: '91% CONFIDENCE',
+    side: 'left', kicker: 'SCENE 2  ·  02:15  ·  FENCE SECTOR 5', step: '2', sev: 'Critical', ask: 'Priority 3 · AGIL Fence', meter: { kind: 'gauge', v: 91 },
     title: 'A real intruder,\nnot the wind',
     quote: 'Climb on segment 5-14. LiDAR: one 1.7 m object. Thermal: one person. Wind is 12 km/h, so not a nuisance.',
-    watch: [['One alert list:', 'no separate fence platform'], ['LiDAR:', 'one object, 1.7 m tall'], ['Thermal PTZ:', 'one person at the fence']],
+    watch: [['One alert list:', 'no separate platform'], ['LiDAR:', 'one object, 1.7 m tall'], ['Thermal PTZ:', 'one person at the fence']],
     live: 'Fence Sector 5  ›  Investigation',
     visual: async (s, vx) => {
       const dv = await device(s, F09, vx, DY, DW, 'V11 Active Alarms for Fence Sector 5: LiDAR point cloud, thermal PTZ view and linked alarms');
       hl(s, dv, ab(F09, 'fence + LiDAR'), 1, { side: 'l', edge: true });
-      await lens(s, dv, F09, [1150, 300, 180, 104], 2.35, 1.72, 2.45, { n: 2, alt: 'LiDAR L-5B point cloud: one human-sized cluster at the fence' });
+      await lens(s, dv, F09, [1176, 322, 126, 73], 2.35, 1.72, 2.45, { n: 2, alt: 'LiDAR L-5B point cloud: one human-sized cluster at the fence' });
       await lens(s, dv, F09, CAM1, 2.35, 3.3, 2.45, { n: 3, alt: 'PTZ 7-02 thermal view: one person at the fence, boxed Person 1.7 m' });
     },
     notes: [
@@ -619,10 +689,10 @@ async function build() {
   });
 
   await scene({
-    kicker: 'SCENE 3  ·  02:04  ·  T2 GATE B12', step: '3', sev: 'Warning', ask: 'Priority 2 · Video analytics', conf: '88% CONFIDENCE',
+    kicker: 'SCENE 3  ·  02:04  ·  T2 GATE B12', step: '3', sev: 'Warning', ask: 'Priority 2 · Video analytics', meter: { kind: 'steps', n: 5, done: 4, await: 1, label: '4 OF 5 DONE' },
     title: 'Bag and owner linked\nin 6 seconds',
     quote: 'Suitcase unattended since 02:04. Its owner left it at 01:58 and is now at Food Court L3. Found in 6.2 s.',
-    watch: [['Person–object link:', 'placed at 01:58'], ['Owner found:', 'by clothing, not face'], ['You decide:', 'approve sending Arjun']],
+    watch: [['Bag link:', 'placed at 01:58'], ['Owner found:', 'by clothing, not face'], ['You decide:', 'approve sending Arjun']],
     live: 'Gate B12 Holdroom  ›  SOP Flow',
     visual: async (s, vx) => {
       const dv = await device(s, F05, vx, DY, DW, 'V11 SOP Flow for the unattended bag at Gate B12: steps 1 to 4 done by Co-pilot, step 5 awaiting approval; cameras show the bag and its owner');
@@ -638,10 +708,10 @@ async function build() {
   });
 
   await scene({
-    side: 'left', kicker: 'SCENE 4  ·  02:11  ·  T2 ARRIVAL BELT 5', step: '4', sev: 'Warning', ask: 'Priority 2 · Video analytics', conf: '78% CONFIDENCE',
+    side: 'left', kicker: 'SCENE 4  ·  02:11  ·  T2 ARRIVAL BELT 5', step: '4', sev: 'Warning', ask: 'Priority 2 · Video analytics', meter: { kind: 'gauge', v: 78 },
     title: 'Seen and heard\nbefore it escalates',
     quote: 'Arguing turned to pushing at Belt 5. Pose analytics and the intercom microphone agree. Nobody is on the ground.',
-    watch: [['Pose analytics:', 'aggression 0.89'], ['Intercom audio:', 'raised voices, 30 s earlier'], ['Responders:', 'officers at 40 m and 90 m']],
+    watch: [['Pose analytics:', 'aggression 0.89'], ['Audio:', 'raised voices, 30 s earlier'], ['Responders:', '40 m and 90 m away']],
     live: 'Arrival Hall Belt 5  ›  Investigation',
     visual: async (s, vx) => {
       const dv = await device(s, F07, vx, DY, DW, 'V11 Active Alarms for Arrival Hall Belt 5: camera with aggression box, linked audio and video alarms');
@@ -656,35 +726,37 @@ async function build() {
   });
 
   await scene({
-    kicker: 'SCENE 5  ·  02:13  ·  T1 DOOR C2', step: '5', sev: 'Warning', ask: 'Priority 1 · Access intelligence', conf: '82% CONFIDENCE',
+    kicker: 'SCENE 5  ·  02:13  ·  T1 DOOR C2', step: '5', sev: 'Warning', ask: 'Priority 1 · Access intelligence', meter: { kind: 'gauge', v: 82 },
     title: 'One card, two doors,\nfour minutes',
     quote: 'Card S-20931 opened A17 at 02:09 and C2 at 02:13: a 19-minute route. The person at C2 is not the holder.',
-    watch: [['Impossible travel:', '4 min vs 19 min'], ['Not the holder:', 'C2 and A17 compared'], ['Legacy card ID:', 'old SSID still active']],
+    watch: [['Impossible travel:', '4 min vs 19 min'], ['Not the holder:', 'C2 vs A17 cameras'], ['Root cause:', 'old card ID not revoked']],
     live: 'T1 Door C2  ›  Investigation',
     visual: async (s, vx) => {
       const dv = await device(s, F04, vx, DY, DW, 'V11 Active Alarms for T1 Door C2: cameras at C2 and A17, appearance check and linked access alarms');
       hl(s, dv, ab(F04, 'Same card used', 1), 1, { side: 'r', edge: true });
-      await lens(s, dv, F04, CAM1, 6.15, 1.72, 2.0, { n: 2, alt: 'Camera 1-204 at Door C2: the person is boxed Not the holder' });
+      await lens(s, dv, F04, CAM1, 6.15, 1.72, 2.0, { alt: 'Camera 1-204 at Door C2: the person is boxed Not the holder' });
       await lens(s, dv, F04, CAM2, 8.35, 1.72, 1.8, { alt: 'Camera 3-052 at Door A17 at 02:09: the cardholder' });
-      await lens(s, dv, F04, CAM3, 8.35, 2.98, 1.8, { alt: 'Appearance check: the person at C2 against the cardholder, 31% similar' });
+      await lens(s, dv, F04, CAM3, 8.35, 3.01, 1.8, { alt: 'Appearance check: the person at C2 against the cardholder, 31% similar' });
+      brackets(s, 6.03, 1.6, 4.24, 2.59, { arm: 0.16, lw: 1.25, tr: 25 });
+      marker(s, 10.27, 1.6, 2);
       hl(s, dv, ab(F04, 'legacy SSID', 1), 3, { side: 'r', edge: true });
     },
     notes: [
       'Now, access intelligence. Card S-20931 opened Door A17 in Terminal 3 at 2:09, and Door C2 in Terminal 1 just four minutes later. The fastest route between them takes nineteen.',
       'The cameras at both doors, side by side, show that it is not the same person.',
-      'And Co-pilot shows why it happened: C2 was opened with the card’s old ID, which should have been revoked when the card was re-issued. Validate the context, not only the card.',
+      'And Co-pilot shows why it happened: C2 accepted an old card ID that should have been revoked when the card was re-issued. Validate the context, not only the card.',
     ].join('\n'),
   });
 
   await scene({
-    side: 'left', kicker: 'SCENE 6  ·  01:45  ·  T4 BAGGAGE HALL B2', step: '6', sev: 'Info', ask: 'Priority 1 · Access intelligence', conf: '73% CONFIDENCE',
+    side: 'left', kicker: 'SCENE 6  ·  01:45  ·  T4 BAGGAGE HALL B2', step: '6', sev: 'Info', ask: 'Priority 1 · Access intelligence', meter: { kind: 'gauge', v: 73 },
     title: 'Your own rules,\nnow running live',
-    quote: 'K. Lim has been in B2 since 22:36. The shift ended at 01:00, B2 is outside K. Lim’s duties, and there is no overtime.',
-    watch: [['Your rules:', '4 of 5 triggered'], ['Context:', 'roster checked, no overtime'], ['Right urgency:', 'Info, a radio check']],
+    quote: 'K. Lim in B2 since 22:36. Shift ended 01:00; B2 is outside K. Lim’s duties; no overtime request.',
+    watch: [['Your rules:', '4 of 5 triggered'], ['Context:', 'roster, no overtime'], ['Right urgency:', 'Info, a radio check']],
     live: 'Baggage Hall B2  ›  Investigation',
     visual: async (s, vx) => {
       const dv = await device(s, F08, vx, DY, DW, 'V11 Active Alarms for Baggage Hall B2: overstay with the airport rules that triggered');
-      await lens(s, dv, F08, [916, 738, 428, 112], 0.78, 5.0, 4.1, { n: 1, alt: 'Airport rules triggered: restricted zone in wee hours, outside scope of duty, non-working hours, dwell 3h 40m against 45 min usual' });
+      await lens(s, dv, F08, [916, 738, 428, 112], 0.66, 4.95, 4.25, { n: 1, alt: 'Airport rules triggered: restricted zone in wee hours, outside scope of duty, non-working hours, dwell 3h 40m against 45 min usual' });
       hl(s, dv, ab(F08, 'In zone since'), 2, { side: 'r', edge: true });
       hl(s, dv, ab(F08, 'Baggage Hall B2'), 3, { side: 'l', edge: true });
     },
@@ -696,54 +768,54 @@ async function build() {
   });
 
   await scene({
-    kicker: 'SCENE 7  ·  02:12  ·  T1 DEPARTURE ROW K', step: '7', sev: 'Warning', ask: 'Priority 1 · Governed AI', conf: 'VERIFY MATCH FIRST',
+    kicker: 'SCENE 7  ·  02:12  ·  T1 DEPARTURE ROW K', step: '7', sev: 'Warning', ask: 'Priority 1 · Governed AI', meter: { kind: 'gauge', v: 87, col: GOLD, label: 'POSSIBLE MATCH' },
     title: 'Sensitive calls\nstay human',
     quote: 'Possible watchlist match: 23 min loitering, three staff-door approaches. Nothing happens until you confirm.',
-    watch: [['Behaviour first:', '23 min, 3 approaches'], ['Side by side:', 'live capture, reference'], ['Your call:', 'confirm or reject, logged']],
+    watch: [['Behaviour first:', '23 min, 3 approaches'], ['Side by side:', 'capture, reference'], ['Your call:', 'confirm or reject']],
     live: 'Departure Hall Row K  ›  SOP Flow',
     visual: async (s, vx) => {
       const dv = await device(s, F06, vx, DY, DW, 'V11 SOP Flow for Departure Hall Row K: verification step first, with live capture and watchlist reference');
       hl(s, dv, ab(F06, 'Approached staff door'), 1, { side: 'r', edge: true });
       await lens(s, dv, F06, [1134, 296, 210, 248], 7.85, 1.72, 2.2, { n: 2, alt: 'Live capture at 02:12 shown above the watchlist reference image' });
-      await lens(s, dv, F06, [916, 634, 428, 126], 6.15, 4.6, 4.0, { n: 3, alt: 'Critical Action Required: verify first, with Confirm match and Not a match buttons' });
+      await lens(s, dv, F06, [916, 634, 428, 126], 6.1, 4.85, 4.15, { n: 3, alt: 'Critical Action Required: verify first, with Confirm match and Not a match buttons' });
     },
     notes: [
       'The most sensitive case. At Departure Row K, someone has loitered for 23 minutes, approached a staff door three times, and may match a watchlist entry.',
-      'Co-pilot puts the live capture next to the reference image, and then it stops. Nothing happens until the operator confirms or rejects the match, and that decision is logged.',
+      'Co-pilot puts the live capture next to the reference image, and then it stops. The match is marked as possible, not confirmed. Nothing happens until the operator confirms or rejects it, and that decision is logged.',
       'Whether watchlist matching is used at all is your policy. Sensitive calls stay human.',
     ].join('\n'),
   });
 
   await scene({
     side: 'left', kicker: '02:30  ·  THE DUTY MANAGER ASKS', step: 'Ask', ask: 'Priority 1 · Natural language',
-    title: 'Ask in\nplain English',
+    title: 'Ask in plain English.\nAnswers cite sources.',
     quoteLabel: 'DANIEL ASKS  ·  CO-PILOT ANSWERS',
     quote: [{ text: '“Show critical incidents in Terminal 5 in the last hour.” ', options: { bold: true } }, { text: 'Two: one open and awaiting a decision, one closed as wildlife.', options: { color: MUTED } }],
-    watch: [['Ask:', 'type into the search bar'], ['Answer:', 'one line, plus the alerts'], ['Sources:', 'event log, SOP, cameras']],
+    watch: [['Ask:', 'type into the search bar'], ['Answer:', 'one line, plus alerts'], ['Sources:', 'event log, SOP, cameras']],
     live: 'Search bar  ›  ask in plain English',
     visual: async (s, vx) => {
       const dv = await device(s, F11, vx, DY, DW, 'V11 search bar with a Co-pilot question and the answer dropdown listing two critical incidents in Terminal 5 with sources');
       hl(s, dv, ab(F11, 'Show critical incidents', 0, { pad: 10 }), 1, { side: 't', edge: true });
-      await lens(s, dv, F11, [440, 92, 655, 108], 1.0, 4.95, 5.6, { n: 2, alt: 'Co-pilot answer: two critical incidents in Terminal 5 in the last hour; one open, one closed as wildlife' });
+      await lens(s, dv, F11, [440, 100, 655, 100], 0.85, 5.15, 6.3, { n: 2, alt: 'Co-pilot answer: two critical incidents in Terminal 5 in the last hour; one open, one closed as wildlife' });
       hl(s, dv, ab(F11, 'Sources:'), 3, { side: 'r', edge: true });
     },
     notes: [
       '2:30. Daniel, the duty manager, does not want to click through screens. He simply asks: show critical incidents in Terminal 5 in the last hour.',
-      'Co-pilot answers in one line, lists the matching alerts, and cites its sources: the event log, the SOP section and the cameras. Follow-up questions are one click away.',
+      'Co-pilot answers in one line and lists the matching alerts. Every answer cites its sources: the event log, the SOP section and the cameras.',
     ].join('\n'),
   });
 
   await scene({
-    kicker: '07:00  ·  HANDOVER', step: 'Report', ask: 'Priority 1 · Reporting',
+    kicker: '07:00  ·  HANDOVER', step: 'Report', liveX: 6.33, ask: 'Priority 1 · Reporting',
     title: 'The report\nwrites itself',
     quoteLabel: 'CO-PILOT REPORT DRAFT',
     quote: 'Follower entered airside on badge B-55821, intercepted at L2-East at 02:21. Root cause: courtesy tailgating.',
-    watch: [['Incident list:', 'every escalation lands here'], ['Report draft:', 'from the audit trail'], ['Close Incident:', 'a person signs off']],
+    watch: [['Incident list:', 'every escalation'], ['Report draft:', 'from the audit trail'], ['Close Incident:', 'a person signs']],
     live: 'Incident Management  ›  TGT-214',
     visual: async (s) => {
-      const dv = await device(s, F12, 6.53, DY, 6.2, 'V11 Incident Management: incident list and the TGT-214 detail with a Co-pilot report draft in Remarks');
+      const dv = await device(s, F12, 6.33, DY, 6.4, 'V11 Incident Management: incident list and the TGT-214 detail with a Co-pilot report draft in Remarks', { bh: 6.69 - DY });
       hl(s, dv, ab(F12, 'TGT-214'), 1, { side: 'l', edge: true });
-      await lens(s, dv, F12, [876, 596, 668, 120], 6.53, 5.62, 6.2, { n: 2, nAt: 'tl', alt: 'Co-pilot report draft in the Remarks timeline' });
+      await lens(s, dv, F12, [876, 598, 668, 112], 6.33, 5.55, 6.4, { n: 2, nAt: 'tl', alt: 'Co-pilot report draft in the Remarks timeline' });
       hl(s, dv, ab(F12, 'Close Incident', 0, { pad: 12 }), 3, { side: 'r', edge: true });
     },
     notes: [
@@ -757,23 +829,23 @@ async function build() {
   pres.addSection({ title: SEC.platform });
   s = pres.addSlide({ masterName: 'CONTENT', sectionTitle: SEC.platform });
   s.addText('PLATFORM  ·  UNIFIED AND MULTI-SITE', { placeholder: 'kicker', charSpacing: 1.5 });
-  s.addText('One platform above every system and site', { placeholder: 'title', charSpacing: -0.5 });
+  s.addText('Keep every system you own. Run them as one.', { placeholder: 'title', charSpacing: -0.5 });
   s.addImage({ path: A('viz_stack.png'), x: 0, y: 0, w: SW, h: SH, altText: 'Four stacked layers: any-brand systems, site edge, AGIL Secure core, and where people work', objectName: 'Platform stack' });
   {
     const { cx, a, layers } = GEO.stack, lx = 6.1;
     const ROWS = [
       ['WHERE PEOPLE WORK', 'V11 console  ·  Responder app  ·  Reports and insights', null, BLUE],
       ['AGIL® SECURE ISMS CORE', 'Correlation  ·  On-premise Co-pilot  ·  3D twin  ·  Case and audit', null, LAV],
-      ['SITE EDGE, PER TERMINAL  ·  KEEPS WORKING IF THE LINK DROPS', 'Video analytics  ·  LiDAR fusion  ·  Local rules  ·  Buffering', null, '8FB4FF'],
-      ['ANY-BRAND SYSTEMS', 'CCTV  ·  Access control  ·  AGIL Fence  ·  LiDAR  ·  Audio  ·  Rosters', null, MUTED],
+      ['SITE EDGE, PER TERMINAL  ·  RUNS OFFLINE TOO', 'Video analytics  ·  LiDAR fusion  ·  Local rules  ·  Buffering', null, '8FB4FF'],
+      ['ANY-BRAND SYSTEMS', 'CCTV  ·  Access  ·  AGIL Fence  ·  LiDAR  ·  Audio  ·  Rosters', null, MUTED],
     ];
     for (const [i, [hd, items, note, col]] of ROWS.entries()) {
       const y = layers[i];
       s.addShape(LINE, { x: cx + a + 0.06, y, w: lx - 0.2 - (cx + a + 0.06), h: 0, line: { color: col, width: 1, transparency: 35, dashType: 'dash' }, objectName: 'Leader ' + hd });
       s.addShape(OVAL, { x: lx - 0.26, y: y - 0.06, w: 0.12, h: 0.12, fill: { color: col }, line: { type: 'none' }, objectName: 'Leader dot' });
       label(s, hd, lx, y - 0.5, RX - lx, col);
-      fit('platform row ' + i, items, 16, false, RX - lx, i === 3 ? 0.56 : 0.3);
-      T(s, items, { x: lx, y: y - 0.2, w: RX - lx, h: i === 3 ? 0.6 : 0.34, fontSize: 16 });
+      fit('platform row ' + i, items, 16, false, RX - lx, 0.3);
+      T(s, items, { x: lx, y: y - 0.2, w: RX - lx, h: 0.34, fontSize: 16 });
       if (note) T(s, note, { x: lx, y: y + 0.17, w: RX - lx, h: 0.28, fontSize: 14, color: '8FB4FF' });
     }
     // multi-site governance band
@@ -793,7 +865,7 @@ async function build() {
     }
   }
   s.addNotes([
-    'Everything you have seen sits on one platform, above the systems you already own.',
+    'Keep every system you own, and run them as one. Everything you have seen sits on one platform, above the systems you already have.',
     'Cameras and access control from any vendor, AGIL Fence and LiDAR feed an edge node at each site, which keeps detecting even if the network link drops. The AGIL Secure core correlates events, runs Co-pilot on premise and keeps the audit trail. Operators work in the V11 console, and patrols use the responder app.',
     'For CAG, that means one security baseline across terminals, cargo and remote sites, while each site keeps its local autonomy. That answers your third and fourth priorities.',
   ].join('\n'));
@@ -813,12 +885,14 @@ async function build() {
       ['LuLockKeyhole', 'Role-based, per site', 'Staff see only the sites and data they are cleared for.'],
       ['LuEyeOff', 'Privacy first', 'No facial recognition needed. Watchlist matching is optional.'],
       ['LuListChecks', 'Complete audit trail', 'Every AI suggestion and human decision is logged.']];
+    // left column right-aligned with its icons facing the ring; right column mirrored
     for (const [i, [ic, hd, tx]] of TR.entries()) {
-      const leftCol = i % 2 === 0, y = rows[Math.floor(i / 2)] - 0.3, x = leftCol ? MX : 8.6, w = 4.13;
-      await iconDisc(s, ic, x, y, 0.62, { k: 0.48 });
-      T(s, hd, { x: x + 0.82, y: y - 0.03, w: w - 0.82, h: 0.38, fontSize: 20, bold: true });
-      fit('trust ' + hd, tx, 16, false, w - 0.82, 0.82);
-      T(s, tx, { x: x + 0.82, y: y + 0.4, w: w - 0.82, h: 0.84, fontSize: 16, color: MUTED });
+      const leftCol = i % 2 === 0, ry = rows[Math.floor(i / 2)], dd = GEO.trust.d, ix = (leftCol ? GEO.trust.left : GEO.trust.right) - dd / 2;
+      await iconDisc(s, ic, ix, ry - dd / 2, dd, { k: 0.48 });
+      const x = leftCol ? MX : ix + dd + 0.2, w = leftCol ? ix - 0.2 - MX : RX - x, al = leftCol ? 'right' : 'left';
+      T(s, hd, { x, y: ry - 0.42, w, h: 0.38, fontSize: 20, bold: true, align: al });
+      fit('trust ' + hd, tx, 16, false, w, 0.82);
+      T(s, tx, { x, y: ry + 0.0, w, h: 0.84, fontSize: 16, color: MUTED, align: al });
     }
   }
   s.addNotes([
@@ -834,10 +908,10 @@ async function build() {
   {
     // hero: 1,248 raw alarms condensing into 7 ranked incidents
     const vx = MX, vy = 2.45, vw = 6.4, vh = vw / GEO.alarms.aspect, nx = vx + GEO.alarms.nodes[0][0] * vw;
-    T(s, '1,248', { x: vx, y: 1.72, w: 1.9, h: 0.7, fontSize: 40, bold: true, charSpacing: -1, valign: 'middle' });
+    T(s, '1,248', { x: vx, y: 1.68, w: 1.9, h: 0.78, fontSize: 48, bold: true, charSpacing: -1, valign: 'middle' });
     T(s, runs('RAW ALARMS\nIN ONE SHIFT'), { x: vx + 1.92, y: 1.8, w: 1.8, h: 0.55, fontSize: TS.micro, bold: true, color: MUTED, charSpacing: 2, valign: 'middle' });
     T(s, runs('RANKED\nINCIDENTS'), { x: nx - 2.15, y: 1.8, w: 1.6, h: 0.55, fontSize: TS.micro, bold: true, color: LAV, charSpacing: 2, valign: 'middle', align: 'right' });
-    T(s, '7', { x: nx - 0.45, y: 1.72, w: 0.9, h: 0.7, fontSize: 40, bold: true, color: LAV, align: 'center', valign: 'middle' });
+    T(s, '7', { x: nx - 0.45, y: 1.68, w: 0.9, h: 0.78, fontSize: 48, bold: true, color: LAV, align: 'center', valign: 'middle' });
     s.addImage({ path: A('viz_alarms.png'), x: vx, y: vy, w: vw, h: vh, altText: 'A cloud of 1,248 alarm dots flowing into seven glowing incident nodes', objectName: 'Alarms to incidents' });
     // three proof points
     const ST = [['6.2 s', 'bag linked to owner'], ['1 click', 'to escalate'], ['~10 min', 'to a drafted report']];
@@ -845,28 +919,28 @@ async function build() {
     for (const [i, [v, l]] of ST.entries()) {
       const x = vx + i * (sw3 + 0.15);
       card(s, x, sy, sw3, sh, { tr: 25, name: 'Stat ' + v });
-      T(s, v, { x: x + 0.22, y: sy + 0.12, w: sw3 - 0.3, h: 0.52, fontSize: 28, bold: true, charSpacing: -0.5 });
-      fit('stat label ' + v, l, 13, false, sw3 - 0.36, 0.22);
-      T(s, l, { x: x + 0.22, y: sy + 0.64, w: sw3 - 0.36, h: 0.44, fontSize: 13, color: MUTED });
+      T(s, v, { x: x + 0.22, y: sy + 0.1, w: sw3 - 0.3, h: 0.58, fontSize: 32, bold: true, charSpacing: -0.5 });
+      fit('stat label ' + v, l, 14, false, sw3 - 0.3, 0.26);
+      T(s, l, { x: x + 0.22, y: sy + 0.7, w: sw3 - 0.3, h: 0.3, fontSize: 14, color: MUTED });
     }
     // what changes: today → with Co-pilot
     const ROWS = [['Alarms', '1,248, by hand', 'Seven ranked incidents'], ['Evidence', 'Nine screens', 'One evidence panel'],
       ['Response', 'SOP binders', 'SOP pre-filled, one click'], ['Investigation', 'Hours of footage', 'One plain-English question'],
       ['Reporting', 'After the shift', 'Drafted, ready to sign']];
-    const rx0 = 7.3, rw = RX - rx0, rh = 0.84;
+    const rx0 = 7.3, rw = RX - rx0, rh = 0.8;
     label(s, 'BEFORE', rx0 + 0.25, 1.82, 2);
     label(s, 'WITH CO-PILOT', rx0 + 2.45, 1.82, 2.0, LAV);
     for (const [i, [k, a, b]] of ROWS.entries()) {
-      const y = 2.16 + i * (rh + 0.09);
+      const y = 2.16 + i * (rh + 0.08);
       card(s, rx0, y, rw, rh, { tr: 30, edge: false, name: 'Change ' + k });
       label(s, k.toUpperCase(), rx0 + 0.25, y + 0.08, 2.2, MUTED);
-      fit('value today ' + k, a, 15, false, 1.85, 0.3);
-      T(s, a, { x: rx0 + 0.25, y: y + 0.38, w: 1.85, h: 0.32, fontSize: 15, color: MUTED });
+      fit('value today ' + k, a, 16, false, 1.85, 0.3);
+      T(s, a, { x: rx0 + 0.25, y: y + 0.37, w: 1.85, h: 0.34, fontSize: 16, color: MUTED });
       s.addImage({ data: await icon('LuArrowRight', HEX.lav), x: rx0 + 2.13, y: y + 0.44, w: 0.2, h: 0.2, altText: '' });
       fit('value with ' + k, b, 16, true, rw - 2.55, 0.3);
       T(s, b, { x: rx0 + 2.45, y: y + 0.36, w: rw - 2.5, h: 0.34, fontSize: 16, bold: true });
     }
-    T(s, 'Demo scenario figures. A pilot measures them on CAG data.', { x: rx0, y: 6.82, w: rw, h: 0.26, fontSize: 12, color: MUTED });
+    T(s, 'Demo scenario figures. A pilot measures them on CAG data.', { x: rx0, y: 6.62, w: rw, h: 0.26, fontSize: 12, color: MUTED });
   }
   s.addNotes([
     'So what changes for CAG? Seven ranked, explained incidents instead of twelve hundred raw alarms. Evidence assembled in one place. Your SOP filled in and ready to approve. One plain-English question instead of hours of footage. And reports drafted, ready to sign.',
@@ -880,9 +954,9 @@ async function build() {
   fit('roadmap title', 'From today’s demo to an Airport Security OS', TS.title, true, 12.1, 0.72, 1.0);
   full(s, 'viz_timeline.png');
   {
-    const H4 = [['NOW', 'Proven live', 'V11 + Co-pilot', ['Seven airport scenarios', 'Correlation and SOPs', 'Ask Co-pilot, reports'], INK],
-      ['NEXT', 'Pilot', 'One terminal, ~12 weeks', ['Scenarios on CAG data', 'Joint KPIs and baseline', 'Privacy policy agreed'], BLUE],
-      ['THEN', 'Scale', 'All terminals', ['AGIL Fence migrated', 'Multi-site governance', 'Responder app'], BLUE],
+    const H4 = [['NOW', 'Proven live', 'V11 + Co-pilot', ['Seven live scenarios', 'Correlation and SOPs', 'Ask Co-pilot, reports'], INK],
+      ['NEXT', 'Pilot', 'One terminal, ~12 weeks', ['Live CAG data', 'Joint KPIs, baseline', 'Privacy policy set'], BLUE],
+      ['THEN', 'Scale', 'All terminals', ['AGIL Fence on V11', 'Multi-site governance', 'Responder app'], BLUE],
       ['VISION', 'Security OS', 'Predictive, federated', [], LAV]];
     const colW = (SW - 2 * MX - 3 * 0.25) / 4, ly = 2.2;
     for (const [i, [tag, ttl, sub, pts, col]] of H4.entries()) {
@@ -890,27 +964,27 @@ async function build() {
       s.addShape(OVAL, { x: x + 0.15, y: ly - 0.2, w: 0.4, h: 0.4, fill: { color: col, transparency: 70 }, line: { type: 'none' }, objectName: 'Milestone halo ' + tag });
       s.addShape(OVAL, { x: x + 0.22, y: ly - 0.13, w: 0.26, h: 0.26, fill: { color: col }, line: { color: INK, width: 1.5 }, objectName: 'Milestone ' + tag });
       T(s, tag, { x: x + 0.15, y: ly - 0.58, w: 2, h: 0.28, fontSize: 12, bold: true, color: col, charSpacing: 2.5, valign: 'middle' });
-      const y = 2.62, h = 3.75, pilot = i === 1;
-      card(s, x, y, colW, h, { fill: pilot ? LAV : CARD, tr: pilot ? 88 : 25, line: pilot ? LAV : INK, ltr: pilot ? 35 : 82, lw: pilot ? 1.25 : 0.75, edge: col, shadow: true, name: 'Horizon ' + tag });
-      if (pilot) { s.addShape(LINE, { x: x + 0.25, y: y + h - 0.6, w: colW - 0.5, h: 0, line: { color: LAV, width: 0.75, transparency: 50 }, objectName: 'Divider' }); label(s, 'YOUR DECISION TODAY', x + 0.25, y + h - 0.47, colW - 0.5, LAV, { fontSize: 12, charSpacing: 1 }); }
+      const y = 2.62, h = 3.2, pilot = i === 1, top = pilot ? 0.3 : 0;
+      card(s, x, y, colW, h, { fill: pilot ? LAV : CARD, tr: pilot ? 88 : 25, line: pilot ? LAV : INK, ltr: pilot ? 35 : 82, lw: pilot ? 1.25 : 0.75, edge: col, name: 'Horizon ' + tag });
+      if (pilot) label(s, 'YOUR DECISION TODAY', x + 0.25, y + 0.2, colW - 0.5, LAV, { fontSize: 12, charSpacing: 1 });
       if (pts.length) {
         fit('roadmap ' + ttl, ttl, 24, true, colW - 0.5, 0.45);
-        T(s, ttl, { x: x + 0.25, y: y + 0.25, w: colW - 0.5, h: 0.45, fontSize: 24, bold: true });
+        T(s, ttl, { x: x + 0.25, y: y + 0.25 + top, w: colW - 0.5, h: 0.45, fontSize: 24, bold: true });
         fit('roadmap sub ' + sub, sub, 14, true, colW - 0.5, 0.3);
-        T(s, sub, { x: x + 0.25, y: y + 0.74, w: colW - 0.5, h: 0.3, fontSize: 14, color: col, bold: true });
-        for (const p of pts) fit('roadmap pt ' + p, p, 16, false, colW - 0.75, 0.56);
-        T(s, pts.map((p, j) => ({ text: p, options: { bullet: { indent: 16 }, breakLine: j < pts.length - 1 } })), { x: x + 0.25, y: y + 1.3, w: colW - 0.45, h: 2.2, fontSize: 16, color: MUTED, paraSpaceAfter: 9 });
+        T(s, sub, { x: x + 0.25, y: y + 0.74 + top, w: colW - 0.5, h: 0.3, fontSize: 14, color: col, bold: true });
+        for (const p of pts) fit('roadmap pt ' + p, p, 16.2, false, colW - 0.55, 0.3);
+        T(s, pts.map((p, j) => ({ text: p, options: { bullet: { indent: 15 }, breakLine: j < pts.length - 1 } })), { x: x + 0.2, y: y + 1.3 + top, w: colW - 0.3, h: 1.5, fontSize: 16, color: MUTED, paraSpaceAfter: 9 });
       } else {
         const iw2 = colW - 0.16, ih2 = iw2 * 9 / 16;
         s.addImage({ path: A('concept_overview.jpg'), x: x + 0.08, y: y + 0.08, w: iw2, h: ih2, altText: 'Concept design of a future operations overview with a 3D airport twin', objectName: 'Concept frame' });
-        pill(s, x + 0.2, y + ih2 - 0.26, 'CONCEPT', NAVY, LAV, { tr: 10, line: LAV, ltr: 40, h: 0.28 });
-        T(s, ttl, { x: x + 0.25, y: y + ih2 + 0.25, w: colW - 0.5, h: 0.45, fontSize: 24, bold: true });
-        T(s, sub, { x: x + 0.25, y: y + ih2 + 0.72, w: colW - 0.5, h: 0.3, fontSize: 14, color: col, bold: true });
-        fit('vision text', 'Live 3D twin, federated sites, same Co-pilot.', 16, false, colW - 0.5, 0.56);
-        T(s, 'Live 3D twin, federated sites, same Co-pilot.', { x: x + 0.25, y: y + ih2 + 1.12, w: colW - 0.5, h: 0.6, fontSize: 16, color: MUTED });
+        T(s, 'CONCEPT', { x: x + colW - 1.5, y: ly - 0.58, w: 1.35, h: 0.28, fontSize: 12, bold: true, color: MUTED, charSpacing: 1.5, align: 'right', valign: 'middle' });
+        T(s, ttl, { x: x + 0.25, y: y + ih2 + 0.22, w: colW - 0.5, h: 0.45, fontSize: 24, bold: true });
+        T(s, sub, { x: x + 0.25, y: y + ih2 + 0.7, w: colW - 0.5, h: 0.3, fontSize: 14, color: col, bold: true });
+        fit('vision line', 'Live 3D twin.', 16, false, colW - 0.5, 0.3);
+        T(s, 'Live 3D twin.', { x: x + 0.25, y: y + ih2 + 1.05, w: colW - 0.5, h: 0.32, fontSize: 16, color: MUTED });
       }
     }
-    T(s, 'Phases and durations are indicative and will be agreed in the pilot plan.', { x: MX, y: 6.6, w: 9, h: 0.26, fontSize: 12, color: MUTED });
+    T(s, 'Phases and durations are indicative and will be agreed in the pilot plan.', { x: MX, y: 6.62, w: 9, h: 0.26, fontSize: 12, color: MUTED });
   }
   s.addNotes([
     'Today’s demo is step one, and the decision in front of us is the next one: a pilot in one terminal, for about twelve weeks, on live feeds, with joint KPIs and an agreed privacy and watchlist policy.',
@@ -935,8 +1009,8 @@ async function build() {
       ['Define success', 'Pilot KPIs, governance, privacy and watchlist policy.', 'Weeks 4–6']];
     const w3 = (SW - 2 * MX - 2 * 0.3) / 3;
     for (const [i, [hd, tx, when]] of NS.entries()) {
-      const x = MX + i * (w3 + 0.3), y = 4.0, h = 2.75;
-      card(s, x, y, w3, h, { tr: 25, shadow: true, name: 'Step ' + (i + 1) });
+      const x = MX + i * (w3 + 0.3), y = 4.0, h = 2.4;
+      card(s, x, y, w3, h, { tr: 25, name: 'Step ' + (i + 1) });
       T(s, '0' + (i + 1), { x: x + 0.3, y: y + 0.22, w: 1.0, h: 0.6, fontSize: 36, bold: true, color: LAV, charSpacing: -1 });
       T(s, when.toUpperCase(), { x: x + w3 - 1.9, y: y + 0.36, w: 1.6, h: 0.3, fontSize: 12, bold: true, color: MUTED, charSpacing: 1, align: 'right' });
       fit('next title ' + hd, hd, 22, true, w3 - 0.6, 0.42);
@@ -969,53 +1043,58 @@ async function build() {
     ['7–8', '7:00', '“Let’s run a night shift, live” · “Seven incidents. Already ranked.”', 'Home: counters (2 / 4 / 1), then pins in the 3D view', 'V11-01'],
     ['9', '9:00', '“5 alarms. 1 incident. Explained.”', 'Click Staff Door D-214 → Investigation → “+2 more”', 'V11-02'],
     ['10', '11:00', '“Co-pilot prepares. You approve.”', 'SOP Flow → step 2 “Lock” → 3D shows D-214 locked', 'V11-03'],
-    ['11', '12:30', '“Escalated in one click, already filled in”', 'Escalate → point at pre-filled fields → Create Incident', 'V11-10'],
+    ['11', '12:30', '“One click to escalate. Nothing to retype.”', 'Escalate → point at pre-filled fields → Create Incident', 'V11-10'],
     ['12', '13:30', '“A real intruder, not the wind”', 'Fence Sector 5 → Investigation → LiDAR, thermal tiles', 'V11-09'],
     ['13', '15:30', '“Bag and owner linked in 6 seconds”', 'Gate B12 Holdroom → SOP Flow → step 5 “Approve”', 'V11-05'],
     ['14', '17:30', '“Seen and heard before it escalates”', 'Arrival Hall Belt 5 → Investigation', 'V11-07'],
     ['15', '19:00', '“One card, two doors, four minutes”', 'T1 Door C2 → Investigation → legacy SSID row', 'V11-04'],
     ['16', '21:00', '“Your own rules, now running live”', 'Baggage Hall B2 → Investigation → rules', 'V11-08'],
     ['17', '22:30', '“Sensitive calls stay human”', 'Departure Hall Row K → SOP Flow → “Not a match”', 'V11-06'],
-    ['18', '24:30', '“Ask in plain English”', 'Search bar → type the question → result cards', 'V11-11'],
+    ['18', '24:30', '“Ask in plain English. Answers cite sources.”', 'Search bar → type the question → result cards', 'V11-11'],
     ['19', '26:30', '“The report writes itself”', 'Incident Management → TGT-214 → Close Incident', 'V11-12'],
     ['20–25', '28:30', 'Platform, trust, value, roadmap, the ask, close', 'Exit Incident Management → Home', 'V11-01'],
   ];
-  const hdr = ['Slide', 'Clock', 'Script cue', 'Clicks in V11', 'Screen'];
+  const hdr = ['Slide', 'Time', 'Script cue', 'Clicks in V11', 'Screen'];
   const colWs = [0.8, 0.8, 3.9, 5.2, 1.43];
   for (const [part, rows] of [[1, RUN.slice(0, 7)], [2, RUN.slice(7)]]) {
     s = pres.addSlide({ masterName: 'APPENDIX', sectionTitle: SEC.appx });
     s.hidden = !process.env.SHOW_HIDDEN;
-    s.addText('APPENDIX  ·  PRESENTER ONLY', { placeholder: 'kicker', charSpacing: 2 });
+    s.addText('APPENDIX  ·  PRESENTER ONLY', { placeholder: 'kicker', charSpacing: 1.5 });
     s.addText(`Demo run sheet (${part} of 2)`, { placeholder: 'title' });
-    const head = hdr.map(h => ({ text: h, options: { bold: true, color: INK, fill: { color: NAVY }, fontSize: 12 } }));
-    const body = rows.map((r, i) => r.map((c, j) => ({ text: c, options: { color: NAVY, fontSize: 13, bold: j === 3, fill: { color: i % 2 ? 'EEF1F7' : 'FFFFFF' } } })));
-    s.addTable([head, ...body], { x: MX, y: 1.7, w: SW - 2 * MX, colW: colWs, rowH: 0.55, valign: 'middle', margin: [3, 6, 3, 6], border: { type: 'solid', pt: 0.5, color: 'D5DAE5' }, fontFace: 'Arial' });
-    if (part === 2) T(s, 'If V11 stalls: stay on the slides. Every live slide shows the same screen, with the same numbered tags.', { x: MX, y: 6.4, w: 12, h: 0.3, fontSize: 13, color: NAVY, bold: true });
-    T(s, 'Hidden in the slide show. Delete the appendix before sending the deck to CAG.', { x: MX, y: 6.85, w: 9, h: 0.28, fontSize: 12, color: BLUE });
+    // dark table so the deck never flashes white (table cells take hex colours)
+    const head = hdr.map(h => ({ text: h.toUpperCase(), options: { bold: true, color: HEX.lav, fill: { color: THEME.colors.dk2 }, fontSize: 12, charSpacing: 1 } }));
+    const body = rows.map((r, i) => r.map((c, j) => ({ text: c, options: { color: HEX.white, fontSize: 13, bold: j === 3, fill: { color: i % 2 ? '111A2E' : '0B1222' } } })));
+    s.addTable([head, ...body], { x: MX, y: 1.7, w: SW - 2 * MX, colW: colWs, rowH: 0.55, valign: 'middle', margin: [3, 6, 3, 6], border: { type: 'solid', pt: 0.5, color: '2A3346' }, fontFace: 'Arial' });
+    if (part === 2) {
+      card(s, MX, 6.0, SW - 2 * MX, 0.48, { tr: 15, edge: false, name: 'Fallback' });
+      s.addShape(RECT, { x: MX, y: 6.0, w: 0.05, h: 0.48, fill: { color: RED }, line: { type: 'none' }, objectName: 'Fallback rule' });
+      T(s, 'If V11 stalls: stay on the slides. Every live slide shows the same screen, with the same numbered tags.', { x: MX + 0.25, y: 6.0, w: 11.7, h: 0.48, fontSize: 14, bold: true, valign: 'middle' });
+    }
+    T(s, 'Hidden in the slide show. Delete the appendix before sending the deck to CAG.', { x: MX, y: 6.62, w: 9, h: 0.28, fontSize: 12, color: MUTED });
     s.addNotes('Presenter reference. This slide is hidden in the slide show; delete the appendix before sending the deck to CAG.');
   }
   s = pres.addSlide({ masterName: 'APPENDIX', sectionTitle: SEC.appx });
   s.hidden = !process.env.SHOW_HIDDEN;
-  s.addText('APPENDIX  ·  PRESENTER ONLY', { placeholder: 'kicker', charSpacing: 2 });
+  s.addText('APPENDIX  ·  PRESENTER ONLY', { placeholder: 'kicker', charSpacing: 1.5 });
   s.addText('Likely questions, short answers', { placeholder: 'title' });
   {
     const QA = [
       ['Does it need facial recognition?', 'No. Bags and people are linked by appearance: clothing, bags and movement. Watchlist matching is optional, policy-controlled and always verified by an operator.'],
       ['Where does the AI run?', 'On premise, inside the airport network. Video stays on site; sites share events and incidents, not raw footage.'],
-      ['What if Co-pilot is wrong?', 'It never acts alone. Critical steps need a person, every closure is logged and reversible, and operator feedback tunes it.'],
-      ['Do we replace our VMS, access control or iPAM?', 'No rip-and-replace. AGIL Secure sits above them, and AGIL Fence alarms move into the same workflow as everything else.'],
+      ['What if Co-pilot is wrong?', 'It never acts alone. Critical steps need a person; every closure is logged and reversible; feedback improves it.'],
+      ['Do we replace our VMS, access control or iPAM?', 'No rip-and-replace. AGIL Secure sits above them, and AGIL Fence alarms join the same workflow as the rest.'],
       ['How long does a pilot take?', 'About 12 weeks for one terminal once data access is agreed (indicative, confirmed in the pilot plan).'],
       ['Is today’s demo live data?', 'It runs on the V11 system with simulated demo data. The pilot runs on CAG feeds.'],
     ];
     const w2 = (SW - 2 * MX - 0.4) / 2;
     for (const [i, [q, a]] of QA.entries()) {
       const x = MX + (i % 2) * (w2 + 0.4), y = 1.7 + Math.floor(i / 2) * 1.62;
-      s.addShape(RR, { x, y, w: w2, h: 1.45, rectRadius: 0.1, fill: { color: 'F2F4F9' }, line: { color: 'D5DAE5', width: 0.75 }, objectName: 'QA ' + (i + 1) });
-      T(s, q, { x: x + 0.25, y: y + 0.16, w: w2 - 0.5, h: 0.32, fontSize: 16, bold: true, color: NAVY });
-      fit('qa ' + i, a, 14, false, w2 - 0.5, 0.82);
-      T(s, a, { x: x + 0.25, y: y + 0.52, w: w2 - 0.5, h: 0.85, fontSize: 14, color: NAVY });
+      card(s, x, y, w2, 1.45, { tr: 15, name: 'QA ' + (i + 1) });
+      T(s, q, { x: x + 0.25, y: y + 0.16, w: w2 - 0.5, h: 0.32, fontSize: 16, bold: true });
+      fit('qa ' + i, a, 14, false, w2 - 0.5, 0.82, 1.1);
+      T(s, a, { x: x + 0.25, y: y + 0.52, w: w2 - 0.5, h: 0.85, fontSize: 14, color: MUTED, lineSpacingMultiple: 1.05 });
     }
-    T(s, 'Hidden in the slide show. Delete the appendix before sending the deck to CAG.', { x: MX, y: 6.85, w: 9, h: 0.28, fontSize: 12, color: BLUE });
+    T(s, 'Hidden in the slide show. Delete the appendix before sending the deck to CAG.', { x: MX, y: 6.62, w: 9, h: 0.28, fontSize: 12, color: MUTED });
   }
   s.addNotes('Presenter reference. This slide is hidden in the slide show; delete the appendix before sending the deck to CAG.');
 
