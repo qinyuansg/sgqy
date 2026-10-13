@@ -19,6 +19,7 @@ Scenario, names and data are illustrative, and the film says so on screen.
 DECK_ASSETS=/path/to/deck/assets KOKORO_DIR=/path/to/kokoro BUILD=/path/to/build ./build.sh
 ```
 
+- `SCRIPT.md`: storyboard and the timecoded narration
 - `script/vo.json`: narration and subtitle text (`en` is shown, `say` is spoken; `|` splits subtitle cues)
 - `tools/tts.py`: Kokoro voice (bf_emma), measured timeline → `src/js/timeline.js`
 - `src/`: the film as a deterministic web page (`index.html?t=42` shows any frame, `?play=1&subs=1` previews)
