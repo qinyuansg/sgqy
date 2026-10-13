@@ -10,7 +10,7 @@
     { a: 's08', b: 's08', label: '05 · The difference' },
   ].map(c => ({ ...c, start: S(c.a).start, end: S(c.b).end }));
 
-  let kick, kickText, bug, note, hud, subs, subEn;
+  let kick, kickText, bug, note, hud, black, subs, subEn;
   const showSubs = new URLSearchParams(location.search).get('subs') === '1';
 
   (E.initHooks = E.initHooks || []).push(stage => {
@@ -19,6 +19,7 @@
     kickText = E.q(kick, '.kicker');
     bug = E.add(root, '<div class="bug">AGIL<sup style="font-size:9px">®</sup> Secure V11 · <b>AI Co-pilot</b></div>');
     note = E.add(root, '<div class="clk">Illustrative scenario · simulated data</div>');
+    black = E.add(root, '<div style="position:absolute;inset:0;background:#000;z-index:80;opacity:0"></div>');
     hud = ['tl', 'tr', 'bl', 'br'].map(k => E.add(root, `<div class="hud" style="${k[0] === 't' ? 'top:28px' : 'bottom:28px'};${k[1] === 'l' ? 'left:28px' : 'right:28px'};border-${k[0] === 't' ? 'top' : 'bottom'}-width:1.5px;border-${k[1] === 'l' ? 'left' : 'right'}-width:1.5px"></div>`));
     if (showSubs) {
       subs = E.add(stage, '<div id="subs"><div class="en"></div></div>');
@@ -40,7 +41,9 @@
     const win = (a, b) => Math.min(E.ep(t, a + 0.3, a + 0.9), 1 - E.ep(t, b - 0.4, b));
     E.vis(bug, win(S('s02').start, S('s08').end) * 0.95);
     E.vis(note, win(S('s05').start, S('m9').end));
-    hud.forEach(h => E.vis(h, win(0.6, E.total - 0.2)));
+    const kc = E.ep(t, E.L('v30').start - 0.5, E.L('v30').start + 0.4);
+    hud.forEach(h => E.vis(h, win(0.6, E.total - 0.2) * (1 - kc)));
+    E.vis(black, E.ep(t, E.total - 1.3, E.total - 0.15, 'sine'));
     if (subs) {
       let cue = null;
       for (const l of window.TL.lines) for (const c of l.cues) if (t >= c.start && t < c.end + 0.3) cue = c;

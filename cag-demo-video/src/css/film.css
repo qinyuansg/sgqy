@@ -30,7 +30,7 @@
 html, body { margin: 0; padding: 0; background: #000; }
 body { -webkit-font-smoothing: antialiased; text-rendering: geometricPrecision; }
 #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; font-family: var(--body); color: var(--t1); background: var(--navy); }
-#stage * { text-wrap: pretty; }
+:where(#stage *) { text-wrap: pretty; }   /* zero specificity: never overrides a nowrap */
 #bg { position: absolute; inset: 0; background: radial-gradient(1300px 820px at 62% 40%, #0C1430 0%, #070B18 58%, #04060B 100%); }
 #bg .aur { position: absolute; inset: 0; background:
   radial-gradient(900px 520px at 88% 96%, rgba(124, 92, 255, .20), transparent 70%),

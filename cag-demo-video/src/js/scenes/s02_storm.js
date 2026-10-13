@@ -17,14 +17,6 @@
       s.sub = E.add(el, `<div class="abs" style="left:120px;top:490px;width:520px">
         <div class="lead s1" style="color:#fff">Nine systems.</div><div class="lead s2" style="color:#fff;margin-top:4px">One operator.</div></div>`);
       s.s1 = E.q(s.sub, '.s1'); s.s2 = E.q(s.sub, '.s2');
-      // nine systems on a ring around the operator
-      s.sys = SYS.map((d, i) => {
-        const a = -Math.PI / 2 + (i / SYS.length) * Math.PI * 2, x = CX + Math.cos(a) * 500, y = CY + Math.sin(a) * 340;
-        const e = E.add(el, `<div class="abs" style="left:${x - 34}px;top:${y - 34}px;width:68px;height:68px">
-          ${K.ibox(d[0], 68, 30, 'background:rgba(14,22,40,.92);color:#8FB4FF;border-color:rgba(143,180,255,.45)')}
-          <div class="label" style="position:absolute;left:50%;top:78px;transform:translateX(-50%);color:var(--muted)">${d[1]}</div></div>`);
-        return { e, x, y, t0: v3.start + 1.25 + i * 0.09 };
-      });
       // the storm: alarm particles fired from the nine systems toward the centre
       const R = E.rng(1248), SEV = ['#D72D30', '#D4B741', '#D4B741', '#4DAFBE', '#7D8AA3', '#7D8AA3', '#7D8AA3'];
       s.p = Array.from({ length: 560 }, () => {
@@ -34,13 +26,21 @@
       });
       s.svg = E.add(el, `<svg class="abs" width="1920" height="1080" style="left:0;top:0">${s.p.map(p => `<circle r="${p.rad.toFixed(1)}" fill="${p.col}"/>`).join('')}</svg>`);
       s.pe = Array.from(s.svg.children);
+      // nine systems on a ring around the operator
+      s.sys = SYS.map((d, i) => {
+        const a = -Math.PI / 2 + (i / SYS.length) * Math.PI * 2, x = CX + Math.cos(a) * 500, y = CY + Math.sin(a) * 340;
+        const e = E.add(el, `<div class="abs" style="left:${x - 34}px;top:${y - 34}px;width:68px;height:68px">
+          ${K.ibox(d[0], 68, 30, 'background:rgba(14,22,40,.92);color:#8FB4FF;border-color:rgba(143,180,255,.45)')}
+          <div class="label" style="position:absolute;left:50%;top:78px;transform:translateX(-50%);color:var(--muted)">${d[1]}</div></div>`);
+        return { e, x, y, t0: v3.start + 1.25 + i * 0.09 };
+      });
       // one operator
       s.op = E.add(el, `<div class="abs" style="left:${CX - 120}px;top:${CY - 140}px;width:240px;height:280px">
         <div style="position:absolute;inset:0;border-radius:18px;overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,.6)"><img src="assets/persona_nurul.jpg" style="width:240px;height:280px;object-fit:cover;object-position:50% 35%;filter:brightness(.9)"></div>
         <div class="label" style="position:absolute;left:0;right:0;top:296px;text-align:center;color:#fff">Nurul · operator</div></div>`);
       s.opB = K.brackets(el, CX - 120, CY - 140, 240, 280, { gap: 14, arm: 34, col: 'rgba(255,255,255,.7)' });
       // her questions
-      const QP = [[905, 372], [1390, 362], [860, 600], [1390, 560], [1140, 722]];
+      const QP = [[905, 372], [1390, 362], [834, 600], [1390, 560], [1140, 722]];
       s.q = Q.map((q, i) => {
         const e = E.add(el, `<div class="abs glass" style="left:${QP[i][0]}px;top:${QP[i][1]}px;padding:12px 22px;border-radius:24px 24px 24px 6px;font-size:26px;font-weight:600;color:#fff;white-space:nowrap;background:rgba(18,26,48,.92)">${q}</div>`);
         return { e, t0: E.at('v04', q.split(' ').slice(-1)[0].replace('?', '')) - 0.25 };

@@ -80,7 +80,7 @@
           <circle class="marc" cx="23" cy="23" r="${r}" fill="none" stroke="${m.col || '#B69CFF'}" stroke-width="5" stroke-linecap="round" stroke-dasharray="${C2.toFixed(2)}" stroke-dashoffset="${C2.toFixed(2)}" transform="rotate(-90 23 23)"/></svg></div>`;
       m.C2 = C2;
     } else if (m && m.kind === 'steps') {
-      meter = `<div style="display:flex;align-items:center;gap:12px"><span class="label" style="color:var(--lav);font-size:13px">${m.label}</span>
+      meter = `<div style="display:flex;align-items:center;gap:12px"><span class="label mlab" style="color:var(--lav);font-size:13px">${m.label}</span>
         <span class="msteps" style="display:flex;gap:6px">${Array.from({ length: m.n }, () => '<i style="width:30px;height:9px;border-radius:3px;display:block"></i>').join('')}</span></div>`;
     }
     const el = E.add(parent, `
@@ -90,7 +90,7 @@
         </div>
         <div class="cp-q" style="margin-top:14px;${o.qstyle || ''}"><span class="qt"></span><span class="caret"></span></div>
       </div>`);
-    const c = { el, o, qt: E.q(el, '.qt'), caret: E.q(el, '.caret'), arc: E.q(el, '.marc'), mtxt: E.q(el, '.mtxt'), steps: E.qa(el, '.msteps i') };
+    const c = { el, o, qt: E.q(el, '.qt'), caret: E.q(el, '.caret'), arc: E.q(el, '.marc'), mtxt: E.q(el, '.mtxt'), steps: E.qa(el, '.msteps i'), mlab: E.q(el, '.mlab') };
     // reserve the final height so the card does not grow while typing
     c.qt.textContent = o.quote; const h = el.offsetHeight; c.qt.textContent = '';
     if (!o.h) el.style.height = h + 'px';
@@ -98,7 +98,9 @@
   };
   // tq: typing start; tm: meter start
   K.copilotUpdate = (c, t, tq, tm, cps = 42) => {
-    const done = E.type(c.qt, c.o.quote, t, tq, cps);
+    let done;
+    if (c.o.pre && t < tq) { E.txt(c.qt, c.o.pre + '.'.repeat(1 + Math.floor(t * 3) % 3)); E.css(c.qt, { color: 'var(--muted)' }); done = false; }
+    else { done = E.type(c.qt, c.o.quote, t, tq, cps); E.css(c.qt, { color: '' }); }
     E.vis(c.caret, t < tq - 0.3 ? 0 : done ? (Math.floor(t * 2.2) % 2 ? 0 : 1) * (1 - E.p(t, tq + c.o.quote.length / cps + 1.2, tq + c.o.quote.length / cps + 1.5)) : 1);
     const m = c.o.meter;
     if (m && m.kind === 'gauge') {
@@ -106,11 +108,13 @@
       E.attr(c.arc, 'stroke-dashoffset', (m.C2 * (1 - k * m.v / 100)).toFixed(2));
       E.txt(c.mtxt, Math.round(k * m.v) + '%');
     } else if (m && m.kind === 'steps') {
+      const st = m.after && t >= m.after.t ? { ...m, ...m.after } : m;
+      if (c.mlab) E.txt(c.mlab, st.label);
       c.steps.forEach((s, i) => {
         const on = t >= tm + i * 0.18;
-        const st = i < m.done ? 'done' : i < m.done + (m.wait || 0) ? 'wait' : 'todo';
-        E.css(s, on ? (st === 'done' ? { background: '#B69CFF', border: '0', boxShadow: '0 0 10px rgba(182,156,255,.6)' }
-          : st === 'wait' ? { background: 'transparent', border: '1.5px solid #B69CFF', boxShadow: `0 0 ${Math.floor(t * 2) % 2 ? 0 : 10}px rgba(182,156,255,.7)` }
+        const ss = i < st.done ? 'done' : i < st.done + (st.wait || 0) ? 'wait' : 'todo';
+        E.css(s, on ? (ss === 'done' ? { background: '#B69CFF', border: '0', boxShadow: '0 0 10px rgba(182,156,255,.6)' }
+          : ss === 'wait' ? { background: 'transparent', border: '1.5px solid #B69CFF', boxShadow: `0 0 ${Math.floor(t * 2) % 2 ? 0 : 10}px rgba(182,156,255,.7)` }
             : { background: 'transparent', border: '1.5px solid rgba(255,255,255,.4)', boxShadow: 'none' })
           : { background: 'rgba(255,255,255,.08)', border: '0', boxShadow: 'none' });
       });
@@ -143,37 +147,42 @@
   //   c.plan = { screens: [[t, name]], shots: [[t, rect|null, dur]] }   rect in frame px (1400×1069)
   //   K.hl(c, {...})       highlight + numbered tag in frame coordinates
   // ======================================================================
-  const FW = 1400, FH = 1069;
+  const FW = 1400, FH = 1069;   // the device shows 1400 × 1069 frame px at zoom 1
+  const fwOf = name => (window.FRAMES && window.FRAMES[name] ? window.FRAMES[name][0] : FW);
   K.console = (parent, o) => {
     const VW = o.w, VH = Math.round(o.w * FH / FW);
     const root = E.add(parent, `<div class="abs con" style="left:${o.x}px;top:${o.y}px;width:${VW}px;height:${VH}px"></div>`);
     const dev = E.add(root, `<div class="abs dev" style="left:0;top:0;width:${VW}px;height:${VH}px"><div class="spec"></div></div>`);
-    const scan = E.add(dev, '<div class="abs" style="left:0;right:0;height:2px;top:0;z-index:4;background:linear-gradient(90deg,transparent,#D4C6FF 20%,#fff 50%,#D4C6FF 80%,transparent);box-shadow:0 0 22px 6px rgba(182,156,255,.55);opacity:0"></div>');
+    const scan = E.add(dev, '<div class="abs" style="left:0;right:0;height:2px;top:0;z-index:5;background:linear-gradient(90deg,transparent,#D4C6FF 20%,#fff 50%,#D4C6FF 80%,transparent);box-shadow:0 0 22px 6px rgba(182,156,255,.55);opacity:0"></div>');
+    // when zoomed in on the right-hand panel, fade out the clipped map labels at the left edge
+    const edge = E.add(dev, '<div class="abs" style="left:0;top:0;bottom:0;width:150px;z-index:3;background:linear-gradient(90deg,#05070D 15%,rgba(5,7,13,0));opacity:0"></div>');
     const ov = E.add(root, `<svg class="abs" width="${VW}" height="${VH}" style="left:0;top:0;z-index:6;overflow:visible"></svg>`);
     const brk = K.brackets(root, 0, 0, VW, VH, { gap: 18, arm: 46 });
-    const c = { root, dev, scan, ov, brk, VW, VH, s0: VW / FW, layers: {}, hls: [], plan: { screens: [], shots: [] }, cam: { k: VW / FW, ox: 0, oy: 0 } };
+    const c = { root, dev, scan, edge, ov, brk, VW, VH, s0: VH / FH, layers: {}, hls: [], plan: { screens: [], shots: [] }, cam: { k: VH / FH, ox: 0, oy: 0, z: 1 } };
     c.frame = name => {
       if (c.layers[name]) return c.layers[name];
-      const L = E.add(dev, `<div class="scr" style="visibility:hidden"><img src="assets/v11/${name}.png"></div>`);
+      const w = fwOf(name);
+      const L = E.add(dev, `<div class="scr" style="visibility:hidden;width:${w}px"><img src="assets/v11/${name}.png" style="width:${w}px"></div>`);
       return (c.layers[name] = L);
     };
     return c;
   };
+  // native width of the screen showing at time t
+  const screenW = (c, t) => { let w = FW; for (const [ts, name] of c.plan.screens) if (t >= ts) w = fwOf(name); return w; };
   const camAt = (c, t) => {
-    // interpolate (cx, cy, log z) between shots; null rect = full screen
-    const full = [0, 0, FW, FH];
-    const toP = r => { r = r || full; const z = E.clamp(Math.min(FW / r[2], FH / r[3]), 1, 2.3); return [r[0] + r[2] / 2, r[1] + r[3] / 2, Math.log(z)]; };
-    let p = toP(full);
+    // interpolate (cx, cy, log z) between shots; a null rect is the whole screen
+    const toP = (r, W) => { r = r || [0, 0, W, FH]; const z = E.clamp(Math.min(FW / r[2], FH / r[3]), 1, 2.3); return [r[0] + r[2] / 2, r[1] + r[3] / 2, Math.log(z)]; };
+    let p = toP(null, screenW(c, c.plan.shots.length ? c.plan.shots[0][0] : t));
     for (const [ts, r, d = 1.3] of c.plan.shots) {
       if (t < ts) break;
-      const q = toP(r), k = E.ease.inOut(E.p(t, ts, ts + d));
+      const q = toP(r, screenW(c, ts + d)), k = E.ease.inOut(E.p(t, ts, ts + d));
       p = [E.lerp(p[0], q[0], k), E.lerp(p[1], q[1], k), E.lerp(p[2], q[2], k)];
     }
-    const z = Math.exp(p[2]), k = c.s0 * z;
-    const ox = E.clamp(c.VW / 2 - p[0] * k, c.VW - FW * k, 0), oy = E.clamp(c.VH / 2 - p[1] * k, c.VH - FH * k, 0);
+    const W = screenW(c, t), z = Math.exp(p[2]), k = c.s0 * z;
+    const ox = E.clamp(c.VW / 2 - p[0] * k, c.VW - W * k, 0), oy = E.clamp(c.VH / 2 - p[1] * k, c.VH - FH * k, 0);
     return { k, ox, oy, z };
   };
-  K.map = (c, fx, fy) => [c.cam.ox + fx * c.cam.k, c.cam.oy + fy * c.cam.k];
+  K.map = (c, fx, fy, cam = c.cam) => [cam.ox + fx * cam.k, cam.oy + fy * cam.k];
 
   K.consoleUpdate = (c, t) => {
     c.cam = camAt(c, t);
@@ -193,45 +202,58 @@
       E.css(L, { visibility: vis ? 'visible' : 'hidden', transform: tr, clipPath: clip, zIndex: cur >= 0 && S[cur][1] === name ? '2' : '1' });
     });
     E.css(c.scan, { opacity: scanK >= 0 ? E.f3(Math.sin(Math.PI * scanK)) : '0', top: (scanK * c.VH).toFixed(1) + 'px' });
+    E.css(c.edge, { opacity: E.f3(E.clamp((c.cam.z - 1.35) / 0.5) * (c.cam.ox < -1 ? 1 : 0)) });
     c.hls.forEach(h => K.hlUpdate(c, h, t));
   };
 
-  // highlight: {r:[x,y,w,h] frame px, n, label, side:'r'|'l'|'t'|'b', t0, t1, scr (only on this screen), dist}
+  // highlight: {r:[x,y,w,h] frame px, n, label, side:'r'|'l'|'t'|'b', t0, t1, dist, dx, dy}
   K.hl = (c, o) => {
     const g = E.add(c.root, '<div class="abs" style="left:0;top:0;width:0;height:0;z-index:7"></div>');
-    const box = E.add(c.dev, '<div class="hlb" style="z-index:3"></div>');
+    const box = E.add(c.dev, '<div class="hlb" style="z-index:4"></div>');
     const line = K.sadd(c.ov, '<line stroke="#B69CFF" stroke-width="2.5" stroke-linecap="round"/>');
     const tag = E.add(g, `<div class="abs tag"><span class="disc">${o.n}</span><span>${o.label}</span></div>`);
     const h = { ...o, g, box, line, tag, tw: 0 };
     c.hls.push(h);
     return h;
   };
+  const TH = 46;
+  // tag position for one side, given the box corners on the device
+  const tagAt = (h, side, x0, y0, x1, y1) => {
+    const d = h.dist ?? 56, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, dx = h.dx || 0;
+    let tx, ty, lx, ly;
+    if (side === 'l') { tx = x0 - d - h.tw; ty = cy - TH / 2; lx = x0; ly = cy; }
+    else if (side === 't') { tx = cx - h.tw / 2 + dx; ty = y0 - d - TH; lx = cx + dx * 0.3; ly = y0; }
+    else if (side === 'b') { tx = cx - h.tw / 2 + dx; ty = y1 + d; lx = cx + dx * 0.3; ly = y1; }
+    else { tx = x1 + d; ty = cy - TH / 2; lx = x1; ly = cy; }
+    if (h.dy) ty += h.dy;
+    return { tx, ty, lx, ly };
+  };
+  const fits = (c, q, tw) => q.tx >= -40 && q.tx + tw <= c.VW + 40 && q.ty >= -20 && q.ty + TH <= c.VH + 10;
   K.hlUpdate = (c, h, t) => {
     const k = E.ep(t, h.t0, h.t0 + 0.5, 'out') * (1 - E.ep(t, h.t1 - 0.3, h.t1, 'in'));
     if (k <= 0.001) { E.css(h.g, { visibility: 'hidden' }); E.css(h.box, { visibility: 'hidden' }); E.attr(h.line, 'opacity', '0'); return; }
+    const [x0, y0] = K.map(c, h.r[0], h.r[1]), [x1, y1] = K.map(c, h.r[0] + h.r[2], h.r[1] + h.r[3]);
     if (!h.label) {  // box only
-      const [x0, y0] = K.map(c, h.r[0], h.r[1]), [x1, y1] = K.map(c, h.r[0] + h.r[2], h.r[1] + h.r[3]);
       E.css(h.g, { visibility: 'hidden' }); E.attr(h.line, 'opacity', '0');
       E.css(h.box, { visibility: 'visible', opacity: E.f3(k), left: x0.toFixed(1) + 'px', top: y0.toFixed(1) + 'px', width: (x1 - x0).toFixed(1) + 'px', height: (y1 - y0).toFixed(1) + 'px' });
       return;
     }
     if (!h.tw) h.tw = h.tag.offsetWidth || 200;
-    const [x0, y0] = K.map(c, h.r[0], h.r[1]), [x1, y1] = K.map(c, h.r[0] + h.r[2], h.r[1] + h.r[3]);
+    // choose the side once, where the camera settles, so a tag never jumps mid-life:
+    // the requested side, else the opposite one, else below or above the box
+    if (!h.sideL) {
+      const cam = camAt(c, h.t0 + 0.7);
+      const [a0, b0] = K.map(c, h.r[0], h.r[1], cam), [a1, b1] = K.map(c, h.r[0] + h.r[2], h.r[1] + h.r[3], cam);
+      const want = h.side || 'r', opp = { l: 'r', r: 'l', t: 'b', b: 't' }[want];
+      h.sideL = [want, opp, 'b', 't'].find(sd => fits(c, tagAt(h, sd, a0, b0, a1, b1), h.tw)) || want;
+      if (h.sideL !== want) console.warn(`tag ${h.n} "${h.label}" placed ${h.sideL} (wanted ${want})`);
+    }
+    const side = h.sideL;
     const kb = E.ep(t, h.t0, h.t0 + 0.45, 'back');
     const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, bw = (x1 - x0) * (0.92 + 0.08 * kb), bh = (y1 - y0) * (0.92 + 0.08 * kb);
     E.css(h.g, { visibility: 'visible', opacity: E.f3(k) });
     E.css(h.box, { visibility: 'visible', opacity: E.f3(k), left: (cx - bw / 2).toFixed(1) + 'px', top: (cy - bh / 2).toFixed(1) + 'px', width: bw.toFixed(1) + 'px', height: bh.toFixed(1) + 'px' });
-    const d = h.dist ?? 56, TH = 46;
-    let tx, ty, lx, ly;
-    if (h.side === 'l') { tx = x0 - d - h.tw; ty = cy - TH / 2; lx = x0; ly = cy; }
-    else if (h.side === 't') { tx = cx - h.tw / 2 + (h.dx || 0); ty = y0 - d - TH; lx = cx + (h.dx || 0) * 0.3; ly = y0; }
-    else if (h.side === 'b') { tx = cx - h.tw / 2 + (h.dx || 0); ty = y1 + d; lx = cx + (h.dx || 0) * 0.3; ly = y1; }
-    else { tx = x1 + d; ty = cy - TH / 2; lx = x1; ly = cy; }
-    if (h.dy) ty += h.dy;
-    // tags stay on the device (±40 px): flip sides when there is no room, then clamp
-    let side = h.side || 'r';
-    if (side === 'l' && tx < -40) { side = 'r'; tx = x1 + d; lx = x1; }
-    else if (side === 'r' && tx + h.tw > c.VW + 40) { side = 'l'; tx = x0 - d - h.tw; lx = x0; }
+    let { tx, ty, lx, ly } = tagAt(h, side, x0, y0, x1, y1);
     tx = E.clamp(tx, -40, c.VW + 40 - h.tw); ty = E.clamp(ty, -20, c.VH + 10 - TH);
     const kt = E.ep(t, h.t0 + 0.15, h.t0 + 0.6, 'out');
     E.css(h.tag, { left: tx.toFixed(1) + 'px', top: ty.toFixed(1) + 'px', opacity: E.f3(kt), transform: `translateX(${E.f3((1 - kt) * (side === 'l' ? 14 : -14))}px)` });

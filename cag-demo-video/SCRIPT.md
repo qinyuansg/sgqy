@@ -37,22 +37,22 @@
 | 12 | 0:53.53–0:59.81 | m1 | Co-pilot loads the procedure and tracks the follower. One click locks the door, and the escalation comes pre-filled. |
 | 13 | 1:01.01–1:09.20 | m2 | Fence Sector 5. LiDAR sees one object, 1.7 metres tall. Thermal confirms a person. A real intruder, not the wind. |
 | 14 | 1:10.40–1:15.86 | m3 | Gate B12. An unattended bag, linked to its owner in six seconds, by clothing, not by face. |
-| 15 | 1:17.06–1:24.40 | m4 | Arrival Belt 5. Video and intercom audio agree: a fight is starting. The nearest officers are 40 metres away. |
-| 16 | 1:25.60–1:29.82 | m5 | One card, two doors, four minutes apart. The fastest route takes nineteen. |
-| 17 | 1:30.12–1:34.21 | m5 | Co-pilot flags it, and shows the old card ID that should have been revoked. |
-| 18 | 1:35.41–1:40.81 | m6 | Baggage Hall B2. Your own rules, running live: after shift, outside duty, no overtime. |
-| 19 | 1:41.11–1:44.19 | m6 | Rated Info: a radio check, not an alarm storm. |
-| 20 | 1:45.39–1:51.57 | m7 | Departure Row K. A possible watchlist match. Co-pilot shows the evidence side by side, and waits. |
-| 21 | 1:51.92–1:53.74 | m7 | Sensitive calls stay human. |
-| 22 | 1:54.94–2:01.62 | m8 | At 2:30, the duty manager simply asks, in plain English. Co-pilot answers in one line, with its sources. |
-| 23 | 2:02.82–2:07.80 | m9 | By handover, the report has written itself, from the audit trail, ready for a person to sign. |
-| 24 | 2:09.20–2:15.91 | s06 | It all runs on one platform, above the systems you already own, from every terminal to the central operations centre. |
-| 25 | 2:16.81–2:20.96 | s07 | On premise. Role based. Every suggestion and every decision, logged. |
-| 26 | 2:21.31–2:24.51 | s07 | No facial recognition needed to link a bag to its owner. |
-| 27 | 2:25.51–2:29.32 | s08 | 1,248 alarms become seven ranked incidents. |
-| 28 | 2:29.72–2:32.81 | s08 | Fewer alarms to chase. Faster, steadier calls. |
-| 29 | 2:34.01–2:36.88 | s09 | People stay in command. AI does the legwork. |
-| 30 | 2:37.58–2:42.04 | s09 | AGIL Secure V11 with AI Co-pilot. From alarms to answers. |
+| 15 | 1:18.66–1:26.00 | m4 | Arrival Belt 5. Video and intercom audio agree: a fight is starting. The nearest officers are 40 metres away. |
+| 16 | 1:27.20–1:31.42 | m5 | One card, two doors, four minutes apart. The fastest route takes nineteen. |
+| 17 | 1:31.72–1:35.81 | m5 | Co-pilot flags it, and shows the old card ID that should have been revoked. |
+| 18 | 1:37.01–1:42.41 | m6 | Baggage Hall B2. Your own rules, running live: after shift, outside duty, no overtime. |
+| 19 | 1:42.71–1:45.79 | m6 | Rated Info: a radio check, not an alarm storm. |
+| 20 | 1:46.99–1:53.17 | m7 | Departure Row K. A possible watchlist match. Co-pilot shows the evidence side by side, and waits. |
+| 21 | 1:53.52–1:55.34 | m7 | Sensitive calls stay human. |
+| 22 | 1:56.54–2:03.22 | m8 | At 2:30, the duty manager simply asks, in plain English. Co-pilot answers in one line, with its sources. |
+| 23 | 2:05.02–2:10.00 | m9 | By handover, the report has written itself, from the audit trail, ready for a person to sign. |
+| 24 | 2:11.90–2:18.61 | s06 | It all runs on one platform, above the systems you already own, from every terminal to the central operations centre. |
+| 25 | 2:19.51–2:23.66 | s07 | On premise. Role based. Every suggestion and every decision, logged. |
+| 26 | 2:24.01–2:27.21 | s07 | No facial recognition needed to link a bag to its owner. |
+| 27 | 2:28.21–2:32.02 | s08 | 1,248 alarms become seven ranked incidents. |
+| 28 | 2:32.42–2:35.51 | s08 | Fewer alarms to chase. Faster, steadier calls. |
+| 29 | 2:36.71–2:39.58 | s09 | People stay in command. AI does the legwork. |
+| 30 | 2:40.28–2:44.74 | s09 | AGIL Secure V11 with AI Co-pilot. From alarms to answers. |
 
-Total: **2:47.54**
+Total: **2:50.24**
 <!-- VO-TABLE:END -->

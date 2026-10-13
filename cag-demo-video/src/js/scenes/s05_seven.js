@@ -30,14 +30,15 @@
       s.k = E.add(el, '<div class="abs kicker" style="left:120px;top:176px">02:14 · All terminals</div>');
       s.h = E.add(el, '<div class="abs h-m" style="left:120px;top:214px;width:560px;font-size:52px">Seven incidents.<br>Already ranked.</div>');
       s.rows = LIST.map((r, i) => {
-        const e = E.add(el, `<div class="abs" style="left:120px;top:${372 + i * 66}px;width:470px;height:56px;display:flex;align-items:center;gap:16px;padding:0 16px;border-radius:12px;background:rgba(14,22,40,.78);border:1px solid rgba(255,255,255,.1)">
+        const e = E.add(el, `<div class="abs" style="left:120px;top:${372 + i * 66}px;width:620px;height:56px;display:flex;align-items:center;gap:16px;padding:0 16px;border-radius:12px;background:rgba(14,22,40,.78);border:1px solid rgba(255,255,255,.1)">
           <i style="width:5px;height:34px;border-radius:3px;background:${K.SEV[r[0]][1]};box-shadow:0 0 12px ${K.SEV[r[0]][1]};flex:none"></i>
-          <span class="mono" style="font-size:16px;color:var(--t3);width:20px">${i + 1}</span>
-          <span style="font-size:22px;font-weight:600;color:#fff;white-space:nowrap">${r[1]}</span><span style="font-size:17px;color:var(--muted);white-space:nowrap;margin-left:auto">${r[2]}</span></div>`);
+          <span class="mono" style="font-size:16px;color:var(--t3);width:20px;flex:none">${i + 1}</span>
+          <span style="font-size:22px;font-weight:600;color:#fff;white-space:nowrap">${r[1]}</span><span style="font-size:17px;color:var(--muted);white-space:nowrap;margin-left:auto;padding-left:12px">${r[2]}</span></div>`);
         return { e, pin: s.pins.find(p => p.n === r[3]), t0: v9.start + 0.35 + i * 0.32 };
       });
-      s.chips = [['crit', '2 Critical', 'Two'], ['warn', '4 Warning', 'Four'], ['info', '1 Info', 'One']].map((c, i) => {
-        const e = E.add(el, `<div class="abs" style="left:${120 + [0, 170, 340][i]}px;top:850px">${K.pill(c[0], c[1].toUpperCase())}</div>`);
+      const chipRow = E.add(el, '<div class="abs" style="left:120px;top:850px;display:flex;gap:14px"></div>');
+      s.chips = [['crit', '2 Critical', 'Two'], ['warn', '4 Warning', 'Four'], ['info', '1 Info', 'One']].map(c => {
+        const e = E.add(chipRow, `<div>${K.pill(c[0], c[1].toUpperCase())}</div>`);
         return { e, t0: E.at('v10', c[2]) - 0.1 };
       });
       s.rows.forEach(r => E.cue(r.t0, 'blipHi', 0.32));

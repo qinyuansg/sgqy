@@ -13,7 +13,7 @@
     id: 's06',
     build(el, s) {
       const v = E.L('v24');
-      s.k = E.add(el, '<div class="abs kicker" style="left:120px;top:150px">One platform</div>');
+      s.k = E.add(el, '<div class="abs kicker" style="left:200px;top:190px">Above the systems you own</div>');
       const rh = (cx, cy) => `${cx},${cy - HH} ${cx + HW},${cy} ${cx},${cy + HH} ${cx - HW},${cy}`;
       s.svg = E.add(el, `<svg class="abs" width="1920" height="1080" style="left:0;top:0"><defs>${LAY.map((l, i) => `
         <linearGradient id="lg${i}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${l[2]}" stop-opacity=".34"/><stop offset="1" stop-color="${l[2]}" stop-opacity=".06"/></linearGradient>`).join('')}</defs></svg>`);
@@ -34,14 +34,14 @@
       s.beam = K.sadd(s.svg, `<line x1="${CX}" y1="${Y0 + 3 * DY}" x2="${CX}" y2="${Y0}" stroke="#D4C6FF" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="${3 * DY} ${3 * DY}"/>`);
       // federation: every terminal to the central operations centre
       s.tF = E.C('v24', 1).start - 0.1;
-      const FX = 1590, FY = 360, TY = 700, TX = [1380, 1485, 1590, 1695, 1800].map(x => x - 20);
+      const FX = 1566, FY = 360, TY = 700, TX = [-2, -1, 0, 1, 2].map(k => FX + k * 100);
       s.fed = E.add(el, `<div class="abs" style="left:0;top:0;width:1920px;height:1080px"></div>`);
       s.fsvg = E.add(s.fed, `<svg class="abs" width="1920" height="1080" style="left:0;top:0">${TX.map(x => `<path d="M${x} ${TY - 30} C${x} ${TY - 180} ${FX} ${FY + 160} ${FX} ${FY + 44}" fill="none" stroke="#8FB4FF" stroke-width="1.6" stroke-opacity=".7"/>`).join('')}</svg>`);
       s.paths = E.qa(s.fsvg, 'path').map(p => { const L = p.getTotalLength(); p.setAttribute('stroke-dasharray', `${L.toFixed(1)} ${L.toFixed(1)}`); return { p, L }; });
       s.hub = E.add(s.fed, `<div class="abs" style="left:${FX - 44}px;top:${FY - 44}px;width:88px;height:88px;border-radius:50%;background:#4D8DFF;box-shadow:0 0 50px 10px rgba(77,141,255,.55);display:grid;place-items:center;color:#fff">${K.icon('building', 38, 1.8)}</div>`);
       s.hubL = E.add(s.fed, `<div class="abs label" style="left:${FX - 200}px;width:400px;top:${FY - 92}px;text-align:center;color:#fff;font-size:15px">Central operations centre</div>`);
       s.term = TX.map((x, i) => E.add(s.fed, `<div class="abs" style="left:${x - 34}px;top:${TY - 30}px;width:68px;height:60px;border-radius:12px;background:rgba(14,22,40,.9);border:1.5px solid rgba(143,180,255,.6);display:grid;place-items:center;font-family:var(--head);font-weight:800;font-size:24px;color:#fff">T${i + 1}</div>`));
-      s.termL = E.add(s.fed, `<div class="abs label" style="left:${1590 - 250}px;width:500px;top:${TY + 48}px;text-align:center;color:var(--muted)">Every terminal</div>`);
+      s.termL = E.add(s.fed, `<div class="abs label" style="left:${FX - 250}px;width:500px;top:${TY + 48}px;text-align:center;color:var(--muted)">Every terminal</div>`);
       s.L.forEach(l => E.cue(l.t0, 'thud', 0.35));
       E.cue(s.tF, 'sweep', 0.4, { dur: 1.2 });
       E.cue(s.tF + 1.0, 'chime', 0.3);

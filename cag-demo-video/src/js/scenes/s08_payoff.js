@@ -2,8 +2,12 @@
    faster, steadier calls. */
 (function () {
   'use strict';
-  const SEV = ['crit', 'crit', 'warn', 'warn', 'warn', 'warn', 'info'];
-  const NX = 1440, NY0 = 300, NDY = 82;
+  // the same seven incidents, in the order Co-pilot ranked them (s05)
+  const RANK = [['crit', 'Tailgating', 'T3 · Staff Door D-214'], ['crit', 'Fence climb', 'Perimeter · Sector 5'], ['warn', 'Unattended bag', 'T2 · Gate B12'],
+    ['warn', 'Fight starting', 'T2 · Arrival Belt 5'], ['warn', 'Card used twice', 'T1 · Door C2'], ['warn', 'Possible watchlist match', 'T1 · Departure Row K'],
+    ['info', 'Overstay', 'T4 · Baggage Hall B2']];
+  const SEV = RANK.map(r => r[0]);
+  const NX = 1080, NY0 = 290, NDY = 78;
   E.scene({
     id: 's08',
     build(el, s) {
@@ -20,14 +24,15 @@
       s.nodes = SEV.map((sv, i) => ({ x: NX, y: NY0 + i * NDY, col: K.SEV[sv][1] }));
       s.p = Array.from({ length: 420 }, () => {
         const a = R() * Math.PI * 2, r = Math.sqrt(R()) * 230, n = Math.floor(R() * 7);
-        return { x0: 900 + Math.cos(a) * r * 0.9, y0: 540 + Math.sin(a) * r, n, d: R() * 0.8, ph: R() * 6.28, col: ['#D72D30', '#D4B741', '#4DAFBE', '#7D8AA3', '#7D8AA3'][Math.floor(R() * 5)], rad: 1.8 + R() * 2 };
+        return { x0: 830 + Math.cos(a) * r * 0.9, y0: 540 + Math.sin(a) * r, n, d: R() * 0.8, ph: R() * 6.28, col: ['#D72D30', '#D4B741', '#4DAFBE', '#7D8AA3', '#7D8AA3'][Math.floor(R() * 5)], rad: 1.8 + R() * 2 };
       });
       s.svg = E.add(el, `<svg class="abs" width="1920" height="1080" style="left:0;top:0">
         <g class="pp">${s.p.map(p => `<circle r="${p.rad.toFixed(1)}" fill="${p.col}"/>`).join('')}</g>
         ${s.nodes.map(n => `<g class="nd"><circle cx="${n.x}" cy="${n.y}" r="26" fill="none" stroke="${n.col}" stroke-width="2" opacity=".5"/><circle cx="${n.x}" cy="${n.y}" r="15" fill="${n.col}" stroke="#fff" stroke-width="2.5"/></g>`).join('')}
       </svg>`);
       s.pe = E.qa(s.svg, '.pp circle'); s.ne = E.qa(s.svg, '.nd');
-      s.tags = s.nodes.map((n, i) => E.add(el, `<div class="abs label" style="left:${n.x + 44}px;top:${n.y - 10}px;color:${K.SEV[SEV[i]][2]}">${K.SEV[SEV[i]][0]}</div>`));
+      s.tags = s.nodes.map((n, i) => E.add(el, `<div class="abs" style="left:${n.x + 46}px;top:${n.y - 17}px;display:flex;align-items:baseline;gap:14px;white-space:nowrap">
+        <span class="label" style="color:${K.SEV[SEV[i]][2]};width:92px">${K.SEV[SEV[i]][0]}</span><span style="font-size:24px;font-weight:600;color:#fff">${RANK[i][1]}</span><span style="font-size:18px;color:var(--muted)">${RANK[i][2]}</span></div>`));
       E.cue(s.tC, 'riser', 0.4, { dur: 1.0 });
       E.cue(s.tC + 1.1, 'impact', 0.6);
       E.cue(v28.start, 'chime', 0.35);

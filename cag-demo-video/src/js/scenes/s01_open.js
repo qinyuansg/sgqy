@@ -68,7 +68,7 @@
       s.hubEl = E.add(s.tw, `<div class="abs" style="left:${s.hub[0] - 40}px;top:${s.hub[1] - 40}px;width:80px;height:80px">
         <div class="ring" style="position:absolute;inset:0;border-radius:50%;border:2px solid rgba(182,156,255,.8);box-shadow:0 0 40px rgba(182,156,255,.6)"></div>
         <div style="position:absolute;inset:16px;border-radius:50%;background:#B69CFF;box-shadow:0 0 30px 8px rgba(182,156,255,.7);display:grid;place-items:center;color:#120B2E">${K.icon('building', 26, 2)}</div>
-        <div class="label" style="position:absolute;left:96px;top:30px;color:#fff;font-size:17px;letter-spacing:.18em;white-space:nowrap">One control room</div></div>`);
+        <div class="label" style="position:absolute;left:50%;top:100px;transform:translateX(-50%);color:#fff;font-size:17px;letter-spacing:.18em;white-space:nowrap;background:rgba(5,7,13,.85);padding:7px 14px;border-radius:8px">One control room</div></div>`);
       s.hubRing = E.q(s.hubEl, '.ring');
       // counters
       const CNT = [['cameras', 'Cameras', 2960, '#8FB4FF'], ['doors', 'Doors', 1240, '#B69CFF'], ['sensors', 'Sensors', 612, '#4DAFBE']];

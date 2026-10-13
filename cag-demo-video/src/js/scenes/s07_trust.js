@@ -44,6 +44,7 @@
         E.fade(r.e, E.ep(t, r.t0, r.t0 + 0.5, 'out'), { dx: -20, dy: 0 });
         const k = E.ep(t, r.t0, r.t0 + 0.9, 'inOut');
         E.attr(s.arcs[i], 'stroke-dasharray', `${(s.C2 * 0.25 * k - 8 * k).toFixed(1)} ${s.C2.toFixed(1)}`);
+        E.attr(s.arcs[i], 'opacity', k > 0.002 ? '1' : '0');
       });
       E.fade(s.sh, E.ep(t, s.start + 0.4, s.start + 1.0, 'back'), { s: 0.7, dy: 0 });
     },
