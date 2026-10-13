@@ -34,6 +34,9 @@ for (const [name, fn] of Object.entries(SCENES)) {
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.setContent(page_(sc.svg, 1280, 720, sc), { waitUntil: 'load' });
   await page.screenshot({ path: path.join(out, name + '.jpg'), type: 'jpeg', quality: 80 });
+  // clean variant (no burned-in OSD) for re-use under a different camera label
+  await page.setContent(page_(sc.svg, 1280, 720, { ...sc, osd: '' }), { waitUntil: 'load' });
+  await page.screenshot({ path: path.join(out, name + '_clean.jpg'), type: 'jpeg', quality: 80 });
   meta[name] = { boxes: sc.boxes, osd: sc.osd, ts: sc.ts };
   console.log('scene', name);
 }

@@ -69,11 +69,11 @@ export default function bag() {
       // owner trail
       const ty = ey + eh + 16, th = c.y1 - ty;
       let t = text(c.x + 22, ty + 36, 'Owner trail', { size: 15, weight: 600, fill: T.t1 }) + text(c.x + 120, ty + 36, 'Re-identified by appearance across 4 cameras', { size: 13, fill: T.t3 });
-      const trail = [['trail_gate', 'Gate B12', '01:58 · places bag'], ['trail_walk', 'Concourse B', '02:04 · walks away'], ['corridor', 'Restroom corridor', '02:09 · passes'], ['trail_food', 'Food Court L3', '02:15 · now · on phone']];
+      const trail = [['trail_gate', 'Gate B12', '01:58 · places bag'], ['trail_walk', 'Concourse B', '02:04 · walks away'], ['corridor_clean', 'Restroom corridor', '02:09 · passes'], ['trail_food', 'Food Court L3', '02:15 · now · on phone']];
       const tw = (c.w - 48 - 3 * 20) / 4;
       trail.forEach(([im, lab, sub], i) => {
         const tx = c.x + 24 + i * (tw + 20);
-        const bx = boxes(im).person;
+        const bx = boxes(im.replace('_clean', '')).person;
         t += thumb(F, 'Trail ' + lab, tx, ty + 56, tw, img(im), { box: bx, color: i === 3 ? T.ok : T.blue, active: i === 3, label: lab, sub });
         if (i < 3) t += icon(F, 'chevR', tx + tw + 2, ty + 56 + tw * 9 / 32 - 8, 16, T.t3, 2);
       });

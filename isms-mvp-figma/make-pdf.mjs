@@ -1,0 +1,12 @@
+import fs from 'fs'; import path from 'path'; import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const { chromium } = require('/opt/node22/lib/node_modules/playwright');
+const dir = process.argv[2];
+const files = fs.readdirSync(path.join(dir, 'svg')).filter(f => f.endsWith('.svg')).sort();
+const html = `<!doctype html><html><head><style>@page{size:1920px 1080px;margin:0}html,body{margin:0;background:#05070D}div{width:1920px;height:1080px;page-break-after:always;overflow:hidden}img{display:block;width:1920px;height:1080px}</style></head><body>${files.map(f => `<div><img src="svg/${f}"></div>`).join('')}</body></html>`;
+fs.writeFileSync(path.join(dir, 'all.html'), html);
+const b = await chromium.launch(); const p = await b.newPage();
+await p.goto('file://' + path.join(dir, 'all.html'), { waitUntil: 'networkidle' });
+await p.waitForTimeout(1000);
+await p.pdf({ path: path.join(dir, 'ISMS_MVP_Figma_frames.pdf'), width: '1920px', height: '1080px', printBackground: true });
+await b.close();

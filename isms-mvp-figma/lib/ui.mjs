@@ -364,14 +364,14 @@ export function incidentHeader(F, inc) {
   ]);
   s += meta.svg;
   // right: confidence + time open + actions (laid out right-to-left so long notes never collide)
-  const rx = L.x1, note = inc.confNote || 'High · 5 sources agree', age = inc.age || '1m 12s';
-  const ox = rx - 104 - Math.max(textWidth('Open for', 12, 500), textWidth(age, 13, 600));
+  const rx = L.x1, note = inc.confNote || 'High · 5 sources agree', age = inc.age || '1m 12s', ageL = inc.ageLabel || 'Open for';
+  const ox = rx - 104 - Math.max(textWidth(ageL, 12, 500), textWidth(age, 13, 600));
   const cw = Math.max(textWidth('AI confidence', 12, 500), textWidth(note, 13, 600));
   const tx = ox - 40 - cw;
   s += ring(F, tx - 38, L.y0 + 58, 26, inc.conf / 100, SEV[inc.sev], { size: 17, sw: 5 });
   s += text(tx, L.y0 + 52, 'AI confidence', { size: 12, weight: 500, fill: T.t3 }) + text(tx, L.y0 + 72, note, { size: 13, weight: 600, fill: T.t1 });
   s += vhair(ox - 20, L.y0 + 36, L.y0 + 82);
-  s += text(ox, L.y0 + 52, 'Open for', { size: 12, weight: 500, fill: T.t3 }) + text(ox, L.y0 + 72, age, { size: 13, weight: 600, fill: T.t1 });
+  s += text(ox, L.y0 + 52, ageL, { size: 12, weight: 500, fill: T.t3 }) + text(ox, L.y0 + 72, age, { size: 13, weight: 600, fill: T.t1 });
   s += iconBtn(F, rx - 92, L.y0 + 40, 38, 'users') + iconBtn(F, rx - 44, L.y0 + 40, 38, 'dots');
   return g(F, 'Incident header', s);
 }

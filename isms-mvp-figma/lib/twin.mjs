@@ -81,7 +81,7 @@ export function pin(F, P, p, o = {}) {
 export const TERMINALS = [
   { id: 'T1', x1: 11, x2: 21, y1: 25, y2: 32, h: 2.4, piers: [[12.5, 14.6, 15, 25], [17.5, 19.6, 32, 42]] },
   { id: 'T2', x1: 26, x2: 37, y1: 25, y2: 32, h: 2.6, piers: [[28, 30, 15, 25], [33, 35, 32, 42]] },
-  { id: 'T3', x1: 44, x2: 58, y1: 24, y2: 32, h: 3.2, piers: [[46, 48.2, 14, 24], [53, 55.2, 32, 43]] },
+  { id: 'T3', labLeft: true, x1: 44, x2: 58, y1: 24, y2: 32, h: 3.2, piers: [[46, 48.2, 14, 24], [53, 55.2, 32, 43]] },
   { id: 'T4', x1: 64, x2: 72, y1: 26, y2: 32, h: 2.0, piers: [[66.5, 68.5, 32, 41]] },
   { id: 'T5', x1: 78, x2: 94, y1: 24, y2: 33, h: 3.4, piers: [[79.5, 81.7, 14, 24], [85, 87.2, 14, 24], [90.5, 92.7, 33, 43]] },
 ];
@@ -179,7 +179,7 @@ export function airport(F, x, y, w, h, o = {}) {
   // terminal labels
   let lb = '';
   for (const t of TERMINALS) {
-    const [lx, ly] = P(t.x2 - 2.5, t.y1, t.h + 0.2);
+    const [lx, ly] = P(t.labLeft ? t.x1 + 0.5 : t.x2 - 2.5, t.y1, t.h + 0.2);
     lb += g(F, 'Label ' + t.id, rect(lx - 2, ly - 30, 34, 22, { r: 7, fill: '#05070D', fo: 0.7, stroke: '#FFFFFF', so: 0.15 }) + text(lx + 15, ly - 14.5, t.id, { size: 12, weight: 700, fill: T.t1, anchor: 'middle' }));
   }
   s += g(F, 'Terminal labels', lb);
