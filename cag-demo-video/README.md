@@ -1,6 +1,6 @@
 # CAG demo film: "From alarms to answers"
 
-A 2:48 film (1920×1080, 30 fps, English narration, burned-in English subtitles) to play at the CAG
+A 2:50 film (1920×1080, 30 fps, English narration, burned-in English subtitles) to play at the CAG
 demo. It follows the same storyline and design language as the pitch deck in `../cag-pitch-deck`,
 and uses the same real V11 screens (`../isms-mvp-figma/screens-v11`):
 

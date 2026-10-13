@@ -1,6 +1,6 @@
 # From alarms to answers: CAG demo film
 
-> 2:48 · 1920×1080 · English narration with burned-in English subtitles · plays at the CAG demo before or
+> 2:50 · 1920×1080 · English narration with burned-in English subtitles · plays at the CAG demo before or
 > after the live V11 walkthrough. Scenario, names and data are illustrative, and the film says so on screen.
 
 ## Storyboard
