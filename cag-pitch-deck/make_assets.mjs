@@ -3,7 +3,7 @@
 // - 2x renders of the V11 product frames (the screens clicked live on demo day)
 // - dark "aurora" backgrounds, photo backgrounds from the previous deck (darkened; stale
 //   on-screen numbers blurred), the airport demo map with numbered scenario pins
-// - reversed (white) logo, persona portraits, the concept frame for the roadmap slide
+// - persona portraits and the concept frame for the roadmap slide (no logo: the deck carries none)
 import fs from 'fs';
 import path from 'path';
 import { createRequire } from 'module';
@@ -17,7 +17,7 @@ const [oldDeck, v11Dir, mvpDir, outArg] = process.argv.slice(2);
 const OUT = path.resolve(outArg || 'assets');
 for (const d of ['', 'v11', 'old']) fs.mkdirSync(path.join(OUT, d), { recursive: true });
 
-// ---------- 1) photos and logo from the previous deck ----------
+// ---------- 1) photos from the previous deck ----------
 const oldDir = path.join(OUT, 'old');
 execFileSync('python3', ['-c', `
 import sys, zipfile
@@ -26,20 +26,11 @@ for n in z.namelist():
     if n.startswith('ppt/media/'):
         open(sys.argv[2] + '/' + n.split('/')[-1], 'wb').write(z.read(n))
 `, oldDeck, oldDir]);
-// image1 wide ops room · image9 overloaded operator · image28 end of shift · image5-8 personas · image4 logo
+// image1 wide ops room · image9 overloaded operator · image28 end of shift · image5-8 personas
 execFileSync('python3', ['-c', `
 import sys
 from PIL import Image
 src, out = sys.argv[1], sys.argv[2]
-# reversed logo: grey wordmark -> white, red symbol kept
-lg = Image.open(src + '/image4.png').convert('RGBA')
-px = lg.load()
-for y in range(lg.size[1]):
-    for x in range(lg.size[0]):
-        r, g, b, a = px[x, y]
-        if a and abs(r - g) < 28 and abs(g - b) < 28:
-            px[x, y] = (255, 255, 255, a)
-lg.save(out + '/logo_white.png')
 for i, n in [(5, 'nurul'), (6, 'daniel'), (7, 'arjun'), (8, 'grace')]:
     im = Image.open(src + '/image%d.jpg' % i).convert('RGB')
     w, h = im.size

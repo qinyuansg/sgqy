@@ -127,7 +127,7 @@ await shoot(photo('image28.jpg', 7,
 // ---------- 3) alarm field: 1,248 raw alarms on the left condense into 7 incidents on the right ----------
 {
   const W = 2400, H = 1100, R = rng(4242);
-  const nodes = [[0.86, 0.12, '#D72D30'], [0.86, 0.24, '#D72D30'], [0.86, 0.38, '#D4B741'], [0.86, 0.50, '#D4B741'], [0.86, 0.62, '#D4B741'], [0.86, 0.75, '#4DAFBE'], [0.86, 0.88, '#D4B741']];
+  const nodes = [[0.86, 0.12, '#D72D30'], [0.86, 0.24, '#D72D30'], [0.86, 0.38, '#D4B741'], [0.86, 0.50, '#D4B741'], [0.86, 0.62, '#D4B741'], [0.86, 0.75, '#D4B741'], [0.86, 0.88, '#4DAFBE']];
   const pts = [];
   for (let i = 0; i < 1248; i++) {
     // gaussian-ish cloud centred left

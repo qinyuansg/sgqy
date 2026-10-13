@@ -228,15 +228,16 @@ async function lens(s, dev, frame, r, x, y, w, o = {}) {
   s.addShape(RR, { x: x - 0.05, y: y - 0.05, w: w + 0.1, h: h + 0.1, rectRadius: 0.1, fill: { color: LAV, transparency: 80 }, line: { type: 'none' }, objectName: 'Zoom glow' });
   s.addShape(RR, { x, y, w, h, rectRadius: 0.07, fill: { color: NAVY }, line: { color: LAV, width: 1.75 }, shadow: shadow(30, 0.75, 10), objectName: 'Zoom lens' });
   s.addImage({ data: await shot(frame, r, iw), x: x + pad, y: y + pad, w: iw, h: ih, altText: o.alt || '', objectName: 'Zoom ' + (o.name || frame.slice(0, 6)) });
-  if (o.n) marker(s, o.nAt === 'tl' ? x : x + w, y, o.n);
+  if (o.n) marker(s, o.nAt === 'tl' ? x : x + w, o.nAt === 'br' ? y + h : y, o.n);
   const map = (fx, fy) => [x + pad + (fx - r[0]) / r[2] * iw, y + pad + (fy - r[1]) / r[3] * ih];
   return { x, y, w, h, map };
 }
 
 // highlight a V11 element and tag it with its number; the tag sits beside the element
-// (side l/r/t/b) or, with edge, on the bezel with a short leader, so it never hides the UI
+// (side l/r/t/b) or, with edge, on the bezel with a short leader, so it never hides the UI;
+// o.p tightens the padding where neighbouring rows sit close
 function hl(s, dv, box, n, o = {}) {
-  const [fx, fy, fw, fh] = box, p = 0.025, d = 0.34, g = 0.07;
+  const [fx, fy, fw, fh] = box, p = o.p ?? 0.025, d = 0.34, g = 0.07;
   let [x1, y1] = dv.map(fx, fy), [x2, y2] = dv.map(fx + fw, fy + fh);
   x1 -= p; y1 -= p; x2 += p; y2 += p;
   if (o.box !== false) s.addShape(RR, { x: x1, y: y1, w: x2 - x1, h: y2 - y1, rectRadius: 0.04, fill: { color: LAV, transparency: 84 }, line: { color: LAV, width: 1.5 }, objectName: 'Highlight ' + n });
@@ -258,9 +259,10 @@ function hl(s, dv, box, n, o = {}) {
   marker(s, mx, my, n, { d, pt: 14 });
 }
 // highlight box around a piece of V11 text, from its position in the frame
+// (o.pad: padding all round; o.px: horizontal padding where rows are tight but the line has room)
 function ab(frame, needle, i = 0, o = {}) {
-  const a = anchor(frame, needle, i), pad = o.pad ?? 5;
-  return [a.x - pad, a.y - a.size * 0.95 - pad * 0.6, (o.w ?? rw(a.t, a.size)) + 2 * pad, a.size * 1.25 + pad * 1.2];
+  const a = anchor(frame, needle, i), pad = o.pad ?? 5, px = o.px ?? pad;
+  return [a.x - px, a.y - a.size * 0.95 - pad * 0.6, (o.w ?? rw(a.t, a.size)) + 2 * px, a.size * 1.25 + pad * 1.2];
 }
 
 // ---------- layouts ----------
@@ -405,10 +407,10 @@ async function build() {
     ['LuSparkles', 'AI-powered\nAGIL® Secure', 'Correlation, automation and reports', 'Seven incidents explained, SOPs ready', [1, 5, 6, 7, 'ask', 'report']],
     ['LuLuggage', 'Advanced\nvideo analytics', 'Bag-to-owner links, no face recognition', 'A Gate B12 bag linked to its owner', [3, 4]],
     ['LuFence', 'AGIL Fence,\nfully unified', 'Fence alarms in one workflow', 'A fence climb verified by LiDAR and thermal', [2]],
-    ['LuNetwork', 'Multi-site\ngovernance', 'One baseline across every site and vendor', 'Site context in V11, federated platform', ['platform', 'Platform']],
+    ['LuNetwork', 'Multi-site\ngovernance', 'One baseline across every site and vendor', 'Site context in V11; multi-site architecture', ['platform', 'Platform'], 'SHOWN TODAY'],
   ];
   const cw = (SW - 2 * MX - 3 * 0.25) / 4;
-  for (const [i, [ic, ttl, asked, see, tags]] of PRI.entries()) {
+  for (const [i, [ic, ttl, asked, see, tags, seeLbl]] of PRI.entries()) {
     const x = MX + i * (cw + 0.25), y = 1.85, h = 4.95, iw = cw - 0.56;
     card(s, x, y, cw, h, { tr: 25, name: 'Priority ' + (i + 1) });
     await iconDisc(s, ic, x + 0.28, y + 0.28, 0.62, { k: 0.5 });
@@ -419,7 +421,7 @@ async function build() {
     fit('priority asked ' + i, asked, 16, false, iw, 0.56);
     T(s, asked, { x: x + 0.28, y: y + 2.16, w: iw, h: 0.84, fontSize: 16, color: MUTED });
     s.addShape(LINE, { x: x + 0.28, y: y + 3.1, w: iw, h: 0, line: { color: INK, width: 0.75, transparency: 85 }, objectName: 'Divider' });
-    label(s, 'LIVE TODAY', x + 0.28, y + 3.22, iw, LAV);
+    label(s, seeLbl || 'LIVE TODAY', x + 0.28, y + 3.22, iw, LAV);
     fit('priority see ' + i, see, 16, false, iw, 0.56);
     T(s, see, { x: x + 0.28, y: y + 3.52, w: iw, h: 0.84, fontSize: 16 });
     label(s, 'SEE IT IN', x + 0.28, y + h - 0.8, iw);
@@ -428,7 +430,7 @@ async function build() {
   }
   s.addNotes([
     'When we last met, you shared four priorities. An AI-powered AGIL Secure. Video analytics that respect privacy. AGIL Fence, fully unified. And one governance model across all your sites.',
-    'We built today around them. Each live scene carries a tag that shows which priority it answers, so you can hold us to it.',
+    'We built today around them. Each live scene carries a tag that shows which priority it answers, and the platform section answers the fourth, so you can hold us to it.',
   ].join('\n'));
 
   // 3 ── the problem
@@ -450,7 +452,7 @@ async function build() {
   T(s, 'Figures from tonight’s demo scenario.', { x: MX, y: 6.62, w: 6, h: 0.28, fontSize: 12, color: MUTED });
   s.addNotes([
     'Here is a night shift as it runs today. More than twelve hundred alarms in one night, from nine separate systems, each on its own screen. And one operator in the middle.',
-    'That operator joins the dots by hand. Is this a real alarm, or another nuisance? Is the fence alarm related to the door? Which camera covers D-214? Which SOP applies? Who do I call first?',
+    'That operator joins the dots by hand. Is this a real alarm, or another nuisance? Is the fence alarm related to the door? Which camera covers D-214? Who left the bag at B12? Which SOP applies here? Who do I call first?',
     'So the outcome depends on who happens to be on shift. These figures come from our demo scenario, but the pattern will be familiar.',
   ].join('\n'));
 
@@ -461,8 +463,8 @@ async function build() {
   {
     const F = 'V11-01-home-real-time-alerts';
     const dv = await device(s, F, 6.53, 1.95, 6.2, 'AGIL Secure V11 home screen: Real Time Alerts with Co-pilot lines, the airport in 3D with incident pins, and the search bar');
-    await lens(s, dv, F, [44, 312, 300, 104], 6.76, 5.2, 3.3, { n: 1, alt: 'The Staff Door D-214 alert card with its Co-pilot line: 5 linked alarms, 94%' });
-    marker(s, ...dv.map(1110, 455), 2);
+    await lens(s, dv, F, [44, 308, 320, 108], 6.76, 5.2, 3.515, { n: 1, nAt: 'br', alt: 'The Staff Door D-214 alert card with its Co-pilot line: 5 linked alarms, 94%' });
+    hl(s, dv, [1046, 375, 189, 37], 2, { side: 't' });
     hl(s, dv, ab(F, 'Search or ask', 0, { pad: 8 }), 3, { side: 't', edge: true });
     hl(s, dv, [94, 132, 236, 24], 4, { side: 'l', edge: true });
     const F4 = [['Every alert explained', 'Linked alarms and confidence on each card.'],
@@ -492,16 +494,16 @@ async function build() {
   s.addText('HOW CO-PILOT WORKS', { placeholder: 'kicker', charSpacing: 1.5 });
   s.addText('Six steps. Co-pilot runs five. You make the call', { placeholder: 'title', charSpacing: -0.5 });
   full(s, 'viz_flow.png');
-  const STEPS = [['LuRadar', 'Detect', 'Every sensor, every second'], ['LuGitMerge', 'Correlate', 'Time, place, person, badge'],
-    ['LuSparkles', 'Explain', 'What, why, and the sources'], ['LuListChecks', 'Recommend', 'Your own SOP, pre-filled'],
-    ['LuHand', 'You decide', 'Approve, adjust or dismiss'], ['LuFileCheck', 'Report', 'Drafted, and learns from you']];
+  const STEPS = [['LuRadar', 'Detect', 'Every sensor,\nevery second'], ['LuGitMerge', 'Correlate', 'Time, place,\nperson, badge'],
+    ['LuSparkles', 'Explain', 'What, why,\nand the sources'], ['LuListChecks', 'Recommend', 'Your own SOP,\npre-filled'],
+    ['LuHand', 'You decide', 'Approve, adjust\nor dismiss'], ['LuFileCheck', 'Report', 'Drafted, and\nlearns from you']];
   const sx0 = 1.55, sdx = 2.0466, scy = 2.75, sd = 1.15;
   for (const [i, [ic, lab, sub]] of STEPS.entries()) {
     const cx = sx0 + i * sdx, human = lab === 'You decide';
     await iconDisc(s, ic, cx - sd / 2, scy - sd / 2, sd, human ? { fill: LAV, tr: 0, ring: INK, ltr: 10, hex: HEX.navy, k: 0.46 } : { fill: NAVY, tr: 0, ring: LAV, ltr: 40, k: 0.44 });
     T(s, lab, { x: cx - 0.95, y: scy + sd / 2 + 0.26, w: 1.9, h: 0.4, fontSize: 20, bold: true, align: 'center', color: human ? LAV : INK });
     fit('step ' + lab, sub, 16, false, 1.9, 0.56);
-    T(s, sub, { x: cx - 0.95, y: scy + sd / 2 + 0.7, w: 1.9, h: 0.58, fontSize: 16, color: MUTED, align: 'center' });
+    T(s, runs(sub), { x: cx - 0.95, y: scy + sd / 2 + 0.7, w: 1.9, h: 0.58, fontSize: 16, color: MUTED, align: 'center' });
   }
   s.addShape(LINE, { x: SW / 2 - 0.4, y: 5.38, w: 0.8, h: 0, line: { color: LAV, width: 2 }, objectName: 'Rule' });
   T(s, [{ text: 'Steps 1–4 take seconds. ' }, { text: 'Step 5 is always a person.', options: { color: LAV, bold: true } }], { x: MX, y: 5.6, w: SW - 2 * MX, h: 0.5, fontSize: 24, align: 'center', valign: 'middle' });
@@ -557,7 +559,8 @@ async function build() {
   label(s, 'RANKED BY CO-PILOT', MX, 2.02, 2.2);
   { let cx2 = MX + 2.32; for (const [t, sv] of [['2 CRITICAL', 'Critical'], ['4 WARNING', 'Warning'], ['1 INFO', 'Info']]) cx2 += pill(s, cx2, 2.0, t, SEV[sv][0], SEV[sv][1], { h: 0.3, pt: 12 }) + 0.08; }
   {
-    const mw = 12.4, mh = mw / GEO.twin.aspect, mx0 = SW - mw + 0.35, my0 = 0.68;
+    // the platform's right corner sits at 0.97 of the image width: keep it inside the right margin
+    const mw = 11.8, mh = mw / GEO.twin.aspect, mx0 = RX - 0.97 * mw, my0 = 0.86;
     s.addImage({ path: A('viz_twin.png'), x: mx0, y: my0, w: mw, h: mh, altText: 'The airport as a 3D digital twin: five terminals, two runways and the north perimeter fence', objectName: 'Airport twin' });
     const at = ([fx, fy]) => [mx0 + fx * mw, my0 + fy * mh];
     const rx = GEO.twin.ring.rx * mw, ry = GEO.twin.ring.ry * mh, d = 0.36, LIFT = { 7: 0.75, 4: 0.5 };
@@ -586,13 +589,16 @@ async function build() {
       s.addText(String(p.n), { shape: OVAL, x: hx - d / 2, y: hy - lift - d / 2, w: d, h: d, fill: { color: col }, line: { color: INK, width: 1.5 }, color: SEV[p.sev][1], bold: true, fontSize: 14, align: 'center', valign: 'middle', margin: 0, objectName: 'Pin ' + p.n });
     }
   }
-  const MAP = [['Tailgating + anti-passback', '02:14  ·  T3 Staff Door D-214', 'Critical'], ['Perimeter intrusion', '02:15  ·  Fence Sector 5, north', 'Critical'],
-    ['Unattended bag', '02:04  ·  T2 Gate B12', 'Warning'], ['Fight detected', '02:11  ·  T2 Arrival Belt 5', 'Warning'],
-    ['Identity spoofing', '02:13  ·  T1 Door C2', 'Warning'], ['Overstay in a restricted zone', '01:45  ·  T4 Baggage Hall B2', 'Info'],
-    ['Watchlist person loitering', '02:12  ·  T1 Departure Row K', 'Warning']];
-  for (const [i, [nm, sub, sev]] of MAP.entries()) {
-    const y = 2.55 + i * 0.57;
-    s.addText(String(i + 1), { shape: OVAL, x: MX, y: y + 0.03, w: 0.38, h: 0.38, fill: { color: SEV[sev][0] }, line: { color: INK, width: 1 }, color: SEV[sev][1], bold: true, fontSize: 14, align: 'center', valign: 'middle', margin: 0, objectName: 'Scene pin ' + (i + 1) });
+  // listed in rank order (Critical, Warning, Info); each row keeps its scene number, as on the pins and the scene tracker
+  const MAP = [[1, 'Tailgating + anti-passback', '02:14  ·  T3 Staff Door D-214'], [2, 'Perimeter intrusion', '02:15  ·  Fence Sector 5, north'],
+    [3, 'Unattended bag', '02:04  ·  T2 Gate B12'], [4, 'Fight detected', '02:11  ·  T2 Arrival Belt 5'],
+    [5, 'Identity spoofing', '02:13  ·  T1 Door C2'], [7, 'Possible watchlist match', '02:12  ·  T1 Departure Row K'],
+    [6, 'Overstay in a restricted zone', '01:45  ·  T4 Baggage Hall B2']];
+  const RANK = { Critical: 0, Warning: 1, Info: 2 };
+  if (MAP.some((r, i) => i && RANK[SCN_SEV[r[0]]] < RANK[SCN_SEV[MAP[i - 1][0]]])) throw new Error('slide 8 list is not in rank order');
+  for (const [i, [n, nm, sub]] of MAP.entries()) {
+    const y = 2.55 + i * 0.57, sev = SCN_SEV[n];
+    s.addText(String(n), { shape: OVAL, x: MX, y: y + 0.03, w: 0.38, h: 0.38, fill: { color: SEV[sev][0] }, line: { color: INK, width: 1 }, color: SEV[sev][1], bold: true, fontSize: 14, align: 'center', valign: 'middle', margin: 0, objectName: 'Scene pin ' + n });
     T(s, nm, { x: MX + 0.56, y: y - 0.04, w: 4.6, h: 0.3, fontSize: 17, bold: true });
     T(s, sub, { x: MX + 0.56, y: y + 0.27, w: 4.6, h: 0.26, fontSize: 14, color: MUTED });
   }
@@ -600,7 +606,7 @@ async function build() {
   s.addNotes([
     'It is 2:14 in the morning, and seven situations are unfolding across the airport, from a tailgated staff door in Terminal 3 to a fence climb on the north perimeter.',
     'Before anyone touches a button, Co-pilot has ranked them: two Critical, four Warning and one Info. At 2:30 the duty manager asks a question, and by seven o’clock the report is ready for handover.',
-    'The numbers you see here follow each incident through the rest of the demo. We start with the most urgent.',
+    'The numbers you see here follow each incident through the rest of the demo. We start with the most urgent, and finish with the most sensitive.',
   ].join('\n'));
 
   // 9–19 ── scenes: device at y DY; markers sit beside or on the bezel, never on the UI they point at
@@ -621,7 +627,7 @@ async function build() {
       const dv = await device(s, F02, vx, DY, DW, 'V11 Active Alarms for Staff Door D-214 on the Investigation tab: AI summary, linked alarms and camera evidence');
       hl(s, dv, ab(F02, 'Co-pilot · 5 linked'), 1, { side: 'l', edge: true });
       await lens(s, dv, F02, CAM1, 7.78, 1.72, 2.3, { n: 2, alt: 'Camera 3-118 at Door D-214: badge holder and follower, the follower boxed in red as No badge' });
-      hl(s, dv, ab(F02, '+2 more'), 3, { side: 'r', edge: true });
+      hl(s, dv, [950, 743, 378, 106], 3, { side: 'r', edge: true });
     },
     notes: [
       'Staff Door D-214, Terminal 3. Five separate alarms fire within seconds: a badge read, the door opening, a LiDAR count of two people, a video alert and the door held open.',
@@ -644,7 +650,7 @@ async function build() {
     },
     notes: [
       'Now the response. Co-pilot has loaded your own SOP and already completed step one: the follower is verified and tracked across three cameras.',
-      'Step two needs a person: lock D-214 and switch on hard anti-passback. One click, and the operator makes it.',
+      'Step two needs a person: lock D-214 and switch on hard anti-passback. The operator approves it with one click.',
       'At the same moment, Arjun on patrol receives the follower’s photo on his phone. Co-pilot prepares. The operator decides.',
     ].join('\n'),
   });
@@ -657,7 +663,7 @@ async function build() {
     live: 'Escalate  ›  Create Incident',
     visual: async (s, vx) => {
       const dv = await device(s, F10, vx, DY, DW, 'V11 Escalate Event dialog with Category, Severity and Remarks pre-filled by Co-pilot', { brackets: false });
-      const ln = await lens(s, dv, F10, [391, 488, 618, 222], 6.34, 4.62, 6.0, { alt: 'Escalate Event form: Category Unauthorised airside entry, Severity Critical, Remarks drafted by Co-pilot' });
+      const ln = await lens(s, dv, F10, [391, 488, 618, 282], 6.34, 4.05, 6.0, { alt: 'Escalate Event form: Category Unauthorised airside entry, Severity Critical, Remarks drafted by Co-pilot, then Cancel and Create Incident' });
       hl(s, ln, [397, 492, 296, 70], 1, { side: 'l', box: false });
       hl(s, ln, [706, 492, 296, 70], 2, { side: 'r', box: false });
       hl(s, ln, [397, 596, 608, 106], 3, { side: 'r', box: false });
@@ -672,7 +678,7 @@ async function build() {
   await scene({
     side: 'left', kicker: 'SCENE 2  ·  02:15  ·  FENCE SECTOR 5', step: '2', sev: 'Critical', ask: 'Priority 3 · AGIL Fence', meter: { kind: 'gauge', v: 91 },
     title: 'A real intruder,\nnot the wind',
-    quote: 'Climb on segment 5-14. LiDAR: one 1.7 m object. Thermal: one person. Wind is 12 km/h, so not a nuisance.',
+    quote: 'Climb on segment 5-14. LiDAR: one 1.7\u00A0m object. Thermal: one person. Wind is 12\u00A0km/h, so not a nuisance alarm.',
     watch: [['One alert list:', 'no separate platform'], ['LiDAR:', 'one object, 1.7 m tall'], ['Thermal PTZ:', 'one person at the fence']],
     live: 'Fence Sector 5  ›  Investigation',
     visual: async (s, vx) => {
@@ -691,7 +697,7 @@ async function build() {
   await scene({
     kicker: 'SCENE 3  ·  02:04  ·  T2 GATE B12', step: '3', sev: 'Warning', ask: 'Priority 2 · Video analytics', meter: { kind: 'steps', n: 5, done: 4, await: 1, label: '4 OF 5 DONE' },
     title: 'Bag and owner linked\nin 6 seconds',
-    quote: 'Suitcase unattended since 02:04. Its owner left it at 01:58 and is now at Food Court L3. Found in 6.2 s.',
+    quote: 'Suitcase unattended since 02:04. Its owner left it at 01:58 and is now at Food Court L3. Found in 6.2\u00A0s.',
     watch: [['Bag link:', 'placed at 01:58'], ['Owner found:', 'by clothing, not face'], ['You decide:', 'approve sending Arjun']],
     live: 'Gate B12 Holdroom  ›  SOP Flow',
     visual: async (s, vx) => {
@@ -716,8 +722,9 @@ async function build() {
     visual: async (s, vx) => {
       const dv = await device(s, F07, vx, DY, DW, 'V11 Active Alarms for Arrival Hall Belt 5: camera with aggression box, linked audio and video alarms');
       await lens(s, dv, F07, CAM1, 2.6, 1.72, 2.3, { n: 1, alt: 'Camera 1-142 at Belt 5: two passengers boxed Aggression 0.89' });
-      hl(s, dv, ab(F07, 'Raised voices'), 2, { side: 'r', edge: true });
-      hl(s, dv, ab(F07, 'Nearest officers'), 3, { side: 'r', edge: true });
+      // whole row (time, event, source) so the leader starts past 'Audio · IC-B5'; tight padding keeps the rows above and below clear
+      hl(s, dv, ab(F07, '02:10:40', 0, { w: 374, pad: 2 }), 2, { side: 'r', edge: true, p: 0.008 });
+      hl(s, dv, ab(F07, 'Nearest officers', 0, { pad: 0, px: 5, w: rw('Nearest officers Lee 40 m, Ravi 90 m', 16) + 6 }), 3, { side: 'r', edge: true, p: 0 });
     },
     notes: [
       'Arrival Hall, Belt 5. Pose analytics sees two passengers go from arguing to pushing, with an aggression score of 0.89. The intercom microphone picked up raised voices thirty seconds earlier.',
@@ -732,18 +739,20 @@ async function build() {
     watch: [['Impossible travel:', '4 min vs 19 min'], ['Not the holder:', 'C2 vs A17 cameras'], ['Root cause:', 'old card ID not revoked']],
     live: 'T1 Door C2  ›  Investigation',
     visual: async (s, vx) => {
-      const dv = await device(s, F04, vx, DY, DW, 'V11 Active Alarms for T1 Door C2: cameras at C2 and A17, appearance check and linked access alarms');
-      hl(s, dv, ab(F04, 'Same card used', 1), 1, { side: 'r', edge: true });
+      const dv = await device(s, F04, vx, DY, DW, 'V11 Active Alarms for T1 Door C2: cameras at C2 and A17, an appearance check on clothing and build, and linked access alarms');
+      // both lines: the second-door read and the card ID the quote names
+      const b1 = ab(F04, 'Same card used', 1); hl(s, dv, [b1[0], 239, b1[2], 40], 1, { side: 'r', edge: true });
       await lens(s, dv, F04, CAM1, 6.15, 1.72, 2.0, { alt: 'Camera 1-204 at Door C2: the person is boxed Not the holder' });
       await lens(s, dv, F04, CAM2, 8.35, 1.72, 1.8, { alt: 'Camera 3-052 at Door A17 at 02:09: the cardholder' });
-      await lens(s, dv, F04, CAM3, 8.35, 3.01, 1.8, { alt: 'Appearance check: the person at C2 against the cardholder, 31% similar' });
+      await lens(s, dv, F04, CAM3, 8.35, 3.01, 1.8, { alt: 'Appearance check: a zoomed body crop of the person at C2, compared with the cardholder by clothing and build, 31% similar' });
       brackets(s, 6.03, 1.6, 4.24, 2.59, { arm: 0.16, lw: 1.25, tr: 25 });
-      marker(s, 10.27, 1.6, 2);
-      hl(s, dv, ab(F04, 'legacy SSID', 1), 3, { side: 'r', edge: true });
+      marker(s, 10.33, 1.6, 2);
+      // the whole row (time, status dot, event, source), so the leader starts past 'Access control'
+      const b3 = ab(F04, 'legacy SSID', 1, { pad: 1 }); hl(s, dv, [952, b3[1], 380, b3[3]], 3, { side: 'r', edge: true, p: 0.008 });
     },
     notes: [
       'Now, access intelligence. Card S-20931 opened Door A17 in Terminal 3 at 2:09, and Door C2 in Terminal 1 just four minutes later. The fastest route between them takes nineteen.',
-      'The cameras at both doors, side by side, show that it is not the same person.',
+      'Put the two door cameras side by side, and Co-pilot compares clothing and build, not faces. It is not the same person.',
       'And Co-pilot shows why it happened: C2 accepted an old card ID that should have been revoked when the card was re-issued. Validate the context, not only the card.',
     ].join('\n'),
   });
@@ -751,31 +760,33 @@ async function build() {
   await scene({
     side: 'left', kicker: 'SCENE 6  ·  01:45  ·  T4 BAGGAGE HALL B2', step: '6', sev: 'Info', ask: 'Priority 1 · Access intelligence', meter: { kind: 'gauge', v: 73 },
     title: 'Your own rules,\nnow running live',
-    quote: 'K. Lim in B2 since 22:36. Shift ended 01:00; B2 is outside K. Lim’s duties; no overtime request.',
-    watch: [['Your rules:', '4 of 5 triggered'], ['Context:', 'roster, no overtime'], ['Right urgency:', 'Info, a radio check']],
+    quote: 'K. Lim in B2 since 22:05. Shift ended 01:00; B2 is outside K. Lim’s duties; no overtime request.',
+    watch: [['Your rules:', '4 of 5 triggered'], ['Context:', 'roster, no overtime'], ['Right urgency:', 'teal Info, a radio check']],
     live: 'Baggage Hall B2  ›  Investigation',
     visual: async (s, vx) => {
       const dv = await device(s, F08, vx, DY, DW, 'V11 Active Alarms for Baggage Hall B2: overstay with the airport rules that triggered');
       await lens(s, dv, F08, [916, 738, 428, 112], 0.66, 4.95, 4.25, { n: 1, alt: 'Airport rules triggered: restricted zone in wee hours, outside scope of duty, non-working hours, dwell 3h 40m against 45 min usual' });
-      hl(s, dv, ab(F08, 'In zone since'), 2, { side: 'r', edge: true });
-      hl(s, dv, ab(F08, 'Baggage Hall B2'), 3, { side: 'l', edge: true });
+      hl(s, dv, ab(F08, 'In zone since', 0, { pad: 1, px: 5 }), 2, { side: 'r', edge: true, p: 0.008 });
+      // the whole B2 alert card, teal Info stripe included
+      hl(s, dv, [36, 430, 344, 142], 3, { side: 'l', edge: true });
     },
     notes: [
-      'Five years ago, CAG specified business-analytics rules: restricted areas in the small hours, zones outside someone’s duties, and dwell time beyond their usual pattern. Those rules now run live in Co-pilot.',
-      'K. Lim has been in Baggage Hall B2 for three hours and forty minutes, after the shift ended, with no overtime request. Four of your rules have triggered.',
-      'Co-pilot rates it Info: a radio check, not an alarm storm. The right urgency for the right event.',
+      'Five years ago, CAG specified business-analytics rules: restricted areas in the small hours, zones outside someone’s duties, non-working hours, and unusual dwell time. Those rules now run live in Co-pilot, and here four of the five have triggered.',
+      'Co-pilot then checks the context against the roster. K. Lim badged into Baggage Hall B2 at 22:05 and has been there for three hours and forty minutes. The shift ended at one, B2 is outside K. Lim’s duties, and there is no overtime request.',
+      'So Co-pilot rates it Info: a radio check, not an alarm storm. The right urgency for the right event.',
     ].join('\n'),
   });
 
   await scene({
     kicker: 'SCENE 7  ·  02:12  ·  T1 DEPARTURE ROW K', step: '7', sev: 'Warning', ask: 'Priority 1 · Governed AI', meter: { kind: 'gauge', v: 87, col: GOLD, label: 'POSSIBLE MATCH' },
     title: 'Sensitive calls\nstay human',
-    quote: 'Possible watchlist match: 23 min loitering, three staff-door approaches. Nothing happens until you confirm.',
+    quote: 'Possible watchlist match: 23\u00A0min loitering, three staff-door approaches. Nothing happens until you confirm.',
     watch: [['Behaviour first:', '23 min, 3 approaches'], ['Side by side:', 'capture, reference'], ['Your call:', 'confirm or reject']],
     live: 'Departure Hall Row K  ›  SOP Flow',
     visual: async (s, vx) => {
       const dv = await device(s, F06, vx, DY, DW, 'V11 SOP Flow for Departure Hall Row K: verification step first, with live capture and watchlist reference');
-      hl(s, dv, ab(F06, 'Approached staff door'), 1, { side: 'r', edge: true });
+      // both lines: 'loitering 23 min' and 'approached 3 times'
+      hl(s, dv, [911, 239, 358, 43], 1, { side: 'r', edge: true });
       await lens(s, dv, F06, [1134, 296, 210, 248], 7.85, 1.72, 2.2, { n: 2, alt: 'Live capture at 02:12 shown above the watchlist reference image' });
       await lens(s, dv, F06, [916, 634, 428, 126], 6.1, 4.85, 4.15, { n: 3, alt: 'Critical Action Required: verify first, with Confirm match and Not a match buttons' });
     },
@@ -790,18 +801,19 @@ async function build() {
     side: 'left', kicker: '02:30  ·  THE DUTY MANAGER ASKS', step: 'Ask', ask: 'Priority 1 · Natural language',
     title: 'Ask in plain English.\nAnswers cite sources.',
     quoteLabel: 'DANIEL ASKS  ·  CO-PILOT ANSWERS',
-    quote: [{ text: '“Show critical incidents in Terminal 5 in the last hour.” ', options: { bold: true } }, { text: 'Two: one open and awaiting a decision, one closed as wildlife.', options: { color: MUTED } }],
+    quote: [{ text: '“Show critical incidents in Terminal 5 in the last hour.” ', options: { bold: true } }, { text: 'Two, both closed: a forced door and a wildlife alarm.', options: { color: MUTED } }],
     watch: [['Ask:', 'type into the search bar'], ['Answer:', 'one line, plus alerts'], ['Sources:', 'event log, SOP, cameras']],
     live: 'Search bar  ›  ask in plain English',
     visual: async (s, vx) => {
-      const dv = await device(s, F11, vx, DY, DW, 'V11 search bar with a Co-pilot question and the answer dropdown listing two critical incidents in Terminal 5 with sources');
+      const dv = await device(s, F11, vx, DY, DW, 'V11 search bar with a Co-pilot question and the answer dropdown: two critical incidents in Terminal 5, both closed, with the matching alerts and sources');
       hl(s, dv, ab(F11, 'Show critical incidents', 0, { pad: 10 }), 1, { side: 't', edge: true });
-      await lens(s, dv, F11, [440, 100, 655, 100], 0.85, 5.15, 6.3, { n: 2, alt: 'Co-pilot answer: two critical incidents in Terminal 5 in the last hour; one open, one closed as wildlife' });
+      await lens(s, dv, F11, [440, 100, 655, 100], 0.85, 5.15, 6.3, { n: 2, alt: 'Co-pilot answer at 02:30: two critical incidents in Terminal 5 in the last hour, both closed: a forced door (Andrew Teo, 02:05) and a wildlife alarm' });
       hl(s, dv, ab(F11, 'Sources:'), 3, { side: 'r', edge: true });
     },
     notes: [
-      '2:30. Daniel, the duty manager, does not want to click through screens. He simply asks: show critical incidents in Terminal 5 in the last hour.',
-      'Co-pilot answers in one line and lists the matching alerts. Every answer cites its sources: the event log, the SOP section and the cameras.',
+      '2:30. Daniel, the duty manager, does not want to click through screens. He simply types into the search bar: show critical incidents in Terminal 5 in the last hour.',
+      'Co-pilot answers in one line: two incidents, a forced service door and a fence alarm that turned out to be wildlife, and both are already closed. The matching alerts are listed underneath.',
+      'And it cites its sources: the event log, the SOP section and the cameras. Follow-up questions are one click away.',
     ].join('\n'),
   });
 
@@ -809,12 +821,14 @@ async function build() {
     kicker: '07:00  ·  HANDOVER', step: 'Report', liveX: 6.33, ask: 'Priority 1 · Reporting',
     title: 'The report\nwrites itself',
     quoteLabel: 'CO-PILOT REPORT DRAFT',
-    quote: 'Follower entered airside on badge B-55821, intercepted at L2-East at 02:21. Root cause: courtesy tailgating.',
+    // the badge ID opens the line, so no line break can split it at its hyphen
+    quote: 'Badge B-55821 took two people airside. The follower was intercepted at L2-East at 02:21. Root cause: courtesy tailgating.',
     watch: [['Incident list:', 'every escalation'], ['Report draft:', 'from the audit trail'], ['Close Incident:', 'a person signs']],
     live: 'Incident Management  ›  TGT-214',
     visual: async (s) => {
       const dv = await device(s, F12, 6.33, DY, 6.4, 'V11 Incident Management: incident list and the TGT-214 detail with a Co-pilot report draft in Remarks', { bh: 6.69 - DY });
-      hl(s, dv, ab(F12, 'TGT-214'), 1, { side: 'l', edge: true });
+      // the whole TGT-214 row, so the leader meets it at its left edge instead of crossing the cells
+      hl(s, dv, [42, 299, 799, 51], 1, { side: 'l', edge: true });
       await lens(s, dv, F12, [876, 598, 668, 112], 6.33, 5.55, 6.4, { n: 2, nAt: 'tl', alt: 'Co-pilot report draft in the Remarks timeline' });
       hl(s, dv, ab(F12, 'Close Incident', 0, { pad: 12 }), 3, { side: 'r', edge: true });
     },
@@ -943,8 +957,9 @@ async function build() {
     T(s, 'Demo scenario figures. A pilot measures them on CAG data.', { x: rx0, y: 6.62, w: rw, h: 0.26, fontSize: 12, color: MUTED });
   }
   s.addNotes([
-    'So what changes for CAG? Seven ranked, explained incidents instead of twelve hundred raw alarms. Evidence assembled in one place. Your SOP filled in and ready to approve. One plain-English question instead of hours of footage. And reports drafted, ready to sign.',
-    'These numbers come from our demo scenario. In a pilot, we baseline your current figures and measure the same things on your data, together.',
+    'So what changes for CAG? Seven ranked, explained incidents instead of more than twelve hundred raw alarms worked by hand. One evidence panel instead of nine screens. Your SOP pre-filled and ready to approve. One plain-English question instead of hours of footage. And reports drafted, ready to sign.',
+    'In the scenario you just saw, that meant 6.2 seconds to link a bag to its owner, one click to escalate, and about ten minutes to a drafted report.',
+    'These are demo figures. In a pilot, we baseline your current numbers and measure the same things on your data, together.',
   ].join('\n'));
 
   // 23 ── roadmap
@@ -956,7 +971,7 @@ async function build() {
   {
     const H4 = [['NOW', 'Proven live', 'V11 + Co-pilot', ['Seven live scenarios', 'Correlation and SOPs', 'Ask Co-pilot, reports'], INK],
       ['NEXT', 'Pilot', 'One terminal, ~12 weeks', ['Live CAG data', 'Joint KPIs, baseline', 'Privacy policy set'], BLUE],
-      ['THEN', 'Scale', 'All terminals', ['AGIL Fence on V11', 'Multi-site governance', 'Responder app'], BLUE],
+      ['THEN', 'Scale', 'Every terminal and site', ['Fence fully migrated', 'All sites, one baseline', 'App for every patrol'], BLUE],
       ['VISION', 'Security OS', 'Predictive, federated', [], LAV]];
     const colW = (SW - 2 * MX - 3 * 0.25) / 4, ly = 2.2;
     for (const [i, [tag, ttl, sub, pts, col]] of H4.entries()) {
@@ -988,7 +1003,7 @@ async function build() {
   }
   s.addNotes([
     'Today’s demo is step one, and the decision in front of us is the next one: a pilot in one terminal, for about twelve weeks, on live feeds, with joint KPIs and an agreed privacy and watchlist policy.',
-    'Then we scale to all terminals, move AGIL Fence onto the same workflow, and bring in multi-site governance and the responder app.',
+    'Then we scale to every terminal: migrate every AGIL Fence sector into this same workflow, bring cargo and the regional sites under one baseline, and put the responder app in every patrol officer’s hands.',
     'The destination is an airport security operating system: predictive, federated, and built on the same Co-pilot. The image shows the design direction; it is not part of today’s demo.',
   ].join('\n'));
 
@@ -1020,8 +1035,8 @@ async function build() {
     }
   }
   s.addNotes([
-    'Our ask today is simple: name a CAG working team, and we will come back within two weeks with your pilot plan.',
-    'From there it is three steps. Choose the pilot terminal and the scenarios that matter most to you. Connect the data in an integration workshop. And agree what success looks like, including your policy on watchlist use.',
+    'Our ask today is simple: name a CAG working team. From that day, the first six weeks are three steps.',
+    'In the first two weeks, we choose the pilot terminal and the three or four scenarios that matter most to you, and we come back with your pilot plan. In weeks two to four, we connect the data in a workshop: access control, video management, AGIL Fence, LiDAR and your SOPs. And by week six, we agree what success looks like: the pilot KPIs, governance, and your privacy and watchlist policy.',
   ].join('\n'));
 
   // 25 ── close
@@ -1064,7 +1079,7 @@ async function build() {
     // dark table so the deck never flashes white (table cells take hex colours)
     const head = hdr.map(h => ({ text: h.toUpperCase(), options: { bold: true, color: HEX.lav, fill: { color: THEME.colors.dk2 }, fontSize: 12, charSpacing: 1 } }));
     const body = rows.map((r, i) => r.map((c, j) => ({ text: c, options: { color: HEX.white, fontSize: 13, bold: j === 3, fill: { color: i % 2 ? '111A2E' : '0B1222' } } })));
-    s.addTable([head, ...body], { x: MX, y: 1.7, w: SW - 2 * MX, colW: colWs, rowH: 0.55, valign: 'middle', margin: [3, 6, 3, 6], border: { type: 'solid', pt: 0.5, color: '2A3346' }, fontFace: 'Arial' });
+    s.addTable([head, ...body], { x: MX, y: 1.66, w: SW - 2 * MX, colW: colWs, rowH: 0.52, valign: 'middle', margin: [3, 6, 3, 6], border: { type: 'solid', pt: 0.5, color: '2A3346' }, fontFace: 'Arial' });
     if (part === 2) {
       card(s, MX, 6.0, SW - 2 * MX, 0.48, { tr: 15, edge: false, name: 'Fallback' });
       s.addShape(RECT, { x: MX, y: 6.0, w: 0.05, h: 0.48, fill: { color: RED }, line: { type: 'none' }, objectName: 'Fallback rule' });
@@ -1081,7 +1096,7 @@ async function build() {
     const QA = [
       ['Does it need facial recognition?', 'No. Bags and people are linked by appearance: clothing, bags and movement. Watchlist matching is optional, policy-controlled and always verified by an operator.'],
       ['Where does the AI run?', 'On premise, inside the airport network. Video stays on site; sites share events and incidents, not raw footage.'],
-      ['What if Co-pilot is wrong?', 'It never acts alone. Critical steps need a person; every closure is logged and reversible; feedback improves it.'],
+      ['What if Co-pilot is wrong?', 'A person approves every intervention. Any alarm it closes is logged with its reason and can be reopened.'],
       ['Do we replace our VMS, access control or iPAM?', 'No rip-and-replace. AGIL Secure sits above them, and AGIL Fence alarms join the same workflow as the rest.'],
       ['How long does a pilot take?', 'About 12 weeks for one terminal once data access is agreed (indicative, confirmed in the pilot plan).'],
       ['Is today’s demo live data?', 'It runs on the V11 system with simulated demo data. The pilot runs on CAG feeds.'],
