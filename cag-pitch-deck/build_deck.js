@@ -965,20 +965,20 @@ async function build() {
   if (CLIENT) return write();
   pres.addSection({ title: SEC.appx });
   const RUN = [
-    ['1–6', '0:00', 'Opening, priorities, problem, solution, cast', 'V11 on Home, idle', 'V11-01'],
-    ['7–8', '7:00', '“Let’s run a night shift, live”', 'Home: counters (2 / 4 / 1), then pins in the 3D view', 'V11-01'],
+    ['1–6', '0:00', 'Opening, priorities, problem, answer, how it works, cast', 'V11 on Home, idle', 'V11-01'],
+    ['7–8', '7:00', '“Let’s run a night shift, live” · “Seven incidents. Already ranked.”', 'Home: counters (2 / 4 / 1), then pins in the 3D view', 'V11-01'],
     ['9', '9:00', '“5 alarms. 1 incident. Explained.”', 'Click Staff Door D-214 → Investigation → “+2 more”', 'V11-02'],
     ['10', '11:00', '“Co-pilot prepares. You approve.”', 'SOP Flow → step 2 “Lock” → 3D shows D-214 locked', 'V11-03'],
-    ['11', '12:30', '“Escalated in one click”', 'Escalate → point at pre-filled fields → Create Incident', 'V11-10'],
+    ['11', '12:30', '“Escalated in one click, already filled in”', 'Escalate → point at pre-filled fields → Create Incident', 'V11-10'],
     ['12', '13:30', '“A real intruder, not the wind”', 'Fence Sector 5 → Investigation → LiDAR, thermal tiles', 'V11-09'],
-    ['13', '15:30', '“Bag and owner linked”', 'Gate B12 Holdroom → SOP Flow → step 5 “Approve”', 'V11-05'],
-    ['14', '17:30', '“Seen and heard”', 'Arrival Hall Belt 5 → Investigation', 'V11-07'],
-    ['15', '19:00', '“One card, two doors”', 'T1 Door C2 → Investigation → legacy SSID row', 'V11-04'],
-    ['16', '21:00', '“Your own rules, live”', 'Baggage Hall B2 → Investigation → rules', 'V11-08'],
+    ['13', '15:30', '“Bag and owner linked in 6 seconds”', 'Gate B12 Holdroom → SOP Flow → step 5 “Approve”', 'V11-05'],
+    ['14', '17:30', '“Seen and heard before it escalates”', 'Arrival Hall Belt 5 → Investigation', 'V11-07'],
+    ['15', '19:00', '“One card, two doors, four minutes”', 'T1 Door C2 → Investigation → legacy SSID row', 'V11-04'],
+    ['16', '21:00', '“Your own rules, now running live”', 'Baggage Hall B2 → Investigation → rules', 'V11-08'],
     ['17', '22:30', '“Sensitive calls stay human”', 'Departure Hall Row K → SOP Flow → “Not a match”', 'V11-06'],
     ['18', '24:30', '“Ask in plain English”', 'Search bar → type the question → result cards', 'V11-11'],
     ['19', '26:30', '“The report writes itself”', 'Incident Management → TGT-214 → Close Incident', 'V11-12'],
-    ['20–25', '28:30', 'Platform, trust, value, roadmap, ask', 'Exit Incident Management → Home', 'V11-01'],
+    ['20–25', '28:30', 'Platform, trust, value, roadmap, the ask, close', 'Exit Incident Management → Home', 'V11-01'],
   ];
   const hdr = ['Slide', 'Clock', 'Script cue', 'Clicks in V11', 'Screen'];
   const colWs = [0.8, 0.8, 3.9, 5.2, 1.43];

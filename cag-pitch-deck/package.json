@@ -1,7 +1,7 @@
 {
   "name": "cag-pitch-deck",
   "private": true,
-  "description": "CAG demo-day pitch deck: CMO presents, CTO drives AGIL Secure V11 live (editable .pptx)",
+  "description": "CAG demo-day pitch deck: slides in sync with a live AGIL Secure V11 demo (editable .pptx)",
   "scripts": {
     "assets": "node make_assets.mjs",
     "build": "node build_deck.js"

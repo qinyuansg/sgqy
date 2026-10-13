@@ -1,6 +1,6 @@
 // Assets for the CAG demo pitch deck.
 //   node make_assets.mjs <oldDeck.pptx> <v11SvgDir> <mvpSvgDir> <outDir>
-// - 2x renders of the V11 product frames (the screens the CTO clicks on demo day)
+// - 2x renders of the V11 product frames (the screens clicked live on demo day)
 // - dark "aurora" backgrounds, photo backgrounds from the previous deck (darkened; stale
 //   on-screen numbers blurred), the airport demo map with numbered scenario pins
 // - reversed (white) logo, persona portraits, the concept frame for the roadmap slide
