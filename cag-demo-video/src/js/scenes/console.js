@@ -24,7 +24,7 @@
         { t: S('m1').start, title: '5 alarms.\n1 incident.', meter: { kind: 'gauge', v: 94 }, tq: L('v11').start + 0.5,
           quote: 'Two people, one badge at D-214. The follower has no credential and is heading airside.' },
         { t: L('v12').start - 0.25, title: 'Co-pilot prepares.\nYou approve.', meter: { kind: 'steps', n: 4, done: 1, wait: 1, label: 'Step 2 of 4', after: { t: at('v12', 'locks') + 0.1, done: 2, wait: 0, label: 'Step 2 approved' } }, tq: L('v12').start + 0.2,
-          quote: 'Step 1 done: follower tracked on 3 cameras. Step 2, locking D-214, needs your approval.',
+          quote: 'Step 1 done: follower tracked on 3 cameras. Step 2, locking D-214, runs only on your approval.',
           persona: { k: 'nurul', act: 'Approved: lock D-214', t: at('v12', 'locks') + 0.15 } },
       ],
       plan: () => {
@@ -111,7 +111,7 @@
         screens: [[S('m6').start, F.over]],
         shots: [[S('m6').start + 0.2, HEAD, 1.2], [E.C('v18', 1).start - 0.2, [700, 600, 660, 330], 1.1], [L('v19').start - 0.2, [10, 360, 520, 300], 1.3]],
         hls: [
-          { r: [908, 234, 304, 28], n: 1, label: 'In B2 since 22:05', side: 'b', dist: 150, dx: -60, t0: L('v18').start + 0.4, t1: E.C('v18', 1).start },
+          { r: [908, 234, 304, 28], n: 1, label: 'In B2 since 22:05', side: 'r', dist: 24, t0: L('v18').start + 0.4, t1: E.C('v18', 1).start },
           { r: [944, 735, 408, 110], n: 2, label: 'Your rules: 4 triggered', side: 'l', t0: E.C('v18', 1).start + 0.6, t1: L('v19').start },
           { r: [44, 444, 324, 116], n: 3, label: 'Rated Info: a radio check', side: 'r', t0: L('v19').start + 0.9, t1: S('m6').end + 0.1 },
         ],

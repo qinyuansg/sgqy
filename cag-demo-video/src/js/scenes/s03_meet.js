@@ -19,7 +19,7 @@
       // the console
       s.con = K.console(el, { x: 440, y: 150, w: 1040 });
       s.con.frame(F01);
-      s.con.plan = { screens: [[s.start, F01]], shots: [[s.start, null, 0.1], [E.C('v06', 1).start - 0.3, [0, 180, 860, 660], 1.4]] };
+      s.con.plan = { screens: [[s.start, F01]], shots: [[s.start, null, 0.1], [E.C('v06', 1).start - 0.3, [0, 170, 830, 640], 1.4]] };
       const tB = E.C('v06', 1).start + 0.15;
       ['Co-pilot · 5 linked', 'Co-pilot · fence', 'Co-pilot · verify'].forEach((n, i) =>
         K.hl(s.con, { r: K.ab(F01, n, 0, { pad: 6 }), n: 1, label: i === 0 ? 'Answers, built in' : null, side: 'r', dist: 70, t0: tB + i * 0.16, t1: s.end + 0.2 }));

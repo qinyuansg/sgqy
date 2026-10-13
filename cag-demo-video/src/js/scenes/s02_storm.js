@@ -28,7 +28,7 @@
       s.pe = Array.from(s.svg.children);
       // nine systems on a ring around the operator
       s.sys = SYS.map((d, i) => {
-        const a = -Math.PI / 2 + (i / SYS.length) * Math.PI * 2, x = CX + Math.cos(a) * 500, y = CY + Math.sin(a) * 340;
+        const a = -Math.PI / 2 + (i / SYS.length) * Math.PI * 2, x = CX + Math.cos(a) * 488, y = CY + Math.sin(a) * 340;
         const e = E.add(el, `<div class="abs" style="left:${x - 34}px;top:${y - 34}px;width:68px;height:68px">
           ${K.ibox(d[0], 68, 30, 'background:rgba(14,22,40,.92);color:#8FB4FF;border-color:rgba(143,180,255,.45)')}
           <div class="label" style="position:absolute;left:50%;top:78px;transform:translateX(-50%);color:var(--muted)">${d[1]}</div></div>`);

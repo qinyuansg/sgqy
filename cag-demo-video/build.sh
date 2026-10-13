@@ -22,6 +22,6 @@ cp "$BUILD/master_subs.mp4" "$D/${N}_1080p_EN-subs_MASTER.mp4"   # play this one
 cp "$BUILD/master.mp4" "$D/${N}_1080p_clean_MASTER.mp4"          # no burned-in subtitles
 tools/deliver.sh "$BUILD/master_subs.mp4" "$D/${N}_1080p_EN-subs_share.mp4" "From alarms to answers — AGIL Secure V11 with AI Co-pilot"
 cp "$BUILD/subs/EN.srt" "$D/${N}_EN.srt"
-ffmpeg -y -loglevel error -ss "${THUMB_T:-160.5}" -i "$BUILD/master.mp4" -frames:v 1 -q:v 2 "$D/${N}_thumbnail.jpg"
+ffmpeg -y -loglevel error -ss "${THUMB_T:-164}" -i "$BUILD/master.mp4" -frames:v 1 -q:v 2 "$D/${N}_thumbnail.jpg"
 python3 tools/script_md.py                         # timecoded narration table in SCRIPT.md
 ls -la "$D"

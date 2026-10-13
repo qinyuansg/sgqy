@@ -155,7 +155,7 @@
     const dev = E.add(root, `<div class="abs dev" style="left:0;top:0;width:${VW}px;height:${VH}px"><div class="spec"></div></div>`);
     const scan = E.add(dev, '<div class="abs" style="left:0;right:0;height:2px;top:0;z-index:5;background:linear-gradient(90deg,transparent,#D4C6FF 20%,#fff 50%,#D4C6FF 80%,transparent);box-shadow:0 0 22px 6px rgba(182,156,255,.55);opacity:0"></div>');
     // when zoomed in on the right-hand panel, fade out the clipped map labels at the left edge
-    const edge = E.add(dev, '<div class="abs" style="left:0;top:0;bottom:0;width:150px;z-index:3;background:linear-gradient(90deg,#05070D 15%,rgba(5,7,13,0));opacity:0"></div>');
+    const edge = E.add(dev, '<div class="abs" style="left:0;top:0;bottom:0;width:190px;z-index:3;background:linear-gradient(90deg,#05070D 42%,rgba(5,7,13,0));opacity:0"></div>');
     const ov = E.add(root, `<svg class="abs" width="${VW}" height="${VH}" style="left:0;top:0;z-index:6;overflow:visible"></svg>`);
     const brk = K.brackets(root, 0, 0, VW, VH, { gap: 18, arm: 46 });
     const c = { root, dev, scan, edge, ov, brk, VW, VH, s0: VH / FH, layers: {}, hls: [], plan: { screens: [], shots: [] }, cam: { k: VH / FH, ox: 0, oy: 0, z: 1 } };
