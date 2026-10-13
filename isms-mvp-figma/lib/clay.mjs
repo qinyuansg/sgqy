@@ -52,18 +52,21 @@ function wedge(P, cx, cy, r, a0, a1, col) {
 
 // V11-style map marker: severity disc + white icon, optional label pill
 export function marker(F, P, m) {
-  const col = { Critical: V.crit, Warning: V.warn, Info: V.info }[m.sev] || V.blue;
+  const col = m.col || { Critical: V.crit, Warning: V.warn, Info: V.info }[m.sev] || V.blue;
+  const k = m.scale || 1;
   const [bx, by] = P(m.X, m.Y, 0), [hx, hy] = P(m.X, m.Y, m.h ?? 4.5);
   let s = '';
   const ring = [];
   for (let i = 0; i < 32; i++) { const a = i / 32 * Math.PI * 2; ring.push(P(m.X + 1.6 * Math.cos(a), m.Y + 1.6 * Math.sin(a), 0.05)); }
   s += poly(ring, { fill: col, fo: 0.22, stroke: col, so: 0.9, sw: 1.5 });
-  s += line(bx, by, hx, hy + 14, { stroke: col, sw: 2 });
-  s += circle(hx, hy, 18, { fill: col, fo: 0.3, filter: F.blur(5) }) + circle(hx, hy, 15, { fill: col, stroke: '#FFFFFF', sw: 2 });
-  s += icon(F, m.icon || 'alert', hx - 8.5, hy - 8.5, 17, '#FFFFFF', 2);
+  s += line(bx, by, hx, hy + 14 * k, { stroke: col, sw: 2 });
+  s += circle(hx, hy, 18 * k, { fill: col, fo: 0.3, filter: F.blur(5 * k) }) + circle(hx, hy, 15 * k, { fill: col, stroke: '#FFFFFF', sw: 2 });
+  // numbered marker (deck demo map) or icon marker (product UI)
+  if (m.num !== undefined) s += text(hx, hy + 6 * k, String(m.num), { size: Math.round(17 * k), weight: 700, fill: m.numCol || '#FFFFFF', anchor: 'middle' });
+  else s += icon(F, m.icon || 'alert', hx - 8.5 * k, hy - 8.5 * k, 17 * k, '#FFFFFF', 2);
   if (m.label) {
     const lw = textWidth(m.label, 14, 500) + 24;
-    const lx = m.left ? hx - 22 - lw : hx + 22, ly = hy - 16;
+    const lx = m.left ? hx - 22 * k - lw : hx + 22 * k, ly = hy - 16;
     s += rect(lx, ly, lw, 32, { r: 8, fill: '#1D232C', fo: 0.92, stroke: col, sw: 1.5 }) + text(lx + 12, ly + 21, m.label, { size: 14, weight: 500, fill: '#FFFFFF' });
   }
   return g(F, 'Marker ' + (m.id || m.label || ''), s);
@@ -73,10 +76,10 @@ export function clayAirport(F, P, o = {}) {
   let s = '';
   // grid (axonometric, aligned with the twin), fading with distance
   let gr = '';
-  for (let k = -60; k <= 160; k += 4) {
+  if (o.grid !== false) for (let k = -60; k <= 160; k += 4) {
     gr += line(...P(k, -60), ...P(k, 120), { stroke: V.grid, so: 0.28, sw: 1 });
   }
-  for (let k = -60; k <= 120; k += 4) gr += line(...P(-60, k), ...P(160, k), { stroke: V.grid, so: 0.28, sw: 1 });
+  if (o.grid !== false) for (let k = -60; k <= 120; k += 4) gr += line(...P(-60, k), ...P(160, k), { stroke: V.grid, so: 0.28, sw: 1 });
   s += g(F, 'Grid', gr);
   // site plate
   s += g(F, 'Site plate', poly([P(0, 0), P(WORLD.w, 0), P(WORLD.w, WORLD.h), P(0, WORLD.h)], { fill: '#0B0F15', fo: 0.92, stroke: '#5C83C9', so: 0.45, sw: 1.2 }));
