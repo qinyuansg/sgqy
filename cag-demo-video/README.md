@@ -29,5 +29,6 @@ DECK_ASSETS=/path/to/deck/assets KOKORO_DIR=/path/to/kokoro BUILD=/path/to/build
 - `tools/music.py`, `tools/mix.py`: original synthesised score and SFX, mixed to −14 LUFS, −3 dBTP
 - `tools/srt.py`, `tools/subs.mjs`: English SRT and the burned-in subtitle track
 
-Deliverables in `$BUILD/dist`: the subtitled master to play at the demo, a clean master, a share
-copy under 28 MiB, `EN.srt` and a thumbnail.
+Deliverables in `$BUILD/dist`: subtitled and clean masters (CRF 16, about 70 MB), subtitled and clean
+share copies under 28 MiB (two-pass; SSIM 0.997 and PSNR 48 dB against the master, so either plays at
+the demo), `EN.srt` and a thumbnail. Audio: −14 LUFS integrated, −3 dBTP.
