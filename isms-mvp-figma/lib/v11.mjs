@@ -244,12 +244,13 @@ export function remarksBox(F, x, y, w, o = {}) {
 const BTN = { blue: '#1F4FBF', red: '#A61B1B', green: '#43A517', grey: '#5A606B' };
 export function sopFlow(F, x, y, w, steps, o = {}) {
   let s = '', cy = y;
-  if (o.caption) { s += icon(F, 'sparkle', x + 16, cy + 7, 14, C.copilot, 2) + text(x + 36, cy + 19, o.caption, { size: 12.5, weight: 500, fill: C.copilot }); cy += 30; }
+  if (o.caption) { const cc = o.captionCol || C.copilot; s += icon(F, o.captionIcon || 'sparkle', x + 16, cy + 7, 14, cc, 2) + text(x + 36, cy + 19, o.caption, { size: 12.5, weight: 500, fill: cc }); cy += 30; }
   steps.forEach((st, i) => {
     const crit = st.state === 'critical', done = st.state === 'done';
     const tl = st.text ? wrap(st.text, w - 60, 12.5, 400) : [];
     const items = st.items || [];
     const bh = 8 + tl.length * 18 + items.length * 22 + (st.actions ? 44 : 0) + 6;
+    const pos = o.pos ? (o.pos[i] = { y: cy, h: 32 + bh, actions: [] }) : null;   // layout read-back (film callouts)
     let r = '';
     if (crit) r += rect(x, cy, w, 32, { fill: C.sopGold });
     r += circle(x + 25, cy + 16, 9, { fill: crit ? '#7A1E14' : C.stepNum, fo: crit ? 0.6 : 1 }) + text(x + 25, cy + 20.5, String(i + 1), { size: 12, weight: 700, fill: '#FFFFFF', anchor: 'middle' });
@@ -276,6 +277,7 @@ export function sopFlow(F, x, y, w, steps, o = {}) {
       for (const [lab, kind] of st.actions) {
         const bw = textWidth(lab, 15, 700) + 26;
         r += g(F, 'Action ' + lab, rect(ax, ay, bw, 32, { r: 6, fill: BTN[kind] || BTN.grey }) + text(ax + bw / 2, ay + 21.5, lab, { size: 15, weight: 700, fill: '#FFFFFF', anchor: 'middle' }));
+        if (pos) pos.actions.push([ax, ay, bw, 32]);
         ax += bw + 8;
       }
     }

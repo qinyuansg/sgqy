@@ -10,18 +10,18 @@ export function useThumbs(dir) { THUMBS = dir; }
 const thumb = name => 'data:image/jpeg;base64,' + fs.readFileSync(path.join(THUMBS, name + '.jpg')).toString('base64');
 
 const AMBER = '#D4B741', BLUE = '#3EA9FF', LAV = C.copilot, WHITE = '#FFFFFF', GREEN = '#44AC0C';
-const ROLES = { sensor: ['AgilFence', AMBER], system: ['System', BLUE], copilot: ['Co-pilot', LAV], operator: ['Operator', WHITE], patrol: ['Patrol', GREEN] };
+const ROLES = { sensor: ['AgilFence', AMBER], system: ['AGIL Secure (auto)', BLUE], copilot: ['Co-pilot (concept)', LAV], operator: ['People decide', WHITE], patrol: ['Patrol', GREEN] };
 
 export const STEPS = [
-  { n: 1, frame: 'AF-01-perimeter-triggered', w: 1400, time: 'T+0 s · 02:14:58', title: 'Perimeter triggered', cap: 'Someone climbs segment 5-14. AgilFence feels the strain in the fibre and pinpoints the segment.', who: ['sensor'] },
-  { n: 2, frame: 'AF-02-system-message-alarm', w: 1400, time: 'T+1 s · 02:14:59', title: 'System message and alarm', cap: 'A system message, an alarm tone and a Critical card. The pin drops on the airport model.', who: ['system'] },
-  { n: 3, frame: 'AF-03-incident-list', w: 1600, time: 'T+7 s · 02:15:05', title: 'Alarm in the incident list', cap: 'PER-005 tops the incident list with fence, LiDAR and camera alarms linked into one.', who: ['system', 'copilot'] },
-  { n: 4, frame: 'AF-04-locate-nearest-cameras', w: 1400, time: 'T+8 s · 02:15:06', title: 'Locate: nearest camera', cap: 'One click flies the model to 5-14 and ranks the nearest cameras. PTZ 7-02 is already on preset.', who: ['operator', 'system'] },
-  { n: 5, frame: 'AF-05-ptz-films-the-area', w: 1400, time: 'T+14 s · 02:15:12', title: 'PTZ films the area', cap: 'Live thermal shows one person, 1.7 m. The clip from before the alarm is already saved.', who: ['system', 'copilot'] },
-  { n: 6, frame: 'AF-06-command-centre-video-wall', w: 1920, time: 'T+20 s · 02:15:18', title: 'Command-centre video wall', cap: 'Live, wide, replay, LiDAR, map and fence trace on the wall: one picture for the whole room.', who: ['system', 'operator'] },
-  { n: 7, frame: 'AF-07-sop-approve-dispatch', w: 1400, time: 'T+32 s · 02:15:30', title: 'Operator runs the SOP', cap: 'Verify, then approve the dispatch and inform Airside Ops and the tower. The system ticks the routine steps.', who: ['operator', 'system', 'copilot'] },
-  { n: 8, frame: 'AF-08-patrol-on-scene', w: 1400, time: 'T+3 min 10 s · 02:18:08', title: 'Patrol on scene', cap: 'Patrol P-3 holds the person inside the fence line, 150 m short of runway 02L.', who: ['patrol', 'operator'] },
-  { n: 9, frame: 'AF-09-close-and-report', w: 1600, time: 'T+17 min 42 s · 02:32:40', title: 'Close and report', cap: 'Closed with a response timeline, an evidence pack and a report drafted by Co-pilot.', who: ['operator', 'copilot'] },
+  { n: 1, frame: 'AF-01-perimeter-triggered', w: 1400, time: '02:14:58', title: 'Perimeter triggered', cap: 'Someone climbs segment 5-14. The strain rises above the wind and AgilFence pinpoints the segment.', who: ['sensor'], today: true },
+  { n: 2, frame: 'AF-02-system-message-alarm', w: 1400, time: '02:14:59', title: 'System message and alarm', cap: 'A system message, an alarm tone, a Critical card and a pin on the airport model.', who: ['system'] },
+  { n: 3, frame: 'AF-03-incident-list', w: 1600, time: '02:15:05', title: 'Alarm in the incident list', cap: 'PER-005 tops the incident list: the fence and LiDAR alarms and the camera call-up, linked.', who: ['system', 'copilot'] },
+  { n: 4, frame: 'AF-04-locate-nearest-cameras', w: 1400, time: '02:15:08', title: 'Locate: nearest camera', cap: 'One click flies the map to 5-14 and lists the nearest cameras. iPAMS has PTZ 7-02 on preset.', who: ['operator', 'system'] },
+  { n: 5, frame: 'AF-05-ptz-films-the-area', w: 1400, time: '02:15:12', title: 'PTZ films the area', cap: 'One more click takes PTZ 7-02 live: one person, 1.7 m, auto-tracked. The pre-alarm replay is kept.', who: ['operator', 'system', 'copilot'] },
+  { n: 6, frame: 'AF-06-command-centre-video-wall', w: 1920, time: '02:15:18', title: 'Command-centre video wall', cap: 'Live, wide, replay, LiDAR, map and fence trace on the wall: one picture for the whole room.', who: ['system', 'operator'] },
+  { n: 7, frame: 'AF-07-sop-approve-dispatch', w: 1400, time: '02:15:24 – 02:16:00', title: 'Operator runs the SOP', cap: 'Works check, verify, dispatch Patrol 2, inform Airside Ops and the tower; the duty manager approves the police call.', who: ['operator', 'system'] },
+  { n: 8, frame: 'AF-08-patrol-on-scene', w: 1400, time: '02:18:08', title: 'Patrol on scene', cap: 'Patrol 2 (two officers) reaches the person inside the fence line, short of the runway, and holds for the police.', who: ['patrol', 'operator'] },
+  { n: 9, frame: 'AF-09-close-and-report', w: 1600, time: '02:44:20', title: 'Close and report', cap: 'Closed by Nurul, signed off by Daniel: incident timeline, locked evidence and a report draft.', who: ['operator', 'copilot'] },
 ];
 
 function chip(F, x, y, k) {
@@ -42,6 +42,10 @@ export function flowBoard() {
   s += text(100, 120, 'END-TO-END FLOW · AGILFENCE × AGIL SECURE V11', { size: 20, weight: 700, ls: 2.5, fill: AMBER });
   s += text(100, 196, 'From a climb on the fence to a confirmed response', { size: 64, weight: 700, fill: '#FFFFFF' });
   s += text(100, 248, 'Fence Sector 5 · Segment 5-14 · north perimeter, 150 m from runway 02L · 02:14:58', { size: 26, fill: C.t2 });
+  // what CAG has today vs what AGIL Secure V11 adds
+  s += g(F, 'Today vs added', rect(100, 272, 12, 12, { r: 3, fill: AMBER }) + text(122, 284, 'Today with AgilFence + iPAMS: sensing, pinpointing, camera preset (steps 1 and 4)', { size: 17, fill: C.t1 }) +
+    rect(1000, 272, 12, 12, { r: 3, fill: BLUE }) + text(1022, 284, 'Added by AGIL Secure V11: one incident, Locate, live view, video wall, SOP, record (steps 2–9)', { size: 17, fill: C.t1 }) +
+    rect(2040, 270, 16, 16, { r: 3, stroke: '#8C96A6', dash: '4 3', sw: 1.5 }) + text(2066, 284, 'NEW layers = concepts for V11', { size: 17, fill: C.t2 }));
   s += rect(2960.5, 92.5, 420, 44, { r: 22, fill: '#1D232C', stroke: '#4A505B' }) + text(3170.5, 121, 'Illustrative scenario · simulated data', { size: 18, weight: 500, fill: C.t3, anchor: 'middle' });
   let lx = 2360;
   s += text(lx, 196, 'WHO ACTS', { size: 15, weight: 700, ls: 1.5, fill: C.t2 });
@@ -58,7 +62,7 @@ export function flowBoard() {
     let c = rect(x, y, cw, 740, { r: 20, fill: '#11161E', stroke: i === 0 ? AMBER : '#2B3442', sw: i === 0 ? 2 : 1.2 });
     // number + time + title
     c += circle(x + 40, y + 44, 22, { fill: i === 0 ? AMBER : C.blue }) + text(x + 40, y + 52, String(st.n), { size: 22, weight: 700, fill: i === 0 ? '#111111' : '#FFFFFF', anchor: 'middle' });
-    c += text(x + 76, y + 38, st.time, { size: 17, weight: 500, fill: i === 0 ? AMBER : '#8FC4FF' }) + text(x + 76, y + 64, st.title, { size: 25, weight: 700, fill: '#FFFFFF' });
+    c += text(x + 76, y + 38, st.time, { size: 18, weight: 600, fill: i === 0 ? AMBER : '#8FC4FF' }) + text(x + 76, y + 64, st.title, { size: 25, weight: 700, fill: '#FFFFFF' });
     // preview
     const py = y + 90, ph = st.w === 1920 ? cw * 1080 / 1920 : cw * 1069 / st.w;
     const clip = F.clip(`<rect x="${x + 1}" y="${py}" width="${cw - 2}" height="${f(Math.min(ph, th))}"/>`);
@@ -82,19 +86,18 @@ export function flowBoard() {
     ar += pathEl(`M${x5 + cw / 2} ${y5 + 748} L${x5 + cw / 2} ${yy - 14} Q${x5 + cw / 2} ${yy} ${x5 + cw / 2 - 14} ${yy} L${x6 + cw / 2 + 14} ${yy} Q${x6 + cw / 2} ${yy} ${x6 + cw / 2} ${yy + 14} L${x6 + cw / 2} ${y6 - 10} M${x6 + cw / 2 - 10} ${y6 - 22} L${x6 + cw / 2} ${y6 - 10} L${x6 + cw / 2 + 10} ${y6 - 22}`, { stroke: '#8C96A6', sw: 3, cap: 'round', join: 'round' });
   }
   s += g(F, 'Arrows', ar);
-  // outcome card (row 2, slot 5)
+  // scenario clock (row 2, slot 5): clock times only, no durations
   {
     const x = x0 + 4 * (cw + gap), y = rowY[1];
     let o = rect(x, y, cw, 740, { r: 20, fill: '#0D1A14', stroke: GREEN, so: 0.7, sw: 1.5 });
-    o += text(x + 32, y + 56, 'OUTCOME', { size: 16, weight: 700, ls: 2, fill: GREEN }) + text(x + 32, y + 98, 'Climb to patrol on scene', { size: 30, weight: 700, fill: '#FFFFFF' });
-    o += text(x + 32, y + 196, '3 min 10 s', { size: 92, weight: 700, fill: '#FFFFFF' });
-    o += text(x + 32, y + 236, 'Person held 150 m short of runway 02L', { size: 20, fill: C.t1 });
-    const kp = [['Alert on screen', '1 s'], ['Camera on target', '5 s'], ['Verified on video', '26 s'], ['Patrol dispatched', '32 s'], ['Airside Ops / tower told', '40 s'], ['Incident closed', '17 min 42 s']];
-    kp.forEach(([l, v], i) => { const yy = y + 296 + i * 54; o += line(x + 32, yy - 32, x + cw - 32, yy - 32, { stroke: '#22382C' }) + text(x + 32, yy, l, { size: 20, fill: C.t1 }) + text(x + cw - 32, yy, v, { size: 22, weight: 700, fill: '#FFFFFF', anchor: 'end' }); });
-    o += text(x + 32, y + 640, 'Illustrative scenario timings.', { size: 16, fill: C.t2 });
-    o += text(x + 32, y + 690, 'The fence feels it. The system shows it.', { size: 21, weight: 500, fill: AMBER }) + text(x + 32, y + 718, 'Your team acts on it.', { size: 21, weight: 500, fill: AMBER });
+    o += text(x + 32, y + 56, 'SCENARIO CLOCK · ILLUSTRATIVE', { size: 16, weight: 700, ls: 2, fill: GREEN }) + text(x + 32, y + 98, 'From a climb to a closed incident', { size: 28, weight: 700, fill: '#FFFFFF' });
+    const kp = [['Climb on segment 5-14', '02:14:58'], ['Verified on video', '02:15:24'], ['Patrol 2 sent', '02:15:30'], ['Tower informed', '02:15:40'], ['Police call approved', '02:16:00'], ['Patrol on scene', '02:18:08'], ['Police custody', '02:26:30'], ['Closed and signed off', '02:44:20'], ['Summary to head of security', '07:00']];
+    kp.forEach(([l, v], i) => { const yy = y + 160 + i * 52; o += line(x + 32, yy - 32, x + cw - 32, yy - 32, { stroke: '#22382C' }) + text(x + 32, yy, l, { size: 20, fill: C.t1 }) + text(x + cw - 32, yy, v, { size: 22, weight: 700, fill: '#FFFFFF', anchor: 'end' }); });
+    o += text(x + 32, y + 664, 'AgilFence feels it. AGIL Secure shows it.', { size: 21, weight: 500, fill: AMBER }) + text(x + 32, y + 692, 'Your team acts on it.', { size: 21, weight: 500, fill: AMBER });
     s += g(F, 'Outcome', o);
   }
-  s += text(100, 1980, 'Frames AF-01 to AF-09 are in the same file, at full size. Elements marked NEW in layer names are additions to the current V11 UI; everything else is today’s V11.', { size: 20, fill: C.t2 });
+  s += text(100, 1972, 'Restricted: for CAG security and airside operations stakeholders · not for public display. Names, times, layout and distances are simulated and stylised.', { size: 19, fill: C.t2 });
+  s += text(100, 2004, 'Next: a live AGIL Secure V11 walkthrough on your AgilFence alarms, and an SOP-mapping workshop with your team.', { size: 19, weight: 500, fill: '#FFFFFF' });
+  s += text(3380, 2004, 'Frames AF-01 to AF-09 follow at full size', { size: 19, fill: C.t2, anchor: 'end' });
   return F.render(s);
 }

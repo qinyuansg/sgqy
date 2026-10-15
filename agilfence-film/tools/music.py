@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Original score + sound design, synthesised from scratch (numpy/scipy only).
 
-Music follows the film's scenes (read from timeline.json): an ambient D-minor
-night, a pulse under the alarm storm, a lift to D major when V11 and Co-pilot
-are revealed, a steady groove under the seven incidents (held back for the
-sensitive calls), a build on the platform and a resolve on the end card. Sound effects are rendered from the picture-locked cues the scenes
+Music follows the film's scenes (read from timeline.json): a dark D-minor night
+on the perimeter, a light arpeggio for the sensing fence, held tension at the
+climb, a driving minor groove under the alarm, a lift to D major for the
+response and a resolve on the end card. Sound effects are rendered from the picture-locked cues the scenes
 register (cues.json).
 
 Writes $BUILD/stems/music.wav and $BUILD/stems/sfx.wav (48 kHz, stereo, float).
@@ -269,49 +269,41 @@ def score(total, S):
     buf = np.zeros((int((total + 3) * SR), 2))
     s = lambda k: S[k]["start"]
     e = lambda k: S[k]["end"]
-    # A · 02:14: ambient Dm9 and a low drone under the control room, a lift as the airport appears
-    add(buf, 0.0, pad(CH["Dm9"], s("s02") + 0.6, fc=650, att=2.4), 0.55)
-    n = int((s("s02") + 1.2) * SR)
+    # A · 02:14, the quiet perimeter: a dark Dm9 pad and a low drone; a slow pulse under the question
+    add(buf, 0.0, pad(CH["Dm9"], e("f02") + 0.6, fc=600, att=2.6), 0.55)
+    n = int((e("f02") + 1.0) * SR)
     drone = (sine(mtof(26), n) + 0.4 * sine(mtof(38), n)) * env_adsr(n, 3.0, 0.1, 1.0, 1.2)
-    add(buf, 0.0, drone, 0.16)
-    section(buf, 6.0, s("s02"), ["Bbmaj7", "Asus"], 1, pad_fc=1500, pad_g=0.22, arp_g=0.07)
-    # B · the alarm storm: pulse builds, riser into the reveal
-    section(buf, s("s02"), e("s02") - 0.35, ["Dm9", "Bbmaj7", "Gm9", "Asus"], 2, pad_fc=1100, pad_g=0.42,
-            bass_mode="eighths", bass_g=0.22, hat_mode="16ths", hat_g=0.06, kick_mode="one", kick_g=0.32, drums_from=s("s02") + 1.0)
-    add(buf, e("s02") - 2.4, riser(2.3, 150, 2600), 0.24)
-    # C · reveal: D major I–V–vi–IV, drums enter as the console rises; continues under the Co-pilot flow
-    lift0 = s("s03")
-    section(buf, lift0, e("s04"), ["D", "A/C#", "Bm", "Gmaj7"], 2, pad_fc=2800, pad_g=0.44, bass_mode="sync", bass_g=0.2,
-            arp_g=0.15, arp_from=lift0 + 4.0, kick_mode="four", kick_g=0.24, drums_from=lift0 + 4.0, hat_mode="off", hat_g=0.055)
-    # D · one night, seven incidents: steady, lighter groove under dense narration
-    g0 = s("s05")
-    section(buf, g0, e("m5"), ["Bm", "Gmaj7", "D", "A"], 2, pad_fc=2200, pad_g=0.36, bass_mode="sync", bass_g=0.17,
-            arp_g=0.1, kick_mode="half", kick_g=0.22, hat_mode="off", hat_g=0.045, clap_g=0.045)
-    # D2 · rules and sensitive calls: drums drop out, held bass
-    section(buf, s("m6"), e("m7"), ["Gmaj7", "Em7", "Bm", "A"], 2, pad_fc=1800, pad_g=0.4, bass_mode="hold", bass_g=0.15, arp_g=0.07)
-    # D3 · ask and report: the groove returns, brighter
-    section(buf, s("m8"), e("m9"), ["D", "A/C#", "Bm", "A"], 2, pad_fc=2600, pad_g=0.38, bass_mode="sync", bass_g=0.17,
-            arp_g=0.12, kick_mode="half", kick_g=0.22, hat_mode="off", hat_g=0.05, clap_g=0.05)
-    # E · platform and governance: build
-    section(buf, s("s06"), e("s07"), ["Gmaj7", "A", "Bm", "A"], 1, pad_fc=2900, pad_g=0.42, bass_mode="eighths", bass_g=0.19,
-            arp_g=0.14, kick_mode="four", kick_g=0.28, hat_mode="16ths", hat_g=0.055, clap_g=0.07)
-    add(buf, e("s07") - 1.6, riser(1.6, 300, 4200), 0.2)
-    # F · the difference: full statement
-    section(buf, s("s08"), e("s08"), ["D", "A/C#", "Bm", "Gmaj7"], 2, pad_fc=3000, pad_g=0.44, bass_mode="sync", bass_g=0.21,
-            arp_g=0.15, kick_mode="four", kick_g=0.32, hat_mode="8ths", hat_g=0.06, clap_g=0.09)
-    # G · outro: IV – V – I, the final chord rings out on the end card
-    o0 = s("s09")
-    add(buf, o0, pad(CH["Gmaj7"], 2.2, fc=2000), 0.42)
-    add(buf, o0 + 2.2, pad(CH["A"], 2.2, fc=2200), 0.42)
-    tres = o0 + 4.4
+    add(buf, 0.0, drone, 0.17)
+    section(buf, s("f02"), e("f02"), ["Bbmaj7", "Asus"], 1, pad_fc=900, pad_g=0.18, kick_mode="one", kick_g=0.22)
+    # B · the fence is the sensor: a light arpeggio, curious and precise
+    section(buf, s("f03"), e("f03"), ["Dm9", "Bbmaj7", "Gm9", "Asus"], 2, pad_fc=1800, pad_g=0.34, bass_mode="hold", bass_g=0.14,
+            arp_g=0.1, arp_from=s("f03") + 1.5, hat_mode="off", hat_g=0.035, drums_from=s("f03") + 4.0)
+    # C · first touch: everything drops to a held tension chord; a riser into the alarm
+    add(buf, s("f04"), pad(CH["Gm9"], e("f04") - s("f04") + 0.4, fc=1200, att=0.4), 0.42)
+    add(buf, s("f04"), bass(31, e("f04") - s("f04"), "hold"), 0.16)
+    add(buf, e("f04") - 2.2, riser(2.1, 160, 2800), 0.22)
+    # D · the alarm on the console: driving minor groove
+    section(buf, s("f05"), e("f08"), ["Dm9", "Bbmaj7", "Gm9", "Asus"], 2, pad_fc=1500, pad_g=0.36, bass_mode="eighths", bass_g=0.2,
+            arp_g=0.08, kick_mode="half", kick_g=0.26, hat_mode="16ths", hat_g=0.05, drums_from=s("f05") + 0.8)
+    add(buf, e("f08") - 1.4, riser(1.4, 300, 3600), 0.16)
+    # E · the response: lift to D major, steady and confident
+    section(buf, s("f09"), e("f12"), ["D", "A/C#", "Bm", "Gmaj7"], 2, pad_fc=2600, pad_g=0.4, bass_mode="sync", bass_g=0.18,
+            arp_g=0.13, kick_mode="four", kick_g=0.24, hat_mode="off", hat_g=0.05, clap_g=0.05)
+    # F · what it means: full statement
+    section(buf, s("f13"), e("f13"), ["Gmaj7", "A", "Bm", "A"], 1, pad_fc=3000, pad_g=0.44, bass_mode="sync", bass_g=0.2,
+            arp_g=0.15, kick_mode="four", kick_g=0.3, hat_mode="8ths", hat_g=0.06, clap_g=0.08)
+    # G · close: IV – V – I, the final chord rings out on the end card
+    o0 = s("f14")
+    add(buf, o0, pad(CH["Gmaj7"], 2.4, fc=2000), 0.42)
+    add(buf, o0 + 2.4, pad(CH["A"], 2.4, fc=2200), 0.42)
+    tres = o0 + 4.8
     for c in json.load(open(os.path.join(BUILD, "cues.json"))):
         if c["type"] == "shimmer" and c["t"] > o0:
             tres = c["t"]
-    add(buf, o0 + 4.4, pad(CH["Dadd9"], total - (o0 + 4.4), fc=2600, att=0.8, rel=2.5), 0.5)
-    add(buf, o0 + 4.4, bass(26, total - (o0 + 4.4), "hold"), 0.18)
+    add(buf, o0 + 4.8, pad(CH["Dadd9"], total - (o0 + 4.8), fc=2600, att=0.8, rel=2.5), 0.5)
+    add(buf, o0 + 4.8, bass(26, total - (o0 + 4.8), "hold"), 0.18)
     for i, m in enumerate([74, 78, 81, 86]):
         add(buf, tres + i * 0.09, bell(mtof(m), 3.2), 0.12, pan=(-0.4 + i * 0.27))
-    # gentle fade at the very end
     nfade = int(2.2 * SR); iend = int(total * SR)
     buf[iend - nfade:iend] *= np.linspace(1, 0, nfade)[:, None] ** 1.3
     buf[iend:] = 0

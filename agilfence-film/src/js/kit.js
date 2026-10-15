@@ -1,4 +1,5 @@
-/* Shared components: icons, viewfinder brackets, severity pills, Co-pilot card, numbered rows,
+/* AgilFence film: accent is ice blue (#8FB4FF); lavender stays reserved for Co-pilot.
+   Shared components: icons, viewfinder brackets, severity pills, Co-pilot card, numbered rows,
    and the V11 console (real V11 screens with a camera that pushes in, highlights and tags). */
 (function () {
   'use strict';
@@ -153,7 +154,7 @@
     const VW = o.w, VH = Math.round(o.w * FH / FW);
     const root = E.add(parent, `<div class="abs con" style="left:${o.x}px;top:${o.y}px;width:${VW}px;height:${VH}px"></div>`);
     const dev = E.add(root, `<div class="abs dev" style="left:0;top:0;width:${VW}px;height:${VH}px"><div class="spec"></div></div>`);
-    const scan = E.add(dev, '<div class="abs" style="left:0;right:0;height:2px;top:0;z-index:5;background:linear-gradient(90deg,transparent,#D4C6FF 20%,#fff 50%,#D4C6FF 80%,transparent);box-shadow:0 0 22px 6px rgba(182,156,255,.55);opacity:0"></div>');
+    const scan = E.add(dev, '<div class="abs" style="left:0;right:0;height:2px;top:0;z-index:5;background:linear-gradient(90deg,transparent,#C6DAFF 20%,#fff 50%,#C6DAFF 80%,transparent);box-shadow:0 0 22px 6px rgba(143,180,255,.55);opacity:0"></div>');
     // when zoomed in on the right-hand panel, fade out the clipped map labels at the left edge
     const edge = E.add(dev, '<div class="abs" style="left:0;top:0;bottom:0;width:190px;z-index:3;background:linear-gradient(90deg,#05070D 42%,rgba(5,7,13,0));opacity:0"></div>');
     const ov = E.add(root, `<svg class="abs" width="${VW}" height="${VH}" style="left:0;top:0;z-index:6;overflow:visible"></svg>`);
@@ -162,7 +163,7 @@
     c.frame = name => {
       if (c.layers[name]) return c.layers[name];
       const w = fwOf(name);
-      const L = E.add(dev, `<div class="scr" style="visibility:hidden;width:${w}px"><img src="assets/v11/${name}.png" style="width:${w}px"></div>`);
+      const L = E.add(dev, `<div class="scr" style="visibility:hidden;width:${w}px"><img src="assets/af/${name}.png" style="width:${w}px"></div>`);
       return (c.layers[name] = L);
     };
     return c;
@@ -171,7 +172,8 @@
   const screenW = (c, t) => { let w = FW; for (const [ts, name] of c.plan.screens) if (t >= ts) w = fwOf(name); return w; };
   const camAt = (c, t) => {
     // interpolate (cx, cy, log z) between shots; a null rect is the whole screen
-    const toP = (r, W) => { r = r || [0, 0, W, FH]; const z = E.clamp(Math.min(FW / r[2], FH / r[3]), 1, 2.3); return [r[0] + r[2] / 2, r[1] + r[3] / 2, Math.log(z)]; };
+    // a wider-than-1400 screen may zoom out to fit (never below its fit-to-width zoom)
+    const toP = (r, W) => { r = r || [0, 0, W, FH]; const z = E.clamp(Math.min(FW / r[2], FH / r[3]), Math.min(1, FW / W), 2.3); return [r[0] + r[2] / 2, r[1] + r[3] / 2, Math.log(z)]; };
     let p = toP(null, screenW(c, c.plan.shots.length ? c.plan.shots[0][0] : t));
     for (const [ts, r, d = 1.3] of c.plan.shots) {
       if (t < ts) break;
@@ -179,7 +181,8 @@
       p = [E.lerp(p[0], q[0], k), E.lerp(p[1], q[1], k), E.lerp(p[2], q[2], k)];
     }
     const W = screenW(c, t), z = Math.exp(p[2]), k = c.s0 * z;
-    const ox = E.clamp(c.VW / 2 - p[0] * k, c.VW - W * k, 0), oy = E.clamp(c.VH / 2 - p[1] * k, c.VH - FH * k, 0);
+    const fit = (v, lo) => (lo > 0 ? lo / 2 : E.clamp(v, lo, 0));   // centre a screen smaller than the device
+    const ox = fit(c.VW / 2 - p[0] * k, c.VW - W * k), oy = fit(c.VH / 2 - p[1] * k, c.VH - FH * k);
     return { k, ox, oy, z };
   };
   K.map = (c, fx, fy, cam = c.cam) => [cam.ox + fx * cam.k, cam.oy + fy * cam.k];
@@ -202,7 +205,9 @@
       E.css(L, { visibility: vis ? 'visible' : 'hidden', transform: tr, clipPath: clip, zIndex: cur >= 0 && S[cur][1] === name ? '2' : '1' });
     });
     E.css(c.scan, { opacity: scanK >= 0 ? E.f3(Math.sin(Math.PI * scanK)) : '0', top: (scanK * c.VH).toFixed(1) + 'px' });
-    E.css(c.edge, { opacity: E.f3(E.clamp((c.cam.z - 1.35) / 0.5) * (c.cam.ox < -1 ? 1 : 0)) });
+    // only when the camera looks at the right-hand side of the screen (the clipped map labels sit at the left edge)
+    const fcx = (c.VW / 2 - c.cam.ox) / c.cam.k;
+    E.css(c.edge, { opacity: E.f3(E.clamp((c.cam.z - 1.35) / 0.5) * (c.cam.ox < -1 ? 1 : 0) * E.clamp((fcx - 640) / 160) * (screenW(c, t) === FW ? 1 : 0)) });
     c.hls.forEach(h => K.hlUpdate(c, h, t));
   };
 
@@ -210,7 +215,7 @@
   K.hl = (c, o) => {
     const g = E.add(c.root, '<div class="abs" style="left:0;top:0;width:0;height:0;z-index:7"></div>');
     const box = E.add(c.dev, '<div class="hlb" style="z-index:4"></div>');
-    const line = K.sadd(c.ov, '<line stroke="#B69CFF" stroke-width="2.5" stroke-linecap="round"/>');
+    const line = K.sadd(c.ov, '<line stroke="#8FB4FF" stroke-width="2.5" stroke-linecap="round"/>');
     const tag = E.add(g, `<div class="abs tag"><span class="disc">${o.n}</span><span>${o.label}</span></div>`);
     const h = { ...o, g, box, line, tag, tw: 0 };
     c.hls.push(h);

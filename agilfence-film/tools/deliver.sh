@@ -2,7 +2,7 @@
 # Two-pass H.264 delivery encodes sized for messaging (≤ 28 MiB each) + thumbnail.
 # usage: tools/deliver.sh <master.mp4> <out.mp4> [title]
 set -euo pipefail
-IN="$1"; OUT="$2"; TITLE="${3:-From alarms to answers — AGIL Secure V11 with AI Co-pilot}"
+IN="$1"; OUT="$2"; TITLE="${3:-First touch — AgilFence × AGIL Secure V11}"
 DUR=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$IN")
 # total budget 28 MiB, minus 128 kb/s audio and ~2.5 % container overhead
 VK=$(python3 -c "d=float('$DUR'); print(int((28*1024*1024*8/d/1000 - 128) * 0.975))")

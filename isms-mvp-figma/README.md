@@ -36,3 +36,23 @@ node make-pdf.mjs $OUT ISMS_AI_Demo_fit_to_V11.pdf
 - `lib/clay.mjs` – airport twin in the V11 3D-viewer look
 - `lib/roboto-widths.json` – Roboto advance widths for text layout
 - `screens-v11/frames.mjs` – product frames; `screens-v11/spec.mjs` – delta map and click paths
+
+## AgilFence end-to-end flow (V11 design)
+
+Ten frames and a flow board that follow one climb on an AgilFence-protected airfield fence through the
+current V11 UI: perimeter triggered (illustration) → system message and alarm → incident list → Locate
+and nearest cameras → PTZ live view → command-centre video wall (1920×1080) → SOP → patrol on scene →
+close and report. Clock times only, people decide, NEW layers are concepts; all data is illustrative.
+
+```bash
+A=/path/to/assets                                  # as for the V11-fit frames
+node render-cctv.mjs $A/cctv fence_                # fence camera scenes (PTZ, wide, pre-alarm, auto-track, patrol)
+node build-agilfence.mjs $OUT $A                   # svg/, png/, thumb/, anchors.json (+ AF-00b flow board)
+node make-pdf.mjs $OUT AgilFence_End-to-End_V11.pdf
+AF_FILM=1 node build-agilfence.mjs $OUT2 $A        # film variants: no baked pointer, in-between states, 2x PNG
+```
+
+- `screens-v11/agilfence.mjs` – the frames (and `ANCHORS`, the on-screen rects the film uses for callouts)
+- `screens-v11/agilfence-illustration.mjs` – the fence bay, FBG cable, strain and climber illustration
+- `screens-v11/agilfence-board.mjs` – the flow board (nine steps, who acts, scenario clock)
+- `lib/fence.mjs` – scenario data, fence-site overlay for the 3D viewer, system toast, nearest cameras, video player

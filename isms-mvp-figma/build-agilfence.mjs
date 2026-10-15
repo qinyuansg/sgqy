@@ -14,14 +14,17 @@ const assets = path.resolve(process.argv[3] || 'assets');
 const only = process.argv[4];
 useFont('Roboto', 'roboto-widths.json');
 useAssets(assets);
-const { AF_FRAMES } = await import('./screens-v11/agilfence.mjs');
+const { AF_FRAMES, AF_FILM_FRAMES, ANCHORS, setFrame } = await import('./screens-v11/agilfence.mjs');
+// AF_FILM=1: frames for the film (no baked pointer, plus the in-between states), 2x PNG
+const FRAMES = process.env.AF_FILM ? [...AF_FRAMES, ...AF_FILM_FRAMES] : AF_FRAMES;
+const DPR = process.env.AF_FILM ? 2 : 1;
 
 for (const d of ['svg', 'png', 'thumb']) fs.mkdirSync(path.join(out, d), { recursive: true });
 const { chromium } = require(process.env.PLAYWRIGHT_PATH || '/opt/node22/lib/node_modules/playwright');
 const browser = await chromium.launch();
 async function preview(list) {
   for (const [name, p, w, h] of list) {
-    const page = await browser.newPage({ viewport: { width: w, height: h } });
+    const page = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: DPR });
     await page.goto('file://' + p);
     await page.waitForTimeout(200);
     await page.screenshot({ path: path.join(out, 'png', name + '.png') });
@@ -37,13 +40,15 @@ const write = (name, svg) => {
   return [name, p, +m[1], +m[2]];
 };
 const built = [];
-for (const [name, fn] of AF_FRAMES) if (!only || name.includes(only)) built.push(write(name, fn()));
+for (const [name, fn] of FRAMES) if (!only || name.includes(only)) { setFrame(name); built.push(write(name, fn())); }
+setFrame(null);
+fs.writeFileSync(path.join(out, 'anchors.json'), JSON.stringify(ANCHORS, null, 1));
 await preview(built);
 // pass 2: the flow board embeds previews of the frames
-if (!only || only === 'board') {
+if ((!only || only === 'board') && !process.env.AF_FILM) {
   const board = await import('./screens-v11/agilfence-board.mjs');
   board.useThumbs(path.join(out, 'thumb'));
-  await preview([write('AF-FLOW-board', board.flowBoard())]);
+  await preview([write('AF-00b-flow-board', board.flowBoard())]);
 }
 await browser.close();
 console.log('previews done');

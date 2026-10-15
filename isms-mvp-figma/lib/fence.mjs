@@ -14,7 +14,7 @@ export const AF = {
     { id: 'CAM 7-11', kind: 'Fixed · colour', X: 66.2, Y: 1.7, dist: '120 m' },
     { id: 'PTZ 7-03', kind: 'PTZ · thermal wide', X: 68.4, Y: 2.7, dist: '210 m' },
   ],
-  patrol: { id: 'Patrol P-3 · Arjun', from: [50, 9.5], via: [[50, 2.4]], to: [62.4, 2.4], eta: 'ETA 3 min' },
+  patrol: { id: 'Patrol 2 · Arjun + 1', from: [50, 9.5], via: [[50, 2.4]], to: [62.4, 2.4], eta: 'ETA 02:18:30' },
 };
 // segment k (5-k) spans X = 34 + 2k .. 36 + 2k on the north fence
 export const segX = k => [34 + 2 * k, 36 + 2 * k];
@@ -118,9 +118,14 @@ export function nearestCams(F, x, y, cams, o = {}) {
     const ry = y + 50 + i * rh;
     if (c.pref) s += rect(x + 8, ry, w - 16, rh - 6, { r: 8, fill: '#55D6E6', fo: 0.12, stroke: '#55D6E6', so: 0.6, sw: 1 });
     s += text(x + 20, ry + 21, c.id, { size: 15, weight: 500, fill: '#FFFFFF' }) + text(x + 20, ry + 40, `${c.kind} · ${c.dist}`, { size: 12.5, fill: C.t2 });
-    const st = c.state || (c.pref ? 'Live · on target' : 'Live');
-    const sw = textWidth(st, 12, 500) + 18;
-    s += rect(x + w - 20 - sw, ry + 13, sw, 22, { r: 11, fill: c.pref ? '#0E5E68' : '#2C3036', stroke: c.pref ? '#55D6E6' : '#4A505B', sw: 1 }) + circle(x + w - 20 - sw + 10, ry + 24, 3.5, { fill: c.pref ? '#55D6E6' : C.online }) + text(x + w - 20 - sw + 18, ry + 28, st, { size: 12, weight: 500, fill: '#FFFFFF' });
+    if (c.action) {   // the preferred camera offers one-click live view
+      const bw = textWidth(c.action, 12, 700) + 20;
+      s += g(F, 'Open live NEW', rect(x + w - 20 - bw, ry + 12, bw, 24, { r: 6, fill: C.blue }) + text(x + w - 20 - bw / 2, ry + 28, c.action, { size: 12, weight: 700, fill: '#FFFFFF', anchor: 'middle' }));
+    } else {
+      const st = c.state || (c.pref ? 'Live · on target' : 'Live');
+      const sw = textWidth(st, 12, 500) + 18;
+      s += rect(x + w - 20 - sw, ry + 13, sw, 22, { r: 11, fill: c.pref ? '#0E5E68' : '#2C3036', stroke: c.pref ? '#55D6E6' : '#4A505B', sw: 1 }) + circle(x + w - 20 - sw + 10, ry + 24, 3.5, { fill: c.pref ? '#55D6E6' : C.online }) + text(x + w - 20 - sw + 18, ry + 28, st, { size: 12, weight: 500, fill: '#FFFFFF' });
+    }
   });
   return { svg: g(F, 'Nearest cameras NEW', s), h };
 }

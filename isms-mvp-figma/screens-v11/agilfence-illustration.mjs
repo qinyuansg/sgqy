@@ -21,7 +21,7 @@ function climber(F, x, y, k = 1) {
   // arms up to the top rail
   s += pathEl(`M${S(-26, -110)} L${S(-44, -168)} L${S(-40, -224)}`, { stroke: col, sw: 16 * k, cap: 'round', join: 'round' });
   s += pathEl(`M${S(26, -110)} L${S(46, -170)} L${S(44, -230)}`, { stroke: col, sw: 16 * k, cap: 'round', join: 'round' });
-  s += circle(...S(-40, -226), 9 * k, { fill: '#B48C74' }) + circle(...S(44, -232), 9 * k, { fill: '#B48C74' });
+  s += circle(...S(-40, -226), 9 * k, { fill: '#1A1D22' }) + circle(...S(44, -232), 9 * k, { fill: '#1A1D22' });   // dark gloves
   // head + cap
   s += circle(...S(0, -140), 20 * k, { fill: '#1A1C22' }) + pathEl(`M${S(-21, -146)} Q${S(0, -170)} ${S(21, -146)} Z`, { fill: '#121418' });
   return g(F, 'Climber (illustrative)', s);
