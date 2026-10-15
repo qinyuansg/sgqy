@@ -30,20 +30,20 @@
 | 1 | 0:03.80–0:10.53 | f01 | 2:14 a.m. The north perimeter is quiet. Kilometres of fence, wind across the runway, and no one in sight. |
 | 2 | 0:11.53–0:16.91 | f02 | At night, every fence alarm asks the same question. Is it the wind? Or someone at the fence? |
 | 3 | 0:17.91–0:24.26 | f03 | AgilFence makes the fence the sensor. Fibre-optic sensors in one cable feel a climb, a cut or a lift. |
-| 4 | 0:24.66–0:33.80 | f03 | It senses with light, so electromagnetic and radio interference can't affect it. It adapts to wind, rain and jet blast, to keep nuisance alarms low. |
-| 5 | 0:34.90–0:43.61 | f04 | Then someone climbs. Quietly. The strain in the fibre rises above the wind, and AgilFence pinpoints it: segment 5-14, to within a few metres. |
-| 6 | 0:44.81–0:51.59 | f05 | In the control room, AGIL Secure raises the alarm: a system message, an alarm tone, and a pin on the airport model. |
-| 7 | 0:52.19–0:58.87 | f06 | It tops the incident list, linked with the laser scanner's detection at the same spot: one incident, not separate alarms. |
-| 8 | 0:59.47–1:07.78 | f07 | Nurul clicks Locate. The map flies to segment 5-14 and lists the nearest cameras. The fence alarm has already turned the closest one there. |
-| 9 | 1:08.28–1:14.99 | f08 | One more click takes it live. It zooms in on one person, and tracks them. Fence, scanner and camera agree: it's someone. |
-| 10 | 1:15.89–1:22.85 | f09 | On the command-centre video wall, the whole room sees one picture: the live camera, the wide view, and a replay from before the alarm. |
-| 11 | 1:23.75–1:32.20 | f10 | Then the airport's own procedure, step by step. The system ticks the routine checks. Nurul confirms it's real, and approves sending Arjun's patrol. |
-| 12 | 1:32.60–1:41.66 | f10 | Runway 02L is close, so Nurul informs Airside Operations and the tower. Duty manager Daniel takes command, and approves the police call. |
-| 13 | 1:42.56–1:49.77 | f11 | Cameras keep the intruder in view. The patrol reaches them inside the fence line, well short of the runway, and the police take over. |
-| 14 | 1:50.47–1:58.03 | f12 | Nurul closes the incident, and Daniel signs off. Every clip, decision and call is on the record, with a report drafted for review. |
-| 15 | 1:59.13–2:04.81 | f13 | A location you can act on. A camera that's already there. One picture and one procedure, every shift. |
-| 16 | 2:05.91–2:09.92 | f14 | AgilFence has been on Changi's airfield perimeter since 2011. |
-| 17 | 2:10.82–2:17.66 | f14 | AgilFence feels it. AGIL Secure shows it: every sensor, camera and step, in one place. Your team acts on it. |
+| 4 | 0:24.66–0:33.80 | f03 | It senses with light, so electromagnetic and radio interference can't affect it. It adapts to wind, rain and jet blast, to keep nuisance alarms low. |
+| 5 | 0:34.90–0:43.61 | f04 | Then someone climbs. Quietly. The strain in the fibre rises above the wind, and AgilFence pinpoints it: segment 5-14, to within a few metres. |
+| 6 | 0:44.81–0:51.59 | f05 | In the control room, AGIL Secure raises the alarm: a system message, an alarm tone, and a pin on the airport model. |
+| 7 | 0:52.79–0:59.47 | f06 | It tops the incident list, linked with the laser scanner's detection at the same spot: one incident, not separate alarms. |
+| 8 | 1:00.07–1:08.38 | f07 | Nurul clicks Locate. The map flies to segment 5-14 and lists the nearest cameras. The fence alarm has already turned the closest one there. |
+| 9 | 1:09.58–1:16.29 | f08 | One more click takes it live. It zooms in on one person, and tracks them. Fence, scanner and camera agree: it's someone. |
+| 10 | 1:17.89–1:24.85 | f09 | On the command-centre video wall, the whole room sees one picture: the live camera, the wide view, and a replay from before the alarm. |
+| 11 | 1:26.55–1:35.00 | f10 | Then the airport's own procedure, step by step. The system ticks the routine checks. Nurul confirms it's real, and approves sending Arjun's patrol. |
+| 12 | 1:35.40–1:44.46 | f10 | Runway 02L is close, so Nurul informs Airside Operations and the tower. Duty manager Daniel takes command, and approves the police call. |
+| 13 | 1:45.36–1:52.57 | f11 | Cameras keep the intruder in view. The patrol reaches them inside the fence line, well short of the runway, and the police take over. |
+| 14 | 1:53.27–2:00.83 | f12 | Nurul closes the incident, and Daniel signs off. Every clip, decision and call is on the record, with a report drafted for review. |
+| 15 | 2:01.93–2:07.61 | f13 | A location you can act on. A camera that's already there. One picture and one procedure, every shift. |
+| 16 | 2:08.71–2:12.72 | f14 | AgilFence has been on Changi's airfield perimeter since 2011. |
+| 17 | 2:13.62–2:20.46 | f14 | AgilFence feels it. AGIL Secure shows it: every sensor, camera and step, in one place. Your team acts on it. |
 
-Total: **2:24.16**
+Total: **2:26.96**
 <!-- VO-TABLE:END -->
