@@ -129,13 +129,24 @@ export function camTile(F, x, y, w, h, cam) {
   ox = Math.min(x, Math.max(x + w - iw, ox)); oy = Math.min(y, Math.max(y + h - ih, oy));
   const clip = F.clip(`<rect x="${f(x)}" y="${f(y)}" width="${f(w)}" height="${f(h)}"/>`);
   let inner = `<image x="${f(ox)}" y="${f(oy)}" width="${f(iw)}" height="${f(ih)}" preserveAspectRatio="none" href="${cam.href}" xlink:href="${cam.href}"/>`;
-  if (cam.box) {
-    const [bx, by, bw, bh] = cam.box;
-    const X = ox + bx * sc, Y = oy + by * sc, col = cam.boxCol || C.crit;
+  // one box (box/boxCol/boxLabel) or several (boxes: [{box, col, label}])
+  for (const b of cam.boxes || (cam.box ? [{ box: cam.box, col: cam.boxCol, label: cam.boxLabel }] : [])) {
+    const [bx, by, bw, bh] = b.box;
+    const X = ox + bx * sc, Y = oy + by * sc, col = b.col || C.crit;
     // the label sits under the box, but never past the tile's bottom or right edge
-    const lw = cam.boxLabel ? textWidth(cam.boxLabel, 11, 500) + 10 : 0;
+    const lw = b.label ? textWidth(b.label, 11, 500) + 10 : 0;
     const ly = Math.min(Y + bh * sc + 3, y + h - 21), lx = Math.max(x + 3, Math.min(X, x + w - lw - 3));
-    inner += g(F, 'BBox NEW', rect(X, Y, bw * sc, bh * sc, { r: 3, stroke: col, sw: 2 }) + (cam.boxLabel ? rect(lx, ly, lw, 18, { r: 3, fill: col }) + text(lx + 5, ly + 13, cam.boxLabel, { size: 11, weight: 500, fill: '#FFFFFF' }) : ''));
+    inner += g(F, 'BBox NEW', rect(X, Y, bw * sc, bh * sc, { r: 3, stroke: col, sw: 2 }) + (b.label ? rect(lx, ly, lw, 18, { r: 3, fill: col }) + text(lx + 5, ly + 13, b.label, { size: 11, weight: 500, fill: '#FFFFFF' }) : ''));
+  }
+  // state chips on the tile (e.g. On preset, Auto-track, LIVE)
+  if (cam.chips) {
+    let cx = x + w - 6;
+    for (const [lab, col] of [...cam.chips].reverse()) {
+      const cw = textWidth(lab, 10.5, 700) + (lab === 'LIVE' ? 20 : 12);
+      cx -= cw;
+      inner += g(F, 'Chip ' + lab + ' NEW', rect(cx, y + 37, cw, 17, { r: 8.5, fill: col || C.blue }) + (lab === 'LIVE' ? circle(cx + 8, y + 45.5, 2.8, { fill: '#FFFFFF' }) : '') + text(cx + (lab === 'LIVE' ? 14 : 6), y + 49.5, lab, { size: 10.5, weight: 700, fill: '#FFFFFF' }));
+      cx -= 4;
+    }
   }
   inner += rect(x, y, w, 31, { fill: '#000000', fo: 0.2 }) + rect(x, y, w, 31, { fill: C.panel, fo: 0.65 });
   inner += icon(F, 'cctv', x + 10, y + 7, 17, '#FFFFFF', 1.7) + text(x + 31, y + 20, cam.label, { size: 12, weight: 500, fill: '#FFFFFF' });

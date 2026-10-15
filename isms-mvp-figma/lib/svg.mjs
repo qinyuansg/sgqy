@@ -180,6 +180,12 @@ const P = {
   extLink: '<path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
   cctv: '<path d="M3 7.5 15 4l1.6 5.4L4.6 13z"/><path d="m16 6.2 4.4-1.3 1 3.3-4.4 1.3"/><path d="M8 12.3 9.3 17H3.5"/><path d="M3.5 14.5v5"/>',
   download: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
+  siren: '<path d="M6.5 18v-5.5a5.5 5.5 0 0 1 11 0V18"/><path d="M4.5 18h15v2.5h-15z"/><path d="M12 3v2M4.2 6.2l1.4 1.4M19.8 6.2l-1.4 1.4M10 13.5a2 2 0 0 1 2-2"/>',
+  volume: '<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/>',
+  car: '<path d="M4 16.5V12l2-4.5h12l2 4.5v4.5"/><path d="M3 12h18v4.5H3z"/><circle cx="7.5" cy="17.5" r="1.8"/><circle cx="16.5" cy="17.5" r="1.8"/><path d="M10 4.5h4"/>',
+  radio: '<rect x="5" y="8" width="14" height="13" rx="2"/><path d="M8.5 8 15 3"/><circle cx="12" cy="15.5" r="2.6"/><path d="M8 11.5h8"/>',
+  monitor: '<rect x="3" y="4" width="18" height="12.5" rx="1.5"/><path d="M8.5 20.5h7M12 16.5v4"/>',
+  film: '<rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M7.5 4.5v15M16.5 4.5v15M3.5 9h4M3.5 15h4M16.5 9h4M16.5 15h4"/>',
   thumbDown: '<path d="M7 13V4H4v9zM7 13l4 7a2 2 0 0 0 2.6-2.3L13 14h5.5a2 2 0 0 0 2-2.4l-1.4-6A2.5 2.5 0 0 0 16.7 4H7"/>',
 };
 export const ICONS = Object.keys(P);

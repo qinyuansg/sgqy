@@ -61,7 +61,8 @@ export function fenceSite(F, P, o = {}) {
     const [cx, cy] = P(c.X, c.Y, 0), [hx, hy] = P(c.X, c.Y, 1.6), col = c.pref ? '#55D6E6' : '#7FB2FF';
     let m = line(cx, cy, hx, hy, { stroke: col, sw: 2 }) + circle(hx, hy, 14, { fill: '#1D232C', stroke: col, sw: 2 }) + icon(F, 'cctv', hx - 9, hy - 9, 18, '#FFFFFF', 1.8);
     if (c.label !== false) {
-      const lab = `${c.id} · ${c.dist}`, lw = textWidth(lab, 13, 500) + 20, lx = hx + (c.left ? -20 - lw : 20), ly = hy - 14;
+      const lab = c.text || `${c.id} · ${c.dist}`, lw = textWidth(lab, 13, 500) + 20, pl = c.place || (c.left ? 'left' : 'right');
+      const lx = pl === 'above' ? hx - lw / 2 : hx + (pl === 'left' ? -20 - lw : 20), ly = pl === 'above' ? hy - 50 : hy - 14;
       m += rect(lx, ly, lw, 28, { r: 7, fill: '#1D232C', fo: 0.92, stroke: col, sw: 1.2 }) + text(lx + 10, ly + 19, lab, { size: 13, weight: 500, fill: '#FFFFFF' });
     }
     s += g(F, `Camera ${c.id} NEW`, m);
@@ -73,14 +74,16 @@ export function fenceSite(F, P, o = {}) {
     const at = p.at || p.from, [vx, vy] = P(at[0], at[1], 0.2);
     let v = circle(vx, vy, 15, { fill: '#44AC0C', stroke: '#FFFFFF', sw: 2 }) + icon(F, 'route', vx - 9, vy - 9, 18, '#FFFFFF', 2);
     const lab = `${p.id} · ${p.eta}`, lw = textWidth(lab, 13, 500) + 20;
-    v += rect(vx + 20, vy - 14, lw, 28, { r: 7, fill: '#1D232C', fo: 0.92, stroke: '#44AC0C', sw: 1.2 }) + text(vx + 30, vy + 5, lab, { size: 13, weight: 500, fill: '#FFFFFF' });
+    let lx = vx + 20, ly = vy - 14;
+    if (p.place === 'below') { lx = Math.max(p.minX ?? -1e9, vx - lw / 2); ly = vy + 22; }
+    v += rect(lx, ly, lw, 28, { r: 7, fill: '#1D232C', fo: 0.92, stroke: '#44AC0C', sw: 1.2 }) + text(lx + 10, ly + 19, lab, { size: 13, weight: 500, fill: '#FFFFFF' });
     s += g(F, 'Patrol vehicle NEW', v);
   }
   // runway hold label
   if (o.runway) {
-    const [rx, ry] = P(o.runway.X ?? 75, 5, 0);
-    const lab = o.runway.label, lw = textWidth(lab, 13, 500) + 20;
-    s += g(F, 'Runway note NEW', rect(rx, ry - 14, lw, 28, { r: 7, fill: '#1D232C', fo: 0.92, stroke: C.warn, sw: 1.2 }) + text(rx + 10, ry + 5, lab, { size: 13, weight: 500, fill: '#FFFFFF' }));
+    const [rx, ry] = P(o.runway.X ?? 75, o.runway.Y ?? 5, 0);
+    const lab = o.runway.label, lw = textWidth(lab, 13, 500) + 20, col = o.runway.col || C.warn;
+    s += g(F, 'Runway note NEW', rect(rx, ry - 14, lw, 28, { r: 7, fill: '#1D232C', fo: 0.92, stroke: col, sw: 1.2 }) + text(rx + 10, ry + 5, lab, { size: 13, weight: 500, fill: '#FFFFFF' }));
   }
   return g(F, 'AgilFence site overlay', s);
 }
@@ -92,6 +95,7 @@ export function toast(F, x, y, o) {
   s += rect(x, y, 6, h, { r: 3, fill: C.crit });
   s += circle(x + 34, y + 34, 16, { fill: C.crit }) + icon(F, o.icon || 'fence', x + 24, y + 24, 20, '#FFFFFF', 2);
   s += text(x + 62, y + 30, o.title, { size: 16, weight: 700, fill: '#FFFFFF' }) + text(x + w - 16, y + 30, o.time, { size: 13, fill: C.t2, anchor: 'end' });
+  if (o.sound) s += g(F, 'Alarm tone on', icon(F, 'volume', x + w - 40 - textWidth(o.time, 13), y + 16, 18, '#FF8E8F', 1.8));
   s += text(x + 62, y + 50, o.sub, { size: 13, weight: 500, fill: '#FF8E8F' });
   lines.forEach((l, i) => { s += text(x + 62, y + 76 + i * 21, l, { size: 15, fill: C.t1 }); });
   if (o.actions) {
