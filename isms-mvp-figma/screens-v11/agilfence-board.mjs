@@ -43,7 +43,7 @@ export function flowBoard() {
   s += text(100, 196, 'From a climb on the fence to a confirmed response', { size: 64, weight: 700, fill: '#FFFFFF' });
   s += text(100, 248, 'Fence Sector 5 · Segment 5-14 · north perimeter, 150 m from runway 02L · 02:14:58', { size: 26, fill: C.t2 });
   // what CAG has today vs what AGIL Secure V11 adds
-  s += g(F, 'Today vs added', rect(100, 272, 12, 12, { r: 3, fill: AMBER }) + text(122, 284, 'Today with AgilFence + iPAMS: sensing, pinpointing, camera preset (step 1; preset in step 4)', { size: 17, fill: C.t1 }) +
+  s += g(F, 'Today vs added', rect(100, 272, 12, 12, { r: 3, fill: AMBER }) + text(122, 284, 'Today with AgilFence + iPAMS: sensing, pinpointing, PTZ preset call-up (step 1)', { size: 17, fill: C.t1 }) +
     rect(1000, 272, 12, 12, { r: 3, fill: BLUE }) + text(1022, 284, 'AGIL Secure V11 with proposed concept features: one incident, Locate, live view, video wall, SOP, record (steps 2–9)', { size: 17, fill: C.t1 }) +
     rect(2140, 270, 16, 16, { r: 3, stroke: '#8C96A6', dash: '4 3', sw: 1.5 }) + text(2166, 284, 'Concepts (NEW layers): auto-linking, nearest cameras, one-click live, wall layout, timeline, evidence pack, Co-pilot', { size: 17, fill: C.t2 }));
   s += rect(2960.5, 92.5, 420, 44, { r: 22, fill: '#1D232C', stroke: '#4A505B' }) + text(3170.5, 121, 'Illustrative scenario · simulated data', { size: 18, weight: 500, fill: C.t3, anchor: 'middle' });
@@ -91,7 +91,7 @@ export function flowBoard() {
     const x = x0 + 4 * (cw + gap), y = rowY[1];
     let o = rect(x, y, cw, 740, { r: 20, fill: '#0D1A14', stroke: GREEN, so: 0.7, sw: 1.5 });
     o += text(x + 32, y + 56, 'SCENARIO CLOCK · ILLUSTRATIVE', { size: 16, weight: 700, ls: 2, fill: GREEN }) + text(x + 32, y + 98, 'From a climb to a closed incident', { size: 28, weight: 700, fill: '#FFFFFF' });
-    const kp = [['Climb on segment 5-14', '02:14:58'], ['Verified on video', '02:15:24'], ['Patrol 2 sent', '02:15:30'], ['Tower informed', '02:15:40'], ['Police call approved', '02:16:00'], ['Patrol on scene', '02:18:08'], ['Police custody', '02:26:30'], ['Closed and signed off', '02:44:20'], ['Summary to head of security', '07:00']];
+    const kp = [['Climb on segment 5-14', '02:14:58'], ['Verified on video', '02:15:24'], ['Patrol 2 sent', '02:15:30'], ['Tower informed', '02:15:40'], ['Police call approved', '02:16:00'], ['Patrol on scene', '02:18:08'], ['Police custody', '02:26:30'], ['Closed and signed off', '02:44:20']];
     kp.forEach(([l, v], i) => { const yy = y + 160 + i * 52; o += line(x + 32, yy - 32, x + cw - 32, yy - 32, { stroke: '#22382C' }) + text(x + 32, yy, l, { size: 20, fill: C.t1 }) + text(x + cw - 32, yy, v, { size: 22, weight: 700, fill: '#FFFFFF', anchor: 'end' }); });
     o += text(x + 32, y + 664, 'AgilFence feels it. AGIL Secure shows it.', { size: 21, weight: 500, fill: AMBER }) + text(x + 32, y + 692, 'Your team acts on it.', { size: 21, weight: 500, fill: AMBER });
     s += g(F, 'Outcome', o);

@@ -48,7 +48,7 @@
       // cable + beads + pulses + strain
       sv += `<path class="cab" d="M${X + 20} ${CY} H${X + WD - 20}" stroke="${FIB}" stroke-width="4" fill="none"/>`;
       s.nodes = [];
-      for (let x = X + 34; x < X + WD - 20; x += 44) s.nodes.push({ x, hot: Math.abs(x - HOT) < 140 });
+      for (let x = X + 34; x < X + WD - 20; x += 44) s.nodes.push({ x, hot: Math.abs(x - HOT) < 70 });   // only the 5-14 beads
       sv += '<g class="halo">' + s.nodes.map(n => `<circle cx="${n.x}" cy="${CY}" r="18" fill="${CRIT}" opacity="0"/>`).join('') + '</g>';
       sv += '<g class="nodes">' + s.nodes.map(n => `<circle cx="${n.x}" cy="${CY}" r="5.5" fill="${TEAL}" stroke="#fff" stroke-opacity=".5" stroke-width="1.5"/>`).join('') + '</g>';
       sv += `<g class="pulse"><circle r="14" fill="${FIB}" opacity=".55" filter="url(#fglow)"/><circle r="4.5" fill="#fff"/></g>`;
@@ -77,7 +77,7 @@
       const RX = 1350, chip = (ic, a, b, col) => `<div class="abs" style="left:${RX}px;width:470px;display:flex;align-items:center;gap:18px">
           ${K.ibox(ic, 58, 26, `color:${col};border-color:${col}88`)}<div><div style="font-size:26px;font-weight:600;color:#fff;white-space:nowrap">${a}</div>${b ? `<div style="font-size:19px;color:var(--muted);margin-top:2px">${b}</div>` : ''}</div></div>`;
       s.lab1 = E.add(el, `<div class="abs label" style="left:${RX}px;top:300px;color:${AMB}">It feels</div>`);
-      s.feel = [['hand', 'A climb'], ['fence', 'A cut'], ['up', 'A lift']].map(([ic, a], i) => { const e = E.add(el, chip(ic, a, '', AMB)); e.style.top = (334 + i * 78) + 'px'; return e; });
+      s.feel = [['hand', 'A climb'], ['scissors', 'A cut'], ['up', 'A lift']].map(([ic, a], i) => { const e = E.add(el, chip(ic, a, '', AMB)); e.style.top = (334 + i * 78) + 'px'; return e; });
       s.lab2 = E.add(el, `<div class="abs label" style="left:${RX}px;top:600px">Built for an airfield</div>`);
       s.light = E.add(el, chip('shield', 'Senses with light', 'Immune to electromagnetic and radio interference', '#8FB4FF')); s.light.style.top = '634px';
       s.adapt = E.add(el, chip('pulse', 'Adapts to the weather', 'Wind · rain · jet blast: nuisance alarms kept low', '#8FB4FF')); s.adapt.style.top = '734px';

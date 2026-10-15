@@ -41,6 +41,7 @@
     building: '<path d="M4 21V7l8-4 8 4v14"/><path d="M9 21v-5h6v5"/><path d="M8 10h.01M12 10h.01M16 10h.01M8 13.5h.01M12 13.5h.01M16 13.5h.01"/>',
     radio: '<rect x="5" y="8" width="14" height="13" rx="2"/><path d="M8 8 15 3"/><circle cx="12" cy="15" r="2.5"/>',
     arrow: '<path d="M4.5 12h15"/><path d="m13.5 6 6 6-6 6"/>',
+    scissors: '<circle cx="6" cy="6" r="3"/><path d="M8.12 8.12 12 12"/><path d="M20 4 8.12 15.88"/><circle cx="6" cy="18" r="3"/><path d="M14.8 14.8 20 20"/>',
     up: '<path d="M12 20V5"/><path d="m6 11 6-6 6 6"/><path d="M5 20h14"/>',
     chat: '<path d="M4 5.5h16v10H9l-5 4z"/>',
     userCheck: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.7 3.4-5.6 6.5-5.6 1.6 0 3 .5 4.1 1.4"/><path d="m15 17.5 2 2 4-4.5"/>',
@@ -161,7 +162,8 @@
     const edgeR = E.add(dev, '<div class="abs" style="right:0;top:0;bottom:0;width:190px;z-index:3;background:linear-gradient(270deg,#05070D 42%,rgba(5,7,13,0));opacity:0"></div>');
     const ov = E.add(root, `<svg class="abs" width="${VW}" height="${VH}" style="left:0;top:0;z-index:6;overflow:visible"></svg>`);
     const brk = K.brackets(root, 0, 0, VW, VH, { gap: 18, arm: 46 });
-    const c = { root, dev, scan, edge, edgeR, ov, brk, VW, VH, s0: VH / FH, layers: {}, hls: [], plan: { screens: [], shots: [] }, cam: { k: VH / FH, ox: 0, oy: 0, z: 1 } };
+    const edgeT = E.add(dev, '<div class="abs" style="left:0;right:0;top:0;height:64px;z-index:3;background:linear-gradient(180deg,#05070D 35%,rgba(5,7,13,0));opacity:0"></div>');
+    const c = { root, dev, scan, edge, edgeR, edgeT, ov, brk, VW, VH, s0: VH / FH, layers: {}, hls: [], plan: { screens: [], shots: [] }, cam: { k: VH / FH, ox: 0, oy: 0, z: 1 } };
     c.frame = name => {
       if (c.layers[name]) return c.layers[name];
       const w = fwOf(name);
@@ -209,10 +211,14 @@
     E.css(c.scan, { opacity: scanK >= 0 ? E.f3(Math.sin(Math.PI * scanK)) : '0', top: (scanK * c.VH).toFixed(1) + 'px' });
     // only when the camera looks at the right-hand side of the screen (the clipped map labels sit at the left edge)
     const fcx = (c.VW / 2 - c.cam.ox) / c.cam.k;
-    E.css(c.edge, { opacity: E.f3(E.clamp((c.cam.z - 1.35) / 0.5) * (c.cam.ox < -1 ? 1 : 0) * E.clamp((fcx - 640) / 160) * (screenW(c, t) === FW ? 1 : 0)) });
+    const fx0 = -c.cam.ox / c.cam.k, listCut = fx0 > 4 && fx0 < 360 ? 1 : 0;   // a sliver of the alert list at the left edge
+    E.css(c.edge, { opacity: E.f3(E.clamp((c.cam.z - 1.35) / 0.5) * Math.max((c.cam.ox < -1 ? 1 : 0) * E.clamp((fcx - 640) / 160), listCut) * (screenW(c, t) === FW ? 1 : 0)) });
     // and the clipped side panel at the right edge when the camera looks at the map
     const fx1 = (c.VW - c.cam.ox) / c.cam.k;
-    E.css(c.edgeR, { opacity: E.f3(E.clamp((c.cam.z - 1.35) / 0.5) * (fx1 < screenW(c, t) - 8 ? 1 : 0) * E.clamp((760 - fcx) / 160) * (screenW(c, t) === FW ? 1 : 0)) });
+    E.css(c.edgeR, { opacity: E.f3(E.clamp((c.cam.z - 1.35) / 0.5) * (fx1 < screenW(c, t) - 8 ? 1 : 0) * E.clamp((840 - fcx) / 160) * (screenW(c, t) === FW ? 1 : 0)) });
+    // and cut text at the top edge on the SOP screens when zoomed low
+    const scr = cur >= 0 ? S[cur][1] : '', fy0 = -c.cam.oy / c.cam.k;
+    E.css(c.edgeT, { opacity: E.f3(E.clamp((c.cam.z - 1.35) / 0.5) * (fy0 > 300 && /^AF-07/.test(scr) ? 1 : 0)) });
     c.hls.forEach(h => K.hlUpdate(c, h, t));
   };
 

@@ -24,8 +24,8 @@ const markCounts = counts => { const ws = counts.map(([t]) => textWidth(t, 14, 5
 
 // colour grammar used on the cover, the flow board and the film
 export const ROLE = {
-  sensor: ['AgilFence sensor', '#D4B741'], system: ['System · auto', '#3EA9FF'], copilot: ['Co-pilot (concept)', C.copilot],
-  operator: ['Operator decision', '#FFFFFF'], patrol: ['Patrol', '#44AC0C'],
+  sensor: ['AgilFence', '#D4B741'], system: ['AGIL Secure (auto)', '#3EA9FF'], copilot: ['Co-pilot (concept)', C.copilot],
+  operator: ['People decide', '#FFFFFF'], patrol: ['Patrol', '#44AC0C'],
 };
 const AMBER = '#D4B741', TEAL = '#55D6E6', GREEN = '#44AC0C';
 const LOC = ['Main Airport', 'Airfield'];
@@ -60,7 +60,7 @@ function siteView(F, o = {}) {
   if (o.extra) s += o.extra(F, P);
   s += marker(F, P, { X: 63, Y: 1, sev: 'Critical', icon: 'fence', h: o.mh ?? 3.2, label: o.label ?? 'Seg 5-14 · Alarm', left: o.mleft });
   { const [hx, hy] = P(63, 1, o.mh ?? 3.2), lw = textWidth(o.label ?? 'Seg 5-14 · Alarm', 14, 500) + 24; mark('site', o.mleft ? [hx - 42 - lw, hy - 20, lw + 62, 40] : [hx - 20, hy - 20, lw + 62, 40]); }
-  if (o.patrol) { const [vx, vy] = P(...(o.patrol.at || o.patrol.from), 0.2), lw = textWidth(`${o.patrol.id} · ${o.patrol.eta}`, 13, 500) + 20; mark('vehicle', [vx - 18, vy - 18, 36, 36]); mark('patrolLabel', [Math.max(o.patrol.minX ?? -1e9, vx - lw / 2), vy + 30, lw, 28]); }
+  if (o.patrol) { const [vx, vy] = P(...(o.patrol.at || o.patrol.from), 0.2), lw = textWidth(`${o.patrol.id} · ${o.patrol.eta}`, 13, 500) + 20; mark('vehicle', [vx - 18, vy - 18, 36, 36]); mark('patrolLabel', [Math.max(o.patrol.minX ?? -1e9, vx - lw / 2), vy + (o.patrol.dy ?? 30), lw, 28]); }
   return scene(F, s);
 }
 // wider view of the north perimeter road: patrol route, vehicle and the alarm segment
@@ -68,7 +68,7 @@ function patrolView(F, o) {
   return siteView(F, {
     sx: 640, sy: 510, sc: 30, cx: 61, cy: 3.5, label: o.label, mleft: o.mleft,
     cams: [{ ...AF.cams[0], place: 'left', text: 'PTZ 7-02 · tracking' }, { ...AF.cams[1], label: false }, { ...AF.cams[2], label: false }],
-    patrol: { ...AF.patrol, id: 'Patrol 2', eta: o.eta, at: o.at, place: 'below', minX: 392 },
+    patrol: { ...AF.patrol, id: 'Patrol 2', eta: o.eta, at: o.at, place: 'below', minX: 392, dy: o.pdy },
     runway: { X: 64, Y: 6.4, label: o.runway, col: o.runwayCol },
   });
 }
@@ -86,7 +86,7 @@ function airportView(F, o = {}) {
 function consoleFrame(name, o) {
   const F = new Frame(name, W, H);
   let s = o.center(F);
-  s += header(F, { loc: LOC });
+  s += header(F, { loc: LOC, placeholder: 'Search…' });
   if (o.toggle) s += modelToggle(F);
   s += alertsPanel(F, { cluster: 'All terminals', counts: o.counts || COUNTS, cards: cardsWith(o.card) });
   markCounts(o.counts || COUNTS);
@@ -127,7 +127,7 @@ export function cover() {
   s += image(F, 'Logo', asset('logo_s.png'), 60, 56, 50, 46);
   s += text(128, 76, 'AGIL Secure V11', { size: 16, weight: 700, fill: '#FFFFFF' }) + text(128, 96, 'with AgilFence perimeter intrusion detection', { size: 14, fill: C.t2 });
   s += rect(1110.5, 60.5, 230, 30, { r: 15, fill: '#1D232C', stroke: '#4A505B' }) + text(1225.5, 80.5, 'Illustrative scenario · simulated data', { size: 12.5, weight: 500, fill: C.t3, anchor: 'middle' });
-  s += text(1340, 112, 'NEW elements are concepts for V11', { size: 12.5, fill: C.t2, anchor: 'end' });
+  s += text(1340, 112, 'Concepts for V11: auto-linking, nearest cameras, one-click live, wall layout, timeline, evidence pack, Co-pilot', { size: 12.5, fill: C.t2, anchor: 'end' });
   s += text(60, 190, 'END-TO-END FLOW', { size: 14, weight: 700, ls: 2, fill: AMBER });
   s += text(60, 252, 'AgilFence, end to end', { size: 58, weight: 700, fill: '#FFFFFF' });
   s += para(60, 300, 'From a climb on the fence to a confirmed response: what the operator sees on the AGIL Secure V11 dashboard and the command-centre video wall.', 640, { size: 21, lh: 31, fill: C.t1 }).svg;
@@ -217,7 +217,7 @@ export function trigger() {
   s += g(F, 'How it senses', b);
   // signal chain
   const chain = [['AgilFence sensor', 'Alarm on 5-14', AMBER, 'fence'], ['iPAMS', 'Location + camera preset', C.link, 'pin'], ['AGIL Secure V11', 'Alarm, incident, SOP', C.link, 'monitor'], ['Operator', 'Sees, clicks, decides', '#FFFFFF', 'user']];
-  const cy = 870, cw2 = 296;
+  const cy = 886, cw2 = 296;
   s += text(60, cy - 16, 'SIGNAL CHAIN', { size: 12, weight: 700, ls: 1.2, fill: C.t2 });
   chain.forEach(([t, sub, col, ic], i) => {
     const x = 60 + i * (cw2 + 30);
@@ -231,7 +231,7 @@ export function trigger() {
 
 // ---------- AF-02 · System message and alarm alert ----------
 export function alarm() {
-  const fc = fenceCard('Co-pilot · preparing a summary…');
+  const fc = fenceCard('Co-pilot (concept) · preparing a summary…');
   return consoleFrame('AF-02 · System message and alarm alert (home)', {
     card: fc, toggle: true,
     center: F => airportView(F),
@@ -303,8 +303,8 @@ const IM_OTHERS = [
   ['Open', 'Warning', 'T2 Arrival Belt 5', 'Today, 02:11:09', 'FGT-040', null, 'CAM-1-142'],
   ['Open', 'Warning', 'T2 Gate E5', 'Today, 02:04:12', 'UAB-112', null, 'CAM-2-031'],
   ['Open', 'Info', 'T4 Baggage Hall B2', 'Today, 01:45:20', 'OVS-012', null, 'ACS-B2'],
-  ['Closed', 'Critical', 'Fence Sector 15', 'Today, 01:42:10', 'PER-015', ['Nurul A.', 'Today, 01:43:05'], 'AGF-15-03'],
   ['Closed', 'Critical', 'T3 Pier B Service Door', 'Today, 01:47:02', 'TGT-209', ['Andrew Teo', 'Today, 02:05:40'], 'ACS-P3B'],
+  ['Closed', 'Warning', 'T4 Door G3', 'Today, 01:38:10', 'IDS-198', ['Nurul A.', 'Today, 01:52:30'], 'ACS-G3'],
 ];
 function tabs2(F, a, b, on = 0) {
   return rect(876, 549, 334, 40, { fill: on === 0 ? C.tabBody : '#2E333B' }) + rect(1210, 549, 334, 40, { fill: on === 1 ? C.tabBody : '#2E333B' }) +
@@ -323,7 +323,7 @@ export function incidentList() {
       d += rect(876, 589, 668, 360, { fill: C.tabBody });
       const tl = timeline(F, 892, 602, 636, [
         { who: 'System', time: '02:15:03', text: '2 alarms and 1 camera action linked', size: 14, italic: true, rows: LINKED.slice(0, 3) },
-        { who: 'Co-pilot', tag: 'AI summary', time: '02:15:04', col: C.copilot, text: 'AgilFence and LiDAR L-5B agree: one object, 1.7 m tall, at the fence on segment 5-14. No works or patrols are booked at Sector 5. PTZ 7-02 is on preset 5-14.', size: 14, lh: 20 },
+        { who: 'Co-pilot', tag: 'AI summary · concept', time: '02:15:04', col: C.copilot, text: 'AgilFence and LiDAR L-5B agree: one object, 1.7 m tall, at the fence on segment 5-14. No works or patrols are booked at Sector 5. PTZ 7-02 is on preset 5-14.', size: 14, lh: 20 },
       ], { gap: 12 });
       d += g(F, 'Linked alarms NEW', tl.svg);
       mark('linked', [876, 589, 668, tl.h + 22]); mark('row', [40, 296, 804, 56]); mark('locate', [884, 965, 320, 44]); mark('cams', [876, 333, 668, 200]); mark('note', [60, 870, 764, 64]);
@@ -338,7 +338,7 @@ export function incidentList() {
 
 // ---------- AF-04 · Locate: nearest cameras ----------
 export function locate() {
-  const fc = fenceCard('Co-pilot · fence + LiDAR agree: 1 object', { selected: true });
+  const fc = fenceCard('Co-pilot (concept) · fence + LiDAR agree', { selected: true });
   return consoleFrame('AF-04 · Locate · nearest cameras on target', {
     card: fc,
     center: F => { const n = nearestCams(F, 400, 590, AF.cams.map(c => c.pref ? { ...c, action: 'Open live', kind: 'Thermal + IR · on preset' } : c), { w: 300 }); mark('nearest', [400, 590, 300, n.h]); { const bw = textWidth('Open live', 12, 700) + 20; mark('openLive', [700 - 20 - bw, 640 + 12, bw, 24]); } mark('ptzTile', [916, 296, 210, 248]); const [lx, ly] = locateLink(F, fc); mark('locateLink', [lx - 4, ly - 18, 82, 26]); return siteView(F) + n.svg; },
@@ -346,7 +346,7 @@ export function locate() {
       ev: EV,
       cams: [CAMS.ptz({ box: null, chips: [['On preset 5-14', C.blue], ['LIVE', C.crit]] }), CAMS.wide(), CAMS.lidar()],
       body: investigation([
-        { who: 'Co-pilot', tag: 'AI summary', time: '02:15:06', col: C.copilot, text: 'AgilFence reports a disturbance on segment 5-14 at 02:14:58, consistent with a climb. LiDAR L-5B sees one 1.7 m object at the same spot. PTZ 7-02 is on preset.', size: 14, lh: 20 },
+        { who: 'Co-pilot', tag: 'AI summary · concept', time: '02:15:06', col: C.copilot, text: 'AgilFence reports a disturbance on segment 5-14 at 02:14:58, consistent with a climb. LiDAR L-5B sees one 1.7 m object at the same spot. PTZ 7-02 is on preset.', size: 14, lh: 20 },
         { who: 'System', time: '02:15:03', text: '2 alarms and 1 camera action linked', size: 14, italic: true, rows: LINKED.slice(0, 3) },
       ]),
     },
@@ -356,7 +356,7 @@ export function locate() {
 
 // ---------- AF-05 · PTZ films the area ----------
 export function ptz() {
-  const fc = fenceCard('Co-pilot · fence, LiDAR and thermal agree', { selected: true });
+  const fc = fenceCard('Co-pilot (concept) · fence + LiDAR + thermal', { selected: true });
   return consoleFrame('AF-05 · PTZ films the area · live thermal + pre-alarm clip', {
     card: fc,
     center: F => {
@@ -374,14 +374,14 @@ export function ptz() {
       s += g(F, 'PTZ live view NEW', p);
       { const ih = ph - 34, sc = Math.max(w / 1280, ih / 720), iw = 1280 * sc, ihh = 720 * sc, [bx, by, bw, bh] = box('thermal', 'person');
         const ox = Math.min(x, Math.max(x + w - iw, x + w / 2 - 0.56 * iw)), oy = Math.min(y, Math.max(y + ih - ihh, y + ih / 2 - 0.48 * ihh));   // as player()
-        mark('player', [x - 6, y - 6, w + 12, ph + 120]); mark('pbox', [ox + bx * sc - 4, oy + by * sc - 4, bw * sc + 8, bh * sc + 30]); mark('clip', [x - 4, cy + 46, 460, 26]); mark('send', [x + 288, cy, 200, 36]); mark('summary', [916, 604, 428, 116]); }
+        mark('player', [x - 6, y - 6, w + 12, ph + 120]); mark('pbox', [ox + bx * sc - 4, oy + by * sc - 4, bw * sc + 8, bh * sc + 8]); mark('clip', [x - 4, cy + 46, 460, 26]); mark('send', [x + 288, cy, 200, 36]); mark('summary', [916, 604, 428, 116]); }
       return s;
     },
     alarm: {
       ev: EV,
       cams: [CAMS.thermal({ chips: [['Auto-track', C.blue], ['LIVE', C.crit]] }), CAMS.wide(), CAMS.lidar()],
       body: investigation([
-        { who: 'Co-pilot', tag: 'AI summary', time: '02:15:12', col: C.copilot, text: 'Disturbance on segment 5-14 at 02:14:58. LiDAR sees one 1.7 m object at the fence and thermal shows one person. No works are booked at Sector 5.', size: 14, lh: 20 },
+        { who: 'Co-pilot', tag: 'AI summary · concept', time: '02:15:12', col: C.copilot, text: 'Disturbance on segment 5-14 at 02:14:58. LiDAR sees one 1.7 m object at the fence and thermal shows one person. No works are booked at Sector 5.', size: 14, lh: 20 },
         { who: 'System', time: '02:15:12', text: '3 alarms and 1 camera action linked', size: 14, italic: true, rows: LINKED },
       ]),
     },
@@ -425,7 +425,7 @@ export function videoWall() {
     const P = camera(x + w / 2, y + h / 2 + 30, 17, 63, 3);
     const mc = F.clip(`<rect x="${f(x)}" y="${f(y)}" width="${f(w)}" height="${f(h)}" rx="6"/>`);
     let m = rect(x, y, w, h, { r: 6, fill: '#05080D' }) + clayAirport(F, P, { alarmFence: false, lidar: false, labels: false, markers: [] });
-    m += fenceSite(F, P, { cams: AF.cams.map(c => ({ ...c, label: false })), segLabels: false, sensors: false, patrol: { ...AF.patrol, id: 'Patrol 2', eta: 'standing by', at: AF.patrol.from } });
+    m += fenceSite(F, P, { cams: AF.cams.map(c => ({ ...c, label: false })), segLabels: false, sensors: false, patrol: { ...AF.patrol, id: 'Patrol 2', eta: 'standing by', at: AF.patrol.from, place: 'below', dy: 22 } });
     m += marker(F, P, { X: 63, Y: 1, sev: 'Critical', icon: 'fence', h: 3, scale: 0.8, label: 'Seg 5-14' });
     s += g(F, 'Sector 5 map NEW', `<g clip-path="${mc}">${m}${rect(x, y, w, 30, { fill: '#000000', fo: 0.45 })}${icon(F, 'pin', x + 10, y + 7, 16, '#FFFFFF', 1.8)}${text(x + 32, y + 20, 'Sector 5 · map · cameras and patrol', { size: 13, weight: 500, fill: '#FFFFFF' })}</g>`);
   }
@@ -448,8 +448,8 @@ export function videoWall() {
 // ---------- AF-07 · Operator runs the SOP ----------
 const SOP = (stage = 0) => [
   { title: 'Alarm located, cameras on target', state: 'done', tag: 'Auto' },
-  { title: 'Works and own patrols: none', state: 'done', tag: 'Auto' },
-  { title: 'Verify on video', state: 'done', tag: 'Confirmed · Nurul 02:15:24' },
+  { title: 'No works or patrols at segment 5-14', state: 'done', tag: 'Auto' },
+  stage >= 0 ? { title: 'Verify on video', state: 'done', tag: 'Confirmed · Nurul 02:15:24' } : { title: 'Verify on video', state: 'todo' },
   stage >= 1 ? { title: 'Dispatch Patrol 2', state: 'done', tag: 'Approved · Nurul 02:15:30' } :
     { title: 'Critical Action Required', state: 'critical', tag: 'Your approval', text: 'Dispatch Patrol 2 (Arjun + 1) by the airside perimeter road, ETA 02:18:30. Keep off the runway strip unless the tower clears it.', actions: [['Dispatch', 'blue'], ['Choose another', 'grey']] },
   { title: 'Inform Airside Ops and tower', state: stage >= 2 ? 'done' : 'todo', tag: stage >= 2 ? 'Logged 02:15:40' : null },
@@ -457,16 +457,16 @@ const SOP = (stage = 0) => [
   { title: 'Keep target in view', state: 'todo', tag: 'Auto · running' },
   { title: 'Secure, close and report', state: 'todo' },
 ];
-export function sop() {
-  const fc = fenceCard('Co-pilot · fence, LiDAR and thermal agree', { selected: true });
-  return consoleFrame('AF-07 · Operator runs the SOP · approve dispatch', {
+export function sop(stage = 0) {
+  const fc = fenceCard('Co-pilot (concept) · fence + LiDAR + thermal', { selected: true });
+  return consoleFrame(stage < 0 ? 'AF-07a · SOP, routine checks (film)' : 'AF-07 · Operator runs the SOP · approve dispatch', {
     card: fc,
-    center: F => patrolView(F, { at: AF.patrol.from, eta: 'standing by', runway: 'Runway 02L · 150 m' }),
+    center: F => patrolView(F, { at: AF.patrol.from, eta: 'standing by', runway: 'Runway 02L · 150 m', pdy: 40 }),
     alarm: {
       ev: EV,
       cams: [CAMS.track({ chips: [['Auto-track', C.blue], ['LIVE', C.crit]] }), CAMS.wide(), CAMS.lidar()],
       tab: 1,
-      body: (F, x, y, w, h) => { const pos = []; const r = sopFlow(F, x, y + 4, w, SOP(0), { caption: 'Loaded automatically: SOP-PER-02 Perimeter intrusion (sample)', captionCol: C.link, captionIcon: 'list', pos });
+      body: (F, x, y, w, h) => { const pos = []; const r = sopFlow(F, x, y + 4, w, SOP(stage), { caption: 'Loaded automatically: SOP-PER-02 Perimeter intrusion (sample)', captionCol: C.link, captionIcon: 'list', pos });
         mark('auto', [x, pos[0].y, w, pos[2].y - pos[0].y]); mark('verify', [x, pos[2].y, w, pos[3].y + pos[3].h - pos[2].y]); mark('crit', [x, pos[3].y, w, pos[3].h]); mark('dispatch', pos[3].actions[0]); mark('sop', [x, y, w, h]); return r; },
     },
     after: F => cursor(F, 1030, 880, { click: true }),
@@ -475,10 +475,10 @@ export function sop() {
 
 // ---------- AF-08 · Patrol on scene ----------
 export function onScene() {
-  const fc = fenceCard('Co-pilot · summary updated', { selected: true });
+  const fc = fenceCard('Co-pilot (concept) · summary updated', { selected: true });
   return consoleFrame('AF-08 · Patrol on scene · person held short of the runway', {
     card: fc,
-    center: F => patrolView(F, { at: [60.2, 2.4], eta: 'on scene 02:18:08', runway: 'Runway 02L · 130 m from the person', runwayCol: GREEN, label: 'Seg 5-14 · Patrol on scene', mleft: true }),
+    center: F => patrolView(F, { at: [60.2, 2.4], eta: 'on scene 02:18:08', runway: 'Runway 02L · 130 m', runwayCol: GREEN, label: 'Seg 5-14 · Patrol on scene', mleft: true }),
     alarm: {
       ev: { ...EV, lines: [['Person stationary inside the fence line'], ['Patrol 2 on scene ', { b: '02:18:08' }, ' · police on the way']] },
       cams: (mark('tile', [916, 296, 210, 248]), mark('radio', [916, 604, 428, 104]), [CAMS.patrol({ chips: [['LIVE', C.crit]] }), CAMS.wide({ box: null }), CAMS.lidar()]),
@@ -510,7 +510,7 @@ export function close() {
       d += rect(876, 638, 334, 40, { fill: C.tabBody }) + rect(1210, 638, 334, 40, { fill: '#2E333B' }) + text(1043, 665, 'Remarks', { size: 18, weight: 700, fill: '#FFFFFF', anchor: 'middle' }) + text(1377, 665, 'SOP Flow · 8/8', { size: 18, weight: 700, fill: '#8E95A1', anchor: 'middle' });
       d += rect(876, 678, 668, 220, { fill: C.tabBody });
       const tl = timeline(F, 892, 690, 636, [
-        { who: 'Co-pilot', tag: 'Report draft', time: '02:40:05', col: C.copilot, text: 'Disturbance on fence segment 5-14 at 02:14:58 (AgilFence), corroborated by LiDAR and thermal; verified on video by Nurul A. 02:15:24. Patrol 2 dispatched 02:15:30, on scene 02:18:08; person held 130 m short of runway 02L, police custody 02:26:30. Mesh bent, no cut.', size: 14, lh: 19 },
+        { who: 'Co-pilot', tag: 'Report draft · concept', time: '02:40:05', col: C.copilot, text: 'Disturbance on fence segment 5-14 at 02:14:58 (AgilFence), corroborated by LiDAR and thermal; verified on video by Nurul A. 02:15:24. Patrol 2 dispatched 02:15:30, on scene 02:18:08; person held 130 m short of runway 02L, police custody 02:26:30. Mesh bent, no cut.', size: 14, lh: 19 },
         { who: 'Nurul A.', time: '02:44:20', col: '#2E8BFF', text: 'Reviewed and closed; Daniel L. signed off. Segment 5-14 guarded until repair.', size: 14, lh: 20 },
       ], { gap: 8 });
       d += tl.svg;
@@ -533,11 +533,11 @@ export function quiet() {
 }
 // the alarm card without the system message (toast dismissed)
 export function alarmNoToast() {
-  return consoleFrame('AF-02b · Alarm card, message dismissed (film)', { card: fenceCard('Co-pilot · preparing a summary…'), toggle: true, center: F => airportView(F) });
+  return consoleFrame('AF-02b · Alarm card, message dismissed (film)', { card: fenceCard('Co-pilot (concept) · preparing a summary…'), toggle: true, center: F => airportView(F) });
 }
 // SOP after the dispatch was approved (stage 1), the tower informed (2), the police call approved (3)
 function sopStage(stage, name) {
-  const fc = fenceCard('Co-pilot · fence, LiDAR and thermal agree', { selected: true });
+  const fc = fenceCard('Co-pilot (concept) · fence + LiDAR + thermal', { selected: true });
   return consoleFrame(name, {
     card: fc,
     center: F => patrolView(F, { at: [54, 2.4], eta: 'ETA 02:18:30', runway: stage >= 2 ? 'Runway 02L · tower informed' : 'Runway 02L · 150 m' }),
@@ -549,7 +549,7 @@ function sopStage(stage, name) {
 export const sopDone = () => sopStage(1, 'AF-07b · SOP after dispatch (film)');
 export const sopTower = () => sopStage(2, 'AF-07c · SOP, tower informed (film)');
 export const sopPolice = () => sopStage(3, 'AF-07d · SOP, police call approved (film)');
-export const AF_FILM_FRAMES = [['AF-02a-quiet', quiet, W], ['AF-02b-alarm-card', alarmNoToast, W], ['AF-07b-sop-dispatched', sopDone, W], ['AF-07c-sop-tower', sopTower, W], ['AF-07d-sop-police', sopPolice, W]];
+export const AF_FILM_FRAMES = [['AF-02a-quiet', quiet, W], ['AF-02b-alarm-card', alarmNoToast, W], ['AF-07a-sop-checks', () => sop(-1), W], ['AF-07b-sop-dispatched', sopDone, W], ['AF-07c-sop-tower', sopTower, W], ['AF-07d-sop-police', sopPolice, W]];
 
 export const AF_FRAMES = [
   ['AF-00-cover', cover, W],

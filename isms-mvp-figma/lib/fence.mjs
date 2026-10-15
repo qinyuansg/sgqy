@@ -12,7 +12,7 @@ export const AF = {
   cams: [
     { id: 'PTZ 7-02', kind: 'PTZ · thermal + IR', X: 61.2, Y: 2.0, dist: '85 m', pref: true },
     { id: 'CAM 7-11', kind: 'Fixed · colour', X: 66.2, Y: 1.7, dist: '120 m' },
-    { id: 'PTZ 7-03', kind: 'PTZ · thermal wide', X: 68.4, Y: 2.7, dist: '210 m' },
+    { id: 'PTZ 7-03', kind: 'PTZ · thermal wide', X: 69.6, Y: 4.0, dist: '270 m' },
   ],
   patrol: { id: 'Patrol 2 · Arjun + 1', from: [51.5, 2.4], via: [], to: [62.4, 2.4], eta: 'ETA 02:18:30' },   // standby on the perimeter road
 };

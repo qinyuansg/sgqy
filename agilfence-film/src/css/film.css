@@ -82,7 +82,7 @@ img { display: block; }
 .tag { width: max-content; display: flex; align-items: center; gap: 12px; height: 46px; padding: 0 18px 0 6px; border-radius: 99px; white-space: nowrap;
   background: rgba(8, 12, 24, .92); border: 1.5px solid rgba(143, 180, 255, .75); box-shadow: 0 10px 30px rgba(0, 0, 0, .55), 0 0 30px rgba(77, 141, 255, .25);
   font-size: 20px; font-weight: 600; color: var(--ink); }
-.ibox { display: grid; place-items: center; border-radius: 50%; background: rgba(14, 22, 40, .9); color: var(--acc); border: 1.5px solid rgba(143, 180, 255, .45); }
+.ibox { flex: none; display: grid; place-items: center; border-radius: 50%; background: rgba(14, 22, 40, .9); color: var(--acc); border: 1.5px solid rgba(143, 180, 255, .45); }
 .icon { display: inline-block; vertical-align: middle; }
 
 /* V11 device: neutral bezel, specular top edge, viewfinder brackets outside */

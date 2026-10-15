@@ -6,7 +6,7 @@
   const L = E.L, at = E.at, S = E.S;
   const F = {
     quiet: 'AF-02a-quiet', alarm: 'AF-02-system-message-alarm', list: 'AF-03-incident-list', loc: 'AF-04-locate-nearest-cameras',
-    ptz: 'AF-05-ptz-films-the-area', sop: 'AF-07-sop-approve-dispatch', sopd: 'AF-07b-sop-dispatched', sopt: 'AF-07c-sop-tower', sopp: 'AF-07d-sop-police', scene: 'AF-08-patrol-on-scene', close: 'AF-09-close-and-report',
+    ptz: 'AF-05-ptz-films-the-area', sopa: 'AF-07a-sop-checks', sop: 'AF-07-sop-approve-dispatch', sopd: 'AF-07b-sop-dispatched', sopt: 'AF-07c-sop-tower', sopp: 'AF-07d-sop-police', scene: 'AF-08-patrol-on-scene', close: 'AF-09-close-and-report',
   };
   const A = (f, k) => window.ANCH[F[f]][k];
   const mid = r => [r[0] + r[2] / 2, r[1] + r[3] / 2];
@@ -27,7 +27,7 @@
           hls: [
             { r: pad(A('alarm', 'toast'), 4), n: 1, label: 'System message', side: 'l', t0: at('v06', 'system') - 0.1, t1: S('f05').end },
             { r: pad(A('alarm', 'card'), 2), n: 2, label: 'Critical alarm, with tone', side: 'r', t0: at('v06', 'tone') - 0.15, t1: S('f05').end },
-            { r: pad(A('alarm', 'marker'), 4), n: 3, label: 'Pin on the airport model', side: 'b', dx: 90, t0: at('v06', 'pin') - 0.45, t1: S('f05').end },
+            { r: pad(A('alarm', 'marker'), 4), n: 3, label: 'Pin on the airport model', side: 'b', dx: 90, dist: 8, t0: at('v06', 'pin') - 0.45, t1: S('f05').end },
           ],
           cues: [[tA, 'alert', 0.75], [tA + 0.9, 'alert', 0.5], [tA + 0.05, 'impactSoft', 0.4]],
           flash: tA,
@@ -39,10 +39,10 @@
       body: 'The fence and laser scanner alarms, and the camera call-up, are linked into PER-005 at the top of the list.', path: 'Incident Management  ›  PER-005',
       plan: () => ({
         screens: [[S('f06').start, F.list]],
-        shots: [[S('f06').start + 0.15, [30, 250, 830, 620], 1.1], [at('v07', 'linked') - 0.2, [500, 280, 1100, 700], 1.1]],
+        shots: [[S('f06').start + 0.15, [30, 120, 830, 640], 1.1], [at('v07', 'linked') + 0.3, [500, 280, 1100, 700], 1.1]],
         hls: [
-          { r: pad(A('list', 'row'), 2), n: 1, label: 'Top of the incident list', side: 'b', dx: 170, t0: at('v07', 'tops') - 0.1, t1: at('v07', 'linked') - 0.2 },
-          { r: [880, 595, 660, 140], n: 2, label: 'Fence, scanner, camera', side: 'l', t0: at('v07', 'linked') + 0.3, t1: S('f06').end },
+          { r: pad(A('list', 'row'), 2), n: 1, label: 'Top of the list', side: 't', dist: 62, dx: 100, t0: at('v07', 'tops') - 0.1, t1: at('v07', 'linked') + 0.5 },
+          { r: [880, 595, 660, 140], n: 2, label: 'Fence, scanner, camera', side: 'l', dy: 100, t0: at('v07', 'linked') + 0.9, t1: S('f06').end },
         ],
       }),
     },
@@ -54,10 +54,10 @@
         const tc = at('v08', 'Locate') + 0.05, b = A('list', 'locate'), [bx, by] = mid(b);
         return {
           screens: [[tc + 0.25, F.loc]],
-          shots: [[S('f07').start + 0.05, [860, 600, 700, 470], 1.0], [tc + 0.35, [380, 150, 560, 690], 1.2], [at('v08', 'already') - 0.4, [600, 150, 780, 440], 1.2]],
+          shots: [[S('f07').start + 0.05, [860, 600, 700, 470], 1.0], [tc + 0.35, [380, 150, 560, 690], 1.2], [at('v08', 'already') - 0.6, [600, 150, 780, 440], 1.2]],
           hls: [
-            { r: pad(A('loc', 'nearest'), 3), n: 1, label: 'Nearest cameras, listed', side: 't', dist: 30, t0: at('v08', 'lists') - 0.1, t1: at('v08', 'already') - 0.45 },
-            { r: pad(A('loc', 'ptzTile'), 3), n: 2, label: 'Already on preset', side: 'l', dy: 110, t0: at('v08', 'already') + 0.1, t1: S('f07').end },
+            { r: pad(A('loc', 'nearest'), 3), n: 1, label: 'Nearest cameras, listed', side: 't', dist: 30, t0: at('v08', 'lists') - 0.1, t1: at('v08', 'already') - 0.65 },
+            { r: pad(A('loc', 'ptzTile'), 3), n: 2, label: 'Already on preset', side: 'l', dy: 110, t0: at('v08', 'already') - 0.1, t1: S('f07').end },
           ],
           cursor: { path: [[S('f07').start + 0.1, bx + 150, by - 120], [tc - 0.1, bx - 40, by + 2]], clicks: [tc], win: [S('f07').start, tc + 0.5] },
           cues: [[tc, 'click', 0.8], [tc + 0.3, 'whoosh', 0.3]],
@@ -67,16 +67,16 @@
     {
       id: 'f08', step: 5, kicker: '02:15:12 · PTZ 7-02 live', title: 'One more click.\nLive, and tracking.', who: ['operator', 'system', 'copilot'], path: 'Active Alarms  ›  PTZ 7-02 live',
       concept: 'Concept: one-click live view, Co-pilot',
-      copilot: { label: 'CO-PILOT · CONCEPT', pre: 'Summarising fence, scanner and camera', quote: 'Fence, laser scanner and thermal agree: one person, 1.7 m, at segment 5-14. No works are booked here.', tq: () => at('v09', 'agree') - 0.6 },
+      copilot: { label: 'CO-PILOT · CONCEPT', pre: 'Summarising fence, scanner and camera', quote: 'Fence, laser scanner and thermal agree: one person, 1.7 m, at segment 5-14. No works are booked here.', tq: () => at('v09', 'person') + 0.2 },
       plan: () => {
         const tc = at('v09', 'click') + 0.05, b = A('loc', 'openLive'), [bx, by] = mid(b);
         return {
           screens: [[tc + 0.25, F.ptz]],
-          shots: [[S('f08').start + 0.05, [380, 520, 520, 340], 1.0], [tc + 0.35, [384, 132, 520, 440], 1.1], [at('v09', 'agree') - 0.4, [560, 540, 800, 420], 1.1]],
+          shots: [[S('f08').start + 0.05, [380, 520, 520, 340], 1.0], [tc + 0.35, [384, 132, 520, 440], 1.1], [at('v09', 'agree') - 0.9, [560, 540, 800, 420], 1.1]],
           hls: [
             { r: pad(b, 3), n: 1, label: '', t0: S('f08').start + 0.3, t1: tc + 0.35 },
-            { r: A('ptz', 'pbox'), n: 1, label: 'One person, 1.7 m · tracking', side: 'r', dist: 40, t0: at('v09', 'person') - 0.1, t1: at('v09', 'agree') - 0.45 },
-            { r: pad(A('ptz', 'summary'), 1), n: 2, label: 'Fence, scanner and camera agree', side: 'l', t0: at('v09', 'agree') + 0.1, t1: S('f08').end },
+            { r: A('ptz', 'pbox'), n: 1, label: 'One person, 1.7 m · tracking', side: 'r', dist: 40, t0: at('v09', 'person') - 0.1, t1: at('v09', 'agree') - 0.95 },
+            { r: pad(A('ptz', 'summary'), 1), n: 2, label: 'Fence, scanner and camera agree', side: 'l', dy: -90, t0: at('v09', 'agree') - 0.4, t1: S('f08').end },
           ],
           cursor: { path: [[S('f08').start + 0.1, bx - 120, by + 80], [tc - 0.1, bx + 4, by + 4]], clicks: [tc], win: [S('f08').start, tc + 0.5] },
           cues: [[tc, 'click', 0.8], [tc + 0.25, 'switch', 0.4]],
@@ -91,7 +91,7 @@
       plan: () => {
         const td = at('v11', 'approves') + 0.2, d = A('sop', 'dispatch'), [dx, dy] = mid(d);
         return {
-          screens: [[S('f10').start, F.sop], [td + 0.3, F.sopd], [at('v12', 'informs') + 0.2, F.sopt], [at('v12', 'approves') - 0.1, F.sopp]],
+          screens: [[S('f10').start, F.sopa], [at('v11', 'Nurul') + 0.1, F.sop], [td + 0.3, F.sopd], [at('v12', 'informs') + 0.2, F.sopt], [at('v12', 'approves') - 0.1, F.sopp]],
           shots: [[S('f10').start + 0.1, [560, 560, 820, 420], 1.1], [td + 0.6, [370, 280, 600, 340], 1.2], [at('v12', 'Airside') - 0.4, [560, 560, 820, 420], 1.1]],
           hls: [
             { r: pad(A('sop', 'auto'), 2), n: null, label: 'Routine checks: the system', side: 'l', t0: at('v11', 'system') - 0.1, t1: at('v11', 'Nurul') - 0.2 },
@@ -113,7 +113,7 @@
         screens: [[S('f11').start, F.scene]],
         shots: [[S('f11').start + 0.1, [380, 290, 520, 340], 1.2]],
         hls: [
-          { r: pad(A('scene', 'patrolLabel'), 2), n: 1, label: 'Inside the fence line, short of the runway', side: 'b', dist: 14, dx: -140, t0: at('v13', 'reaches') - 0.1, t1: S('f11').end },
+          { r: pad(A('scene', 'patrolLabel'), 2), n: 1, label: 'Inside the fence line, short of the runway', side: 'b', dist: 14, dx: -230, t0: at('v13', 'reaches') - 0.1, t1: S('f11').end },
         ],
         cues: [[at('v13', 'reaches'), 'success', 0.35]],
       }),
@@ -126,14 +126,14 @@
         shots: [[S('f12').start + 0.1, [600, 500, 960, 560], 1.1]],
         hls: [
           { r: A('close', 'closed'), n: 1, label: 'Closed and signed off', side: 'l', t0: at('v14', 'closes') - 0.1, t1: S('f12').end },
-          { r: A('close', 'timeline'), n: 2, label: 'Every step, timed', side: 'l', dist: 24, dy: 20, t0: at('v14', 'record') - 0.4, t1: S('f12').end },
-          { r: A('close', 'report'), n: 3, label: 'Drafted for review', side: 'l', dy: 44, t0: at('v14', 'report') - 0.1, t1: S('f12').end },
+          { r: A('close', 'timeline'), n: 2, label: 'Every step, timed', side: 'l', dist: 24, dy: 211, t0: at('v14', 'Every') - 0.1, t1: S('f12').end },
+          { r: A('close', 'report'), n: 3, label: 'Drafted for review', side: 'l', dist: 24, dy: 192, t0: at('v14', 'with') - 0.3, t1: S('f12').end },
         ],
         cues: [[at('v14', 'closes'), 'stamp', 0.4]],
       }),
     },
   ];
-  const CX = 120, CW = 520, DX = 700, DY = 128, DW = 1060;
+  const CX = 120, CW = 520, DX = 725, DY = 128, DW = 1010;   // device bottom clears two-line subtitles
 
   E.scene({
     id: 'console', start: S('f05').start, end: S('f12').end, inDur: 0.6, outDur: 0.6,
@@ -169,7 +169,7 @@
               <div style="display:flex;align-items:center;gap:8px;margin-top:6px;font-size:21px;color:var(--acc2)">${K.icon('userCheck', 22, 1.9)}<span>${pp.act}</span></div></div></div>`));
           y += 112;
         });
-        plan.hls.forEach(h => { h.t1 = Math.min(h.t1, w.end - 0.45); K.hl(s.con, h); });
+        plan.hls.forEach(h => { h.t1 = Math.min(h.t1, w.end - (d.id === 'f12' ? 0.2 : 0.45)); K.hl(s.con, h); });
         const col = { d, w, plan, g, kick, ttl, body, cp, who, per, con };
         if (plan.cursor) col.cur = K.cursor(s.con);
         (plan.cues || []).forEach(c => E.cue(c[0], c[1], c[2]));
