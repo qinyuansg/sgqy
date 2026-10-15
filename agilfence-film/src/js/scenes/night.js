@@ -38,7 +38,7 @@
       // the fence: posts receding along the left, mesh, top wires and the (dormant) AgilFence cable
       const X0 = -520, TOP = 90, BOT = 1180, MID = 640;
       const posts = [];
-      for (let k = 0; k < 44; k++) posts.push(1 + k * 0.38);
+      for (let k = 0; k < 64; k++) posts.push(Math.pow(1.075, k) + k * 0.12);   // spacing grows with depth, so the fence runs to the horizon
       let fe = '', mesh = '';
       for (let k = 0; k < posts.length - 1; k++) {
         const z0 = posts[k], z1 = posts[k + 1];
@@ -66,7 +66,7 @@
       // AgilFence cable along the mesh, with sensor beads (lit gently: the fence is on watch)
       sv += `<path id="ncable" d="${wire(MID)}" stroke="#7FB2FF" stroke-width="3" opacity=".55"/>`;
       s.beads = [];
-      for (let k = 0; k < 60; k++) { const z = 1 + k * 0.28; if (z > zF) break; const [x, y] = pj(X0, MID, z); s.beads.push({ x, y, z, k }); }
+      for (let k = 0; k < 90; k++) { const z = Math.pow(1.055, k) + k * 0.08; if (z > zF) break; const [x, y] = pj(X0, MID, z); s.beads.push({ x, y, z, k }); }
       sv += '<g id="nbeads">' + s.beads.map(b => `<circle cx="${b.x.toFixed(1)}" cy="${b.y.toFixed(1)}" r="${Math.max(1, 7 / b.z).toFixed(2)}" fill="#55D6E6"/>`).join('') + '</g>';
       // wind streaks
       s.wind = Array.from({ length: 46 }, () => ({ y: 300 + R() * 640, x0: R() * 2400 - 300, sp: 140 + R() * 220, len: 40 + R() * 120, o: 0.05 + R() * 0.12, ph: R() * 6 }));
@@ -85,6 +85,7 @@
         <div class="label" style="font-size:15px;color:#8F9CB8">Restricted: for CAG security and airside operations stakeholders</div></div>`);
       s.shade = E.add(el, '<div class="abs" style="inset:0;background:radial-gradient(1200px 700px at 50% 55%, rgba(3,5,10,.25), rgba(3,5,10,.85));opacity:0"></div>');
       // f01 type
+      s.tb = E.add(el, '<div class="abs" style="left:0;top:560px;width:1300px;height:520px;background:radial-gradient(760px 340px at 22% 70%, rgba(3,5,10,.86), rgba(3,5,10,0))"></div>');
       s.t1 = E.add(el, `<div class="abs" style="left:120px;top:742px;width:900px">
         <div class="kicker">02:14 · North perimeter</div>
         <div class="h-xl" style="margin-top:18px;font-size:96px"><span class="ln">Quiet.</span></div>
@@ -123,6 +124,7 @@
       E.attr(s.b1, 'opacity', E.f3(bk)); E.attr(s.b2, 'opacity', E.f3(bk * 0.4));
       // f01 type
       const t0 = L('v01').start, out1 = 1 - E.ep(t, f2 - 0.3, f2 + 0.2, 'in');
+      E.vis(s.tb, E.ep(t, 3.4, 4.0) * out1);
       E.fade(s.k1, E.ep(t, 3.6, 4.1) * out1, { dy: 10 });
       E.revealWords(s.h1, t, at('v01', 'quiet') - 0.25, { per: 0.07 });
       E.vis(s.h1, out1);
@@ -143,7 +145,7 @@
       };
       const tq = at('v02', 'someone');
       E.attr(s.tw, 'd', tr(160, 9 + 5 * Math.sin(t * 0.8), 0, null));
-      E.attr(s.tp, 'd', tr(420, 6, 2.2, { at: 0.72, a: 70 * E.ep(t, tq - 0.2, tq + 0.4) }));
+      E.attr(s.tp, 'd', tr(420, 6, 2.2, { at: 0.72, a: 112 * E.ep(t, tq - 0.2, tq + 0.4) }));
       E.attr(s.tp, 'opacity', E.f3(E.ep(t, tq - 0.4, tq + 0.1)));
       E.fade(s.qa, E.ep(t, at('v02', 'Is') - 0.2, at('v02', 'Is') + 0.3), { dy: 14 });
       E.fade(s.qb, E.ep(t, tq - 0.3, tq + 0.2), { dy: 14 });

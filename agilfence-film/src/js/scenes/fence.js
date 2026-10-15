@@ -77,9 +77,9 @@
       const RX = 1350, chip = (ic, a, b, col) => `<div class="abs" style="left:${RX}px;width:470px;display:flex;align-items:center;gap:18px">
           ${K.ibox(ic, 58, 26, `color:${col};border-color:${col}88`)}<div><div style="font-size:26px;font-weight:600;color:#fff;white-space:nowrap">${a}</div>${b ? `<div style="font-size:19px;color:var(--muted);margin-top:2px">${b}</div>` : ''}</div></div>`;
       s.lab1 = E.add(el, `<div class="abs label" style="left:${RX}px;top:300px;color:${AMB}">It feels</div>`);
-      s.feel = [['hand', 'A climb'], ['fence', 'A cut'], ['pulse', 'A lift']].map(([ic, a], i) => { const e = E.add(el, chip(ic, a, '', AMB)); e.style.top = (334 + i * 78) + 'px'; return e; });
+      s.feel = [['hand', 'A climb'], ['fence', 'A cut'], ['up', 'A lift']].map(([ic, a], i) => { const e = E.add(el, chip(ic, a, '', AMB)); e.style.top = (334 + i * 78) + 'px'; return e; });
       s.lab2 = E.add(el, `<div class="abs label" style="left:${RX}px;top:600px">Built for an airfield</div>`);
-      s.light = E.add(el, chip('signal', 'Senses with light', 'Immune to electromagnetic and radio interference', '#8FB4FF')); s.light.style.top = '634px';
+      s.light = E.add(el, chip('shield', 'Senses with light', 'Immune to electromagnetic and radio interference', '#8FB4FF')); s.light.style.top = '634px';
       s.adapt = E.add(el, chip('pulse', 'Adapts to the weather', 'Wind · rain · jet blast: nuisance alarms kept low', '#8FB4FF')); s.adapt.style.top = '734px';
       // f04: trace inset, pin, segment strip, time code
       s.trace = E.add(el, `<div class="abs glass" style="left:${RX}px;top:300px;width:470px;height:330px;padding:22px 24px">
@@ -87,16 +87,16 @@
         <svg width="422" height="230" style="margin-top:16px"><line x1="0" y1="64" x2="422" y2="64" stroke="rgba(255,255,255,.12)"/><line x1="0" y1="176" x2="422" y2="176" stroke="rgba(255,255,255,.12)"/>
           <path class="tw" stroke="#9AA6BA" stroke-width="2.5" fill="none"/><path class="tc" stroke="${CRIT}" stroke-width="2.5" fill="none"/>
           <text class="lw" x="0" y="22" fill="#A9B4C8" font-size="17" font-family="InterF">Seg 5-09 · wind 12 km/h · no alarm</text>
-          <text class="lc" x="0" y="134" fill="#FF8E8F" font-size="17" font-weight="600" font-family="InterF">Seg 5-14 · strain above the wind · alarm</text></svg></div>`);
+          <text class="lc" x="0" y="124" fill="#FF8E8F" font-size="17" font-weight="600" font-family="InterF">Seg 5-14 · strain above the wind · alarm</text></svg></div>`);
       s.tw = E.q(s.trace, '.tw'); s.tc = E.q(s.trace, '.tc'); s.lw = E.q(s.trace, '.lw'); s.lc = E.q(s.trace, '.lc');
-      s.pin = E.add(el, `<div class="abs" style="left:${HOT - 200}px;top:180px;width:400px;display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:14px;background:rgba(14,18,28,.95);border:2px solid ${CRIT};box-shadow:0 0 40px rgba(215,45,48,.35)">
+      s.pin = E.add(el, `<div class="abs" style="left:${HOT - 230}px;top:180px;width:460px;display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:14px;background:rgba(14,18,28,.95);border:2px solid ${CRIT};box-shadow:0 0 40px rgba(215,45,48,.35)">
         <span style="width:40px;height:40px;border-radius:50%;background:${CRIT};display:grid;place-items:center;color:#fff;flex:none">${K.icon('target', 24, 2)}</span>
         <div><div style="font-size:22px;font-weight:700;color:#fff;white-space:nowrap">Fence Sector 5 · Segment 5-14</div><div style="font-size:18px;color:#FF8E8F;margin-top:2px">Pinpointed to within a few metres</div></div></div>`);
       s.pinL = K.sadd(s.svg, `<line x1="${HOT}" y1="262" x2="${HOT}" y2="${CY - 10}" stroke="${CRIT}" stroke-width="2.5" stroke-dasharray="5 5"/>`);
-      s.tc0 = E.add(el, `<div class="abs mono" style="left:${HOT + 220}px;top:196px;font-size:26px;font-weight:600;color:#FF8E8F">02:14:58</div>`);
-      s.strip = E.add(el, `<div class="abs" style="left:${X + 40}px;top:870px;width:${WD - 80}px;display:flex;gap:8px">${[11, 12, 13, 14, 15, 16, 17].map(k =>
+      s.tc0 = E.add(el, `<div class="abs mono" style="left:${HOT + 252}px;top:198px;font-size:26px;font-weight:600;color:#FF8E8F">02:14:58</div>`);
+      s.strip = E.add(el, `<div class="abs" style="left:${X + 40}px;top:870px;width:${WD - 80}px;display:flex;gap:8px">${[10, 11, 12, 13, 14, 15, 16].map(k =>
         `<div style="flex:1"><div class="sg" style="height:10px;border-radius:5px;background:#3A5A8C"></div><div class="mono" style="text-align:center;margin-top:10px;font-size:17px;color:${k === 14 ? '#fff' : 'var(--t3)'};font-weight:${k === 14 ? 600 : 400}">5-${k}</div></div>`).join('')}</div>`);
-      s.seg = E.qa(s.strip, '.sg')[3];
+      s.seg = E.qa(s.strip, '.sg')[4];   // 5-14 sits under the climb
       // timing
       s.tFbg = at('v03', 'Fibre') - 0.2;
       s.tFeel = [at('v03', 'climb'), at('v03', 'cut'), at('v03', 'lift')];
@@ -175,7 +175,7 @@
         return d;
       };
       E.attr(s.tw, 'd', tr(64, 6, 0, 0));
-      E.attr(s.tc, 'd', tr(176, 3, 2, 46 * E.ep(t, s.tContact, s.tContact + 0.4)));
+      E.attr(s.tc, 'd', tr(186, 3, 2, 34 * E.ep(t, s.tContact, s.tContact + 0.4)));
       E.attr(s.lw, 'opacity', E.f3(E.ep(t, s.tReads, s.tReads + 0.4)));
       E.attr(s.lc, 'opacity', E.f3(E.ep(t, s.tReads + 0.3, s.tReads + 0.7)));
       // pin + segment + time code

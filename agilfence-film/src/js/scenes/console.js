@@ -23,7 +23,7 @@
         const tA = L('v06').start - 0.35;
         return {
           screens: [[S('f05').start, F.quiet], [tA, F.alarm]],
-          shots: [[tA + 0.4, [30, 90, 1340, 950], 2.4]],
+          shots: [[tA + 0.4, [20, 30, 1360, 1020], 2.4]],
           hls: [
             { r: pad(A('alarm', 'toast'), 4), n: 1, label: 'System message', side: 'l', t0: at('v06', 'system') - 0.1, t1: S('f05').end },
             { r: pad(A('alarm', 'card'), 2), n: 2, label: 'Critical alarm, with tone', side: 'r', t0: at('v06', 'tone') - 0.15, t1: S('f05').end },

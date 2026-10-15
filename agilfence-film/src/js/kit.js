@@ -41,6 +41,7 @@
     building: '<path d="M4 21V7l8-4 8 4v14"/><path d="M9 21v-5h6v5"/><path d="M8 10h.01M12 10h.01M16 10h.01M8 13.5h.01M12 13.5h.01M16 13.5h.01"/>',
     radio: '<rect x="5" y="8" width="14" height="13" rx="2"/><path d="M8 8 15 3"/><circle cx="12" cy="15" r="2.5"/>',
     arrow: '<path d="M4.5 12h15"/><path d="m13.5 6 6 6-6 6"/>',
+    up: '<path d="M12 20V5"/><path d="m6 11 6-6 6 6"/><path d="M5 20h14"/>',
     chat: '<path d="M4 5.5h16v10H9l-5 4z"/>',
     userCheck: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.7 3.4-5.6 6.5-5.6 1.6 0 3 .5 4.1 1.4"/><path d="m15 17.5 2 2 4-4.5"/>',
     globe: '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17"/><path d="M12 3.5c2.4 2.6 3.5 5.5 3.5 8.5s-1.1 5.9-3.5 8.5c-2.4-2.6-3.5-5.5-3.5-8.5s1.1-5.9 3.5-8.5z"/>',

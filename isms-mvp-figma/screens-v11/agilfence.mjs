@@ -33,7 +33,13 @@ const EV = { time: '02:14:58', id: 'AGF-5-14', code: 'PER-005', title: 'Fence Se
 
 // ---------- shared pieces ----------
 // tonight's other alerts (the standalone AgilFence night: no D-214 tailgating card)
-const OTHERS = ['spoof', 'watch', 'fight', 'bag', 'overstay'].map(k => ALERTS.find(a => a.key === k));
+const OTHERS = [   // tonight's other alerts, as in the incident list (no AI lines: this flow is about the fence)
+  { key: 'spoof', sev: 'Warning', title: 'T1 Door C2', desc: 'Same card used at two doors 4 min apart', time: '02:13 am', X: 19, Y: 36, icon: 'idcard' },
+  { key: 'watch', sev: 'Warning', title: 'T1 Departure Row K', desc: 'Person loitering 23 min in a closed area', time: '02:12 am', X: 15, Y: 29, icon: 'eye' },
+  { key: 'fight', sev: 'Warning', title: 'T2 Arrival Belt 5', desc: 'Crowd forming near the belt', time: '02:11 am', X: 31, Y: 28, icon: 'users' },
+  { key: 'bag', sev: 'Warning', title: 'T2 Gate B12', desc: 'Unattended bag reported', time: '02:04 am', X: 34, Y: 39, icon: 'bag' },
+  { key: 'overstay', sev: 'Info', title: 'T4 Baggage Hall B2', desc: 'Overstay in a restricted zone', time: '01:45 am', X: 66, Y: 29.5, icon: 'timer' },
+];
 const fenceCard = (ai, o = {}) => ({ key: 'fence', sev: 'Critical', title: 'Fence Sector 5', desc: o.desc || 'AgilFence alarm, segment 5-14', ai, time: o.time || 'Now', X: 63, Y: 1, icon: 'fence', selected: o.selected });
 const COUNTS = [['1 Critical', C.crit], ['4 Warnings', C.warn], ['1 Info', C.info]];
 const cardsWith = fc => fc ? [fc, ...OTHERS] : OTHERS;
@@ -184,7 +190,7 @@ export function trigger() {
     text(hot - pw / 2 + 44, 158, 'Fence Sector 5 · Segment 5-14', { size: 15, weight: 700, fill: '#FFFFFF' }) + text(hot - pw / 2 + 44, 178, 'Pinpointed to within a few metres', { size: 13, fill: '#FF8E8F' }));
   // segment strip
   s += text(X + 40, 760, 'FENCE SECTOR 5 · SEGMENTS', { size: 12, weight: 700, ls: 1.2, fill: C.t2 });
-  s += segmentStrip(F, X + 40, 772, Wd - 80);
+  s += segmentStrip(F, X + 40, 772, Wd - 80, { first: 10 });
   // right column: what the fence feels + how it senses
   const rx = 1010, rw = 350;
   let a = rect(rx, 150, rw, 312, { r: 14, fill: '#1D232C', fo: 0.95, stroke: '#323A47' });
@@ -224,7 +230,7 @@ export function trigger() {
 
 // ---------- AF-02 · System message and alarm alert ----------
 export function alarm() {
-  const fc = fenceCard('Co-pilot · checking LiDAR and thermal…');
+  const fc = fenceCard('Co-pilot · preparing a summary…');
   return consoleFrame('AF-02 · System message and alarm alert (home)', {
     card: fc, toggle: true,
     center: F => airportView(F),
@@ -292,7 +298,7 @@ function imPage(name, o) {
 }
 const IM_OTHERS = [
   ['Open', 'Warning', 'T1 Door C2', 'Today, 02:13:20', 'IDS-207', null, 'ACS-C2'],
-  ['Open', 'Warning', 'T1 Departure Row K', 'Today, 02:12:40', 'WLS-033', null, 'CAM-1-311'],
+  ['Open', 'Warning', 'T1 Departure Row K', 'Today, 02:12:40', 'LTR-033', null, 'CAM-1-311'],
   ['Open', 'Warning', 'T2 Arrival Belt 5', 'Today, 02:11:09', 'FGT-040', null, 'CAM-1-142'],
   ['Open', 'Warning', 'T2 Gate B12', 'Today, 02:04:12', 'UAB-112', null, 'CAM-2-031'],
   ['Open', 'Info', 'T4 Baggage Hall B2', 'Today, 01:45:20', 'OVS-012', null, 'ACS-B2'],
@@ -526,7 +532,7 @@ export function quiet() {
 }
 // the alarm card without the system message (toast dismissed)
 export function alarmNoToast() {
-  return consoleFrame('AF-02b · Alarm card, message dismissed (film)', { card: fenceCard('Co-pilot · checking LiDAR and thermal…'), toggle: true, center: F => airportView(F) });
+  return consoleFrame('AF-02b · Alarm card, message dismissed (film)', { card: fenceCard('Co-pilot · preparing a summary…'), toggle: true, center: F => airportView(F) });
 }
 // SOP after the dispatch was approved: patrol on the way
 export function sopDone() {

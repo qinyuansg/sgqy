@@ -18,7 +18,7 @@ def ts(t):
 def wrap_en(s, width=42):
     if len(s) <= width:
         return [s]
-    words, best = s.split(), None
+    words, best = s.split(' '), None   # split on plain spaces only: no-break spaces keep names together
     for i in range(1, len(words)):  # most balanced split that fits
         a, b = " ".join(words[:i]), " ".join(words[i:])
         if len(a) <= width and len(b) <= width:

@@ -74,9 +74,9 @@ export function fenceIllustration(F, X, Y, Wd, Ht, o = {}) {
 // perimeter strip: north fence of Sector 5 with segments 5-11 … 5-17, the alarm segment in red
 export function segmentStrip(F, x, y, w, o = {}) {
   let s = rect(x, y, w, 64, { r: 10, fill: '#1D232C', fo: 0.9, stroke: '#3E4655' });
-  const n = 7, sw = (w - 40) / n;
+  const n = 7, sw = (w - 40) / n, first = o.first ?? 11;   // first: label of the left-most bar (align 5-14 with the climb)
   for (let i = 0; i < n; i++) {
-    const k = 11 + i, sx = x + 20 + i * sw, hot = k === 14;
+    const k = first + i, sx = x + 20 + i * sw, hot = k === 14;
     s += rect(sx + 2, y + 18, sw - 4, 10, { r: 5, fill: hot ? C.crit : '#3A5A8C', fo: hot ? 1 : 0.8 });
     s += text(sx + sw / 2, y + 50, '5-' + k, { size: 13, weight: hot ? 700 : 400, fill: hot ? '#FFFFFF' : C.t2, anchor: 'middle' });
     if (hot) s += circle(sx + sw / 2, y + 23, 10, { fill: C.crit, fo: 0.25 });
