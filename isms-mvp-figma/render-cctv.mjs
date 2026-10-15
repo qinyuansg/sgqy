@@ -1,5 +1,5 @@
 // Rasterise the stylised CCTV scenes into "camera-like" JPEGs (grain, softness, vignette, OSD).
-// Usage: node render-cctv.mjs <outDir>
+// Usage: node render-cctv.mjs <outDir> [filter]   (filter: only scenes whose name contains it; meta.json is merged)
 import fs from 'fs';
 import path from 'path';
 import { createRequire } from 'module';
@@ -28,8 +28,11 @@ const page_ = (svg, w, h, o) => `<!doctype html><html><head><style>
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
-const meta = {};
+const only = process.argv[3];
+const metaPath = path.join(out, 'meta.json');
+const meta = fs.existsSync(metaPath) ? JSON.parse(fs.readFileSync(metaPath, 'utf8')) : {};
 for (const [name, fn] of Object.entries(SCENES)) {
+  if (only && !name.includes(only)) continue;
   const sc = fn();
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.setContent(page_(sc.svg, 1280, 720, sc), { waitUntil: 'load' });
@@ -40,7 +43,7 @@ for (const [name, fn] of Object.entries(SCENES)) {
   meta[name] = { boxes: sc.boxes, osd: sc.osd, ts: sc.ts };
   console.log('scene', name);
 }
-for (const k of ['a17', 'c2', 'live', 'ref']) {
+for (const k of only ? [] : ['a17', 'c2', 'live', 'ref']) {
   const sc = portrait(k);
   await page.setViewportSize({ width: 512, height: 512 });
   await page.setContent(page_(sc.svg, 512, 512, { grain: k === 'ref' ? 0.15 : 0.6, blur: k === 'ref' ? 0.2 : 1.2 }), { waitUntil: 'load' });

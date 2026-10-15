@@ -21,6 +21,9 @@ export function person(x, y, h, o = {}) {
   if (pose === 'push') { lh = [-22, -70]; rh = [-20, -64]; lf = [-2, 0]; rf = [9, 0]; }
   if (pose === 'phone') { rh = [6, -84]; }
   if (pose === 'sit') { lf = [-10, 0]; rf = [8, 0]; }
+  if (pose === 'climb') { lh = [-12, -112]; rh = [10, -117]; lf = [-9, -26]; rf = [5, 0]; }
+  if (pose === 'run') { lh = [-16, -60]; rh = [15, -72]; lf = [-14, -6]; rf = [13, 0]; }
+  if (pose === 'held') { lh = [-6, -54]; rh = [6, -54]; }
   const lean = o.lean || 0;
   const id = 'p' + Math.round(x) + '_' + Math.round(y) + '_' + Math.round(h);
   const vest = o.vest ? `<path d="M-9 -78 L9 -78 L8 -52 L-8 -52 Z" fill="${o.vest}" opacity=".95"/><path d="M-9 -64 H9 M-8.5 -58 H8.5" stroke="#E8EEF5" stroke-width="1.6" opacity=".85"/>` : '';
@@ -65,6 +68,46 @@ const floorGrid = (vx, vy, y0, n2 = 14, spread = 260, op = 0.08) => {
   let s = '';
   for (let i = -n2; i <= n2; i++) s += `<line x1="${vx}" y1="${vy}" x2="${vx + i * spread}" y2="${H}" stroke="#B9CBE6" stroke-opacity="${op}" stroke-width="1.4"/>`;
   [0.05, 0.13, 0.25, 0.42, 0.66, 1].forEach(t => { const yy = y0 + (H - y0) * t; s += `<line x1="0" y1="${yy}" x2="${W}" y2="${yy}" stroke="#B9CBE6" stroke-opacity="${op * 0.8}" stroke-width="1.2"/>`; });
+  return s;
+};
+
+// ---------- perimeter helpers (night) ----------
+const nightSky = (top = '#101010', bottom = '#1C1C1C') => `<rect width="${W}" height="${H}" fill="${top}"/><rect y="120" width="${W}" height="200" fill="${bottom}" opacity=".9"/>`;
+// distant airfield: runway edge lights, taxiway lights, a floodlit apron glow
+const airfieldLights = (y, op = 1, colour = false, mono = '#EDEDED') => {
+  let s = `<rect y="${y - 6}" width="${W}" height="14" fill="#000" opacity=".25"/>`;
+  for (let i = 0; i < 44; i++) s += `<circle cx="${12 + i * 29.5}" cy="${y}" r="2.2" fill="${colour ? (i % 6 === 0 ? '#FFB54A' : '#F4F1E6') : mono}" opacity="${op}"/>`;
+  for (let i = 0; i < 30; i++) s += `<circle cx="${30 + i * 42}" cy="${y + 14}" r="1.6" fill="${colour ? '#4D9BFF' : mono}" opacity="${op * 0.7}"/>`;
+  s += `<ellipse cx="1040" cy="${y - 20}" rx="220" ry="40" fill="${colour ? '#FFE2A8' : mono}" opacity=".10" filter="url(#glow)"/>`;
+  return s;
+};
+// frontal chain-link fence with Y-arm barbed wire; the AgilFence sensing cable runs along the mesh
+const fenceFront = (top, bottom, o = {}) => {
+  const col = o.col || '#8A8A8A', mesh = o.mesh || '#5C5C5C', step = 160;
+  let s = '';
+  for (let i = 0; i < 9; i++) {
+    const x = 20 + i * step;
+    s += `<rect x="${x}" y="${top - 30}" width="10" height="${bottom - top + 30}" fill="${col}"/>`;
+    s += `<path d="M${x + 5} ${top - 30} l-26 -26 M${x + 5} ${top - 30} l26 -26" stroke="${col}" stroke-width="4"/>`;
+  }
+  for (const dy of [-50, -40, -30]) s += `<path d="M0 ${top + dy} H${W}" stroke="${col}" stroke-width="1.6" stroke-dasharray="6 5" opacity=".8"/>`;
+  s += `<path d="M0 ${top} H${W} M0 ${bottom} H${W}" stroke="${col}" stroke-width="4"/>`;
+  for (let i = 0; i < 80; i++) s += `<line x1="${i * 18}" y1="${top}" x2="${i * 18 + 44}" y2="${bottom}" stroke="${mesh}" stroke-width="1.3"/><line x1="${i * 18 + 44}" y1="${top}" x2="${i * 18}" y2="${bottom}" stroke="${mesh}" stroke-width="1.3"/>`;
+  if (o.cable) s += `<path d="M0 ${(top + bottom) / 2 + 12} H${W}" stroke="${col}" stroke-width="3" opacity=".9"/>`;
+  return s;
+};
+// fence receding along the perimeter road (one-point perspective), with road lights
+const fencePerspective = () => {
+  const vx = 1180, vy = 300;
+  let s = `<path d="M0 720 L${vx} ${vy} L1280 ${vy + 8} L1280 720 Z" fill="#1A2029"/><path d="M0 520 L${vx} ${vy} L0 ${vy - 10} Z" fill="#141A23"/>`;
+  for (let i = 0; i < 16; i++) {
+    const t = Math.pow(i / 16, 1.7), x = vx - (vx + 60) * (1 - t), yb = vy + (600 - vy) * (1 - t), h = 280 * (1 - t) + 14;
+    s += `<rect x="${x}" y="${yb - h}" width="${Math.max(2, 10 * (1 - t))}" height="${h}" fill="#7C8798"/>`;
+  }
+  s += `<path d="M-60 600 L${vx} ${vy} M-60 320 L${vx} ${vy - 12}" stroke="#7C8798" stroke-width="3"/>`;
+  for (let k = 0; k < 40; k++) { const t = k / 40; s += `<line x1="${-60 + (vx + 60) * t}" y1="${320 + (vy - 12 - 320) * t}" x2="${-60 + (vx + 60) * (t + 0.03)}" y2="${600 + (vy - 600) * (t + 0.03)}" stroke="#56616F" stroke-width="1"/>`; }
+  s += `<path d="M-60 470 L${vx} ${vy - 4}" stroke="#7C8798" stroke-width="2.4" opacity=".9"/>`;
+  for (let i = 0; i < 6; i++) { const t = Math.pow(i / 6, 1.5), x = 120 + (vx - 120) * t, y = 330 + (vy - 330) * t; s += `<ellipse cx="${x}" cy="${y + 120 * (1 - t)}" rx="${120 * (1 - t) + 20}" ry="${50 * (1 - t) + 8}" fill="#FFE2A8" opacity=".12" filter="url(#glow)"/>`; }
   return s;
 };
 
@@ -298,6 +341,79 @@ export const SCENES = {
     const defs = `<linearGradient id="th" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1E1E1E"/><stop offset="1" stop-color="#2E2E2E"/></linearGradient>
       <linearGradient id="gr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3C3C3C"/><stop offset="1" stop-color="#262626"/></linearGradient>`;
     return { svg: wrap(body, defs, '#202020'), osd: 'PTZ 7-02 THERMAL  SECTOR 5', ts: '2026-10-13  02:15:12', mono: true, boxes: { person: pbox(...p) } };
+  },
+
+  // ---------- AgilFence end-to-end flow: north perimeter, Sector 5, segment 5-14 (night) ----------
+  // PTZ 7-02 zoomed on the fence (IR, mono): intruder climbing from the landside
+  fence_ptz() {
+    const p = [640, 430, 250];
+    // the climber is on the far (landside) face of the fence, so the mesh is drawn over the figure
+    const body = `${nightSky()}${airfieldLights(196, 0.8)}
+      <rect y="540" width="${W}" height="180" fill="url(#gr2)"/>
+      ${lightPool(640, 420, 520, 230, 0.16, '#F2F2F2')}
+      <g filter="url(#soft)">${person(p[0], p[1], p[2], { coat: '#9A9A9A', coatHi: '#C4C4C4', pants: '#6A6A6A', skin: '#DADADA', hair: '#3A3A3A', pose: 'climb', back: true, cap: '#4A4A4A' })}</g>
+      ${fenceFront(232, 540, { cable: true })}
+      <path d="M640 300 v-34 M640 390 v34 M590 345 h-34 M690 345 h34" stroke="#F0F0F0" stroke-width="2" opacity=".5"/>`;
+    const defs = `<linearGradient id="gr2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3A3A3A"/><stop offset="1" stop-color="#1E1E1E"/></linearGradient>`;
+    return { svg: wrap(body, defs, '#151515'), osd: 'PTZ 7-02  SECTOR 5  SEG 5-14  IR', ts: '2026-10-13  02:15:04', mono: true, boxes: { person: pbox(p[0], p[1], p[2], 0.1, 0.42) } };
+  },
+  // Recorded pre-alarm clip (fixed camera 7-11, colour night): the person walks up to the fence on the perimeter road
+  fence_pre() {
+    const p = [820, 560, 190];
+    const body = `${nightSky('#0B1322', '#18233A')}${airfieldLights(212, 0.9, true)}
+      ${fenceFront(250, 500, { cable: true, col: '#7C8798', mesh: '#56616F' })}
+      <rect y="500" width="${W}" height="220" fill="url(#rd)"/>
+      <path d="M0 610 H1280" stroke="#C9B36A" stroke-width="3" stroke-dasharray="40 30" opacity=".35"/>
+      ${lightPool(300, 470, 330, 160, 0.18, '#FFE2A8')}${lightPool(1080, 470, 300, 150, 0.14, '#FFE2A8')}
+      ${person(p[0], p[1], p[2], { coat: '#3A3F48', coatHi: '#4B515C', pants: '#202329', pose: 'walk', phase: 0.3, cap: '#2A2D33', backpack: '#22252B' })}`;
+    const defs = `<linearGradient id="rd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#262B33"/><stop offset="1" stop-color="#14171C"/></linearGradient>`;
+    return { svg: wrap(body, defs, '#0E141F'), osd: 'CAM 7-11  PERIMETER RD  SEG 5-14', ts: '2026-10-13  02:14:41', boxes: { person: pbox(...p) } };
+  },
+  // Fixed camera 7-11 wide along the fence line (colour night): the climber is small, far down the fence
+  fence_wide() {
+    const p = [835, 418, 96];
+    const body = `${nightSky('#0B1322', '#18233A')}${airfieldLights(236, 0.7, true)}
+      ${fencePerspective()}
+      ${lightPool(860, 420, 220, 110, 0.18, '#FFE2A8')}
+      <g filter="url(#soft)">${person(p[0], p[1], p[2], { coat: '#3A3F48', pants: '#202329', pose: 'climb', back: true, cap: '#2A2D33' })}</g>`;
+    return { svg: wrap(body, '', '#0E141F'), osd: 'CAM 7-11  SECTOR 5  WIDE', ts: '2026-10-13  02:15:02', boxes: { person: pbox(p[0], p[1], p[2], 0.14, 0.46) } };
+  },
+  // PTZ 7-02 auto-track (IR, mono): the intruder is inside the fence, running across the grass towards runway 02L
+  fence_inside() {
+    const p = [700, 560, 200];
+    const body = `${nightSky('#141414', '#202020')}${airfieldLights(250, 1, false, '#F2F2F2')}
+      <rect y="262" width="${W}" height="458" fill="url(#gs)"/>
+      ${Array.from({ length: 14 }, (_, i) => `<line x1="0" y1="${300 + i * 30}" x2="${W}" y2="${296 + i * 31}" stroke="#4A4A4A" stroke-width="1" opacity=".35"/>`).join('')}
+      ${lightPool(700, 470, 420, 200, 0.14, '#F2F2F2')}
+      <g filter="url(#soft)">${person(p[0], p[1], p[2], { coat: '#9A9A9A', coatHi: '#C0C0C0', pants: '#5E5E5E', skin: '#D6D6D6', hair: '#3A3A3A', pose: 'run', cap: '#4A4A4A' })}</g>
+      <rect x="560" y="300" width="280" height="300" fill="none" stroke="#F0F0F0" stroke-width="2" stroke-dasharray="14 10" opacity=".45"/>
+      <text x="566" y="292" font-family="DejaVu Sans Mono, monospace" font-size="16" fill="#F0F0F0" opacity=".7">AUTO-TRACK</text>`;
+    const defs = `<linearGradient id="gs" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2E2E2E"/><stop offset="1" stop-color="#1A1A1A"/></linearGradient>`;
+    return { svg: wrap(body, defs, '#141414'), osd: 'PTZ 7-02  AUTO-TRACK  ZOOM 18X', ts: '2026-10-13  02:15:26', mono: true, boxes: { person: pbox(p[0], p[1], p[2], 0.1, 0.44) } };
+  },
+  // PTZ 7-02 (colour night): patrol vehicle at the fence, the intruder detained
+  fence_patrol() {
+    const pi = [760, 560, 220], po1 = [650, 566, 232], po2 = [880, 572, 230];
+    const body = `${nightSky('#0B1322', '#18233A')}${airfieldLights(220, 0.8, true)}
+      ${fenceFront(240, 470, { col: '#7C8798', mesh: '#56616F' })}
+      <rect y="470" width="${W}" height="250" fill="url(#gr3)"/>
+      <!-- patrol vehicle with light bar -->
+      <g transform="translate(130 560)">
+        <path d="M0 -40 L30 -110 L250 -110 L300 -50 L330 -40 L330 0 L0 0 Z" fill="#D9DEE6"/>
+        <path d="M44 -100 L70 -100 L70 -58 L22 -58 Z M80 -100 L190 -100 L190 -58 L80 -58 Z M200 -100 L240 -100 L276 -58 L200 -58 Z" fill="#1E2735"/>
+        <rect x="0" y="-32" width="330" height="10" fill="#E8A21B"/><rect x="0" y="-22" width="330" height="8" fill="#2D5BD8"/>
+        <circle cx="70" cy="0" r="26" fill="#111"/><circle cx="262" cy="0" r="26" fill="#111"/>
+        <rect x="96" y="-122" width="110" height="12" rx="4" fill="#2C3546"/>
+        <rect x="100" y="-121" width="48" height="9" rx="3" fill="#FFB020"/><rect x="154" y="-121" width="48" height="9" rx="3" fill="#3E7BFF"/>
+        <text x="160" y="-70" text-anchor="middle" font-family="DejaVu Sans, sans-serif" font-size="20" font-weight="700" fill="#1A2233">AIRPORT SECURITY</text>
+      </g>
+      <ellipse cx="254" cy="440" rx="190" ry="80" fill="#FFB020" opacity=".16" filter="url(#glow)"/><ellipse cx="320" cy="430" rx="160" ry="70" fill="#3E7BFF" opacity=".16" filter="url(#glow)"/>
+      ${lightPool(780, 520, 460, 160, 0.16, '#FFF3D6')}
+      ${person(po1[0], po1[1], po1[2], { coat: '#1F2A3A', pants: '#151B26', pose: 'stand', vest: '#D9E021', cap: '#121722' })}
+      ${person(pi[0], pi[1], pi[2], { coat: '#3A3F48', coatHi: '#4B515C', pants: '#202329', pose: 'held', cap: '#2A2D33' })}
+      ${person(po2[0], po2[1], po2[2], { coat: '#1F2A3A', pants: '#151B26', pose: 'phone', vest: '#D9E021', cap: '#121722' })}`;
+    const defs = `<linearGradient id="gr3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#28303A"/><stop offset="1" stop-color="#15191F"/></linearGradient>`;
+    return { svg: wrap(body, defs, '#0E141F'), osd: 'PTZ 7-02  SECTOR 5  SEG 5-14', ts: '2026-10-13  02:18:47', boxes: { person: pbox(...pi), officer1: pbox(...po1), officer2: pbox(...po2), vehicle: [130, 438, 330, 148] } };
   },
 
   // Corridor L2-East — tailgater walking away (co-pilot "where now")

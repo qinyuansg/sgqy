@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Subtitle overlay</title>
+<link rel="stylesheet" href="css/film.css">
+<style>html, body, #stage { background: transparent !important; }</style>
+</head>
+<body>
+<!-- Transparent 1920×1080 layer: tools/subs.mjs renders one PNG per English cue. -->
+<div id="stage"><div id="subs"><div class="en"></div></div></div>
+<script>
+  window.showCue = lines => {
+    const en = document.querySelector('#subs .en');
+    en.innerHTML = '';
+    lines.forEach((l, i) => { if (i) en.appendChild(document.createElement('br')); en.appendChild(document.createTextNode(l)); });
+    document.getElementById('subs').style.visibility = lines.length ? 'visible' : 'hidden';
+  };
+  window.showCue([]);
+</script>
+</body>
+</html>
