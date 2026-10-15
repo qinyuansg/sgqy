@@ -6,7 +6,7 @@
   const L = E.L, at = E.at, S = E.S;
   const F = {
     quiet: 'AF-02a-quiet', alarm: 'AF-02-system-message-alarm', list: 'AF-03-incident-list', loc: 'AF-04-locate-nearest-cameras',
-    ptz: 'AF-05-ptz-films-the-area', sop: 'AF-07-sop-approve-dispatch', sopd: 'AF-07b-sop-dispatched', scene: 'AF-08-patrol-on-scene', close: 'AF-09-close-and-report',
+    ptz: 'AF-05-ptz-films-the-area', sop: 'AF-07-sop-approve-dispatch', sopd: 'AF-07b-sop-dispatched', sopt: 'AF-07c-sop-tower', sopp: 'AF-07d-sop-police', scene: 'AF-08-patrol-on-scene', close: 'AF-09-close-and-report',
   };
   const A = (f, k) => window.ANCH[F[f]][k];
   const mid = r => [r[0] + r[2] / 2, r[1] + r[3] / 2];
@@ -17,7 +17,7 @@
 
   const SC = [
     {
-      id: 'f05', step: 2, kicker: '02:14:59 · Fence Sector 5', title: 'The alarm,\non the console.', who: ['system'], concept: 'Concept: system message',
+      id: 'f05', step: 2, kicker: '02:14:59 · Fence Sector 5', title: 'The alarm,\non the console.', who: ['system'], concept: 'Concept: system message, Co-pilot',
       body: 'A system message, an alarm tone, a Critical card and a pin on the airport model.', path: 'Home  ›  Real Time Alerts',
       plan: () => {
         const tA = L('v06').start - 0.35;
@@ -27,7 +27,7 @@
           hls: [
             { r: pad(A('alarm', 'toast'), 4), n: 1, label: 'System message', side: 'l', t0: at('v06', 'system') - 0.1, t1: S('f05').end },
             { r: pad(A('alarm', 'card'), 2), n: 2, label: 'Critical alarm, with tone', side: 'r', t0: at('v06', 'tone') - 0.15, t1: S('f05').end },
-            { r: pad(A('alarm', 'marker'), 4), n: 3, label: 'Pin on the airport model', side: 'b', t0: at('v06', 'pin') - 0.1, t1: S('f05').end },
+            { r: pad(A('alarm', 'marker'), 4), n: 3, label: 'Pin on the airport model', side: 'b', dx: 90, t0: at('v06', 'pin') - 0.45, t1: S('f05').end },
           ],
           cues: [[tA, 'alert', 0.75], [tA + 0.9, 'alert', 0.5], [tA + 0.05, 'impactSoft', 0.4]],
           flash: tA,
@@ -35,19 +35,19 @@
       },
     },
     {
-      id: 'f06', step: 3, kicker: '02:15:05 · Incident list', title: 'Linked into\none incident.', who: ['system'], concept: 'Concept: auto-linked incident',
+      id: 'f06', step: 3, kicker: '02:15:05 · Incident list', title: 'Linked into\none incident.', who: ['system', 'copilot'], concept: 'Concept: auto-linked incident, Co-pilot summary',
       body: 'The fence and laser scanner alarms, and the camera call-up, are linked into PER-005 at the top of the list.', path: 'Incident Management  ›  PER-005',
       plan: () => ({
         screens: [[S('f06').start, F.list]],
         shots: [[S('f06').start + 0.15, [30, 250, 830, 620], 1.1], [at('v07', 'linked') - 0.2, [500, 280, 1100, 700], 1.1]],
         hls: [
-          { r: pad(A('list', 'row'), 2), n: 1, label: 'Top of the incident list', side: 'b', t0: at('v07', 'tops') - 0.1, t1: at('v07', 'linked') - 0.2 },
+          { r: pad(A('list', 'row'), 2), n: 1, label: 'Top of the incident list', side: 'b', dx: 170, t0: at('v07', 'tops') - 0.1, t1: at('v07', 'linked') - 0.2 },
           { r: [880, 595, 660, 140], n: 2, label: 'Fence, scanner, camera', side: 'l', t0: at('v07', 'linked') + 0.3, t1: S('f06').end },
         ],
       }),
     },
     {
-      id: 'f07', step: 4, kicker: '02:15:08 · Locate', title: 'One click.\nNearest cameras.', who: ['operator', 'system'], concept: 'Concept: nearest-camera list',
+      id: 'f07', step: 4, kicker: '02:15:08 · Locate', title: 'One click.\nNearest cameras.', who: ['operator', 'system'], concept: 'Concept: nearest-camera list, Co-pilot summary',
       body: 'Locate flies the map to segment 5-14 and lists the cameras. iPAMS has already turned PTZ 7-02 there.',
       path: 'Locate  ›  Fence Sector 5 · Seg 5-14', personas: [{ k: 'nurul', act: 'Clicks Locate', t: () => at('v08', 'Locate') }],
       plan: () => {
@@ -57,7 +57,7 @@
           shots: [[S('f07').start + 0.05, [860, 600, 700, 470], 1.0], [tc + 0.35, [380, 150, 560, 690], 1.2], [at('v08', 'already') - 0.4, [600, 150, 780, 440], 1.2]],
           hls: [
             { r: pad(A('loc', 'nearest'), 3), n: 1, label: 'Nearest cameras, listed', side: 't', dist: 30, t0: at('v08', 'lists') - 0.1, t1: at('v08', 'already') - 0.45 },
-            { r: pad(A('loc', 'ptzTile'), 3), n: 2, label: 'Already on preset', side: 'l', t0: at('v08', 'already') + 0.1, t1: S('f07').end },
+            { r: pad(A('loc', 'ptzTile'), 3), n: 2, label: 'Already on preset', side: 'l', dy: 110, t0: at('v08', 'already') + 0.1, t1: S('f07').end },
           ],
           cursor: { path: [[S('f07').start + 0.1, bx + 150, by - 120], [tc - 0.1, bx - 40, by + 2]], clicks: [tc], win: [S('f07').start, tc + 0.5] },
           cues: [[tc, 'click', 0.8], [tc + 0.3, 'whoosh', 0.3]],
@@ -67,7 +67,7 @@
     {
       id: 'f08', step: 5, kicker: '02:15:12 · PTZ 7-02 live', title: 'One more click.\nLive, and tracking.', who: ['operator', 'system', 'copilot'], path: 'Active Alarms  ›  PTZ 7-02 live',
       concept: 'Concept: one-click live view, Co-pilot',
-      copilot: { label: 'CO-PILOT · CONCEPT', pre: 'Checking the fence, scanner and camera', quote: 'Fence, laser scanner and thermal agree: one person, 1.7 m, at segment 5-14. No works are booked here.', tq: () => at('v09', 'agree') - 0.6 },
+      copilot: { label: 'CO-PILOT · CONCEPT', pre: 'Summarising fence, scanner and camera', quote: 'Fence, laser scanner and thermal agree: one person, 1.7 m, at segment 5-14. No works are booked here.', tq: () => at('v09', 'agree') - 0.6 },
       plan: () => {
         const tc = at('v09', 'click') + 0.05, b = A('loc', 'openLive'), [bx, by] = mid(b);
         return {
@@ -75,8 +75,8 @@
           shots: [[S('f08').start + 0.05, [380, 520, 520, 340], 1.0], [tc + 0.35, [384, 132, 520, 440], 1.1], [at('v09', 'agree') - 0.4, [560, 540, 800, 420], 1.1]],
           hls: [
             { r: pad(b, 3), n: 1, label: '', t0: S('f08').start + 0.3, t1: tc + 0.35 },
-            { r: A('ptz', 'pbox'), n: 2, label: 'One person, 1.7 m · tracking', side: 'r', dist: 40, t0: at('v09', 'person') - 0.1, t1: at('v09', 'agree') - 0.45 },
-            { r: [916, 640, 428, 82], n: 3, label: 'Fence, scanner and camera agree', side: 'l', t0: at('v09', 'agree') + 0.1, t1: S('f08').end },
+            { r: A('ptz', 'pbox'), n: 1, label: 'One person, 1.7 m · tracking', side: 'r', dist: 40, t0: at('v09', 'person') - 0.1, t1: at('v09', 'agree') - 0.45 },
+            { r: pad(A('ptz', 'summary'), 1), n: 2, label: 'Fence, scanner and camera agree', side: 'l', t0: at('v09', 'agree') + 0.1, t1: S('f08').end },
           ],
           cursor: { path: [[S('f08').start + 0.1, bx - 120, by + 80], [tc - 0.1, bx + 4, by + 4]], clicks: [tc], win: [S('f08').start, tc + 0.5] },
           cues: [[tc, 'click', 0.8], [tc + 0.25, 'switch', 0.4]],
@@ -91,14 +91,14 @@
       plan: () => {
         const td = at('v11', 'approves') + 0.2, d = A('sop', 'dispatch'), [dx, dy] = mid(d);
         return {
-          screens: [[S('f10').start, F.sop], [td + 0.3, F.sopd]],
+          screens: [[S('f10').start, F.sop], [td + 0.3, F.sopd], [at('v12', 'informs') + 0.2, F.sopt], [at('v12', 'approves') - 0.1, F.sopp]],
           shots: [[S('f10').start + 0.1, [560, 560, 820, 420], 1.1], [td + 0.6, [370, 280, 600, 340], 1.2], [at('v12', 'Airside') - 0.4, [560, 560, 820, 420], 1.1]],
           hls: [
-            { r: pad(A('sop', 'auto'), 2), n: 1, label: 'Routine checks: the system', side: 'l', t0: at('v11', 'system') - 0.1, t1: at('v11', 'Nurul') - 0.2 },
-            { r: pad(A('sop', 'crit'), 2), n: 2, label: 'Your approval', side: 'l', t0: at('v11', 'Nurul') + 0.1, t1: td + 0.25 },
-            { r: pad(A('sopd', 'vehicle'), 6), n: 3, label: 'Patrol 2 on the way', side: 'b', dist: 64, t0: td + 0.9, t1: at('v12', 'Airside') - 0.45 },
-            { r: pad(A('sopd', 'step5'), 2), n: 4, label: 'Airside Ops and tower', side: 'l', t0: at('v12', 'Airside') + 0.1, t1: at('v12', 'Daniel') - 0.2 },
-            { r: pad(A('sopd', 'step6'), 2), n: 5, label: 'Police call: duty manager', side: 'l', t0: at('v12', 'Daniel') + 0.1, t1: S('f10').end },
+            { r: pad(A('sop', 'auto'), 2), n: null, label: 'Routine checks: the system', side: 'l', t0: at('v11', 'system') - 0.1, t1: at('v11', 'Nurul') - 0.2 },
+            { r: pad(A('sop', 'verify'), 2), n: null, label: 'Nurul verifies and approves', side: 'l', t0: at('v11', 'Nurul') + 0.1, t1: td + 0.25 },
+            { r: pad(A('sopd', 'vehicle'), 6), n: null, label: 'Patrol 2 on the way', side: 't', dist: 40, t0: td + 0.9, t1: at('v12', 'Airside') - 0.45 },
+            { r: pad(A('sopt', 'step5'), 2), n: null, label: 'Airside Ops and tower', side: 'l', t0: at('v12', 'Airside') + 0.1, t1: at('v12', 'Daniel') - 0.2 },
+            { r: pad(A('sopp', 'step6'), 2), n: null, label: 'Police call: duty manager', side: 'l', t0: at('v12', 'Daniel') + 0.1, t1: S('f10').end },
           ],
           cursor: { path: [[at('v11', 'Nurul') - 0.4, dx + 190, dy + 70], [td - 0.12, dx + 6, dy + 4]], clicks: [td], win: [at('v11', 'Nurul') - 0.5, td + 0.5] },
           cues: [[td, 'click', 0.8], [td + 0.1, 'confirm', 0.55], [at('v12', 'Airside'), 'notify', 0.4], [at('v12', 'approves'), 'confirm', 0.4]],
@@ -111,24 +111,23 @@
       personas: [{ k: 'arjun', act: 'Patrol 2 · two officers', t: () => at('v13', 'patrol') }],
       plan: () => ({
         screens: [[S('f11').start, F.scene]],
-        shots: [[S('f11').start + 0.1, [370, 300, 600, 330], 1.2], [at('v13', 'police') - 0.6, [880, 250, 470, 360], 1.1]],
+        shots: [[S('f11').start + 0.1, [380, 290, 520, 340], 1.2]],
         hls: [
-          { r: pad(A('scene', 'vehicle'), 6), n: 1, label: 'Inside the fence line, short of the runway', side: 'b', dist: 50, t0: at('v13', 'reaches') - 0.1, t1: at('v13', 'police') - 0.65 },
-          { r: pad(A('scene', 'tile'), 3), n: 2, label: 'Holding for the police', side: 'l', t0: at('v13', 'police') + 0.1, t1: S('f11').end },
+          { r: pad(A('scene', 'patrolLabel'), 2), n: 1, label: 'Inside the fence line, short of the runway', side: 'b', dist: 14, dx: -140, t0: at('v13', 'reaches') - 0.1, t1: S('f11').end },
         ],
         cues: [[at('v13', 'reaches'), 'success', 0.35]],
       }),
     },
     {
-      id: 'f12', step: 9, kicker: '02:44:20 · Closed', title: 'Closed, with\na full record.', who: ['operator', 'copilot'], concept: 'Concept: incident timeline, evidence pack',
+      id: 'f12', step: 9, kicker: '02:44:20 · Closed', title: 'Closed, with\na full record.', who: ['operator', 'copilot'], concept: 'Concept: incident timeline, evidence pack, Co-pilot draft',
       body: 'Closed by Nurul, signed off by Daniel: the incident timeline, locked evidence and a report drafted by Co-pilot.', path: 'Incident Management  ›  PER-005 closed',
       plan: () => ({
         screens: [[S('f12').start, F.close]],
         shots: [[S('f12').start + 0.1, [600, 500, 960, 560], 1.1]],
         hls: [
           { r: A('close', 'closed'), n: 1, label: 'Closed and signed off', side: 'l', t0: at('v14', 'closes') - 0.1, t1: S('f12').end },
-          { r: A('close', 'timeline'), n: 2, label: 'Every step, timed', side: 'l', dist: 24, t0: at('v14', 'record') - 0.4, t1: S('f12').end },
-          { r: A('close', 'report'), n: 3, label: 'Drafted for review', side: 'l', t0: at('v14', 'report') - 0.1, t1: S('f12').end },
+          { r: A('close', 'timeline'), n: 2, label: 'Every step, timed', side: 'l', dist: 24, dy: 20, t0: at('v14', 'record') - 0.4, t1: S('f12').end },
+          { r: A('close', 'report'), n: 3, label: 'Drafted for review', side: 'l', dy: 44, t0: at('v14', 'report') - 0.1, t1: S('f12').end },
         ],
         cues: [[at('v14', 'closes'), 'stamp', 0.4]],
       }),

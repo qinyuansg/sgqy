@@ -18,16 +18,16 @@
       s.brk = K.brackets(el, 120, 90, 1680, 900, { gap: 0, arm: 56 });
       const tags = [
         ['hero', 'Live camera · auto-track', at('v10', 'live') - 0.1],
-        ['wide', 'The wide view', at('v10', 'wide') - 0.1],
-        ['replay', 'Replay from before the alarm', at('v10', 'replay') - 0.1],
+        ['wide', 'The wide view', at('v10', 'wide') - 0.3],
+        ['replay', 'Replay from before the alarm', at('v10', 'replay') + 0.7],
       ];
       s.tags = tags.map(([k, label, t0], i) => ({ k, t0, r: A(k), box: E.add(el, '<div class="hlb" style="z-index:4"></div>'), tag: E.add(el, `<div class="abs tag" style="z-index:5"><span class="disc">${i + 1}</span><span>${label}</span></div>`) }));
-      s.cap = E.add(el, `<div class="abs glass" style="left:60px;top:1080px;width:600px;padding:22px 26px;z-index:6">
+      s.cap = E.add(el, `<div class="abs glass" style="left:60px;top:1080px;width:520px;padding:20px 24px;z-index:6">
         <div class="label" style="color:var(--acc)">Step 6 of 9 · 02:15:18</div>
         <div class="h-s" style="margin-top:10px;font-size:32px">One picture for the whole room.</div>
         <div style="margin-top:12px;display:inline-flex;height:28px;align-items:center;padding:0 12px;border-radius:14px;border:1.5px dashed rgba(201,211,230,.6);font-size:15px;color:#C9D3E6">Concept: video wall layout</div></div>`);
       // camera plan in wall px: [t, rect, dur]
-      s.shots = [[s.start, null, 0.1], [at('v10', 'replay') - 0.4, [1170, 130, 750, 420], 1.4]];
+      s.shots = [[s.start, null, 0.1], [at('v10', 'replay') + 0.1, [1170, 130, 750, 420], 1.1]];
       s.tags.forEach(g => E.cue(g.t0 + 0.05, 'blip', 0.45));
       E.cue(s.start + 0.1, 'whoosh', 0.45); E.cue(s.start + 0.4, 'switch', 0.4);
     },
@@ -44,7 +44,7 @@
       K.bracketsIn(s.brk, E.ep(t, s.start + 0.2, s.start + 0.8) * (1 - E.ep(t, s.start + 1.0, s.start + 1.4)));
       // tags (one at a time; each holds until the next)
       s.tags.forEach((g, i) => {
-        const t1 = i < 2 ? s.tags[2].t0 - 0.35 : s.end - 0.4;   // live + wide hold together until the replay push
+        const t1 = i < 2 ? at('v10', 'replay') + 0.5 : s.end - 0.4;   // live + wide hold together, fading as the replay push begins
         const k = E.ep(t, g.t0, g.t0 + 0.45) * (1 - E.ep(t, t1 - 0.3, t1, 'in'));
         const [x, y, w, h] = g.r, X0 = ox + x * z, Y0 = oy + y * z, X1 = ox + (x + w) * z, Y1 = oy + (y + h) * z;
         E.css(g.box, { left: (X0 + 6).toFixed(1) + 'px', top: (Y0 + 6).toFixed(1) + 'px', width: (X1 - X0 - 12).toFixed(1) + 'px', height: (Y1 - Y0 - 12).toFixed(1) + 'px', opacity: E.f3(k), visibility: k > 0.001 ? 'visible' : 'hidden' });
@@ -52,7 +52,7 @@
         E.css(g.tag, { left: tx.toFixed(1) + 'px', top: ty.toFixed(1) + 'px', opacity: E.f3(k), visibility: k > 0.001 ? 'visible' : 'hidden', transform: `translateY(${E.f3((1 - k) * 12)}px)` });
       });
       E.fade(s.cap, E.ep(t, s.start + 0.8, s.start + 1.3) * (1 - E.ep(t, s.end - 0.5, s.end)), { dy: 20 });
-      E.css(s.cap, { top: '900px' });
+      E.css(s.cap, { top: '780px' });   // clear of the subtitle band
     },
   });
 })();

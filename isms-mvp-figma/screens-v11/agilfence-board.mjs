@@ -43,9 +43,9 @@ export function flowBoard() {
   s += text(100, 196, 'From a climb on the fence to a confirmed response', { size: 64, weight: 700, fill: '#FFFFFF' });
   s += text(100, 248, 'Fence Sector 5 · Segment 5-14 · north perimeter, 150 m from runway 02L · 02:14:58', { size: 26, fill: C.t2 });
   // what CAG has today vs what AGIL Secure V11 adds
-  s += g(F, 'Today vs added', rect(100, 272, 12, 12, { r: 3, fill: AMBER }) + text(122, 284, 'Today with AgilFence + iPAMS: sensing, pinpointing, camera preset (steps 1 and 4)', { size: 17, fill: C.t1 }) +
-    rect(1000, 272, 12, 12, { r: 3, fill: BLUE }) + text(1022, 284, 'Added by AGIL Secure V11: one incident, Locate, live view, video wall, SOP, record (steps 2–9)', { size: 17, fill: C.t1 }) +
-    rect(2040, 270, 16, 16, { r: 3, stroke: '#8C96A6', dash: '4 3', sw: 1.5 }) + text(2066, 284, 'NEW layers = concepts for V11', { size: 17, fill: C.t2 }));
+  s += g(F, 'Today vs added', rect(100, 272, 12, 12, { r: 3, fill: AMBER }) + text(122, 284, 'Today with AgilFence + iPAMS: sensing, pinpointing, camera preset (step 1; preset in step 4)', { size: 17, fill: C.t1 }) +
+    rect(1000, 272, 12, 12, { r: 3, fill: BLUE }) + text(1022, 284, 'AGIL Secure V11 with proposed concept features: one incident, Locate, live view, video wall, SOP, record (steps 2–9)', { size: 17, fill: C.t1 }) +
+    rect(2140, 270, 16, 16, { r: 3, stroke: '#8C96A6', dash: '4 3', sw: 1.5 }) + text(2166, 284, 'Concepts (NEW layers): auto-linking, nearest cameras, one-click live, wall layout, timeline, evidence pack, Co-pilot', { size: 17, fill: C.t2 }));
   s += rect(2960.5, 92.5, 420, 44, { r: 22, fill: '#1D232C', stroke: '#4A505B' }) + text(3170.5, 121, 'Illustrative scenario · simulated data', { size: 18, weight: 500, fill: C.t3, anchor: 'middle' });
   let lx = 2360;
   s += text(lx, 196, 'WHO ACTS', { size: 15, weight: 700, ls: 1.5, fill: C.t2 });

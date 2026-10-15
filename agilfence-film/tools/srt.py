@@ -22,7 +22,7 @@ def wrap_en(s, width=42):
     for i in range(1, len(words)):  # most balanced split that fits
         a, b = " ".join(words[:i]), " ".join(words[i:])
         if len(a) <= width and len(b) <= width:
-            score = abs(len(a) - len(b))
+            score = abs(len(a) - len(b)) - (8 if a[-1] in '.,:?;' else 0)   # prefer breaking after punctuation
             if best is None or score < best[0]:
                 best = (score, [a, b])
     return best[1] if best else [s]

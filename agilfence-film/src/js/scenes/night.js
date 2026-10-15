@@ -80,7 +80,7 @@
       // opening slate: what this is, and who it is for
       s.slate = E.add(el, `<div class="abs" style="inset:0;background:#03050A;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center">
         <div style="font-family:var(--head);font-weight:800;font-size:46px;color:#fff;letter-spacing:-.01em">AgilFence <span style="color:var(--muted);font-weight:500">×</span> AGIL Secure V11</div>
-        <div style="font-size:24px;color:#C9D3E6">Shows AGIL Secure V11 with proposed AgilFence workflow features (concept)</div>
+        <div style="font-size:24px;color:#C9D3E6">AGIL Secure V11, shown with proposed AgilFence workflow features (concepts)</div>
         <div class="label" style="margin-top:18px;font-size:15px;color:#8F9CB8">Illustrative scenario · simulated data</div>
         <div class="label" style="font-size:15px;color:#8F9CB8">Restricted: for CAG security and airside operations stakeholders</div></div>`);
       s.shade = E.add(el, '<div class="abs" style="inset:0;background:radial-gradient(1200px 700px at 50% 55%, rgba(3,5,10,.25), rgba(3,5,10,.85));opacity:0"></div>');
@@ -138,7 +138,7 @@
         for (let i = 0; i <= 160; i++) {
           const x = i * 9, ph = t * 3.2 + i * 0.32 + seed;
           let y = y0 + Math.sin(ph) * amp + Math.sin(ph * 2.3 + 1) * amp * 0.45 + Math.sin(ph * 5.1) * amp * 0.2;
-          if (spike) { const c = 1440 * spike.at, dd = (x - c) / 22; y += Math.exp(-dd * dd) * Math.sin(x * 0.2) * spike.a; }
+          if (spike) { const c = 1440 * spike.at, dd = (x - c) / 22; y -= Math.exp(-dd * dd) * Math.sin(x * 0.2) * spike.a; }   // the big lobe rises through the threshold
           d += (i ? ' L' : 'M') + x + ' ' + y.toFixed(1);
         }
         return d;

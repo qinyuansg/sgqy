@@ -158,9 +158,10 @@
     const scan = E.add(dev, '<div class="abs" style="left:0;right:0;height:2px;top:0;z-index:5;background:linear-gradient(90deg,transparent,#C6DAFF 20%,#fff 50%,#C6DAFF 80%,transparent);box-shadow:0 0 22px 6px rgba(143,180,255,.55);opacity:0"></div>');
     // when zoomed in on the right-hand panel, fade out the clipped map labels at the left edge
     const edge = E.add(dev, '<div class="abs" style="left:0;top:0;bottom:0;width:190px;z-index:3;background:linear-gradient(90deg,#05070D 42%,rgba(5,7,13,0));opacity:0"></div>');
+    const edgeR = E.add(dev, '<div class="abs" style="right:0;top:0;bottom:0;width:190px;z-index:3;background:linear-gradient(270deg,#05070D 42%,rgba(5,7,13,0));opacity:0"></div>');
     const ov = E.add(root, `<svg class="abs" width="${VW}" height="${VH}" style="left:0;top:0;z-index:6;overflow:visible"></svg>`);
     const brk = K.brackets(root, 0, 0, VW, VH, { gap: 18, arm: 46 });
-    const c = { root, dev, scan, edge, ov, brk, VW, VH, s0: VH / FH, layers: {}, hls: [], plan: { screens: [], shots: [] }, cam: { k: VH / FH, ox: 0, oy: 0, z: 1 } };
+    const c = { root, dev, scan, edge, edgeR, ov, brk, VW, VH, s0: VH / FH, layers: {}, hls: [], plan: { screens: [], shots: [] }, cam: { k: VH / FH, ox: 0, oy: 0, z: 1 } };
     c.frame = name => {
       if (c.layers[name]) return c.layers[name];
       const w = fwOf(name);
@@ -209,6 +210,9 @@
     // only when the camera looks at the right-hand side of the screen (the clipped map labels sit at the left edge)
     const fcx = (c.VW / 2 - c.cam.ox) / c.cam.k;
     E.css(c.edge, { opacity: E.f3(E.clamp((c.cam.z - 1.35) / 0.5) * (c.cam.ox < -1 ? 1 : 0) * E.clamp((fcx - 640) / 160) * (screenW(c, t) === FW ? 1 : 0)) });
+    // and the clipped side panel at the right edge when the camera looks at the map
+    const fx1 = (c.VW - c.cam.ox) / c.cam.k;
+    E.css(c.edgeR, { opacity: E.f3(E.clamp((c.cam.z - 1.35) / 0.5) * (fx1 < screenW(c, t) - 8 ? 1 : 0) * E.clamp((760 - fcx) / 160) * (screenW(c, t) === FW ? 1 : 0)) });
     c.hls.forEach(h => K.hlUpdate(c, h, t));
   };
 
@@ -217,7 +221,7 @@
     const g = E.add(c.root, '<div class="abs" style="left:0;top:0;width:0;height:0;z-index:7"></div>');
     const box = E.add(c.dev, '<div class="hlb" style="z-index:4"></div>');
     const line = K.sadd(c.ov, '<line stroke="#8FB4FF" stroke-width="2.5" stroke-linecap="round"/>');
-    const tag = E.add(g, `<div class="abs tag"><span class="disc">${o.n}</span><span>${o.label}</span></div>`);
+    const tag = E.add(g, `<div class="abs tag"${o.n == null ? ' style="padding-left:18px"' : ''}>${o.n == null ? '' : `<span class="disc">${o.n}</span>`}<span>${o.label}</span></div>`);
     const h = { ...o, g, box, line, tag, tw: 0 };
     c.hls.push(h);
     return h;

@@ -14,7 +14,7 @@ export const AF = {
     { id: 'CAM 7-11', kind: 'Fixed · colour', X: 66.2, Y: 1.7, dist: '120 m' },
     { id: 'PTZ 7-03', kind: 'PTZ · thermal wide', X: 68.4, Y: 2.7, dist: '210 m' },
   ],
-  patrol: { id: 'Patrol 2 · Arjun + 1', from: [50, 9.5], via: [[50, 2.4]], to: [62.4, 2.4], eta: 'ETA 02:18:30' },
+  patrol: { id: 'Patrol 2 · Arjun + 1', from: [51.5, 2.4], via: [], to: [62.4, 2.4], eta: 'ETA 02:18:30' },   // standby on the perimeter road
 };
 // segment k (5-k) spans X = 34 + 2k .. 36 + 2k on the north fence
 export const segX = k => [34 + 2 * k, 36 + 2 * k];
@@ -29,8 +29,9 @@ export function fenceSite(F, P, o = {}) {
     const [x0] = segX(k);
     const [tx, ty] = P(x0, y, 0.6), [bx, by] = P(x0, y, 0);
     seg += line(tx, ty - 10, bx, by + 6, { stroke: '#9FC3FF', so: 0.7, sw: 1.2 });
-    if (o.segLabels !== false && k >= 11 && k <= 17) {
-      const [lx, ly] = P(x0 + 1, y - 0.55, 0);
+    const [lx, ly] = P(x0 + 1, y - 0.55, 0);
+    const underPin = (o.cams || []).some(c => { const [px, py] = P(c.X, c.Y, 1.6); return Math.hypot(px - lx, py - ly) < 22; });
+    if (o.segLabels !== false && k >= 11 && k <= 17 && !(k === 14 && o.alarm !== false) && !underPin) {
       seg += text(lx, ly, '5-' + k, { size: 12, weight: k === 14 ? 700 : 500, fill: k === 14 ? '#FFFFFF' : '#9FC3FF', anchor: 'middle' });
     }
   }
@@ -63,7 +64,7 @@ export function fenceSite(F, P, o = {}) {
     if (c.label !== false) {
       const lab = c.text || `${c.id} · ${c.dist}`, lw = textWidth(lab, 13, 500) + 20, pl = c.place || (c.left ? 'left' : 'right');
       const lx = pl === 'above' ? hx - lw / 2 : hx + (pl === 'left' ? -20 - lw : 20), ly = pl === 'above' ? hy - 50 : hy - 14;
-      m += rect(lx, ly, lw, 28, { r: 7, fill: '#1D232C', fo: 0.92, stroke: col, sw: 1.2 }) + text(lx + 10, ly + 19, lab, { size: 13, weight: 500, fill: '#FFFFFF' });
+      m += rect(lx, ly, lw, 28, { r: 7, fill: '#1D232C', stroke: col, sw: 1.2 }) + text(lx + 10, ly + 19, lab, { size: 13, weight: 500, fill: '#FFFFFF' });
     }
     s += g(F, `Camera ${c.id} NEW`, m);
   }
@@ -75,15 +76,15 @@ export function fenceSite(F, P, o = {}) {
     let v = circle(vx, vy, 15, { fill: '#44AC0C', stroke: '#FFFFFF', sw: 2 }) + icon(F, 'route', vx - 9, vy - 9, 18, '#FFFFFF', 2);
     const lab = `${p.id} · ${p.eta}`, lw = textWidth(lab, 13, 500) + 20;
     let lx = vx + 20, ly = vy - 14;
-    if (p.place === 'below') { lx = Math.max(p.minX ?? -1e9, vx - lw / 2); ly = vy + 22; }
-    v += rect(lx, ly, lw, 28, { r: 7, fill: '#1D232C', fo: 0.92, stroke: '#44AC0C', sw: 1.2 }) + text(lx + 10, ly + 19, lab, { size: 13, weight: 500, fill: '#FFFFFF' });
+    if (p.place === 'below') { lx = Math.max(p.minX ?? -1e9, vx - lw / 2); ly = vy + (p.dy ?? 30); }
+    v += rect(lx, ly, lw, 28, { r: 7, fill: '#1D232C', stroke: '#44AC0C', sw: 1.2 }) + text(lx + 10, ly + 19, lab, { size: 13, weight: 500, fill: '#FFFFFF' });
     s += g(F, 'Patrol vehicle NEW', v);
   }
   // runway hold label
   if (o.runway) {
     const [rx, ry] = P(o.runway.X ?? 75, o.runway.Y ?? 5, 0);
     const lab = o.runway.label, lw = textWidth(lab, 13, 500) + 20, col = o.runway.col || C.warn;
-    s += g(F, 'Runway note NEW', rect(rx, ry - 14, lw, 28, { r: 7, fill: '#1D232C', fo: 0.92, stroke: col, sw: 1.2 }) + text(rx + 10, ry + 5, lab, { size: 13, weight: 500, fill: '#FFFFFF' }));
+    s += g(F, 'Runway note NEW', rect(rx, ry - 14, lw, 28, { r: 7, fill: '#1D232C', stroke: col, sw: 1.2 }) + text(rx + 10, ry + 5, lab, { size: 13, weight: 500, fill: '#FFFFFF' }));
   }
   return g(F, 'AgilFence site overlay', s);
 }

@@ -6,7 +6,7 @@
   'use strict';
   const L = E.L, at = E.at, S = E.S;
   const X = 150, Y = 250, WD = 1100, HT = 600;
-  const TOP = Y + 70, BOT = Y + HT - 60, CY = TOP + (BOT - TOP) * 0.42, HOT = X + WD * 0.58;
+  const TOP = Y + 70, BOT = Y + HT - 60, CY = TOP + (BOT - TOP) * 0.42, HOT = X + WD * 0.6335;   // centre of the 5-14 bar
   const POSTS = [X + 40, X + WD / 2, X + WD - 40];
   const CRIT = '#D72D30', TEAL = '#55D6E6', FIB = '#7FB2FF', AMB = '#E3B341', STEEL = '#8C96A6';
 

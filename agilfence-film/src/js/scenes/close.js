@@ -38,15 +38,18 @@
       s.since = E.add(el, `<div class="abs" style="left:0;right:0;top:250px;text-align:center">
         <div class="label" style="color:var(--amberT);font-size:16px">On Changi’s airfield perimeter</div>
         <div class="h-xl mono" style="font-family:var(--head);font-size:150px;margin-top:10px">Since 2011</div></div>`);
-      const lines = [['AgilFence feels it.', '#E3B341', at('v17', 'feels')], ['AGIL Secure shows it.', '#3EA9FF', at('v17', 'shows')], ['Your team acts on it.', '#FFFFFF', at('v17', 'acts')]];
-      s.lines = lines.map(([txt, col, t0], i) => ({ t0, el: E.add(el, `<div class="abs" style="left:0;right:0;top:${[290, 400, 560][i]}px;display:flex;justify-content:center;align-items:center;gap:26px">
+      const lines = [['AgilFence feels it.', '#E3B341', L('v17').start + 0.05], ['AGIL Secure shows it.', '#3EA9FF', at('v17', 'shows')], ['Your team acts on it.', '#FFFFFF', at('v17', 'acts')]];
+      // the three lines share a left edge, so their dots sit in one column
+      s.lines = lines.map(([txt, col, t0], i) => ({ t0, el: E.add(el, `<div class="abs" style="left:0;top:${[290, 400, 560][i]}px;display:flex;align-items:center;gap:26px">
         <i style="width:18px;height:18px;border-radius:50%;background:${col};box-shadow:0 0 22px ${col}"></i><span class="h-l" style="font-size:84px;white-space:nowrap">${txt}</span></div>`) }));
-      s.sub = E.add(el, `<div class="abs" style="left:0;right:0;top:496px;text-align:center;font-size:24px;color:#9FC3FF">every sensor, camera and step, in one place</div>`);
+      const wMax = Math.max(...s.lines.map(l => l.el.offsetWidth)), x0 = Math.round((1920 - wMax) / 2);
+      s.lines.forEach(l => { l.el.style.left = x0 + 'px'; });
+      s.sub = E.add(el, `<div class="abs" style="left:${x0 + 44}px;top:496px;font-size:24px;color:#9FC3FF">every sensor, camera and step, in one place</div>`);
       s.lock = E.add(el, `<div class="abs" style="left:0;right:0;top:752px;display:flex;justify-content:center;align-items:center;gap:22px">
-        <img src="assets/logo_s.png" style="width:56px;height:52px"><span style="font-family:var(--head);font-weight:800;font-size:40px;color:#fff;letter-spacing:-.01em">AgilFence <span style="color:var(--muted);font-weight:500">×</span> AGIL Secure V11</span></div>`);
+        <img src="assets/logo_s.png" style="width:56px;height:52px"><span style="font-family:var(--head);font-weight:800;font-size:40px;color:#fff;letter-spacing:-.01em">AgilFence <span style="color:var(--muted);font-weight:500">×</span> AGIL<sup style="font-size:.5em">®</sup> Secure V11</span></div>`);
       s.disc = E.add(el, `<div class="abs" style="left:0;right:0;top:846px;text-align:center">
         <div style="font-size:21px;color:#fff;font-weight:500">Next: a live AGIL Secure V11 walkthrough on your AgilFence alarms, and an SOP-mapping workshop with your team.</div>
-        <div class="label" style="margin:16px auto 0;width:1500px;font-size:13.5px;line-height:1.6;color:#8F9CB8;white-space:normal">Illustrative scenario · simulated data · names, times, layout and distances are stylised · NEW screens and Co-pilot are concepts · not a recording of a real event · restricted: for CAG security and airside operations stakeholders</div></div>`);
+        <div class="label" style="margin:16px auto 0;width:1500px;font-size:13.5px;line-height:1.6;color:#8F9CB8;white-space:normal">Illustrative scenario · simulated data · names, times, layout and distances are stylised · features marked “Concept” and Co-pilot are concepts<br>not a recording of a real event · restricted: for CAG security and airside operations stakeholders</div></div>`);
       s.tL = L('v16').start; s.tSwap = L('v17').start - 0.2;
       s.lines.forEach(l => E.cue(l.t0 - 0.05, 'hit', 0.5));
       E.cue(at('v17', 'acts') + 0.6, 'shimmer', 0.3, { dur: 2.2 });
