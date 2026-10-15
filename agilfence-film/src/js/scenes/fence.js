@@ -13,8 +13,10 @@
   function bay() {
     let s = `<defs><clipPath id="fbay"><rect x="${X + 40}" y="${TOP}" width="${WD - 80}" height="${BOT - TOP}"/></clipPath>
       <linearGradient id="fgnd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1A202A"/><stop offset="1" stop-color="#05070D" stop-opacity="0"/></linearGradient>
-      <filter id="fglow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter></defs>`;
-    s += `<rect x="${X - 60}" y="${BOT}" width="${WD + 120}" height="120" fill="url(#fgnd)"/>`;
+      <filter id="fglow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter>
+      <linearGradient id="fgx" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".18" stop-color="#fff"/><stop offset=".82" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+      <mask id="fgm"><rect x="${X - 200}" y="${BOT}" width="${WD + 400}" height="120" fill="url(#fgx)"/></mask></defs>`;
+    s += `<rect x="${X - 200}" y="${BOT}" width="${WD + 400}" height="120" fill="url(#fgnd)" mask="url(#fgm)"/>`;   // ground fades out at both sides
     let m = '';
     for (let i = -24; i < WD / 26 + 24; i++) {
       const x0 = X + 40 + i * 26, d = (BOT - TOP) * 0.55;
@@ -92,7 +94,7 @@
       s.pin = E.add(el, `<div class="abs" style="left:${HOT - 230}px;top:180px;width:460px;display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:14px;background:rgba(14,18,28,.95);border:2px solid ${CRIT};box-shadow:0 0 40px rgba(215,45,48,.35)">
         <span style="width:40px;height:40px;border-radius:50%;background:${CRIT};display:grid;place-items:center;color:#fff;flex:none">${K.icon('target', 24, 2)}</span>
         <div><div style="font-size:22px;font-weight:700;color:#fff;white-space:nowrap">Fence Sector 5 · Segment 5-14</div><div style="font-size:18px;color:#FF8E8F;margin-top:2px">Pinpointed to within a few metres</div></div></div>`);
-      s.pinL = K.sadd(s.svg, `<line x1="${HOT}" y1="262" x2="${HOT}" y2="${CY - 10}" stroke="${CRIT}" stroke-width="2.5" stroke-dasharray="5 5"/>`);
+      s.pinL = K.sadd(s.svg, `<g><line x1="${HOT}" y1="262" x2="${HOT}" y2="${TOP - 4}" stroke="${CRIT}" stroke-width="2.5" stroke-dasharray="5 5"/><circle cx="${HOT}" cy="${TOP - 4}" r="4" fill="${CRIT}"/></g>`);   // ends on the top rail, clear of the climber
       s.tc0 = E.add(el, `<div class="abs mono" style="left:${HOT + 252}px;top:198px;font-size:26px;font-weight:600;color:#FF8E8F">02:14:58</div>`);
       s.strip = E.add(el, `<div class="abs" style="left:${X + 40}px;top:870px;width:${WD - 80}px;display:flex;gap:8px">${[10, 11, 12, 13, 14, 15, 16].map(k =>
         `<div style="flex:1"><div class="sg" style="height:10px;border-radius:5px;background:#3A5A8C"></div><div class="mono" style="text-align:center;margin-top:10px;font-size:17px;color:${k === 14 ? '#fff' : 'var(--t3)'};font-weight:${k === 14 ? 600 : 400}">5-${k}</div></div>`).join('')}</div>`);

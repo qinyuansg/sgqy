@@ -39,9 +39,9 @@
       body: 'The fence and laser scanner alarms, and the camera call-up, are linked into PER-005 at the top of the list.', path: 'Incident Management  ›  PER-005',
       plan: () => ({
         screens: [[S('f06').start, F.list]],
-        shots: [[S('f06').start + 0.15, [30, 120, 830, 640], 1.1], [at('v07', 'linked') + 0.3, [500, 280, 1100, 700], 1.1]],
+        shots: [[S('f06').start + 0.15, [30, 120, 830, 640], 1.1], [at('v07', 'linked') + 0.3, [475, 280, 1125, 700], 1.1]],
         hls: [
-          { r: pad(A('list', 'row'), 2), n: 1, label: 'Top of the list', side: 't', dist: 62, dx: 100, t0: at('v07', 'tops') - 0.1, t1: at('v07', 'linked') + 0.5 },
+          { r: pad(A('list', 'row'), 2), n: 1, label: 'Top of the list', side: 't', dist: 62, dx: 74, t0: at('v07', 'tops') - 0.1, t1: at('v07', 'linked') + 0.5 },
           { r: [880, 595, 660, 140], n: 2, label: 'Fence, scanner, camera', side: 'l', dy: 100, t0: at('v07', 'linked') + 0.9, t1: S('f06').end },
         ],
       }),
@@ -125,7 +125,7 @@
         screens: [[S('f12').start, F.close]],
         shots: [[S('f12').start + 0.1, [600, 500, 960, 560], 1.1]],
         hls: [
-          { r: A('close', 'closed'), n: 1, label: 'Closed and signed off', side: 'l', t0: at('v14', 'closes') - 0.1, t1: S('f12').end },
+          { r: A('close', 'closed'), n: 1, label: 'Closed and signed off', side: 'b', dist: 8, t0: at('v14', 'closes') - 0.1, t1: S('f12').end },
           { r: A('close', 'timeline'), n: 2, label: 'Every step, timed', side: 'l', dist: 24, dy: 211, t0: at('v14', 'Every') - 0.1, t1: S('f12').end },
           { r: A('close', 'report'), n: 3, label: 'Drafted for review', side: 'l', dist: 24, dy: 192, t0: at('v14', 'with') - 0.3, t1: S('f12').end },
         ],

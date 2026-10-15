@@ -51,7 +51,7 @@
         const tw = g.tag.offsetWidth || 300, tx = E.clamp(X0 + 26, 30, 1890 - tw), ty = E.clamp(Y1 - 74 - (g.k === 'replay' ? 34 * z + 12 : 0), 100, 1000);   // the replay tag sits above the scrubber
         E.css(g.tag, { left: tx.toFixed(1) + 'px', top: ty.toFixed(1) + 'px', opacity: E.f3(k), visibility: k > 0.001 ? 'visible' : 'hidden', transform: `translateY(${E.f3((1 - k) * 12)}px)` });
       });
-      E.fade(s.cap, E.ep(t, s.start + 0.8, s.start + 1.3) * (1 - E.ep(t, s.end - 0.5, s.end)), { dy: 20 });
+      E.fade(s.cap, E.ep(t, s.start + 0.8, s.start + 1.3) * (1 - E.ep(t, at('v10', 'replay') + 0.1, at('v10', 'replay') + 0.5)), { dy: 20 });   // out before the replay push
       E.css(s.cap, { top: '440px' });   // in the dark left of the hero tile, clear of the LiDAR tile and the subtitles
     },
   });

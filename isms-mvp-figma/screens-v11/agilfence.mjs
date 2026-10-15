@@ -127,7 +127,7 @@ export function cover() {
   s += image(F, 'Logo', asset('logo_s.png'), 60, 56, 50, 46);
   s += text(128, 76, 'AGIL Secure V11', { size: 16, weight: 700, fill: '#FFFFFF' }) + text(128, 96, 'with AgilFence perimeter intrusion detection', { size: 14, fill: C.t2 });
   s += rect(1110.5, 60.5, 230, 30, { r: 15, fill: '#1D232C', stroke: '#4A505B' }) + text(1225.5, 80.5, 'Illustrative scenario · simulated data', { size: 12.5, weight: 500, fill: C.t3, anchor: 'middle' });
-  s += text(1340, 112, 'Concepts for V11: auto-linking, nearest cameras, one-click live, wall layout, timeline, evidence pack, Co-pilot', { size: 12.5, fill: C.t2, anchor: 'end' });
+  s += text(1340, 112, 'Concepts for V11: system message, auto-linking, nearest cameras, one-click live, wall layout,', { size: 12.5, fill: C.t2, anchor: 'end' }) + text(1340, 128, 'works check, SOP prompts, patrol on the map, timeline, evidence pack, Co-pilot', { size: 12.5, fill: C.t2, anchor: 'end' });
   s += text(60, 190, 'END-TO-END FLOW', { size: 14, weight: 700, ls: 2, fill: AMBER });
   s += text(60, 252, 'AgilFence, end to end', { size: 58, weight: 700, fill: '#FFFFFF' });
   s += para(60, 300, 'From a climb on the fence to a confirmed response: what the operator sees on the AGIL Secure V11 dashboard and the command-centre video wall.', 640, { size: 21, lh: 31, fill: C.t1 }).svg;
@@ -478,7 +478,7 @@ export function onScene() {
   const fc = fenceCard('Co-pilot (concept) · summary updated', { selected: true });
   return consoleFrame('AF-08 · Patrol on scene · person held short of the runway', {
     card: fc,
-    center: F => patrolView(F, { at: [60.2, 2.4], eta: 'on scene 02:18:08', runway: 'Runway 02L · 130 m', runwayCol: GREEN, label: 'Seg 5-14 · Patrol on scene', mleft: true }),
+    center: F => patrolView(F, { at: [60.2, 2.4], eta: 'on scene 02:18:08', runway: 'Person · 130 m to 02L', runwayCol: GREEN, label: 'Seg 5-14 · Patrol on scene', mleft: true }),
     alarm: {
       ev: { ...EV, lines: [['Person stationary inside the fence line'], ['Patrol 2 on scene ', { b: '02:18:08' }, ' · police on the way']] },
       cams: (mark('tile', [916, 296, 210, 248]), mark('radio', [916, 604, 428, 104]), [CAMS.patrol({ chips: [['LIVE', C.crit]] }), CAMS.wide({ box: null }), CAMS.lidar()]),

@@ -56,7 +56,7 @@
 
   // CCTV viewfinder brackets around a box (stage px)
   K.brackets = (parent, x, y, w, h, o = {}) => {
-    const g = o.gap ?? 16, a = o.arm ?? 44, col = o.col || 'rgba(182,156,255,.8)', lw = o.lw ?? 2.5;
+    const g = o.gap ?? 16, a = o.arm ?? 44, col = o.col || 'rgba(143,180,255,.8)', lw = o.lw ?? 2.5;
     return ['tl', 'tr', 'bl', 'br'].map(k => {
       const L = k[1] === 'l' ? x - g : x + w + g - a, T = k[0] === 't' ? y - g : y + h + g - a;
       return E.add(parent, `<div class="brk ${k}" style="left:${L}px;top:${T}px;width:${a}px;height:${a}px;border-color:${col};--lw:${lw}px"></div>`);
@@ -218,7 +218,7 @@
     E.css(c.edgeR, { opacity: E.f3(E.clamp((c.cam.z - 1.35) / 0.5) * (fx1 < screenW(c, t) - 8 ? 1 : 0) * E.clamp((840 - fcx) / 160) * (screenW(c, t) === FW ? 1 : 0)) });
     // and cut text at the top edge on the SOP screens when zoomed low
     const scr = cur >= 0 ? S[cur][1] : '', fy0 = -c.cam.oy / c.cam.k;
-    E.css(c.edgeT, { opacity: E.f3(E.clamp((c.cam.z - 1.35) / 0.5) * (fy0 > 300 && /^AF-07/.test(scr) ? 1 : 0)) });
+    E.css(c.edgeT, { opacity: E.f3(E.clamp((c.cam.z - 1.2) / 0.3) * (fy0 > 300 && /^AF-07/.test(scr) ? 1 : 0)) });
     c.hls.forEach(h => K.hlUpdate(c, h, t));
   };
 
