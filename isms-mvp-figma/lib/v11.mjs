@@ -254,7 +254,9 @@ export function sopFlow(F, x, y, w, steps, o = {}) {
     let r = '';
     if (crit) r += rect(x, cy, w, 32, { fill: C.sopGold });
     r += circle(x + 25, cy + 16, 9, { fill: crit ? '#7A1E14' : C.stepNum, fo: crit ? 0.6 : 1 }) + text(x + 25, cy + 20.5, String(i + 1), { size: 12, weight: 700, fill: '#FFFFFF', anchor: 'middle' });
-    r += text(x + 44, cy + 22, st.title, { size: 16, weight: 500, fill: crit ? '#6E1A10' : '#FFFFFF' });
+    let tx = x + 44;
+    if (st.lock) { r += g(F, 'Lock (estate baseline) NEW', icon(F, 'lock', tx - 1, cy + 7.5, 15, crit ? '#6E1A10' : C.t3, 2)); tx += 20; }   // locked estate-baseline step (multi-site governance)
+    r += text(tx, cy + 22, st.title, { size: 16, weight: 500, fill: crit ? '#6E1A10' : '#FFFFFF' });
     const cbx = x + w - 30, cby = cy + 8;
     if (done) r += rect(cbx, cby, 16, 16, { r: 3, fill: '#2E8BFF' }) + icon(F, 'check', cbx + 1, cby + 1, 14, '#FFFFFF', 3);
     else r += rect(cbx, cby, 16, 16, { r: 3, fill: '#FFFFFF', fo: 0.9 });
