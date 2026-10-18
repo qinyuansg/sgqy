@@ -56,3 +56,24 @@ AF_FILM=1 node build-agilfence.mjs $OUT2 $A        # film variants: no baked poi
 - `screens-v11/agilfence-illustration.mjs` – the fence bay, FBG cable, strain and climber illustration
 - `screens-v11/agilfence-board.mjs` – the flow board (nine steps, who acts, scenario clock)
 - `lib/fence.mjs` – scenario data, fence-site overlay for the 3D viewer, system toast, nearest cameras, video player
+
+## Strategic areas 2 · 4 · 5: end-to-end flows and the multi-site governance frames (V11 design)
+
+Answers the 16 October asks for the C-level deck in `../cag-strategic-areas-deck`: six new multi-site,
+multi-brand governance frames (MS-01…06: estate overview, site drill-down with local autonomy, security
+baseline with override approval, roles and access, systems and connectors with an onboarding dialog, estate
+report), two flow boards (P2 for the AI-powered ISMS flow, P5 for multi-site) and one master board with all
+three lanes (points 2, 4 and 5). Everything is graded In V11 today / Concept · designed / Roadmap, and every
+date is a proposal to confirm with R&D. Sites, vendors (Vendor A–E), people and figures are illustrative.
+
+```bash
+A=/path/to/assets; OUT=/path/to/out
+node build-v11.mjs $OUT $A                        # V11-01…12 (+ V11-00, V11-00b)
+node build-agilfence.mjs $OUT $A                  # AF-00…09 + AF-00b flow board
+node build-cpo-flows.mjs $OUT $A                  # MS-01…06 (svg, png, png2x, thumb, ms-anchors.json) + P2 / P5 / CPO master boards
+node make-pdf.mjs $OUT CAG_Strategic_Areas_2-4-5_Figma_frames.pdf
+```
+
+- `screens-v11/multisite.mjs` – the six MS frames (`MS_FRAMES`, `ANCHORS`, `setFrame`)
+- `screens-v11/cpo-boards.mjs` – the P2, P5 and master boards (`BOARDS`, `useThumbs`)
+- `build-cpo-flows.mjs` – builds the frames, then the boards from the thumbs of all frames
