@@ -1,49 +1,97 @@
-# AgilFence alarm · operator experience v2 (fewer clicks)
+# AgilFence alarm · operator experience v2 — fewer clicks, credible operational logic
 
-Goal: when AgilFence is triggered, the operator sees **who is at the fence without a single click**, and the whole
-response takes **three clicks**, each one a decision only a person should make. Same V11 design language, same scenario
-(Fence Sector 5, segment 5-14, 02:14:58), no Co-pilot, clock times only, people decide.
+Two goals, both from review:
+1. **Fewer clicks.** When AgilFence is triggered the operator sees who is at the fence **without a click**: the alarm view
+   opens itself with the nearest PTZ already live on the segment.
+2. **Operationally credible.** Every critical transition is shown as **Trigger → Decision → Action → Evidence**: why the
+   alarm is verified, who has the authority to act, what protects the runway, and what evidence allows closure.
+   Principle: the system must give confidence that *the right action was taken, by the right authority, at the right time,
+   with verifiable evidence of the outcome* — not just that actions were taken.
 
-## Clicks: v1 vs v2
+Same V11 design language and scenario (Fence Sector 5, segment 5-14, north perimeter, Runway 02L), no Co-pilot / AI,
+clock times only, no percentages, people decide. Everything below is a design proposal on simulated data; authorities and
+SOP clauses are illustrative and must be validated with airport security operations (see §6).
 
-| | v1 (today's demo) | v2 |
+## 1. State model (shown in the UI as the **Incident progress** rail, NEW)
+
+| Phase | States (each with time + who/what) |
+|---|---|
+| 1 Detection | Alarm raised (sensor) |
+| 2 Verification | Corroborated (sensors on one track) → Authorised-activity check (clear / found / unknown) → **Visually confirmed by operator** (or *Resolved: authorised / false alarm*) |
+| 3 Response (concurrent) | Patrol: dispatched → en route → on scene · Police: requested → contacted → acknowledged → responding → on scene · Aviation safety: tower notified → decision → restriction active → restored · Tracking: live, sensor hand-over |
+| 4 Resolution & audit | Contained → Intercepted → Detained → Handed to police → Area secured → Runway restored → Fence made safe → Evidence sealed → Submitted → **Signed off (authenticated)** → Closed |
+
+The alarm and the incident share one record: the incident `PER-005` is **raised at the operator's confirmation from alarm
+`AGF-5-14`, and everything since 02:14:58 is inherited** (shown on the incident header: "Raised from alarm AGF-5-14 ·
+history since 02:14:58").
+
+## 2. Authority matrix shown in the SOP (SOP-PER-02 · Critical perimeter intrusion, illustrative)
+
+| Action | Authority | Approval |
 |---|---|---|
-| See the alarm | toast → click *Open alarm* | **auto**: the alarm view opens itself (Critical, fence segment) |
-| See the person | click *Locate* → click *Open live* | **auto**: PTZ 7-02 is already on preset; its live video and the pre-alarm replay play in the alarm view; map flies to 5-14 |
-| Verify | (read the tiles) | **click 1 · Confirm intrusion** (or *False alarm*) under the live video |
-| Raise the incident | click *Escalate* → dialog → click *Create Incident* | **auto on confirm**: incident PER-005 is raised with the alarm, clips and segment attached |
-| Dispatch | click *SOP Flow* tab → click *Dispatch* | SOP opens itself on confirm with the nearest patrol pre-selected · **click 2 · Dispatch Patrol 2** |
-| Inform tower / Airside Ops | SOP step | **auto** on dispatch (logged with time) |
-| Police call | SOP step | sent to the duty manager for approval (Daniel approves on his console; shown as a status) |
-| Follow the person | (static) | **auto**: PTZ auto-track keeps the person in view; patrol position on the map |
-| Close | *Incident Management* → search → row → *Close Incident* → dialog → *Confirm* | close card appears in the alarm view when police custody is logged; reason and evidence pre-filled · **click 3 · Close & sign** |
-| **Operator clicks** | **11** | **3** |
+| Dispatch nearest patrol | Operator | **Pre-authorised for Critical** — no approval wait |
+| Contact Airport Police | Operator | **Pre-authorised for Critical**; duty manager informed in parallel |
+| Runway / aviation restriction | **Control tower (ATC supervisor)** — not security | Tower decides and records; security sees the decision and its status |
+| Emergency lockdown | Duty manager or above, with confirmation | not used in this scenario; header shows *Lockdown status: not active* separately from the button |
+| Close a Critical incident | Operator submits · **Duty manager signs with his own authenticated session** (badge + PIN) | Close is blocked until every required evidence item is complete |
+| Escalation timeout | If the duty manager does not acknowledge within the SOP time, the head of security is notified (shown as a rule, not triggered tonight) | |
 
-## States (frames `AV-S1` … `AV-S8`, 1400×1069, rendered with `DEMO_CLEAN=1`)
+## 3. The flow — states AV-S1 … AV-S10 (frames 1400×1069 unless noted, `DEMO_CLEAN=1`)
 
-1. **AV-S1 quiet** — the console before the alarm (02:14:50).
-2. **AV-S2 auto alarm view** (02:14:59) — no pointer needed. The Critical card tops Real Time Alerts; the centre switches to
-   an **Alarm view** (NEW): a large live video tile *PTZ 7-02 · Live · on preset 5-14* with the person boxed "Person · climbing",
-   a strip under it with *Replay 02:14:41* (pre-alarm, CAM 7-11) and *Thermal*, and a small map inset with segment 5-14 lit
-   and the nearest cameras. Chip: "Opened automatically · AgilFence segment 5-14". Active Alarms on the right shows the event
-   head and the linked facts (fence 02:14:58, LiDAR 1.7 m 02:15:01, PTZ preset 02:15:03). Under the video: two buttons
-   **Confirm intrusion** (red) and **False alarm** (grey) and "Your decision".
-3. **AV-S3 confirm hover → clicked** (02:15:24) — pointer on *Confirm intrusion*, pressed state.
-4. **AV-S4 confirmed** (02:15:25) — toast "Intrusion confirmed · Nurul A. · 02:15:24 · Incident PER-005 raised"; the right
-   panel switches to **SOP Flow** on its own: steps 1–2 ticked Auto, step 3 *Dispatch Patrol 2 · nearest · ETA 02:18:30*
-   pre-selected (critical, buttons *Dispatch* / *Choose another*); video keeps playing (now "Auto-track").
-5. **AV-S5 dispatch clicked** (02:15:30) — pressed Dispatch.
-6. **AV-S6 dispatched** (02:15:40) — step 3 "Approved · Nurul A. · 02:15:30"; step 4 "Airside Ops and tower informed ·
-   Auto · 02:15:40"; step 5 "Police call · sent to duty manager" then "Approved · Daniel L. · 02:16:00"; map inset shows Patrol 2
-   moving; video auto-tracking the person inside the fence line.
-7. **AV-S7 patrol on scene** (02:18:08) — video shows the patrol with the person (fence_patrol scene), map inset patrol at
-   5-14; step 6 *Secure, close and report* ready; at 02:26:30 "Police custody logged" and a **Close card** appears under the
-   video: reason "Intruder detained · handed to Airport Police" (pre-filled), evidence "3 clips · fence trace · SOP record",
-   button **Close & sign** with "Nurul A. · operator".
-8. **AV-S8 closed** (02:44:20) — pressed then closed: toast "PER-005 closed · signed Nurul A. · 02:44:20 · report filed";
-   the alert card leaves the list; counters drop to 1 Critical; the console returns to quiet with the map normal.
+**Operator clicks: 3 (Confirm intrusion · Dispatch Patrol 2 · Submit for sign-off). Duty manager: 1 authenticated sign-off on his own console.** Police contact and tower notification are SOP actions the operator triggers with the confirmation (pre-authorised), shown with their full acknowledgement chain.
 
-Rules: reuse the UC2 module's building blocks (`screens-v11/demo/uc2-agilfence.mjs`, `lib/fence.mjs` player / nearestCams /
-fenceSite, `lib/v11.mjs` kit, `lib/demo.mjs` cursor/btnState/confirmToast); new parts carry `NEW` in layer names; no
-lavender, no "Co-pilot" text (header placeholder reads "Search…"); every automatic event says *Auto* with a time; every
-decision shows the person and the time.
+1. **AV-S1 · quiet** 02:14:50 — console; header shows the Emergency Lockdown button **and** a separate status pill
+   "Lockdown: not active".
+2. **AV-S2 · alarm view opens itself** 02:14:59 (Trigger: AgilFence 5-14 climb signature). No click. Centre = **Alarm view (NEW)**:
+   big live tile *PTZ 7-02 · Live · on preset 5-14* with the person boxed, strip *Replay 02:14:41 (CAM 7-11, pre-alarm)* + *Thermal*,
+   map inset (fence line, 5-14 lit, cameras, Runway 02L 130 m). Chip "Opened automatically · 02:14:59". Toast offers **Mute tone**
+   (not "Silence"): the alarm stays Critical and visible until resolved. Incident progress rail: *Detection ✓ 02:14:58*.
+3. **AV-S3 · verification panel** 02:15:20 — right panel **Verification (NEW)**:
+   - **Corroboration: same track** — AgilFence 5-14 climb 02:14:58 → LiDAR L-5B track T-07 (1 object, 1.7 m) 02:15:01 → PTZ 7-02
+     auto-track locked on T-07 02:15:12; each row with the sensor and its **health: OK**; status "**Corroborated · 3 sensors, one track**".
+   - **Authorised-activity check** with sources: Permit-to-work (no permit for Sector 5 tonight) · Patrol roster (no patrol in Sector 5) ·
+     Gate access (no badge at G-5 since 23:40) · Maintenance schedule (none) — each **Clear**, with an **Unknown** state style defined
+     (none tonight).
+   - Decision bar: **Confirm intrusion** (red) · **Authorised activity** · **False alarm** · "Your decision — becomes the incident record".
+4. **AV-S4 · click 1: Confirm intrusion** 02:15:24 (pressed). Decision recorded: *Visually confirmed · Nurul A. (owner) · 02:15:24*.
+5. **AV-S5 · incident raised, response opens in parallel** 02:15:26 — toast "Incident PER-005 raised from alarm AGF-5-14 · history
+   inherited · owner Nurul A.". Right panel switches to **Response (NEW)**, three concurrent lanes:
+   - **Patrol** — Patrol 2 (Arjun + 1) nearest · ETA 02:18:30 · *Pre-authorised (SOP-PER-02 §3.1)* · buttons **Dispatch Patrol 2** / Choose another.
+   - **Police** — *Requested 02:15:25 (pre-authorised §3.2)* → *Contacted · Airport Police ops room · 02:15:38* → (pending ack). Duty manager
+     Daniel L. *informed 02:15:25 · reviewing*.
+   - **Aviation safety** — *Tower notified 02:15:25 · person 130 m from Runway 02L* → awaiting tower decision (authority: ATC).
+6. **AV-S6 · click 2: Dispatch Patrol 2** 02:15:30 (pressed).
+7. **AV-S7 · response running** 02:16:40 — Patrol *Dispatched · Nurul A. · 02:15:30 → En route*. Police *Acknowledged · Sgt. Lim (APD) ·
+   02:15:52 → Responding · unit AP-12 · ETA 02:24*. Aviation *Tower decision · Runway 02L: arrivals held, no movements on 02L ·
+   ATC supervisor Tan · 02:15:58 · restriction **active***. **Exception:** "PTZ 7-02 video lost 02:16:40 · LiDAR T-07 still tracking ·
+   PTZ 7-03 took over automatically 02:16:42" — the live tile switches to PTZ 7-03 with a small amber banner; map shows T-07 moving
+   inside the fence line toward the runway strip, LiDAR trail.
+8. **AV-S8 · on scene and outcomes** (condensed sequence, each with time on the Incident progress rail) — *Patrol on scene 02:18:08* →
+   *Contained 02:18:08 (person stationary inside fence line)* → *Intercepted 02:19:30* → *Detained 02:20:05* → *Police on scene AP-12
+   02:24:10* → *Handed to police · custody AP-12 · 02:26:30*. Live tile shows patrol with the person (fence_patrol scene).
+9. **AV-S9 · closure checklist** 02:43:50 — **Close (NEW)** card, each item with evidence and source: Handed to police (custody
+   record AP-12, 02:26:30) ✓ · Area secured (sweep of Sector 5 by Patrol 2, 02:38:40) ✓ · Runway 02L restored (tower, ATC Tan, 02:31:10) ✓ ·
+   Fence 5-14 made safe (mesh bent, no cut; guard posted; FM ticket FM-90412) ✓ · SOP 7 of 7 steps ✓ · Evidence pack sealed
+   (3 clips + fence trace + LiDAR track, sealed 02:43:40) ✓. Button **Submit for sign-off** (enabled only because all six are ✓; the
+   frame shows the rule "Closing is blocked until every item is complete"). Pointer clicks it (**click 3**).
+10. **AV-S10 · duty manager sign-off** 02:44:20 — the **duty manager's console** (same V11 shell, user chip "Daniel L. · Duty manager"):
+    sign-off dialog with the six evidence items, "Sign with badge + PIN" field filled (masked), button **Sign and close**; then the
+    closed state: "PER-005 closed · signed by Daniel L. (authenticated: badge + PIN) · 02:44:20 · audit record locked". The operator's
+    console returns to quiet; counters drop.
+
+## 4. Alternative path (short vignette, frames AV-A1, AV-A2)
+
+Same alarm on another night: **AV-A1** — verification shows *Permit-to-work PTW-2231 · fence repair Sector 5 · 01:00–04:00 · contractor
+crew of 2 · badge-in at G-5 01:05* → **Found**; corroboration shows 2 people at the works location. Decision bar highlights
+**Authorised activity**. **AV-A2** — after the click: "Resolved as authorised activity · Nurul A. · 01:22:10 · linked to PTW-2231 ·
+alarm kept in the record"; no incident raised, no patrol dispatched; a note "Works supervisor called to confirm crew · 01:21:40".
+
+## 5. What the film shows on screen (besides the UI)
+Clock chip (scenario time) · operator-clicks counter (0 → 3) · opening slate and end slate. No subtitles, no captions.
+
+## 6. Open questions for the workflow validation session (Product, airport security operations, systems engineering, software)
+1. What corroboration makes a sensor alarm a confirmed intrusion (sensors on one track, operator visual, both)?
+2. If the intruder nears the runway before the patrol arrives: who decides the aviation restriction (ATC), and how is it recorded?
+3. Which actions are pre-authorised for Critical, which need approval, and what happens when the approver is unavailable?
+4. What evidence proves resolution: containment, police handover, area sweep, runway restoration, fence made safe?
+5. What stops premature closure or signing on someone else's behalf (evidence gate, authenticated sign-off, locked audit)?
