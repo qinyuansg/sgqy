@@ -77,3 +77,17 @@ node make-pdf.mjs $OUT CAG_Strategic_Areas_2-4-5_Figma_frames.pdf
 - `screens-v11/multisite.mjs` – the six MS frames (`MS_FRAMES`, `ANCHORS`, `setFrame`)
 - `screens-v11/cpo-boards.mjs` – the P2, P5 and master boards (`BOARDS`, `useThumbs`)
 - `build-cpo-flows.mjs` – builds the frames, then the boards from the thumbs of all frames
+
+## Airport demo · five click-by-click flows (V11 design)
+
+`DEMOFLOWS.md` is the brief: the journey (Detect → Correlate → Contextualise → Orchestrate → Assist & govern), the three
+improvements (Co-pilot briefing in the SOP Flow tab, facts-only Investigation, no Co-pilot text on the alert cards), the
+interaction states, and the product requirement / user story / acceptance criteria for Overstay, AgilFence, Identity
+spoofing, Search / Ask Co-pilot and Incident Management. `lib/demo.mjs` is the interaction kit (cursor, hover, focus,
+pressed, tooltip, annotation pills, stage chips, Co-pilot briefing, menus); `screens-v11/demo/uc*.mjs` hold one frame per
+state and `screens-v11/demo/boards.mjs` the five boards plus the master board.
+
+```bash
+node build-demoflows.mjs $OUT $A                 # UC1…UC5 frames (svg, png, png2x, thumb) + boards
+node make-pdf.mjs $OUT Airport_Demo_Flows_V11_frames.pdf
+```
