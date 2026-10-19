@@ -7,12 +7,24 @@
 </head>
 <body>
 <div id="stage"><div id="bg"><div class="aur"></div><div class="grid"></div><div class="vignette"></div></div></div>
-<script src="js/timeline.js"></script>
-<script src="js/geo.js"></script>
-<script src="js/engine.js"></script>
-<script src="js/kit.js"></script>
-<script src="js/scenes/flow.js"></script>
-<script src="js/chrome.js"></script>
+<script>
+  // Cut variants: ?cut=<name> (or a window.CUT set before this script) picks the film. The default cut, operator,
+  // loads js/timeline.js and then js/scenes/flow.js + js/chrome.js; any other cut loads js/timeline-<name>.js,
+  // whose "scripts" list names its own scene files (js/scenes/<name>/*.js). document.write keeps the scripts
+  // parser-blocking, so they run in order before the player below, exactly as static tags would.
+  (function () {
+    const q = new URLSearchParams(location.search);
+    const cut = String(q.get('cut') || window.CUT || 'operator').replace(/[^a-z0-9_-]/gi, '') || 'operator';
+    window.CUT = cut;
+    document.write(`<script src="js/${cut === 'operator' ? 'timeline' : 'timeline-' + cut}.js"><\/script>`);
+  })();
+</script>
+<script>
+  (function () {
+    const own = (window.TL && window.TL.scripts) || ['js/scenes/flow.js', 'js/chrome.js'];
+    document.write(['js/geo.js', 'js/engine.js', 'js/kit.js', ...own].map(s => `<script src="${s}"><\/script>`).join(''));
+  })();
+</script>
 <script>
   // Deterministic player: every frame is a pure function of t (seconds).
   // ?t=12.5 freezes a frame; ?play=1 previews in real time.

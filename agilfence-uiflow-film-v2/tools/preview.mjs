@@ -12,7 +12,7 @@ fs.mkdirSync(out, { recursive: true });
 const browser = await chromium.launch({ args: ['--force-color-profile=srgb', '--disable-lcd-text', '--font-render-hinting=none'] });
 const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
 const errs = []; page.on('pageerror', e => errs.push(String(e)));
-await page.goto('file://' + path.join(ROOT, 'src', 'index.html')); await page.evaluate(() => document.fonts.ready);
+await page.goto('file://' + path.join(ROOT, 'src', 'index.html') + '?cut=' + encodeURIComponent(process.env.CUT || 'operator')); await page.evaluate(() => document.fonts.ready);
 for (const t of times) { await page.evaluate(tt => window.seek(tt), t); await page.screenshot({ path: path.join(out, `t${t.toFixed(2).padStart(6, '0')}.jpg`), type: 'jpeg', quality: 85 }); }
 await browser.close();
 if (errs.length) { console.error(errs.join('\n')); process.exit(1); }

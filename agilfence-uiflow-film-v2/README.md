@@ -68,7 +68,64 @@ incident raised, acknowledgements, outcomes, resolved), a soft warning at the PT
 
 ```bash
 AV_FRAMES=/path/to/frames BUILD=/path/to/build ./build.sh     # AV_FRAMES defaults to $BUILD/../frames
+CUT=highlight BUILD=/path/to/build-highlight ./build.sh       # another cut of the same film (one BUILD dir per cut)
 ```
+
+### Cuts (variants)
+
+`CUT` (default `operator`) selects the film; everything else (engine, kit, frames, render, mix, delivery) is shared.
+
+| CUT | Timeline | Scene files | Score | Deliverables |
+|---|---|---|---|---|
+| `operator` (default) | `src/js/timeline.js` | `src/js/scenes/flow.js`, `src/js/chrome.js` | `score()` in `tools/music.py` | `AgilFence_UI_Flow_v2_1080p_*` |
+| `<cut>` | `src/js/timeline-<cut>.js` | its `"scripts"` list, `src/js/scenes/<cut>/*.js` | `score(M, total, scenes, cues)` in `tools/music_<cut>.py` | `AgilFence_v2_<Cut>_1080p_*` |
+
+- `src/index.html` reads `?cut=` (or a `window.CUT` set before its loader) and loads the cut's timeline, then `geo.js`,
+  `engine.js`, `kit.js` and the scripts the timeline lists. `tools/render.mjs`, `cues.mjs` and `preview.mjs` read `$CUT`
+  and pass it to the page URL; `render.mjs` reads fps/total from the cut's timeline.
+- A cut's timeline may also carry `"thumb"` (thumbnail time, used by `build.sh` unless `THUMB_T` is set) and `"mix"`
+  (`{"music": LUFS, "sfx": LUFS}` bus levels for `tools/mix.py`; default −17 / −23).
+- Extra assets for a cut: an executable `tools/assets-<cut>.sh`, run by `build.sh` after `tools/assets.sh`.
+- `K.console` accepts a higher zoom ceiling per device (`c.zmax`, default 2.3).
+
+**B · Highlight** (`CUT=highlight`, 45.5 s, music-led, 120 BPM; `src/js/timeline-highlight.js`, `src/js/scenes/highlight/`,
+`tools/music_highlight.py`, `tools/assets-highlight.sh`): 1.0 s black → *AgilFence × AGIL® Secure V11* (it holds over the
+first moments of the console) → quiet console, 2 s, on the airport model (the alert list stays out of frame) → **the fence
+feels it** (4.5–6.5 s): the AF-01 fence bay, the climber, the strained sensors pulsing on the cable, *Fence Sector 5 ·
+Segment 5-14* → the alarm view opens itself (6.5 s), hero push onto the climber on PTZ 7-02 live → corroboration, then a
+highlight pulse on the *AgilFence 5-14 · Climb signature* row → **Confirm intrusion** (18.5 s; the recorded state holds
+1.2 s) → three response lanes → **Dispatch Patrol 2** (24.0 s) → tower decision and the PTZ 7-02 → 7-03 hand-over (the whole
+live tile, 2.5 s) → patrol and police with the person on the live tile → the evidence checklist (3 s) → signed and closed
+(3 s, a short pull back) → end card *AgilFence — the fence feels it. / AGIL Secure shows who is there. / Your team decides.*
+(the first line rises during the last shot's fade) + *Illustrative scenario · simulated data*. Shots cross-dissolve over
+0.4 s and the outgoing shot holds still through the dissolve; the clock chip (small) is the only chrome over the UI, no
+click counter. The fence plate needs the AF-01 crop (`tools/assets-highlight.sh` runs `tools/assets-story.sh`). Thumbnail at 10.8 s.
+
+**C · Product story** (`CUT=story`, 67 s, 80 BPM; `src/js/timeline-story.js`, `src/js/scenes/story/`, `tools/music_story.py`,
+`tools/assets-story.sh` + `tools/af-crops.py`): a cold open on the fence bay with *AgilFence × AGIL® Secure V11* laid over
+it, then five chapters, each opened by a large headline card (1.5 s, a two-beat pickup; every headline sharp by 0.33 s;
+every chapter starts on a downbeat, the first on the first frame):
+
+| Chapter | Seconds | Picture |
+|---|---|---|
+| cold open | 0.0–4.5 | AF-01 fence bay (segment callout painted out): the climber and the strain ripple from 0.3 s (pulse rings, a signal running along the fibre), drift in, ease back to the whole climber; the product line over it (lower third, 1.8–4.5) |
+| card 1 *Feels a climb* | 4.5–6.0 | — |
+| 1 | 6.0–12.0 | AF-01 *What the fence feels*, near full frame: a dashed threshold across both traces, the wind trace (Seg 5-09) stays under it, the climb trace (Seg 5-14) crosses it at 8.1 s, the *Alarm* badge pulses; callout *Wind: no alarm · Climb: alarm* |
+| card 2 *Pinpoints the segment* | 12.0–13.5 | — |
+| 2 | 13.5–19.5 | AF-04 airfield map: a light runs along the fence line and stops on 5-14 (lit), push in, PTZ 7-02's view cone swings onto the segment and locks |
+| card 3 *Shows who is there* | 19.5–21.0 | — |
+| 3 | 21.0–34.5 | AV-S1 quiet → AV-S2 the alarm view opens itself (22.4 s), hero push on PTZ 7-02 live, the climber; AV-S3 corroboration and the authorised-activity check |
+| card 4 *Coordinates the response* | 34.5–36.0 | — |
+| 4 | 36.0–49.5 | **Confirm intrusion** (38.2 s) → AV-S4 → dip → AV-S5 straight onto Patrol → **Dispatch Patrol 2** (41.6 s) → AV-S6 → dip → AV-S7 tower decision → PTZ 7-02 → 7-03 hand-over → AV-S8 patrol and police with the person |
+| card 5 *Closes with evidence* | 49.5–51.0 | — |
+| 5 | 51.0–61.5 | AV-S9 six evidence items, **Submit for sign-off** (55.8 s) → AV-S10a the duty manager's authenticated sign-off, **Sign and close** (59.9 s) → AV-S10b closed, pull back to the whole console |
+| end | 61.5–67.0 | *AgilFence × AGIL® Secure V11* (104 px) / *On Changi’s airfield perimeter since 2013* (52 px) / *Illustrative scenario · simulated data* (23 px), held over 3 s |
+
+The clock chip (Fence Sector 5, 02:14:50 → 02:44:20) shows only over the chapter 3–5 consoles; no click counter. The AF-01/AF-04
+illustrations (2x renders, `AF_ILLUS`, default `$BUILD/../../sa245/assets/af`) are cropped into `src/assets/af/AF-01-fence.png`
+(highlight cut), `AF-01-fence-clean.png` (story: the segment callout painted out, so pinpointing first shows in chapter 2),
+`AF-01-trace.png` and `AF-04-map.png`; `tools/af-crops.py` scans each crop and fails on violet (lavender) pixels beyond a few
+anti-aliased ones, so the AF-04 alert list with its concept line and its right panel stay out of the film. Thumbnail at 25.5 s.
 
 - `src/js/timeline.js`: hand-written scene windows (`lines` is empty: no voiceover)
 - `tools/assets.sh`: copies `png2x/AV-*.png` into `src/assets/af/` and writes `src/js/geo.js` (frame sizes from the PNGs, AV anchors from `demo-anchors.json`)

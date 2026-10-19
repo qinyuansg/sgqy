@@ -7,9 +7,13 @@ three response lanes and the outcomes, a settle on the closure checklist, a D-ma
 manager's sign-off, a quiet minor pad for the alternative night and the D-major chord again under the end slate.
 Sound effects are rendered from the picture-locked cues the scenes register (cues.json).
 
+Cut variants: $CUT (default operator) picks the score. The operator cut uses score() below; any other cut
+uses score(M, total, scenes, cues) from tools/music_<cut>.py, which gets this module as M (instruments, section(),
+riser(), CH/ROOTS, BPM helpers) and returns the music bed. Sound effects are the same for every cut.
+
 Writes $BUILD/stems/music.wav and $BUILD/stems/sfx.wav (48 kHz, stereo, float).
 """
-import json, os
+import importlib, json, os, sys
 import numpy as np
 import soundfile as sf
 from scipy.signal import butter, sosfilt, fftconvolve
@@ -17,6 +21,7 @@ from scipy.signal import butter, sosfilt, fftconvolve
 SR = 48000
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BUILD = os.environ.get("BUILD", os.path.join(ROOT, "build"))
+CUT = os.environ.get("CUT", "operator")
 RNG = np.random.default_rng(2026)
 BPM = 84.0
 BEAT = 60.0 / BPM
@@ -196,8 +201,10 @@ ROOTS = {"Dm9": 38, "Bbmaj7": 34, "Gm9": 31, "Asus": 33, "D": 38, "A/C#": 37, "B
 
 
 def section(buf, t0, t1, prog, bars_per_chord=2, pad_fc=1400, pad_g=0.5, bass_mode=None, bass_g=0.3,
-            arp_g=0.0, kick_mode=None, kick_g=0.35, hat_mode=None, hat_g=0.08, arp_from=None, drums_from=None):
-    """Render one musical section on its own bar grid starting at t0."""
+            arp_g=0.0, kick_mode=None, kick_g=0.35, hat_mode=None, hat_g=0.08, arp_from=None, drums_from=None, beat=None):
+    """Render one musical section on its own bar grid starting at t0 (beat: seconds per beat, default the 84 BPM grid)."""
+    BEAT = beat or globals()["BEAT"]
+    BAR = 4 * BEAT
     span = bars_per_chord * BAR
     k = 0
     t = t0
@@ -422,7 +429,11 @@ def main():
     cues = json.load(open(os.path.join(BUILD, "cues.json")))
     total = tl["total"]
     os.makedirs(os.path.join(BUILD, "stems"), exist_ok=True)
-    m = score(total, tl["scenes"])
+    if CUT == "operator":
+        m = score(total, tl["scenes"])
+    else:   # tools/music_<cut>.py: the cut's own section map on the same instruments
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        m = importlib.import_module(f"music_{CUT}").score(sys.modules[__name__], total, tl["scenes"], cues)
     m = apply_reverb(m, 0.22, reverb_ir(2.6, 3800, 1))
     s = sfx(total, cues)
     s = apply_reverb(s, 0.18, reverb_ir(1.4, 5200, 2))

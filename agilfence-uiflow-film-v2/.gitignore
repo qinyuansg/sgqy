@@ -3,3 +3,4 @@ src/assets/
 __pycache__/
 *.pyc
 src/js/geo.js
+src/js/.geo.*

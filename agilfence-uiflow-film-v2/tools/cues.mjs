@@ -15,7 +15,7 @@ const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
 const errs = [];
 page.on('pageerror', e => errs.push(String(e)));
-await page.goto('file://' + path.join(ROOT, 'src', 'index.html'));
+await page.goto('file://' + path.join(ROOT, 'src', 'index.html') + '?cut=' + encodeURIComponent(process.env.CUT || 'operator'));
 const { cues, tl } = await page.evaluate(() => ({ cues: E.sfx.slice().sort((a, b) => a.t - b.t), tl: window.TL }));
 await browser.close();
 if (errs.length) { console.error(errs.join('\n')); process.exit(1); }

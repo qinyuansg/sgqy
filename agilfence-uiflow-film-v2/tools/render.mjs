@@ -16,7 +16,9 @@ const args = Object.fromEntries(process.argv.slice(2).reduce((acc, a, i, arr) =>
   return acc;
 }, []));
 
-const TLsrc = fs.readFileSync(path.join(ROOT, 'src', 'js', 'timeline.js'), 'utf8');
+// CUT picks the film variant (default operator: src/js/timeline.js; else src/js/timeline-<cut>.js)
+const CUT = process.env.CUT || 'operator';
+const TLsrc = fs.readFileSync(path.join(ROOT, 'src', 'js', CUT === 'operator' ? 'timeline.js' : `timeline-${CUT}.js`), 'utf8');
 const TL = JSON.parse(TLsrc.slice(TLsrc.indexOf('{'), TLsrc.lastIndexOf('}') + 1));
 const FPS = TL.fps || 30;
 const from = Math.round((+(args.from || 0)) * FPS);
@@ -27,7 +29,7 @@ const out = args.out || path.join(BUILD, 'video.mp4');
 const crf = args.crf || '16';
 const segDir = path.join(BUILD, 'segments');
 fs.mkdirSync(segDir, { recursive: true });
-const url = 'file://' + path.join(ROOT, 'src', 'index.html');
+const url = 'file://' + path.join(ROOT, 'src', 'index.html') + '?cut=' + encodeURIComponent(CUT);
 
 async function worker(k, a, b) {
   const seg = path.join(segDir, `seg${String(k).padStart(2, '0')}.mp4`);

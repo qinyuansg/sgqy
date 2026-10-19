@@ -120,8 +120,8 @@
   const screenW = (c, t) => { let w = FW; for (const [ts, name] of c.plan.screens) if (t >= ts) w = fwOf(name); return w; };
   const camAt = (c, t) => {
     // interpolate (cx, cy, log z) between shots; a null rect is the whole screen
-    // a wider-than-1400 screen may zoom out to fit (never below its fit-to-width zoom)
-    const toP = (r, W) => { r = r || [0, 0, W, FH]; const z = E.clamp(Math.min(FW / r[2], FH / r[3]), Math.min(1, FW / W), 2.3); return [r[0] + r[2] / 2, r[1] + r[3] / 2, Math.log(z)]; };
+    // a wider-than-1400 screen may zoom out to fit (never below its fit-to-width zoom); zoom tops out at c.zmax (default 2.3)
+    const toP = (r, W) => { r = r || [0, 0, W, FH]; const z = E.clamp(Math.min(FW / r[2], FH / r[3]), Math.min(1, FW / W), c.zmax || 2.3); return [r[0] + r[2] / 2, r[1] + r[3] / 2, Math.log(z)]; };
     let p = toP(null, screenW(c, c.plan.shots.length ? c.plan.shots[0][0] : t));
     for (const [ts, r, d = 1.3] of c.plan.shots) {
       if (t < ts) break;

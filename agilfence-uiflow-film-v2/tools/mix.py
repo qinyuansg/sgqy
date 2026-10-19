@@ -99,8 +99,9 @@ def main():
         mus *= (10 ** ((-9.0 * np.clip(env / 0.12, 0, 1)) / 20))[:, None]
         sfx *= (10 ** ((-3.0 * np.clip(env / 0.12, 0, 1)) / 20))[:, None]
     else:                                                          # no narration: the bed carries the film
-        mus = gain_to(mus, -17.0)
-        sfx = gain_to(sfx, -23.0)
+        lv = tl.get("mix") or {}                                   # a cut may set its own bus levels (LUFS)
+        mus = gain_to(mus, lv.get("music", -17.0))
+        sfx = gain_to(sfx, lv.get("sfx", -23.0))
 
     mix = vo_st + mus + sfx
     # −4 dBTP ceiling leaves a dB for AAC overshoot: the encoded deliverables must measure ≤ −3 dBTP
