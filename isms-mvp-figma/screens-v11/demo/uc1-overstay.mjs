@@ -28,8 +28,8 @@ const START = 4;   // the list is scrolled so the Info card (last of 7) is in vi
 const EV = (badge, badgeCol) => ({ time: '01:45:20', id: 'ACS-B2', code: 'OVS-012', title: 'Baggage Hall B2', badge, badgeCol, lines: [['In zone since 22:05 · shift ended 01:00'], ['Card user ', { b: 'K. Lim' }, ', Card ID ', { b: 'C-11873' }]] });
 const CAMS = [
   { href: cctv('baghall_clean'), label: 'Camera 4-018 · B2', focus: [0.62, 0.6], box: box('baghall', 'person'), boxCol: C.info, boxLabel: 'K. Lim · 3h 40m' },
-  { href: cctv('baghall_clean'), label: 'Camera 4-019 · ULD row 3', focus: [0.8, 0.5] },
-  { href: cctv('door_clean'), label: 'Camera 4-011 · B2 east door', focus: [0.7, 0.5] },
+  { href: cctv('baghall_clean'), label: 'Camera 4-019 · ULD row 3', focus: [0.8, 0.5], box: box('baghall', 'person'), boxCol: C.info, boxLabel: 'K. Lim' },
+  { href: cctv('door_clean'), label: 'Camera 4-011 · B2 east door', focus: [0.7, 0.5], chips: [['REPLAY 22:05', C.info]] },   // badge-in replay, corroborates the ACS fact row
 ];
 // System facts for the Investigation tab (no Co-pilot entry here: improvement 1)
 const FACTS = [
@@ -41,7 +41,7 @@ const FACTS = [
     ['01:45', 'Rule (v) · 3h 40m vs 45 min usual', 'Dwell', C.info],
   ] },
 ];
-const BRIEF = { text: 'K. Lim (contractor) badged into B2 at 22:05 and has not badged out. Shift ended 01:00, B2 is outside K. Lim’s duty zones, no overtime tonight. Radio check first, then patrol.', sources: 'ACS events · roster · airport rules (i)–(v)', time: '01:45' };
+const BRIEF = { text: 'K. Lim (contractor) badged into B2 at 22:05, no badge-out. Shift ended 01:00, B2 outside duty zones, no overtime.', sources: 'ACS events · roster · airport rules (i)–(v)', time: '01:45' };
 
 // ---------- shared pieces (copied from frames.mjs / v11.mjs so this module controls scroll, badges, list offset) ----------
 const markersFor = (labels = {}) => ALERTS.map(a => ({ id: a.key, X: a.X, Y: a.Y, sev: a.sev, icon: a.icon, h: a.key === 'fence' ? 3.5 : 4.5, label: labels[a.key], left: a.key === 'watch' || a.key === 'spoof' }));
@@ -56,7 +56,7 @@ const b2Marker = (label) => ({ id: KEY, X: B2.X, Y: B2.Y, sev: 'Info', icon: 'ti
 function alertsList(F, o) {
   const x = 40, y = 118, w = 336, h = 629;
   const clip = F.clip(`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="16"/>`);
-  let s = rect(x, y, w, h, { r: 16, fill: C.panel, fo: 0.85 });
+  let s = rect(x, y, w, h, { r: 16, fill: C.frame }) + rect(x, y, w, h, { r: 16, fill: C.panel, fo: 0.85 });   // opaque backing: the zoomed map must not show through the cards
   const ws = COUNTS.map(([t]) => textWidth(t, 14, 500) + 16), tot = ws.reduce((a, b) => a + b, 0) + 8 * (COUNTS.length - 1);
   let cx = x + (w - tot) / 2;
   COUNTS.forEach(([t, col], i) => { s += pill(F, cx, 134, t, col).svg; cx += ws[i] + 8; });
@@ -143,11 +143,11 @@ const investigation = (F, x, y, w) => {
 // SOP Flow tab: Co-pilot briefing above SOP-OPS-003 (improvement 1)
 let POS = [], SCROLLED = 0;
 const sopBody = (steps) => (F, x, y, w) => {
-  const b = copilotBriefing(F, x + 16, y + 10, w - 32, BRIEF);
-  mark('briefing', [x + 16, y + 10, w - 32, b.h]);
+  const b = copilotBriefing(F, x + 16, y + 6, w - 32, BRIEF);
+  mark('briefing', [x + 16, y + 6, w - 32, b.h]);
   POS = [];
-  const sf = sopFlow(F, x, y + 10 + b.h + 8, w, steps, { caption: 'SOP-OPS-003 · Overstay in a restricted zone', captionIcon: 'doc', captionCol: C.t2, pos: POS });
-  return { svg: b.svg + sf.svg, h: 10 + b.h + 8 + sf.h + 8 };
+  const sf = sopFlow(F, x, y + 6 + b.h + 4, w, steps, { caption: 'SOP-OPS-003 · Overstay in a restricted zone', captionIcon: 'doc', captionCol: C.t2, pos: POS });
+  return { svg: b.svg + sf.svg, h: 6 + b.h + 4 + sf.h + 8 };
 };
 const STEPS_S4 = [
   { title: 'Rules check', state: 'done', tag: 'Auto · rules (i)(ii)(iii)(v)' },
@@ -159,7 +159,7 @@ const STEPS_S5 = [
   { title: 'Rules check', state: 'done', tag: 'Auto · rules (i)(ii)(iii)(v)' },
   { title: 'Radio check', state: 'done', tag: 'Approved · Nurul A. · 01:50', text: 'Call K. Lim · answered 01:51 on Ch 4.' },
   { title: 'Confirm reason', state: 'done', tag: 'Nurul A. · 01:51', text: 'Finishing a ULD repair, no overtime filed.' },
-  { title: 'Log and acknowledge', state: 'todo', tag: 'In progress', text: 'Audit line written; card moves to On Hold.', items: [['Rules (i)(ii)(iii)(v) logged', true], ['Radio check logged · 01:51', true], ['Acknowledged · Nurul A. · 01:52', true]] },
+  { title: 'Log and acknowledge', state: 'done', tag: 'Nurul A. · 01:52', text: 'Audit line written; card moves to On Hold.', items: [['Rules (i)(ii)(iii)(v) logged', true], ['Radio check logged · 01:51', true], ['Acknowledged · Nurul A. · 01:52', true]] },
 ];
 // Context card in the viewer after Locate (roster, duty zones, overtime)
 function contextCard(F, x, y, w) {
@@ -198,9 +198,9 @@ export function s1() {
   return consoleFrame('UC1-S1 · Detect · Info card in Real Time Alerts (hover)', {
     stage: 'detect', toggle: true, sel: null, center: homeView,
     after: F => {
-      const [x, y, w, h] = CARD, px = 338, py = 600;
+      const [x, y, w, h] = CARD, px = x + w - 60, py = y + h - 30, tw = textWidth('Open alarm', 13, 500) + 20;
       let s = hover(F, x, y + 1, w, h - 2, { name: 'card' });
-      s += tooltip(F, px, py - 2, 'Open alarm', { right: true }); mark('tooltip', [px, py - 36, textWidth('Open alarm', 13, 500) + 20, 26]);
+      s += tooltip(F, px, py - 2, 'Open alarm'); mark('tooltip', [px - tw / 2, py - 36, tw, 26]);
       s += cursor(F, px, py);
       s += placeNote(F, 400, 634, 'Hover · Baggage Hall B2 card', { to: [px + 2, py + 2] });
       s += placeNote(F, 400, 674, 'Shows · Info card · rules (i)(ii)(iii)(v) fired', { kind: 'shows', to: [x + w + 2, y + 24] });

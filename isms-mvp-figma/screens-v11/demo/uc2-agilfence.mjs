@@ -72,7 +72,8 @@ function fenceView(F) {
 }
 // Locate: close-up of the north fence with segment 5-14, sensors, cameras and their cones
 function locateView(F, o = {}) {
-  const P = camera(o.sx ?? 600, o.sy ?? 490, 40, 63, 1);
+  // camera origin 570 (not 600): at 600 the end face of a terminal block pokes into the viewer's left gutter below the alerts panel
+  const P = camera(o.sx ?? 570, o.sy ?? 490, 40, 63, 1);
   let s = clayAirport(F, P, { alarmFence: false, lidar: false, labels: false, markers: [] });
   s += fenceSite(F, P, { cams: AF.cams.map(c => ({ ...c, place: 'above', label: c.id === 'PTZ 7-03' ? false : undefined })) });
   s += marker(F, P, { X: 63, Y: 1, sev: 'Critical', icon: 'fence', h: 2.5, label: 'Seg 5-14 · Alarm' });
@@ -122,22 +123,35 @@ const SOP = (stage = 0) => [
   { title: 'No works or patrols at Sector 5', state: 'done', tag: 'Auto · 02:15:05' },
   stage === 1 ? { title: 'Dispatch Patrol 2', state: 'done', tag: 'Approved · Nurul A. · 02:15:30', text: 'Patrol 2 (Arjun + 1) · perimeter road · ETA 02:18:30', items: [['Patrol app notified · 02:15:31', true]] }
     : stage >= 2 ? { title: 'Dispatch Patrol 2', state: 'done', tag: 'Approved · Nurul A. · 02:15:30' }
-    : { title: 'Critical Action Required', state: 'critical', tag: 'Your approval', text: 'Dispatch Patrol 2 (Arjun + 1) · perimeter road · ETA 02:18:30', actions: [['Dispatch', 'blue'], ['Choose another', 'grey']] },
+    // the step keeps its name in every state (as UC1/UC3 do); the gold row + tag carry the critical state
+    : { title: 'Dispatch Patrol 2', state: 'critical', tag: 'Your approval', text: 'Patrol 2 (Arjun + 1) · perimeter road · ETA 02:18:30', actions: [['Dispatch', 'blue'], ['Choose another', 'grey']] },
   { title: 'Inform Airside Ops and tower', state: stage >= 2 ? 'done' : 'todo', tag: stage >= 2 ? 'Logged · 02:15:40' : null },
-  { title: 'Police call', state: 'todo', tag: 'Duty manager approval' },
+  // police call: approved by the duty manager at 02:16:00 (the UC5 record), so it is logged only in the frame at 02:16:10 (stage 3)
+  stage >= 3 ? { title: 'Police call', state: 'done', tag: 'Approved · Daniel L. · 02:16:00' } : { title: 'Police call', state: 'todo', tag: 'Duty manager approval' },
   { title: 'Secure, close and report', state: 'todo' },
 ];
-const sopBody = (stage, pos) => (F, x, y, w, h) => {
+// o.scroll 'end': the tab body is scrolled to the last steps (own thumb + top fade; the kit only draws a top thumb / bottom fade)
+const sopBody = (stage, pos, o = {}) => (F, x, y, w, h) => {
   const b = copilotBriefing(F, x + 16, y + 6, w - 32, BRIEF);
-  mark('briefing', [x + 16, y + 6, w - 32, b.h]);
   const p = pos || [];
   const r = sopFlow(F, x, y + 6 + b.h + 4, w, SOP(stage), { pos: p });
-  if (p[2]) mark('step3', [x, p[2].y, w, p[2].h]);
-  if (p[2] && p[2].actions[0]) mark('dispatch', p[2].actions[0]);
-  return { svg: b.svg + r.svg, h: 6 + b.h + 4 + r.h + 8 };
+  const full = 6 + b.h + 4 + r.h + 8;
+  const sc = o.scroll === 'end' ? Math.max(0, full - h) : 0;
+  p.sc = sc;
+  mark('briefing', [x + 16, y + 6 - sc, w - 32, b.h]);
+  if (p[2]) mark('step3', [x, p[2].y - sc, w, p[2].h]);
+  if (p[2] && p[2].actions[0]) { const [ax, ay, aw, ah] = p[2].actions[0]; mark('dispatch', [ax, ay - sc, aw, ah]); }
+  if (p[4]) mark('step5', [x, p[4].y - sc, w, p[4].h]);
+  let s = `<g transform="translate(0 ${f(-sc)})">${b.svg + r.svg}</g>`;
+  if (sc > 0) {
+    const th = Math.max(24, h * h / full - 8);
+    s += rect(x, y, w, 20, { fill: F.lin([[0, C.tabBody, 1], [1, C.tabBody, 0]], 0, 0, 0, 1) }) + rect(x + w - 6, y + 4 + (h - 8 - th), 3, th, { r: 1.5, fill: '#FFFFFF', fo: 0.35 });
+    return { svg: s, h };   // reported height = body height, so the kit adds no thumb / bottom fade of its own
+  }
+  return { svg: s, h: full };
 };
-// layout read-back for the SOP (positions of the step rows and action buttons on screen)
-function sopLayout(stage) { const pos = []; sopBody(stage, pos)(new Frame('m'), 916, 600, 428, 360); return pos; }
+// layout read-back for the SOP (positions of the step rows and action buttons on screen; pos.sc = scroll offset)
+function sopLayout(stage, o) { const pos = []; sopBody(stage, pos, o)(new Frame('m'), 916, 600, 428, 360); return pos; }
 
 // ---------- UC2-S1 · Detect ----------
 export function s1() {
@@ -231,21 +245,20 @@ export function s4() {
 
 // ---------- UC2-S5 · Orchestrate · Dispatch approved ----------
 export function s5() {
-  const pos = sopLayout(0), [dx, dy, dw, dh] = pos[2].actions[0];
   const pos1 = sopLayout(1);
   return consoleFrame('UC2-S5 · Orchestrate · Dispatch clicked · Approved · Nurul A. · 02:15:30', {
     sel: 'fence', center: F => patrolView(F, { at: [54, 2.4], eta: 'ETA 02:18:30' }),
     alarm: { cams: TILES.sop(), tab: 1, bodyH: 360, body: sopBody(1) },
     after: F => {
-      const cx = dx + dw / 2 + 6, cy = dy + dh / 2 + 2;
-      let s = cursor(F, cx, cy, { click: true });
+      // post-click state: the Dispatch button is gone, so no pointer / ripple here (S4 carries the hover + click);
+      // the "Click" callout points at the step-3 number, the "Shows" callout drops onto the top edge of the Approved chip
       const tagW = textWidth('Approved · Nurul A. · 02:15:30', 11, 500) + 12, tagX = 916 + 428 - 30 - 10 - tagW, tagY = pos1[2].y + 8;
       mark('approved', [tagX, tagY, tagW, 17]);
-      s += confirmToast(F, 480, 690, 'Patrol 2 dispatched', 'Approved · Nurul A. · 02:15:30 · ETA 02:18:30', { w: 380 });
+      let s = confirmToast(F, 480, 690, 'Patrol 2 dispatched', 'Approved · Nurul A. · 02:15:30 · ETA 02:18:30', { w: 380 });
       mark('confirm', [480, 690, 380, 70]);
       s += chip(F, 'orchestrate');
-      s += note(F, 700, 946, 'Click · Dispatch', { to: [cx, cy] }).svg;
-      s += note(F, 560, tagY - 40, 'Shows · Approved · Nurul A. · 02:15:30', { kind: 'shows', to: [tagX - 2, tagY + 8] }).svg;
+      s += note(F, 700, 946, 'Click · Dispatch', { to: [916 + 25 - 10, tagY + 8] }).svg;
+      s += note(F, 560, tagY - 40, 'Shows · Approved · Nurul A. · 02:15:30', { kind: 'shows', to: [tagX + tagW / 2, tagY - 1] }).svg;
       return s;
     },
   });
@@ -314,20 +327,29 @@ export function s7() {
 
 // ---------- UC2-S8 · Assist & govern · Incident created ----------
 export function s8() {
+  // 02:16:10: the police call is approved (Daniel L. · 02:16:00) and the SOP body is scrolled to the end so the logged row is readable (AC6)
+  const pos = sopLayout(3, { scroll: 'end' });
   return consoleFrame('UC2-S8 · Assist & govern · Incident PER-005 created · Incident Management', {
     sel: 'fence', center: F => patrolView(F, { at: [58, 2.4], eta: 'ETA 02:18:30', runway: 'Runway 02L · tower informed' }),
-    alarm: { cams: TILES.sop(), tab: 1, bodyH: 360, body: sopBody(2) },
+    alarm: { cams: TILES.sop(), tab: 1, bodyH: 360, body: sopBody(3, null, { scroll: 'end' }) },
     after: F => {
       mark('imButton', [1103.5, 40.5, 256, 45]);
       let s = btnState(F, 1103.5, 40.5, 256, 45, 'hover', { r: 7.5 });
       s += g(F, 'New incident badge NEW', pill(F, 1338, 30, '1 new', C.crit, { h: 20, size: 12, pad: 14 }).svg);
       const cx = 1250, cy = 66;
       s += cursor(F, cx, cy);
-      s += confirmToast(F, 500, 150, 'Incident PER-005 created · 02:16:10', 'Perimeter intrusion · Critical · now the top row of Incident Management', { w: 470 });
-      mark('confirm', [500, 150, 470, 70]);
+      // toast at x 420 (right edge 890) so it stays clear of the Active Alarms panel at x 900
+      s += confirmToast(F, 420, 150, 'Incident PER-005 created · 02:16:10', 'Perimeter intrusion · Critical · now the top row of Incident Management', { w: 470 });
+      mark('confirm', [420, 150, 470, 70]);
       s += chip(F, 'govern');
       s += note(F, 880, 100, 'Hover · Incident Management', { to: [cx, cy] }).svg;
-      s += note(F, 500, 250, 'Shows · Incident PER-005 created · 02:16:10', { kind: 'shows', to: [540, 220] }).svg;
+      s += note(F, 420, 250, 'Shows · Incident PER-005 created · 02:16:10', { kind: 'shows', to: [460, 220] }).svg;
+      // AC5 (PER-005 as the top row of Incident Management) is evidenced by UC5-S2; point at it from the "1 new" badge
+      s += note(F, 1170, 96, 'See UC5-S2 · PER-005 top row', { kind: 'shows', to: [1364, 50] }).svg;
+      // AC6: police step logged with its clock time
+      const tagW = textWidth('Approved · Daniel L. · 02:16:00', 11, 500) + 12, tagX = 916 + 428 - 30 - 10 - tagW, tagY = pos[4].y + 8 - pos.sc;
+      mark('police', [tagX, tagY, tagW, 17]);
+      s += note(F, 560, tagY - 40, 'Shows · Police call · Daniel L. · 02:16:00', { kind: 'shows', to: [tagX + tagW / 2, tagY - 1] }).svg;
       return s;
     },
   });

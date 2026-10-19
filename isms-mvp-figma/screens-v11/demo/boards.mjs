@@ -95,7 +95,7 @@ export const UCS = [
       { frame: 'UC2-S7-escalate-dialog', stage: 'govern', title: 'Escalate dialog pre-filled', user: 'Click · Create Incident', shows: 'Dialog pre-filled by Co-pilot: Category "Perimeter intrusion", Severity Critical, remarks (grey hint); the operator edits before creating', who: ['copilot', 'people'] },
       { frame: 'UC2-S8-incident-created', stage: 'govern', title: 'Incident PER-005 created', user: 'Hover · Incident Management (header)', shows: 'Toast "Incident PER-005 created · 02:16:10 · Perimeter intrusion · Critical · now the top row of Incident Management"', who: ['system', 'people'] },
     ],
-    decisions: [['Verify on video (Open live)', 'operator · 02:15:12'], ['Dispatch Patrol 2', 'Approved · Nurul A. · 02:15:30'], ['Create Incident PER-005', 'Nurul A. · 02:16:10'], ['Tower and police steps', 'logged with clock times']],
+    decisions: [['Verify on video (Open live)', 'Nurul A. · 02:15:24'], ['Dispatch Patrol 2', 'Approved · Nurul A. · 02:15:30'], ['Create Incident PER-005', 'Nurul A. · 02:16:10'], ['Tower and police steps', 'logged with clock times']],
   },
   {
     id: 'UC3', slug: 'spoofing', col: C.warn, sev: 'Warning', kicker: 'UC3 · IDENTITY SPOOFING (WARNING) · DETECT → CORRELATE → CONTEXTUALISE → ORCHESTRATE → ASSIST & GOVERN',
@@ -185,16 +185,19 @@ function chip(F, x, y, lab, col) {
 }
 const disc = (x, y, n, col = C.blue, r = 22, size = 22, ink = WHITE) => circle(x, y, r, { fill: col }) + text(x, y + size * 0.36, String(n), { size, weight: 700, fill: ink, anchor: 'middle' });
 const arrowH = (x1, x2, y) => pathEl(`M${f(x1 + 8)} ${f(y)} L${f(x2 - 10)} ${f(y)} M${f(x2 - 22)} ${f(y - 10)} L${f(x2 - 10)} ${f(y)} L${f(x2 - 22)} ${f(y + 10)}`, { stroke: '#8C96A6', sw: 3, cap: 'round', join: 'round' });
-// preview of a frame, sized by width at the thumb's own aspect, clipped, 1 px stroke
-function preview(F, name, x, y, w) {
+// preview of a frame, sized by width at the thumb's own aspect, clipped, 1 px stroke (unless the caller strokes a box)
+function preview(F, name, x, y, w, o = {}) {
   const [fw, fh] = frameSize(name), h = w * fh / fw;
   const clip = F.clip(`<rect x="${f(x)}" y="${f(y)}" width="${f(w)}" height="${f(h)}"/>`);
-  return `<g clip-path="${clip}">${image(F, 'Preview ' + name, thumb(name), x, y, w, h)}</g>` + rect(x, y, w, h, { stroke: STROKE });
+  return `<g clip-path="${clip}">${image(F, 'Preview ' + name, thumb(name), x, y, w, h)}</g>` + (o.noStroke ? '' : rect(x, y, w, h, { stroke: STROKE }));
 }
-// preview centred in a box with the 1400×1069 aspect (the 1600-wide Incident Management frames are shorter)
+// preview centred in a box with the 1400×1069 aspect (the 1600-wide Incident Management frames are shorter):
+// the letterbox band is painted in the frames' own near-black so it reads as frame chrome, and the stroke is on the box
+const FRAME_BG = '#020303';
 function previewBox(F, name, x, y, w) {
   const [fw, fh] = frameSize(name), boxH = w * 1069 / 1400, ph = w * fh / fw;
-  return { svg: preview(F, name, x, y + (boxH - ph) / 2, w), boxH };
+  const band = ph < boxH - 0.5 ? rect(x, y, w, boxH, { fill: FRAME_BG }) : '';
+  return { svg: band + preview(F, name, x, y + (boxH - ph) / 2, w, { noStroke: true }) + rect(x, y, w, boxH, { stroke: STROKE }), boxH };
 }
 function pillTag(F, x, y, label) {
   const w = textWidth(label, 18, 500) + 60;
@@ -285,8 +288,12 @@ function decisions(F, x, y, w, uc, h) {
 
 // ---------- step card ----------
 const CW = 572, LINE_W = CW - 48;
+// USER / SHOWS pills: one gutter from the wider pill (+16 padding, +10 clearance) so both description columns align
+const markW = lab => textWidth(lab, 14, 700) + 16;
+const markGutter = () => Math.max(markW('USER'), markW('SHOWS')) + 10;
 function cardLayout(st) {
-  const title = wrap(st.title, CW - 100, 23, 700), user = wrap(st.user, LINE_W - 60, 17), shows = wrap(st.shows, LINE_W - 60, 17);
+  const GUT = markGutter();
+  const title = wrap(st.title, CW - 100, 23, 700), user = wrap(st.user, LINE_W - GUT, 17), shows = wrap(st.shows, LINE_W - GUT, 17);
   if (user.length > 3) warn(`${st.frame}: user line ${user.length} lines`);
   if (shows.length > 4) warn(`${st.frame}: shows line ${shows.length} lines`);
   const headH = 92 + (title.length - 1) * 28, ph = CW * 1069 / 1400;
@@ -306,10 +313,11 @@ function card(F, x, y, h, st, n, col) {
   c += `<g clip-path="${clip}">${pv.svg}</g>`;
   let yy = py + L.ph + 18 + 17;
   // User does · (plum on pink marker) / System shows · (lavender marker)
+  const TX = x + 24 + markGutter();
   const mark = (yy0, lab, fill, stroke, ink, lines) => {
-    const w = textWidth(lab, 14, 700) + 16;
+    const w = markW(lab);
     let r = rect(x + 24, yy0 - 16, w, 23, { r: 11.5, fill, stroke, sw: 1 }) + text(x + 32, yy0, lab, { size: 14, weight: 700, fill: ink });
-    lines.forEach((l, i) => { r += text(x + 24 + 60, yy0 + i * 23, l, { size: 17, fill: C.t1 }); });
+    lines.forEach((l, i) => { r += text(TX, yy0 + i * 23, l, { size: 17, fill: C.t1 }); });
     return r;
   };
   c += mark(yy, 'USER', PINK, PLUM, PLUM, L.user); yy += L.user.length * 23 + 12;

@@ -1,6 +1,7 @@
 // UC4 · Search / Ask Co-pilot · end-to-end click flow in the current V11 UI, one state per frame.
-// Journey: Assist & govern (S1–S3: the question) → Correlate (S4: the answer links the events) →
-// Contextualise (S5: Locate flies the map) → Assist & govern (S6: follow-up, everything logged).
+// Journey: every step is Assist & govern (§1: "Co-pilot answers … logs everything · asks"): the question (S1–S3),
+// the answer with sources (S4), Locate from a result (S5) and the logged follow-up (S6). The answer draws on
+// correlation and context, but that is said in the "shows" text, not in the stage chip (improvement 2: one order).
 // Improvements applied: lavender appears only in the Co-pilot answer; alert cards carry no Co-pilot line
 // (plainCards); every answer names its sources and is logged with user and clock time. People act on it.
 // Names, IDs and times are illustrative (demo night; duty manager Daniel L. asks at 02:30).
@@ -198,7 +199,6 @@ function answerPanel(F, a, o = {}) {
   L.svg = g(F, 'Co-pilot answer dropdown NEW', rect(x, y, w, L.h, { r: 16, fill: C.panel, fo: 0.97, stroke: C.copilot, so: 0.6, sw: 1.2, filter: F.shadow(8, 12, 0.5) }) + d);
   return L;
 }
-const layout = a => answerPanel(new Frame('m'), a);   // dry run: positions of the links and chips
 // the answer collapsed to one line after Locate: count, the selected result, Expand
 function summaryBar(F) {
   const x = TX, y = DY, w = TW, h = 34, head = '2 results · T5 · ' + T0, lab = 'T5 Pier B Service Door';
@@ -252,7 +252,7 @@ export function s2() {
       const [bx, by, bw, bh] = BAR, px = 760, py = 72;
       let s = focusRing(F, bx, by, bw, bh, 8);
       const d = typeahead(F, { name: 'Recent questions NEW', title: 'RECENT QUESTIONS', rows: RECENT,
-        footer: (x, fy, w) => icon(F, 'sparkle', x + 16, fy + 10, 16, C.copilot, 2) + text(x + 40, fy + 23, 'Ask anything about tonight', { size: 14, weight: 500, fill: C.copilot }) + text(x + w - 16, fy + 23, 'Enter to ask', { size: 12, fill: C.t3, anchor: 'end' }) });
+        footer: (x, fy, w) => icon(F, 'sparkle', x + 16, fy + 10, 16, C.copilot, 2) + text(x + 40, fy + 23, 'Ask anything about tonight', { size: 14, weight: 500, fill: C.t2 }) + text(x + w - 16, fy + 23, 'Enter to ask', { size: 12, fill: C.t3, anchor: 'end' }) });
       s += d.svg; mark('dropdown', [TX, DY, TW, d.h]); mark('recent1', d.rows[0]); mark('askHint', [TX + 6, DY + d.h - 38, TW - 12, 32]);
       s += point(F, px, py, { click: true });
       s += chip(F, 'govern');
@@ -287,7 +287,7 @@ export function s3() {
 
 // ---------- UC4-S4 · the answer: headline, result cards, sources, follow-ups · hover on result 1 ----------
 export function s4() {
-  return consoleFrame('UC4-S4 · Correlate · Answer · results, sources, follow-ups · hover on a result card', {
+  return consoleFrame('UC4-S4 · Assist & govern · Answer · results, sources, follow-ups · hover on a result card', {
     center: F => homeView(F, { results: true }), search: { mode: 'query', text: Q1 },
     after: F => {
       const p = answerPanel(F, ANS1);
@@ -300,7 +300,7 @@ export function s4() {
       const px = cx0 + 520, py = cy0 + 82;
       s += tip(F, px, py - 6, 'CAM 5-210');
       s += point(F, px, py);
-      s += chip(F, 'correlate', 1110, 100);   // the answer panel occupies the x 400 column; the chip sits in the open centre view
+      s += chip(F, 'govern', 1110, 100);   // the answer panel occupies the x 400 column; the chip sits in the open centre view
       s += noteR(F, 1388, cy0 + 70, 'Hover · T5 Pier B result card', { to: [px + 2, py + 2] });
       s += noteR(F, 1388, 146, 'Shows · Answer with sources', { kind: 'shows', to: [DX + DW + 2, 128] });
       return s;
@@ -310,16 +310,17 @@ export function s4() {
 
 // ---------- UC4-S5 · Locate clicked: map flies to T5 Pier B door, answer collapsed to one line ----------
 export function s5() {
-  const [lx, ly] = layout(ANS1).locate[0];
-  return consoleFrame('UC4-S5 · Contextualise · Locate clicked · map flies to T5 Pier B door · results collapsed', {
+  return consoleFrame('UC4-S5 · Assist & govern · Locate clicked · map flies to T5 Pier B door · results collapsed', {
     loc: ['Main Airport', 'T5'], center: t5View, search: { mode: 'query', text: Q1 },
     after: F => {
       const b = summaryBar(F);
       let s = b.svg; mark('summaryBar', [TX, DY, TW, b.h]); mark('selectedResult', b.selected); mark('expand', b.expand);
-      const px = lx + 22, py = ly - 4;   // where the Locate link was (the panel has collapsed)
-      s += point(F, px, py, { click: true });
-      s += chip(F, 'context');
-      s += placeNote(F, px + 30, py + 30, 'Click · Locate', { to: [px + 2, py + 2] });
+      // the Locate link went with the collapsed panel, so the pointer rests on the visible consequence of the click:
+      // the selected-result chip in the summary bar (no ripple — the click already happened)
+      const [sx, sy, sw] = b.selected, px = sx + sw - 7, py = sy + 15;   // on the chip's right padding, not on its text (as S6)
+      s += point(F, px, py);
+      s += chip(F, 'govern');
+      s += placeNote(F, 1000, 150, 'Clicked · Locate · result selected', { to: [px + 2, py + 2] });
       s += placeNote(F, 740, 400, 'Shows · Map flies to T5 Pier B door · results collapsed', { kind: 'shows', to: [760, 480] });
       return s;
     },

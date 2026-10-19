@@ -40,9 +40,9 @@ const TILE_A17 = [1134, 296, 210, 120];
 const FACTS = [
   { who: 'System', time: '02:13:22', text: '5 alarms linked into this event', size: 14, italic: true, rows: [
     ['02:09:12', 'Granted · T3 A17 (new SSID)', 'ACS', C.green],
+    ['02:12:05', 'Denied ×3 · T1 C3', 'ACS', C.warn],
     ['02:13:20', 'Granted · T1 C2 (legacy SSID)', 'ACS', C.crit],
     ['02:13:21', 'Appearance differs from holder', 'CAM 1-204', C.crit],
-    ['02:12:05', 'Denied ×3 · T1 C3', 'ACS', C.warn],
     ['02:13:22', 'Off-roster access · M. Rahman', 'Roster', C.warn],
   ] },
   { who: 'System', time: '02:13:24', text: 'Context checked', size: 14, italic: true, rows: [
@@ -52,7 +52,7 @@ const FACTS = [
   ] },
 ];
 const BRIEF = { text: 'One card at two doors: A17 02:09:12, C2 02:13:20; fastest route 19 min. Person at C2 is not the holder M. Rahman. C2 used legacy SSID S-20931-L, due for revocation.', sources: 'ACS grants · CAM 1-204 · CAM 3-052 · roster', time: '02:13:26' };
-const REMARKS = 'Card S-20931 (holder M. Rahman) opened T3 A17 at 02:09:12 and T1 C2 at 02:13:20; fastest route 19 min. Person at C2 does not match the holder (CAM 1-204 vs CAM 3-052). C2 used legacy SSID S-20931-L. Both SSIDs suspended 02:16:05, approved by Nurul A.';
+const REMARKS = 'Card S-20931 (holder M. Rahman) opened T3 A17 at 02:09:12 and T1 C2 at 02:13:20; fastest route 19 min. Person at C2 does not match the holder (CAM 1-204 vs CAM 3-052). C2 used legacy SSID S-20931-L. Both SSIDs suspended 02:16:05, approved by Siti K.';
 
 // ---------- shared pieces (copied from frames.mjs / v11.mjs so this module controls scroll, badges, list offset) ----------
 const markersFor = (labels = {}) => ALERTS.map(a => ({ id: a.key, X: a.X, Y: a.Y, sev: a.sev, icon: a.icon, h: a.key === 'fence' ? 3.5 : 4.5, label: labels[a.key], left: a.key === 'watch' || a.key === 'spoof' }));
@@ -145,6 +145,7 @@ function alarmsPanel(F, o) {
   const content = o.body(F, 916, 600, 428, bodyH);
   const sc = o.scroll === 'end' ? Math.max(0, content.h - bodyH) : (o.scroll || 0);
   SCROLLED = sc;
+  if (sc && CUR && ANCHORS[CUR]) for (const k of ['briefing', 'step2', 'suspend', 'keepActive']) if (ANCHORS[CUR][k]) ANCHORS[CUR][k][1] = Math.round((ANCHORS[CUR][k][1] - sc) * 10) / 10;
   s += g(F, ti === 0 ? 'Investigation tab' : 'SOP Flow tab', `<g clip-path="${bclip}"><g transform="translate(0 ${f(-sc)})">${content.svg}</g></g>`);
   if (content.h > bodyH) {
     const th = Math.max(24, bodyH * bodyH / content.h - 8), ty = 604 + (bodyH - 8 - th) * Math.min(1, sc / (content.h - bodyH));
@@ -170,8 +171,8 @@ const investigation = (F, x, y, w) => {
 const SOP = (stage = 0) => [
   { title: 'Compare doors', state: 'done', tag: 'Auto · 02:13:24' },
   stage === 0 ? { title: 'Suspend card S-20931', state: 'critical', tag: 'Your approval', text: 'Both SSIDs (new + legacy S-20931-L) at all readers.', actions: [['Suspend', 'blue'], ['Keep active', 'grey']] }
-    : { title: 'Suspend card S-20931', state: 'done', tag: 'Approved · Nurul A. · 02:16:05', text: 'Both SSIDs suspended at all readers.', items: [['New SSID S-20931-N suspended · 02:16:06', true], ['Legacy SSID S-20931-L suspended · 02:16:06', true]] },
-  { title: 'Notify duty manager', state: stage >= 2 ? 'done' : 'todo', tag: stage >= 2 ? 'Sent · Nurul A. · 02:16:40' : 'Next', text: 'Call Daniel (duty manager), send the door comparison.' },
+    : { title: 'Suspend card S-20931', state: 'done', tag: 'Approved · Siti K. · 02:16:05', text: 'Both SSIDs suspended at all readers.', items: [['New SSID S-20931-N suspended · 02:16:06', true], ['Legacy SSID S-20931-L suspended · 02:16:06', true]] },
+  { title: 'Notify duty manager', state: stage >= 2 ? 'done' : 'todo', tag: stage >= 2 ? 'Sent · Siti K. · 02:16:40' : 'Next', text: 'Call Daniel (duty manager), send the door comparison.' },
   { title: 'Log and escalate', state: 'todo', tag: stage >= 2 ? 'In progress' : null, text: 'Audit: grants, route check, suspension, operator, time.' },
 ];
 let POS = [];
@@ -304,11 +305,13 @@ export function s3() {
     stage: 'context', sel: KEY, center: F => c2View(F) + compareOverlay(F, 400, 150, 480).svg,
     alarm: { tab: 0, body: investigation },
     after: F => {
-      const [tx, ty, tw, th] = TILE_A17, px = tx + tw / 2, py = ty + 76;
+      // tooltip above the tile, right-aligned to its edge (clear of the event head text and of the holder); pointer on the tile label row
+      const [tx, ty, tw, th] = TILE_A17, px = tx + tw - 4, py = ty + 22, tip = 'Compare with C2', tipW = textWidth(tip, 13, 500) + 20;
       let s = hover(F, tx, ty, tw, th, { name: 'A17 tile', fo: 0.1 });
-      s += tooltip(F, px, py - 16, 'Compare with C2 (now)'); mark('tooltip', [px - (textWidth('Compare with C2 (now)', 13, 500) + 20) / 2, py - 50, textWidth('Compare with C2 (now)', 13, 500) + 20, 26]);
+      s += tooltip(F, px, ty - 2, tip, { left: true }); mark('tooltip', [px - tipW, ty - 36, tipW, 26]);
       s += cursor(F, px, py);
-      s += placeNote(F, 660, 566, 'Hover · A17 tile', { to: [px + 2, py + 2] });
+      // note at the right end of the tab bar; its leader runs up the tiles' right edge instead of across the C2 tile
+      s += placeNote(F, tx + tw - (textWidth('Hover · A17 tile', 13, 700) + 24), 544, 'Hover · A17 tile', { to: [px + 2, py + 2] });
       s += placeNote(F, 400, 516, 'Shows · Compare · C2 now vs A17 02:09 · 19 min route, 4 min elapsed', { kind: 'shows', to: [430, 504] });
       return s;
     },
@@ -345,22 +348,22 @@ export function s5() {
     },
   });
 }
-// ---------- UC3-S6 · Orchestrate: Suspend clicked → Approved · Nurul A. · 02:16:05 ----------
+// ---------- UC3-S6 · Orchestrate: Suspend clicked → Approved · Siti K. · 02:16:05 ----------
 export function s6() {
   const pos0 = sopLayout(0), [bx, by, bw, bh] = pos0[1].actions[0];
   const pos1 = sopLayout(1);
-  return consoleFrame('UC3-S6 · Orchestrate · Suspend clicked · Approved · Nurul A. · 02:16:05', {
+  return consoleFrame('UC3-S6 · Orchestrate · Suspend clicked · Approved · Siti K. · 02:16:05', {
     stage: 'orchestrate', sel: KEY, center: locateView,
     alarm: { tab: 1, body: sopBody(1) },
     after: F => {
       const px = bx + bw - 14, py = by + bh - 8;
       let s = cursor(F, px, py, { click: true });
-      const tag = 'Approved · Nurul A. · 02:16:05', tagW = textWidth(tag, 11, 500) + 12, tagX = 916 + 428 - 30 - 10 - tagW, tagY = pos1[1].y + 8;
+      const tag = 'Approved · Siti K. · 02:16:05', tagW = textWidth(tag, 11, 500) + 12, tagX = 916 + 428 - 30 - 10 - tagW, tagY = pos1[1].y + 8;
       mark('approved', [tagX, tagY, tagW, 17]);
-      s += confirmToast(F, 480, 700, 'Card S-20931 suspended · both SSIDs', 'Approved · Nurul A. · 02:16:05 · ACS confirmed 02:16:06', { w: 420 });
+      s += confirmToast(F, 480, 700, 'Card S-20931 suspended · both SSIDs', 'Approved · Siti K. · 02:16:05 · ACS confirmed 02:16:06', { w: 420 });
       mark('toast', [480, 700, 420, 70]);
       s += placeNote(F, 700, by + 36, 'Click · Suspend', { to: [px + 2, py + 2] });
-      s += placeNote(F, 560, tagY - 44, 'Shows · Approved · Nurul A. · 02:16:05', { kind: 'shows', to: [tagX - 2, tagY + 8] });
+      s += placeNote(F, 560, tagY - 44, 'Shows · Approved · Siti K. · 02:16:05', { kind: 'shows', to: [tagX - 2, tagY + 8] });
       return s;
     },
   });
@@ -385,15 +388,15 @@ export function s7() {
 export function s8() {
   return consoleFrame('UC3-S8 · Assist & govern · Incident IDS-207 created · Incident Management', {
     stage: 'govern', sel: KEY, center: locateView,
-    alarm: { tab: 1, body: sopBody(2) },
+    alarm: { tab: 1, body: sopBody(2), scroll: 'end' },   // steps 3-4 ('Notify duty manager' · Sent, 'Log and escalate') in view
     after: F => {
       mark('imButton', [1103.5, 40.5, 256, 45]);
       let s = btnState(F, 1103.5, 40.5, 256, 45, 'hover', { r: 7.5 });
       s += g(F, 'New incident badge NEW', pill(F, 1338, 30, '1 new', C.crit, { h: 20, size: 12, pad: 14 }).svg);
       const px = 1250, py = 66;
       s += cursor(F, px, py);
-      s += confirmToast(F, 480, 720, 'Incident IDS-207 created · 02:17:10', 'Credential misuse · Warning · listed in Incident Management', { w: 470 });
-      mark('confirm', [480, 720, 470, 70]);
+      s += confirmToast(F, 420, 720, 'Incident IDS-207 created · 02:17:10', 'Credential misuse · Warning · listed in Incident Management', { w: 470 });
+      mark('confirm', [420, 720, 470, 70]);
       s += placeNote(F, 880, 100, 'Hover · Incident Management', { to: [px, py] });
       s += placeNote(F, 480, 812, 'Shows · Incident IDS-207 created · 02:17:10', { kind: 'shows', to: [520, 790] });
       return s;

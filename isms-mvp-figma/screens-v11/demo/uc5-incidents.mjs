@@ -6,6 +6,7 @@
 // SOP Flow tab; alert cards on the console carry no Co-pilot line (plainCards). People keep the decisions: the
 // close needs a reason, a sign-off and a click, and the row then shows who closed it and when.
 // All names, IDs and times are illustrative (demo night, 02:14 scenario; 07:00 handover review by Grace T.).
+// The SOP record (STEPS) mirrors UC2's live SOP-PER-02 list one-for-one: six steps, same titles and times.
 import fs from 'fs';
 import path from 'path';
 import { Frame, f, rect, circle, line, pathEl, poly, text, rich, icon, image, g, textWidth, wrap } from '../../lib/svg.mjs';
@@ -41,6 +42,8 @@ const OTHERS = [
 ];
 const ROWS = closed => [PER005(closed), ...OTHERS];
 const TOTAL = 24;
+// detail pane vertical layout: camera tiles 160 tall so the SOP Flow tab body (400) holds briefing + six steps
+const TILE_H = 160, TAB_Y = 333 + TILE_H + 16, BODY_Y = TAB_Y + 40, BODY_H = 949 - BODY_Y;
 // detail pane content for PER-005 (the 07:00 review: both tiles are recordings)
 const DESC = [['Climb on segment 5-14 · LiDAR object 1.7 m · thermal: 1 person'], ['Patrol 2 on scene ', { b: '02:18:08' }, ' · handed to Airport Police ', { b: '02:26:30' }]];
 const TILES = () => [
@@ -50,9 +53,11 @@ const TILES = () => [
 const REPORT = 'Climb on segment 5-14 at 02:14:58 (AgilFence), confirmed by LiDAR L-5B (1.7 m) and PTZ 7-02 thermal; verified on video by Nurul A. 02:15:24. Patrol 2 dispatched 02:15:30 (approved by Nurul A.); Airside Ops and tower informed 02:15:40; police call approved by Daniel L. 02:16:00. On scene 02:18:08; intruder held 130 m short of runway 02L, handed to Airport Police 02:26:30. Mesh bent, no cut.';
 const SOURCES = 'AgilFence 5-14 · LiDAR L-5B · PTZ 7-02 · SOP-PER-02 log · patrol app';
 const BRIEF = { text: 'Climb on 5-14 at 02:14:58, confirmed by LiDAR and PTZ 7-02 thermal. Patrol 2 on scene 02:18:08; intruder held 130 m short of runway 02L, handed to Airport Police 02:26:30.', sources: 'AgilFence 5-14 · LiDAR L-5B · PTZ 7-02 · patrol app', time: '02:40' };
-// SOP-PER-02 record: completed steps carry who approved and when; the last step waits for the head of security
+// SOP-PER-02 record: the same six steps, titles and times as the live SOP in UC2 (uc2-agilfence.mjs SOP), one-for-one;
+// completed steps carry who approved and when; the last step waits for the head of security
 const STEPS = closed => [
-  { title: 'Alarm located, cameras on target · no works or patrols', state: 'done', tag: 'Auto · 02:15:05' },
+  { title: 'Alarm located, cameras on target', state: 'done', tag: 'Auto · 02:15:03' },
+  { title: 'No works or patrols at Sector 5', state: 'done', tag: 'Auto · 02:15:05' },
   { title: 'Dispatch Patrol 2', state: 'done', tag: 'Approved · Nurul A. · 02:15:30' },
   { title: 'Inform Airside Ops and tower', state: 'done', tag: 'Logged · 02:15:40' },
   { title: 'Police call', state: 'done', tag: 'Approved · Daniel L. · 02:16:00' },
@@ -67,7 +72,8 @@ function consoleFrame(name, after) {
   const P = camera(870, 520, 8.4, 50, 29);
   let s = scene(F, clayAirport(F, P, { markers: markersFor({ tailgate: 'D-214 · Tailgating', fence: 'Sector 5 · PER-005' }) }));
   s += header(F) + modelToggle(F);
-  s += alertsPanel(F, { cluster: 'All terminals', counts: COUNTS, cards: plainCards(ALERTS, null) });
+  // 07:00 review: the two Critical cards carry the clock time of the 02:14 events instead of the live 'Now' badge (data.mjs stays as UC1–UC4 need it)
+  s += alertsPanel(F, { cluster: 'All terminals', counts: COUNTS, cards: plainCards(ALERTS.map(a => a.time === 'Now' ? { ...a, time: '02:14 am' } : a), null) });
   s += deviceStatus(F, { online: 4812, offline: 6 });
   s += after(F);
   return F.render(s);
@@ -123,11 +129,11 @@ function imPage(name, o) {
     s += g(F, 'Result count NEW', text(52, ry, lab, { size: 14, fill: C.t2 }) + text(52 + textWidth(lab, 14) + 6, ry, '·', { size: 14, fill: C.t2 }) + text(52 + textWidth(lab, 14) + 18, ry, 'Clear search', { size: 14, weight: 500, fill: C.link }));
     mark('showing', [52, ry - 14, textWidth(lab, 14) + 18 + textWidth('Clear search', 14, 500), 20]);
   } else {
-    const py = 828;
-    s += rect(393, py - 15, 105, 30, { r: 15, fill: '#FFFFFF' }) + text(403, py + 5, '10 / page', { size: 13, weight: 500, fill: '#111111' }) + poly([[478, py - 3], [488, py - 3], [483, py + 3]], { fill: '#111111' });
-    s += text(526, py + 5, '←', { size: 16, fill: '#FFFFFF' });
-    [1, 2, 3].forEach((n, i) => { s += circle(567 + i * 35, py, 10, { fill: i ? '#FFFFFF' : '#1D232C', stroke: '#FFFFFF' }) + text(567 + i * 35, py + 4.5, String(n), { size: 12, weight: 700, fill: i ? '#111111' : '#FFFFFF', anchor: 'middle' }); });
-    s += text(670, py + 5, '→', { size: 16, fill: '#FFFFFF' }) + text(703, py + 5, 'Go to page', { size: 13, weight: 700, fill: '#FFFFFF' }) + rect(790, py - 14, 28, 28, { r: 6, fill: '#FFFFFF' }) + text(804, py + 5, '1', { size: 13, weight: 700, fill: '#111111', anchor: 'middle' }) + text(828, py + 5, 'Go ›', { size: 13, weight: 700, fill: C.link });
+    const py = 828;   // pager group inset 16 px so 'Go ›' ends inside the table's right edge (844)
+    s += rect(377, py - 15, 105, 30, { r: 15, fill: '#FFFFFF' }) + text(387, py + 5, '10 / page', { size: 13, weight: 500, fill: '#111111' }) + poly([[462, py - 3], [472, py - 3], [467, py + 3]], { fill: '#111111' });
+    s += text(510, py + 5, '←', { size: 16, fill: '#FFFFFF' });
+    [1, 2, 3].forEach((n, i) => { s += circle(551 + i * 35, py, 10, { fill: i ? '#FFFFFF' : '#1D232C', stroke: '#FFFFFF' }) + text(551 + i * 35, py + 4.5, String(n), { size: 12, weight: 700, fill: i ? '#111111' : '#FFFFFF', anchor: 'middle' }); });
+    s += text(654, py + 5, '→', { size: 16, fill: '#FFFFFF' }) + text(687, py + 5, 'Go to page', { size: 13, weight: 700, fill: '#FFFFFF' }) + rect(774, py - 14, 28, 28, { r: 6, fill: '#FFFFFF' }) + text(788, py + 5, '1', { size: 13, weight: 700, fill: '#111111', anchor: 'middle' }) + text(812, py + 5, 'Go ›', { size: 13, weight: 700, fill: C.link });
   }
   // detail pane
   const dx = 860, dy = 198, dw = 700, dh = 831;
@@ -149,15 +155,15 @@ function imPage(name, o) {
     d += pill(F, 1440, 242, 'Today, 02:14:58', '#4F545E', { h: 20, size: 13 }).svg;
     DESC.forEach((runs, i) => { d += rich(876, 286 + i * 22, runs.map(r => typeof r === 'string' ? { t: r, fill: C.t2 } : { t: r.b, fill: '#FFFFFF', weight: 500 }), { size: 16 }); });
     const tiles = TILES();
-    d += camTile(F, 876, 333, 330, 200, tiles[0]) + camTile(F, 1214, 333, 330, 200, tiles[1]);
-    mark('cams', [876, 333, 668, 200]);
+    d += camTile(F, 876, 333, 330, TILE_H, tiles[0]) + camTile(F, 1214, 333, 330, TILE_H, tiles[1]);
+    mark('cams', [876, 333, 668, TILE_H]);
     // tabs Remarks / SOP Flow
     const on = dt.tab || 0;
-    d += g(F, 'Detail tabs', rect(876, 549, 334, 40, { fill: on === 0 ? C.tabBody : '#2E333B' }) + rect(1210, 549, 334, 40, { fill: on === 1 ? C.tabBody : '#2E333B' }) +
-      text(1043, 576, 'Remarks', { size: 18, weight: 700, fill: on === 0 ? '#FFFFFF' : '#8E95A1', anchor: 'middle' }) + text(1377, 576, 'SOP Flow · ' + (dt.status === 'Closed' ? '5/5' : '4/5'), { size: 18, weight: 700, fill: on === 1 ? '#FFFFFF' : '#8E95A1', anchor: 'middle' }));
-    mark('remarksTab', [876, 549, 334, 40]); mark('sopTab', [1210, 549, 334, 40]);
-    d += rect(876, 589, 668, 360, { fill: C.tabBody });
-    const bclip = F.clip('<rect x="876" y="589" width="668" height="360"/>');
+    d += g(F, 'Detail tabs', rect(876, TAB_Y, 334, 40, { fill: on === 0 ? C.tabBody : '#2E333B' }) + rect(1210, TAB_Y, 334, 40, { fill: on === 1 ? C.tabBody : '#2E333B' }) +
+      text(1043, TAB_Y + 27, 'Remarks', { size: 18, weight: 700, fill: on === 0 ? '#FFFFFF' : '#8E95A1', anchor: 'middle' }) + text(1377, TAB_Y + 27, 'SOP Flow · ' + (dt.status === 'Closed' ? '6/6' : '5/6'), { size: 18, weight: 700, fill: on === 1 ? '#FFFFFF' : '#8E95A1', anchor: 'middle' }));
+    mark('remarksTab', [876, TAB_Y, 334, 40]); mark('sopTab', [1210, TAB_Y, 334, 40]);
+    d += rect(876, BODY_Y, 668, BODY_H, { fill: C.tabBody });
+    const bclip = F.clip(`<rect x="876" y="${BODY_Y}" width="668" height="${BODY_H}"/>`);
     d += g(F, on === 0 ? 'Remarks tab' : 'SOP Flow tab', `<g clip-path="${bclip}">${dt.body(F)}</g>`);
     // footer: Close Incident (open) or the closed bar
     if (dt.status === 'Closed') {
@@ -192,9 +198,9 @@ function entry(F, x, y, w, e) {
 }
 function remarksBody(F) {
   const x = 892, w = 636;
-  let y = 602;
+  let y = BODY_Y + 13;
   const e1 = entry(F, x, y, w, { who: 'Co-pilot', tag: 'Report draft', time: '02:40:05', col: C.copilot, text: REPORT, sources: SOURCES });
-  mark('report', [876, 596, 668, e1.h + 12]);
+  mark('report', [876, BODY_Y + 7, 668, e1.h + 12]);
   y += e1.h + 10;
   const e2 = entry(F, x, y, w, { who: 'Nurul A.', time: '02:45:10', col: '#2E8BFF', text: 'Reviewed the draft, agree. Segment 5-14 guarded until repair; FM ticket raised.' });
   mark('remark', [876, y - 6, 668, e2.h + 12]);
@@ -204,12 +210,12 @@ function remarksBody(F) {
 }
 // ---------- SOP Flow tab: Co-pilot briefing on top (improvement 1), then the SOP-PER-02 record ----------
 function sopBody(F, closed, pos) {
-  const b = copilotBriefing(F, 884, 597, 652, BRIEF);
-  mark('briefing', [884, 597, 652, b.h]);
+  const b = copilotBriefing(F, 884, BODY_Y + 4, 652, BRIEF);
+  mark('briefing', [884, BODY_Y + 4, 652, b.h]);
   const p = pos || [];
-  const r = sopFlow(F, 876, 597 + b.h + 6, 668, STEPS(closed), { pos: p });
-  if (p[1]) { const tw = textWidth(STEPS(closed)[1].tag, 11, 500) + 12; mark('approved', [876 + 668 - 30 - 10 - tw, p[1].y + 8, tw, 17]); }
-  if (p[4]) { const tw = textWidth(STEPS(closed)[4].tag, 11, 500) + 12; mark('step5', [876, p[4].y, 668, p[4].h]); mark('signoff', [876 + 668 - 30 - 10 - tw, p[4].y + 8, tw, 17]); }
+  const r = sopFlow(F, 876, BODY_Y + 4 + b.h + 4, 668, STEPS(closed), { pos: p });
+  if (p[2]) { const tw = textWidth(STEPS(closed)[2].tag, 11, 500) + 12; mark('approved', [876 + 668 - 30 - 10 - tw, p[2].y + 8, tw, 17]); }   // step 3 · Dispatch Patrol 2
+  if (p[5]) { const tw = textWidth(STEPS(closed)[5].tag, 11, 500) + 12; mark('lastStep', [876, p[5].y, 668, p[5].h]); mark('signoff', [876 + 668 - 30 - 10 - tw, p[5].y + 8, tw, 17]); }   // step 6 · Secure, close and report
   return b.svg + r.svg;
 }
 function sopLayout(closed) { const pos = []; sopBody(new Frame('m'), closed, pos); return pos; }
@@ -226,14 +232,14 @@ function closeDialog(F) {
   let m = `<g clip-path="${clip}">${rect(x, y, w, h, { fill: '#333A47' }) + rect(x, y, w, 36, { fill: '#191E25' })}</g>`;
   m += text(x + 16, y + 23, 'Close Incident', { size: 16, weight: 700, fill: '#FFFFFF' }) + icon(F, 'x', x + w - 37, y + 8, 20, '#FFFFFF', 2.2);
   m += text(x + 24, y + 68, 'Fence Sector 5', { size: 20, weight: 500, fill: C.t1 }) + pill(F, x + 24 + textWidth('Fence Sector 5', 20, 500) + 14, y + 53, 'Critical', C.crit, { h: 20, size: 13 }).svg;
-  m += rich(x + 24, y + 92, [{ t: 'PER-005 · AGF-5-14 · Today, 02:14:58 · ', fill: C.t2 }, { t: 'SOP-PER-02 · 4 of 5 steps done', fill: C.t1 }], { size: 14 });
+  m += rich(x + 24, y + 92, [{ t: 'PER-005 · AGF-5-14 · Today, 02:14:58 · ', fill: C.t2 }, { t: 'SOP-PER-02 · 5 of 6 steps done', fill: C.t1 }], { size: 14 });
   m += line(x + 16, y + 110, x + w - 16, y + 110, { stroke: '#6B7280' });
   m += text(x + 24, y + 146, 'Closing reason', { size: 18, fill: '#FFFFFF' }) + text(x + 24 + textWidth('Closing reason', 18), y + 146, '*', { size: 18, fill: C.crit });
   m += select(F, x + 24, y + 157, w - 48, 'Intruder detained · handed to Airport Police');
   m += text(x + 24, y + 233, 'Sign-off', { size: 18, fill: '#FFFFFF' }) + text(x + 24 + textWidth('Sign-off', 18), y + 233, '*', { size: 18, fill: C.crit });
   m += select(F, x + 24, y + 244, w - 48, 'Grace T. · Head of Security');
   m += rect(x + 24, y + 306, 18, 18, { r: 3, fill: '#2E8BFF' }) + icon(F, 'check', x + 26, y + 308, 14, '#FFFFFF', 3) + text(x + 52, y + 320, 'Report reviewed', { size: 16, fill: '#FFFFFF' }) + text(x + 52 + textWidth('Report reviewed', 16) + 10, y + 320, 'Co-pilot draft 02:40:05 · remark by Nurul A. 02:45:10', { size: 13.5, fill: C.t2 });
-  m += icon(F, 'doc', x + 24, y + 341, 15, C.t2, 2) + text(x + 46, y + 354, 'On confirm an audit line is written: reason, sign-off, time and the SOP record (5/5).', { size: 13.5, fill: C.t2 });
+  m += icon(F, 'doc', x + 24, y + 341, 15, C.t2, 2) + text(x + 46, y + 354, 'On confirm an audit line is written: reason, sign-off, time and the SOP record (6/6).', { size: 13.5, fill: C.t2 });
   m += rect(x + 16.5, y + 386.5, 139, 43, { r: 7.5, stroke: '#8B8B8B' }) + text(x + 86, y + 415, 'Cancel', { size: 20, weight: 700, fill: C.t3, anchor: 'middle' });
   const bx = x + 165, by = y + 386, bw = w - 181, bh = 44;
   m += g(F, 'Button Confirm close', rect(bx, by, bw, bh, { r: 8, fill: C.blue }) + text(bx + bw / 2, by + 29, 'Confirm close', { size: 20, weight: 700, fill: '#FFFFFF', anchor: 'middle' }));
@@ -246,7 +252,8 @@ function exportMenu(F, x, y) {
   const w = 164, m = menu(F, x, y, w, ['PDF report', 'CSV list', ''], {});
   const fy = y + 6 + 2 * 36;
   let s = m.svg + g(F, 'Export footnote NEW', line(x + 8, fy + 2, x + w - 8, fy + 2, { stroke: '#4A505B' }) + icon(F, 'filter', x + 14, fy + 11, 13, C.t2, 2) + text(x + 32, fy + 22, 'Carries current filters', { size: 11.5, fill: C.t2 }));
-  s += g(F, 'Menu caret NEW', pathEl(`M${f(x + 8)} ${f(y + 0.5)} L${f(x + 15)} ${f(y - 7)} L${f(x + 22)} ${f(y + 0.5)} Z`, { fill: '#262A31', stroke: '#4A505B', sw: 1 }) + rect(x + 8.5, y - 0.5, 13, 2, { fill: '#262A31' }));
+  const kx = x + 53;   // caret under the midpoint of the 106-wide Export button (menu flush-left with the button)
+  s += g(F, 'Menu caret NEW', pathEl(`M${f(kx - 7)} ${f(y + 0.5)} L${f(kx)} ${f(y - 7)} L${f(kx + 7)} ${f(y + 0.5)} Z`, { fill: '#262A31', stroke: '#4A505B', sw: 1 }) + rect(kx - 6.5, y - 0.5, 13, 2, { fill: '#262A31' }));
   mark('exportMenu', [x, y, w, m.h]);
   return { svg: s, h: m.h };
 }
@@ -261,15 +268,15 @@ export function s1() {
     s += cursor(F, cx, cy, { click: true });
     s += stageChip(F, 400, 100, 'detect').svg;
     s += note(F, 880, 100, 'Hover + click · Incident Management', { to: [cx, cy] }).svg;
-    s += note(F, 400, 136, 'Shows · the overall incident list · (24) · 5 Open', { kind: 'shows' }).svg;
+    s += note(F, 400, 136, 'Shows · the overall incident list · (24) · 5 Open · 07:00 handover', { kind: 'shows' }).svg;
     return s;
   });
 }
 
-// ---------- UC5-S2 · Correlate · list, Status dropdown open, hover on a row ----------
+// ---------- UC5-S2 · Correlate · list, Status dropdown open, hover on Open (one hover per frame; the row hover is S3) ----------
 export function s2() {
   return imPage('UC5-S2 · Correlate · overall list (24) · Status filter open · All / Open / Closed', {
-    open: 5, rows: ROWS(false), status: 'All', selected: -1, hoverRow: 0, detail: null,
+    open: 5, rows: ROWS(false), status: 'All', selected: -1, hoverRow: -1, detail: null,
     after: F => {
       let s = btnState(F, 900, 135, 155, 38, 'hover', { r: 6 });
       const m = menu(F, 900, 177, 155, ['All', 'Open', 'Closed'], { selected: 0, hover: 1 });
@@ -313,7 +320,7 @@ export function s4() {
       const u = note(F, 0, 0, 'Click · PER-005 row');
       s += note(F, cx + 12 - u.w, 212, 'Click · PER-005 row', { to: [cx, cy] }).svg;   // right edge short of the Export button
       const n = note(F, 0, 0, 'Shows · event, cameras, report draft (Co-pilot) + remark', { kind: 'shows' });
-      s += note(F, 866 - n.w, 560, 'Shows · event, cameras, report draft (Co-pilot) + remark', { kind: 'shows', to: [868, 612] }).svg;
+      s += note(F, 866 - n.w, 560, 'Shows · event, cameras, report draft (Co-pilot) + remark', { kind: 'shows', to: [868, BODY_Y + 23] }).svg;
       return s;
     },
   });
@@ -325,11 +332,12 @@ export function s5() {
   return imPage('UC5-S5 · Orchestrate · SOP Flow tab · briefing + completed steps · approvals', {
     open: 5, rows: ROWS(false), status: 'All', search: 'PER-005', selected: 0, detail: DETAIL.sop(),
     after: F => {
-      const cx = 1486, cy = 572;   // click lands right of the tab label so the ripple leaves the text clear
+      const cx = 1486, cy = TAB_Y + 23;   // click lands right of the tab label so the ripple leaves the text clear
       let s = cursor(F, cx, cy, { click: true });
       s += chipIM(F, 'orchestrate');
-      s += note(F, 1222, 496, 'Click · SOP Flow tab', { to: [cx, cy] }).svg;
-      const tagY = pos[1].y + 8;
+      const u = note(F, 0, 0, 'Click · SOP Flow');
+      s += note(F, 1544 - 6 - u.w, 335, 'Click · SOP Flow', { to: [cx, cy] }).svg;   // in the CAM 7-11 header strip, right of its label: off the footage, leader straight down to the ripple
+      const tagY = pos[2].y + 8;   // step 3 · Dispatch Patrol 2 · Approved · Nurul A.
       const n = note(F, 0, 0, 'Shows · briefing + approvals with names and times', { kind: 'shows' });
       s += note(F, 866 - n.w, 560, 'Shows · briefing + approvals with names and times', { kind: 'shows', to: [868, tagY + 8] }).svg;
       return s;
@@ -363,14 +371,14 @@ export function s7() {
     open: 4, rows: ROWS(true), status: 'All', search: 'PER-005', selected: 0, detail: DETAIL.closed(),
     after: F => {
       let s = btnState(F, 603, 206, 106, 40, 'hover', { r: 6 });
-      s += exportMenu(F, 694, 252).svg;   // right part of the button: row 1's Closed By cell stays readable
+      s += exportMenu(F, 603, 252).svg;   // flush-left under the Export button (603–709); row 1's Closed By text is carried by the Shows pill and the pane
       const cx = 612, cy = 236;
       s += cursor(F, cx, cy);
       s += confirmToast(F, 60, 930, 'Incident PER-005 closed · audit line written', `Intruder detained · handed to Airport Police · Grace T. · Head of Security · ${CLOSE_T}`, { w: 600 });
       mark('toast', [60, 930, 600, 70]);
       s += chipIM(F, 'govern');
       s += note(F, 380, 212, 'Hover · Export', { to: [cx, cy] }).svg;
-      s += note(F, 60, 440, `Shows · row Closed · Grace T. · ${CLOSE_T} · PDF / CSV carry the filters`, { kind: 'shows', to: [688, 352] }).svg;
+      s += note(F, 60, 440, `Shows · row Closed · Grace T. · ${CLOSE_T} · PDF / CSV carry the filters`, { kind: 'shows', to: [603, 372] }).svg;   // menu's bottom-left corner
       return s;
     },
   });

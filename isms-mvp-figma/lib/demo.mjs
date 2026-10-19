@@ -95,5 +95,15 @@ export function menu(F, x, y, w, items, o = {}) {
   });
   return { svg: g(F, 'Dropdown NEW', s), h };
 }
+// snap a tab-body scroll offset to a step-row boundary: with the viewport [sc, sc+bodyH] in content coordinates and the
+// sopFlow() read-back `pos` ([{y, h}] in screen coordinates, header 32px tall), returns the smallest offset >= sc at which
+// no step header straddles the clip edge (the header is either fully in view or fully below it). Callers that compute
+// `sc` themselves (uc1/uc3 alarmsPanel, uc2 sopBody) pass it through here before translating the content.
+export function snapScroll(sc, bodyH, pos, o = {}) {
+  const head = o.head ?? 32, top = o.top ?? 600;
+  let out = sc;
+  for (const p of pos || []) { if (!p) continue; const y0 = p.y - top, y1 = y0 + head, edge = out + bodyH; if (edge > y0 && edge < y1) out = y1 - bodyH; }
+  return Math.max(0, out);
+}
 // alert cards without Co-pilot text (improvement 3)
 export const plainCards = (list, sel) => list.map(a => { const { ai, ...rest } = a; return { ...rest, selected: a.key === sel }; });
