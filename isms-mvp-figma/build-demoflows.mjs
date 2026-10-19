@@ -32,7 +32,7 @@ const write = (name, svg) => {
   return [name, p, +m[1], +m[2]];
 };
 // frames: one module per use case, each exporting FRAMES = [[id, fn], ...] and optional ANCHORS/setFrame
-const MODULES = ['./screens-v11/demo/uc1-overstay.mjs', './screens-v11/demo/uc2-agilfence.mjs', './screens-v11/demo/uc3-spoofing.mjs', './screens-v11/demo/uc4-ask.mjs', './screens-v11/demo/uc5-incidents.mjs'];
+const MODULES = ['./screens-v11/demo/uc1-overstay.mjs', './screens-v11/demo/uc2-agilfence.mjs', './screens-v11/demo/uc3-spoofing.mjs', './screens-v11/demo/uc4-ask.mjs', './screens-v11/demo/uc5-incidents.mjs', './screens-v11/demo/av-autoview.mjs'];
 const anchors = {};
 if (only !== 'board') {
   const built = [];

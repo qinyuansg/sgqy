@@ -1,0 +1,5 @@
+build/
+src/assets/
+__pycache__/
+*.pyc
+src/js/geo.js

@@ -36,7 +36,7 @@ history since 02:14:58").
 | Close a Critical incident | Operator submits · **Duty manager signs with his own authenticated session** (badge + PIN) | Close is blocked until every required evidence item is complete |
 | Escalation timeout | If the duty manager does not acknowledge within the SOP time, the head of security is notified (shown as a rule, not triggered tonight) | |
 
-## 3. The flow — states AV-S1 … AV-S10 (frames 1400×1069 unless noted, `DEMO_CLEAN=1`)
+## 3. The flow — states AV-S1 … AV-S10c (frames 1400×1069 unless noted, `DEMO_CLEAN=1`)
 
 **Operator clicks: 3 (Confirm intrusion · Dispatch Patrol 2 · Submit for sign-off). Duty manager: 1 authenticated sign-off on his own console.** Police contact and tower notification are SOP actions the operator triggers with the confirmation (pre-authorised), shown with their full acknowledgement chain.
 
@@ -62,7 +62,8 @@ history since 02:14:58").
    - **Aviation safety** — *Tower notified 02:15:25 · person 130 m from Runway 02L* → awaiting tower decision (authority: ATC).
 6. **AV-S6 · click 2: Dispatch Patrol 2** 02:15:30 (pressed).
 7. **AV-S7 · response running** 02:16:40 — Patrol *Dispatched · Nurul A. · 02:15:30 → En route*. Police *Acknowledged · Sgt. Lim (APD) ·
-   02:15:52 → Responding · unit AP-12 · ETA 02:24*. Aviation *Tower decision · Runway 02L: arrivals held, no movements on 02L ·
+   02:15:52 → Responding · unit AP-12 · 02:16:05 · ETA 02:24:00*. Duty manager Daniel L. *acknowledged 02:15:41* (S7 on); the Response
+   tab shows the matrix rule "no duty-manager acknowledgement within SOP time → head of security notified · not triggered" (S5–S8). Aviation *Tower decision · Runway 02L: arrivals held, no movements on 02L ·
    ATC supervisor Tan · 02:15:58 · restriction **active***. **Exception:** "PTZ 7-02 video lost 02:16:40 · LiDAR T-07 still tracking ·
    PTZ 7-03 took over automatically 02:16:42" — the live tile switches to PTZ 7-03 with a small amber banner; map shows T-07 moving
    inside the fence line toward the runway strip, LiDAR trail.
@@ -71,13 +72,14 @@ history since 02:14:58").
    02:24:10* → *Handed to police · custody AP-12 · 02:26:30*. Live tile shows patrol with the person (fence_patrol scene).
 9. **AV-S9 · closure checklist** 02:43:50 — **Close (NEW)** card, each item with evidence and source: Handed to police (custody
    record AP-12, 02:26:30) ✓ · Area secured (sweep of Sector 5 by Patrol 2, 02:38:40) ✓ · Runway 02L restored (tower, ATC Tan, 02:31:10) ✓ ·
-   Fence 5-14 made safe (mesh bent, no cut; guard posted; FM ticket FM-90412) ✓ · SOP 7 of 7 steps ✓ · Evidence pack sealed
+   Fence 5-14 made safe (mesh bent, no cut; guard posted; FM ticket FM-90412, 02:40:15) ✓ · SOP 7 of 7 steps (02:43:30) ✓ · Evidence pack sealed
    (3 clips + fence trace + LiDAR track, sealed 02:43:40) ✓. Button **Submit for sign-off** (enabled only because all six are ✓; the
    frame shows the rule "Closing is blocked until every item is complete"). Pointer clicks it (**click 3**).
-10. **AV-S10 · duty manager sign-off** 02:44:20 — the **duty manager's console** (same V11 shell, user chip "Daniel L. · Duty manager"):
-    sign-off dialog with the six evidence items, "Sign with badge + PIN" field filled (masked), button **Sign and close**; then the
-    closed state: "PER-005 closed · signed by Daniel L. (authenticated: badge + PIN) · 02:44:20 · audit record locked". The operator's
-    console returns to quiet; counters drop.
+10. **AV-S10a · duty manager sign-off dialog** 02:44:14 — the **duty manager's console** (same V11 shell and header grid, user chip
+    "Daniel L. · Duty manager"): sign-off dialog with the six evidence items, "Sign with badge + PIN" filled (masked), button
+    **Sign and close** not yet pressed; behind it the incident is still Critical, Submitted.
+    **AV-S10b · closed** 02:44:20 — dialog gone, header pill *Closed*, toast "PER-005 closed · signed by Daniel L. · badge + PIN ·
+    audit record locked", counters down. **AV-S10c · operator console back to quiet** — Nurul A.'s console, counters down, closure notice.
 
 ## 4. Alternative path (short vignette, frames AV-A1, AV-A2)
 

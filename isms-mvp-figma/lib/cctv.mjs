@@ -415,6 +415,48 @@ export const SCENES = {
     const defs = `<linearGradient id="gr3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#28303A"/><stop offset="1" stop-color="#15191F"/></linearGradient>`;
     return { svg: wrap(body, defs, '#0E141F'), osd: 'PTZ 7-02  SECTOR 5  SEG 5-14', ts: '2026-10-13  02:18:47', boxes: { person: pbox(...pi), officer1: pbox(...po1), officer2: pbox(...po2), vehicle: [130, 438, 330, 148] } };
   },
+  // PTZ 7-03 (colour night): hand-over to Airport Police unit AP-12 — patrol officer, the person, police officer, police car
+  fence_handover() {
+    const pi = [760, 560, 220], po1 = [640, 566, 232], pp = [880, 570, 236];
+    const body = `${nightSky('#0B1322', '#18233A')}${airfieldLights(220, 0.8, true)}
+      ${fenceFront(240, 470, { col: '#7C8798', mesh: '#56616F' })}
+      <rect y="470" width="${W}" height="250" fill="url(#gr5)"/>
+      <!-- Airport Police car AP-12 with light bar -->
+      <g transform="translate(110 560)">
+        <path d="M0 -40 L30 -110 L250 -110 L300 -50 L330 -40 L330 0 L0 0 Z" fill="#E6EAF0"/>
+        <path d="M44 -100 L70 -100 L70 -58 L22 -58 Z M80 -100 L190 -100 L190 -58 L80 -58 Z M200 -100 L240 -100 L276 -58 L200 -58 Z" fill="#1E2735"/>
+        ${Array.from({ length: 22 }, (_, i) => `<rect x="${i * 15}" y="-34" width="15" height="9" fill="${i % 2 ? '#F2F2F2' : '#1F3F9E'}"/><rect x="${i * 15}" y="-25" width="15" height="9" fill="${i % 2 ? '#1F3F9E' : '#F2F2F2'}"/>`).join('')}
+        <circle cx="70" cy="0" r="26" fill="#111"/><circle cx="262" cy="0" r="26" fill="#111"/>
+        <rect x="96" y="-122" width="110" height="12" rx="4" fill="#2C3546"/>
+        <rect x="100" y="-121" width="48" height="9" rx="3" fill="#3E7BFF"/><rect x="154" y="-121" width="48" height="9" rx="3" fill="#3E7BFF"/>
+        <text x="165" y="-40" text-anchor="middle" font-family="DejaVu Sans, sans-serif" font-size="15" font-weight="700" fill="#1A2233">AIRPORT POLICE · AP-12</text>
+      </g>
+      <ellipse cx="270" cy="430" rx="220" ry="85" fill="#3E7BFF" opacity=".2" filter="url(#glow)"/>
+      ${lightPool(780, 520, 460, 160, 0.16, '#FFF3D6')}
+      ${person(po1[0], po1[1], po1[2], { coat: '#1F2A3A', pants: '#151B26', pose: 'stand', vest: '#D9E021', cap: '#121722' })}
+      ${person(pi[0], pi[1], pi[2], { coat: '#3A3F48', coatHi: '#4B515C', pants: '#202329', pose: 'held', cap: '#2A2D33' })}
+      ${person(pp[0], pp[1], pp[2], { coat: '#16213A', pants: '#111827', pose: 'stand', vest: '#2A3550', cap: '#0F1626' })}`;
+    const defs = `<linearGradient id="gr5" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#28303A"/><stop offset="1" stop-color="#15191F"/></linearGradient>`;
+    return { svg: wrap(body, defs, '#0E141F'), osd: 'PTZ 7-03  SECTOR 5  SEG 5-14', ts: '2026-10-13  02:26:30', boxes: { person: pbox(...pi), officer1: pbox(...po1), police: pbox(...pp), vehicle: [110, 438, 330, 148] } };
+  },
+  // PTZ 7-02 (colour night), another night: permitted contractor crew of 2 repairing the fence at 5-14 (one continuous scene)
+  fence_crew() {
+    const c1 = [610, 566, 232], c2 = [800, 572, 230];
+    const cone = x => `<g transform="translate(${x} 600)"><path d="M-18 0 L-5 -58 L5 -58 L18 0 Z" fill="#E8741B"/><rect x="-11" y="-36" width="22" height="8" fill="#F2F2F2" opacity=".85"/><rect x="-24" y="0" width="48" height="7" rx="2" fill="#2A2F37"/></g>`;
+    const body = `${nightSky('#0B1322', '#18233A')}${airfieldLights(220, 0.8, true)}
+      ${fenceFront(240, 470, { col: '#7C8798', mesh: '#56616F' })}
+      <rect y="470" width="${W}" height="250" fill="url(#gr4)"/>
+      ${lightPool(700, 520, 520, 170, 0.18, '#FFF3D6')}
+      <!-- work light on a tripod and a tool case at the repair -->
+      <g transform="translate(470 590)"><path d="M0 0 L22 -150 L44 0 M22 -150 V0" stroke="#3A414C" stroke-width="5" fill="none"/><rect x="2" y="-178" width="40" height="28" rx="4" fill="#2C3546"/><rect x="6" y="-174" width="32" height="20" rx="3" fill="#FFF6D8"/></g>
+      <ellipse cx="510" cy="420" rx="170" ry="90" fill="#FFF3D6" opacity=".12" filter="url(#glow)"/>
+      <rect x="680" y="548" width="70" height="34" rx="4" fill="#B5471B"/><rect x="700" y="540" width="30" height="9" rx="3" fill="#2A2F37"/>
+      ${cone(330)}${cone(1010)}
+      ${person(c1[0], c1[1], c1[2], { coat: '#2B2F36', pants: '#151B26', pose: 'push', vest: '#D9E021', cap: '#E8E8E8' })}
+      ${person(c2[0], c2[1], c2[2], { coat: '#2B2F36', pants: '#151B26', pose: 'phone', vest: '#D9E021', cap: '#E8E8E8' })}`;
+    const defs = `<linearGradient id="gr4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#28303A"/><stop offset="1" stop-color="#15191F"/></linearGradient>`;
+    return { svg: wrap(body, defs, '#0E141F'), osd: 'PTZ 7-02  SECTOR 5  SEG 5-14', ts: '2026-10-11  01:21:05', boxes: { crew1: pbox(...c1), crew2: pbox(...c2) } };
+  },
 
   // Corridor L2-East — tailgater walking away (co-pilot "where now")
   corridor() {
