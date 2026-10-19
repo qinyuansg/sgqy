@@ -9,9 +9,12 @@ export const STAGES = {
   orchestrate: ['Orchestrate', '#D4B741'], govern: ['Assist & govern', '#B69CFF'],
 };
 const PINK = '#FDD8FD', PLUM = '#480448';
+// DEMO_CLEAN=1: product UI only (no cursor, pills, tooltips, stage chips, Co-pilot briefing) for film frames
+export const CLEAN = !!process.env.DEMO_CLEAN;
 
 // mouse pointer, optional click ripple
 export function cursor(F, x, y, o = {}) {
+  if (CLEAN && !o.keep) return '';
   let s = '';
   if (o.click) s += circle(x, y, 22, { fill: C.link, fo: 0.18, stroke: C.link, so: 0.8, sw: 1.5 }) + circle(x, y, 34, { stroke: C.link, so: 0.35, sw: 1.2 });
   s += pathEl(`M${f(x)} ${f(y)} l0 22 l6 -5.5 l4 9.5 l3.6 -1.6 l-4 -9.2 l8 0 Z`, { fill: '#FFFFFF', stroke: '#111111', sw: 1.3, join: 'round', filter: F.shadow(2, 2, 0.5) });
@@ -38,6 +41,7 @@ export const focusRing = (F, x, y, w, h, r = 8) => g(F, 'Focus ring NEW', rect(x
 export const caret = (F, x, y, h = 20) => g(F, 'Caret NEW', rect(x, y, 1.5, h, { fill: '#FFFFFF' }));
 // tooltip pill above a point
 export function tooltip(F, cx, y, label, o = {}) {
+  if (CLEAN) return '';
   const w = textWidth(label, 13, 500) + 20, h = 26, x = o.left ? cx - w : o.right ? cx : cx - w / 2;
   let s = rect(x, y - h - 8, w, h, { r: 6, fill: '#0B0F16', stroke: '#4A505B', filter: F.shadow(4, 6, 0.45) });
   s += pathEl(`M${f(cx - 5)} ${f(y - 8)} L${f(cx)} ${f(y - 2)} L${f(cx + 5)} ${f(y - 8)} Z`, { fill: '#0B0F16' });
@@ -46,6 +50,7 @@ export function tooltip(F, cx, y, label, o = {}) {
 }
 // annotation: what the user does (plum on pink) or what appears (white on dark, lavender border)
 export function note(F, x, y, label, o = {}) {
+  if (CLEAN) return { svg: '', w: 0, h: 0 };
   const size = o.size || 13, w = textWidth(label, size, 700) + 24 + (o.n ? 22 : 0), h = 28;
   const user = o.kind !== 'shows';
   let s = rect(x, y, w, h, { r: 14, fill: user ? PINK : '#1D232C', stroke: user ? PLUM : C.copilot, sw: 1.2, filter: F.shadow(3, 5, 0.4) });
@@ -60,11 +65,13 @@ export function note(F, x, y, label, o = {}) {
 }
 // journey stage chip
 export function stageChip(F, x, y, key, o = {}) {
+  if (CLEAN) return { svg: '', w: 0, h: 0 };
   const [lab, col] = STAGES[key], size = o.size || 12, w = textWidth(lab.toUpperCase(), size, 700, 1) + 30, h = o.h || 24;
   return { svg: g(F, 'Stage ' + lab, rect(x, y, w, h, { r: h / 2, fill: col, fo: 0.16, stroke: col, so: 0.9, sw: 1 }) + circle(x + 12, y + h / 2, 4, { fill: col }) + text(x + 22, y + h / 2 + size * 0.36, lab.toUpperCase(), { size, weight: 700, ls: 1, fill: '#FFFFFF' })), w, h };
 }
 // Co-pilot briefing block for the SOP Flow tab (replaces the lavender summary in Investigation)
 export function copilotBriefing(F, x, y, w, o) {
+  if (CLEAN) return { svg: '', h: 0 };
   const lines = wrap(o.text, w - 48, 13.5, 400), h = 46 + lines.length * 19 + (o.sources ? 22 : 0) + 12;
   let s = rect(x, y, w, h, { r: 8, fill: C.copilot, fo: 0.1, stroke: C.copilot, so: 0.55, sw: 1 });
   s += icon(F, 'sparkle', x + 14, y + 13, 16, C.copilot, 2) + text(x + 36, y + 26, o.title || 'Co-pilot briefing', { size: 14, weight: 700, fill: C.copilot });
