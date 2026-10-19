@@ -237,7 +237,7 @@ function bullets(s, items, x, y, w, h, o = {}) {
   s.addText(items.map((p, j) => ({ text: p, options: { bullet: { indent: 14 }, breakLine: j < items.length - 1 } })), { x, y, w, h, fontSize: pt, color: o.color || MUTED, paraSpaceAfter: o.gap ?? 6, valign: 'top', margin: 0, isTextBox: true, lineSpacingMultiple: 1.0 });
 }
 // the proposal footnote: the one line that makes every date on the slide a proposal
-const footnote = (s, text, y = 6.62, w = CW, h = 0.3) => { fit('footnote ' + text.slice(0, 20), text, 12, false, w, h, 1.1); T(s, text, { x: MX, y, w, h, fontSize: 12, color: MUTED, lineSpacingMultiple: 1.05 }); };
+const footnote = (s, text, y = 6.62, w = CW, h = 0.3) => { fit('footnote ' + text.slice(0, 20), text, 12, false, w, h, 1.1); T(s, runs(text), { x: MX, y, w, h, fontSize: 12, color: MUTED, lineSpacingMultiple: 1.05 }); };
 const proposalNote = (s, y = 6.62) => footnote(s, PROPOSAL_NOTE, y);
 
 // ---------- frames: V11 (2×), AgilFence (2×), multi-site (2×), boards (1×) ----------
@@ -250,6 +250,7 @@ FRAMES['AF-00b'] = { dir: 'boards', scale: 1, w: 3480, h: 2040 };
 FRAMES['P2'] = { dir: 'boards', scale: 1, w: 3480, h: 2040 };
 FRAMES['P5'] = { dir: 'boards', scale: 1, w: 3480, h: 2040 };
 FRAMES['CPO'] = { dir: 'boards', scale: 1, w: 4000, h: 2600 };
+FRAMES['MASTER'] = { dir: 'boards', scale: 1, w: 4000, h: 2600, file: 'CPO-master-board.png' }; // same file, an id without the role acronym (finalize() rejects it in slide XML)
 const dirCache = {};
 const listDir = d => dirCache[d] || (dirCache[d] = fs.existsSync(A(d)) ? fs.readdirSync(A(d)) : []);
 function pngSize(file) { const b = Buffer.alloc(24); const fd = fs.openSync(file, 'r'); fs.readSync(fd, b, 0, 24, 0); fs.closeSync(fd); return [b.readUInt32BE(16), b.readUInt32BE(20)]; }
@@ -258,7 +259,7 @@ const infoCache = {};
 function frame(id) {
   if (infoCache[id]) return infoCache[id];
   const spec = FRAMES[id]; if (!spec) throw new Error('unknown frame ' + id);
-  const name = listDir(spec.dir).find(f => f.endsWith('.png') && (f === id + '.png' || f.startsWith(id + '-')));
+  const name = listDir(spec.dir).find(f => f.endsWith('.png') && (f === (spec.file || id + '.png') || f.startsWith(id + '-')));
   const file = name ? A(path.join(spec.dir, name)) : A(path.join(spec.dir, id + '.png'));
   const f = { file, rel: path.relative(ASSETS, file), key: name ? name.replace(/\.png$/, '') : id, ok: !!name, w: spec.w, h: spec.h, scale: spec.scale };
   if (f.ok) { const [pw, ph] = pngSize(file); f.pxW = pw; f.pxH = ph; f.w = pw / spec.scale; f.h = ph / spec.scale; }
@@ -483,7 +484,12 @@ async function scene(d) {
   // the frame's own grade, then its id
   let px = tx;
   px += grade(s, px, 0.95, d.grade[0], d.grade[1]) + 0.12;
-  if (d.frame) T(s, d.frame.toUpperCase(), { x: px, y: 0.95, w: tx + w - px, h: 0.3, fontSize: 12, bold: true, color: MUTED, charSpacing: 0.5, valign: 'middle' });
+  if (d.frame) {
+    // the frame id keeps its letter spacing when the room beside the grade pill allows it, else it drops to 0 (never wraps)
+    const lab = d.frame.toUpperCase(), bw = tx + w - px, cs = tw(lab, 12, true, 0.5) <= bw ? 0.5 : 0;
+    fit(d.kicker + ' frame', lab, 12, true, bw, 0.3, 1.17, cs);
+    T(s, lab, { x: px, y: 0.95, w: bw, h: 0.3, fontSize: 12, bold: true, color: MUTED, charSpacing: cs, valign: 'middle' });
+  }
   const tpt = sizeFor(d.title, [32, 30, 28, 26], true, 4.8, 1.0, 0.95, -0.5);
   s.addText(d.title.split('\n').map((t, i, a) => ({ text: t, options: { fontSize: tpt, breakLine: i < a.length - 1 } })), { placeholder: 'title', charSpacing: -0.5 });
   let y = 2.48;
@@ -511,17 +517,19 @@ async function scene(d) {
   if (process.env.DEBUG) console.log('scene', d.frame, 'column ends at', y.toFixed(2));
   if (d.extra) {
     const e = d.extra, top = y + 0.08, hAvail = 6.88 - top, asp = e.r[2] / e.r[3];
+    // a caption under the lens takes its measured height out of the lens budget, so the column still ends at 6.88
+    const capH = e.caption ? nlines(e.caption, 12, false, w) * 0.2 + 0.1 : 0, budget = e.caption ? 0.14 + capH : 0;
     let lw, lh, below;
-    if (w / asp + 0.36 <= hAvail) { lw = w; lh = w / asp; below = true; }
+    if (w / asp + budget <= hAvail) { lw = w; lh = w / asp; below = true; }
     else {
       lh = hAvail; lw = lh * asp; if (lw > w) { lw = w; lh = w / asp; }
       below = (w - lw) < 1.1;
-      if (below) { lh = hAvail - 0.36; lw = lh * asp; }
+      if (below) { lh = hAvail - budget; lw = lh * asp; }
     }
     if (lh < 0.75) WARN.push(`${d.kicker}: extra lens only ${lh.toFixed(2)}in tall`);
-    const ln = await lens(s, null, e.id, e.r, tx, top + 0.04, lw, { n: e.n, nAt: 'tl', alt: e.alt });
+    const ln = await lens(s, null, e.id, e.r, tx, top + 0.04, lw, { n: e.n, nAt: e.nAt || 'tl', alt: e.alt });
     if (e.caption) {
-      const cx = below ? tx : tx + lw + 0.2, cy = below ? top + lh + 0.14 : top + 0.04, cw = below ? w : w - lw - 0.2, ch = below ? 0.42 : lh;
+      const cx = below ? tx : tx + lw + 0.2, cy = below ? top + lh + 0.14 : top + 0.04, cw = below ? w : w - lw - 0.2, ch = below ? capH : lh;
       fit(d.kicker + ' extra caption', e.caption, 12, false, cw, ch, 1.05);
       T(s, e.caption, { x: cx, y: cy, w: cw, h: ch, fontSize: 12, color: MUTED, valign: 'top', lineSpacingMultiple: 1.05 });
     }
@@ -530,7 +538,7 @@ async function scene(d) {
   // every proposed date on this slide points here
   if (d.ready.some(r => r[0] === 'roadmap')) {
     const vx = right ? 5.95 : MX, nx = vx + (d.noteDx || 0), nw = DW - (d.noteDx || 0);
-    const long = `Proposed dates: confirm with R&D by ${CONFIRM_BY}. No date goes to CAG before that.`, note = nlines(long, 12, false, nw) === 1 ? long : `Dates: proposed · confirm with R&D by ${CONFIRM_BY}`;
+    const long = `Proposed dates: confirm with R&D by ${CONFIRM_BY}.`, note = nlines(long, 12, false, nw) === 1 ? long : `Dates: proposed · confirm with R&D by ${CONFIRM_BY}`;
     fit(d.kicker + ' note', note, 12, false, nw, 0.3);
     T(s, note, { x: nx, y: d.noteY || 6.6, w: DW - (d.noteDx || 0), h: 0.3, fontSize: 12, color: MUTED });
   }
@@ -551,11 +559,13 @@ async function trainBoard(s, key, o = {}) {
     card(s, x, y0, colW, h, { tr: 25, edge: col, name: 'Train ' + t.name });
     grade(s, x + 0.22, y0 + 0.22, i ? 'roadmap' : 'today', i ? 'ROADMAP · ' + t.name : undefined);
     const ttl = o.titles ? o.titles[i] : t.theme;
-    fit('train title ' + t.name, ttl, 18, true, colW - 0.44, 0.62, 1.0);
+    const n = fit('train title ' + t.name, ttl, 18, true, colW - 0.44, 0.62, 1.0);
     T(s, ttl, { x: x + 0.22, y: y0 + 0.64, w: colW - 0.44, h: 0.62, fontSize: 18, bold: true, lineSpacingMultiple: 1.0 });
-    if (t.ga) T(s, PROPOSED.toUpperCase(), { x: x + 0.22, y: y0 + 1.3, w: colW - 0.44, h: 0.26, fontSize: 12, bold: true, color: GOLD, charSpacing: 1, valign: 'middle' });
-    else T(s, 'IN SERVICE', { x: x + 0.22, y: y0 + 1.3, w: colW - 0.44, h: 0.26, fontSize: 12, bold: true, color: GREEN, charSpacing: 1.5, valign: 'middle' });
-    bullets(s, t[key], x + 0.18, y0 + 1.66, colW - 0.36, 1.4, { pt: 13, id: 'train ' + t.name + ' ' + key, gap: 4 });
+    // the one-line kicker follows the measured title height (one or two lines); the footnote carries the full "confirm with R&D" rule
+    const ky = y0 + 0.64 + n * 0.29 + 0.08, kick = t.ga ? 'PROPOSED · TO CONFIRM' : 'IN SERVICE';
+    fit('train kicker ' + t.name, kick, 12, true, colW - 0.44, 0.26, 1.17, 0.5);
+    T(s, kick, { x: x + 0.22, y: ky, w: colW - 0.44, h: 0.26, fontSize: 12, bold: true, color: t.ga ? GOLD : GREEN, charSpacing: 0.5, valign: 'middle' });
+    bullets(s, t[key], x + 0.18, y0 + 1.64, colW - 0.36, 1.42, { pt: 13, id: 'train ' + t.name + ' ' + key, gap: 3 });
     s.addShape(LINE, { x: x + 0.22, y: y0 + 3.1, w: colW - 0.44, h: 0, line: { color: INK, width: 0.5, transparency: 80 }, objectName: 'Card rule' });
     label(s, 'WHAT CAG SEES', x + 0.22, y0 + 3.16, colW - 0.44, LAV);
     fit('train see ' + t.name, t.see[key], 12, false, colW - 0.44, 0.44, 1.05);
@@ -594,16 +604,16 @@ async function build() {
   {
     const cw = (CW - 2 * 0.25) / 3, y = 1.8, h = 4.5;
     const COLS = [
-      { n: 2, name: 'AI-powered AGIL Secure ISMS', ask: 'Is Weili’s deck aligned and good to commit to CAG?', head: 'Yes, with four edits.',
+      { n: 2, name: 'AI-powered AGIL Secure ISMS', ask: 'Is Weili’s deck aligned and good to commit? Any other supporting material?', head: 'Yes, with four edits.',
         tags: [['today', 'WORKFLOW'], ['concept', 'AI LAYER']],
         answer: 'The alarm → incident → SOP → report workflow is in V11 today. The AI layer is designed (12 frames, film) and ships in V11.1 and V11.2.',
-        sees: '22 Oct: film + frames, or live V11 if R&D confirms a demo instance.' },
+        sees: '22 Oct: film + frames, or live V11 if R&D confirms. Supporting material: in hand.' },
       { n: 4, name: 'AgilFence unified integration', ask: 'Is there a ready in-built module in V11 to present to CAG?', head: 'Partly.',
         tags: [['today', 'WORKFLOW'], ['roadmap', 'FENCE MODULE']],
-        answer: 'Fence alarms can run through V11’s workflow today. The AgilFence module (fence line, segments, health, configuration) is designed and ships in three trains.',
+        answer: 'V11’s workflow takes any alarm source today; the fence feed joins once connected (interface: R&D to confirm). The AgilFence module is designed and ships in three trains.',
         sees: '22 Oct: AgilFence flow board + film. Q4: SOP-mapping workshop.' },
       { n: 5, name: 'Multi-site, multi-brand governance', ask: 'Is there a ready in-built module in V11 to present to CAG?', head: 'Not yet.',
-        tags: [['concept', '6 FRAMES'], ['roadmap', 'THREE TRAINS']],
+        tags: [['concept', 'SIX FRAMES'], ['roadmap', 'THREE TRAINS']],
         answer: 'V11 runs one site with many clusters. The estate layer (overview, baseline, roles, connectors, report) is designed in six frames and ships in V11.1–V11.3.',
         sees: 'Q4: design walkthrough with a CAG design partner.' },
     ];
@@ -629,14 +639,14 @@ async function build() {
     const by = 6.42;
     card(s, MX, by, CW, 0.48, { fill: LAV, tr: 86, line: LAV, ltr: 55, lw: 1, name: 'Decisions band' });
     label(s, 'DECISIONS TODAY', MX + 0.25, by + 0.11, 2.1, LAV);
-    const dec = [{ text: '1  ', options: { bold: true, color: LAV } }, { text: 'Approve the commitment list     ' }, { text: '2  ', options: { bold: true, color: LAV } }, { text: 'Approve Weili\u2019s four edits     ' }, { text: '3  ', options: { bold: true, color: LAV } }, { text: 'Lock the train dates with R&D by 30 Oct' }];
+    const dec = [{ text: '1  ', options: { bold: true, color: LAV } }, { text: 'Approve the commitment list   ' }, { text: '2  ', options: { bold: true, color: LAV } }, { text: 'Approve the four edits   ' }, { text: '3  ', options: { bold: true, color: LAV } }, { text: 'Lock train dates by 30 Oct   ' }, { text: '4  ', options: { bold: true, color: LAV } }, { text: 'Name the design partner' }];
     fit('decisions band', plain(dec), 13, false, CW - 2.55, 0.3);
     T(s, dec, { x: MX + 2.35, y: by, w: CW - 2.55, h: 0.48, fontSize: 13, valign: 'middle' });
   }
   s.addNotes([
-    'Here is the summary on one page. Area two: the alarm-to-incident workflow is in V11 today and the AI layer is designed. Weili’s deck is aligned and we commit it with four edits.',
-    'Area four: partly. Fence alarms can already run through V11’s workflow. The AgilFence module itself is designed and on the roadmap. Area five: not yet. V11 runs one site; the estate layer is designed in six new frames and ships in three trains, on proposed dates.',
-    'We need three decisions today: approve the commitment list, approve the four edits, and mandate us to lock the train dates with R&D by the thirtieth of October.',
+    'Here is the summary on one page. Area two: the alarm-to-incident workflow, with its standard operating procedures, is in V11 today and the AI layer is designed. Weili’s deck is aligned and we commit it with four edits.',
+    'Area four: partly. V11’s workflow takes any alarm source today; the fence feed still has to be connected, and R&D confirms the interface. The AgilFence module itself is designed and on the roadmap. Area five: not yet. V11 runs one site; the estate layer is designed in six new frames and ships in three trains, on proposed dates.',
+    'We need four decisions today: approve the commitment list, approve the four edits, mandate us to lock the train dates with R&D by the thirtieth of October, and name the CAG design partner for multi-site governance.',
   ].join('\n'));
 
   // 3 ── the asks
@@ -647,7 +657,7 @@ async function build() {
       { n: 2, name: 'AI-powered AGIL Secure ISMS', ask: '“Please confirm if the deck and use cases provided by Weili are aligned and good to be committed to CAG. Any other supporting material from R&D on this aspect?”',
         out: 'Position AGIL Secure as an AI-enabled security operating platform rather than a traditional ACS / VMS solution, supported by the existing ISMS digital workflow architecture.', who: 'Qinyuan (Product) · Weili (deck) · Peter and Anuar (R&D view)' },
       { n: 4, name: 'AgilFence unified integration', ask: '“Do advise if there is a ready in-built module in V11 that we can present to CAG. If not, advise the roadmap, high-level visuals and timeline of official launch.”',
-        out: 'Improvement from the decade-old iPAMS; CAG’s increasing platform stickiness.', who: 'Qinyuan (Product) · Anuar (iPAMS interface) · Peter (roadmap)' },
+        out: 'Improvement from the decade-old iPAMS, the AgilFence alarm-management software; CAG’s increasing platform stickiness.', who: 'Qinyuan (Product) · Anuar (iPAMS interface) · Peter (roadmap)' },
       { n: 5, name: 'Multi-site, multi-brand governance', ask: '“Do advise if there is a ready in-built module in V11 that we can present to CAG. If not, advise the roadmap, high-level visuals and timeline of official launch.”',
         out: 'AGIL Secure positioned above subsystem level as the orchestration, governance and operational decision layer, supported by open API, SDK and interoperability.', who: 'Qinyuan (Product) · Peter (API, roles) · Anuar (connectors)' },
     ];
@@ -669,8 +679,8 @@ async function build() {
     }
   }
   s.addNotes([
-    'These are the three asks exactly as they were written on Friday, next to the strategic area and the success outcome each one serves. Area two is about positioning AGIL Secure as an AI-enabled security operating platform. Area four is about bringing the separate AgilFence platform into one workflow. Area five is about running many terminals, facilities and third-party systems under one governance framework.',
-    'Qinyuan owns the product answer in this deck. Peter and Anuar own the technical confirmation, and Weili owns the AI deck we are reviewing.',
+    'These are the three asks as they were written on Friday, lightly edited for grammar, next to the strategic area and the success outcome each one serves. Area two is about positioning AGIL Secure as an AI-enabled security operating platform. Area four is about bringing the separate AgilFence platform into one workflow. Area five is about running many terminals, facilities and third-party systems under one governance framework.',
+    'We own the product answer in this deck. Peter and Anuar own the technical confirmation, and Weili owns the AI deck we are reviewing.',
   ].join('\n'));
 
   // 4 ── how we grade readiness
@@ -703,10 +713,41 @@ async function build() {
     'The commitment rule follows from that. We commit what is in V11 today. We show concepts, always labelled. We promise dates only after R&D confirms them, which we have asked for by the thirtieth of October. And we never promise autonomous closure, facial recognition or performance numbers.',
   ].join('\n'));
 
-  // 5 ── section: area 2
+  // 5 ── three flows on one board: the master board from the Figma package
+  s = content('STRATEGIC AREAS 2 · 4 · 5  ·  END-TO-END USER FLOWS', 'Three flows on one board', SEC.open);
+  {
+    const bw = 7.2, by = 1.78;
+    await board(s, 'MASTER', MX, by, bw, 'Master board · illustrative scenario, simulated data · Figma SVG and PDF in the package (A2)', { alt: 'Master board with three lanes, one per strategic area: the ask, the one-line answer and the flow as V11 screens, each step with its grade tag and release train' });
+    const rx0 = MX + bw + 0.3, rw2 = RX - rx0, ch = 1.48;
+    const LANES = [
+      ['2', 'AI-powered AGIL Secure ISMS', 'Workflow in V11 today; the AI layer is designed and ships in V11.1 and V11.2.', '6 steps', 'V11-01 → V11-12'],
+      ['4', 'AgilFence unified integration', 'Partly: the workflow takes any alarm source; the fence module is designed and on the roadmap.', '9 steps', 'AF-01 → AF-09'],
+      ['5', 'Multi-site, multi-brand governance', 'Not yet: one site today; the estate layer is designed and ships in three trains.', '6 steps', 'MS-01 → MS-06'],
+    ];
+    for (const [i, [n, name, ans, steps, ids]] of LANES.entries()) {
+      const y = by + i * (ch + 0.1), ix = rx0 + 0.22, iw = rw2 - 0.44;
+      card(s, rx0, y, rw2, ch, { tr: 25, name: 'Lane ' + n });
+      label(s, 'LANE ' + (i + 1) + '  ·  STRATEGIC AREA ' + n, ix, y + 0.14, iw, LAV);
+      fit('lane name ' + n, name, 15, true, iw, 0.3);
+      T(s, name, { x: ix, y: y + 0.42, w: iw, h: 0.3, fontSize: 15, bold: true });
+      fit('lane answer ' + n, ans, 12, false, iw, 0.44, 1.05);
+      T(s, ans, { x: ix, y: y + 0.74, w: iw, h: 0.44, fontSize: 12, color: MUTED, lineSpacingMultiple: 1.05 });
+      T(s, [{ text: steps + '  ', options: { bold: true } }, { text: ids, options: { color: LAV, bold: true } }], { x: ix, y: y + 1.16, w: iw, h: 0.26, fontSize: 12, color: MUTED, valign: 'middle' });
+    }
+    T(s, 'Each step carries its grade and release train.', { x: rx0, y: 6.58, w: rw2, h: 0.3, fontSize: 12, color: MUTED });
+  }
+  s.addNotes([
+    'Before the three answers, the whole picture on one board. Three lanes, one per strategic area: the ask from Friday, our one-line answer, and the flow CAG would see, screen by screen, each step with its readiness grade and its release train.',
+    'This board is the one Figma file the team can open; the frames follow at full size in the package. Everything on it is an illustrative scenario with simulated data, and every date on it is a proposal until R&D confirms.',
+  ].join('\n'));
+
+  // 6 ── section: area 2
   pres.addSection({ title: SEC.p2 });
   s = section('STRATEGIC AREA 2', 'AI-powered AGIL Secure ISMS', 'The workflow is in V11 today. The AI layer is designed and ships in V11.1 and V11.2, on proposed dates. Weili’s deck is aligned: commit it with four edits.', SEC.p2, 2);
-  s.addNotes('Strategic area two. Our answer in one line: the workflow is in V11 today, the AI layer is designed, and it goes into production in trains eleven point one and eleven point two, on proposed dates. Weili’s deck is aligned in direction and we recommend committing it with four edits.');
+  s.addNotes([
+    'Strategic area two. Our answer in one line: the workflow is in V11 today, the AI layer is designed, and it goes into production in trains eleven point one and eleven point two, on proposed dates. Weili’s deck is aligned in direction and we recommend committing it with four edits.',
+    'Three use cases on V11 screens come first. Then the verdict on Weili’s deck, the split between what exists and what the demo adds, and the material we already have.',
+  ].join('\n'));
 
   // 6 ── six capabilities, one use case each
   s = content('STRATEGIC AREA 2  ·  DEMO USE CASES', 'Six capabilities CAG named, one demo use case each', SEC.p2);
@@ -719,10 +760,10 @@ async function build() {
       ['Access intelligence', 'T1 Door C2 impossible presence; B2 overstay rules', 'V11-04', 'ACS alarms in Active Alarms', 'Travel-time check, legacy-SSID row, rules (i)–(v)', ['11.1', '11.2']],
       ['Automated reporting', 'TGT-214 report draft, ready to sign', 'V11-12', 'Incident Management, Remarks', 'Co-pilot report draft', ['11.1']],
     ];
-    const cols = [0.95, 1.95, 2.95, 2.25, 2.55, 1.45], xs = []; let cx = MX; for (const w of cols) { xs.push(cx); cx += w + 0.0; }
+    const cols = [1.30, 1.95, 2.95, 1.90, 2.55, 1.45], xs = []; let cx = MX; for (const w of cols) { xs.push(cx); cx += w + 0.0; }
     const y0 = 1.78, rh = 0.76;
-    // header: the grade of each column
-    label(s, 'FRAME', xs[0], y0, cols[0]);
+    // header: the grade of each column (the frame thumbnails are concept frames, so their column is headed by the concept pill)
+    grade(s, xs[0], y0 - 0.02, 'concept', 'CONCEPT');
     label(s, 'CAG NAMED', xs[1], y0, cols[1]);
     label(s, 'DEMO USE CASE', xs[2], y0, cols[2]);
     grade(s, xs[3], y0 - 0.02, 'today'); grade(s, xs[4], y0 - 0.02, 'concept'); grade(s, xs[5], y0 - 0.02, 'roadmap', 'TRAIN');
@@ -762,8 +803,8 @@ async function build() {
       hl(s, dv, [950, 743, 378, 106], 3, { side: 'r', edge: true });
     },
     notes: [
-      'The first use case: alarm correlation. Staff Door D-214 raises five alarms within seconds. In V11 today they appear as alert cards and in Active Alarms with the Investigation tab and camera tiles. What the Co-pilot adds is the line on the card, the one-sentence summary and the list of linked alarms behind it.',
-      'What you see in the chrome is V11 today. What you see in lavender is the designed concept, proposed for train eleven point one.',
+      'The first use case: alarm correlation. Staff Door D-214 raises five alarms, one after another. In V11 today they appear as alert cards and in Active Alarms with the Investigation tab and camera tiles. What the Co-pilot adds is the line on the card, the one-sentence summary and the list of linked alarms behind it.',
+      'The screen itself is V11 today. What you see in lavender is the designed concept, proposed for train eleven point one.',
     ],
   });
 
@@ -773,7 +814,7 @@ async function build() {
     title: 'Co-pilot prepares.\nPeople approve.',
     watch: [['Done by Co-pilot:', 'follower tracked'], ['Your approval:', 'lock D-214']],
     ready: [['today', 'SOP Flow, Critical Action steps, Escalate'], ['concept', 'Pre-filled SOP and dialog, auto-ticked steps'], ['roadmap', '11.1']],
-    extra: { id: F10, r: [391, 488, 618, 215], n: 3, caption: 'Escalate dialog pre-filled from the investigation: edit anything, then create the incident.', alt: 'Escalate Event dialog with Category, Severity and Remarks pre-filled by Co-pilot' },
+    extra: { id: F10, r: [372, 488, 637, 215], n: 3, nAt: 'tr', caption: 'Pre-filled Escalate dialog: edit anything, then create the incident.', alt: 'Escalate Event dialog with Category, Severity and Remarks pre-filled by Co-pilot' },
     visual: async (s, vx) => {
       const dv = await device(s, F03, vx, DY, DW, 'V11 SOP Flow for D-214 with the Critical Action step and door buttons; the 3D Locate view shows D-214');
       hl(s, dv, ab(F03, 'Done by Co-pilot', 0, { pad: 8 }), 1, { side: 'r', edge: true });
@@ -824,7 +865,7 @@ async function build() {
     const ED = [
       ['Grade every page.', 'Pages 4–7 read as product today; CAG may take them as committed.'],
       ['Replace concept art with V11 screens', 'where we have them (V11-02/03, 04, 05, 11), or label it “concept illustration”. Remove the “high confidence” percentages from imagery.'],
-      ['Rename UC3', 'from “Autonomous incident management” to “Assisted incident management: AI gathers, people authorise”. Keep the human-authorisation line on every use-case page.'],
+      ['Rename UC3', 'from “Autonomous incident management” to “Assisted incident management: AI gathers, people authorise”. Keep the human-authorisation line on every use-case page; show confidence as a band, never a number.'],
       ['Cover all five strategic areas:', 'add a perimeter page (AgilFence, AF frames), a multi-site governance page (MS frames) and one privacy line: no facial recognition needed; watchlist matching optional, person-verified.'],
     ];
     let ey = y + 0.6;
@@ -838,10 +879,11 @@ async function build() {
     if (ey > y + h) WARN.push('edits overflow ' + ey.toFixed(2));
     const by = 6.0;
     card(s, MX, by, CW, 0.85, { fill: GOLD, tr: 88, line: GOLD, ltr: 55, lw: 1, name: 'Confirm band' });
-    grade(s, MX + 0.25, by + 0.28, 'confirm');
+    const pw = grade(s, MX + 0.25, by + 0.28, 'confirm');
     const cf = 'Page 2 lists overstay, fight, fire and identity-spoofing detection as “today’s AI”. Before commitment, R&D confirms which of these run in the current V11 / video-analytics stack at CAG.';
-    fit('confirm band', cf, 13, false, CW - 2.4, 0.7, 1.1);
-    T(s, cf, { x: MX + 2.2, y: by + 0.06, w: CW - 2.4, h: 0.72, fontSize: 13, valign: 'middle', lineSpacingMultiple: 1.05 });
+    const cx0 = MX + 0.25 + pw + 0.12, cw0 = RX - 0.25 - cx0;
+    fit('confirm band', cf, 13, false, cw0, 0.7, 1.1);
+    T(s, cf, { x: cx0, y: by + 0.06, w: cw0, h: 0.72, fontSize: 13, valign: 'middle', lineSpacingMultiple: 1.05 });
   }
   s.addNotes([
     'Now to Friday’s first question: is Weili’s deck aligned and good to commit? Yes, in direction. Its four use cases map one-to-one onto our demo, its five-stage journey matches our six steps, and its human-in-the-loop message is exactly our positioning.',
@@ -874,11 +916,11 @@ async function build() {
   ].join('\n'));
 
   // 12 ── what is in V11 today, and what the demo adds
-  s = content('STRATEGIC AREA 2  ·  THE HONEST SPLIT', 'What is in V11 today, and what the demo adds', SEC.p2);
+  s = content('STRATEGIC AREA 2  ·  TODAY VERSUS THE DEMO', 'What is in V11 today, and what the demo adds', SEC.p2);
   {
     const cw = (CW - 2 * 0.3) / 3, y = 1.8, h = 4.3;
     const TODAY = ['Header: lockdown, site › cluster selector, search, Incident Management', 'Real Time Alerts: counters, tabs, Locate and Escalate on every card', 'Device Status; 2D / 3D toggle; 3D viewer with Locate', 'Active Alarms: event head, camera tiles, Investigation, SOP Flow, Remarks', 'SOP Flow: numbered steps, checkboxes, Critical Action steps', 'Escalate dialog → Incident Management: table, filters, export, Close Incident'];
-    const DELTA = [['Co-pilot line on alert cards', 'XS'], ['3D airport model, pins, Locate zoom', 'M'], ['Ask Co-pilot search with answers', 'M'], ['Camera-tile bounding boxes', 'S'], ['Co-pilot entry in Investigation', 'S'], ['Linked alarms in the System entry', 'S'], ['SOP steps pre-filled, auto steps ticked', 'S'], ['Approvals as Critical Action steps', 'S'], ['Escalate dialog pre-filled', 'XS'], ['Co-pilot report draft in Remarks', 'XS'], ['Co-pilot colour token', 'XS']];
+    const DELTA = [['Co-pilot line on alert cards', 'XS'], ['3D airport model, pins, Locate zoom', 'M'], ['Ask Co-pilot search with answers', 'M'], ['Outline boxes on camera tiles', 'S'], ['Co-pilot entry in Investigation', 'S'], ['Linked alarms in the System entry', 'S'], ['SOP steps pre-filled, auto steps ticked', 'S'], ['Approvals as Critical Action steps', 'S'], ['Escalate dialog pre-filled', 'XS'], ['Co-pilot report draft in Remarks', 'XS'], ['Co-pilot colour token', 'XS']];
     const BEHIND = ['Airport 3D model', 'Recorded demo clips with analytics metadata', 'ACS, AgilFence and LiDAR event feeds (recorded is fine)', 'SOP library', 'Co-pilot service: summary, linked alarms, SOP pre-fill, Q&A'];
     for (const [i, [tag, kind, head]] of [[null, 'today', 'In V11 today, unchanged'], [null, 'concept', 'The demo adds (front end)'], [null, 'confirm', 'Behind the UI, not design work']].entries()) {
       const x = MX + i * (cw + 0.3);
@@ -906,13 +948,14 @@ async function build() {
     const by = 6.22;
     card(s, MX, by, CW, 0.68, { fill: CARD, tr: 15, line: LAV, ltr: 55, lw: 1, name: '22 Oct plans' });
     label(s, '22 OCT', MX + 0.25, by + 0.21, 0.9, LAV);
-    const plans = [{ text: 'Plan A  ', options: { bold: true, color: LAV } }, { text: 'live V11 with these additions and recorded data, if R&D confirms a demo instance.     ' }, { text: 'Plan B  ', options: { bold: true, color: LAV } }, { text: 'film “From alarms to answers” + click-through of the 12 frames; needs nothing from R&D. Both are honest.' }];
-    fit('plans', plain(plans), 12, false, CW - 1.5, 0.6, 1.1);
+    const planA = 'live V11 with these additions and recorded data, if R&D confirms a demo instance.', planB = 'film “From alarms to answers” + click-through of the 12 frames; needs nothing from R&D.';
+    const plans = [{ text: 'Plan A  ', options: { bold: true, color: LAV } }, { text: planA, options: { breakLine: true } }, { text: 'Plan B  ', options: { bold: true, color: LAV } }, { text: planB }];
+    fit('plans', `Plan A  ${planA}\nPlan B  ${planB}`, 12, false, CW - 1.5, 0.6, 1.1);
     T(s, plans, { x: MX + 1.15, y: by + 0.04, w: CW - 1.4, h: 0.6, fontSize: 12, valign: 'middle', lineSpacingMultiple: 1.05 });
   }
   s.addNotes([
-    'Here is the honest split behind area two. The left column is V11 today, unchanged. The middle column is the eleven front-end additions the demo needs, each reusing an existing V11 part; the sizes are indicative front-end effort. The right column is what sits behind the user interface and is not design work.',
-    'For the twenty-second we have two plans. Plan A runs live V11 with these additions and recorded data, if R&D confirms a demo instance exists. Plan B uses the film and a click-through of the twelve frames, and needs nothing from R&D. Both are honest.',
+    'Here is the split behind area two. The left column is V11 today, unchanged. The middle column is the eleven front-end additions the demo needs, each reusing an existing V11 part; the sizes are indicative front-end effort. The right column is what sits behind the user interface and is not design work.',
+    'For the twenty-second we have two plans. Plan A runs live V11 with these additions and recorded data, if R&D confirms a demo instance exists. Plan B uses the film and a click-through of the twelve frames, and needs nothing from R&D. Both are safe to show.',
   ].join('\n'));
 
   // 13 ── supporting material already in hand
@@ -921,9 +964,9 @@ async function build() {
     const lw = 7.6, y0 = 1.8, rh = 0.98;
     const MAT = [
       { id: 'V11-01', t: '12 V11-fit demo frames', d: 'V11-01…12, Figma SVG in the V11 design; use cases for all six capabilities', g: 'concept' },
-      { id: 'V11-05', t: 'Film “From alarms to answers”', d: 'The night shift on V11 screens, narrated; plan B for 22 Oct', g: 'concept', play: true },
+      { id: 'V11-05', t: 'Film “From alarms to answers”', d: 'The night shift on V11 screens, narrated (2:50); plan B for 22 Oct', g: 'concept', play: true },
       { file: 'viz_cover.png', t: 'Pitch deck v2 (28 slides)', d: 'Live-demo deck with speaker script and presenter appendix', g: 'concept' },
-      { id: 'AF-00b', t: 'AgilFence flow, board and film', d: 'AF-00…09 + flow board, film “First touch”: from a climb on the fence to a closed incident', g: 'concept', play: true },
+      { id: 'AF-00b', t: 'AgilFence flow, board and film', d: 'AF-00…09 + flow board, film “First touch” (2:27): from a climb on the fence to a closed incident', g: 'concept', play: true },
       { id: 'MS-01', t: 'Six multi-site frames (new)', d: 'MS-01…06: estate overview, site drill-down, baseline, roles, connectors, estate report; flow boards', g: 'concept' },
     ];
     for (const [i, m] of MAT.entries()) {
@@ -935,11 +978,12 @@ async function build() {
       else await pic(s, m.file, MX + 0.12, y + (rh - 0.1 - th) / 2, tw2, th, 'Pitch deck cover art');
       if (m.play) await iconDisc(s, 'LuPlay', MX + 0.12 + Math.min(tw3, 1.5) / 2 - 0.2, y + (rh - 0.1) / 2 - 0.2, 0.4, { fill: NAVY, tr: 20, k: 0.5, lw: 1 });
       const tx0 = MX + 1.8;
+      // a two-line description lifts the row by 0.04 in so it keeps its padding above the card edge
+      const n = fit('mat desc ' + i, m.d, 12, false, lw - 1.95, 0.40, 1.05), ty = y + (n > 1 ? 0.10 : 0.14);
       fit('mat title ' + i, m.t, 15, true, lw - 1.95 - 2.0, 0.3);
-      T(s, m.t, { x: tx0, y: y + 0.14, w: lw - 1.95 - 2.0, h: 0.3, fontSize: 15, bold: true });
-      fit('mat desc ' + i, m.d, 12, false, lw - 1.95, 0.42, 1.05);
-      T(s, m.d, { x: tx0, y: y + 0.46, w: lw - 1.95, h: 0.42, fontSize: 12, color: MUTED, lineSpacingMultiple: 1.05 });
-      grade(s, MX + lw - 0.2, y + 0.14, m.g, undefined, { right: true });
+      T(s, m.t, { x: tx0, y: ty, w: lw - 1.95 - 2.0, h: 0.3, fontSize: 15, bold: true });
+      T(s, m.d, { x: tx0, y: ty + 0.32, w: lw - 1.95, h: 0.40, fontSize: 12, color: MUTED, lineSpacingMultiple: 1.05 });
+      grade(s, MX + lw - 0.2, ty, m.g, undefined, { right: true });
     }
     const rx0 = MX + lw + 0.3, rw2 = RX - rx0;
     card(s, rx0, y0, rw2, 5 * rh - 0.1, { fill: GOLD, tr: 90, line: GOLD, ltr: 55, lw: 1, name: 'From R&D' });
@@ -952,17 +996,20 @@ async function build() {
       fit('need ' + a, b, 12, false, rw2 - 1.0, 0.5, 1.05);
       T(s, b, { x: rx0 + 0.75, y: y + 0.32, w: rw2 - 1.0, h: 0.5, fontSize: 12, color: MUTED, lineSpacingMultiple: 1.05 });
     }
-    footnote(s, `Asked for by ${CONFIRM_BY}, together with the train dates.`, 6.62);
+    footnote(s, `Items 1, 3 and 4 by ${CONFIRM_BY}, with the train dates. Item 2 by 21 Oct 2026, before Weili’s deck goes to CAG.`, 6.62);
   }
   s.addNotes([
     'We are not starting from zero. We already have twelve V11-fit frames, the film, the pitch deck, the AgilFence flow with its film, and six new multi-site frames in this deliverable. All of it is concept on V11 screens, and labelled as such.',
-    'What we still need from R&D is on the right: the AI roadmap by train, the status of the video-analytics catalogue, the plan for the Co-pilot service, and data access for a pilot. We have asked for these by the thirtieth of October, together with the train dates.',
+    'What we still need from R&D is on the right: the AI roadmap by train, the status of the video-analytics catalogue, the plan for the Co-pilot service, and data access for a pilot. We have asked for the video-analytics answer by the twenty-first, before Weili’s deck goes out, and the other three by the thirtieth, together with the train dates.',
   ].join('\n'));
 
-  // 14 ── section: area 4
+  // 15 ── section: area 4
   pres.addSection({ title: SEC.p4 });
   s = section('STRATEGIC AREA 4', 'AgilFence unified integration', 'Partly in V11 today: the alarm → incident → SOP → report workflow takes any alarm source. The AgilFence module itself is designed and on the roadmap.', SEC.p4, 4);
-  s.addNotes('Strategic area four, AgilFence unified integration. The answer is partly. The alarm-to-report workflow is in V11 today and takes any alarm source. The AgilFence-specific module is designed and on the roadmap, on proposed dates.');
+  s.addNotes([
+    'Strategic area four, AgilFence unified integration. The answer is partly. The alarm-to-report workflow is in V11 today and takes any alarm source. The AgilFence-specific module is designed and on the roadmap, on proposed dates.',
+    'We start with what CAG runs today and what moves into V11. Then the question row by row, the fence alarm end to end, and the three trains.',
+  ].join('\n'));
 
   // 15 ── today two platforms, target one workflow
   s = content('STRATEGIC AREA 4  ·  WHAT CAG RUNS TODAY, WHAT CHANGES', 'Today two platforms. Target one workflow.', SEC.p4);
@@ -994,7 +1041,7 @@ async function build() {
     }
     // middle: what moves, what stays
     label(s, 'WHAT MOVES INTO V11', mx0, y + 0.2, mw, LAV);
-    const MOVES = [['11.1', 'Alarm, segment and camera preset flow into the V11 workflow; fence alarms in reports'], ['11.2', 'Fence line and segments on the map, nearest cameras, replay, wall layout, health view, fence reports'], ['11.3', 'Zone and sensitivity configuration, calibration, nuisance analytics']];
+    const MOVES = [['11.1', 'Alarm, segment, camera preset in the V11 workflow; fence alarms in reports'], ['11.2', 'Fence line on the map, nearest cameras, replay, wall, health view, fence reports'], ['11.3', 'Zone and sensitivity configuration, calibration, nuisance analytics']];
     for (const [i, [t, txt]] of MOVES.entries()) {
       const yy = y + 0.52 + i * 1.12;
       card(s, mx0, yy, mw, 1.04, { tr: 15, edge: false, line: LAV, ltr: 65, name: 'Move ' + t });
@@ -1027,7 +1074,7 @@ async function build() {
       ['Command-centre video wall layout', ['none', 'VMS wall today'], ['concept', 'one-click wall layout (AF-06)'], ['11.2'], 'Wall controller integration'],
       ['Fence health, diagnostics, nuisance analytics', ['none', 'in iPAMS'], ['concept', 'dashboard, listed; not yet drawn'], ['11.2', '11.3'], null],
       ['Zone / sensitivity configuration, calibration', ['none', 'in iPAMS'], ['none', 'stays in iPAMS until V11.3'], ['11.3'], null],
-      ['Unified reporting', ['today', 'Incident Management export'], ['concept', 'fence alarms in the same report; evidence pack (AF-09)'], ['11.1', '11.2'], null],
+      ['Unified reporting', ['today', 'Incident Mgmt export'], ['concept', 'fence alarms in one report; evidence pack (AF-09)'], ['11.1', '11.2'], null],
     ];
     const cols = [2.9, 2.2, 3.1, 1.55, 2.383], xs = []; let cx = MX; for (const w of cols) { xs.push(cx); cx += w; }
     const y0 = 1.78, rh = 0.64;
@@ -1063,14 +1110,15 @@ async function build() {
     const cy = bd.y + bd.h + 0.14;
     let px = MX + grade(s, MX, cy, 'today', 'STEP 1 · TODAY') + 0.1;
     px += grade(s, px, cy, 'concept', 'STEPS 2–9 · CONCEPT') + 0.14;
-    const cap = 'AF-00b · film \u201CFirst touch\u201D · illustrative';
+    const cap = 'AF-00b · film \u201CFirst touch\u201D (2:27) · illustrative';
     fit('board caption', cap, 12, false, MX + bw - px, 0.3);
     T(s, cap, { x: px, y: cy, w: MX + bw - px, h: 0.3, fontSize: 12, color: MUTED, valign: 'middle' });
-    const kx = MX + bw + 0.3, kw = RX - kx;
+    const kx = MX + bw + 0.3, kw = RX - kx - 0.1;
+    // the third key frame is the whole Critical Action card (header, text and both buttons); AF-04 is trimmed to the panel header and the PTZ 7-02 row
     const KEYS = [
       { id: 'AF-02', r: afr('AF-02', 'toast'), t: '02:14:59 · alarm lands in V11', g: ['concept', 'CONCEPT'] },
-      { id: 'AF-04', r: [400, 590, 300, 110], t: '02:15:08 · nearest cameras', g: ['concept', 'CONCEPT'] },
-      { id: 'AF-07', r: [916, 772, 428, 92], t: '02:15:24 · a person approves', g: ['today', 'SOP IN V11'] },
+      { id: 'AF-04', r: [400, 598, 300, 96], t: '02:15:08 · nearest cameras', g: ['concept', 'CONCEPT'] },
+      { id: 'AF-07', r: afr('AF-07', 'crit'), t: '02:15:24 · a person approves', g: ['concept', 'CONCEPT'] },
     ];
     let ky = by;
     for (const [i, k] of KEYS.entries()) {
@@ -1088,7 +1136,7 @@ async function build() {
   }
   s.addNotes([
     'This is what CAG will see on the twenty-second for AgilFence: a flow board with nine steps, from a climb on segment five-fourteen to a closed incident, all on V11 screens. The three key moments are the system message when the fence alarm lands in V11, the Locate view with the nearest cameras, and the SOP step where the operator approves the dispatch.',
-    'Step one is AgilFence and iPAMS as they work today. Steps two to nine are concept on V11, labelled as such, and the film walks through them.',
+    'Step one is AgilFence and iPAMS as they work today. Steps two to nine are concept on V11, labelled as such, and the film walks through them. The SOP Flow panel in the third moment is V11 today; the fence steps inside it are concept.',
   ].join('\n'));
 
   // 18 ── locate: the fence, the segment, the nearest camera
@@ -1111,7 +1159,7 @@ async function build() {
 
   // 19 ── AgilFence roadmap in V11
   s = content('STRATEGIC AREA 4  ·  ROADMAP', 'AgilFence roadmap in V11', SEC.p4);
-  await trainBoard(s, 'p4', { titles: ['Fence alarms in the V11 workflow', 'The connector', 'The AgilFence module', 'iPAMS functions in V11'] });
+  await trainBoard(s, 'p4', { titles: ['Any alarm source', 'The connector', 'AgilFence module', 'iPAMS functions in V11'] });
   s.addNotes([
     'The AgilFence roadmap in V11 in three trains. Eleven point one is the connector: alarm, segment and camera preset flow into the V11 workflow, and fence alarms appear in reports. Eleven point two is the module: fence on the map, nearest cameras, replay, wall layout, health view and fence reports. Eleven point three brings the remaining iPAMS functions into V11: configuration, calibration and nuisance analytics.',
     'The dates are our proposal: March, September, and March again. Peter and Anuar confirm them against the R&D roadmap by the thirtieth of October.',
@@ -1120,40 +1168,43 @@ async function build() {
   // 20 ── section: area 5
   pres.addSection({ title: SEC.p5 });
   s = section('STRATEGIC AREA 5', 'Multi-site, multi-brand governance', 'Not in V11 today: V11 runs one site with many clusters. The estate layer is designed in six new frames and ships in three trains, on proposed dates.', SEC.p5, 5);
-  s.addNotes('Strategic area five, multi-site and multi-brand governance. Not in V11 today. V11 runs one site with many clusters. The estate layer is designed in six new frames in this deliverable and ships in three trains, on proposed dates.');
+  s.addNotes([
+    'Strategic area five, multi-site and multi-brand governance. Not in V11 today. V11 runs one site with many clusters. The estate layer is designed in six new frames in this deliverable and ships in three trains, on proposed dates.',
+    'We turn the ask into four jobs, walk through the concept on the new screens, and close with the three trains.',
+  ].join('\n'));
 
   // 21 ── what CAG asked for, in product terms
   s = content('STRATEGIC AREA 5  ·  FOUR JOBS', 'What CAG asked for, in product terms', SEC.p5);
   {
-    const cw = (CW - 3 * 0.25) / 4, y = 1.8, h = 4.9;
+    const cw = (CW - 3 * 0.25) / 4, y = 1.8, h = 4.66;
     const JOBS = [
       ['LuBuilding2', 'Estate overview', 'Every terminal and facility on one screen: health, open alarms, baseline compliance.', ['none', 'Site › cluster selector only; one site per console'], 'MS-01', ['11.1', '11.2']],
       ['LuScale', 'One baseline, local autonomy', 'A common security baseline and SOPs; each site keeps local control with approved overrides.', ['today', 'SOP Flow per site; per-site console'], 'MS-02 · MS-03', ['11.1', '11.2']],
-      ['LuPlug', 'Any brand under one roof', 'Any vendor\u2019s cameras, access control, fences and intercoms, onboarded by protocol.', ['today', 'Integrations per site; connector list to confirm'], 'MS-04 · MS-05', ['11.2', '11.3']],
+      ['LuPlug', 'Any brand under one roof', 'Any vendor\u2019s cameras, access control, fences and intercoms, onboarded by protocol.', ['today', 'Integrations per site; connector list to confirm'], 'MS-04 · MS-05', ['11.1', '11.2', '11.3']],
       ['LuCode', 'Open API and SDK', 'Partners build on AGIL Secure: API, SDK, certification and a sandbox.', ['none', 'Not in V11; API status to confirm with R&D'], 'MS-05 dialog', ['11.3']],
     ];
     for (const [i, [ic, ttl, asked, [tk, ttxt], fr, trains]] of JOBS.entries()) {
       const x = MX + i * (cw + 0.25), iw = cw - 0.4, ix = x + 0.2;
       card(s, x, y, cw, h, { tr: 25, name: 'Job ' + (i + 1) });
-      await iconDisc(s, ic, ix, y + 0.24, 0.58, { k: 0.5 });
-      T(s, 'JOB ' + (i + 1), { x: x + cw - 1.3, y: y + 0.38, w: 1.1, h: 0.3, fontSize: 12, bold: true, color: MUTED, charSpacing: 1.5, align: 'right', valign: 'middle' });
+      await iconDisc(s, ic, ix, y + 0.18, 0.50, { k: 0.5 });
+      T(s, 'JOB ' + (i + 1), { x: x + cw - 1.3, y: y + 0.28, w: 1.1, h: 0.3, fontSize: 12, bold: true, color: MUTED, charSpacing: 1.5, align: 'right', valign: 'middle' });
       fit('job title ' + i, ttl, 18, true, iw, 0.6, 1.0);
-      T(s, ttl, { x: ix, y: y + 0.98, w: iw, h: 0.6, fontSize: 18, bold: true, lineSpacingMultiple: 1.0 });
-      label(s, 'CAG ASKED FOR', ix, y + 1.6, iw);
+      T(s, ttl, { x: ix, y: y + 0.78, w: iw, h: 0.6, fontSize: 18, bold: true, lineSpacingMultiple: 1.0 });
+      label(s, 'CAG ASKED FOR', ix, y + 1.4, iw);
       fit('job asked ' + i, asked, 12, false, iw, 0.62, 1.1);
-      T(s, asked, { x: ix, y: y + 1.84, w: iw, h: 0.64, fontSize: 12, color: MUTED, lineSpacingMultiple: 1.05 });
-      s.addShape(LINE, { x: ix, y: y + 2.56, w: iw, h: 0, line: { color: INK, width: 0.75, transparency: 85 }, objectName: 'Divider' });
-      label(s, 'V11 TODAY', ix, y + 2.66, iw);
-      grade(s, ix, y + 2.92, tk, tk === 'none' ? 'NOT IN V11' : 'PARTLY', { soft: tk === 'none' });
+      T(s, asked, { x: ix, y: y + 1.64, w: iw, h: 0.64, fontSize: 12, color: MUTED, lineSpacingMultiple: 1.05 });
+      s.addShape(LINE, { x: ix, y: y + 2.36, w: iw, h: 0, line: { color: INK, width: 0.75, transparency: 85 }, objectName: 'Divider' });
+      label(s, 'V11 TODAY', ix, y + 2.46, iw);
+      grade(s, ix, y + 2.72, tk, tk === 'none' ? 'NOT IN V11' : 'PARTLY', { soft: tk === 'none' });
       fit('job today ' + i, ttxt, 12, false, iw, 0.42, 1.05);
-      T(s, ttxt, { x: ix, y: y + 3.26, w: iw, h: 0.44, fontSize: 12, color: MUTED, lineSpacingMultiple: 1.05 });
-      label(s, 'CONCEPT  ·  TRAIN', ix, y + 3.78, iw);
-      const pw = grade(s, ix, y + 4.04, 'concept', fr);
+      T(s, ttxt, { x: ix, y: y + 3.06, w: iw, h: 0.44, fontSize: 12, color: MUTED, lineSpacingMultiple: 1.05 });
+      label(s, 'CONCEPT  ·  TRAIN', ix, y + 3.58, iw);
+      const pw = grade(s, ix, y + 3.84, 'concept', fr);
       if (pw > iw) WARN.push('job concept tag overflow ' + i);
-      const px = ix + trainTags(s, ix, y + 4.4, trains);
+      const px = ix + trainTags(s, ix, y + 4.2, trains);
       if (px > x + cw - 0.1) WARN.push('job tags overflow ' + i);
     }
-    proposalNote(s, 6.86);
+    proposalNote(s);
   }
   s.addNotes([
     'In product terms CAG asked for four jobs. An estate overview of every site. One security baseline with local autonomy. Any brand under one roof. And an open API and SDK.',
@@ -1183,8 +1234,8 @@ async function build() {
     side: 'left', section: SEC.p5, kicker: 'MULTI-SITE  ·  02:20  ·  SELETAR, LOCAL', grade: ['concept', 'CONCEPT ON V11 SCREENS'], frame: 'MS-02 + MS-03',
     title: 'Local autonomy\nunder one baseline',
     watch: [['Mode chip:', 'local autonomous'], ['SOP:', 'baseline locked + 1 local step']],
-    ready: [['today', 'Per-site console and SOP Flow'], ['concept', 'Autonomy chip, locked baseline, local step, approvals'], ['roadmap', 'V11.2 · Q3 2027 (Sep) · proposed (site switcher: V11.1)']],
-    extra: { id: 'MS-03', r: msr('MS-03', 'overrideRequest'), n: 3, caption: 'MS-03: an override request waits for a person to approve or return it.', alt: 'Estate Governance: a pending override request with Approve and Return buttons' },
+    ready: [['today', 'Per-site console and SOP Flow'], ['concept', 'Autonomy chip, locked baseline, local step, approvals'], ['roadmap', 'MS-02: V11.1 · Q1 2027 (Mar) · MS-03: V11.2 · Q3 2027 (Sep) · proposed']],
+    extra: { id: 'MS-03', r: msr('MS-03', 'overrideRequest'), n: 3, caption: 'MS-03: a person approves or returns the override request.', alt: 'Estate Governance: a pending override request with Approve and Return buttons' },
     visual: async (s, vx) => {
       const dv = await device(s, 'MS-02', vx, DY, DW, 'V11 console for Seletar Airport in local autonomous mode: fence alarm on Sector 2, SOP Flow with locked estate baseline steps and one approved local step');
       hl(s, dv, msr('MS-02', 'autonomyChip'), 1, { side: 't', edge: true });
@@ -1202,16 +1253,18 @@ async function build() {
     section: SEC.p5, kicker: 'MULTI-SITE  ·  CONNECTORS AND ROLES', grade: ['concept', 'CONCEPT ON V11 SCREENS'], frame: 'MS-05 + MS-04',
     title: 'Any brand,\none governance',
     watch: [['Catalogue:', 'site, vendor, protocol, status'], ['Onboarding:', 'certification checks first']],
-    ready: [['today', 'Integrations and roles per site'], ['concept', 'Connector catalogue, onboarding, role matrix'], ['roadmap', 'V11.2 · Q3 2027 (Sep) · proposed (API, sandbox: V11.3)']],
-    extra: { id: 'MS-04', r: (() => { const m = msr('MS-04', 'matrix'); return [m[0], m[1], Math.min(m[2], 540), Math.min(m[3], 260)]; })(), n: 3, caption: 'MS-04, roles × sites: local guards see only their site; the estate edits only the baseline.', alt: 'Role by site matrix: estate admin, Central SOC operator, site security manager, auditor, integrator' },
+    ready: [['today', 'Integrations and roles per site'], ['concept', 'Connector catalogue, onboarding, role matrix'], ['roadmap', 'MS-05: V11.2 · Q3 2027 (Sep) · MS-04: V11.1 · Q1 2027 (Mar) · proposed']],
+    // the lens ends on cell boundaries (header + three roles, Role + three sites) and starts 40 px into the page gutter so the marker sits off the Role header
+    extra: { id: 'MS-04', r: (() => { const m = msr('MS-04', 'matrix'); return [m[0] - 40, m[1], 596 + 40, 228]; })(), n: 3, caption: 'MS-04, roles × sites: local guards see only their site; the estate edits only the baseline.', alt: 'Role by site matrix: estate admin, Central SOC operator, site security manager, auditor, integrator' },
     visual: async (s, vx) => {
       const dv = await device(s, 'MS-05', vx, DY, DW, 'Estate Governance, Systems and connectors: systems by site, vendor and protocol with status, and the Add third-party system dialog');
       hl(s, dv, msr('MS-05', 'onboardingRows'), 1, { side: 'l', edge: true });
-      hl(s, dv, msr('MS-05', 'protocolSelect'), 2, { side: 'r', edge: true });
+      // marker 2 = the "Run certification checks" block (header + five rows); ms-anchors.json may carry it as certChecks, else the measured rect
+      hl(s, dv, (MSA['MS-05'] || {}).certChecks || [906, 508, 608, 200], 2, { side: 'r', edge: true });
     },
     notes: [
       'Any brand under one governance. The connector page lists every system by site, vendor and protocol, with its certification status; third-party systems appear as vendor A to E with their protocol, never as named brands. Adding a system is a guided dialog with certification checks. The roles page shows who can do what at which site: local guards see only their site, the estate sees everything and edits only the baseline.',
-      'Integrations and site roles exist per site in V11 today. The catalogue is proposed for eleven point two, certification and the partner sandbox for eleven point three.',
+      'Integrations and site roles exist per site in V11 today. Roles per site are proposed for eleven point one, the catalogue for eleven point two, certification and the partner sandbox for eleven point three.',
     ],
   });
 
@@ -1219,7 +1272,7 @@ async function build() {
   await scene({
     side: 'left', section: SEC.p5, kicker: 'MULTI-SITE  ·  ESTATE REPORT', grade: ['concept', 'CONCEPT ON V11 SCREENS'], frame: 'MS-06 · illustrative',
     title: 'One report\nfor the estate',
-    watch: [['Incidents by site:', 'and by severity'], ['Fence coverage:', 'km, segments in alarm'], ['Export:', 'one estate report']],
+    watch: [['Incidents:', 'by site and by severity'],['Fence coverage:', 'km, segments in alarm'], ['Export:', 'one estate report']],
     ready: [['today', 'Per-site export in Incident Management'], ['concept', 'Estate report: incidents, alarms, compliance, health, fence'], ['roadmap', '11.2']],
     visual: async (s, vx) => {
       const dv = await device(s, 'MS-06', vx, DY, DW, 'Estate Governance, Estate report: tiles for open incidents by site, alarms by source system, baseline compliance, device health and AgilFence coverage');
@@ -1254,12 +1307,14 @@ async function build() {
       s.addShape(OVAL, { x: x + 0.1, y: ly - 0.2, w: 0.4, h: 0.4, fill: { color: col, transparency: 70 }, line: { type: 'none' }, objectName: 'Milestone halo ' + name });
       s.addShape(OVAL, { x: x + 0.17, y: ly - 0.13, w: 0.26, h: 0.26, fill: { color: col }, line: { color: INK, width: 1.5 }, objectName: 'Milestone ' + name });
       T(s, [{ text: name + '  ', options: { bold: true, color: col } }, { text: g || q, options: { color: INK } }], { x: x + 0.1, y: ly - 0.62, w: colW - 0.1, h: 0.32, fontSize: 15, valign: 'middle' });
-      if (g) T(s, PROPOSED.toUpperCase(), { x: x + 0.6, y: ly + 0.12, w: colW - 0.6, h: 0.26, fontSize: 12, bold: true, color: GOLD, charSpacing: 0.5, valign: 'middle' });
-      else T(s, '22 OCT DEMO · 30 OCT R&D', { x: x + 0.55, y: ly + 0.12, w: colW - 0.55, h: 0.26, fontSize: 12, bold: true, color: GREEN, valign: 'middle' });
+      // one line under the milestone, on a navy plate so the timeline art (dot cloud, NOW rings) stays behind it
+      const lab = g ? PROPOSED.toUpperCase() : '22 OCT DEMO · 30 OCT R&D', lw2 = tw(lab, 12, true, 0) + 0.1;
+      if (x + lw2 > x + colW) WARN.push('roadmap label wider than its column: ' + lab);
+      s.addText(lab, { shape: RR, x: x + 0.02, y: ly + 0.2, w: lw2, h: 0.24, rectRadius: 0.06, fill: { color: NAVY, transparency: 35 }, line: { type: 'none' }, color: g ? GOLD : GREEN, fontSize: 12, bold: true, charSpacing: 0, align: 'center', valign: 'middle', margin: 0, isTextBox: true, objectName: 'Label ' + lab });
     }
     // lanes
     const LANES = [['2', 'AI ISMS', 'p2'], ['4', 'AgilFence', 'p4'], ['5', 'Multi-site', 'p5']];
-    const ly0 = 2.62, lh = 1.08;
+    const ly0 = 2.66, lh = 1.02;
     for (const [j, [n, nm, key]] of LANES.entries()) {
       const y = ly0 + j * (lh + 0.1);
       for (const [i, t] of TRAINS.entries()) {
@@ -1280,7 +1335,8 @@ async function build() {
     const nt = '22 Oct demo · 30 Oct R&D confirmation · Q4 workshops';
     fit('calendar', nt, 12, false, colW - 0.1, 0.44, 1.05);
     T(s, nt, { x: colX(0), y: py, w: colW - 0.1, h: 0.44, fontSize: 12, color: MUTED, valign: 'middle', lineSpacingMultiple: 1.0 });
-    proposalNote(s, py + 0.62);
+    if (py + 0.44 > 6.5) WARN.push(`pilot bar ends at ${(py + 0.44).toFixed(2)}`);
+    proposalNote(s);
   }
   s.addNotes([
     'All three areas on one timeline. In the next two weeks: the sales demo on the twenty-second and the roadmap confirmation on the thirtieth, then workshops in the fourth quarter. Eleven point one in March, eleven point two in September, eleven point three in March of twenty twenty-eight, all proposed. The pilot would start with eleven point one in one terminal.',
@@ -1297,14 +1353,16 @@ async function build() {
       [null, 'DO NOT PROMISE', 'ever', 'Automatic closure of incidents or any autonomous consequential action. Facial recognition. Performance numbers: accuracy, response times, savings. Any date before R&D confirms.'],
     ];
     const y0 = 1.85, rh = 1.02;
+    // one body column for all rows, placed after the widest pill (grade() pads 0.3, pill() 0.32)
+    const pwMax = Math.max(...LAD.map(([k, lab]) => tw(lab, 12, true, 1) + (k ? 0.3 : 0.32))), tx0 = MX + 0.3 + pwMax + 0.2, tw0 = RX - 0.3 - tx0;
     for (const [i, [k, lab, when, txt]] of LAD.entries()) {
       const y = y0 + i * (rh + 0.12), col = k ? GRADES[k].hex : HEX.red;
       card(s, MX, y, CW, rh, { tr: 25, edge: col, name: 'Ladder ' + lab });
       s.addShape(RECT, { x: MX, y: y + 0.12, w: 0.06, h: rh - 0.24, fill: { color: col }, line: { type: 'none' }, objectName: 'Ladder rule' });
       if (k) grade(s, MX + 0.3, y + 0.2, k, lab); else pill(s, MX + 0.3, y + 0.2, lab, HEX.red, HEX.white, { pt: 12 });
       T(s, when.toUpperCase(), { x: MX + 0.3, y: y + 0.58, w: 3.0, h: 0.28, fontSize: 13, bold: true, color: MUTED, charSpacing: 1, valign: 'middle' });
-      fit('ladder ' + lab, txt, 15, false, CW - 3.9, rh - 0.2, 1.1);
-      T(s, txt, { x: MX + 3.6, y: y, w: CW - 3.9, h: rh, fontSize: 15, valign: 'middle', lineSpacingMultiple: 1.05 });
+      fit('ladder ' + lab, txt, 15, false, tw0, rh - 0.2, 1.1);
+      T(s, txt, { x: tx0, y: y, w: tw0, h: rh, fontSize: 15, valign: 'middle', lineSpacingMultiple: 1.05 });
     }
   }
   s.addNotes([
@@ -1317,7 +1375,7 @@ async function build() {
   {
     const ROWS = [
       ['R&D roadmap alignment', 'If the trains move, every date we show CAG moves with them; nothing is promised before confirmation.', 'Peter, with Anuar', CONFIRM_BY],
-      ['iPAMS interface (relay / OPC / API)', 'Decides how soon fence alarms flow into V11 and what the V11.1 connector can carry.', 'Anuar', CONFIRM_BY],
+      ['iPAMS interface (relay contact, OPC data link or API)', 'Decides how soon fence alarms flow into V11 and what the V11.1 connector can carry.', 'Anuar', CONFIRM_BY],
       ['Demo instance for plan A', 'Live V11 with the demo additions and recorded data; without it we run plan B (film + frames).', 'R&D', '21 Oct 2026'],
       ['Pilot data access and privacy policy', 'ACS, VMS, AgilFence and LiDAR feeds for one terminal; watchlist and privacy policy agreed with CAG.', 'CAG with Sales', 'Q4 2026'],
       ['Edits to Weili’s deck', 'The four edits and the page-2 confirmation before the deck goes to CAG.', 'Weili with Product', '21 Oct 2026'],
@@ -1330,30 +1388,33 @@ async function build() {
   }
   s.addNotes([
     'Five dependencies, each with an owner and a date. Roadmap alignment with Peter by the thirtieth. The iPAMS interface with Anuar. A demo instance for plan A from R&D before the twenty-second. Pilot data access and the privacy policy with CAG and Sales. And the edits to Weili’s deck with Weili and Product by the twenty-first.',
+    'None of these blocks the twenty-second. Plan B needs nothing from R&D, and every concept we show is labelled.',
   ].join('\n'));
 
   // 30 ── decisions needed today
   s = content('FOUR DECISIONS', 'Decisions needed today', SEC.close);
   {
     const DEC = [
-      ['Approve the commitment list', 'for 22 Oct and Q4 2026: commit what is in V11 today, show concepts labelled, promise dates only after R&D confirms.'],
-      ['Approve the four edits to Weili’s deck', 'grade every page, V11 screens instead of concept art, “Assisted” instead of “Autonomous”, all five strategic areas plus one privacy line.'],
-      [`Mandate Product and R&D to lock the train dates by ${CONFIRM_BY}`, 'V11.1, V11.2 and V11.3 confirmed against the R&D roadmap before any date reaches CAG.'],
-      ['Name the CAG design partner for multi-site governance', 'one terminal or facility that shapes the estate concept with us, and sets the pilot scope.'],
+      ['Approve the commitment list', 'for 22 Oct and Q4 2026: commit what is in V11 today, show concepts labelled, promise dates only after R&D confirms. Owner: Product.'],
+      ['Approve the four edits to Weili’s deck', 'grade every page, V11 screens instead of concept art, “Assisted” instead of “Autonomous”, all five strategic areas plus one privacy line. Weili with Product, by 21 Oct 2026.'],
+      [`Mandate Product and R&D to lock the train dates by ${CONFIRM_BY}`, 'V11.1, V11.2 and V11.3 confirmed against the R&D roadmap before any date reaches CAG. Peter, with Anuar.'],
+      ['Name the CAG design partner for multi-site governance', 'one terminal or facility that shapes the estate concept with us, and sets the pilot scope. With CAG and Sales, Q4 2026.'],
     ];
     const w2 = (CW - 0.3) / 2, h = 2.25;
     for (const [i, [hd, tx]] of DEC.entries()) {
       const x = MX + (i % 2) * (w2 + 0.3), y = 1.85 + Math.floor(i / 2) * (h + 0.25);
       card(s, x, y, w2, h, { tr: 25, name: 'Decision ' + (i + 1) });
       T(s, '0' + (i + 1), { x: x + 0.3, y: y + 0.2, w: 1.0, h: 0.6, fontSize: 36, bold: true, color: LAV, charSpacing: -1 });
-      fit('decision ' + i, hd, 19, true, w2 - 1.6, 0.9, 1.0);
-      T(s, hd, { x: x + 1.3, y: y + 0.24, w: w2 - 1.6, h: 0.9, fontSize: 19, bold: true, lineSpacingMultiple: 1.0 });
+      // the body follows the measured heading height, so a one-line and a two-line heading leave the same gap
+      const n = fit('decision ' + i, hd, 19, true, w2 - 1.6, 0.9, 1.0), ty = y + 0.24 + n * 0.3 + 0.16;
+      T(s, hd, { x: x + 1.3, y: y + 0.24, w: w2 - 1.6, h: n * 0.3 + 0.04, fontSize: 19, bold: true, lineSpacingMultiple: 1.0 });
       fit('decision text ' + i, tx, 14, false, w2 - 1.6, 0.9, 1.1);
-      T(s, tx, { x: x + 1.3, y: y + 1.18, w: w2 - 1.6, h: 0.95, fontSize: 14, color: MUTED, lineSpacingMultiple: 1.05 });
+      T(s, tx, { x: x + 1.3, y: ty, w: w2 - 1.6, h: 0.95, fontSize: 14, color: MUTED, lineSpacingMultiple: 1.05 });
     }
   }
   s.addNotes([
     'Four decisions today. Approve the commitment list for the twenty-second and the fourth quarter. Approve the four edits to Weili’s deck. Mandate Product and R&D to lock the train dates by the thirtieth. And name the CAG design partner for multi-site governance, which sets the pilot scope.',
+    'The first three protect what we say on the twenty-second; the fourth starts the multi-site work with a real site behind it.',
   ].join('\n'));
 
   // 31 ── close
@@ -1361,8 +1422,13 @@ async function build() {
   s.addText('THANK YOU', { placeholder: 'kicker', charSpacing: 1.5 });
   s.addText([{ text: 'Commit what we can show.', options: { breakLine: true } }, { text: 'Show what we will build.', options: { color: LAV } }], { placeholder: 'title', charSpacing: -1 });
   fit('close title', 'Commit what we can show.\nShow what we will build.', 52, true, 11.5, 1.65, 0.92);
-  s.addText([{ text: `Next step: the train dates confirmed with R&D by ${CONFIRM_BY}, then the commitment list goes to CAG.`, options: { breakLine: true } }, { text: 'Every date in this deck is a proposal until then.', options: { fontSize: 16 } }], { placeholder: 'body' });
-  s.addNotes('Commit what we can show. Show what we will build. Thank you. The next step is the roadmap confirmation with R&D by the thirtieth of October; then the commitment list goes to CAG.');
+  const closeBody = `Next step: 22 Oct, show what is in V11 today and the labelled concepts. ${CONFIRM_BY}, R&D confirms the train dates; only then do dates go to CAG.`;
+  fit('close body', closeBody, TS.lead, false, 10, 0.68);
+  s.addText([{ text: closeBody, options: { breakLine: true } }, { text: 'Every date in this deck is a proposal until then.', options: { fontSize: 16 } }], { placeholder: 'body' });
+  s.addNotes([
+    'Commit what we can show. Show what we will build. Thank you.',
+    'The next steps: on the twenty-second we show what is in V11 today and the labelled concepts. By the thirtieth of October R&D confirms the train dates, and only then do dates go to CAG.',
+  ].join('\n'));
 
   // A1–A3 ── appendix (left out with DECK=client)
   if (CLIENT) return write();
@@ -1379,57 +1445,67 @@ async function build() {
       ['Demo instance with the 11 front-end additions and recorded data (plan A for 22 Oct)', '2', 'R&D', '21 Oct 2026'],
       ['Video analytics live at CAG today: overstay, fight, fire, identity spoofing (Weili page 2)', '2', 'R&D', '21 Oct 2026'],
       ['AI roadmap by train: Co-pilot features for V11.1 and V11.2; Co-pilot service plan (on premise)', '2', 'Peter', CONFIRM_BY],
-      ['Which iPAMS interface V11 can consume today (relay / OPC / API)', '4', 'Anuar', CONFIRM_BY],
+      ['Which iPAMS interface V11 can consume today (relay contact, OPC data link or API)', '4', 'Anuar', CONFIRM_BY],
       ['Preset handshake between iPAMS and VMS / V11', '4', 'Anuar', CONFIRM_BY],
       ['Airport 3D model availability for the map and Locate', '2 · 4', 'R&D', CONFIRM_BY],
       ['Wall controller integration for the one-click wall layout', '4', 'R&D', CONFIRM_BY],
       ['Edge / WAN behaviour of V11 today (site autonomy when the link drops)', '5', 'Peter', CONFIRM_BY],
       ['SOP library data model (estate baseline, local overrides)', '5', 'R&D', CONFIRM_BY],
-      ['Current role model: scope of site-level roles', '5', 'R&D', CONFIRM_BY],
-      ['Connector list V11 ships today (ONVIF, OSDP, AgilFence, LiDAR, intercom, others)', '5', 'Anuar', CONFIRM_BY],
+      ['Current role model: scope of site-level roles', '5', 'Peter', CONFIRM_BY],
+      ['Connector list V11 ships today (ONVIF cameras, OSDP access readers, AgilFence, LiDAR, intercom, others)', '5', 'Anuar', CONFIRM_BY],
       ['Open API status today', '5', 'Peter', CONFIRM_BY],
       ['Release train dates V11.1 / V11.2 / V11.3 against the R&D roadmap', '2 · 4 · 5', 'Peter, Anuar', CONFIRM_BY],
     ];
     s.addTable([thead(['Fact to confirm', 'Area', 'Owner', 'By when']), ...tbody(ROWS, [0, 3])], tableOpts([7.4, 1.0, 1.9, 1.833], 0.34));
     footnote(s, 'Every amber tag in the deck points to one of these rows.', 6.62);
   }
-  s.addNotes('Reference for the team: every fact Product cannot verify alone, with its owner and date.');
+  s.addNotes([
+    'Reference for the team: every fact Product cannot verify alone, with its owner and date.',
+    'Two rows are due on the twenty-first, before Weili’s deck and the demo; the rest by the thirtieth, together with the train dates.',
+  ].join('\n'));
 
   s = pres.addSlide({ masterName: 'APPENDIX', sectionTitle: SEC.appx });
   s.addText('APPENDIX A2  ·  THE FIGMA PACKAGE', { placeholder: 'kicker', charSpacing: 1.5 });
   s.addText('Figma frame index', { placeholder: 'title' });
   {
     const P2 = [['V11-01', 'Home · Real Time Alerts'], ['V11-02', 'Tailgating · Investigation'], ['V11-03', 'Tailgating · SOP Flow, door control'], ['V11-04', 'Identity spoofing · Investigation'], ['V11-05', 'Unattended bag · SOP Flow'], ['V11-06', 'Watchlist, loitering · SOP verify'], ['V11-07', 'Fight detection · Investigation'], ['V11-08', 'Overstay · Investigation'], ['V11-09', 'AgilFence + LiDAR · Investigation'], ['V11-10', 'Escalate Event · Co-pilot pre-fill'], ['V11-11', 'Search · Ask Co-pilot'], ['V11-12', 'Incident Management · report'], ['P2 board', 'Point 2 end-to-end flow board']];
-    const P4 = [['AF-00', 'Cover'], ['AF-00b', 'End-to-end flow board'], ['AF-01', 'Perimeter triggered'], ['AF-02', 'System message and alarm (02a quiet, 02b card)'], ['AF-03', 'Alarm in the incident list'], ['AF-04', 'Locate: nearest camera'], ['AF-05', 'PTZ films the area'], ['AF-06', 'Command-centre video wall'], ['AF-07', 'Operator runs the SOP (07a–d steps)'], ['AF-08', 'Patrol on scene'], ['AF-09', 'Close and report']];
+    const P4 = [['AF-00', 'Cover'], ['AF-00b', 'End-to-end flow board'], ['AF-01', 'Perimeter triggered'], ['AF-02', 'System message and alarm'], ['AF-03', 'Alarm in the incident list'], ['AF-04', 'Locate: nearest camera'], ['AF-05', 'PTZ films the area'], ['AF-06', 'Command-centre video wall'], ['AF-07', 'Operator runs the SOP'], ['AF-08', 'Patrol on scene'], ['AF-09', 'Close and report']];
     const P5 = [['MS-01', 'Estate overview'], ['MS-02', 'Site drill-down · Seletar'], ['MS-03', 'Governance · Security baseline'], ['MS-04', 'Governance · Roles and access'], ['MS-05', 'Governance · Systems and connectors'], ['MS-06', 'Governance · Estate report'], ['P5 board', 'Point 5 end-to-end flow board'], ['Master board', 'Three lanes, one per area, with legend']];
     const tw3 = (CW - 2 * 0.2) / 3;
-    for (const [i, [title, rows]] of [['Area 2 · V11 frames (1400×1069)', P2], ['Area 4 · AgilFence (1400–1920 wide)', P4], ['Area 5 · multi-site (1400 / 1600)', P5]].entries()) {
+    for (const [i, [title, rows]] of [['Area 2 · V11 frames (1400 / 1600 wide)', P2], ['Area 4 · AgilFence (1400–1920 wide)', P4], ['Area 5 · multi-site (1400 / 1600)', P5]].entries()) {
       const x = MX + i * (tw3 + 0.2);
       fit('a2 title ' + i, title, 12, true, tw3, 0.3);
       T(s, title.toUpperCase(), { x, y: 1.7, w: tw3, h: 0.3, fontSize: 12, bold: true, color: LAV, charSpacing: 0.5, valign: 'middle' });
       s.addTable([thead(['ID', 'Frame']), ...tbody(rows)], tableOpts([1.05, tw3 - 1.05], 0.3, { x, y: 2.05, w: tw3 }));
     }
-    footnote(s, 'Plus V11-00 (delta map) and V11-00b (click paths). All frames are concept on V11 screens with illustrative data; packaged as CAG_Strategic_Areas_2-4-5_Figma_SVG.zip with the master board PNG and a PDF.', 6.5, CW, 0.44);
+    footnote(s, 'Plus V11-00 (delta map) and V11-00b (click paths). All frames are concept on V11 screens with illustrative data.\nPackaged as CAG_Strategic_Areas_2-4-5_Figma_SVG.zip with the master board PNG and a PDF.', 6.5, CW, 0.44);
   }
-  s.addNotes('Reference: every frame in the Figma package, grouped by strategic area.');
+  s.addNotes([
+    'Reference: every frame in the Figma package, grouped by strategic area.',
+    'The master board is the one file to open first; the frames follow at full size in the SVG package and the PDF.',
+  ].join('\n'));
 
   s = pres.addSlide({ masterName: 'APPENDIX', sectionTitle: SEC.appx });
   s.addText('APPENDIX A3  ·  22 OCTOBER', { placeholder: 'kicker', charSpacing: 1.5 });
   s.addText('Demo click paths (22 Oct)', { placeholder: 'title' });
   {
     const ROWS = [
-      ['Alarm correlation · D-214', 'Real Time Alerts → Staff Door D-214 → Investigation → linked alarms “+2 more”', 'Film chapter 1; frames V11-01, V11-02'],
-      ['Co-pilot and assisted response', 'SOP Flow → step 2 Lock (Critical Action) → Escalate → pre-filled dialog → Create Incident', 'Film chapter 2; frames V11-03, V11-10'],
-      ['Assisted incident automation · B12, Row K', 'Gate B12 → SOP Flow → steps 1–4 done → Approve step 5; Row K → verify first', 'Film chapters 3 and 7; frames V11-05, V11-06'],
-      ['Access intelligence · C2, B2', 'T1 Door C2 → Investigation → legacy SSID row; Baggage Hall B2 → rules', 'Film chapters 5 and 6; frames V11-04, V11-08'],
-      ['Natural language · Ask Co-pilot', 'Search bar → type the question → answer and sources', 'Film chapter 8; frame V11-11'],
-      ['Automated reporting · TGT-214', 'Incident Management → TGT-214 → report draft → Close Incident', 'Film chapter 9; frame V11-12'],
+      // film timecodes from cag-demo-video/SCRIPT.md (narration table; the film runs 2:50)
+      ['Alarm correlation · D-214', 'Real Time Alerts → Staff Door D-214 → Investigation → linked alarms “+2 more”', 'Film 0:46–1:00 (D-214); frames V11-01, V11-02'],
+      ['Co-pilot and assisted response', 'SOP Flow → step 2 Lock (Critical Action) → Escalate → pre-filled dialog → Create Incident', 'Film 0:29–0:38 (Co-pilot) and 0:53–1:00 (lock, escalation); frames V11-03, V11-10'],
+      ['Assisted incident automation · B12, Row K', 'Gate B12 → SOP Flow → steps 1–4 done → Approve step 5; Row K → verify first', 'Film 1:10–1:16 (B12) and 1:46–1:56 (Row K); frames V11-05, V11-06'],
+      ['Access intelligence · C2, B2', 'T1 Door C2 → Investigation → legacy SSID row; Baggage Hall B2 → rules', 'Film 1:27–1:36 (C2) and 1:37–1:46 (B2); frames V11-04, V11-08'],
+      ['Natural language · Ask Co-pilot', 'Search bar → type the question → answer and sources', 'Film 1:56–2:04; frame V11-11'],
+      ['Automated reporting · TGT-214', 'Incident Management → TGT-214 → report draft → Close Incident', 'Film 2:05–2:10; frame V11-12'],
       ['AgilFence (area 4)', 'Not live on 22 Oct: flow board AF-00b and film “First touch”', 'Board + film; frames AF-01…09'],
     ];
     s.addTable([thead(['Use case', 'Plan A · live V11 with the demo additions (if R&D confirms)', 'Plan B · film + frames (needs nothing from R&D)']), ...tbody(ROWS, [0])], tableOpts([3.0, 5.4, 3.733], 0.58));
     footnote(s, 'Plan A needs the demo instance confirmed by R&D on 21 Oct. Plan B is ready today.', 6.62);
   }
-  s.addNotes('Reference for the demo team: plan A clicks and plan B material per use case.');
+  s.addNotes([
+    'Reference for the demo team: plan A clicks and plan B material per use case.',
+    'Plan A waits for the demo instance on the twenty-first; plan B, the film with its timecodes and the frames, is ready today.',
+  ].join('\n'));
 
   return write();
 }
@@ -1480,6 +1556,14 @@ async function finalize(file) {
   for (const name of Object.keys(zip.files).filter(n => /^ppt\/(slides|slideLayouts|notesSlides)\/[^/]+\.xml$/.test(n))) {
     const hit = (await zip.file(name).async('string')).match(/\b(CMO|CTO|CSO|CCO|CPO)\b|iPAM(?!S)|claude|gpt-|sonnet|opus|haiku/i);
     if (hit) throw new Error(`${name} contains "${hit[0]}"`);
+  }
+  // docProps/app.xml: pptxgenjs lists Calibri under "Fonts Used" although nothing references it; drop it
+  const appPart = 'docProps/app.xml';
+  if (zip.file(appPart)) {
+    const app = await zip.file(appPart).async('string');
+    if (app.includes('<vt:lpstr>Calibri</vt:lpstr>')) zip.file(appPart, app.replace('<vt:lpstr>Calibri</vt:lpstr>', '')
+      .replace(/(<vt:lpstr>Fonts Used<\/vt:lpstr><\/vt:variant>\s*<vt:variant><vt:i4>)(\d+)/, (_, h, n) => h + (n - 1))
+      .replace(/(<TitlesOfParts>\s*<vt:vector size=")(\d+)/, (_, h, n) => h + (n - 1)));
   }
   for (const name of Object.keys(zip.files).filter(n => /^ppt\/notesSlides\/notesSlide\d+\.xml$/.test(n))) {
     const xml = await zip.file(name).async('string');

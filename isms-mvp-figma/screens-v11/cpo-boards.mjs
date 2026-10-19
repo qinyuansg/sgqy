@@ -230,7 +230,7 @@ const P2_STEPS = [
   { n: 5, id: 'V11-11', frame: 'V11-11-search-ask-copilot', kicker: 'NATURAL-LANGUAGE INVESTIGATION', title: 'Ask in plain English',
     cap: '“Show critical incidents in T5 in the last hour.” The answer lists the matching alerts with their sources; open or Locate from there.',
     who: ['operator', 'copilot'], grades: [['today', null, 'search bar'], ['concept', null, 'Ask Co-pilot answer with sources'], ['roadmap', 'ROADMAP · V11.2', R12[0]]] },
-  { n: 6, id: 'V11-12', frame: 'V11-12-incident-management-report', kicker: 'AUTOMATED REPORTING', title: 'The report writes itself',
+  { n: 6, id: 'V11-12', frame: 'V11-12-incident-management-report', kicker: 'AUTOMATED REPORTING', title: 'The report drafts itself',
     cap: 'Incident TGT-214 in Incident Management: the Co-pilot report draft sits in Remarks, ready for a person to review and sign.',
     who: ['copilot', 'operator'], grades: [['today', null, 'Incident Management · Remarks · export'], ['concept', null, 'Co-pilot report draft'], ['roadmap', 'ROADMAP · V11.1', R11[0]]] },
 ];
@@ -277,7 +277,7 @@ export function p2Board() {
   // row 2: the other use cases, same workflow
   const y2 = 1250;
   s += text(x0, y2 - 22, 'SIX MORE USE CASES ON THE SAME WORKFLOW · SHOWN AS VARIANTS IN THE DEMO', { size: 15, weight: 700, ls: 1.5, fill: C.t2 });
-  s += text(BW - 100, y2 - 22, 'Same path every time: alert card → Active Alarm → Investigation / SOP Flow → Acknowledge or Escalate → Incident Management', { size: 15, fill: C.t2, anchor: 'end' });
+  s += text(BW - 100, y2 - 22, 'Same path every time: alert card › Active Alarm › Investigation / SOP Flow › Acknowledge or Escalate › Incident Management', { size: 15, fill: C.t2, anchor: 'end' });
   let strip = '';
   P2_MORE.forEach((m, i) => { strip += miniCard(F, m, x0 + i * (cw + gap), y2, cw, 220); });
   s += g(F, 'Variants · V11-04 to V11-09', strip);
@@ -285,7 +285,7 @@ export function p2Board() {
   const y3 = 1562, bw = (BW - 200 - 3 * 40) / 4, bh = 320;
   s += text(x0, y3 - 22, 'RELEASE TRAINS · PRODUCT PROPOSAL · TO CONFIRM AGAINST THE R&D ROADMAP BY 30 OCT 2026 · NO DATE GOES TO CAG BEFORE THAT', { size: 15, weight: 700, ls: 1.5, fill: C.t2 });
   const trains = [
-    { kind: 'today', tag: 'IN V11 TODAY', col: GREEN, title: 'V11 · in service', chips: [['Alert cards', GREEN], ['Active Alarms', GREEN], ['SOP Flow', GREEN], ['Escalate', GREEN], ['Incident Management', GREEN]], body: 'One workflow for any alarm source: alert card → Active Alarm → Investigation / SOP Flow → Escalate → Incident Management. This is the part we can show live on 22 October. Operated per site.' },
+    { kind: 'today', tag: 'IN V11 TODAY', col: GREEN, title: 'V11 · in service', chips: [['Alert cards', GREEN], ['Active Alarms', GREEN], ['SOP Flow', GREEN], ['Escalate', GREEN], ['Incident Management', GREEN]], body: 'One workflow for any alarm source: alert card › Active Alarm › Investigation / SOP Flow › Escalate › Incident Management. This is the part we can show live on 22 October. Operated per site.' },
     { kind: 'roadmap', tag: 'ROADMAP · V11.1', col: ROAD, date: 'Q1 2027 (Mar)', title: 'Unified alarms · Co-pilot assist', frames: ['V11-01', 'V11-02', 'V11-03', 'V11-10', 'V11-12'], body: 'Co-pilot lines on alert cards, linked alarms, Co-pilot summary, SOP and Escalate pre-fill, report draft (steps 1–4 and 6). Also the access rules, fight, overstay and AgilFence + LiDAR cases.' },
     { kind: 'roadmap', tag: 'ROADMAP · V11.2', col: ROAD, date: 'Q3 2027 (Sep)', title: 'Ask Co-pilot · live analytics', frames: ['V11-11', 'V11-05', 'V11-04'], body: 'Ask Co-pilot on-premise (step 5), automatic investigation steps on live video analytics, appearance check for access intelligence. Co-pilot still recommends; people decide.' },
     { kind: 'confirm', tag: 'R&D TO CONFIRM', col: AMBER, title: '22 October: plan A or plan B', chips: [['Plan A · live V11 + demo instance · R&D to confirm', AMBER], ['Plan B · film + 12 frames · ready now', GREEN]], body: 'Plan A: live V11 plus a demo instance with these deltas and recorded data — R&D to confirm it exists. Plan B: the film “From alarms to answers” and a click-through of the 12 frames — needs nothing from R&D. Both are honest.' },
@@ -307,19 +307,19 @@ const P5_STEPS = [
     who: ['estate', 'soc'], grades: [['concept', null, 'estate selector · estate map · Sites panel'], ['roadmap', 'ROADMAP · V11.1 / 11.2', 'read-only view in 11.1 · full in 11.2']] },
   { n: 2, id: 'MS-02', frame: 'MS-02-site-seletar-local-autonomy', kicker: 'LOCAL AUTONOMY · 02:20:14 – 02:41:10', title: 'Seletar handles its own alarm',
     cap: 'Seletar runs the perimeter SOP under the estate baseline: locked estate steps plus one approved local step, while Central SOC watches.',
-    who: ['site', 'soc'], grades: [['concept', null, 'autonomy chip · locked steps · local step'], ['roadmap', 'ROADMAP · V11.1', 'per-site console exists in V11 today'], ['confirm', null, 'edge / WAN behaviour of V11 today']] },
+    who: ['site', 'soc'], grades: [['today', null, 'per-site console'], ['concept', null, 'autonomy chip · locked steps · local step'], ['roadmap', 'ROADMAP · V11.1'], ['confirm', null, 'edge / WAN behaviour of V11 today']] },
   { n: 3, id: 'MS-03', frame: 'MS-03-governance-security-baseline', kicker: 'ONE SECURITY BASELINE', title: 'Estate SOPs, local overrides',
     cap: 'Estate SOPs are locked at baseline v3. A site requests a local override; a person approves or returns it, and the audit line records it.',
-    who: ['estate', 'site'], grades: [['concept', null, 'governance page · override approval'], ['roadmap', 'ROADMAP · V11.2', 'SOP Flow per site exists today'], ['confirm', null, 'SOP library data model']] },
+    who: ['estate', 'site'], grades: [['today', null, 'SOP Flow per site'], ['concept', null, 'governance page · override approval'], ['roadmap', 'ROADMAP · V11.2'], ['confirm', null, 'SOP library data model']] },
   { n: 4, id: 'MS-04', frame: 'MS-04-governance-roles-access', kicker: 'ROLES PER SITE', title: 'Who sees what, per site',
     cap: 'Local guards see only their site; the estate sees everything and edits only the baseline. Auditors read, integrators get a sandbox.',
-    who: ['estate', 'system'], grades: [['concept', null, 'role × site matrix'], ['roadmap', 'ROADMAP · V11.1', 'site-level roles exist today'], ['confirm', null, 'current role model and its scope']] },
+    who: ['estate', 'system'], grades: [['today', null, 'site-level roles · scope to confirm'], ['concept', null, 'role × site matrix'], ['roadmap', 'ROADMAP · V11.1'], ['confirm', null, 'current role model and its scope']] },
   { n: 5, id: 'MS-05', frame: 'MS-05-governance-systems-connectors', kicker: 'ANY BRAND, ONE ROOF', title: 'Connectors by site and protocol',
     cap: 'Every third-party system by site, vendor and protocol, with its status. A guided dialog adds a new system and runs certification checks.',
     who: ['estate', 'system'], grades: [['concept', null, 'connector catalogue · onboarding dialog'], ['roadmap', 'ROADMAP · V11.2 / 11.3', 'catalogue 11.2 · certification 11.3'], ['confirm', null, 'connector list V11 ships today']] },
   { n: 6, id: 'MS-06', frame: 'MS-06-governance-estate-report', kicker: 'ESTATE REPORTING', title: 'One report for the estate',
     cap: 'Open incidents by site, alarms by source system, baseline compliance, device health and fence coverage per site, with one export.',
-    who: ['estate', 'soc'], grades: [['concept', null, 'report tiles · export · figures illustrative'], ['roadmap', 'ROADMAP · V11.2', 'per-site export exists today']] },
+    who: ['estate', 'soc'], grades: [['today', null, 'per-site export'], ['concept', null, 'report tiles · export · figures illustrative'], ['roadmap', 'ROADMAP · V11.2']] },
 ];
 function clockCard(F, x, y, w, h) {
   let o = rect(x, y, w, h, { r: 20, fill: '#0D1A14', stroke: SITE, so: 0.7, sw: 1.5 });
@@ -381,18 +381,18 @@ const LANES = [
       { id: 'V11-03', frame: 'V11-03-tailgating-sop-flow-door-control', title: 'Co-pilot prepares, you approve', tags: T(['today'], ['concept'], ['roadmap', 'ROADMAP · V11.1']) },
       { id: 'V11-10', frame: 'V11-10-escalate-event-copilot-prefill', title: 'Escalate, pre-filled', tags: T(['today'], ['concept'], ['roadmap', 'ROADMAP · V11.1']) },
       { id: 'V11-11', frame: 'V11-11-search-ask-copilot', title: 'Ask in plain English', tags: T(['today'], ['concept'], ['roadmap', 'ROADMAP · V11.2']) },
-      { id: 'V11-12', frame: 'V11-12-incident-management-report', title: 'The report writes itself', tags: T(['today'], ['concept'], ['roadmap', 'ROADMAP · V11.1']) },
+      { id: 'V11-12', frame: 'V11-12-incident-management-report', title: 'The report drafts itself', tags: T(['today'], ['concept'], ['roadmap', 'ROADMAP · V11.1']) },
     ],
     train: '11.1 Co-pilot lines, linked alarms, summary, SOP / Escalate pre-fill, report draft (steps 1–4, 6) · 11.2 Ask Co-pilot, automatic investigation steps on live video analytics (step 5) · also V11-04…09 as variants' },
   { n: 4, col: AMBER, title: 'Strategic area 4 · AgilFence unified integration', tw: 360, titleSize: 20,
     ask: 'Is there a ready in-built module in V11 that we can present to CAG? If not: the roadmap, high-level visuals and the launch timeline.',
-    answer: 'Partly. The alarm → incident → SOP → report workflow is in V11 today and takes any alarm source. The AgilFence module (fence line, segments, health, configuration) is not in V11: designed (10 frames, board, film) and on the roadmap.',
+    answer: 'Partly. The alarm › incident › SOP › report workflow is in V11 today and takes any alarm source. The AgilFence module (fence line, segments, health, configuration) is not in V11: designed (10 frames, board, film) and on the roadmap.',
     steps: [
       { id: 'AF-01', frame: 'AF-01-perimeter-triggered', title: 'Perimeter triggered', tags: T(['fence']) },
       { id: 'AF-02', frame: 'AF-02-system-message-alarm', title: 'System message, alarm', tags: T(['today'], ['concept'], ['roadmap', 'ROADMAP · V11.1'], ['confirm']) },
       { id: 'AF-03', frame: 'AF-03-incident-list', title: 'In the incident list', tags: T(['today'], ['concept'], ['roadmap', 'ROADMAP · V11.1']) },
       { id: 'AF-04', frame: 'AF-04-locate-nearest-cameras', title: 'Locate: nearest camera', tags: T(['today'], ['concept'], ['roadmap', 'ROADMAP · V11.2'], ['confirm']) },
-      { id: 'AF-05', frame: 'AF-05-ptz-films-the-area', title: 'PTZ films the area', tags: T(['today'], ['concept'], ['roadmap', 'ROADMAP · V11.2']) },
+      { id: 'AF-05', frame: 'AF-05-ptz-films-the-area', title: 'PTZ films the area', tags: T(['today'], ['concept'], ['roadmap', 'ROADMAP · V11.1 / 11.2'], ['confirm']) },
       { id: 'AF-06', frame: 'AF-06-command-centre-video-wall', title: 'Command-centre wall', tags: T(['concept'], ['roadmap', 'ROADMAP · V11.2'], ['confirm']) },
       { id: 'AF-07', frame: 'AF-07-sop-approve-dispatch', title: 'Operator runs the SOP', tags: T(['today'], ['concept'], ['roadmap', 'ROADMAP · V11.1']) },
       { id: 'AF-08', frame: 'AF-08-patrol-on-scene', title: 'Patrol on scene', tags: T(['today'], ['concept'], ['roadmap', 'ROADMAP · V11.2']) },
@@ -404,11 +404,11 @@ const LANES = [
     answer: 'Not in V11 today. V11 runs one site with many clusters; roles and integrations are per site. The estate layer is designed here (six frames + board) and ships in three trains.',
     steps: [
       { id: 'MS-01', frame: 'MS-01-estate-overview', title: 'Every site on one screen', tags: T(['concept'], ['roadmap', 'ROADMAP · V11.1 / 11.2']) },
-      { id: 'MS-02', frame: 'MS-02-site-seletar-local-autonomy', title: 'Seletar handles its own alarm', tags: T(['concept'], ['roadmap', 'ROADMAP · V11.1'], ['confirm']) },
-      { id: 'MS-03', frame: 'MS-03-governance-security-baseline', title: 'Estate SOPs, local overrides', tags: T(['concept'], ['roadmap', 'ROADMAP · V11.2'], ['confirm']) },
-      { id: 'MS-04', frame: 'MS-04-governance-roles-access', title: 'Who sees what, per site', tags: T(['concept'], ['roadmap', 'ROADMAP · V11.1'], ['confirm']) },
+      { id: 'MS-02', frame: 'MS-02-site-seletar-local-autonomy', title: 'Seletar handles its own alarm', tags: T(['today'], ['concept'], ['roadmap', 'ROADMAP · V11.1'], ['confirm']) },
+      { id: 'MS-03', frame: 'MS-03-governance-security-baseline', title: 'Estate SOPs, local overrides', tags: T(['today'], ['concept'], ['roadmap', 'ROADMAP · V11.2'], ['confirm']) },
+      { id: 'MS-04', frame: 'MS-04-governance-roles-access', title: 'Who sees what, per site', tags: T(['today'], ['concept'], ['roadmap', 'ROADMAP · V11.1'], ['confirm']) },
       { id: 'MS-05', frame: 'MS-05-governance-systems-connectors', title: 'Connectors by site and protocol', tags: T(['concept'], ['roadmap', 'ROADMAP · V11.2 / 11.3'], ['confirm']) },
-      { id: 'MS-06', frame: 'MS-06-governance-estate-report', title: 'One report for the estate', tags: T(['concept'], ['roadmap', 'ROADMAP · V11.2']) },
+      { id: 'MS-06', frame: 'MS-06-governance-estate-report', title: 'One report for the estate', tags: T(['today'], ['concept'], ['roadmap', 'ROADMAP · V11.2']) },
     ],
     train: '11.1 estate view (read-only), site switcher, per-site roles · 11.2 baseline with overrides and approvals, estate dashboard and reporting, connector catalogue · 11.3 public API + SDK, connector certification, partner sandbox' },
 ];
@@ -451,7 +451,7 @@ function lane(F, L, y, W) {
 
 export function masterBoard() {
   const BW = 4000, BH = 2600, W = BW - 200;
-  const F = new Frame('CPO master board · Strategic areas 2 · 4 · 5 · end-to-end user flows (AGIL Secure V11 design)', BW, BH);
+  const F = new Frame('Product master board · Strategic areas 2 · 4 · 5 · end-to-end user flows (AGIL Secure V11 design)', BW, BH);
   let s = board(F, BW, BH);
   s += heading(F, BW, { col: SKY, kicker: 'INTERNAL PRODUCT VIEW · 18 OCTOBER 2026 · ANSWERS TO THE 16 OCTOBER ASKS · FIGMA BOARD', titleSize: 58,
     title: 'Strategic areas 2 · 4 · 5 — end-to-end user flows (AGIL Secure V11 design)',

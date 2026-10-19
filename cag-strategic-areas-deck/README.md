@@ -20,7 +20,9 @@ readiness. Node modules are resolved from the sibling project; nothing is instal
 ```
 
 `build.sh` runs `../isms-mvp-figma/build-v11.mjs`, `build-agilfence.mjs` and `build-cpo-flows.mjs` into
-`<out dir>/frames`, copies the 2× multi-site PNGs to `<deck assets>/ms/`, the flow boards and the AgilFence
+`<out dir>/frames`, renders the V11 frames at 2× to `<deck assets>/v11/` (`../isms-mvp-figma/render-2x.mjs`:
+Playwright chromium, viewport = frame size, deviceScaleFactor 2) and rewrites `<deck assets>/anchors.json` from
+their SVGs (`../cag-pitch-deck/extract_anchors.py`), copies the 2× multi-site PNGs to `<deck assets>/ms/`, the flow boards and the AgilFence
 board to `<deck assets>/boards/`, `ms-anchors.json` and `anchors.json` (as `af-anchors.json`) to
 `<deck assets>/`, makes the frames PDF, zips all SVGs (flat) to `<out dir>/CAG_Strategic_Areas_2-4-5_Figma_SVG.zip`, copies the
 frames PDF and `CPO-master-board.png` to `<out dir>`, builds the deck to `<out dir>/AGIL_Secure_V11_CAG_Strategic_Areas_2-4-5_CPO.pptx` and runs the pptx validator.
@@ -56,7 +58,7 @@ empty. Nothing on a slide is below 12 pt.
 - `build_deck.js`: `TRAINS` (the proposed release trains and their contents per area; **every date on every
   slide comes from here** and carries "proposed · confirm with R&D" or a footnote saying so), `GRADES`
   (the four readiness grades and colours), `CAL` (near-term calendar), the layouts, the components, the
-  31 main slides, the three appendix slides and the speaker notes (spoken script only).
+  32 main slides, the three appendix slides and the speaker notes (spoken script only).
 - `BRIEF.md`: the asks, the facts and guardrails, the readiness tables, the verdict on Weili's deck, the
   release trains, the slide-by-slide storyline and the Figma frame spec.
 - `build.sh`: frames → boards → assets → deck, as above.

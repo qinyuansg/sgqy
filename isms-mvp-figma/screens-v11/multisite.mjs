@@ -27,7 +27,7 @@ const fmt = n => n.toLocaleString('en-US');
 export const SITES = [
   { key: 'main', name: 'Changi Airport · Main', short: 'Changi Main', sub: 'T1–T4, airfield', systems: 'V11 native · AgilFence · LiDAR · VMS · ACS', online: 4812, offline: 6, mode: 'Central SOC', alarms: { Critical: 2, Warning: 4, Info: 1 }, baseline: ['compliant', 'Baseline v3 · compliant'], link: 'Link OK', fence: { km: 18.4, alarm: 0, fault: 1 } },
   { key: 'cargo', name: 'Changi Airfreight Centre', short: 'Airfreight Centre', sub: 'Cargo', systems: 'CCTV Vendor B · ACS Vendor C · AgilFence', online: 1204, offline: 2, mode: 'Central SOC', alarms: {}, tonight: 'No open alarms', baseline: ['compliant', 'Baseline v3 · compliant'], link: 'Link OK', fence: { km: 3.1, alarm: 0, fault: 0 } },
-  { key: 'seletar', name: 'Seletar Airport', short: 'Seletar Airport', sub: 'Apron, hangars, 6.2 km fence', systems: 'VMS Vendor A · ACS Vendor C · AgilFence', online: 486, offline: 1, mode: 'Local autonomous', alarms: { Warning: 1 }, handler: 'handled locally by Faizal R.', baseline: ['override', 'Baseline v3 · override approved'], link: 'Link OK', fence: { km: 6.2, alarm: 1, fault: 0 } },
+  { key: 'seletar', name: 'Seletar Airport', short: 'Seletar Airport', sub: 'Apron, hangars, 6.2 km fence', systems: 'VMS Vendor A · ACS Vendor C · AgilFence', online: 486, offline: 1, mode: 'Local autonomous', alarms: { Warning: 1 }, handler: 'handled locally by Faizal R.', baseline: ['override', 'Baseline v3 · override approved'], link: 'Link OK', fence: { km: 6.2, alarm: 0, fault: 0 } },
   { key: 'east', name: 'Changi East', short: 'Changi East · T5 site', sub: 'T5 construction site', systems: 'CCTV Vendor D · gate ACS Vendor E', online: 318, offline: 4, mode: 'Onboarding', alarms: {}, tonight: '2 systems pending certification', baseline: ['onboarding', 'Onboarding · 2 systems pending certification'], link: 'Link OK', fence: null },
   { key: 'fuel', name: 'Fuel farm', short: 'Fuel farm', sub: 'Off-site', systems: 'AgilFence · ACS Vendor C', online: 212, offline: 0, mode: 'Central SOC', alarms: {}, tonight: 'No open alarms', baseline: ['compliant', 'Baseline v3 · compliant'], link: 'Link OK', fence: { km: 2.4, alarm: 0, fault: 0 } },
 ];
@@ -200,7 +200,9 @@ const SEL_SOP = [
   { title: 'Alarm located, cameras on target', state: 'done', lock: true, tag: 'Auto' },
   { title: 'Verify on video', state: 'done', lock: true, tag: 'Verified on PTZ 2-04 · 02:21:05' },
   { title: 'Dispatch Seletar patrol', state: 'done', lock: true, tag: 'Approved · Faizal 02:21:30' },
-  { title: 'Notify Seletar tower', state: 'todo', tag: 'Local · approved by Grace T.', text: 'Local step added by Seletar for its own tower. Approved by the estate on 12 Oct; the baseline steps stay locked.' },
+  { title: 'Notify Seletar tower', state: 'todo', tag: 'Local · approved by Grace T.', text: 'Local step for Seletar’s tower · approved by the estate on 12 Oct.' },
+  { title: 'Inform Airside Ops and tower', state: 'todo', lock: true, tag: 'Estate baseline v3' },
+  { title: 'Police call', state: 'todo', lock: true, tag: 'Estate baseline v3 · duty manager' },
   { title: 'Keep target in view', state: 'todo', lock: true, tag: 'Estate baseline v3' },
   { title: 'Secure, close and report', state: 'todo', lock: true, tag: 'Estate baseline v3' },
 ];
@@ -322,12 +324,12 @@ function govPage(name, tab, o) {
 
 // ---------- MS-03 · Security baseline ----------
 const SOPS = [
-  ['SOP-PER-02', 'Perimeter intrusion', 'v3', 5, '1 approved · 1 pending', '12 Oct 2026', true],
-  ['SOP-SEC-014', 'Tailgating', 'v5', 5, '—', '30 Sep 2026'],
+  ['SOP-PER-02', 'Perimeter intrusion', 'v3', 4, '1 approved · 1 pending', '12 Oct 2026', true],
+  ['SOP-SEC-014', 'Tailgating', 'v5', 4, '—', '30 Sep 2026'],
   ['SOP-SEC-021', 'Unattended item', 'v2', 4, '—', '15 Sep 2026'],
   ['SOP-ACS-007', 'Credential misuse', 'v1', 4, '—', '2 Oct 2026'],
-  ['SOP-OPS-003', 'Overstay in restricted zone', 'v2', 5, '—', '8 Oct 2026'],
-  ['SOP-EMG-001', 'Emergency lockdown', 'v4', 5, '—', '1 Oct 2026'],
+  ['SOP-OPS-003', 'Overstay in restricted zone', 'v2', 4, '—', '8 Oct 2026'],
+  ['SOP-EMG-001', 'Emergency lockdown', 'v4', 4, '—', '1 Oct 2026'],
 ];
 const ESTATE_STEPS = [['Alarm located, cameras on target', 'Auto'], ['Verify on video', 'Operator'], ['Dispatch patrol', 'Critical action · approval'], ['Inform airside operations and tower', 'Operator'], ['Police call', 'Duty manager approval'], ['Keep target in view', 'Auto'], ['Secure, close and report', 'Operator']];
 export function baseline() {
@@ -343,7 +345,7 @@ export function baseline() {
         if (sel) mark('sopRow', [40, y, 804, 56]);
         return g(F, 'Row ' + code, row);
       }).join(''));
-      s += text(60, 672, 'Baseline v3 · published 12 Oct 2026 by Grace T. · acknowledged by all 5 sites on 13 Oct · next review 12 Jan 2027', { size: 13, fill: C.t2 });
+      s += text(60, 672, 'Baseline v3 · published 12 Oct by Grace T. · acknowledged by 4 sites on 13 Oct (Changi East after certification) · next review 12 Jan 2027', { size: 13, fill: C.t2 });
       const hx = 60, hy = 700, hw = 764;
       let hc = rect(hx, hy, hw, 150, { r: 12, fill: '#2C3036' }) + text(hx + 20, hy + 30, 'How the security baseline works', { size: 16, weight: 700, fill: '#FFFFFF' });
       [['lock', 'Estate steps are locked. Only estate admins change them, in a new baseline version.'], ['plus', 'Sites add local steps for their own needs. The estate approves or returns each request.'], ['eye', 'Central SOC sees every site. A site operator sees only their own site and runs the steps.']].forEach(([ic, t], i) => {
@@ -447,7 +449,7 @@ export function roles() {
       d += g(F, 'Access', section(592, 'ACCESS', ['Last sign-in · Today, 02:20:40 · Seletar SOC workstation 2', 'MFA on · session ends 06:00 · role granted by Grace T. on 12 Oct 2026', 'Site mode · Local autonomous · Central SOC watches in read-only'], 'clock', C.t2));
       d += rect(876, 716, 668, 1, { fill: '#4A505B' });
       d += text(876, 752, 'Who sees what', { size: 15, weight: 700, fill: '#FFFFFF' });
-      [['Faizal R. (Seletar)', 'Seletar alarms, cameras, SOP runs · estate status read-only'], ['Nurul A. (Central SOC)', 'every site · operates four, watches Seletar'], ['Grace T. (estate admin)', 'everything · edits only the baseline, roles and connectors']].forEach(([who, what], i) => { const y = 778 + i * 28; d += text(876, y, who, { size: 13.5, weight: 500, fill: '#FFFFFF' }) + text(1070, y, what, { size: 13.5, fill: C.t2 }); });
+      [['Faizal R. (Seletar)', 'Seletar alarms, cameras, SOP runs · estate status read-only'], ['Nurul A. (Central SOC)', 'every site · operates three, watches Seletar and Changi East'], ['Grace T. (estate admin)', 'everything · edits only the baseline, roles and connectors']].forEach(([who, what], i) => { const y = 778 + i * 28; d += text(876, y, who, { size: 13.5, weight: 500, fill: '#FFFFFF' }) + text(1070, y, what, { size: 13.5, fill: C.t2 }); });
       d += g(F, 'Card buttons', rect(884.5, 965.5, 320, 43, { r: 7.5, stroke: '#8B8B8B' }) + text(1044.5, 994, 'View audit log', { size: 20, weight: 700, fill: C.t3, anchor: 'middle' }) + rect(1216, 965, 328, 44, { r: 8, fill: C.blue }) + text(1380, 994, 'Edit role', { size: 20, weight: 700, fill: '#FFFFFF', anchor: 'middle' }));
       mark('personCard', [860, 198, 700, 831]);
       return s + g(F, 'Person card NEW', detailPane(F, BLUE, d));
@@ -464,7 +466,7 @@ const CONNECTORS = [
   { site: 'Fuel farm (off-site)', short: 'Fuel farm', note: '2 systems · 212 online · 0 offline', rows: [['AgilFence', 'fence', 'AGIL', 'AgilFence native', 'Connected', '4 · 2.4 km'], ['Access control', 'key', 'Vendor C', 'OSDP v2', 'Certified', '208']] },
 ];
 const CSTAT = { Connected: GREEN, Certified: C.blue, Onboarding: GREY, Fault: C.crit };
-const CHECKS = [['Discovery', 'Found 110 readers and 12 controllers', 'done', '01:41'], ['Events', 'Door open, forced and held-open events received', 'done', '01:46'], ['Video', 'Not applicable to access control', 'na', '—'], ['Time sync', 'Within 50 ms of the estate clock', 'done', '01:47'], ['Audit', 'Writing and reading back test entries…', 'running', 'running']];
+const CHECKS = [['Discovery', 'Found 110 readers and 12 controllers', 'done', '01:41'], ['Events', 'Door open, forced and held-open events received', 'done', '01:46'], ['Video', 'Not applicable to access control', 'na', '—'], ['Time sync', 'In step with the estate clock', 'done', '01:47'], ['Audit', 'Writing and reading back test entries…', 'running', 'running']];
 export function connectors() {
   return govPage('MS-05 · Estate Governance · Systems & connectors · any brand under one roof, onboarding dialog', 2, {
     body: F => {
@@ -503,6 +505,7 @@ export function connectors() {
       dl += g(F, 'Field Credentials', text(dx + 328, fy, 'Credentials / sandbox key', { size: 16, fill: '#FFFFFF' }) + sel(dx + 328, fy + 10, 296, '••••••••-7F2A · sandbox', { plain: true }));
       fy += 80;
       dl += text(dx + 16, fy, 'Run certification checks', { size: 16, fill: '#FFFFFF' }) + text(dx + dw - 16, fy, 'started 01:40 · 3 of 5 passed, 1 running', { size: 13, fill: C.t2, anchor: 'end' });
+      mark('certChecks', [dx + 16, fy - 18, dw - 32, 16 + 5 * 34 + 14]);
       let ck = '';
       CHECKS.forEach(([n, det, st, t], i) => {
         const y = fy + 16 + i * 34;

@@ -13,7 +13,7 @@ OUT=$(mkdir -p "$3" && cd "$3" && pwd)
 HERE=$(cd "$(dirname "$0")" && pwd)
 FIG="$HERE/../isms-mvp-figma"
 FRAMES="$OUT/frames"
-mkdir -p "$FRAMES" "$DECK/ms" "$DECK/boards" "$DECK/af"
+mkdir -p "$FRAMES" "$DECK/v11" "$DECK/ms" "$DECK/boards" "$DECK/af"
 
 echo "== frames: V11-fit (V11-01…12, V11-00, V11-00b)"
 node "$FIG/build-v11.mjs" "$FRAMES" "$A"
@@ -23,6 +23,9 @@ echo "== frames: multi-site MS-01…06, P2 / P5 boards, master board"
 node "$FIG/build-cpo-flows.mjs" "$FRAMES" "$A"
 
 echo "== deck assets"
+# V11 frames at 2x (slides 6-9 crop these) and their text anchors (deck markers point at real UI elements)
+node "$FIG/render-2x.mjs" "$FRAMES/svg" "$DECK/v11" V11-
+python3 "$HERE/../cag-pitch-deck/extract_anchors.py" "$FRAMES/svg" "$DECK/anchors.json"
 cp "$FRAMES"/png2x/MS-*.png "$DECK/ms/"
 for b in P2-flow-board P5-flow-board CPO-master-board AF-00b-flow-board; do
   if [ -f "$FRAMES/png/$b.png" ]; then cp "$FRAMES/png/$b.png" "$DECK/boards/"; fi

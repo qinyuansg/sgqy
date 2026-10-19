@@ -87,7 +87,7 @@ export function tailgateSop() {
     body: (F, x, y, w, h) => sopFlow(F, x, y + 4, w, [
       { title: 'Verify on camera', state: 'done', tag: 'Done by Co-pilot', text: 'Follower confirmed and auto-followed on 3 cameras.' },
       { title: 'Critical Action Required', state: 'critical', tag: 'Your approval', text: 'Lock D-214 and switch on hard anti-passback (reversible, 2 h). Exit without a matching entry is denied.', actions: [['Lock', 'blue'], ['Secure', 'blue'], ['Normal', 'grey']] },
-      { title: 'Dispatch patrol', state: 'todo', text: 'Send Patrol Arjun to Corridor L2-East (ETA 3 min).', items: [['Photo of follower sent to mobile app', true]] },
+      { title: 'Dispatch patrol', state: 'todo', text: 'Send Patrol Hakim to Corridor L2-East (ETA 3 min).', items: [['Photo of follower sent to mobile app', true]] },
       { title: 'Notify Ground Ops and log', state: 'todo' },
     ], { caption: 'SOP-SEC-014 loaded and pre-filled by Co-pilot' }).svg,
   });
@@ -104,7 +104,7 @@ export function spoofInv() {
     cams: [
       { href: cctv('doorC2_clean'), label: 'Camera 1-204 · Door C2 · now', focus: [0.55, 0.55], box: box('doorC2', 'person'), boxCol: C.crit, boxLabel: 'Not the holder' },
       { href: cctv('doorA17_clean'), label: 'Camera 3-052 · A17 · 02:09', focus: [0.45, 0.55], box: box('doorA17', 'person'), boxCol: C.green, boxLabel: 'Holder' },
-      { href: cctv('doorC2_clean'), label: 'Appearance · 31% vs holder', zoom: 1.8, focus: [0.547, 0.6] },
+      { href: cctv('doorC2_clean'), label: 'Appearance · not the holder', zoom: 1.8, focus: [0.547, 0.6] },
     ],
     body: investigation('Card S-20931 opened T3 Door A17 at 02:09 and T1 Door C2 at 02:13. The fastest route takes 19 min and the person at C2 does not match the holder. C2 used a legacy SSID that should have been revoked.',
       '5 alarms linked into this event',
@@ -112,9 +112,9 @@ export function spoofInv() {
   });
 }
 
-// ---------- 05 · Unattended bag · SOP Flow (autonomous investigation) ----------
+// ---------- 05 · Unattended bag · SOP Flow (assisted investigation) ----------
 export function bagSop() {
-  return incident('V11-05 · Unattended bag · SOP Flow (autonomous investigation)', 'bag', {
+  return incident('V11-05 · Unattended bag · SOP Flow (assisted investigation)', 'bag', {
     marker: 'Gate B12 · Unattended bag',
     ev: { time: '02:16:04', id: 'CAM-2-031', code: 'UAB-112', title: 'Gate B12 Holdroom', lines: [['Black hard-shell suitcase unattended since 02:04'], ['Owner located at ', { b: 'Food Court L3' }, ', ', { b: '410 m' }, ' away']] },
     cams: [
@@ -128,8 +128,8 @@ export function bagSop() {
       { title: 'Find owner and track', state: 'done', tag: 'Auto · 4 cameras' },
       { title: 'Check related events', state: 'done', tag: 'Auto · none within 100 m' },
       { title: 'Load SOP-SEC-021', state: 'done', tag: 'Auto' },
-      { title: 'Critical Action Required', state: 'critical', tag: 'Your decision', text: 'Send Officer Arjun to the owner (ETA 2 min) and keep the camera locked on the bag.', actions: [['Approve', 'green'], ['More info', 'grey']] },
-    ], { caption: 'Co-pilot ran steps 1–4 in 6.2 s. You decide step 5.' }).svg,
+      { title: 'Critical Action Required', state: 'critical', tag: 'Your decision', text: 'Send Officer Ravi to the owner (ETA 2 min) and keep the camera locked on the bag.', actions: [['Approve', 'green'], ['More info', 'grey']] },
+    ], { caption: 'Co-pilot ran steps 1–4. You decide step 5.' }).svg,
   });
 }
 
@@ -137,9 +137,9 @@ export function bagSop() {
 export function watchSop() {
   return incident('V11-06 · Watchlist person loitering · SOP Flow (verify first)', 'watch', {
     marker: 'Row K · Possible match',
-    ev: { time: '02:12:40', id: 'CAM-1-311', code: 'WLS-033', title: 'Departure Hall Row K', lines: [['Possible watchlist match (87%), loitering 23 min'], ['Approached staff door ', { b: 'K-Service' }, ' 3 times']] },
+    ev: { time: '02:12:40', id: 'CAM-1-311', code: 'WLS-033', title: 'Departure Hall Row K', lines: [['Possible watchlist match, loitering 23 min'], ['Approached staff door ', { b: 'K-Service' }, ' 3 times']] },
     cams: [
-      { href: cctv('hall_clean'), label: 'Camera 1-311 · Row K', focus: [0.6, 0.6], box: box('hall', 'person'), boxCol: C.warn, boxLabel: 'Possible match 87%' },
+      { href: cctv('hall_clean'), label: 'Camera 1-311 · Row K', focus: [0.6, 0.6], box: box('hall', 'person'), boxCol: C.warn, boxLabel: 'Possible match · verify' },
       { href: asset('cctv/face_live.jpg'), dims: [512, 512], label: 'Live capture · 02:12', focus: [0.5, 0.45] },
       { href: asset('cctv/face_ref.jpg'), dims: [512, 512], label: 'Watchlist reference · 2025', focus: [0.5, 0.45] },
     ],
@@ -229,7 +229,7 @@ export function escalate() {
       m += g(F, 'Co-pilot hint NEW', icon(F, 'sparkle', 399, 566, 15, C.copilot, 2) + text(420, 579, 'Pre-filled by Co-pilot from the investigation. Edit if needed.', { size: 13.5, weight: 500, fill: C.copilot }));
       m += text(399, 612, 'Remarks', { size: 18, fill: '#FFFFFF' });
       m += rect(399, 623, 602, 80, { r: 6, fill: '#282828', stroke: C.copilot, sw: 1.5 });
-      ['Follower without a credential entered airside via D-214 at 02:14:52', 'behind badge B-55821. Door locked, hard anti-passback on, Patrol', 'Arjun dispatched to Corridor L2-East.'].forEach((l, i) => { m += text(409, 645 + i * 20, l, { size: 14, fill: '#E6E6E6' }); });
+      ['Follower without a credential entered airside via D-214 at 02:14:52', 'behind badge B-55821. Door locked, hard anti-passback on, Patrol', 'Hakim dispatched to Corridor L2-East.'].forEach((l, i) => { m += text(409, 645 + i * 20, l, { size: 14, fill: '#E6E6E6' }); });
       m += rect(391.5, 721.5, 139, 43, { r: 7.5, stroke: '#8B8B8B' }) + text(461, 750, 'Cancel', { size: 20, weight: 700, fill: C.t3, anchor: 'middle' });
       m += rect(540, 721, 469, 44, { r: 8, fill: C.redCreate }) + text(774.5, 750, 'Create Incident', { size: 20, weight: 700, fill: '#FFFFFF', anchor: 'middle' });
       return rect(0, 0, W, H, { fill: '#000000', fo: 0.67 }) + g(F, 'Escalate Event dialog', m);
@@ -250,12 +250,12 @@ export function copilotSearch() {
   let d = '';
   d += icon(F, 'sparkle', x + 18, y + 18, 20, C.copilot, 2) + text(x + 46, y + 34, 'Co-pilot', { size: 18, weight: 700, fill: C.copilot }) + text(x + w - 18, y + 34, 'From live events · 02:30', { size: 14, fill: C.t2, anchor: 'end' });
   d += text(x + 18, y + 68, 'Two critical incidents in Terminal 5 in the last hour.', { size: 18, weight: 500, fill: '#FFFFFF' });
-  d += text(x + 18, y + 92, 'Both are closed: a forced door (Andrew Teo, 02:05) and a wildlife alarm.', { size: 16, fill: C.t2 });
+  d += text(x + 18, y + 92, 'Both are closed: a forced door (Andrew Teo, 02:05) and a wildlife alarm (Siti K., 01:49).', { size: 16, fill: C.t2 });
   const { alertCard: ac } = { alertCard: null };
   let cy = y + 112;
   const res = [
     { sev: 'Critical', title: 'T5 Pier B Service Door', desc: 'Door forced, no badge within 30 s', ai: 'Co-pilot · closed 02:05 · Andrew Teo', time: '01:47 am', selected: true },
-    { sev: 'Critical', title: 'Fence Sector 15 · T5 apron', desc: 'Closed automatically: LiDAR classified wildlife', ai: 'Co-pilot · auto-closed · logged', time: '01:42 am' },
+    { sev: 'Critical', title: 'Fence Sector 15 · T5 apron', desc: 'Wildlife, confirmed on LiDAR and video · closed by Siti K.', ai: 'Co-pilot · suggested close · Siti K. confirmed 01:49', time: '01:42 am' },
   ];
   for (const r of res) { const c = alertCardFn(F, x, cy, w, r); d += c.svg; cy += c.h; }
   d += text(x + 18, cy + 30, 'Sources: event log (8 events) · SOP-SEC-014 §3.2 · CAM 5-210, 5-212', { size: 13.5, fill: C.t2 });
@@ -301,7 +301,7 @@ export function incidentMgmt() {
     ['Closed', 'Warning', 'T2 Gate B12', 'Today, 02:16:04', 'UAB-112', ['Nurul A.', 'Today, 02:31:10'], 'CAM-2-031'],
     ['Closed', 'Info', 'T4 Baggage Hall B2', 'Today, 01:45:20', 'OVS-012', ['Siti K.', 'Today, 02:20:05'], 'ACS-B2'],
     ['Closed', 'Critical', 'T5 Pier B Service Door', 'Today, 01:47:02', 'TGT-209', ['Andrew Teo', 'Today, 02:05:40'], 'ACS-P5B'],
-    ['Closed', 'Critical', 'Fence Sector 15', 'Today, 01:42:10', 'PER-015', ['Auto (LiDAR)', 'Today, 01:42:40'], 'AGF-15-03'],
+    ['Closed', 'Critical', 'Fence Sector 15', 'Today, 01:42:10', 'PER-015', ['Siti K.', 'Today, 01:49:20'], 'AGF-15-03'],
   ];
   rows.forEach(([st, sev, loc, dt, code, by, dev], i) => {
     const y = 296 + i * 56;
@@ -333,7 +333,7 @@ export function incidentMgmt() {
   d += rect(876, 549, 334, 40, { fill: C.tabBody }) + rect(1210, 549, 334, 40, { fill: '#2E333B' }) + text(1043, 576, 'Remarks', { size: 18, weight: 700, fill: '#FFFFFF', anchor: 'middle' }) + text(1377, 576, 'SOP Flow', { size: 18, weight: 700, fill: '#8E95A1', anchor: 'middle' });
   d += rect(876, 589, 668, 360, { fill: C.tabBody });
   const tl = timeline(F, 892, 602, 636, [
-    { who: 'Co-pilot', tag: 'Report draft', time: '02:24:02', col: C.copilot, text: 'Follower without a credential entered airside behind badge B-55821 at 02:14:52. Intercepted by Patrol Arjun at Corridor L2-East at 02:21: contractor with an expired temporary pass, escorted landside. Root cause: courtesy tailgating and a slow door closer (9 s). Recommend staff briefing and door-closer service.', size: 14, lh: 20 },
+    { who: 'Co-pilot', tag: 'Report draft', time: '02:24:02', col: C.copilot, text: 'Follower without a credential entered airside behind badge B-55821 at 02:14:52. Intercepted by Patrol Hakim at Corridor L2-East at 02:21: contractor with an expired temporary pass, escorted landside. Root cause: courtesy tailgating and a slow door closer (9 s). Recommend staff briefing and door-closer service.', size: 14, lh: 20 },
     { who: 'Nurul A.', time: '02:24:10', col: '#2E8BFF', text: 'Reviewed report, agree. Door closer ticket FM-88213 raised.', size: 15, lh: 22 },
   ], { gap: 10 });
   d += tl.svg;
