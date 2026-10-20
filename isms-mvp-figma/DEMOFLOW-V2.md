@@ -118,3 +118,8 @@ The flow must live inside the **original V11 screens**; no invented tabs, rails 
 Header, Real Time Alerts, Device Status and footer buttons stay exactly as V11 (`lib/v11.mjs`); the search placeholder reads "Search…".
 The lockdown-status pill and user chip are dropped to stay true to V11 (kept as proposals in §2).
 **Operator clicks: 4** — SOP Flow tab · Confirm intrusion · Dispatch Patrol 2 · Submit for sign-off (v1: 11). Duty manager: Close Incident + Sign and close on his own Incident Management page.
+
+**Left list (product owner, 20 Oct):** the AgilFence alarm must appear in the **Real Time Alerts list on the left** the moment the fence is triggered:
+a Critical card at the top of the list — "Fence Sector 5" · "AgilFence alarm · segment 5-14 · climb" · "Now" · Locate / Escalate (V11 alert card,
+no Co-pilot line) — with the counters going from 1 to 2 Critical. It stays **selected** (highlighted) while its Active Alarms panel is open, shows
+"Incident PER-005" after confirmation, "Pending sign-off" after submit, and leaves the list when closed (counters back down). AV-S1 (quiet) has no fence card.
