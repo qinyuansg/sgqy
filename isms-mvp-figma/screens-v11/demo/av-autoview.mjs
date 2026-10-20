@@ -1,15 +1,17 @@
-// AgilFence operator experience v2 (DEMOFLOW-V2.md): the alarm view opens itself, the operator verifies, confirms,
-// dispatches and submits; the duty manager signs off on his own console. States AV-S1 … AV-S10c and the
-// alternative path AV-A1, AV-A2, one frame per state, V11 shell (header, Real Time Alerts, right panel).
-// NEW in this flow: Alarm view in the centre (live tile, replay + thermal strip, map inset), Incident progress rail,
-// Verification / Response / Close tabs in the right panel, lockdown status pill, sign-off dialog.
-// Pressed states only on the click frames; no cursors (the film draws its own). All data illustrative.
+// AgilFence operator experience v2 inside the ORIGINAL V11 screens (DEMOFLOW-V2.md §7 'V11 fidelity').
+// The Active Alarms panel opens itself on the Critical fence alarm (Investigation tab by default, three camera
+// tiles), the 3D viewer Locates to segment 5-14 with the nearest cameras and the PTZ 7-02 live player floating in
+// the viewer. Verification lives in the Investigation tab (System entries), the decision and the response lanes
+// live in the SOP Flow tab (steps 1–7, Critical Action steps with buttons), the duty manager signs off on the
+// V11 Incident Management page. Header, Real Time Alerts, Device Status, tabs and footer come unchanged from
+// lib/v11.mjs. Pressed / hover states only where a click happens; no cursors (the film draws its own).
+// All names, IDs, times and SOP clauses are illustrative.
 import fs from 'fs';
 import path from 'path';
-import { Frame, f, rect, circle, line, pathEl, poly, text, rich, icon, g, textWidth, wrap } from '../../lib/svg.mjs';
-import { C, W, H, asset, pill, alertsPanel, deviceStatus, scene, modelToggle } from '../../lib/v11.mjs';
-import { camera, clayAirport } from '../../lib/clay.mjs';
-import { toast } from '../../lib/fence.mjs';
+import { Frame, f, rect, circle, line, poly, text, rich, icon, image, g, textWidth, wrap } from '../../lib/svg.mjs';
+import { C, SEVC, W, H, asset, header, modelToggle, pill, alertsPanel, alertCard, deviceStatus, activeAlarms, timeline, remarksBox, sopFlow, scene, eventHead, camTile } from '../../lib/v11.mjs';
+import { camera, clayAirport, marker } from '../../lib/clay.mjs';
+import { AF, fenceSite, nearestCams, player } from '../../lib/fence.mjs';
 import { btnState, confirmToast, plainCards } from '../../lib/demo.mjs';
 import { ALERTS, BYK } from '../data.mjs';
 
@@ -17,917 +19,653 @@ const cctv = n => asset('cctv/' + n + '.jpg');
 let META = null;
 const box = (sc, k) => { if (!META) META = JSON.parse(fs.readFileSync(path.join(asset.dir, 'cctv/meta.json'), 'utf8')); return META[sc].boxes[k]; };
 
-// ---------- anchors (frame px rects the film points at) ----------
+// ---------- anchors (frame px rects the film pushes on / clicks) ----------
 export const ANCHORS = {};
 let CUR = null;
 export const setFrame = name => { CUR = name; };
 const mark = (k, r) => { if (CUR) (ANCHORS[CUR] = ANCHORS[CUR] || {})[k] = r.map(v => Math.round(v * 10) / 10); };
+// layout guard: warn when a label would not fit its slot at the kit size (never shrink text)
+const fits = (what, s, size, wt, max) => { const w = textWidth(s, size, wt); if (w > max) console.warn(`[${CUR}] ${what} too wide: "${s}" ${w.toFixed(0)} > ${max}`); };
 
-// ---------- tokens (V11 colours only; amber = AgilFence sensor content + exception banner) ----------
-const GREEN = C.green, GREEN_T = '#9BE27A', BLUE = C.link, AMBER = C.warn, RED = C.crit, GREY = '#6B7280';
-const CARD = '#3A3F49';   // card on the tab body
 const OWNER = 'Nurul A.', DM = 'Daniel L.';
+const LOC = ['Main Airport', 'Airfield'];
+const HEAD = { loc: LOC, placeholder: 'Search…' };
 
-// ---------- small parts ----------
-// status dot: done (green check) / current (blue ring) / pending (grey ring) / lost (grey x)
-function dot(F, cx, cy, s, r = 7) {
-  if (s === 'done') return circle(cx, cy, r, { fill: GREEN }) + icon(F, 'check', cx - r + 1.5, cy - r + 1.5, 2 * r - 3, '#FFFFFF', 2.6);
-  if (s === 'current') return circle(cx, cy, r, { fill: '#0E2440', stroke: BLUE, sw: 2 }) + circle(cx, cy, r * 0.38, { fill: BLUE });
-  if (s === 'red') return circle(cx, cy, r, { fill: RED }) + circle(cx, cy, r * 0.38, { fill: '#FFFFFF' });
-  if (s === 'skip') return circle(cx, cy, r, { stroke: GREY, sw: 1.5 }) + line(cx - r * 0.45, cy, cx + r * 0.45, cy, { stroke: '#9BA1AC', sw: 1.6 });
-  return circle(cx, cy, r, { stroke: '#7D8490', sw: 1.5, dash: '2.5 2' });
-}
-// small rounded tag
-function tag(F, x, y, label, o = {}) {
-  const size = o.size || 11.5, w = textWidth(label, size, 500) + 14, h = o.h || 19, k = o.kind || 'auth';
-  const st = {
-    auth: { fill: '#2E8BFF', fo: 0.24, tc: '#B9D9FF' },
-    atc: { fill: '#1D232C', fo: 0.9, tc: '#FFFFFF', stroke: '#9BA1AC' },
-    ok: { fill: GREEN, fo: 0.22, tc: GREEN_T },
-    found: { fill: C.info, fo: 0.25, tc: '#BFEFF6' },
-    unknown: { fill: '#1D232C', fo: 0.6, tc: '#BDBDBD', stroke: '#9BA1AC', dash: '3 2' },
-    crit: { fill: RED, fo: 1, tc: '#FFFFFF' },
-    blue: { fill: BLUE, fo: 0.22, tc: '#CFE8FF' },
-    grey: { fill: '#FFFFFF', fo: 0.12, tc: '#DDE1E8' },
-  }[k];
-  const xx = o.right ? x - w : x;
-  return { svg: rect(xx, y, w, h, { r: 6, fill: st.fill, fo: st.fo, stroke: st.stroke, sw: 1, dash: st.dash }) + text(xx + 7, y + h / 2 + size * 0.36, label, { size, weight: 500, fill: st.tc }), w, x: xx };
-}
-// wrap that measures with weight
-const lines = (s, w, size, wt = 400) => wrap(s, w, size, wt);
-
-// ---------- header: V11 header, search 'Search…', lockdown status pill (separate from the button), user chip ----------
-function header(F, o = {}) {
-  const user = o.user || [OWNER, 'Operator'];
-  let s = g(F, 'Logo', `<image x="40" y="40" width="50" height="46" preserveAspectRatio="xMidYMid slice" href="${asset('logo_s.png')}" xlink:href="${asset('logo_s.png')}"/>`);
-  let e = rect(119, 40, 257, 46, { r: 8, fill: C.red });
-  e += poly([[147, 51], [158, 62], [147, 73], [136, 62]], { fill: '#FFFFFF' }) + rect(145.8, 55.5, 2.4, 9, { fill: C.red }) + rect(145.8, 66.5, 2.4, 2.6, { fill: C.red });
-  e += text(163, 70, 'Emergency Lockdown', { size: 20, weight: 700, fill: '#FFFFFF' });
-  s += g(F, 'Button Emergency Lockdown', e);
-  // right to left: Incident Management, user chip, lockdown status, search
-  // one chip width for both consoles (operator and duty manager), so the header grid never moves between frames
-  const uw = Math.max(...[[OWNER, 'Operator'], [DM, 'Duty manager']].map(([a, b]) => Math.max(textWidth(a, 14, 700), textWidth(b, 12, 400)))) + 46, ux = 1095 - uw;
-  let u = rect(ux, 43, uw, 40, { r: 8, fill: '#1D232C', stroke: '#4A505B' }) + circle(ux + 18, 63, 11, { fill: user[1] === 'Operator' ? '#2E5DA8' : '#5A4A2E' }) + icon(F, 'user', ux + 10, 55, 16, '#FFFFFF', 2);
-  u += text(ux + 36, 60, user[0], { size: 14, weight: 700, fill: '#FFFFFF' }) + text(ux + 36, 76, user[1], { size: 12, fill: C.t2 });
-  s += g(F, 'User chip NEW', u);
-  const lab = 'Lockdown: not active', lw = textWidth(lab, 14, 500) + 38, lx = ux - 10 - lw;
-  s += g(F, 'Lockdown status NEW', rect(lx, 43, lw, 40, { r: 20, fill: '#1D232C', stroke: '#5A606B', sw: 1.2 }) + circle(lx + 17, 63, 5, { fill: '#9BA1AC' }) + text(lx + 29, 68, lab, { size: 14, weight: 500, fill: C.t1 }));
-  mark('lockdownStatus', [lx, 43, lw, 40]);
-  const sx1 = lx - 10;
-  let b = rect(440, 43, sx1 - 440, 40, { r: 8, fill: C.search }) + rect(440, 43, 209, 40, { r: 8, fill: C.locSeg }) + rect(640, 43, 9, 40, { fill: C.locSeg });
-  const w0 = textWidth('Main Airport', 16, 500);
-  b += text(450, 69, 'Main Airport', { size: 16, weight: 500, fill: '#FFFFFF' }) + text(450 + w0 + 7, 68, '›', { size: 14, fill: C.t3 }) + text(450 + w0 + 22, 69, 'Airfield', { size: 16, weight: 500, fill: '#FFFFFF' });
-  b += poly([[627, 60], [637, 60], [632, 66]], { fill: '#FFFFFF' });
-  b += icon(F, 'search', 660, 53, 20, C.t1, 2) + text(689, 69, 'Search…', { size: 16, fill: C.t3 });
-  s += g(F, 'Search bar', b);
-  s += g(F, 'Button Incident Management', rect(1103.5, 40.5, 256, 45, { r: 7.5, fill: '#000000', stroke: '#8B8B8B' }) + icon(F, 'extLink', 1121, 51, 22, '#FFFFFF', 2) + text(1150, 70, 'Incident Management', { size: 20, weight: 700, fill: '#FFFFFF' }));
-  return g(F, 'Header', s);
-}
-
-// ---------- alert list ----------
-// other alerts on the list, in clock times only: [time, description] for the main night and the A-path night (01:2x)
+// ---------- Real Time Alerts (left list) ----------
+// other cards in clock times only; the fence card is the FIRST card while the alarm / incident is live
 const OTHER = {
-  watch: [['02:12', 'Possible watchlist match, loitering since 01:49'], ['01:12', 'Possible watchlist match, loitering since 00:49']],
-  spoof: [['02:13', 'Same card used at T3 A17 at 02:09'], ['01:13', 'Same card used at T3 A17 at 01:09']],
-  fight: [['02:11', 'Fight detected, crowd forming'], ['01:11', 'Fight detected, crowd forming']],
-  bag: [['02:04', 'Unattended bag since 01:52, owner located'], ['01:04', 'Unattended bag since 00:52, owner located']],
-  overstay: [['01:45', 'In restricted zone since 22:05'], ['00:45', 'In restricted zone since 21:05']],
+  watch: [['02:12 am', 'Possible watchlist match, loitering since 01:49'], ['01:12 am', 'Possible watchlist match, loitering since 00:49']],
+  spoof: [['02:13 am', 'Same card used at T3 A17 at 02:09'], ['01:13 am', 'Same card used at T3 A17 at 01:09']],
+  fight: [['02:11 am', 'Fight detected, crowd forming'], ['01:11 am', 'Fight detected, crowd forming']],
+  bag: [['02:04 am', 'Unattended bag since 01:52, owner located'], ['01:04 am', 'Unattended bag since 00:52, owner located']],
+  overstay: [['01:45 am', 'In restricted zone since 22:05'], ['00:45 am', 'In restricted zone since 21:05']],
 };
+const FENCE_DESC = {
+  alarm: 'AgilFence alarm · segment 5-14 · climb',
+  incident: 'Incident PER-005 · AgilFence 5-14 · climb',
+  pending: 'Incident PER-005 · Pending sign-off',
+  cleared: 'Cleared · authorised activity · PTW-2231',
+};
+// o.fence: key of FENCE_DESC or null (no card); o.alt: the other night (A-path);
+// o.late: the frame is minutes after 02:14 (02:16 on), so Staff Door D-214 (02:14:52) and the fence card (02:14:58) show
+// their clock time, not 'Now'
 function cardList(o) {
-  // fence card text follows the state; it leaves the list once resolved or closed
-  const fence = o.fence === false ? null : { ...BYK.fence, desc: o.fence || BYK.fence.desc, time: 'Now' };
-  const others = ALERTS.filter(a => a.key !== 'fence').map(a => OTHER[a.key] ? { ...a, time: OTHER[a.key][o.alt ? 1 : 0][0], desc: OTHER[a.key][o.alt ? 1 : 0][1] } : a);
-  return plainCards([...(fence ? [fence] : []), ...others], fence && o.sel !== false ? 'fence' : null);
+  const others = ALERTS.filter(a => a.key !== 'fence').map(a => OTHER[a.key] ? { ...a, time: OTHER[a.key][o.alt ? 1 : 0][0], desc: OTHER[a.key][o.alt ? 1 : 0][1] } : o.alt && a.time === 'Now' ? { ...a, time: '01:14 am' } : o.late && a.time === 'Now' ? { ...a, time: '02:14 am' } : a);
+  // cleared (A-path): the card stays in the list with a neutral stripe and its clock time, no longer Critical
+  const fence = o.fence ? [{ ...BYK.fence, title: 'Fence Sector 5', desc: FENCE_DESC[o.fence], time: o.fence === 'cleared' ? '01:22 am' : o.late ? '02:14 am' : 'Now', ...(o.fence === 'cleared' ? { sev: 'Cleared' } : {}) }] : [];
+  return plainCards([...fence, ...others], o.fence && o.sel !== false ? 'fence' : null);
 }
+SEVC.Cleared = SEVC.Cleared || C.closed;   // neutral stripe for a cleared alarm card (local key, not a severity)
 const counts = crit => [[crit + ' Critical', C.crit], ['4 Warnings', C.warn], ['1 Info', C.info]];
 
-// ---------- centre: Incident progress rail (NEW) ----------
-const RX = 388, RW = 500, RY = 118, RH = 142;
-function rail(F, st) {
-  let s = rect(RX, RY, RW, RH, { r: 14, fill: C.panel, fo: 0.92, stroke: '#2C3440' });
-  s += text(RX + 16, RY + 23, 'Incident progress', { size: 13, weight: 700, fill: '#FFFFFF' }) + text(RX + RW - 16, RY + 23, st.ref, { size: 12, fill: C.t2, anchor: 'end' });
-  // four phases
-  const cw = (RW - 32) / 4, py = RY + 34;
-  st.phases.forEach((p, i) => {
-    const cx = RX + 16 + i * cw, col = { done: GREEN, current: BLUE }[p.state] || '#4A505B';
-    s += rect(cx, py, cw - 6, 4, { r: 2, fill: col });
-    s += dot(F, cx + 8, py + 20, p.state, 8);
-    s += text(cx + 22, py + 25, p.name, { size: 13, weight: 700, fill: p.state === 'pending' ? C.t2 : '#FFFFFF' });
-    s += text(cx, py + 44, p.sub, { size: 12, weight: p.state === 'current' ? 500 : 400, fill: p.state === 'done' ? GREEN_T : p.state === 'current' ? '#CFE8FF' : C.t2 });
-  });
-  // chain of states of the current phase (wraps, at most 3 lines)
-  const cy0 = RY + 96;
-  s += line(RX + 16, cy0 - 8, RX + RW - 16, cy0 - 8, { stroke: '#3A4250' });
-  let x = RX + 16, y = cy0 + 6, ch = '';
-  const maxX = RX + RW - 14;
-  let nl = 1;
-  st.chain.forEach((c, i) => {
-    const tw = textWidth(c.t, 12, 400) + (c.time ? 5 + textWidth(c.time, 12, 700) : 0), w = 14 + tw;
-    if (i > 0) { if (x + 16 + w > maxX) { x = RX + 16; y += 16; nl++; } else { ch += icon(F, 'chevR', x + 2, y - 5, 10, '#7D8490', 2); x += 16; } }
-    ch += dot(F, x + 5, y, c.s || 'done', 5);
-    ch += text(x + 14, y + 4, c.t, { size: 12, fill: c.s === 'pending' ? C.t2 : C.t1 });
-    if (c.time) ch += text(x + 14 + textWidth(c.t, 12) + 5, y + 4, c.time, { size: 12, weight: 700, fill: '#FFFFFF' });
-    x += w;
-  });
-  if (nl > 3) console.warn('rail chain overflows', CUR, nl);
-  s += ch;
-  mark('progressRail', [RX, RY, RW, RH]);
-  if (st.chainKey) mark(st.chainKey, [RX + 10, cy0 - 6, RW - 20, y - cy0 + 18]);
-  return g(F, 'Incident progress rail NEW', s);
+// ---------- 3D viewer ----------
+// home: whole airport, markers for tonight's alerts (fence only while live)
+function airportView(F, withFence) {
+  const P = camera(870, 520, 8.4, 50, 29);
+  const mk = ALERTS.filter(a => withFence || a.key !== 'fence').map(a => ({ id: a.key, X: a.X, Y: a.Y, sev: a.sev, icon: a.icon, h: a.key === 'fence' ? 3.5 : 4.5, label: a.key === 'tailgate' ? 'D-214 · Tailgating' : undefined, left: a.key === 'watch' || a.key === 'spoof' }));
+  return scene(F, clayAirport(F, P, { markers: mk, alarmFence: !!withFence }));
+}
+// Locate (automatic): close-up of the north fence with segment 5-14, sensors, cameras and their cones (UC2 AF pattern)
+function locateView(F, o = {}) {
+  const P = camera(570, 490, 40, 63, 1);
+  let s = clayAirport(F, P, { alarmFence: false, lidar: false, labels: false, markers: [] });
+  s += fenceSite(F, P, { cams: AF.cams.map(c => ({ ...c, place: 'above', label: c.id === 'PTZ 7-03' ? false : undefined })), alarm: o.alarm });
+  s += marker(F, P, { X: 63, Y: 1, sev: o.sev || 'Critical', icon: 'fence', h: 2.5, label: o.label || 'Seg 5-14 · Alarm' });
+  { const [hx, hy] = P(63, 1, 2.5), lw = textWidth(o.label || 'Seg 5-14 · Alarm', 14, 500) + 24; mark('segment', [hx - 20, hy - 20, lw + 62, 40]); }
+  return scene(F, s);
+}
+// response: wider north perimeter, patrol on the perimeter road, runway note, the tracking camera labelled
+function patrolView(F, o = {}) {
+  const P = camera(615, 495, 30, 61, 3.5);
+  let s = clayAirport(F, P, { alarmFence: false, lidar: false, labels: false, markers: [], cullX: 390 });   // nothing behind the Real Time Alerts panel
+  const patrol = { ...AF.patrol, id: 'Patrol 2', eta: o.eta || 'ETA 02:18:30', at: o.at || AF.patrol.from, place: 'below', minX: 392, dy: 34 };
+  const lost = !!o.ptz703;
+  const cams = [
+    { ...AF.cams[0], pref: !lost, place: 'left', text: lost ? 'PTZ 7-02 · video lost' : 'PTZ 7-02 · tracking', label: undefined },
+    { ...AF.cams[1], label: false },
+    { ...AF.cams[2], pref: lost, label: false },
+  ];
+  if (lost) cams[0].cone = false;
+  s += fenceSite(F, P, { cams, patrol, runway: { X: 64, Y: 6.4, label: o.runway || 'Runway 02L · 130 m', col: o.runwayCol }, alarm: o.alarm });
+  s += marker(F, P, { X: 63, Y: 1, sev: 'Critical', icon: 'fence', h: 3.2, label: o.label || 'Seg 5-14 · PER-005' });
+  { const [vx, vy] = P(...patrol.at, 0.2); mark('patrol', [vx - 18, vy - 18, 36, 36]); }
+  return scene(F, s);
 }
 
-// ---------- centre: Alarm view (NEW) ----------
-const AX = 388, AY = RY + RH + 8, AW = 500, AH = 1029 - AY;
-const TX = AX + 8, TW = AW - 16;          // tile column
-const LT = { x: TX, y: AY + 40, w: TW, h: 290 };
-const ST = { y: LT.y + LT.h + 8, h: 112 };
-const MP = { y: ST.y + ST.h + 8 };
-MP.h = AY + AH - 8 - MP.y;
-
-// image placed to cover a rect (focus + zoom), optional boxes and a patch (copy of the image shifted, to clear a region)
-function cover(F, x, y, w, h, cam) {
-  const [sw0, sh0] = [1280, 720];
-  const sc = Math.max(w / sw0, h / sh0) * (cam.zoom || 1), iw = sw0 * sc, ih = sh0 * sc;
-  const [fx, fy] = cam.focus || [0.5, 0.5];
-  let ox = x + w / 2 - fx * iw, oy = y + h / 2 - fy * ih;
-  ox = Math.min(x, Math.max(x + w - iw, ox)); oy = Math.min(y, Math.max(y + h - ih, oy));
-  const img = (dx = 0) => `<image x="${f(ox - dx * sc)}" y="${f(oy)}" width="${f(iw)}" height="${f(ih)}" preserveAspectRatio="none" href="${cam.href}" xlink:href="${cam.href}"/>`;
-  let s = img();
-  if (cam.patch) { const [px, py, pw, ph] = cam.patch.box; const cp = F.clip(`<rect x="${f(ox + px * sc)}" y="${f(oy + py * sc)}" width="${f(pw * sc)}" height="${f(ph * sc)}"/>`); s += `<g clip-path="${cp}">${img(cam.patch.dx)}</g>`; }
-  for (const b of cam.boxes || []) {
-    const [bx, by, bw, bh] = b.box, X = ox + bx * sc, Y = oy + by * sc, col = b.col || RED;
-    s += rect(X, Y, bw * sc, bh * sc, { r: 3, stroke: col, sw: 2 });
-    if (b.label) {
-      const lw = textWidth(b.label, 12, 500) + 12, ly = b.top ? Math.max(y + 34, Y - 22) : Math.min(Y + bh * sc + 3, y + h - 24), lx = Math.max(x + 4, Math.min(X + (b.dx || 0), x + w - lw - 4));
-      s += rect(lx, ly, lw, 19, { r: 3, fill: col }) + text(lx + 6, ly + 14, b.label, { size: 12, weight: 500, fill: '#FFFFFF' });
-    }
-  }
-  return s;
-}
-// tile with a top bar (camera name + chips) — chips at 11 px (kit minimum)
-function tile(F, x, y, w, h, cam, o = {}) {
-  const clip = F.clip(`<rect x="${f(x)}" y="${f(y)}" width="${f(w)}" height="${f(h)}" rx="6"/>`);
-  let inner = rect(x, y, w, h, { fill: '#05070A' }) + (cam.href ? cover(F, x, y, w, h, cam) : '');
-  if (cam.empty) inner += cam.empty;
-  const bh = o.bar || 30;
-  inner += rect(x, y, w, bh, { fill: '#000000', fo: 0.55 }) + icon(F, cam.icon || 'cctv', x + 9, y + (bh - 16) / 2, 16, '#FFFFFF', 1.7) + text(x + 31, y + bh / 2 + 4.5, cam.label, { size: o.ls || 13, weight: 500, fill: '#FFFFFF' });
-  let cx = x + w - 7;
-  for (const [lab, col] of [...(cam.chips || [])].reverse()) {
-    const live = lab === 'LIVE', cw = textWidth(lab, 11, 700) + (live ? 22 : 14);
-    cx -= cw;
-    inner += rect(cx, y + (bh - 19) / 2, cw, 19, { r: 9.5, fill: col }) + (live ? circle(cx + 9, y + bh / 2, 3, { fill: '#FFFFFF' }) : '') + text(cx + (live ? 15 : 7), y + bh / 2 + 4, lab, { size: 11, weight: 700, fill: '#FFFFFF' });
-    cx -= 5;
-  }
-  if (cam.ts) inner += rect(x + 8, y + h - 26, textWidth(cam.ts, 12, 500) + 14, 19, { r: 4, fill: '#000000', fo: 0.6 }) + text(x + 15, y + h - 12, cam.ts, { size: 12, weight: 500, fill: '#FFFFFF' });
-  if (o.banner) inner += o.banner;
-  return g(F, 'Tile ' + cam.label, `<g clip-path="${clip}">${inner}</g>` + rect(x, y, w, h, { r: 6, stroke: o.ring || '#3E4655', sw: o.ring ? 2 : 1 }));
-}
-
-// map inset: schematic plan of Sector 5 (fence line, segments, cameras, LiDAR, track trail, runway distance)
-function mapInset(F, x, y, w, h, m) {
-  const k = 1.4, ox = x + w * 0.4, oy = y + 60;
-  const P = (X, Y) => [ox + X * k, oy + Y * k];
-  const clip = F.clip(`<rect x="${f(x)}" y="${f(y)}" width="${f(w)}" height="${f(h)}" rx="8"/>`);
-  let s = rect(x, y, w, h, { fill: '#0E131A' });
-  for (let gx = -150; gx <= 250; gx += 25) s += line(...P(gx, -60), ...P(gx, 200), { stroke: '#2A62C9', so: 0.13 });
-  for (let gy = -50; gy <= 200; gy += 25) s += line(...P(-160, gy), ...P(260, gy), { stroke: '#2A62C9', so: 0.13 });
-  s += rect(x, y, w, oy - y, { fill: '#000000', fo: 0.28 });   // outside the fence
-  // perimeter road
-  s += rect(x, P(0, 19)[1], w, 12 * k, { fill: '#232A34' }) + line(x, P(0, 25)[1], x + w, P(0, 25)[1], { stroke: '#5A606B', dash: '6 6' });
-  // runway 02L (edge 130 m from segment 5-14)
-  const [, ry] = P(0, 130);
-  s += rect(x, ry, w, h, { fill: '#2B313B' }) + line(x, ry, x + w, ry, { stroke: '#DDE1E8', so: 0.6, sw: 1.5 }) + line(x, ry + 30, x + w, ry + 30, { stroke: '#DDE1E8', so: 0.5, sw: 2, dash: '16 12' });
-  s += text(x + 12, ry + 22, 'Runway 02L', { size: 12, weight: 700, fill: '#DDE1E8' });
-  if (m.hold) s += tag(F, x + 12 + textWidth('Runway 02L', 12, 700) + 8, ry + 8, m.hold, { kind: m.holdKind || 'crit', size: 11 }).svg;
-  // fence + AgilFence cable (amber dots) + segment ticks
-  s += line(x, oy, x + w, oy, { stroke: '#9FC3FF', so: 0.75, sw: 2 });
-  for (let X = -150; X <= 260; X += 5) { const [dx] = P(X, 0); if (dx > x && dx < x + w) s += circle(dx, oy, 1.4, { fill: AMBER, fo: 0.75 }); }
-  for (let kk = 10; kk <= 18; kk++) {
-    const [sx] = P((kk - 14) * 40 - 20, 0);
-    if (sx > x && sx < x + w) s += line(sx, oy - 6, sx, oy + 6, { stroke: '#9FC3FF', so: 0.8, sw: 1.2 });
-    const [lx] = P((kk - 14) * 40, 0);
-    if (lx > x + 20 && lx < x + w - 20 && kk !== 14) s += text(lx, oy - 9, '5-' + kk, { size: 11, weight: 500, fill: '#9FC3FF', anchor: 'middle' });
-  }
-  const [a0] = P(-20, 0), [a1] = P(20, 0);
-  if (m.alarm !== false) s += line(a0, oy, a1, oy, { stroke: RED, sw: 10, so: 0.3 }) + line(a0, oy, a1, oy, { stroke: RED, sw: 4 });
-  else s += line(a0, oy, a1, oy, { stroke: GREEN, sw: 4 });
-  s += rect(ox - 34, oy - 30, 68, 19, { r: 5, fill: m.alarm === false ? GREEN : RED }) + text(ox, oy - 16, 'AGF 5-14', { size: 11, weight: 700, fill: '#FFFFFF', anchor: 'middle' });
-  // works area (alternative path)
-  if (m.works) { const [w0, w1] = [P(-16, -6), P(16, 9)]; s += rect(w0[0], w0[1], w1[0] - w0[0], w1[1] - w0[1], { r: 3, fill: C.info, fo: 0.16, stroke: C.info, sw: 1.2, dash: '4 3' }); }
-  // dimension 5-14 → runway
-  const [dx0, dy0] = P(-12, 3), [, dy1] = P(-12, 130);
-  s += line(dx0, dy0, dx0, dy1 - 1, { stroke: '#DDE1E8', so: 0.7, sw: 1.2, dash: '3 3' }) + poly([[dx0 - 4, dy1 - 8], [dx0 + 4, dy1 - 8], [dx0, dy1 - 1]], { fill: '#DDE1E8', fo: 0.8 });
-  const dl = '130 m to runway', dlw = textWidth(dl, 11, 500) + 12, dly = dy0 + (dy1 - dy0) * 0.78;
-  s += rect(dx0 - dlw / 2, dly - 10, dlw, 19, { r: 5, fill: '#1D232C', stroke: '#9BA1AC', sw: 1 }) + text(dx0, dly + 4, dl, { size: 11, weight: 500, fill: '#FFFFFF', anchor: 'middle' });
-  // LiDAR L-5B with coverage (left out when a toast covers that corner of the map)
-  const [lx, ly] = P(-40, 62);
-  const lidarSvg = circle(lx, ly, 46 * k, { stroke: '#55D6E6', so: 0.28, sw: 1, dash: '4 4', fill: '#55D6E6', fo: 0.04 }) +
-    circle(lx, ly, 11, { fill: '#1D232C', stroke: '#55D6E6', sw: 1.5 }) + icon(F, 'radar', lx - 7.5, ly - 7.5, 15, '#FFFFFF', 1.8) + text(lx, ly + 26, 'LiDAR L-5B', { size: 11, weight: 500, fill: '#BFEFF6', anchor: 'middle' });
-  s += LIDAR_MARK;
-  // cameras + cones
-  const tgt = m.tgt || [0, 5];
-  for (const c of m.cams) {
-    const [cx, cy] = P(c.X, c.Y), act = c.state === 'active', lost = c.state === 'lost';
-    if (act) {
-      const [tx, ty] = P(...tgt), ang = Math.atan2(ty - cy, tx - cx), d = Math.hypot(tx - cx, ty - cy) * 1.2, hw = 0.26;
-      s += poly([[cx, cy], [cx + d * Math.cos(ang - hw), cy + d * Math.sin(ang - hw)], [cx + d * Math.cos(ang + hw), cy + d * Math.sin(ang + hw)]], { fill: '#55D6E6', fo: 0.2, stroke: '#55D6E6', so: 0.7, sw: 1 });
-    }
-    const col = lost ? GREY : act ? '#55D6E6' : '#7FB2FF';
-    s += circle(cx, cy, 11, { fill: '#1D232C', stroke: col, sw: 1.5 }) + icon(F, 'cctv', cx - 7.5, cy - 7.5, 15, lost ? '#9BA1AC' : '#FFFFFF', 1.7);
-    if (lost) s += circle(cx + 9, cy - 9, 6, { fill: GREY }) + icon(F, 'x', cx + 5, cy - 13, 8, '#FFFFFF', 2);
-    const lab = c.id + (c.note ? ' · ' + c.note : ''), lw = textWidth(lab, 11, 500) + 10;
-    let lx2 = c.place === 'left' ? cx - 15 - lw : c.place === 'below' ? cx - lw / 2 : cx + 15, ly2 = c.place === 'below' ? cy + 14 : cy - 9;
-    lx2 = Math.max(x + 4, Math.min(x + w - lw - 4, lx2));
-    s += rect(lx2, ly2, lw, 18, { r: 4, fill: '#1D232C', fo: 0.9 }) + text(lx2 + 5, ly2 + 13, lab, { size: 11, weight: 500, fill: lost ? '#BDBDBD' : '#FFFFFF' });
-  }
-  // track trail T-07 (LiDAR)
-  if (m.track) {
-    const pts = m.track.map(p => P(...p));
-    pts.forEach(([px, py], i) => { if (i < pts.length - 1) s += circle(px, py, 2.6, { fill: RED, fo: 0.35 + 0.5 * i / pts.length }); });
-    if (pts.length > 1) s += pathEl('M' + pts.map(p => p.map(f).join(' ')).join(' L'), { stroke: RED, so: 0.55, sw: 1.5, dash: '3 3' });
-    const [hx, hy] = pts[pts.length - 1];
-    s += circle(hx, hy, 11, { fill: RED, fo: 0.25 }) + circle(hx, hy, 6, { fill: RED, stroke: '#FFFFFF', sw: 1.5 });
-    const tl = m.trackLabel || 'T-07', tlw = textWidth(tl, 11, 700) + 12, tx0 = m.trackLeft ? hx - 10 - tlw : hx + 10;
-    s += rect(tx0, hy + 6, tlw, 18, { r: 4, fill: RED }) + text(tx0 + 6, hy + 19, tl, { size: 11, weight: 700, fill: '#FFFFFF' });
-  }
-  if (m.lidar === false) s = s.replace(LIDAR_MARK, ''); else s = s.replace(LIDAR_MARK, lidarSvg);
-  if (m.people) for (const p of m.people) { const [px, py] = P(...p); s += circle(px, py, 5.5, { fill: C.info, stroke: '#FFFFFF', sw: 1.5 }); }
-  if (m.peopleLabel) { const [px, py] = P(0, 9); const lw = textWidth(m.peopleLabel, 11, 500) + 12; s += rect(px - lw / 2, py + 4, lw, 18, { r: 4, fill: '#0E5E68' }) + text(px - lw / 2 + 6, py + 17, m.peopleLabel, { size: 11, weight: 500, fill: '#FFFFFF' }); }
-  // units on the ground
-  for (const u of m.units || []) {
-    const [px, py] = P(...u.at), col = u.col || GREEN;
-    if (u.offmap) {   // not on the map yet: arrow on the map edge where it will enter, with its label
-      s += poly([[x + 3, py - 9], [x + 15, py], [x + 3, py + 9]], { fill: col });
-      const lw = textWidth(u.label, 11, 500) + 12; s += rect(x + 20, py - 9, lw, 18, { r: 4, fill: '#1D232C', stroke: col, sw: 1 }) + text(x + 26, py + 4, u.label, { size: 11, weight: 500, fill: '#FFFFFF' });
-      continue;
-    }
-    if (u.from) { const [fx2, fy2] = P(...u.from); s += line(Math.max(x, fx2), fy2, px, py, { stroke: col, sw: 2.5, dash: '7 5' }); }
-    if (u.edge) {   // arrives from off-map: arrow on the map edge + origin
-      const ey = py; s += poly([[x + 2, ey - 9], [x + 14, ey], [x + 2, ey + 9]], { fill: col });
-      const el = u.edge, ew = textWidth(el, 11, 500) + 10; s += rect(x + 4, ey + 12, ew, 18, { r: 4, fill: '#1D232C', fo: 0.9 }) + text(x + 9, ey + 25, el, { size: 11, weight: 500, fill: C.t1 });
-    }
-    s += circle(px, py, 11, { fill: col, stroke: '#FFFFFF', sw: 1.5 }) + icon(F, u.icon || 'car', px - 7.5, py - 7.5, 15, '#FFFFFF', 1.8);
-    const lw = textWidth(u.label, 11, 500) + 12, lx3 = u.left ? px - 15 - lw : px + 15, ly3 = u.below ? py + 13 : u.above ? py - 31 : py - 9;
-    s += rect(lx3, ly3, lw, 18, { r: 4, fill: '#1D232C', stroke: col, sw: 1 }) + text(lx3 + 6, ly3 + 13, u.label, { size: 11, weight: 500, fill: '#FFFFFF' });
-  }
-  // map chrome: title, scale, north
-  const tt = 'Map · Sector 5 · north perimeter', ttw = textWidth(tt, 12, 700) + 30;
-  s += rect(x + 8, y + 8, ttw, 24, { r: 6, fill: '#1D232C', fo: 0.92 }) + icon(F, 'pin', x + 13, y + 12, 15, '#55D6E6', 2) + text(x + 31, y + 25, tt, { size: 12, weight: 700, fill: '#FFFFFF' });
-  s += text(x + w - 12, y + 25, 'Outside', { size: 11, weight: 500, fill: C.t2, anchor: 'end' });
-  const sbx = x + w - 92, sby = ry - 8;
-  s += line(sbx, sby, sbx + 50 * k, sby, { stroke: '#FFFFFF', sw: 2 }) + line(sbx, sby - 4, sbx, sby + 1, { stroke: '#FFFFFF', sw: 2 }) + line(sbx + 50 * k, sby - 4, sbx + 50 * k, sby + 1, { stroke: '#FFFFFF', sw: 2 }) + text(sbx + 25 * k, sby - 6, '50 m', { size: 11, weight: 500, fill: '#FFFFFF', anchor: 'middle' });
-  return g(F, 'Map inset NEW', `<g clip-path="${clip}">${s}</g>` + rect(x, y, w, h, { r: 8, stroke: '#3E4655' }));
-}
-
-const LIDAR_MARK = '<!--lidar-->';
-const CAMS = {
-  climb: (o = {}) => ({ href: cctv('fence_ptz_clean'), label: 'PTZ 7-02 · Live', focus: [0.5, 0.4], boxes: [{ box: box('fence_ptz', 'person'), label: 'Person · climbing' }], ...o }),
-  inside: (o = {}) => ({ href: cctv('fence_inside_clean'), label: 'PTZ 7-02 · Live', focus: [0.55, 0.58], boxes: [{ box: box('fence_inside', 'person'), label: 'Person · T-07' }], ...o }),
-  ptz703: (o = {}) => ({ href: cctv('thermal_clean'), label: 'PTZ 7-03 · Live · thermal', focus: [0.54, 0.5], boxes: [{ box: box('thermal', 'person'), label: 'Person · T-07' }], ...o }),
-  // hand-over at 02:26:30: Patrol 2 officer, the person, Airport Police AP-12 officer and car
-  patrol: (o = {}) => ({ href: cctv('fence_handover_clean'), label: 'PTZ 7-03 · Live', focus: [0.5, 0.56], zoom: 1.15, boxes: [{ box: box('fence_handover', 'person'), label: 'Handed to police · AP-12', top: true, dx: -40 }, { box: box('fence_handover', 'officer1'), col: C.blue, label: 'Patrol 2', dx: -30 }, { box: box('fence_handover', 'police'), col: '#2D5BD8', label: 'Police AP-12', dx: 20 }, { box: box('fence_handover', 'vehicle'), col: '#2D5BD8', label: 'AP-12' }], ...o }),
-  wide: (o = {}) => ({ href: cctv('fence_wide_clean'), label: 'CAM 7-11 · Live', focus: [0.62, 0.45], zoom: 1.5, boxes: [{ box: box('fence_wide', 'person'), col: C.blue, label: 'Guard posted · 5-14' }], ...o }),
-  crew: (o = {}) => ({ href: cctv('fence_crew_clean'), label: 'PTZ 7-02 · Live', focus: [0.55, 0.55], zoom: 1.45, boxes: [{ box: box('fence_crew', 'crew1'), col: '#0E7C8A', label: 'Crew 1 · hi-vis' }, { box: box('fence_crew', 'crew2'), col: '#0E7C8A', label: 'Crew 2 · hi-vis' }], ...o }),
-  pre: (o = {}) => ({ href: cctv('fence_pre_clean'), label: 'Replay · CAM 7-11', icon: 'play', focus: [0.6, 0.6], zoom: 1.2, boxes: [{ box: box('fence_pre', 'person') }], ...o }),
-  thermal: (o = {}) => ({ href: cctv('thermal_clean'), label: 'Thermal · PTZ 7-02', focus: [0.53, 0.5], zoom: 1.2, boxes: [{ box: box('thermal', 'person') }], ...o }),
-  lidar: (o = {}) => ({ href: cctv('lidar_clean'), label: 'LiDAR L-5B · T-07', icon: 'radar', focus: [0.5, 0.45], zoom: 1.2, ...o }),
+// floating in the viewer: nearest cameras (top-left) and the live player (bottom), both opened by the Locate
+const NC = { x: 400, y: 140, w: 300 };
+const PL = { x: 400, y: 586, w: 476, h: 300 };
+const NEAR = {
+  live: () => [
+    { ...AF.cams[0], state: 'Live · on target' },
+    { ...AF.cams[1], state: 'Live' },
+    { ...AF.cams[2], state: 'Live' },
+  ],
+  handover: () => [
+    { ...AF.cams[2], pref: true, state: 'Live · on target' },
+    { ...AF.cams[1], state: 'Live' },
+    { ...AF.cams[0], pref: false, state: 'Video lost', lost: true },
+  ],
 };
-const LIVE_CH = [['On preset 5-14', C.blue], ['LIVE', RED]];
-
-// small strip tile footer: scrubber from the replay start through the alarm
-function scrub(F, x, y, w, from, alarmAt, o = {}) {
-  let s = rect(x, y, w, 26, { fill: '#000000', fo: 0.6 });
-  const bx = x + 8 + textWidth(from, 11, 500) + 8, bw = w - (bx - x) - 10;
-  s += text(x + 8, y + 17, from, { size: 11, weight: 500, fill: '#FFFFFF' });
-  s += rect(bx, y + 11, bw, 4, { r: 2, fill: '#3A404B' }) + rect(bx, y + 11, bw * (o.now ?? 0.35), 4, { r: 2, fill: C.blue });
-  s += rect(bx + bw * 0.62 - 1, y + 6, 2.5, 14, { fill: RED });
-  s += circle(bx + bw * (o.now ?? 0.35), y + 13, 4.5, { fill: '#FFFFFF' });
-  return s;
-}
-
-function alarmView(F, v) {
-  let s = rect(AX, AY, AW, AH, { r: 16, fill: C.panel, fo: 0.92, stroke: '#2C3440' });
-  s += icon(F, 'video', AX + 14, AY + 10, 20, '#FFFFFF', 1.8) + text(AX + 42, AY + 26, 'Alarm view', { size: 16, weight: 700, fill: '#FFFFFF' });
-  if (v.opened) {
-    const lab = v.opened, lw = textWidth(lab, 12, 500) + 30, lx = AX + AW - 12 - lw;
-    s += g(F, 'Opened automatically chip NEW', rect(lx, AY + 9, lw, 22, { r: 11, fill: C.blue, fo: 0.3, stroke: BLUE, so: 0.7 }) + icon(F, 'eye', lx + 8, AY + 13, 14, '#CFE8FF', 1.8) + text(lx + 25, AY + 24.5, lab, { size: 12, weight: 500, fill: '#CFE8FF' }));
-    mark('autoChip', [lx, AY + 9, lw, 22]);
-  }
-  // live tile
-  s += tile(F, LT.x, LT.y, LT.w, LT.h, v.live, { banner: v.banner ? v.banner(LT, F) : '', ring: v.ring });
-  mark('liveVideo', [LT.x, LT.y, LT.w, LT.h]);
-  if (v.banner) mark('exceptionBanner', [LT.x + 8, LT.y + 36, textWidth(EXC, 12.5, 700) + 38, 24]);
-  // strip: replay + second tile
-  const sw = (TW - 8) / 2;
-  s += tile(F, TX, ST.y, sw, ST.h, v.strip[0], { bar: 26, ls: 12, banner: v.strip[0].scrub ? scrub(F, TX, ST.y + ST.h - 26, sw, ...v.strip[0].scrub) : '' });
-  s += tile(F, TX + sw + 8, ST.y, sw, ST.h, v.strip[1], { bar: 26, ls: 12 });
-  mark('replayStrip', [TX, ST.y, TW, ST.h]);
-  s += mapInset(F, TX, MP.y, TW, MP.h, v.map);
-  mark('mapInset', [TX, MP.y, TW, MP.h]);
-  return g(F, 'Alarm view NEW', s);
-}
-// small amber exception pill on the live tile (S7), one line under the tile header
-const EXC = 'PTZ 7-02 video lost 02:16:40 · PTZ 7-03 took over 02:16:42';
-const excBanner = (T, F0) => {
-  const x = T.x + 8, y = T.y + 36, w = textWidth(EXC, 12.5, 700) + 38, h = 24;
-  return rect(x, y, w, h, { r: 12, fill: AMBER, fo: 0.95 }) + icon(F0, 'alert', x + 9, y + 4.5, 15, '#1A1A1A', 2) + text(x + 30, y + 16.5, EXC, { size: 12.5, weight: 700, fill: '#1A1A1A' });
-};
-
-// ---------- right panel shell ----------
-const PX = 900, PY = 125, PW = 460, PH = 904, BX = 916, BW = 428, BY = 332, BH = 1013 - 332;
-const CX = BX + 14, CW = BW - 28;   // content inside the tab body
-function rightPanel(F, o) {
-  const clip = F.clip(`<rect x="${PX}" y="${PY}" width="${PW}" height="${PH}" rx="16"/>`);
-  let s = rect(PX, PY, PW, PH, { r: 16, fill: C.panel, fo: 0.85 });
-  s += `<g clip-path="${clip}">${rect(PX, 161.8, PW, 868, { fill: C.body, fo: 0.8 })}</g>`;
-  s += text(916, 149, 'Active Alarms', { size: 16, weight: 700, fill: '#FFFFFF' }) + icon(F, 'x', 1323, 132, 22, '#FFFFFF', 2.2);
-  // head: alarm (and incident once raised)
-  const hy = 194;
-  let h = icon(F, 'clock', 916, hy - 14, 17, C.t2, 1.8) + text(940, hy, o.t0 || '02:14:58', { size: 16, fill: C.t1 });
-  let cx = 940 + textWidth(o.t0 || '02:14:58', 16) + 18;
-  h += text(cx, hy, 'ID:', { size: 16, fill: C.t2 }); cx += textWidth('ID:', 16) + 8;
-  h += text(cx, hy, 'AGF-5-14', { size: 16, fill: C.t1 }); cx += textWidth('AGF-5-14', 16) + 18;
-  if (o.incident) { h += text(cx, hy, 'Incident:', { size: 16, fill: C.t2 }); cx += textWidth('Incident:', 16) + 8; h += text(cx, hy, 'PER-005', { size: 16, weight: 500, fill: '#FFFFFF' }); }
-  h += text(916, hy + 32, 'Fence Sector 5', { size: 20, weight: 500, fill: C.t1 });
-  const [bl, bc] = o.badge || ['Critical', RED];
-  const bw = textWidth(bl, 14, 500) + 16;
-  h += rect(1344 - bw, hy + 14, bw, 22, { r: 8, fill: bc }) + text(1344 - bw / 2, hy + 29.5, bl, { size: 14, weight: 500, fill: '#FFFFFF', anchor: 'middle' });
-  (o.lines || []).forEach((l, i) => { h += rich(916, hy + 58 + i * 21, l.map(r => typeof r === 'string' ? { t: r, fill: C.t2 } : { t: r.b, fill: '#FFFFFF', weight: 500 }), { size: 14 }); });
-  s += g(F, 'Alarm head', h);
-  // tabs
-  const tabs = ['Verification', 'Response', 'Close'], tw = BW / 3;
-  let t = '';
-  tabs.forEach((lab, i) => {
-    const on = i === o.tab, nw = textWidth(lab, 16, 700);
-    t += rect(BX + i * tw, 292, tw, 40, { fill: on ? C.tabOn : C.tabOff }) + text(BX + i * tw + tw / 2, 318, lab, { size: 16, weight: 700, fill: on ? '#FFFFFF' : '#8E9CC0', anchor: 'middle' });
-    if (o.tabDone && o.tabDone[i]) t += circle(BX + i * tw + tw / 2 + nw / 2 + 12, 312, 6, { fill: GREEN }) + icon(F, 'check', BX + i * tw + tw / 2 + nw / 2 + 7.5, 307.5, 9, '#FFFFFF', 2.6);
-  });
-  s += g(F, 'Tabs NEW', t);
-  s += rect(BX, BY, BW, BH, { fill: C.tabBody });
-  const bclip = F.clip(`<rect x="${BX}" y="${BY}" width="${BW}" height="${BH}"/>`);
-  s += g(F, tabs[o.tab] + ' tab NEW', `<g clip-path="${bclip}">${o.body(F)}</g>`);
-  return g(F, 'Active Alarms', s);
-}
-
-// ---------- Verification tab ----------
-function sectionHead(F, y, ic, title, right) {
-  let s = icon(F, ic, CX, y - 15, 18, '#FFFFFF', 2) + text(CX + 26, y, title, { size: 15, weight: 700, fill: '#FFFFFF' });
-  if (right) s += tag(F, CX + CW, y - 15, right[0], { kind: right[1], right: true, size: 12, h: 21 }).svg;
-  return s;
-}
-const CORR = (alt) => alt ? [
-  ['01:20:31', 'AgilFence 5-14', 'Climb signature at the works location', 'done', 'amber'],
-  ['01:20:34', 'LiDAR L-5B', 'Tracks T-03, T-04 · 2 objects at the works', 'done'],
-  ['01:20:45', 'PTZ 7-02', '2 people, hi-vis, at the works location', 'done'],
-] : [
-  ['02:14:58', 'AgilFence 5-14', 'Climb signature', 'done', 'amber'],
-  ['02:15:01', 'LiDAR L-5B', 'Track T-07 · 1 object · 1.7 m', 'done'],
-  ['02:15:12', 'PTZ 7-02', 'Auto-track locked on T-07', 'done'],
-];
-const AUTH = alt => alt ? [
-  ['Permit-to-work', 'PTW-2231 · fence repair Sector 5 · 01:00–04:00 · contractor crew of 2', 'found'],
-  ['Gate access', 'Badge-in at G-5 01:05 · 2 contractor badges', 'found'],
-  ['Patrol roster', 'No patrol in Sector 5', 'ok'],
-  ['Maintenance schedule', 'Fence repair Sector 5 · linked to PTW-2231', 'found'],
-] : [
-  ['Permit-to-work', 'No permit for Sector 5 tonight', 'ok'],
-  ['Patrol roster', 'No patrol in Sector 5', 'ok'],
-  ['Gate access', 'No badge at G-5 since 23:40', 'ok'],
-  ['Maintenance schedule', 'None', 'ok'],
-];
-const STATE_LAB = { ok: 'Clear', found: 'Found', unknown: 'Unknown', pending: 'Checking' };
-
-function verifyBody(v) {
-  return F => {
-    let s = '', y = BY + 30;
-    // 1 corroboration
-    s += sectionHead(F, y, 'link', v.alt ? 'Corroboration · works location' : 'Corroboration · same track', v.corrPill);
-    const ry0 = y + 14, rows = CORR(v.alt);
-    let r = '';
-    rows.forEach(([t, sensor, what, st, ac], i) => {
-      const yy = ry0 + i * 48, pend = v.corrN != null && i >= v.corrN;
-      r += rect(CX, yy, CW, 42, { r: 6, fill: CARD, fo: pend ? 0.5 : 1 });
-      if (i < rows.length - 1) r += line(CX + 74, yy + 30, CX + 74, yy + 60, { stroke: pend ? GREY : GREEN, sw: 2, dash: pend ? '3 3' : null });
-      r += text(CX + 10, yy + 26, pend ? '–' : t, { size: 13, fill: C.t3 });
-      r += dot(F, CX + 74, yy + 21, pend ? (i === v.corrN ? 'current' : 'pending') : st, 7);
-      if (ac && !pend) r += rect(CX + 88, yy + 8, 3, 26, { r: 1.5, fill: AMBER });
-      r += text(CX + 97, yy + 18, sensor, { size: 14, weight: 500, fill: pend ? C.t2 : '#FFFFFF' });
-      r += text(CX + 97, yy + 35, pend ? (v.pendText?.[i] || 'Waiting') : what, { size: 12.5, fill: pend ? C.t2 : C.t1 });
-      if (!pend) r += tag(F, CX + CW - 8, yy + 11, 'Health OK', { kind: 'ok', right: true, size: 11.5 }).svg;
-    });
-    s += r;
-    y = ry0 + rows.length * 48;
-    if (v.corrStatus) {
-      s += rect(CX, y, CW, 32, { r: 6, fill: GREEN, fo: 0.18, stroke: GREEN, so: 0.6 }) + circle(CX + 16, y + 16, 8, { fill: GREEN }) + icon(F, 'check', CX + 10, y + 10, 12, '#FFFFFF', 2.8);
-      s += text(CX + 32, y + 21, v.corrStatus, { size: 14, weight: 700, fill: '#FFFFFF' });
-      y += 32;
-    }
-    mark('corroboration', [CX, BY + 12, CW, y - BY - 12]);
-    // 2 authorised-activity check
-    y += 34;
-    const ay0 = y - 20;
-    s += sectionHead(F, y, 'shieldCheck', 'Authorised-activity check', v.authPill);
-    y += 12;
-    AUTH(v.alt).forEach(([src, finding, st], i) => {
-      const pend = v.authPending, k = pend ? 'unknown' : st, fl = lines(finding, CW - 104, 12.5), rh = 22 + fl.length * 17;
-      const hl = v.alt && i === 0;
-      s += rect(CX, y, CW, rh, { r: 6, fill: hl ? C.info : CARD, fo: hl ? 0.2 : 1, stroke: hl ? C.info : null, so: 0.8 });
-      s += text(CX + 10, y + 18, src, { size: 13.5, weight: 500, fill: '#FFFFFF' });
-      fl.forEach((l, j) => { s += text(CX + 10, y + 35 + j * 17, pend ? 'Checking…' : l, { size: 12.5, fill: C.t1 }); });
-      s += tag(F, CX + CW - 8, y + 8, pend ? 'Checking' : STATE_LAB[k], { kind: pend ? 'unknown' : k, right: true, size: 11.5 }).svg;
-      if (hl) mark('permitRow', [CX, y, CW, rh]);
-      y += rh + 5;
-    });
-    // result states legend: Unknown has its own style (none tonight)
-    let lx = CX;
-    s += text(lx, y + 15, 'Result states', { size: 12, fill: C.t2 }); lx += textWidth('Result states', 12) + 8;
-    for (const [lab, k] of [['Clear', 'ok'], ['Found', 'found'], ['Unknown', 'unknown']]) { const t = tag(F, lx, y + 2, lab, { kind: k, size: 11 }); s += t.svg; lx += t.w + 6; }
-    s += text(lx + 2, y + 15, v.alt ? 'Unknown: none' : 'Unknown: none tonight', { size: 12, fill: C.t2 });
-    y += 24;
-    mark('authCheck', [CX, ay0, CW, y - ay0]);
-    // 3 decision bar
-    if (v.decision !== false) {
-      y = Math.max(y + 18, BY + BH - 160);
-      s += line(CX, y - 10, CX + CW, y - 10, { stroke: '#6B7280', so: 0.6 });
-      s += icon(F, 'user', CX, y - 2, 16, '#FFFFFF', 2) + text(CX + 22, y + 11, 'Your decision — becomes the incident record', { size: 13, weight: 500, fill: '#FFFFFF' });
-      y += 22;
-      const alt = v.alt, off = k => v.recorded && v.pressed !== k;   // buttons not chosen are disabled once the decision is recorded
-      // Confirm intrusion (red, full width; neutral ghost when de-emphasised on the A-path)
-      const ci = alt ? '#C9CED6' : '#FFFFFF';
-      s += rect(CX, y, CW, 44, { r: 8, fill: alt ? 'none' : C.redCreate, stroke: alt ? '#7D8490' : null, sw: 1.2 }) + icon(F, 'alert', CX + CW / 2 - textWidth('Confirm intrusion', 18, 700) / 2 - 14, y + 13, 18, ci, 2) + text(CX + CW / 2 + 12, y + 28.5, 'Confirm intrusion', { size: 18, weight: 700, fill: ci, anchor: 'middle' });
-      mark('confirmBtn', [CX, y, CW, 44]);
-      if (v.pressed === 'confirm') s += btnState(F, CX, y, CW, 44, 'pressed');
-      if (off('confirm')) s += btnState(F, CX, y, CW, 44, 'disabled');
-      y += 52;
-      const hw = (CW - 8) / 2;
-      // Authorised activity (highlighted on the alternative path) · False alarm
-      if (alt) s += rect(CX - 3, y - 3, hw + 6, 44, { r: 10, stroke: C.info, sw: 2, so: 0.55 });
-      s += rect(CX, y, hw, 38, { r: 8, fill: alt ? '#0E6E7C' : '#5A606B' }) + text(CX + hw / 2, y + 25, 'Authorised activity', { size: 15, weight: 700, fill: '#FFFFFF', anchor: 'middle' });
-      mark('authorisedBtn', [CX, y, hw, 38]);
-      if (v.pressed === 'authorised') s += btnState(F, CX, y, hw, 38, 'pressed');
-      if (off('authorised')) s += btnState(F, CX, y, hw, 38, 'disabled');
-      s += rect(CX + hw + 8, y, hw, 38, { r: 8, fill: '#5A606B' }) + text(CX + hw + 8 + hw / 2, y + 25, 'False alarm', { size: 15, weight: 700, fill: '#FFFFFF', anchor: 'middle' });
-      mark('falseBtn', [CX + hw + 8, y, hw, 38]);
-      if (off('false')) s += btnState(F, CX + hw + 8, y, hw, 38, 'disabled');
-      y += 46;
-      if (v.recorded) {
-        s += circle(CX + 9, y + 10, 8, { fill: GREEN }) + icon(F, 'check', CX + 3, y + 4, 12, '#FFFFFF', 2.8);
-        s += rich(CX + 24, y + 15, [{ t: 'Recorded · ', fill: C.t2 }, { t: v.recorded, fill: '#FFFFFF', weight: 500 }], { size: 13 });
-        if (textWidth('Recorded · ' + v.recorded, 13, 500) > CW - 26) console.warn('recorded line too long', CUR);
-        mark('decisionRecorded', [CX, y, CW, 20]);
-      }
-    }
-    return s;
-  };
-}
-
-// ---------- Response tab: three concurrent lanes ----------
-const RULE_ACK = ['Rule: no duty-manager acknowledgement within SOP time', '→ head of security notified · not triggered'];
-function lane(F, x, y, w, L) {
-  // header: icon + name + state chip; authority tag on the right
+function overlays(F, o) {
   let s = '';
-  const gap = L.gap ?? 6;
-  const steps = L.steps.map(st => ({ ...st, ls: lines(st.t, w - 34 - 72, 13, st.s === 'current' ? 500 : 400), sub: st.sub ? [st.sub] : [] }));
-  const nl = st => st.ls.length + st.sub.length;
-  let h = 40 + (L.info ? 20 : 0) + steps.reduce((a, st) => a + gap + nl(st) * 17, 0) + (L.extra ? 26 : 0) + (L.actions ? 46 : 0) + (L.recorded ? 26 : 0) + 8;
-  s += rect(x, y, w, h, { r: 8, fill: CARD }) + rect(x, y, 4, h, { r: 2, fill: L.col });
-  s += icon(F, L.icon, x + 14, y + 10, 18, '#FFFFFF', 2) + text(x + 40, y + 25, L.name, { size: 15, weight: 700, fill: '#FFFFFF' });
-  s += tag(F, x + w - 10, y + 10, L.auth, { kind: L.authKind || 'auth', right: true, size: 11.5 }).svg;
-  let yy = y + 40;
-  if (L.info) { s += text(x + 14, yy + 9, L.info, { size: 13, fill: C.t1 }); yy += 20; }
-  steps.forEach((st, i) => {
-    yy += gap;
-    const cy = yy + 6;
-    if (i < steps.length - 1) s += line(x + 21, cy + 8, x + 21, cy + nl(st) * 17 + gap - 2, { stroke: st.s === 'done' ? GREEN : '#5A606B', sw: 1.5 });
-    s += dot(F, x + 21, cy, st.s, 6);
-    st.ls.forEach((l, j) => { s += text(x + 34, yy + 10.5 + j * 17, l, { size: 13, weight: st.s === 'current' ? 500 : 400, fill: st.s === 'pending' ? C.t2 : '#FFFFFF' }); });
-    st.sub.forEach((l, j) => { s += text(x + 34, yy + 10.5 + (st.ls.length + j) * 17, l, { size: 12.5, fill: C.t2 }); });
-    if (st.time) s += text(x + w - 10, yy + 10.5, st.time, { size: 13, weight: 500, fill: st.s === 'pending' ? C.t2 : '#FFFFFF', anchor: 'end' });
-    yy += nl(st) * 17;
-  });
-  if (L.extra) {
-    yy += 6; s += rect(x + 10, yy, w - 20, 22, { r: 5, fill: '#FFFFFF', fo: 0.07 }) + icon(F, 'user', x + 16, yy + 4, 14, C.t2, 2);
-    if (Array.isArray(L.extra)) s += rich(x + 36, yy + 15.5, L.extra.map(r => typeof r === 'string' ? { t: r, fill: C.t1 } : { t: r.b, fill: GREEN_T, weight: 500 }), { size: 12.5 });
-    else s += text(x + 36, yy + 15.5, L.extra, { size: 12.5, fill: C.t1 });
-    yy += 22;
+  if (o.near) {
+    const list = NEAR[o.near]();
+    const n = nearestCams(F, NC.x, NC.y, list, { w: NC.w, note: 'Seg 5-14' });
+    s += n.svg;
+    // a lost camera: grey status dot instead of the online green
+    list.forEach((c, i) => {
+      if (!c.lost) return;
+      const ry = NC.y + 50 + i * 54, sw = textWidth(c.state, 12, 500) + 18;
+      s += circle(NC.x + NC.w - 20 - sw + 10, ry + 24, 3.5, { fill: '#9BA1AC' });
+    });
+    mark('nearestCams', [NC.x, NC.y, NC.w, n.h]);
   }
-  let btns = [];
-  if (L.actions) {
-    yy += 10; let ax = x + 14;
-    for (const [lab, kind] of L.actions) {
-      const bw = textWidth(lab, 15, 700) + 28;
-      s += rect(ax, yy, bw, 34, { r: 7, fill: kind === 'blue' ? '#1F4FBF' : '#5A606B' }) + text(ax + bw / 2, yy + 22.5, lab, { size: 15, weight: 700, fill: '#FFFFFF', anchor: 'middle' });
-      btns.push([ax, yy, bw, 34]); ax += bw + 8;
-    }
-    yy += 34;
+  if (o.player) {
+    const p = o.player;
+    let b = rect(PL.x - 6, PL.y - 6, PL.w + 12, PL.h + 24, { r: 12, fill: '#1D232C', fo: 0.97, stroke: '#3E4655', filter: F.shadow(10, 18, 0.5) });
+    b += player(F, PL.x, PL.y, PL.w, PL.h, p.cam, { badge: 'LIVE', clip: p.clip });
+    s += g(F, 'Live view (Locate)', b);
+    mark('viewerPlayer', [PL.x - 6, PL.y - 6, PL.w + 12, PL.h + 24]);
   }
-  let rec = null;
-  if (L.recorded) {
-    yy += 8;
-    s += circle(x + 23, yy + 9, 8, { fill: GREEN }) + icon(F, 'check', x + 17, yy + 3, 12, '#FFFFFF', 2.8);
-    s += rich(x + 38, yy + 14, [{ t: 'Recorded · ', fill: C.t2 }, { t: L.recorded, fill: '#FFFFFF', weight: 500 }], { size: 13 });
-    rec = [x + 14, yy, w - 28, 18];
-  }
-  return { svg: g(F, 'Lane ' + L.name + ' NEW', s), h, btns, rec };
+  return s;
 }
-function responseBody(r) {
-  return F => {
-    let s = '', y = BY + 24;
-    s += text(CX, y, 'SOP-PER-02 · Critical perimeter intrusion', { size: 13, weight: 500, fill: '#FFFFFF' }) + text(CX + CW, y, 'Owner ' + OWNER, { size: 13, fill: C.t2, anchor: 'end' });
-    y += 12;
-    // tracking line
-    s += rect(CX, y, CW, 28, { r: 6, fill: r.trackWarn ? AMBER : '#FFFFFF', fo: r.trackWarn ? 0.16 : 0.07, stroke: r.trackWarn ? AMBER : null, so: 0.5 }) + icon(F, 'radar', CX + 8, y + 6, 16, r.trackWarn ? AMBER : '#55D6E6', 2);
-    if (textWidth('Tracking  ' + r.tracking, 13, 500) > CW - 40) console.warn('tracking line too long', CUR);
-    s += rich(CX + 32, y + 19, [{ t: 'Tracking  ', fill: C.t2, weight: 500 }, { t: r.tracking, fill: '#FFFFFF' }], { size: 13 });
-    y += 38;
-    for (const [key, L] of [['lanePatrol', r.patrol], ['lanePolice', r.police], ['laneAviation', r.aviation]]) {
-      const l = lane(F, CX, y, CW, L);
-      s += l.svg; mark(key, [CX, y, CW, l.h]);
-      if (key === 'lanePatrol' && l.btns.length) {
-        mark('dispatchBtn', l.btns[0]);
-        if (r.pressed) s += btnState(F, ...l.btns[0], 'pressed', { r: 7 });
-        if (L.recorded) s += btnState(F, ...l.btns[1], 'disabled', { r: 7 });
-      }
-      if (l.rec) mark('dispatchRecorded', l.rec);
-      y += l.h + 10;
-    }
-    // escalation rule of the authority matrix (acknowledgement timeout), shown as a rule, not triggered
-    const rl = RULE_ACK;
-    s += icon(F, 'timer', CX, y + 2, 15, C.t2, 2);
-    rl.forEach((l, j) => { s += text(CX + 22, y + 14 + j * 17, l, { size: 12.5, fill: C.t2 }); });
-    mark('escalationRule', [CX, y, CW, rl.length * 17 + 4]);
-    if (y + rl.length * 17 > BY + BH - 4) console.warn('response tab overflows', CUR, Math.round(y + rl.length * 17 - BY - BH));
-    return s;
-  };
+// player cameras (1280×720 scenes); zoomed so the person reads in the floating player
+const PCAM = {
+  climb: () => ({ href: cctv('fence_ptz_clean'), label: 'PTZ 7-02 · Live · preset 5-14', focus: [0.5, 0.42], zoom: 1.35, box: box('fence_ptz', 'person'), boxCol: C.crit, boxLabel: 'Person · climbing' }),
+  track: () => ({ href: cctv('fence_inside_clean'), label: 'PTZ 7-02 · Live · auto-track T-07', focus: [0.55, 0.6], zoom: 1.35, box: box('fence_inside', 'person'), boxCol: C.crit, boxLabel: 'Person · T-07' }),
+  p703: () => ({ href: cctv('thermal_clean'), label: 'PTZ 7-03 · Live · took over 02:16:42', focus: [0.54, 0.5], zoom: 1.3, box: box('thermal', 'person'), boxCol: C.crit, boxLabel: 'Person · T-07' }),
+  handed: () => ({ href: cctv('fence_handover_clean'), label: 'PTZ 7-03 · Live', focus: [0.5, 0.56], zoom: 1.15, box: box('fence_handover', 'person'), boxCol: C.crit, boxLabel: 'Handed to police · AP-12' }),
+  guard: () => ({ href: cctv('fence_wide_clean'), label: 'CAM 7-11 · Live · 5-14', focus: [0.62, 0.45], zoom: 1.5, box: box('fence_wide', 'person'), boxCol: C.blue, boxLabel: 'Guard posted · 5-14' }),
+  crew: () => ({ href: cctv('fence_crew_clean'), label: 'PTZ 7-02 · Live · preset 5-14', focus: [0.55, 0.55], zoom: 1.4, box: box('fence_crew', 'crew1'), boxCol: '#0E7C8A', boxLabel: 'Crew · hi-vis · PTW-2231' }),
+};
+const LIVECLIP = (from = '02:14:41') => ({ from, alarm: 0.62, now: 1, to: 'LIVE', live: true });
+
+// ---------- Active Alarms: event head + three camera tiles ----------
+// Code stays '—' while it is an alarm; PER-005 only exists from the operator's confirmation (02:15:24) on
+const EV = (lines, o = {}) => ({ time: o.t0 || '02:14:58', id: 'AGF-5-14', code: o.code || '—', title: 'Fence Sector 5', lines, ...(o.badge ? { badge: o.badge } : {}) });
+const LINES = {
+  alarm: [['AgilFence alarm on segment 5-14 · climb signature'], ['PTZ ', { b: '7-02' }, ' live on segment 5-14 · runway ', { b: '02L' }, ' 130 m']],
+  incident: [['Incident ', { b: 'PER-005' }, ' · raised from alarm AGF-5-14'], ['History since ', { b: '02:14:58' }, ' · owner ', { b: OWNER }]],
+  alt: [['AgilFence alarm on segment 5-14 · climb signature'], ['Permit ', { b: 'PTW-2231' }, ' · fence repair · crew of 2']],
+};
+const TILE = {
+  ptz: (o = {}) => ({ href: cctv('fence_ptz_clean'), label: 'PTZ 7-02 · Live', focus: [0.5, 0.42], box: box('fence_ptz', 'person'), boxCol: C.crit, boxLabel: 'Person · climbing', chips: [['On preset 5-14', C.blue], ['LIVE', C.crit]], ...o }),
+  track: (o = {}) => ({ href: cctv('fence_inside_clean'), label: 'PTZ 7-02 · Live', focus: [0.55, 0.62], box: box('fence_inside', 'person'), boxCol: C.crit, boxLabel: 'Person · T-07', chips: [['Auto-track T-07', C.blue], ['LIVE', C.crit]], ...o }),
+  p703: (o = {}) => ({ href: cctv('thermal_clean'), label: 'PTZ 7-03 · Live', focus: [0.54, 0.5], box: box('thermal', 'person'), boxCol: C.crit, boxLabel: 'Person · T-07', chips: [['PTZ 7-02 video lost 02:16:40', C.open]], ...o }),
+  handed: (o = {}) => ({ href: cctv('fence_handover_clean'), label: 'PTZ 7-03 · Live', focus: [0.5, 0.56], zoom: 1.1, box: box('fence_handover', 'person'), boxCol: C.crit, boxLabel: 'Handed over', chips: [['LIVE', C.crit]], ...o }),
+  guard: (o = {}) => ({ href: cctv('fence_wide_clean'), label: 'PTZ 7-03 · Live', focus: [0.62, 0.45], zoom: 1.5, box: box('fence_wide', 'person'), boxCol: C.blue, boxLabel: 'Guard posted', chips: [['LIVE', C.crit]], ...o }),
+  crew: (o = {}) => ({ href: cctv('fence_crew_clean'), label: 'PTZ 7-02 · Live', focus: [0.55, 0.55], zoom: 1.2, box: box('fence_crew', 'crew1'), boxCol: '#0E7C8A', boxLabel: 'Crew · hi-vis', chips: [['On preset 5-14', C.blue], ['LIVE', C.crit]], ...o }),
+  replay: (o = {}) => ({ href: cctv('fence_pre_clean'), label: 'CAM 7-11 · Replay 02:14:41', focus: [0.62, 0.6], box: box('fence_pre', 'person'), boxCol: C.warn, chips: [['Pre-alarm', '#3A404B']], ...o }),
+  lidar: (o = {}) => ({ href: cctv('lidar_clean'), label: 'LiDAR L-5B · T-07', focus: [0.5, 0.42], ...o }),
+};
+const TILES = {
+  climb: () => [TILE.ptz(), TILE.replay(), TILE.lidar()],
+  track: () => [TILE.track(), TILE.replay(), TILE.lidar()],
+  p703: () => [TILE.p703(), TILE.replay(), TILE.lidar()],
+  handed: () => [TILE.handed(), TILE.replay(), TILE.lidar({ label: 'LiDAR L-5B · T-07 held' })],
+  guard: () => [TILE.guard(), TILE.replay({ label: 'CAM 7-11 · clip sealed', chips: [['Evidence', '#3A404B']] }), TILE.lidar({ label: 'LiDAR L-5B · track sealed' })],
+  crew: () => [TILE.crew(), TILE.replay({ href: cctv('fence_wide_clean'), label: 'CAM 7-11 · Replay 01:20:14', focus: [0.62, 0.45], zoom: 1.4, box: null }), TILE.lidar({ label: 'LiDAR L-5B · 2 objects' })],
+};
+function markPanel(o) {
+  mark('activeAlarms', [900, 125, 460, 904]);
+  mark('tile1', [916, 296, 210, 248]); mark('tile2', [1134, 296, 210, 120]); mark('tile3', [1134, 424, 210, 120]);
+  mark('tabInvestigation', [916, 560, 214, 40]); mark('tabSop', [1130, 560, 214, 40]);
+  mark('tabBody', [916, 600, 428, 356]);
 }
 
-// ---------- Close tab: evidence gate ----------
+// ---------- Investigation tab: System entries + Remarks (V11) ----------
+const OKC = C.green, FOUNDC = C.info;
+const INV = {
+  linked: { who: 'System', time: '02:15:01', text: '3 alarms linked · one track (T-07)', size: 14, italic: true,
+    rows: [['02:14:58', 'AgilFence 5-14 · climb signature', 'Health OK', C.crit], ['02:14:59', 'PTZ 7-02 · person · preset 5-14', 'Health OK', C.crit], ['02:15:01', 'LiDAR L-5B · T-07 · 1 object 1.7 m', 'Health OK', C.crit]] },
+  auth: { who: 'System', time: '02:15:06', text: 'Authorised-activity check · 4 of 4 sources Clear', size: 14, italic: true,
+    rows: [['02:15:05', 'Permit-to-work · none for Sector 5', 'Clear', OKC], ['02:15:05', 'Patrol roster · no patrol in Sector 5', 'Clear', OKC], ['02:15:06', 'Gate access · no badge at G-5 since 23:40', 'Clear', OKC], ['02:15:06', 'Maintenance schedule · none booked', 'Clear', OKC]] },
+  altLinked: { who: 'System', time: '01:20:45', text: '3 alarms linked · works location', size: 14, italic: true,
+    rows: [['01:20:31', 'AgilFence 5-14 · climb signature', 'Health OK', C.crit], ['01:20:34', 'LiDAR L-5B · 2 objects at the works', 'Health OK', C.link], ['01:20:45', 'PTZ 7-02 · 2 people, hi-vis', 'Health OK', C.link]] },
+  altAuth: { who: 'System', time: '01:20:38', text: 'Authorised-activity check · Found: permit-to-work PTW-2231, fence repair Sector 5, 01:00–04:00, crew of 2', size: 14, italic: true,
+    rows: [['01:20:38', 'Permit-to-work · PTW-2231', 'Found', FOUNDC], ['01:20:38', 'Gate access · 2 badges at G-5 01:05', 'Found', FOUNDC], ['01:20:38', 'Maintenance · linked to PTW-2231', 'Found', FOUNDC], ['01:20:38', 'Patrol roster · no patrol in Sector 5', 'Clear', OKC]] },
+  // the exception and the patrol radio reports (V11 timeline: oldest first)
+  handover: { who: 'System', time: '02:16:42', text: 'PTZ 7-02 video lost · PTZ 7-03 took over 02:16:42 · LiDAR T-07 tracking', size: 14, italic: true },
+  onScene: { who: 'Arjun (radio)', time: '02:18:08', text: 'On scene · person stationary inside fence', size: 15, lh: 22 },
+  detained: { who: 'Arjun (radio)', time: '02:20:05', text: 'Person intercepted 02:19:30 and detained', size: 15, lh: 22 },
+  handedOver: { who: 'Arjun (radio)', time: '02:26:30', text: 'Handed to police · custody record AP-12', size: 15, lh: 22 },
+};
+// rows of the System entries: label + source must fit (timeline kit: label at x+102, source right-aligned)
+function checkRows(e, w) { for (const [, lab, src] of e.rows || []) fits('Investigation row', lab, 13, 500, w - 102 - textWidth(src, 12) - 10); }
+const investigation = (entries, keys) => (F, x, y, w, h) => {
+  const tx = x + 16, tw = w - 32;
+  entries.forEach(e => checkRows(e, tw));
+  const tl = timeline(F, tx, y + 12, tw, entries, { gap: 10 });
+  // per-entry rects for the film (measured with the same kit call)
+  let yy = y + 12;
+  entries.forEach((e, i) => {
+    const hi = timeline(new Frame('m'), tx, yy, tw, [e], { gap: 10 }).h;
+    if (keys[i]) mark(keys[i], [x + 8, yy - 4, w - 16, hi - 2]);
+    yy += hi;
+  });
+  const ry = y + 12 + tl.h + 4;
+  return { svg: tl.svg + remarksBox(F, tx, ry, tw, { h: 56 }), h: ry - y + 24 + 56 + 10 + 40 + 16 };
+};
+
+// ---------- SOP Flow tab: SOP-PER-02 steps 1–7 (kit sopFlow) ----------
+// The decision step carries three buttons; they do not fit one row at the kit size, so the step text reserves a
+// second row (two invisible spacer lines) and 'Confirm intrusion' is drawn there in the kit's button style.
+const NB = ' '.repeat(64), SPACER = ' ' + NB + ' ' + NB;
+const BTN_RED = '#A61B1B', BTN_BLUE = '#1F4FBF', BTN_GREY = '#5A606B';
+const kitButton = (F, x, y, lab, fill) => { const bw = textWidth(lab, 15, 700) + 26; return { svg: g(F, 'Action ' + lab, rect(x, y, bw, 32, { r: 6, fill }) + text(x + bw / 2, y + 21.5, lab, { size: 15, weight: 700, fill: '#FFFFFF', anchor: 'middle' })), r: [x, y, bw, 32] }; };
+
+const T = {   // step titles
+  verify: 'Verify the alarm', patrol: 'Dispatch Patrol 2', police: 'Airport Police', tower: 'Tower / aviation safety',
+  view: 'Keep target in view', contain: 'Contain and hand over', close: 'Secure, close and report',
+};
+// one wording and one time per evidence item, in time order (same in the S13 sign dialog and the S12 remark)
 const EVIDENCE = [
-  ['Handed to police', 'Custody record AP-12', 'Airport Police', '02:26:30'],
-  ['Area secured', 'Sweep of Sector 5 by Patrol 2', 'Patrol app', '02:38:40'],
-  ['Runway 02L restored', 'Tower, ATC supervisor Tan', 'Tower log', '02:31:10'],
-  ['Fence 5-14 made safe', 'Mesh bent, no cut; guard posted; FM ticket FM-90412', 'FM system', '02:40:15'],
-  ['SOP complete', 'SOP-PER-02 · 7 of 7 steps', 'SOP record', '02:43:30'],
-  ['Evidence pack sealed', '3 clips + fence trace + LiDAR track', 'Evidence store', '02:43:40'],
+  ['Handed to police · custody record AP-12 · 02:26:30', true],
+  ['Runway 02L restored · tower, ATC Tan · 02:31:10', true],
+  ['Area secured · Sector 5 sweep, Patrol 2 · 02:38:40', true],
+  ['Fence 5-14 made safe · FM-90412, guard posted · 02:40:15', true],
+  ['SOP-PER-02 steps 1–6 complete · 02:43:30', true],
+  ['Evidence sealed · 3 clips, fence trace, LiDAR · 02:43:40', true],
 ];
-function evidenceRows(F, x, y, w, o = {}) {
-  let s = '';
-  EVIDENCE.forEach(([t, ev, src, tm]) => {
-    const el = lines(ev, w - 44 - 20 - textWidth(src, 12), 12.5), rh = (o.compact ? 20 : 24) + el.length * 16 + (o.compact ? 0 : 0);
-    s += rect(x, y, w, rh, { r: 6, fill: o.fill || CARD });
-    s += circle(x + 17, y + 15, 8, { fill: GREEN }) + icon(F, 'check', x + 11, y + 9, 12, '#FFFFFF', 2.8);
-    s += text(x + 34, y + 18, t, { size: 14, weight: 500, fill: '#FFFFFF' });
-    s += text(x + w - 10, y + 18, tm, { size: 13, weight: 500, fill: '#FFFFFF', anchor: 'end' });
-    el.forEach((l, j) => { s += text(x + 34, y + 35 + j * 16, l, { size: 12.5, fill: C.t1 }); });
-    s += text(x + w - 10, y + 35 + (el.length - 1) * 16, src, { size: 12, fill: C.t2, anchor: 'end' });
-    y += rh + 5;
+// one SOP state per frame; k = stage key. Steps after the current stage stay plain headers (todo).
+const ORD = { verify: 0, confirm: 0, altVerify: 0, altCleared: 0, raised: 1, dispatch: 1, running: 2, handover: 3, contained: 4, submit: 5 };
+function steps(k) {
+  const n = ORD[k], S = {};
+  // 1 · Verify the alarm (Critical Action: the operator's decision becomes the record)
+  if (k === 'verify' || k === 'confirm') S[1] = { title: T.verify, state: 'critical', tag: 'Your decision', text: '3 sensors on one track · authorised-activity check Clear. Your decision becomes the incident record.' + SPACER, actions: [['Authorised activity', 'grey'], ['False alarm', 'grey']] };
+  else if (k === 'altVerify') S[1] = { title: T.verify, state: 'critical', tag: 'Your decision', text: 'Permit PTW-2231 found · 2 people in hi-vis at the works location. Your decision becomes the record.' + SPACER, actions: [['Authorised activity', 'blue'], ['False alarm', 'grey']] };
+  else if (k === 'altCleared') S[1] = { title: T.verify, state: 'done', tag: 'Authorised · 01:22:10', items: [['Works supervisor called to confirm crew · 01:21:40', true], ['Authorised activity · Nurul A. · 01:22:10 · PTW-2231', true], ['Alarm kept in the record · no incident raised', true]] };
+  else S[1] = { title: T.verify, state: 'done', tag: 'Confirmed · Nurul A. · 02:15:24' };
+  // 2 · Dispatch Patrol 2 (Critical Action, pre-authorised for Critical)
+  if (n < 1) S[2] = { title: T.patrol, state: 'todo', tag: 'Pre-authorised · SOP-PER-02 §3.1' };
+  else if (n === 1) S[2] = { title: T.patrol, state: 'critical', tag: 'Pre-authorised · SOP-PER-02 §3.1', text: 'Patrol 2 (Arjun + 1) · nearest · perimeter road · ETA 02:18:30', actions: [['Dispatch', 'blue'], ['Choose another', 'grey']] };
+  else if (n <= 3) S[2] = { title: T.patrol, state: 'todo', tag: 'En route · ETA 02:18:30' };
+  else S[2] = { title: T.patrol, state: 'done', tag: 'On scene · 02:18:08' };
+  // 3 · Airport Police (pre-authorised §3.2), duty manager informed in parallel
+  S[3] = { title: T.police, state: 'todo', tag: 'Pre-authorised · SOP-PER-02 §3.2' };
+  if (n === 1) S[3].items = [['Requested · with your confirmation · 02:15:25', true], ['Contacted · Airport Police ops room', false], ['Duty manager Daniel L. informed · 02:15:25', true]];
+  if (n === 2) S[3].items = [['Requested · 02:15:25', true], ['Contacted · Airport Police ops room · 02:15:38', true], ['Acknowledged · Sgt. Lim (APD) · 02:15:52', true], ['Responding · unit AP-12 · ETA 02:24:00 · 02:16:05', true], ['On scene', false], ['Duty manager Daniel L. acknowledged · 02:15:41', true]];
+  if (n === 3) S[3].tag = 'Responding · AP-12 · 02:16:05';
+  if (n >= 4) S[3] = { title: T.police, state: 'done', tag: 'On scene · AP-12 · 02:24:10' };
+  // 4 · Tower / aviation safety (authority: ATC; security sees the decision and its status)
+  S[4] = { title: T.tower, state: 'todo', tag: 'Authority: ATC' };
+  if (n === 1) S[4].items = [['Tower notified · person 130 m from Runway 02L · 02:15:25', true], ['ATC decision · awaiting tower', false]];
+  if (n === 2) S[4].items = [['Tower notified · person 130 m from Runway 02L · 02:15:25', true], ['ATC supervisor Tan · Runway 02L arrivals held · 02:15:58', true], ['Restriction active · no movements on 02L', true]];
+  if (n === 3 || n === 4) S[4].tag = 'Restriction active · ATC';
+  if (n >= 5) S[4] = { title: T.tower, state: 'done', tag: 'Restored · ATC Tan · 02:31:10' };
+  // 5 · Keep target in view (Auto) — the camera hand-over is recorded here
+  S[5] = { title: T.view, state: 'todo', tag: n >= 1 ? 'Auto · PTZ 7-02 on T-07' : 'Auto' };
+  if (n === 3) S[5] = { title: T.view, state: 'todo', tag: 'Auto', items: [['LiDAR L-5B tracking T-07', true], ['PTZ 7-02 video lost · 02:16:40', true], ['PTZ 7-03 took over automatically · 02:16:42', true], ['PTZ 7-03 auto-track on T-07 · LiDAR T-07 tracking', true]] };
+  if (n === 4) S[5].tag = 'Auto · PTZ 7-03 on T-07';
+  if (n >= 5) S[5] = { title: T.view, state: 'done', tag: 'Auto · ended 02:26:30' };
+  // 6 · Contain and hand over (outcomes, reported by Patrol 2 by radio)
+  S[6] = { title: T.contain, state: 'todo', tag: n >= 1 ? 'Patrol 2 · by radio' : null };
+  if (n === 4) S[6] = { title: T.contain, state: 'done', tag: 'Handed over · 02:26:30', items: [['Contained · person stationary inside fence · 02:18:08', true], ['Intercepted · 02:19:30', true], ['Detained · 02:20:05', true], ['Police on scene · AP-12 · 02:24:10', true], ['Handed to police · custody AP-12 · 02:26:30', true]] };
+  if (n >= 5) S[6] = { title: T.contain, state: 'done', tag: 'Handed over · 02:26:30' };
+  // 7 · Secure, close and report (evidence gate, Critical Action Submit for sign-off)
+  S[7] = { title: T.close, state: 'todo', tag: n >= 1 ? 'Evidence gate' : null };
+  if (n === 5) S[7] = { title: T.close, state: 'critical', tag: 'Your submission', text: 'Closing is blocked until every item is complete.', items: EVIDENCE, actions: [['Submit for sign-off', 'blue']] };
+  if (k === 'altCleared') for (let i = 2; i <= 7; i++) S[i] = { title: S[i].title, state: 'todo', tag: 'Not required' };
+  return [1, 2, 3, 4, 5, 6, 7].map(i => S[i]);
+}
+// guard every step: title vs tag, item widths, text at kit sizes
+function checkSteps(list, w) {
+  list.forEach((st, i) => {
+    const tagW = st.tag ? textWidth(st.tag, 11, 500) + 12 : 0, tagX = w - 30 - 10 - tagW, titleEnd = 44 + textWidth(st.title, 16, 500);
+    if (st.tag && titleEnd + 6 > tagX) console.warn(`[${CUR}] step ${i + 1} title/tag overlap`, st.title, '|', st.tag);
+    for (const [lab] of st.items || []) fits('SOP item', lab, 12.5, 400, w - 62 - 14);
+    if (st.actions) { const aw = st.actions.reduce((a, [l]) => a + textWidth(l, 15, 700) + 26 + 8, -8); if (40 + aw > w - 12) console.warn(`[${CUR}] step ${i + 1} actions overflow`, aw); }
   });
-  return { svg: s, y };
 }
-function closeBody(o) {
-  return F => {
-    let s = '', y = BY + 30;
-    s += sectionHead(F, y, 'shieldCheck', 'Close · evidence for sign-off', ['6 of 6 complete', 'ok']);
-    y += 12;
-    const ey0 = y;
-    const ev = evidenceRows(F, CX, y, CW);
-    s += ev.svg; y = ev.y;
-    mark('closeChecklist', [CX, BY + 12, CW, y - BY - 12]);
-    // gate rule
-    y += 4;
-    s += rect(CX, y, CW, 50, { r: 6, fill: '#FFFFFF', fo: 0.07, stroke: '#9BA1AC', so: 0.5 }) + icon(F, 'lock', CX + 10, y + 8, 16, '#FFFFFF', 2);
-    s += text(CX + 34, y + 21, 'Closing is blocked until every item is complete.', { size: 13, weight: 500, fill: '#FFFFFF' });
-    s += text(CX + 34, y + 39, 'All 6 complete · Submit is enabled', { size: 12.5, fill: GREEN_T });
-    mark('gateRule', [CX, y, CW, 50]);
-    y += 60;
-    s += icon(F, 'idcard', CX, y, 15, C.t2, 2) + text(CX + 22, y + 12, 'Sign-off: duty manager ' + DM + ' · badge + PIN on his console', { size: 12.5, fill: C.t1 });
-    s += icon(F, 'timer', CX, y + 21, 15, C.t2, 2) + text(CX + 22, y + 33, 'Duty manager acknowledged 02:15:41 · escalation not triggered', { size: 12.5, fill: C.t2 });
-    // the action sits right under the sign-off lines (no empty gap above it)
-    y += 54;
-    if (o.submitted) {
-      s += rect(CX, y, CW, 44, { r: 8, fill: '#FFFFFF', fo: 0.08, stroke: '#9BA1AC', so: 0.5 }) + circle(CX + 20, y + 22, 9, { fill: GREEN }) + icon(F, 'check', CX + 13.5, y + 15.5, 13, '#FFFFFF', 2.8);
-      s += text(CX + 38, y + 27, o.submitted, { size: 14, weight: 500, fill: '#FFFFFF' });
-      return s;
+// o: { focus: step index to bring into view, keys: {i: anchorKey}, press: {key: 'pressed'|'hover'}, alt }
+const sopBody = (k, o = {}) => (F, x, y, w, h) => {
+  const list = steps(k);
+  checkSteps(list, w);
+  const pos = [];
+  const r = sopFlow(F, x, y + 6, w, list, { pos });
+  const full = 6 + r.h + 8;
+  // second action row of the decision step: 'Confirm intrusion' (kit button style) above the kit row
+  let extra = '';
+  const btn = {};
+  if (list[0].state === 'critical' && pos[0].actions.length) {
+    const [ax, ay] = pos[0].actions[0];
+    const c = kitButton(F, ax, ay - 38, 'Confirm intrusion', BTN_RED);
+    extra += c.svg; btn.confirmBtn = c.r;
+    btn.authorisedBtn = pos[0].actions[0]; btn.falseBtn = pos[0].actions[1];
+  }
+  if (list[1].state === 'critical' && pos[1].actions.length) btn.dispatchBtn = pos[1].actions[0];
+  if (list[6].state === 'critical' && pos[6].actions.length) btn.submitBtn = pos[6].actions[0];
+  // scroll so the focused step is fully in view (never shrink: the body scrolls, the kit idiom)
+  let sc = 0;
+  if (o.top != null && full > h) {
+    sc = Math.min(Math.max(0, pos[o.top].y - y - 14), full - h + 20);   // up to 20 px of end padding so no header straddles the top
+    // no step header may straddle the bottom edge: scroll back so it sits fully below (keeps the focused step on top)
+    for (const p of pos) { const y0 = p.y - y; if (sc + h > y0 && sc + h < y0 + 32) sc = Math.max(0, y0 - h); }
+    // nor the top edge: a step whose header would be cut is scrolled out (up to 60 px of end padding) or fully into view
+    for (const p of pos) {
+      const y0 = p.y - y;
+      if (sc > y0 - 6 && sc < y0 + 32) { const hide = y0 + p.h - 14; sc = hide <= full - h + 60 ? hide : Math.max(0, y0 - 6); break; }
     }
-    s += rect(CX, y, CW, 44, { r: 8, fill: '#1F4FBF' }) + icon(F, 'send', CX + CW / 2 - textWidth('Submit for sign-off', 18, 700) / 2 - 16, y + 12, 20, '#FFFFFF', 2) + text(CX + CW / 2 + 12, y + 28.5, 'Submit for sign-off', { size: 18, weight: 700, fill: '#FFFFFF', anchor: 'middle' });
-    mark('submitBtn', [CX, y, CW, 44]);
-    if (o.pressed) s += btnState(F, CX, y, CW, 44, 'pressed');
-    return s;
-  };
-}
+  }
+  const st = { x, w };
+  for (const [i, key] of Object.entries(o.keys || {})) { const p = pos[i]; if (p) mark(key, [x, p.y - sc, w, p.h]); }
+  let states = '';
+  for (const [key, r0] of Object.entries(btn)) {
+    const rr = [r0[0], r0[1] - sc, r0[2], r0[3]];
+    mark(key, rr);
+    if (o.press && o.press[key]) states += btnState(F, ...rr, o.press[key], { r: 6 });
+  }
+  let s = `<g transform="translate(0 ${f(-sc)})">${r.svg + extra}</g>` + states;
+  if (sc > 0) {   // scrolled: own thumb at the scroll position + top fade (kit draws only the top thumb)
+    const th = Math.max(24, h * h / full - 8), ty = y + 4 + (h - 8 - th) * Math.min(1, sc / (full - h));
+    s += rect(x, y, w, 12, { fill: F.lin([[0, C.tabBody, 1], [1, C.tabBody, 0]], 0, 0, 0, 1) }) + rect(x + w - 6, ty, 3, th, { r: 1.5, fill: '#FFFFFF', fo: 0.35 });
+    if (sc < full - h) s += rect(x, y + h - 28, w, 28, { fill: F.lin([[0, C.tabBody, 0], [1, C.tabBody, 1]], 0, 0, 0, 1) });
+    return { svg: s, h };
+  }
+  return { svg: s, h: full };
+};
 
-// ---------- frame builder ----------
-function build(name, o) {
+// ---------- frame template: the V11 console ----------
+function consoleFrame(name, o) {
   const F = new Frame(name, W, H);
-  // the 3D scene keeps the S1 framing in every frame; while the Alarm view is open it is dimmed so the left column reads as in S1
-  let s = scene(F, clayAirport(F, camera(870, 520, 8.4, 50, 29), { markers: [], alarmFence: false, lidar: false, labels: o.home }));
-  if (!o.home) s += rect(0, 0, W, H, { fill: C.frame, fo: 0.72 });
-  s += header(F, { user: o.user });
-  if (o.home) s += modelToggle(F);
+  let s = o.center(F);
+  s += header(F, HEAD);
+  if (o.toggle) s += modelToggle(F);
   s += alertsPanel(F, { cluster: 'All terminals', counts: counts(o.crit ?? 2), cards: cardList(o.cards || {}) });
+  if (o.cards && o.cards.fence) {
+    const c0 = cardList(o.cards)[0];
+    mark('fenceCard', [40, 296, 336, alertCard(new Frame('m'), 40, 296, 336, c0).h]);
+  }
   s += deviceStatus(F, { online: 4812, offline: o.offline ?? 6 });
-  if (o.rail) s += rail(F, o.rail);
-  if (o.view) s += alarmView(F, o.view);
-  if (o.panel) s += rightPanel(F, o.panel);
+  if (o.alarm) { s += activeAlarms(F, { bodyH: 356, ...o.alarm }); markPanel(o.alarm); }
+  if (o.alarm && o.alarm.pressTab) s += btnState(F, 1130, 560, 214, 40, 'pressed', { r: 0 });
+  s += overlays(F, o);
+  if (o.newIncident) {   // header Incident Management button: '1 new' (spec §7)
+    s += g(F, 'New incident badge', pill(F, 1324, 30, '1 new', C.crit, { h: 20, size: 12, pad: 14 }).svg);
+    mark('imButton', [1103.5, 40.5, 256, 45]);
+  }
   if (o.after) s += o.after(F);
   return F.render(s);
 }
 
-// ---------- scenario states ----------
-const CAMLIST = (o = {}) => [
-  { id: 'PTZ 7-02', X: -88, Y: 44, state: o.p702 || 'active', place: 'below', note: o.n702 },
-  { id: 'CAM 7-11', X: 72, Y: 9, state: 'idle' },
-  { id: 'PTZ 7-03', X: 150, Y: 52, state: o.p703 || 'idle', place: o.p703place || 'left', note: o.n703 },
-];
-const TRACK0 = [[0, 1], [1, 4], [2, 7], [3, 10]];
-const TRACK7 = [[0, 1], [1, 4], [3, 8], [7, 11], [12, 13], [18, 14], [24, 15], [30, 16]];
-const STRIP = { pre: CAMS.pre({ scrub: ['02:14:41', 0.62, { now: 0.3 }], chips: [['Pre-alarm', '#3A404B']] }), thermal: CAMS.thermal() };
-const HEAD_ALARM = [[{ b: 'AgilFence 5-14' }, ' · climb signature · north perimeter'], ['Owner ', { b: OWNER }, ' · Runway 02L 130 m from 5-14']];
-const HEAD_INC = [['Raised from alarm ', { b: 'AGF-5-14' }, ' · history since ', { b: '02:14:58' }], ['Perimeter intrusion · owner ', { b: OWNER }, ' · SOP-PER-02']];
-const PHS = (d, v, r, z) => [
-  { name: 'Detection', ...d }, { name: 'Verification', ...v }, { name: 'Response', ...r }, { name: 'Resolution', ...z },
-];
-const P_DET = { state: 'done', sub: 'Alarm 02:14:58' };
-
+// ---------- operator frames ----------
 function s1() {
-  return build('AV-S1 · Quiet console · lockdown status shown separately', { home: true, crit: 1, cards: { fence: false } });
+  return consoleFrame('AV-S1 · Quiet console · no fence alarm', { toggle: true, crit: 1, center: F => airportView(F, false), cards: { fence: null } });
 }
+const ALARM = (o) => ({ ev: EV(LINES.alarm), ...o });
 function s2() {
-  return build('AV-S2 · Alarm view opened automatically · PTZ 7-02 live on preset 5-14', {
-    cards: { fence: 'Climb signature on segment 5-14' },
-    rail: { ref: 'Alarm AGF-5-14', phases: PHS(P_DET, { state: 'current', sub: 'Checks running' }, { state: 'pending', sub: 'Not started' }, { state: 'pending', sub: 'Not started' }),
-      chain: [{ t: 'Alarm raised · AgilFence 5-14 climb signature', time: '02:14:58' }, { t: 'Alarm view opened automatically', time: '02:14:59' }, { t: 'Corroboration and authorised-activity check running', s: 'current' }] },
-    view: { opened: 'Opened automatically · 02:14:59', live: CAMS.climb({ chips: LIVE_CH, ts: '02:14:59' }), strip: [STRIP.pre, STRIP.thermal], map: { cams: CAMLIST() } },
-    panel: { tab: 0, lines: HEAD_ALARM, body: verifyBody({ corrN: 1, pendText: ['', 'Waiting for LiDAR L-5B', 'PTZ 7-02 on preset 5-14 · locking on'], corrPill: ['Checking', 'unknown'], authPending: true, authPill: ['Checking 4 sources', 'unknown'], decision: false }) },
-    after: F => {
-      const tx = 908, tw = 444, o = { title: 'AgilFence alarm · Segment 5-14', sub: 'Fence Sector 5 · Critical · north perimeter', time: '02:14:59', sound: true, w: tw, text: 'Climb signature on 5-14. Alarm view opened with PTZ 7-02 live on preset 5-14. The alarm stays Critical until resolved.', actions: [['Mute tone', '']] };
-      const h = toast(new Frame('m'), 0, 0, o).h, ty = 1013 - h;
-      const t = toast(F, tx, ty, o);
-      mark('alarmToast', [tx, ty, tw, h]);
-      mark('muteBtn', [tx + 62, ty + h - 44, textWidth('Mute tone', 14, 700) + 24, 30]);
-      return t.svg;
-    },
+  return consoleFrame('AV-S2 · Fence alarm · Active Alarms opened automatically · Investigation · viewer Located to 5-14', {
+    center: F => locateView(F), cards: { fence: 'alarm' }, near: 'live', player: { cam: PCAM.climb(), clip: LIVECLIP() },
+    alarm: ALARM({ cams: TILES.climb(), tab: 0, body: investigation([INV.linked, INV.auth], ['invLinked', 'invAuthCheck']) }),
   });
 }
-const RAIL_VER = (sub, chain3) => ({ ref: 'Alarm AGF-5-14', phases: PHS(P_DET, { state: 'current', sub }, { state: 'pending', sub: 'Opens on confirm' }, { state: 'pending', sub: 'Not started' }),
-  chain: [{ t: 'Authorised activity: clear', time: '02:15:06' }, { t: 'Corroborated · 3 sensors, one track', time: '02:15:12' }, chain3] });
-const VIEW_VER = () => ({ opened: 'Opened automatically · 02:14:59', live: CAMS.inside({ chips: [['Auto-track T-07', '#0E5E68'], ...LIVE_CH], ts: '02:15:20' }), strip: [STRIP.pre, STRIP.thermal], map: { cams: CAMLIST(), track: TRACK0 } });
-const VER_BASE = { corrPill: ['Corroborated', 'ok'], corrStatus: 'Corroborated · 3 sensors, one track', authPill: ['Clear · 4 of 4 sources', 'ok'] };
 function s3() {
-  return build('AV-S3 · Verification · corroboration and authorised-activity check · decision bar', {
-    cards: { fence: 'Climb on 5-14 · 3 sensors, one track' },
-    rail: RAIL_VER('Your decision', { t: 'Visual confirmation by operator', s: 'current' }),
-    view: VIEW_VER(),
-    panel: { tab: 0, lines: HEAD_ALARM, body: verifyBody({ ...VER_BASE }) },
+  return consoleFrame('AV-S3 · Click 1 · SOP Flow tab', {
+    center: F => locateView(F), cards: { fence: 'alarm' }, near: 'live', player: { cam: PCAM.climb(), clip: LIVECLIP() },
+    alarm: ALARM({ cams: TILES.climb(), tab: 1, pressTab: true, body: sopBody('verify', { keys: { 0: 'sopStep1' } }) }),
   });
 }
 function s4() {
-  const v = VIEW_VER(); v.live.ts = '02:15:24';
-  return build('AV-S4 · Click 1 · Confirm intrusion · visually confirmed by Nurul A. 02:15:24', {
-    cards: { fence: 'Climb on 5-14 · 3 sensors, one track' },
-    rail: { ...RAIL_VER('Confirmed 02:15:24', { t: 'Visually confirmed · Nurul A.', time: '02:15:24' }), phases: PHS(P_DET, { state: 'done', sub: 'Confirmed 02:15:24' }, { state: 'current', sub: 'Opening' }, { state: 'pending', sub: 'Not started' }) },
-    view: v,
-    panel: { tab: 0, lines: HEAD_ALARM, body: verifyBody({ ...VER_BASE, pressed: 'confirm', recorded: 'Visually confirmed · Nurul A. (owner) · 02:15:24' }) },
+  return consoleFrame('AV-S4 · SOP step 1 · Verify the alarm · Confirm intrusion / Authorised activity / False alarm', {
+    center: F => locateView(F), cards: { fence: 'alarm' }, near: 'live', player: { cam: PCAM.track(), clip: LIVECLIP() },
+    alarm: ALARM({ cams: TILES.track(), tab: 1, body: sopBody('verify', { keys: { 0: 'sopStep1' }, press: { confirmBtn: 'hover' } }) }),
   });
 }
-// response lanes per state
-const LANES = {
-  s5: {
-    tracking: 'LiDAR T-07 live · PTZ 7-02 on target',
-    patrol: { name: 'Patrol', icon: 'car', col: BLUE, auth: 'Pre-authorised · SOP-PER-02 §3.1', info: 'Patrol 2 (Arjun + 1) · nearest · ETA 02:18:30',
-      steps: [{ t: 'Dispatch · your click', s: 'current' }, { t: 'En route', s: 'pending' }, { t: 'On scene', s: 'pending' }], actions: [['Dispatch Patrol 2', 'blue'], ['Choose another', 'grey']] },
-    police: { name: 'Police', icon: 'siren', col: BLUE, auth: 'Pre-authorised · SOP-PER-02 §3.2',
-      steps: [{ t: 'Requested · with your confirmation', time: '02:15:25', s: 'done' }, { t: 'Contacting · Airport Police ops room', s: 'current' }, { t: 'Acknowledged', s: 'pending' }, { t: 'Responding', s: 'pending' }, { t: 'On scene', s: 'pending' }],
-      extra: 'Duty manager Daniel L. · informed 02:15:25 · reviewing' },
-    aviation: { name: 'Aviation safety', icon: 'plane', col: BLUE, auth: 'Authority: ATC', authKind: 'atc',
-      steps: [{ t: 'Tower notified · person 130 m from Runway 02L', time: '02:15:25', s: 'done' }, { t: 'Tower decision · awaiting ATC', s: 'current' }, { t: 'Restriction active', s: 'pending' }, { t: 'Restored', s: 'pending' }] },
-  },
-};
-LANES.s7 = {
-  tracking: 'PTZ 7-02 lost 02:16:40 · PTZ 7-03 since 02:16:42', trackWarn: true,
-  patrol: { name: 'Patrol', icon: 'car', col: BLUE, auth: 'Pre-authorised · SOP-PER-02 §3.1', info: 'Patrol 2 (Arjun + 1) · ETA 02:18:30',
-    steps: [{ t: 'Dispatched · Nurul A.', time: '02:15:30', s: 'done' }, { t: 'En route · perimeter road', s: 'current' }, { t: 'On scene', s: 'pending' }] },
-  police: { name: 'Police', icon: 'siren', col: BLUE, auth: 'Pre-authorised · SOP-PER-02 §3.2',
-    steps: [{ t: 'Requested', time: '02:15:25', s: 'done' }, { t: 'Contacted · Airport Police ops room', time: '02:15:38', s: 'done' }, { t: 'Acknowledged · Sgt. Lim (APD)', time: '02:15:52', s: 'done' }, { t: 'Responding · unit AP-12 · ETA 02:24:00', time: '02:16:05', s: 'current' }, { t: 'On scene', s: 'pending' }],
-    extra: ['Duty manager Daniel L. · ', { b: 'acknowledged 02:15:41' }] },
-  aviation: { name: 'Aviation safety', icon: 'plane', col: BLUE, auth: 'Authority: ATC', authKind: 'atc',
-    steps: [{ t: 'Tower notified', time: '02:15:25', s: 'done' }, { t: 'Tower decision · Runway 02L: arrivals held, no movements on 02L', sub: 'ATC supervisor Tan', time: '02:15:58', s: 'done' }, { t: 'Restriction active', s: 'current' }, { t: 'Restored', s: 'pending' }] },
-};
-LANES.s8 = {
-  tracking: 'T-07 stationary inside fence line · PTZ 7-03',
-  patrol: { name: 'Patrol 2 (Arjun + 1)', icon: 'car', col: GREEN, auth: 'Pre-authorised · SOP-PER-02 §3.1', gap: 3,
-    steps: [{ t: 'Dispatched · Nurul A.', time: '02:15:30', s: 'done' }, { t: 'On scene', time: '02:18:08', s: 'done' }, { t: 'Contained · person stationary inside fence', time: '02:18:08', s: 'done' }, { t: 'Intercepted', time: '02:19:30', s: 'done' }, { t: 'Detained', time: '02:20:05', s: 'done' }] },
-  police: { name: 'Police', icon: 'siren', col: GREEN, auth: 'Pre-authorised · SOP-PER-02 §3.2', gap: 3,
-    steps: [{ t: 'Requested', time: '02:15:25', s: 'done' }, { t: 'Contacted · Airport Police ops room', time: '02:15:38', s: 'done' }, { t: 'Acknowledged · Sgt. Lim (APD)', time: '02:15:52', s: 'done' }, { t: 'Responding · unit AP-12', time: '02:16:05', s: 'done' }, { t: 'On scene · AP-12', time: '02:24:10', s: 'done' }, { t: 'Custody · handed to police AP-12', time: '02:26:30', s: 'done' }],
-    extra: ['Duty manager Daniel L. · ', { b: 'acknowledged 02:15:41' }] },
-  aviation: { name: 'Aviation safety', icon: 'plane', col: BLUE, auth: 'Authority: ATC', authKind: 'atc', gap: 3,
-    steps: [{ t: 'Tower decision · 02L arrivals held', sub: 'ATC supervisor Tan', time: '02:15:58', s: 'done' }, { t: 'Restriction active · until tower restores', s: 'current' }, { t: 'Restored', s: 'pending' }] },
-};
-const RAIL_RESP = (chain, rsub = 'Lanes open') => ({ ref: 'Incident PER-005 · from alarm AGF-5-14', phases: PHS(P_DET, { state: 'done', sub: 'Confirmed 02:15:24' }, { state: 'current', sub: rsub }, { state: 'pending', sub: 'Not started' }), chain });
-const VIEW_RESP = (ts, map = {}) => ({ opened: 'Opened automatically · 02:14:59', live: CAMS.inside({ chips: [['Auto-track T-07', '#0E5E68'], ...LIVE_CH], ts }), strip: [STRIP.pre, STRIP.thermal], map: { cams: CAMLIST(), track: [...TRACK0, [4, 12]], units: [{ at: [-130, 25], label: 'Patrol 2 · from G-4', offmap: true }], ...map } });
-const CHAIN5 = [{ t: 'Incident PER-005 raised · Nurul A.', time: '02:15:24' }, { t: 'Police requested', time: '02:15:25' }, { t: 'Tower notified', time: '02:15:25' }, { t: 'Duty manager informed', time: '02:15:25' }, { t: 'Patrol dispatch', s: 'current' }];
 function s5() {
-  return build('AV-S5 · Incident PER-005 raised · response lanes open in parallel', {
-    cards: { fence: 'Incident PER-005 · response open' },
-    rail: RAIL_RESP(CHAIN5),
-    view: VIEW_RESP('02:15:26'),
-    panel: { tab: 1, tabDone: [true], incident: true, lines: HEAD_INC, body: responseBody({ ...LANES.s5 }) },
+  return consoleFrame('AV-S5 · Click 2 · Confirm intrusion · Nurul A. · 02:15:24', {
+    center: F => locateView(F), cards: { fence: 'alarm' }, near: 'live', player: { cam: PCAM.track(), clip: LIVECLIP() },
+    alarm: ALARM({ cams: TILES.track(), tab: 1, body: sopBody('verify', { keys: { 0: 'sopStep1' }, press: { confirmBtn: 'pressed' } }) }),
+  });
+}
+const INC = (o) => ({ ev: EV(LINES.incident, { code: 'PER-005' }), ...o });
+function s6() {
+  return consoleFrame('AV-S6 · Incident PER-005 raised from alarm AGF-5-14 · SOP step 2 Dispatch Patrol 2', {
+    center: F => locateView(F, { label: 'Seg 5-14 · PER-005' }), cards: { fence: 'incident' }, near: 'live', player: { cam: PCAM.track(), clip: LIVECLIP() }, newIncident: true,
+    alarm: INC({ cams: TILES.track(), tab: 1, body: sopBody('raised', { keys: { 0: 'sopStep1', 1: 'sopStep2', 2: 'sopStep3', 3: 'sopStep4' } }) }),
     after: F => {
-      const x = 396, w = 484, y = 943;
+      const x = 396, w = 488, y = 935;
       mark('incidentToast', [x, y, w, 70]);
       return confirmToast(F, x, y, 'Incident PER-005 raised from alarm AGF-5-14', 'History inherited since 02:14:58 · owner Nurul A. · 02:15:24', { w });
     },
   });
 }
-function s6() {
-  return build('AV-S6 · Click 2 · Dispatch Patrol 2 · 02:15:30', {
-    cards: { fence: 'Incident PER-005 · response open' },
-    rail: RAIL_RESP(CHAIN5),
-    view: VIEW_RESP('02:15:30'),
-    panel: { tab: 1, tabDone: [true], incident: true, lines: HEAD_INC, body: responseBody({ ...LANES.s5, pressed: true, patrol: { ...LANES.s5.patrol, recorded: 'Dispatch Patrol 2 · Nurul A. · 02:15:30' } }) },
-  });
-}
 function s7() {
-  return build('AV-S7 · Response running · PTZ 7-02 video lost · PTZ 7-03 took over', {
-    cards: { fence: 'Incident PER-005 · patrol en route' },
-    rail: RAIL_RESP([{ t: 'Patrol 2 dispatched', time: '02:15:30' }, { t: 'Duty manager acknowledged', time: '02:15:41' }, { t: 'Police acknowledged', time: '02:15:52' }, { t: 'Runway 02L held · ATC', time: '02:15:58' }, { t: 'PTZ 7-03 took over', time: '02:16:42' }, { t: 'Patrol en route · ETA 02:18:30', s: 'current' }], 'Running · 3 lanes'),
-    view: { opened: 'Opened automatically · 02:14:59', live: CAMS.ptz703({ chips: [['Auto-track T-07', '#0E5E68'], ['LIVE', RED]], ts: '02:16:42' }), banner: excBanner, ring: AMBER,
-      strip: [STRIP.pre, { label: 'PTZ 7-02 · no video', icon: 'video', empty: '' }],
-      map: { cams: CAMLIST({ p702: 'lost', n702: 'video lost', p703: 'active', n703: 'tracking' }), tgt: [30, 16], track: TRACK7, hold: 'Arrivals held · 02:15:58', units: [{ at: [-112, 25], from: [-160, 25], label: 'Patrol 2 · ETA 02:18:30', above: true }] } },
-    panel: { tab: 1, tabDone: [true], incident: true, lines: HEAD_INC, body: responseBody({ ...LANES.s7 }) },
-    after: F => {
-      // the PTZ 7-02 strip tile: video lost placeholder
-      const sw = (TW - 8) / 2, x = TX + sw + 8, y = ST.y;
-      return g(F, 'Video lost NEW', icon(F, 'video', x + sw / 2 - 14, y + 40, 28, '#9BA1AC', 1.8) + line(x + sw / 2 - 16, y + 40, x + sw / 2 + 16, y + 70, { stroke: '#9BA1AC', sw: 2 }) + text(x + sw / 2, y + 92, 'Video lost 02:16:40', { size: 12, weight: 500, fill: C.t1, anchor: 'middle' }));
-    },
+  return consoleFrame('AV-S7 · Click 3 · Dispatch Patrol 2 · 02:15:30', {
+    center: F => locateView(F, { label: 'Seg 5-14 · PER-005' }), cards: { fence: 'incident' }, near: 'live', player: { cam: PCAM.track(), clip: LIVECLIP() }, newIncident: true,
+    alarm: INC({ cams: TILES.track(), tab: 1, body: sopBody('dispatch', { keys: { 1: 'sopStep2' }, press: { dispatchBtn: 'pressed' } }) }),
   });
 }
 function s8() {
-  return build('AV-S8 · On scene and outcomes · handed to police 02:26:30', {
-    cards: { fence: 'Incident PER-005 · handed to police' },
-    rail: { ref: 'Incident PER-005 · from alarm AGF-5-14', chainKey: 'outcomes',
-      phases: PHS(P_DET, { state: 'done', sub: 'Confirmed 02:15:24' }, { state: 'done', sub: 'On scene 02:18:08' }, { state: 'current', sub: 'Outcomes' }),
-      chain: [{ t: 'Patrol on scene', time: '02:18:08' }, { t: 'Contained', time: '02:18:08' }, { t: 'Intercepted', time: '02:19:30' }, { t: 'Detained', time: '02:20:05' }, { t: 'Police on scene AP-12', time: '02:24:10' }, { t: 'Handed to police · custody AP-12', time: '02:26:30' }] },
-    view: { opened: 'Opened automatically · 02:14:59', live: CAMS.patrol({ chips: [['LIVE', RED]], ts: '02:26:30' }), strip: [STRIP.pre, CAMS.lidar({ label: 'LiDAR L-5B · T-07 stationary' })],
-      map: { cams: CAMLIST({ p702: 'lost', p703: 'active', p703place: 'below' }), tgt: [32, 17], track: TRACK7.concat([[32, 17]]), trackLabel: 'T-07 · contained', trackLeft: true, hold: 'Arrivals held · 02:15:58',
-        units: [{ at: [44, 25], from: [-160, 25], label: 'Patrol 2 · on scene', below: true, left: true }, { at: [118, 25], from: [220, 25], label: 'AP-12 · on scene', col: C.blue, icon: 'siren', above: true }] } },
-    panel: { tab: 1, tabDone: [true], incident: true, lines: HEAD_INC, body: responseBody({ ...LANES.s8 }) },
+  return consoleFrame('AV-S8 · Police and tower running · Sgt. Lim acknowledged · Runway 02L arrivals held', {
+    center: F => patrolView(F, { at: [54.5, 2.4], runway: 'Runway 02L · arrivals held · ATC', runwayCol: C.warn }), cards: { fence: 'incident', late: true }, near: 'live', player: { cam: PCAM.track(), clip: LIVECLIP() }, newIncident: true,
+    alarm: INC({ cams: TILES.track(), tab: 1, body: sopBody('running', { top: 1, keys: { 1: 'sopStep2', 2: 'sopStep3', 3: 'sopStep4' } }) }),
   });
 }
-const VIEW_CLOSE = (ts, opened) => ({ opened, live: CAMS.wide({ chips: [['LIVE', RED]], ts }), strip: [{ ...STRIP.pre, label: 'Sealed clip 1 of 3', chips: [['CAM 7-11', '#3A404B']] }, CAMS.lidar({ label: 'LiDAR track T-07 · sealed' })],
-  map: { alarm: false, cams: CAMLIST({ p702: 'lost', p703: 'idle' }), hold: 'Restored · 02:31:10', holdKind: 'ok', units: [{ at: [4, 6], label: 'Guard posted · 5-14', icon: 'user', below: true }] } });
 function s9() {
-  return build('AV-S9 · Close · six evidence items complete · Submit for sign-off', {
-    cards: { fence: 'Incident PER-005 · ready to close' },
-    rail: { ref: 'Incident PER-005 · from alarm AGF-5-14',
-      phases: PHS(P_DET, { state: 'done', sub: 'Confirmed 02:15:24' }, { state: 'done', sub: 'Custody 02:26:30' }, { state: 'current', sub: 'Submit 02:43:50' }),
-      chain: [{ t: 'Runway 02L restored', time: '02:31:10' }, { t: 'Area secured', time: '02:38:40' }, { t: 'Fence 5-14 made safe', time: '02:40:15' }, { t: 'Evidence sealed', time: '02:43:40' }, { t: 'Submitted for sign-off', time: '02:43:50', s: 'current' }, { t: 'Signed off', s: 'pending' }, { t: 'Closed', s: 'pending' }] },
-    view: VIEW_CLOSE('02:43:50', 'Opened automatically · 02:14:59'),
-    panel: { tab: 2, tabDone: [true, true], incident: true, lines: HEAD_INC, body: closeBody({ pressed: true }) },
+  return consoleFrame('AV-S9 · PTZ 7-02 video lost 02:16:40 · PTZ 7-03 took over 02:16:42 · SOP step 5', {
+    center: F => patrolView(F, { at: [59.5, 2.4], ptz703: true, runway: 'Runway 02L · arrivals held · ATC', runwayCol: C.warn }), cards: { fence: 'incident', late: true }, near: 'handover', offline: 7,
+    player: { cam: PCAM.p703(), clip: LIVECLIP() }, newIncident: true,
+    alarm: INC({ cams: TILES.p703(), tab: 1, body: sopBody('handover', { top: 2, keys: { 4: 'sopStep5', 2: 'sopStep3', 3: 'sopStep4' } }) }),
+    after: F => {
+      mark('tileHandover', [916, 296, 210, 248]);
+      // the exception as recorded on the SOP side (items 2–3 of step 5); the Investigation System entry is the record shown on the incident page (S12)
+      const a = ANCHORS[CUR] && ANCHORS[CUR].sopStep5;
+      if (a) mark('invHandover', [a[0] + 34, a[1] + 58, a[2] - 44, 46]);   // items 2–3 of step 5
+      return '';
+    },
   });
 }
-// duty manager's console: sign-off dialog, badge + PIN, Sign and close; closed confirmation
-function signDialog(F, o = {}) {
-  const x = 380, y = 150, w = 640, h0 = 760;
-  let m = '';
-  const clip = F.clip(`<rect x="${x}" y="${y}" width="${w}" height="${h0}" rx="16"/>`);
-  m += `<g clip-path="${clip}">${rect(x, y, w, h0, { fill: '#333A47' }) + rect(x, y, w, 40, { fill: '#191E25' })}</g>`;
-  m += icon(F, 'shieldCheck', x + 16, y + 10, 20, '#FFFFFF', 2) + text(x + 44, y + 26, 'Sign off and close · Incident PER-005', { size: 16, weight: 700, fill: '#FFFFFF' }) + icon(F, 'x', x + w - 34, y + 9, 20, '#FFFFFF', 2.2);
-  let yy = y + 72;
-  m += text(x + 20, yy, 'Fence Sector 5 · Perimeter intrusion', { size: 20, weight: 500, fill: C.t1 }) + pill(F, x + w - 20 - textWidth('Critical', 14, 500) - 16, yy - 17, 'Critical', RED, { h: 22 }).svg;
-  yy += 24;
-  m += rich(x + 20, yy, [{ t: 'Submitted by ', fill: C.t2 }, { t: 'Nurul A. (owner)', fill: '#FFFFFF', weight: 500 }, { t: ' · 02:43:50 · raised from alarm AGF-5-14 at 02:14:58', fill: C.t2 }], { size: 14 });
-  yy += 22;
-  m += text(x + 20, yy + 6, 'Evidence · 6 of 6 complete', { size: 15, weight: 700, fill: '#FFFFFF' });
-  yy += 16;
-  const ev = evidenceRows(F, x + 20, yy, w - 40, { fill: '#2A303B' });
-  m += ev.svg;
-  mark('closeChecklist', [x + 20, yy - 20, w - 40, ev.y - yy + 20]);
-  yy = ev.y + 10;
-  m += text(x + 20, yy + 6, 'Sign with badge + PIN', { size: 15, weight: 700, fill: '#FFFFFF' }) + text(x + w - 20, yy + 6, 'Signed in as Daniel L. · Duty manager', { size: 12.5, fill: C.t2, anchor: 'end' });
-  yy += 16;
-  const fw = (w - 52) / 2;
-  m += rect(x + 20, yy, fw, 40, { r: 6, fill: '#282828', stroke: C.t3 }) + icon(F, 'idcard', x + 30, yy + 10, 20, C.t2, 1.8) + text(x + 58, yy + 25.5, 'Badge  DL-••••17', { size: 15, fill: '#FFFFFF' });
-  m += rect(x + 32 + fw, yy, fw, 40, { r: 6, fill: '#282828', stroke: C.t3 }) + icon(F, 'key', x + 42 + fw, yy + 10, 20, C.t2, 1.8) + text(x + 70 + fw, yy + 25.5, 'PIN  ••••••', { size: 15, fill: '#FFFFFF' });
-  m += circle(x + w - 36, yy + 20, 9, { fill: GREEN }) + icon(F, 'check', x + w - 42, yy + 14, 12, '#FFFFFF', 2.8);
-  mark('badgePin', [x + 20, yy, w - 40, 40]);
-  yy += 52;
-  m += text(x + 20, yy + 4, 'Your signature closes the incident and locks the audit record.', { size: 13, fill: C.t1 });
-  yy += 18;
-  const bh = 44;
-  m += rect(x + 20.5, yy + 0.5, 139, bh - 1, { r: 7.5, stroke: '#8B8B8B' }) + text(x + 90, yy + 29, 'Cancel', { size: 18, weight: 700, fill: C.t3, anchor: 'middle' });
-  const sx = x + 170, sw = w - 190;
-  m += rect(sx, yy, sw, bh, { r: 8, fill: '#1F4FBF' }) + icon(F, 'lock', sx + sw / 2 - textWidth('Sign and close', 18, 700) / 2 - 14, yy + 12, 20, '#FFFFFF', 2) + text(sx + sw / 2 + 12, yy + 29, 'Sign and close', { size: 18, weight: 700, fill: '#FFFFFF', anchor: 'middle' });
-  if (o.pressed) m += btnState(F, sx, yy, sw, bh, 'pressed');
-  mark('signBtn', [sx, yy, sw, bh]);
-  const h = yy + bh + 18 - y;
-  mark('signDialog', [x, y, w, h]);
-  // trim the dialog background to the content height
-  m = m.replace(`height="${h0}"`, `height="${h}"`).replace(`height="${h0}"`, `height="${h}"`);
-  return { svg: rect(0, 0, W, H, { fill: '#000000', fo: 0.67 }) + g(F, 'Sign-off dialog NEW', m), y: y + h };
-}
-// S10a: the duty manager's console with the sign-off dialog filled in (badge + PIN), Sign and close not yet pressed;
-// behind it the incident is still Critical and Submitted
-const S10_RAIL = (signed) => ({ ref: 'Incident PER-005 · from alarm AGF-5-14',
-  phases: PHS(P_DET, { state: 'done', sub: 'Confirmed 02:15:24' }, { state: 'done', sub: 'Custody 02:26:30' }, signed ? { state: 'done', sub: 'Closed 02:44:20' } : { state: 'current', sub: 'Awaiting sign-off' }),
-  chain: [{ t: 'Submitted · Nurul A.', time: '02:43:50' }, signed ? { t: 'Signed off · Daniel L. (badge + PIN)', time: '02:44:20' } : { t: 'Sign-off · Daniel L.', s: 'current' }, signed ? { t: 'Closed · audit record locked', time: '02:44:20' } : { t: 'Closed', s: 'pending' }] });
-function s10a() {
-  return build('AV-S10a · Duty manager console · sign-off dialog filled · badge + PIN', {
-    user: [DM, 'Duty manager'], cards: { fence: 'Incident PER-005 · awaiting your sign-off' },
-    rail: S10_RAIL(false),
-    view: VIEW_CLOSE('02:44:14', 'For sign-off · PER-005'),
-    panel: { tab: 2, tabDone: [true, true], incident: true, lines: HEAD_INC, body: closeBody({ submitted: 'Submitted by Nurul A. · 02:43:50 · for your sign-off' }) },
-    after: F => signDialog(F).svg,
+function s10() {
+  return consoleFrame('AV-S10 · Contained 02:18:08 · detained 02:20:05 · handed to police AP-12 02:26:30', {
+    center: F => patrolView(F, { at: [62.4, 2.4], eta: 'on scene', ptz703: true, runway: 'Runway 02L · arrivals held · ATC', runwayCol: C.warn }), cards: { fence: 'incident', late: true }, near: 'handover', offline: 7,
+    player: { cam: PCAM.handed(), clip: LIVECLIP() }, newIncident: true,
+    alarm: INC({ cams: TILES.handed(), tab: 1, body: sopBody('contained', { top: 3, keys: { 5: 'sopStep6' } }) }),
   });
 }
-// S10b: signed and closed on the duty manager's console: header Closed, confirmation, counters down
+// still (no operator click): the Investigation timeline with the exception System entry and Patrol 2's radio reports
 function s10b() {
-  return build('AV-S10b · Duty manager console · signed off · PER-005 closed 02:44:20', {
-    user: [DM, 'Duty manager'], crit: 1, cards: { fence: false },
-    rail: S10_RAIL(true),
-    view: VIEW_CLOSE('02:44:20', 'For sign-off · PER-005'),
-    panel: { tab: 2, tabDone: [true, true, true], incident: true, badge: ['Closed', '#525252'], lines: HEAD_INC, body: closeBody({ submitted: 'Signed off by Daniel L. · 02:44:20 · closed' }) },
+  return consoleFrame('AV-S10b · Investigation · PTZ 7-03 took over 02:16:42 · Arjun (radio) on scene, detained, handed over', {
+    center: F => patrolView(F, { at: [62.4, 2.4], eta: 'on scene', ptz703: true, runway: 'Runway 02L · arrivals held · ATC', runwayCol: C.warn }), cards: { fence: 'incident', late: true }, near: 'handover', offline: 7,
+    player: { cam: PCAM.handed(), clip: LIVECLIP() }, newIncident: true,
+    alarm: INC({ cams: TILES.handed(), tab: 0, body: investigation([INV.handover, INV.onScene, INV.detained, INV.handedOver], ['invHandover', 'radioOnScene', 'radioDetained', 'radioHandedOver']) }),
+  });
+}
+// the click frame: still the before-submit state (head and left card); 'Pending sign-off' appears after it (S11b)
+function s11() {
+  return consoleFrame('AV-S11 · Click 4 · SOP step 7 · six evidence items complete · Submit for sign-off', {
+    center: F => patrolView(F, { at: [62.4, 2.4], eta: 'guard posted', ptz703: true, alarm: false, runway: 'Runway 02L · restored 02:31:10', runwayCol: C.green }), cards: { fence: 'incident', late: true }, near: 'handover', offline: 7,
+    player: { cam: PCAM.guard(), clip: LIVECLIP() }, newIncident: true,
+    alarm: INC({ cams: TILES.guard(), tab: 1, body: sopBody('submit', { top: 4, keys: { 6: 'sopStep7' }, press: { submitBtn: 'pressed' } }) }),
+  });
+}
+// after the submit (02:43:50): the top list card reads 'Pending sign-off' (spec §7); step 7 as submitted, nothing pressed
+function s11b() {
+  return consoleFrame('AV-S11b · Submitted for sign-off · list card Incident PER-005 · Pending sign-off', {
+    center: F => patrolView(F, { at: [62.4, 2.4], eta: 'guard posted', ptz703: true, alarm: false, runway: 'Runway 02L · restored 02:31:10', runwayCol: C.green }), cards: { fence: 'pending', late: true }, near: 'handover', offline: 7,
+    player: { cam: PCAM.guard(), clip: LIVECLIP() }, newIncident: true,
+    alarm: INC({ cams: TILES.guard(), tab: 1, body: sopBody('submit', { top: 4, keys: { 6: 'sopStep7' } }) }),
+  });
+}
+// after the sign-off: the operator's console without the fence card, counters back down
+function s15() {
+  return consoleFrame('AV-S15 · Operator console · PER-005 closed · fence card gone', {
+    toggle: true, crit: 1, center: F => airportView(F, false), cards: { fence: null, late: true }, offline: 7,
     after: F => {
-      const x = 396, w = 484, y = 943;
+      const w = 420, x = 1360 - w, y = 943;
       mark('closedToast', [x, y, w, 70]);
-      return confirmToast(F, x, y, 'PER-005 closed · signed by Daniel L.', '02:44:20 · badge + PIN · audit record locked · removed from alerts', { w });
+      return confirmToast(F, x, y, 'PER-005 closed · signed by Daniel L.', '02:44:20 · badge + PIN · audit record locked', { w });
     },
   });
 }
-// S10c: the operator's console back to quiet, counters down, with the closure notice
-function s10c() {
-  return build('AV-S10c · Operator console back to quiet · PER-005 closed', {
-    home: true, crit: 1, cards: { fence: false },
-    after: F => {
-      const w = 400, x = 1360 - w, y = 943;
-      mark('closedToast', [x, y, w, 70]);
-      return confirmToast(F, x, y, 'PER-005 closed · signed by Daniel L.', '02:44:20 · audit record locked', { w });
-    },
-  });
-}
-// ---------- alternative path: authorised work found (another night, 01:2x) ----------
-const RAIL_ALT = (v, r, z, chain) => ({ ref: 'Alarm AGF-5-14', phases: PHS({ state: 'done', sub: 'Alarm 01:20:31' }, v, r, z), chain });
-const VIEW_ALT = ts => ({ opened: 'Opened automatically · 01:20:32', live: CAMS.crew({ chips: LIVE_CH, ts }),
-  strip: [CAMS.pre({ href: cctv('fence_wide_clean'), label: 'Replay · CAM 7-11', focus: [0.62, 0.45], zoom: 1.4, boxes: [], scrub: ['01:20:14', 0.62, { now: 0.3 }], chips: [['Pre-alarm', '#3A404B']] }),
-    { label: 'Gate G-5 · access log', icon: 'idcard', empty: '' }],
-  map: { cams: CAMLIST(), works: true, people: [[-6, 2], [6, 3]], peopleLabel: 'PTW-2231 · crew of 2' } });
-const gateCard = F => {
-  const sw = (TW - 8) / 2, x = TX + sw + 8, y = ST.y + 34;
-  let s = '';
-  [['01:05:12', 'Contractor badge · PTW-2231'], ['01:05:20', 'Contractor badge · PTW-2231']].forEach(([t, l], i) => {
-    s += text(x + 12, y + 16 + i * 22, t, { size: 12, weight: 500, fill: '#FFFFFF' }) + text(x + 72, y + 16 + i * 22, l, { size: 12, fill: C.t1 });
-  });
-  s += text(x + 12, y + 66, 'Badge-in at G-5 · crew of 2', { size: 12, weight: 500, fill: '#BFEFF6' });
-  return g(F, 'Gate log NEW', s);
-};
+
+// ---------- alternative path: permit found, cleared as authorised activity (another night, 01:2x) ----------
+const ALT = (o, badge) => ({ ev: EV(LINES.alt, { t0: '01:20:31', badge }), ...o });
 function a1() {
-  return build('AV-A1 · Alternative path · permit PTW-2231 found · Authorised activity highlighted', {
-    cards: { fence: 'Climb on 5-14 · permit PTW-2231 found', alt: true },
-    rail: RAIL_ALT({ state: 'current', sub: 'Your decision' }, { state: 'pending', sub: 'Not needed yet' }, { state: 'pending', sub: 'Not started' },
-      [{ t: 'Permit PTW-2231 found', time: '01:20:38' }, { t: 'Corroborated · 3 sensors, 2 people', time: '01:20:45' }, { t: 'Your decision', s: 'current' }]),
-    view: VIEW_ALT('01:21:05'),
-    panel: { tab: 0, t0: '01:20:31', lines: [[{ b: 'AgilFence 5-14' }, ' · climb signature · north perimeter'], ['Owner ', { b: OWNER }, ' · works permit PTW-2231 on 5-14']],
-      body: verifyBody({ alt: true, corrPill: ['Corroborated', 'ok'], corrStatus: 'Corroborated · 3 sensors, 2 people at the works', authPill: ['Found · PTW-2231', 'found'] }) },
-    after: gateCard,
+  return consoleFrame('AV-A1 · Alternative · Investigation · Permit-to-work PTW-2231 Found', {
+    center: F => locateView(F), cards: { fence: 'alarm', alt: true }, near: 'live', player: { cam: PCAM.crew(), clip: LIVECLIP('01:20:14') },
+    alarm: ALT({ cams: TILES.crew(), tab: 0, body: investigation([INV.altAuth, INV.altLinked], ['permitEntry', 'invLinked']) }),
+    after: F => { const a = ANCHORS[CUR] && ANCHORS[CUR].permitEntry; if (a) mark('invAuthCheck', a); return ''; },
+  });
+}
+function a1b() {
+  return consoleFrame('AV-A1b · Alternative · SOP step 1 · Authorised activity pressed', {
+    center: F => locateView(F), cards: { fence: 'alarm', alt: true }, near: 'live', player: { cam: PCAM.crew(), clip: LIVECLIP('01:20:14') },
+    alarm: ALT({ cams: TILES.crew(), tab: 1, body: sopBody('altVerify', { keys: { 0: 'sopStep1' }, press: { authorisedBtn: 'pressed' } }) }),
   });
 }
 function a2() {
-  return build('AV-A2 · Resolved as authorised activity · Nurul A. 01:22:10 · no incident raised', {
-    crit: 1, cards: { fence: false, alt: true },
-    rail: RAIL_ALT({ state: 'done', sub: 'Authorised 01:22:10' }, { state: 'skip', sub: 'Not needed' }, { state: 'done', sub: 'Resolved 01:22:10' },
-      [{ t: 'Works supervisor called to confirm crew', time: '01:21:40' }, { t: 'Resolved as authorised activity · Nurul A.', time: '01:22:10' }, { t: 'No incident raised · no patrol dispatched' }]),
-    view: (v => ({ ...v, map: { ...v.map, lidar: false } }))(VIEW_ALT('01:22:10')),
-    panel: { tab: 0, t0: '01:20:31', badge: ['Resolved', '#525252'], lines: [[{ b: 'AgilFence 5-14' }, ' · climb signature · north perimeter'], ['Owner ', { b: OWNER }, ' · works permit PTW-2231 on 5-14']],
-      body: verifyBody({ alt: true, corrPill: ['Corroborated', 'ok'], corrStatus: 'Corroborated · 3 sensors, 2 people at the works', authPill: ['Found · PTW-2231', 'found'], pressed: 'authorised', recorded: 'Authorised activity · Nurul A. · 01:22:10' }) },
+  return consoleFrame('AV-A2 · Alternative · Authorised activity · cleared · no incident raised', {
+    center: F => locateView(F, { alarm: false, sev: 'Info', label: 'Seg 5-14 · PTW-2231' }), cards: { fence: 'cleared', alt: true }, crit: 1, near: 'live', player: { cam: PCAM.crew(), clip: LIVECLIP('01:20:14') },
+    alarm: ALT({ cams: TILES.crew(), tab: 1, body: sopBody('altCleared', { keys: { 0: 'sopStep1' } }) }),
     after: F => {
-      let s = gateCard(F);
-      const x = 396, w = 484, y = 893, h = 120;
-      let t = rect(x, y, w, h, { r: 10, fill: '#1D232C', fo: 0.97, stroke: GREEN, sw: 1.2, filter: F.shadow(8, 14, 0.5) });
-      t += circle(x + 26, y + 28, 12, { fill: GREEN }) + icon(F, 'check', x + 18, y + 20, 16, '#FFFFFF', 3);
-      t += text(x + 50, y + 30, 'Resolved as authorised activity · Nurul A. · 01:22:10', { size: 15, weight: 700, fill: '#FFFFFF' });
-      t += text(x + 50, y + 52, 'Linked to PTW-2231 · alarm kept in the record', { size: 13, fill: C.t1 });
-      t += text(x + 50, y + 72, 'No incident raised · no patrol dispatched', { size: 13, fill: C.t1 });
-      t += icon(F, 'phone', x + 50, y + 85, 14, C.t2, 2) + text(x + 70, y + 97, 'Works supervisor called to confirm crew · 01:21:40', { size: 13, fill: C.t2 });
-      s += g(F, 'Resolved confirmation NEW', t);
-      mark('resolvedToast', [x, y, w, h]);
-      return s;
+      // event head: the red 'Now' badge gives way to a neutral 'Cleared' badge (same slot, right-aligned)
+      const bw = textWidth('Cleared', 14, 500) + 16;
+      mark('clearedBadge', [1344 - bw, 209, bw, 20]);
+      return g(F, 'Badge Cleared', pill(F, 1344 - bw, 209, 'Cleared', C.closed).svg) + a2toast(F);
+    },
+  });
+}
+function a2toast(F) {
+  const x = 396, w = 488, y = 935;
+  mark('clearedToast', [x, y, w, 70]);
+  return confirmToast(F, x, y, 'Alarm AGF-5-14 cleared · authorised activity', 'Nurul A. · 01:22:10 · linked to PTW-2231 · no incident raised', { w });
+}
+
+// ---------- duty manager: V11 Incident Management page (1600 wide) ----------
+const IW = 1600;
+const OTHERS = [
+  ['Open', 'Critical', 'T3 Staff Door D-214', 'Today, 02:14:52', 'TGT-214', null, 'ACS-D214'],
+  ['Open', 'Warning', 'T1 Departure Row K', 'Today, 02:12:40', 'WLS-033', null, 'CAM-1-311'],
+  ['Open', 'Warning', 'T1 Door C2', 'Today, 02:13:20', 'IDS-207', null, 'ACS-C2'],
+  ['Open', 'Warning', 'T2 Arrival Belt 5', 'Today, 02:11:09', 'FGT-040', null, 'CAM-1-142'],
+  ['Closed', 'Warning', 'T2 Gate B12', 'Today, 02:16:04', 'UAB-112', ['Nurul A.', 'Today, 02:31:10'], 'CAM-2-031'],
+  ['Closed', 'Info', 'T4 Baggage Hall B2', 'Today, 01:45:20', 'OVS-012', ['Siti K.', 'Today, 02:20:05'], 'ACS-B2'],
+  ['Closed', 'Critical', 'T5 Pier B Service Door', 'Today, 01:47:02', 'TGT-209', ['Andrew Teo', 'Today, 02:05:40'], 'ACS-P5B'],
+  ['Closed', 'Critical', 'Fence Sector 15', 'Today, 01:42:10', 'PER-015', ['Siti K.', 'Today, 01:49:20'], 'AGF-15-03'],
+];
+const PER005 = closed => closed ? ['Closed', 'Critical', 'Fence Sector 5', 'Today, 02:14:58', 'PER-005', [DM, 'Today, 02:44:20'], 'AGF-5-14'] : ['Open', 'Critical', 'Fence Sector 5', 'Today, 02:14:58', 'PER-005', ['Pending sign-off', 'Nurul A. · 02:43:50'], 'AGF-5-14'];
+const COLS = [['Status', 52], ['Severity', 137], ['Location', 257], ['Date & Time', 377], ['Code', 497], ['Closed By', 617], ['Device ID', 737]];
+const TAB_Y = 549, BODY_Y = 589, BODY_H = 360;
+function imPage(name, o) {
+  const F = new Frame(name, IW, H);
+  let s = rect(0, 0, IW, H, { fill: C.frame });
+  s += image(F, 'Logo', asset('logo_s.png'), 40, 40, 50, 46);
+  s += g(F, 'Button Exit Incident Management', rect(1265.5, 40.5, 294, 45, { r: 7.5, fill: '#000000', stroke: '#8B8B8B' }) + icon(F, 'x', 1284, 53, 20, '#FFFFFF', 2.2) + text(1312, 70, 'Exit Incident Management', { size: 20, weight: 700, fill: '#FFFFFF' }));
+  s += rect(40, 118, 1520, 911, { r: 16, fill: C.panel, fo: 0.85 });
+  s += text(256, 165, 'Incident Management', { size: 24, weight: 700, fill: '#FFFFFF' }) + text(256 + textWidth('Incident Management', 24, 700) + 10, 165, '(24)', { size: 24, weight: 700, fill: '#7D8490' });
+  s += pill(F, 256 + textWidth('Incident Management (24)', 24, 700) + 30, 149, (o.closed ? 4 : 5) + ' Open', C.open, { h: 24 }).svg;
+  s += rect(1070, 135, 155, 38, { r: 6, fill: '#282828', stroke: C.t3 }) + text(1080, 160, 'Location', { size: 16, fill: '#FFFFFF' }) + poly([[1200, 151], [1210, 151], [1205, 157]], { fill: C.t2 });
+  s += rect(1225, 135, 200, 38, { r: 6, fill: '#282828', stroke: C.t3 }) + icon(F, 'search', 1234, 145, 18, C.t2, 2);
+  s += rect(1438, 135, 106, 38, { r: 6, fill: C.tabOn }) + icon(F, 'search', 1452, 145, 18, '#FFFFFF', 2) + text(1478, 160, 'Search', { size: 16, weight: 700, fill: '#FFFFFF' });
+  s += text(60, 232, 'All', { size: 18, weight: 500, fill: C.link }) + text(97, 232, 'Open', { size: 18, fill: C.t2 }) + text(153, 232, 'Closed', { size: 18, fill: C.t2 });
+  s += rect(603, 206, 106, 40, { r: 6, fill: C.tabOn }) + icon(F, 'download', 619, 216, 18, '#FFFFFF', 2.2) + text(648, 232, 'Export', { size: 16, weight: 700, fill: '#FFFFFF' });
+  s += rect(718.5, 206.5, 125, 39, { r: 6, stroke: C.t3 }) + text(733, 232, 'Filter (0)', { size: 16, weight: 700, fill: '#FFFFFF' }) + icon(F, 'filter', 812, 216, 18, '#FFFFFF', 2);
+  // table: PER-005 on top (selected)
+  s += rect(40, 254, 804, 42, { fill: '#262A31' });
+  COLS.forEach(([c, x]) => { s += text(x, 281, c, { size: 14, weight: 500, fill: '#FFFFFF' }); });
+  [PER005(o.closed), ...OTHERS].forEach(([st, sev, loc, dt, code, by, dev], i) => {
+    const y = 296 + i * 56;
+    let r = '';
+    if (i === 0) r += rect(40, y, 804, 56, { fill: '#3A3F47' });
+    r += pill(F, 52, y + 16, st, st === 'Open' ? C.open : C.closed, { h: 25, r: 7.5, pad: 20 }).svg;
+    r += pill(F, 137, y + 18, sev, SEVC[sev], { h: 21, r: 6, pad: 16 }).svg;
+    r += text(257, y + 33, loc.length > 16 ? loc.slice(0, 14) + '…' : loc, { size: 14, fill: '#FFFFFF' }) + text(377, y + 33, dt, { size: 12, fill: '#FFFFFF' }) + text(497, y + 33, code, { size: 14, fill: '#FFFFFF' });
+    if (by) r += text(617, y + 26, by[0], { size: 14, weight: code === 'PER-005' ? 500 : 400, fill: code === 'PER-005' && !o.closed ? C.warn : '#FFFFFF' }) + text(617, y + 42, by[1], { size: 12, fill: C.t2 }); else r += text(617, y + 33, '-', { size: 14, fill: '#FFFFFF' });
+    r += text(737, y + 33, dev, { size: 14, fill: '#FFFFFF' });
+    r += line(40, y + 56, 844, y + 56, { stroke: '#3A3F47' });
+    s += g(F, 'Row ' + code, r);
+    if (code === 'PER-005') mark(o.closed ? 'imClosedRow' : 'imRow', [40, y, 804, 56]);
+  });
+  // pagination (V11)
+  const py = 828;
+  s += rect(393, py - 15, 105, 30, { r: 15, fill: '#FFFFFF' }) + text(403, py + 5, '10 / page', { size: 13, weight: 500, fill: '#111111' }) + poly([[478, py - 3], [488, py - 3], [483, py + 3]], { fill: '#111111' });
+  s += text(526, py + 5, '←', { size: 16, fill: '#FFFFFF' });
+  [1, 2, 3].forEach((n, i) => { s += circle(567 + i * 35, py, 10, { fill: i ? '#FFFFFF' : '#1D232C', stroke: '#FFFFFF' }) + text(567 + i * 35, py + 4.5, String(n), { size: 12, weight: 700, fill: i ? '#111111' : '#FFFFFF', anchor: 'middle' }); });
+  s += text(670, py + 5, '→', { size: 16, fill: '#FFFFFF' }) + text(703, py + 5, 'Go to page', { size: 13, weight: 700, fill: '#FFFFFF' }) + rect(790, py - 14, 28, 28, { r: 6, fill: '#FFFFFF' }) + text(804, py + 5, '1', { size: 13, weight: 700, fill: '#111111', anchor: 'middle' }) + text(828, py + 5, 'Go ›', { size: 13, weight: 700, fill: C.link });
+  // detail pane (V11): name / ID / code, title, date pill, description, two camera tiles, Remarks / SOP Flow, Close Incident
+  const dx = 860, dy = 198, dw = 700, dh = 831;
+  const clip = F.clip(`<rect x="${dx}" y="${dy}" width="${dw}" height="${dh}" rx="0"/>`);
+  let d = rect(dx, dy, dw, dh, { fill: C.body, fo: 0.8 }) + rect(dx, dy, dw, 4, { fill: o.closed ? C.closed : C.crit });
+  d += rich(876, 228, [{ t: 'Name: ', fill: C.t2 }, { t: 'AGILFENCE · SECTOR 5 · SEG 5-14', fill: C.t1 }], { size: 16 }) + rich(1210, 228, [{ t: 'ID: ', fill: C.t2 }, { t: 'AGF-5-14', fill: C.t1 }], { size: 16 }) + rich(1375, 228, [{ t: 'Code: ', fill: C.t2 }, { t: 'PER-005', fill: C.t1 }], { size: 16 });
+  d += text(876, 258, 'Fence Sector 5', { size: 20, weight: 500, fill: C.t1 });
+  d += pill(F, 1440, 242, 'Today, 02:14:58', '#4F545E', { h: 20, size: 13 }).svg;
+  d += rich(876, 286, [{ t: 'Raised from alarm ', fill: C.t2 }, { t: 'AGF-5-14', fill: '#FFFFFF', weight: 500 }, { t: ' · history since ', fill: C.t2 }, { t: '02:14:58', fill: '#FFFFFF', weight: 500 }, { t: ' · owner ', fill: C.t2 }, { t: OWNER, fill: '#FFFFFF', weight: 500 }], { size: 16 });
+  d += rich(876, 308, [{ t: 'Handed to Airport Police ', fill: C.t2 }, { t: '02:26:30', fill: '#FFFFFF', weight: 500 }, { t: ' · submitted for sign-off ', fill: C.t2 }, { t: '02:43:50', fill: '#FFFFFF', weight: 500 }], { size: 16 });
+  d += camTile(F, 876, 333, 330, 200, { href: cctv('fence_ptz_clean'), label: 'PTZ 7-02 · clip 02:14:58–02:16:40', focus: [0.5, 0.42], box: box('fence_ptz', 'person'), boxCol: C.crit, chips: [['Sealed', '#3A404B']] });
+  d += camTile(F, 1214, 333, 330, 200, { href: cctv('fence_handover_clean'), label: 'PTZ 7-03 · clip 02:16:42–02:26:30', focus: [0.5, 0.56], box: box('fence_handover', 'person'), boxCol: C.crit, chips: [['Sealed', '#3A404B']] });
+  d += rect(876, TAB_Y, 334, 40, { fill: C.tabBody }) + rect(1210, TAB_Y, 334, 40, { fill: '#2E333B' }) + text(1043, TAB_Y + 27, 'Remarks', { size: 18, weight: 700, fill: '#FFFFFF', anchor: 'middle' }) + text(1377, TAB_Y + 27, 'SOP Flow', { size: 18, weight: 700, fill: '#8E95A1', anchor: 'middle' });
+  d += rect(876, BODY_Y, 668, BODY_H, { fill: C.tabBody });
+  // Remarks: the incident inherits the alarm's history; the latest entries, newest last (V11 order)
+  const ents = [
+    { who: 'System', time: '02:16:42', col: '#2E8BFF', text: 'PTZ 7-02 video lost 02:16:40 · PTZ 7-03 took over 02:16:42 · LiDAR T-07 tracking', size: 14, italic: true },
+    { who: 'Arjun (radio)', time: '02:26:30', col: '#2E8BFF', text: 'Handed to police · custody record AP-12', size: 15, lh: 22 },
+    { who: OWNER, time: '02:43:50', col: '#2E8BFF', text: 'Submitted for sign-off · 6 of 6 items · SOP-PER-02 steps 1–6 complete · 02:43:30', size: 15, lh: 22 },
+  ];
+  const tl = timeline(F, 892, 602, 636, ents, { gap: 10 });
+  d += tl.svg;
+  const h0 = timeline(new Frame('m'), 892, 602, 636, [ents[0]], { gap: 10 }).h;
+  mark('invHandover', [884, 598, 652, h0 - 2]);
+  d += remarksBox(F, 892, 828, 636, { h: 40 });
+  if (o.closed) {
+    const lab = 'Closed 02:44:20 · signed off by Daniel L. · badge + PIN', tw = textWidth(lab, 20, 700), x0 = 1214 - (tw + 32) / 2;
+    d += g(F, 'Closed bar', rect(884, 965, 660, 44, { r: 8, fill: '#2F6B2F' }) + icon(F, 'check', x0, 976, 22, '#FFFFFF', 2.4) + text(x0 + 32, 994, lab, { size: 20, weight: 700, fill: '#FFFFFF' }));
+    mark('closedBar', [884, 965, 660, 44]);
+  } else {
+    d += g(F, 'Button Close Incident', rect(884, 965, 660, 44, { r: 8, fill: C.blue }) + text(1214, 994, 'Close Incident', { size: 20, weight: 700, fill: '#FFFFFF', anchor: 'middle' }));
+    mark('closeIncidentBtn', [884, 965, 660, 44]);
+  }
+  s += g(F, 'Incident detail', `<g clip-path="${clip}">${d}</g>`);
+  mark('imDetail', [dx, dy, dw, dh]);
+  if (o.after) s += o.after(F);
+  return F.render(s);
+}
+// Close Incident → sign dialog (V11 dialog idiom): evidence list, badge + PIN, Sign and close
+function signDialog(F, o = {}) {
+  const x = 475, y = 214, w = 650;
+  const rows = [
+    ['Handed to police', 'Custody record AP-12 · Airport Police', '02:26:30'],
+    ['Runway 02L restored', 'Tower log · ATC supervisor Tan', '02:31:10'],
+    ['Area secured', 'Sector 5 sweep · Patrol 2', '02:38:40'],
+    ['Fence 5-14 made safe', 'FM-90412 · mesh bent, no cut · guard posted', '02:40:15'],
+    ['SOP-PER-02 steps 1–6 complete', 'Checked by Nurul A.', '02:43:30'],
+    ['Evidence sealed', '3 clips · fence trace · LiDAR track', '02:43:40'],
+  ];
+  const rh = 46, h = 36 + 116 + 34 + rows.length * rh + 30 + 34 + 52 + 34 + 52;
+  const clip = F.clip(`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="16"/>`);
+  let m = `<g clip-path="${clip}">${rect(x, y, w, h, { fill: '#333A47' }) + rect(x, y, w, 36, { fill: '#191E25' })}</g>`;
+  m += text(x + 16, y + 23, 'Close Incident', { size: 16, weight: 700, fill: '#FFFFFF' }) + icon(F, 'x', x + w - 37, y + 8, 20, '#FFFFFF', 2.2);
+  m += eventHead(F, x + 16, y + 68, w - 32 - 24, { time: '02:14:58', id: 'AGF-5-14', code: 'PER-005', title: 'Fence Sector 5', badge: 'Critical', lines: [['Submitted by ', { b: OWNER }, ' · ', { b: '02:43:50' }, ' · intruder handed to Airport Police']] });
+  let yy = y + 152;
+  m += line(x + 16, yy, x + w - 16, yy, { stroke: '#6B7280' });
+  yy += 34;
+  m += text(x + 24, yy, 'Evidence · 6 of 6 complete', { size: 18, fill: '#FFFFFF' });
+  yy += 12;
+  rows.forEach(([t, src, tm]) => {
+    m += rect(x + 24, yy, w - 48, rh - 6, { r: 6, fill: '#282828', stroke: '#3D3D3D' });
+    m += circle(x + 44, yy + 20, 9, { fill: C.green }) + icon(F, 'check', x + 37.5, yy + 13.5, 13, '#FFFFFF', 3);
+    m += text(x + 62, yy + 17, t, { size: 15, weight: 500, fill: '#FFFFFF' }) + text(x + 62, yy + 34, src, { size: 13, fill: C.t2 });
+    m += text(x + w - 36, yy + 25, tm, { size: 14, weight: 500, fill: C.t1, anchor: 'end' });
+    yy += rh;
+  });
+  mark('signEvidence', [x + 24, yy - rows.length * rh, w - 48, rows.length * rh]);
+  yy += 30;
+  m += text(x + 24, yy, 'Sign with badge + PIN', { size: 18, fill: '#FFFFFF' }) + text(x + 24 + textWidth('Sign with badge + PIN', 18), yy, '*', { size: 18, fill: C.crit }) + text(x + w - 24, yy, 'Signed in as Daniel L. · Duty manager', { size: 13.5, fill: C.t2, anchor: 'end' });
+  yy += 12;
+  const fw = (w - 48 - 12) / 2;
+  m += rect(x + 24, yy, fw, 40, { r: 6, fill: '#282828', stroke: C.t3 }) + icon(F, 'idcard', x + 34, yy + 10, 20, C.t2, 1.8) + text(x + 62, yy + 26, 'Badge  DL-••••17', { size: 16, fill: '#FFFFFF' });
+  m += rect(x + 36 + fw, yy, fw, 40, { r: 6, fill: '#282828', stroke: C.t3 }) + icon(F, 'key', x + 46 + fw, yy + 10, 20, C.t2, 1.8) + text(x + 74 + fw, yy + 26, 'PIN  ••••••', { size: 16, fill: '#FFFFFF' });
+  mark('badgePin', [x + 24, yy, w - 48, 40]);
+  yy += 52;
+  m += icon(F, 'lock', x + 24, yy + 2, 15, C.t2, 2) + text(x + 46, yy + 14, 'Signing closes the incident and locks the audit record.', { size: 13.5, fill: C.t2 });
+  yy += 34;
+  m += rect(x + 16.5, yy + 0.5, 139, 43, { r: 7.5, stroke: '#8B8B8B' }) + text(x + 86, yy + 29, 'Cancel', { size: 20, weight: 700, fill: C.t3, anchor: 'middle' });
+  const bx = x + 165, bw = w - 181;
+  m += g(F, 'Button Sign and close', rect(bx, yy, bw, 44, { r: 8, fill: C.blue }) + icon(F, 'lock', bx + bw / 2 - textWidth('Sign and close', 20, 700) / 2 - 16, yy + 12, 20, '#FFFFFF', 2) + text(bx + bw / 2 + 12, yy + 29, 'Sign and close', { size: 20, weight: 700, fill: '#FFFFFF', anchor: 'middle' }));
+  if (o.state) m += btnState(F, bx, yy, bw, 44, o.state);
+  mark('signBtn', [bx, yy, bw, 44]);
+  mark('signDialog', [x, y, w, h]);
+  if (yy + 44 + 16 > y + h) console.warn(`[${CUR}] sign dialog content overflows`, yy + 60 - y - h);
+  return rect(0, 0, IW, H, { fill: '#000000', fo: 0.67 }) + g(F, 'Close Incident dialog', m);
+}
+function s12() {
+  return imPage('AV-S12 · Duty manager · Incident Management · PER-005 pending sign-off', { closed: false });
+}
+function s13() {
+  return imPage('AV-S13 · Duty manager · Close Incident · sign with badge + PIN · Sign and close', {
+    closed: false,
+    after: F => btnState(F, 884, 965, 660, 44, 'pressed') + signDialog(F, { state: 'pressed' }),
+  });
+}
+function s14() {
+  return imPage('AV-S14 · Duty manager · PER-005 closed · Daniel L. · 02:44:20', {
+    closed: true,
+    after: F => {
+      mark('closedToast', [60, 930, 600, 70]);
+      return confirmToast(F, 60, 930, 'PER-005 closed · signed by Daniel L. · 02:44:20', 'Badge + PIN · audit record locked · removed from Real Time Alerts', { w: 600 });
     },
   });
 }
 
 export const FRAMES = [
   ['AV-S1-quiet', s1],
-  ['AV-S2-alarm-view-auto', s2],
-  ['AV-S3-verification', s3],
-  ['AV-S4-confirm-click', s4],
-  ['AV-S5-incident-response-lanes', s5],
-  ['AV-S6-dispatch-click', s6],
-  ['AV-S7-response-running-ptz-handover', s7],
-  ['AV-S8-on-scene-outcomes', s8],
-  ['AV-S9-closure-checklist-submit', s9],
-  ['AV-S10a-signoff-dialog', s10a],
-  ['AV-S10b-closed', s10b],
-  ['AV-S10c-operator-quiet', s10c],
-  ['AV-A1-authorised-work-found', a1],
-  ['AV-A2-resolved-authorised', a2],
+  ['AV-S2-auto-open-investigation', s2],
+  ['AV-S3-sop-tab-click', s3],
+  ['AV-S4-verify-step', s4],
+  ['AV-S5-confirm-click', s5],
+  ['AV-S6-incident-raised-dispatch', s6],
+  ['AV-S7-dispatch-click', s7],
+  ['AV-S8-police-tower-running', s8],
+  ['AV-S9-ptz-handover', s9],
+  ['AV-S10-contained-handed-over', s10],
+  ['AV-S10b-investigation-radio', s10b],
+  ['AV-S11-close-step-submit', s11],
+  ['AV-S11b-pending-signoff', s11b],
+  ['AV-S12-im-pending-signoff', s12],
+  ['AV-S13-im-sign-dialog', s13],
+  ['AV-S14-im-closed', s14],
+  ['AV-S15-operator-closed', s15],
+  ['AV-A1-permit-found', a1],
+  ['AV-A1b-authorised-click', a1b],
+  ['AV-A2-cleared-authorised', a2],
 ];

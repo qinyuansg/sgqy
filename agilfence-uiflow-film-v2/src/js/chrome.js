@@ -4,22 +4,26 @@
 (function () {
   'use strict';
   const S = E.S, B = window.BEATS;
-  // the scenario clock steps through the states of the flow (never behind the latest time on screen);
-  // AV-S8 already shows the hand-over to police (02:26:30), so the clock steps there at its crossfade
+  // the scenario clock steps through the states of the flow (never behind the latest time on screen):
+  // AV-S2 already lists the checks up to 02:15:06, AV-S8 the police response at 02:16:05, AV-S10 the hand-over
+  // to police at 02:26:30 and AV-S11 the evidence sealed at 02:43:40, so the clock steps there at their crossfades
   const CLOCK = [
-    [S('quiet').start, '02:14:50'], [S('alarm').start, '02:14:59'], [S('verify').start, '02:15:20'], [B.c1, '02:15:24'],
-    [S('response').start, '02:15:26'], [B.c2, '02:15:30'], [S('running').start, '02:16:42'], [S('outcomes').start, '02:26:30'],
-    [S('closure').start, '02:43:50'], [S('signoff').start, '02:44:14'], [B.dm + 0.15, '02:44:20'],
-    [S('alt').start, '01:21:05'], [B.a1, '01:22:10'],
+    [S('quiet').start, '02:14:50'], [S('alarm').start, '02:14:58'], [S('alarm').start + 2.0, '02:15:06'], [B.c1, '02:15:20'],
+    [B.c2, '02:15:24'], [B.raised, '02:15:25'], [B.c3, '02:15:30'], [S('running').start, '02:16:05'],
+    [S('handover').start, '02:16:42'], [S('outcomes').start, '02:26:30'], [S('closure').start, '02:43:40'], [B.c4, '02:43:50'],
+    [B.dm1, '02:44:14'], [B.dm2 + 0.15, '02:44:20'],
+    [S('alt').start, '01:20:45'], [B.a1, '01:21:05'], [B.a2, '01:22:10'],
   ];
   const clockAt = t => {
     let txt = CLOCK[0][1];
     for (const [tc, s] of CLOCK) if (t >= tc) txt = s;
     return txt;
   };
-  // operator clicks: three on the main path; the alternative path counts again from zero (one click)
-  const opClicks = t => (t >= S('card').start ? (t >= B.a1 ? 1 : 0) : [B.c1, B.c2, B.c3].filter(c => t >= c).length);
-  const lastClick = t => [B.c1, B.c2, B.c3, B.a1].filter(c => t >= c).pop();
+  // operator clicks: four on the main path (SOP Flow tab · Confirm intrusion · Dispatch · Submit for sign-off; the
+  // duty manager's clicks do not count); the alternative path counts again from zero (SOP Flow tab · Authorised activity)
+  const MAIN = [B.c1, B.c2, B.c3, B.c4], ALT = [B.a1, B.a2];
+  const opClicks = t => (t >= S('card').start ? ALT : MAIN).filter(c => t >= c).length;
+  const lastClick = t => [...MAIN, ...ALT].filter(c => t >= c).pop();
   let chip, clk, cnt, cntN, slate, card, endSlate, black;
 
   (E.initHooks = E.initHooks || []).push(stage => {

@@ -105,11 +105,14 @@ def main():
 
     mix = vo_st + mus + sfx
     # −4 dBTP ceiling leaves a dB for AAC overshoot: the encoded deliverables must measure ≤ −3 dBTP
-    # (tools/truepeak.sh re-measures each MP4 after encoding and trims the gain if one is over)
+    # (tools/truepeak.sh re-measures each MP4 after encoding and trims the gain if one is over).
+    # A cut whose encodes overshoot more sets a lower ceiling in its timeline ("mix": {"ceiling": dBTP}), so the
+    # encodes stay under −3 dBTP without a gain trim and land at −14 LUFS.
+    ceil = float((tl.get("mix") or {}).get("ceiling", -4.0))
     mix = gain_to(mix, -14.0)
-    mix = limiter(mix, -4.0)
+    mix = limiter(mix, ceil)
     mix = gain_to(mix, -14.0)
-    mix = limiter(mix, -4.0)
+    mix = limiter(mix, ceil)
     sf.write(os.path.join(BUILD, "mix.wav"), mix.astype(np.float32), SR, subtype="PCM_24")
     tp = 20 * np.log10(np.abs(resample_poly(mix, 4, 1, axis=0)).max() + 1e-12)
     print(f"mix: {lufs(mix):.1f} LUFS integrated, true peak {tp:.2f} dBTP, {n/SR:.2f}s, voice: {'yes' if have_vo else 'none'}")

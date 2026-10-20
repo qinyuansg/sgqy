@@ -99,8 +99,9 @@ export function clayAirport(F, P, o = {}) {
     const n = Math.floor((py2 - py1) / 4.2);
     for (let i = 0; i < n; i++) {
       const yy = py1 + 2.2 + i * 4.2;
-      if ((i + t.id.length + px1) % 3 !== 1) ac += plane(P, px1 - 2.4, yy, Math.PI / 2, 0.95);
-      if ((i + px2) % 3 !== 0) ac += plane(P, px2 + 2.4, yy, -Math.PI / 2, 0.95);
+      // o.cullX: skip objects that project fully left of this screen x (they would show through a side panel)
+      if ((i + t.id.length + px1) % 3 !== 1 && !(o.cullX && P(px1 - 2.4, yy)[0] < o.cullX - 30)) ac += plane(P, px1 - 2.4, yy, Math.PI / 2, 0.95);
+      if ((i + px2) % 3 !== 0 && !(o.cullX && P(px2 + 2.4, yy)[0] < o.cullX - 30)) ac += plane(P, px2 + 2.4, yy, -Math.PI / 2, 0.95);
     }
   }
   s += g(F, 'Aircraft', ac);
@@ -112,13 +113,15 @@ export function clayAirport(F, P, o = {}) {
   s += g(F, 'AGIL Fence', fe);
   // buildings (painter's order)
   const blds = [];
+  const mx = (x1, y1, x2, y2, z) => Math.max(...[[x1, y1], [x2, y1], [x2, y2], [x1, y2]].flatMap(([X, Y]) => [P(X, Y, 0)[0], P(X, Y, z)[0]]));
   for (const t of TERMINALS) {
     const fl = Math.round(t.h / 0.62);
-    blds.push({ d: P.depth((t.x1 + t.x2) / 2, (t.y1 + t.y2) / 2), svg: () => clayBox(F, P, 'Terminal ' + t.id, t.x1, t.y1, t.x2, t.y2, fl) });
-    t.piers.forEach(([a, b, c, d], i) => blds.push({ d: P.depth((a + b) / 2, (c + d) / 2), svg: () => clayBox(F, P, `Pier ${t.id}-${i + 1}`, a, c, b, d, 2) }));
+    blds.push({ d: P.depth((t.x1 + t.x2) / 2, (t.y1 + t.y2) / 2), maxX: mx(t.x1, t.y1, t.x2, t.y2, t.h), svg: () => clayBox(F, P, 'Terminal ' + t.id, t.x1, t.y1, t.x2, t.y2, fl) });
+    t.piers.forEach(([a, b, c, d], i) => blds.push({ d: P.depth((a + b) / 2, (c + d) / 2), maxX: mx(a, c, b, d, 1.3), svg: () => clayBox(F, P, `Pier ${t.id}-${i + 1}`, a, c, b, d, 2) }));
   }
-  blds.push({ d: P.depth(41, 18), svg: () => clayBox(F, P, 'Control tower', 40.2, 17.2, 41.8, 18.8, 12) + clayBox(F, P, 'Tower cab', 39.6, 16.6, 42.4, 19.4, 2, { z0: 12 * 0.62 }) });
-  for (const [a, b, c, d, nm] of [[2.5, 7.5, 14, 18.5, 'Cargo 1'], [2.5, 7.5, 20, 24.5, 'Cargo 2'], [2.5, 7.5, 27, 31, 'Cargo 3']]) blds.push({ d: P.depth((a + b) / 2, (c + d) / 2), svg: () => clayBox(F, P, nm, a, c, b, d, 2) });
+  blds.push({ d: P.depth(41, 18), maxX: mx(39.6, 16.6, 42.4, 19.4, 8.7), svg: () => clayBox(F, P, 'Control tower', 40.2, 17.2, 41.8, 18.8, 12) + clayBox(F, P, 'Tower cab', 39.6, 16.6, 42.4, 19.4, 2, { z0: 12 * 0.62 }) });
+  for (const [a, b, c, d, nm] of [[2.5, 7.5, 14, 18.5, 'Cargo 1'], [2.5, 7.5, 20, 24.5, 'Cargo 2'], [2.5, 7.5, 27, 31, 'Cargo 3']]) blds.push({ d: P.depth((a + b) / 2, (c + d) / 2), maxX: mx(a, c, b, d, 1.3), svg: () => clayBox(F, P, nm, a, c, b, d, 2) });
+  if (o.cullX) for (let i = blds.length - 1; i >= 0; i--) if (blds[i].maxX < o.cullX) blds.splice(i, 1);
   blds.sort((a, b) => a.d - b.d);
   s += g(F, 'Buildings', blds.map(b => b.svg()).join(''));
   // terminal labels

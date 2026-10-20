@@ -28,9 +28,9 @@
 
   // the scenario clock steps through the states of the flow (never behind the latest time on screen)
   const CLOCK = [
-    [S('alarm').start, '02:14:50'], [B.alarm, '02:14:59'], [S('verify').start, '02:15:20'], [B.c1, '02:15:24'],
-    [B.lanes, '02:15:26'], [B.c2, '02:15:30'], [B.running, '02:16:42'], [B.outcomes, '02:26:30'],
-    [S('closure').start, '02:43:50'], [S('signoff').start, '02:44:14'], [B.dm + 0.15, '02:44:20'],
+    [S('alarm').start, '02:14:50'], [B.alarm, '02:15:06'], [S('respond').start, '02:15:20'], [B.c1, '02:15:25'],
+    [B.c2, '02:15:30'], [B.running, '02:16:05'], [B.handover, '02:16:42'], [B.outcomes, '02:26:30'],
+    [S('closure').start, '02:43:40'], [B.c3, '02:43:50'], [B.close, '02:44:14'], [B.dm + 0.12, '02:44:20'],
   ];
   const clockAt = t => { let s = CLOCK[0][1]; for (const [tc, v] of CLOCK) if (t >= tc) s = v; return s; };
   // chapters 3–5: the chip rides with each console (off over the chapter cards)

@@ -1,15 +1,18 @@
-/* Cut B · Highlight chrome: 1.0 s of black, the product line (it stays over the first moments of the quiet console),
-   the small scenario clock chip (top right, the only thing drawn over the product UI; no click counter), the end card
+/* Cut B · Highlight chrome: 1.0 s of black, the product line (it has faded before the quiet console enters),
+   the small scenario clock chip (top right, the only chrome over the product UI; no click counter), the end card
    with the three-line message (the first line rises during the last shot's fade) and the illustrative line, and the
    fade to black. */
 (function () {
   'use strict';
   const S = E.S, B = window.BEATS;
-  // the scenario clock steps with the shots (never behind the latest time on screen)
+  // the scenario clock steps with the shots; it holds 02:14:59 while the alarm card drops in ('Now') and steps to
+  // 02:15:06 (the authorised-activity check) when the camera leaves the card for the PTZ 7-02 player
   const CLOCK = [
-    [S('quiet').start - 0.3, '02:14:50'], [S('fence').start, '02:14:58'], [S('alarm').start, '02:14:59'], [S('verify').start, '02:15:20'], [B.c1, '02:15:24'],
-    [S('lanes').start, '02:15:26'], [B.c2, '02:15:30'], [S('running').start, '02:16:42'], [S('outcomes').start, '02:26:30'],
-    [S('closure').start, '02:43:50'], [S('closed').start, '02:44:20'],
+    [S('quiet').start - 0.3, '02:14:50'], [S('fence').start, '02:14:58'], [S('alarm').start, '02:14:59'], [B.ptz, '02:15:06'],
+    [B.tab, '02:15:20'], [B.c1, '02:15:24'], [B.c1 + 0.15, '02:15:25'], [B.c2, '02:15:30'],
+    [B.ticks, '02:15:38'], [B.ticks + 0.5, '02:15:52'], [B.ticks + 1.0, '02:16:05'],
+    [S('handover').start, '02:16:42'], [S('handed').start, '02:26:30'], [S('evidence').start, '02:43:40'], [B.submit, '02:43:50'],
+    [B.sign, '02:44:20'],
   ];
   const clockAt = t => { let txt = CLOCK[0][1]; for (const [tc, s] of CLOCK) if (t >= tc) txt = s; return txt; };
   let chip, clk, open, product, endCard, black;
@@ -53,10 +56,10 @@
   };
 
   E.after.push(t => {
-    // 1.0 s of black, then the night background comes up under the product line; the line holds over the
-    // first moments of the quiet console
+    // 1.0 s of black, then the night background comes up under the product line; the line has faded out before
+    // the quiet console enters, so no text sits over the product UI
     E.vis(open, 1 - E.ep(t, 0.9, 2.0, 'sine'));
-    slateK(product, t, [1.0], S('quiet').start + 0.1);
+    slateK(product, t, [1.0], S('quiet').start + 0.1);   // gone before the first shot enters (quiet.start + 0.1)
     // the clock chip: on with the console, off before the end card
     const on = Math.min(E.ep(t, S('quiet').start + 0.5, S('quiet').start + 1.0), 1 - E.ep(t, S('closed').end - 0.6, S('closed').end - 0.1, 'in'));
     E.txt(clk, clockAt(t));

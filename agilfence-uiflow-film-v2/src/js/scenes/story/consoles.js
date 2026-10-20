@@ -1,45 +1,83 @@
-/* Cut C (story), chapters 3–5 on the AGIL Secure V11 console (real AV frames, 1400×1069, DEMO_CLEAN):
-   3 Shows who is there        AV-S1 quiet → AV-S2 the alarm view opens itself, hero push on the live climber → AV-S3 corroboration
-   4 Coordinates the response  Confirm intrusion → AV-S4 → AV-S5 straight onto Patrol → Dispatch Patrol 2 → AV-S6 → a short dip →
-                               AV-S7 tower decision → PTZ 7-02 → 7-03 hand-over → AV-S8 patrol and police with the person live
-   5 Closes with evidence      AV-S9 six evidence items, Submit for sign-off → AV-S10a the duty manager's authenticated
-                               sign-off (badge + PIN), Sign and close → AV-S10b closed, audit record locked
-   One console device per chapter (the chapter cards sit between them); a camera that pushes in, a pointer for the clicks. */
+/* Cut C (story), chapters 3–5 on the V11-faithful AGIL Secure V11 console (real AV frames, 1400×1069, the Incident
+   Management frames 1600×1069; DEMO_CLEAN, 2x):
+   3 Shows who is there        AV-S1 quiet (1 Critical) → the AgilFence alarm card drops in at the top of the left Real
+                               Time Alerts list (the rows below slide down one card, 2 Critical) as the Active Alarms panel,
+                               the nearest cameras and the PTZ 7-02 live player in the viewer open themselves (AV-S2, no
+                               pointer); in on the card, then the hero push onto the climber on the viewer player; the three
+                               tiles; the Investigation tab: 3 alarms linked · one track (T-07) · Health OK, then the
+                               authorised-activity check · 4 of 4 sources Clear
+   4 Coordinates the response  the pointer clicks the SOP Flow tab (AV-S3) → step 1 Verify the alarm, Confirm intrusion
+                               (AV-S4 hover, AV-S5 pressed) → AV-S6 Confirmed · Nurul A. · 02:15:24 (a look across at the left
+                               list card, now Incident PER-005), step 2 Dispatch Patrol 2, Dispatch (AV-S7) → AV-S8 police chain and tower decision → AV-S9 PTZ 7-03 took over on the
+                               viewer player → AV-S10 handed to police on the viewer player, step 6 outcomes
+   5 Closes with evidence      AV-S11 step 7, six evidence items, Submit for sign-off → the duty manager's Incident Management
+                               (scan reveal, AV-S12 PER-005 Pending sign-off), Close Incident → AV-S13 the dialog (6 of 6,
+                               badge + PIN), Sign and close → AV-S14 PER-005 Closed · Daniel L., pull back to the whole console
+   One console device per chapter (the chapter cards sit between them); a camera that pushes in, a pointer for the clicks
+   on real V11 controls (the tab, the SOP action buttons, Close Incident, the dialog button). */
 (function () {
   'use strict';
   const S = E.S;
   const A = (f, k) => window.ANCH[f][k];
   const mid = r => [r[0] + r[2] / 2, r[1] + r[3] / 2];
   const DW = 1360, DX = 280, DY = 21;
+  const FW = 1400, FH = 1069;
+  const ZMAX = 2.9;     // the frames are 2x: 2.9 is about 1.4x upsampling at the tightest push
+  const RED = '#FF5A5F';
   const F = {
-    s1: 'AV-S1-quiet', s2: 'AV-S2-alarm-view-auto', s3: 'AV-S3-verification', s4: 'AV-S4-confirm-click',
-    s5: 'AV-S5-incident-response-lanes', s6: 'AV-S6-dispatch-click', s7: 'AV-S7-response-running-ptz-handover',
-    s8: 'AV-S8-on-scene-outcomes', s9: 'AV-S9-closure-checklist-submit', s10a: 'AV-S10a-signoff-dialog', s10b: 'AV-S10b-closed',
+    s1: 'AV-S1-quiet', s2: 'AV-S2-auto-open-investigation', s3: 'AV-S3-sop-tab-click', s4: 'AV-S4-verify-step',
+    s5: 'AV-S5-confirm-click', s6: 'AV-S6-incident-raised-dispatch', s7: 'AV-S7-dispatch-click',
+    s8: 'AV-S8-police-tower-running', s9: 'AV-S9-ptz-handover', s10: 'AV-S10-contained-handed-over',
+    s11: 'AV-S11-close-step-submit', s12: 'AV-S12-im-pending-signoff', s13: 'AV-S13-im-sign-dialog', s14: 'AV-S14-im-closed',
   };
   const P = (f, k, dx = 0, dy = 0) => { const [x, y] = mid(A(F[f], k)); return [x + dx, y + dy]; };
+  // a framing by centre and zoom (frame px); WIDE is the whole screen
+  const Z = (cx, cy, z) => { const w = FW / z, h = FH / z; return [cx - w / 2, cy - h / 2, w, h]; };
   const WIDE = null;
-  const HERO = [396, 346.5, 484, 300];          // the live tile with its replay strip (as in the operator cut)
-  const SUBMIT = [910, 417, 440, 465];          // the gate rule, the sign-off lines, Submit for sign-off
+  const VIEWER = A(F.s2, 'viewerPlayer');      // the PTZ live player floating in the 3D viewer
+  const HERO = Z(VIEWER[0] + VIEWER[2] / 2, VIEWER[1] + VIEWER[3] / 2 - 2, 2.66);
 
   const B = (window.BEATS = {
-    alarm: S('alarm').start + 1.4,                // AV-S2: the alarm view opens itself
-    c1: S('respond').start + 2.2,                 // Confirm intrusion        (operator)
-    lanes: S('respond').start + 3.5,              // AV-S5: incident raised, the lanes (a short dip, then straight onto Patrol)
-    c2: S('respond').start + 5.6,                 // Dispatch Patrol 2        (operator)
-    running: S('respond').start + 6.6,            // AV-S7: tower decision (a short dip between the two lane states)
-    exception: S('respond').start + 8.0,          // the camera lands on the PTZ 7-02 → 7-03 banner
-    outcomes: S('respond').start + 10.0,          // AV-S8: on scene
-    c3: S('closure').end - 0.2,                   // Submit for sign-off      (operator)
-    dm: S('signoff').start + 3.9,                 // Sign and close           (duty manager, his own console)
+    alarm: S('alarm').start + 1.4,                // AV-S2: the card drops in at the top of the list, the alarm view opens itself
+    tab: S('respond').start + 1.3,                // SOP Flow tab             (operator)
+    c1: S('respond').start + 3.4,                 // Confirm intrusion        (operator)
+    c2: S('respond').start + 5.9,                 // Dispatch Patrol 2        (operator)
+    running: S('respond').start + 6.1,            // AV-S8: police chain, tower decision
+    handover: S('respond').start + 9.0,           // AV-S9: PTZ 7-02 video lost, PTZ 7-03 took over
+    outcomes: S('respond').start + 11.2,          // AV-S10: handed to police
+    c3: S('signoff').start - 0.35,                // Submit for sign-off      (operator)
+    im: S('signoff').start,                       // the duty manager's Incident Management (scan reveal)
+    close: S('signoff').start + 2.0,              // Close Incident           (duty manager)
+    dm: S('signoff').start + 4.5,                 // Sign and close           (duty manager)
   });
+
+  // a layer in frame px that moves with the camera (overlays drawn on the V11 frame)
+  const layer = (c, z = 3) => E.add(c.dev, `<div class="abs" style="left:0;top:0;width:${FW}px;height:${FH}px;z-index:${z};pointer-events:none;transform-origin:0 0;visibility:hidden"></div>`);
+  const sync = (c, el, vis) => E.css(el, { visibility: vis ? 'visible' : 'hidden',
+    transform: `translate3d(${c.cam.ox.toFixed(2)}px,${c.cam.oy.toFixed(2)}px,0) scale(${c.cam.k.toFixed(5)})` });
+  // a window onto a frame: box r (frame px), showing frame src at its own position
+  const crop = (parent, src, r) => {
+    const box = E.add(parent, `<div class="abs" style="left:${r[0]}px;top:${r[1]}px;width:${r[2]}px;height:${r[3]}px;overflow:hidden"></div>`);
+    const img = E.add(box, `<img src="assets/af/${src}.png" style="position:absolute;left:${-r[0]}px;top:${-r[1]}px;width:${FW}px;max-width:none">`);
+    return { box, img };
+  };
+  // a pulsing ring around a box (frame px)
+  const ring = (parent, r, pad = 3) => E.add(parent, `<div class="abs" style="left:${r[0] - pad}px;top:${r[1] - pad}px;width:${r[2] + 2 * pad}px;height:${r[3] + 2 * pad}px;border-radius:6px;border:2.5px solid ${RED};box-shadow:0 0 16px 3px rgba(255,90,95,.55),inset 0 0 14px rgba(255,90,95,.2);opacity:0"></div>`);
+  const pulse = (t, t0, t1) => E.env(t, t0, t1, 0.25) * (0.7 + 0.3 * Math.cos((t - t0) * Math.PI * 2));
 
   function consoleScene(id, start, end, def) {
     E.scene({
       id, start, end, inDur: 0.6, outDur: 0.6,
       build(el, s) {
         const c = (s.con = K.console(el, { x: DX, y: DY, w: DW }));
+        c.zmax = ZMAX;
         def.frames.forEach(f => c.frame(f));
         c.plan = { screens: def.screens, shots: def.shots };
+        // soft dark edges on the device when the camera is in close (slivers of the next panel fade out);
+        // they replace the kit's one-sided edge fades, which would darken the viewer player at a tight push
+        s.vig = E.add(c.dev, '<div class="abs" style="inset:0;z-index:3;pointer-events:none;opacity:0;background:' +
+          'linear-gradient(180deg,#05070D 0,rgba(5,7,13,0) 40px,rgba(5,7,13,0) calc(100% - 48px),#05070D 100%),' +
+          'linear-gradient(90deg,#05070D 0,rgba(5,7,13,0) 60px,rgba(5,7,13,0) calc(100% - 60px),#05070D 100%)"></div>');
         s.path = def.path; s.clicks = def.clicks; s.wins = def.wins;
         s.cur = K.cursor(c);
         if (def.build) def.build(c, s);
@@ -51,142 +89,162 @@
         E.css(c.root, { transform: `perspective(2400px) translate3d(${E.f3(50 * (1 - kin) - 30 * kout)}px,0,0) rotateY(${E.f3(-7 * (1 - kin) + 4 * kout)}deg) scale(${E.f3(0.96 + 0.04 * kin)})`, opacity: E.f3(kin * (1 - kout)) });
         K.bracketsIn(c.brk, E.ep(t, s.start + 0.5, s.start + 1.2) * (1 - kout));
         K.consoleUpdate(c, t);
-        // the side columns are narrower than the kit's edge fades expect: widen them when zoomed in close
-        const fcx = (c.VW / 2 - c.cam.ox) / c.cam.k, kl = E.clamp((c.cam.z - 1.9) / 0.4) * E.clamp((fcx - 1000) / 80);
-        E.css(c.edge, { width: (190 + 110 * kl).toFixed(1) + 'px', background: `linear-gradient(90deg,#05070D ${(42 + 38 * kl).toFixed(1)}%,rgba(5,7,13,0))` });
-        const kr = E.clamp((c.cam.z - 1.9) / 0.4) * E.clamp((760 - fcx) / 80);
-        E.css(c.edgeR, { width: (190 - 40 * kr).toFixed(1) + 'px', background: `linear-gradient(270deg,#05070D ${(42 + 40 * kr).toFixed(1)}%,rgba(5,7,13,0))` });
+        E.css(c.edge, { opacity: '0' }); E.css(c.edgeR, { opacity: '0' }); E.css(c.edgeT, { opacity: '0' });
+        E.css(s.vig, { opacity: E.f3(E.clamp((c.cam.z - 1.5) / 0.5)) });
         if (def.update) def.update(t, c, s);
         let vis = 0;
         for (const [a, b] of s.wins) vis = Math.max(vis, E.env(t, a, b, 0.25));
-        K.cursorUpdate(c, s.cur, t, s.path, s.clicks, vis);
+        if (s.path.length) K.cursorUpdate(c, s.cur, t, s.path, s.clicks, vis);
+        else E.css(s.cur.c, { visibility: 'hidden' });
       },
     });
   }
-  const seg = (t0, from, t1, to, tc) => [[t0, ...from], [t1, ...to], [tc + 0.5, ...to]];
 
   // ================= chapter 3 · Shows who is there =================
   {
-    const q = S('alarm').start, al = B.alarm, v = S('verify').start;
-    consoleScene('con3', q, S('verify').end, {
-      frames: [F.s1, F.s2, F.s3],
-      screens: [[q, F.s1], [al, F.s2, { fade: 0.6 }], [v, F.s3, { fade: 0.5 }]],
+    const q = S('alarm').start, al = B.alarm, v = S('verify').start, ve = S('verify').end;
+    const CARD = A(F.s2, 'fenceCard'), LIST = [40, 296, 336, 449], PANEL = [892, 118, 476, 920], SH = CARD[3];
+    const PILLS = [92, 130, 232, 28];   // the severity counter (1 Critical → 2 Critical)
+    const i1 = al + 0.75;   // the overlays hand over to AV-S2
+    consoleScene('con3', q, ve, {
+      frames: [F.s1, F.s2],
+      screens: [[q, F.s1], [al, F.s2, { fade: 0.45 }]],
       shots: [
-        [q, WIDE, 0.1],
-        [al + 1.2, HERO, 2.0],                        // hero: PTZ 7-02 live on preset 5-14, the person climbing
-        [al + 6.3, [330, 570, 640, 470], 1.4],        // pull back: the pre-alarm replay strip and the map inset
-        [v - 0.5, [900, 120, 470, 920], 1.0],         // the right panel switches to Verification
-        [v + 0.6, [920, 335, 420, 220], 1.3],         // corroboration: one track, three sensors, health OK
-        [v + 3.0, [920, 560, 420, 240], 1.3],         // the authorised-activity check: four sources, all Clear
+        [q, Z(700, 534, 1.0), 0.1],
+        [q + 0.2, Z(700, 528, 1.05), al - q - 0.2],    // a slow drift over the quiet console (1 Critical); the whole
+                                                       // Active Alarms panel and the header stay in frame as it opens
+        [al + 0.85, Z(362, 352, 1.95), 1.0],           // the alarm card at the top of Real Time Alerts (2 Critical) and
+                                                       // the nearest cameras: PTZ 7-02 live · on target
+        [al + 3.0, HERO, 1.4],                         // hero: PTZ 7-02 live in the viewer, the person climbing
+        [al + 4.5, Z(638, 740, 2.76), 2.4],            //   a slow push while it plays
+        [v - 0.4, Z(1140, 360, 2.58), 1.0],            // the event head (Fence Sector 5 · Now) over the three tiles:
+                                                       //   PTZ 7-02 live, CAM 7-11 replay, LiDAR L-5B T-07
+        [v + 1.3, Z(1130, 668, 2.8), 0.9],             // Investigation: 3 alarms linked · one track (T-07) · Health OK
+        [v + 3.2, Z(1130, 830, 2.6), 0.9],             // the authorised-activity check · 4 of 4 sources Clear, Remarks and
+                                                       //   the Clear · Escalate · Acknowledge footer fully in
       ],
-      path: [[q, 1200, 700]], clicks: [], wins: [],
+      path: [], clicks: [], wins: [],
       build(c, s) {
-        s.toastL = E.add(c.dev, `<div class="scr" style="visibility:hidden;width:1400px;z-index:3"><img src="assets/af/${F.s2}.png" style="width:1400px"></div>`);
-        s.flash = E.add(c.dev, '<div class="abs" style="inset:0;z-index:4;background:radial-gradient(900px 600px at 50% 40%, rgba(215,45,48,.36), rgba(215,45,48,0));opacity:0"></div>');
+        s.ov = layer(c);
+        // the panel region of S1 under the opening panel, then the S2 panel sliding in from the right
+        s.pS1 = crop(s.ov, F.s1, PANEL);
+        s.pS2 = crop(s.ov, F.s2, PANEL);
+        // the list: S1's rows slide down one card while the S2 card slides in at the top
+        s.list = E.add(s.ov, `<div class="abs" style="left:${LIST[0]}px;top:${LIST[1]}px;width:${LIST[2]}px;height:${LIST[3]}px;overflow:hidden;background:#191E25"></div>`);
+        s.rows = E.add(s.list, `<div class="abs" style="left:0;top:0;width:${LIST[2]}px;height:${LIST[3]}px;overflow:hidden"><img src="assets/af/${F.s1}.png" style="position:absolute;left:${-LIST[0]}px;top:${-LIST[1]}px;width:${FW}px;max-width:none"></div>`);
+        s.card = crop(s.list, F.s2, CARD);
+        E.css(s.card.box, { left: '0px', top: '0px' });
+        E.css(s.card.img, { left: -CARD[0] + 'px', top: -CARD[1] + 'px' });
+        s.ring = ring(s.ov, CARD);
+        // S1's counter (1 Critical) holds over the crossfading screen until the card lands, then gives way to 2 Critical
+        s.pills = crop(s.ov, F.s1, PILLS);
+        s.flash = E.add(c.dev, '<div class="abs" style="inset:0;z-index:4;background:radial-gradient(760px 560px at 22% 34%, rgba(215,45,48,.34), rgba(215,45,48,0));opacity:0"></div>');
       },
       update(t, c, s) {
-        const on = t >= al && t < al + 1.3;
-        if (on) {
-          const k = E.ep(t, al, al + 0.8, 'out5'), rr = A(F.s2, 'alarmToast'), p = 10;
-          const tr = `translate3d(${c.cam.ox.toFixed(2)}px,${c.cam.oy.toFixed(2)}px,0) scale(${c.cam.k.toFixed(5)}) translate(${E.f3((1 - k) * 480)}px,0)`;
-          E.css(s.toastL, { visibility: 'visible', opacity: E.f3(Math.min(1, k * 3)), transform: tr, clipPath: `inset(${rr[1] - p}px ${1400 - rr[0] - rr[2] - p}px ${1069 - rr[1] - rr[3] - p}px ${rr[0] - p}px)` });
-        } else E.css(s.toastL, { visibility: 'hidden' });
-        E.css(s.flash, { opacity: E.f3(t > al ? (0.5 + 0.5 * Math.cos((t - al) * 9)) * (1 - E.ep(t, al, al + 1.8)) * 0.7 : 0) });
-        // the hero push sweeps the top edge through the incident-progress banner: soften that edge while it moves
-        E.css(c.edgeT, { opacity: E.f3(Math.min(E.ep(t, al + 1.25, al + 1.6), 1 - E.ep(t, al + 2.7, al + 3.2))) });
+        const on = t >= al - 0.05 && t < i1 + 0.05;
+        sync(c, s.ov, true);
+        const kl = E.ep(t, al, al + 0.55, 'inOut'), kc = E.ep(t, al + 0.15, al + 0.65, 'out'), kp = E.ep(t, al, al + 0.6, 'out');
+        E.css(s.list, { visibility: on ? 'visible' : 'hidden' });
+        E.css(s.rows, { transform: `translate3d(0,${E.f3(SH * kl)}px,0)` });
+        E.css(s.card.box, { opacity: E.f3(Math.min(1, kc * 2)), transform: `translate3d(${E.f3(-CARD[2] * 0.6 * (1 - kc))}px,0,0)` });
+        E.css(s.pS1.box, { visibility: on ? 'visible' : 'hidden', opacity: E.f3(1 - E.p(t, al + 0.45, al + 0.6)) });
+        E.css(s.pS2.box, { visibility: on ? 'visible' : 'hidden', opacity: E.f3(Math.min(1, kp * 1.6)), transform: `translate3d(${E.f3(120 * (1 - kp))}px,0,0)` });
+        E.css(s.ring, { opacity: E.f3(pulse(t, al + 0.6, al + 3.1)) });
+        E.css(s.pills.box, { visibility: on ? 'visible' : 'hidden', opacity: E.f3(1 - E.ep(t, al + 0.42, al + 0.56)) });
+        E.css(s.flash, { opacity: E.f3(t > al ? (0.5 + 0.5 * Math.cos((t - al) * 9)) * (1 - E.ep(t, al, al + 1.6)) * 0.75 : 0) });
       },
       cues(s) {
         E.cue(q + 0.1, 'whoosh', 0.4);
-        E.cue(al, 'alert', 0.75); E.cue(al + 0.9, 'alert', 0.5); E.cue(al + 0.05, 'impactSoft', 0.35); E.cue(al + 1.9, 'notify', 0.32);
-        E.cue(v, 'switch', 0.3, { dur: 0.55 });
-        E.cue(v + 3.3, 'blip', 0.25);                 // checks complete
+        E.cue(al, 'alert', 0.75); E.cue(al + 0.75, 'alert', 0.5); E.cue(al + 0.03, 'impactSoft', 0.35);
+        E.cue(al + 0.5, 'pop', 0.28);                 // the card lands at the top of the list
+        E.cue(al + 1.0, 'blip', 0.22);
+        E.cue(al + 3.0, 'whoosh', 0.26); E.cue(al + 3.9, 'notify', 0.3);   // the live player: the person climbing
+        E.cue(v - 0.35, 'whoosh', 0.22);
+        E.cue(v + 1.4, 'blip', 0.22);                 // one track, health OK
+        E.cue(v + 3.4, 'blip', 0.25);                 // checks complete: 4 of 4 Clear
       },
     });
   }
 
   // ================= chapter 4 · Coordinates the response =================
   {
-    const r = S('respond').start;
-    const tg = { confirm: P('s3', 'confirmBtn', 10, 2), dispatch: P('s5', 'dispatchBtn', 8, 2) };
-    consoleScene('con4', r, S('respond').end, {
-      frames: [F.s3, F.s4, F.s5, F.s6, F.s7, F.s8],
+    const r = S('respond').start, re = S('respond').end;
+    const TAB = P('s2', 'tabSop', 6, 4), CF = P('s3', 'confirmBtn', 10, 3), DB = P('s6', 'dispatchBtn', 6, 3);
+    consoleScene('con4', r, re, {
+      frames: [F.s2, F.s3, F.s4, F.s5, F.s6, F.s7, F.s8, F.s9, F.s10],
       screens: [
-        [r, F.s3], [B.c1 + 0.1, F.s4, { fade: 0.2 }], [B.lanes, F.s5, { fade: 0.03 }], [B.c2 + 0.1, F.s6, { fade: 0.2 }],
-        [B.running, F.s7, { fade: 0.03 }], [B.outcomes, F.s8, { fade: 0.6 }],   // AV-S7 swaps in under the dip
+        [r, F.s2], [B.tab + 0.05, F.s3, { fade: 0.15 }], [B.c1 - 0.9, F.s4, { fade: 0.3 }], [B.c1 - 0.05, F.s5, { fade: 0.06 }],
+        [B.c1 + 0.15, F.s6, { fade: 0.25 }], [B.c2 - 0.05, F.s7, { fade: 0.06 }], [B.c2 + 0.2, F.s8, { fade: 0.35 }],
+        [B.handover, F.s9, { fade: 0.45 }], [B.outcomes, F.s10, { fade: 0.5 }],
       ],
       shots: [
-        [r, [900, 330, 460, 700], 0.1],               // the decision bar under the verification
-        [B.c1 + 0.3, [910, 840, 440, 170], 0.8],      // Recorded · Visually confirmed · Nurul A. (owner) · 02:15:24
-        [B.lanes - 0.03, [905, 340, 450, 455], 0.06], // under the dip: incident raised, straight onto Patrol
-        [B.lanes + 0.1, [900, 329, 460, 465], 1.4],   //   and a slow push to Dispatch Patrol 2
-        [B.running - 0.03, [910, 547, 440, 464], 0.06],   // under the dip: police chain + tower decision (Runway 02L arrivals held)
-        [B.running + 0.1, [915, 560, 430, 440], 1.3], //   and a slow push on it
-        [B.exception, HERO, 1.2],                     // the live tile: PTZ 7-02 video lost · PTZ 7-03 took over
-        [B.outcomes + 0.6, [420, 330, 460, 330], 1.3],   // AV-S8: patrol and police with the person on the live tile
+        [r, Z(1140, 640, 2.6), 0.1],                    // the tabs: Investigation · SOP Flow
+        [B.tab + 0.25, Z(1130, 690, 2.85), 0.8],       // step 1 Verify the alarm: Confirm intrusion · Authorised activity · False alarm
+        [B.c1 + 0.3, Z(1130, 700, 2.75), 0.6],         // Confirmed · Nurul A. · 02:15:24; step 2 Dispatch Patrol 2
+        [B.c1 + 1.05, Z(362, 352, 1.95), 0.55],        // a look across: the left list card now reads Incident PER-005 ·
+        [B.c1 + 1.85, Z(1130, 700, 2.75), 0.5],        //   AgilFence 5-14 · climb; back on step 2 before Dispatch
+        [B.c2 + 0.3, Z(1130, 776, 2.72), 0.8],         // police chain (acknowledged, responding) + tower (Runway 02L arrivals held)
+        [B.c2 + 1.2, Z(1130, 780, 2.8), B.handover - B.c2 - 1.6],
+        [B.handover - 0.35, HERO, 1.0],                // the viewer player: PTZ 7-03 · took over 02:16:42, still on the person
+        [B.handover + 0.8, Z(638, 736, 2.74), 1.4],
+        [B.outcomes + 0.2, Z(638, 744, 2.7), 2.0],     // patrol and police with the person: Handed to police · AP-12
       ],
-      path: [
-        ...seg(r + 0.9, [1190, 700], r + 2.2, tg.confirm, B.c1),
-        ...seg(B.c2 - 1.5, [1210, 690], B.c2 - 0.35, tg.dispatch, B.c2),
-      ],
-      clicks: [B.c1, B.c2],
-      wins: [[r + 0.7, B.c1 + 0.8], [B.c2 - 1.7, B.c2 + 0.7]],
+      path: [[r + 0.6, 1210, 760], [B.tab - 0.12, ...TAB], [B.tab + 0.55, ...TAB], [B.c1 - 0.55, ...CF], [B.c1 + 0.9, ...CF],
+        [B.c2 - 0.15, ...DB], [re, ...DB]],
+      clicks: [B.tab, B.c1, B.c2],
+      wins: [[r + 0.55, B.c2 + 0.75]],
       build(c, s) {
-        // a short dip where the right panel changes state (AV-S4 → AV-S5 lanes, AV-S6 → AV-S7): their text panels do
-        // not line up, so no crossfade of one over the other
-        s.dip = E.add(c.dev, '<div class="abs" style="inset:0;z-index:4;background:#05070D;opacity:0"></div>');
+        s.ov = layer(c);
+        s.ring = ring(s.ov, A(F.s6, 'fenceCard'));
       },
       update(t, c, s) {
-        let k = 0;
-        for (const d of [B.lanes, B.running]) k = Math.max(k, t < d ? E.ep(t, d - 0.2, d, 'in') : 1 - E.ep(t, d + 0.04, d + 0.34, 'out'));
-        E.css(s.dip, { opacity: E.f3(k) });
+        sync(c, s.ov, t > B.c1 + 0.9 && t < B.c1 + 2.4);
+        E.css(s.ring, { opacity: E.f3(pulse(t, B.c1 + 1.35, B.c1 + 2.0)) });
       },
       cues(s) {
         E.cue(r + 0.1, 'whoosh', 0.35);
         s.clicks.forEach(t => E.cue(t, 'click', 0.8));
-        E.cue(B.c1 + 0.12, 'confirm', 0.5);           // decision recorded
-        E.cue(B.lanes + 0.05, 'notify', 0.5);         // incident raised, lanes open
-        E.cue(B.c2 + 0.12, 'confirm', 0.5);           // dispatch recorded
-        E.cue(B.running + 0.05, 'notify', 0.4);       // acknowledged: police, duty manager, tower
-        E.cue(B.exception + 0.9, 'alertSoft', 0.4);   // PTZ 7-02 lost, PTZ 7-03 took over
-        E.cue(B.outcomes + 0.05, 'notify', 0.45);     // on scene
+        E.cue(B.tab + 0.05, 'switch', 0.22);          // the SOP Flow tab
+        E.cue(B.c1 + 0.15, 'confirm', 0.5);           // decision recorded, incident raised
+        E.cue(B.c1 + 0.35, 'notify', 0.42);
+        E.cue(B.c1 + 1.05, 'whoosh', 0.2); E.cue(B.c1 + 1.5, 'blip', 0.2);   // the list card: Incident PER-005
+        E.cue(B.c1 + 1.85, 'whoosh', 0.18);
+        E.cue(B.c2 + 0.12, 'confirm', 0.45);          // dispatch recorded
+        E.cue(B.running + 0.5, 'notify', 0.36);       // acknowledged: police, duty manager, tower
+        E.cue(B.handover + 0.05, 'alertSoft', 0.4);   // PTZ 7-02 lost, PTZ 7-03 took over
+        E.cue(B.outcomes + 0.05, 'notify', 0.45);     // handed to police
       },
     });
   }
 
   // ================= chapter 5 · Closes with evidence =================
   {
-    const cl = S('closure').start, so = S('signoff').start;
-    const tg = { submit: P('s9', 'submitBtn', 12, 2), sign: P('s10a', 'signBtn', 14, 2) };
-    const tB = B.dm + 0.15;   // the closed state
-    consoleScene('con5', cl, S('signoff').end, {
-      frames: [F.s9, F.s10a, F.s10b],
-      screens: [[cl, F.s9], [so + 0.1, F.s10a], [tB, F.s10b, { fade: 0.35 }]],   // the duty manager's own console: a scan reveal
+    const cl = S('closure').start, end = S('signoff').end;
+    const SB = P('s11', 'submitBtn', 8, 3), CB = P('s12', 'closeIncidentBtn', 40, 4), SG = P('s13', 'signBtn', 20, 4);
+    const tB = B.dm + 0.12;   // the closed state
+    consoleScene('con5', cl, end, {
+      frames: [F.s11, F.s12, F.s13, F.s14],
+      screens: [[cl, F.s11], [B.im, F.s12], [B.close + 0.1, F.s13, { fade: 0.25 }], [tB, F.s14, { fade: 0.3 }]],   // the duty manager's own console: a scan reveal
       shots: [
-        [cl, [920, 282, 420, 485], 0.1],              // six evidence items with source and time
-        [cl + 2.4, SUBMIT, 1.2],                      // the gate rule, the sign-off lines, Submit for sign-off
-        [so - 0.1, [370, 140, 660, 580], 1.0],        // the duty manager's console: the sign-off dialog
-        [so + 1.4, [390, 252, 620, 473], 1.2],        // six items, badge + PIN, Sign and close
-        [tB + 0.15, WIDE, 1.1],                       // pull back to the whole console: every stage ticked, PER-005 closed
-                                                      // (a pull-back, not a pan: no tile header passes the top edge)
+        [cl, Z(1130, 806, 2.62), 0.1],                 // step 7: closing is blocked until every item is complete; six items
+        [cl + 1.9, Z(1130, 836, 2.72), 1.3],           //   down to Submit for sign-off
+        [B.im, Z(445, 382, 1.74), 0.01],               // Incident Management (a cut under the scan reveal): PER-005 · Pending
+        [B.im + 0.1, Z(452, 378, 1.8), 1.5],          //   sign-off · Nurul A. 02:43:50
+        [B.close - 0.85, Z(1214, 880, 2.0), 0.65],     // the remarks (submitted for sign-off · 6 of 6) and Close Incident
+        [B.close + 0.15, Z(800, 546, 1.6), 0.75],      // the Close Incident dialog: evidence 6 of 6, badge + PIN
+        [tB + 0.15, WIDE, 1.1],                        // pull back: PER-005 Closed · Daniel L., closed 02:44:20
       ],
-      path: [
-        ...seg(cl + 3.1, [1230, 870], cl + 4.4, tg.submit, B.c3),
-        ...seg(so + 2.4, [900, 560], so + 3.55, tg.sign, B.dm),
-      ],
-      clicks: [B.c3, B.dm],
-      wins: [[cl + 2.9, B.c3 + 0.6], [so + 2.2, B.dm + 0.6]],
-      update(t, c) {
-        // the dialog would be darkened at the edges by the kit's edge fades
-        if (t >= so && t < tB) { E.css(c.edge, { opacity: '0' }); E.css(c.edgeR, { opacity: '0' }); }
-        // the pull-back to the whole console reveals the incident-progress panel through the top edge: soften it
-        if (t >= tB) E.css(c.edgeT, { opacity: E.f3(Math.min(E.ep(t, tB + 0.1, tB + 0.3), 1 - E.ep(t, tB + 0.9, tB + 1.25))) });
-      },
+      path: [[B.c3 - 1.15, 1240, 860], [B.c3 - 0.15, ...SB], [B.c3 + 0.5, ...SB],
+        [B.close - 0.95, 1300, 760], [B.close - 0.12, ...CB], [B.close + 0.9, ...CB], [B.dm - 0.2, ...SG], [end, ...SG]],
+      clicks: [B.c3, B.close, B.dm],
+      wins: [[B.c3 - 1.2, B.c3 + 0.3], [B.close - 1.0, B.dm + 0.7]],
       cues(s) {
         E.cue(cl + 0.1, 'whoosh', 0.35); E.cue(cl + 0.3, 'switch', 0.25, { dur: 0.55 });
         s.clicks.forEach(t => E.cue(t, 'click', 0.8));
-        E.cue(B.c3 + 0.12, 'confirm', 0.45);                                   // submitted
-        E.cue(so + 0.05, 'whoosh', 0.35); E.cue(so + 0.3, 'pop', 0.3);         // the duty manager's console, the dialog
-        E.cue(tB + 0.05, 'confirm', 0.5); E.cue(tB + 0.3, 'success', 0.5);     // signed off, closed
+        E.cue(B.c3 + 0.12, 'confirm', 0.45);                                  // submitted
+        E.cue(B.im + 0.05, 'whoosh', 0.3);                                    // the duty manager's console
+        E.cue(B.close + 0.1, 'pop', 0.3);                                     // the dialog
+        E.cue(B.dm + 0.1, 'confirm', 0.45); E.cue(tB + 0.2, 'success', 0.5); // signed off, closed
       },
     });
   }

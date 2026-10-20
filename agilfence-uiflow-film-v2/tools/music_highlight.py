@@ -4,12 +4,15 @@ Section map (the picture cuts on the timeline's windows, read from S):
   0–1.0       black: a riser into the first downbeat (the product line)
   1.0–fence   product line, quiet console: dark D-minor pad, a soft arpeggio, no drums
   fence–alarm the fence feels the climb: a low hit, the pad carries on, a riser into the alarm
-  alarm–lanes the alarm view opens itself (impact on the downbeat), hero push, verification, Confirm intrusion:
-              minor progression one chord a bar, held bass then halves, kick on 1 and 3
-  lanes–closure  lanes, Dispatch, tower decision and hand-over, on scene: the full groove (bass quarters, kick,
-              offbeat hats, a light clap on 2 and 4, a brighter arpeggio)
-  closure–closed evidence checklist: the lift (Bbmaj7 → Asus) and a riser into the close
-  closed–end  signed and closed: D major on the downbeat, bells
+  alarm–dispatch the alarm card drops into the list and the alarm view opens itself (impact on the downbeat), hero
+              push on the climber, investigation, SOP Flow, Confirm intrusion: minor progression one chord a bar, held
+              bass then halves, kick on 1 and 3
+  dispatch–evidence  incident raised, Dispatch, police and tower items ticking, PTZ hand-over, handed to police: the full
+              groove (bass quarters, kick, offbeat hats, a light clap on 2 and 4, a brighter arpeggio)
+  evidence–im evidence step, Submit for sign-off: the lift (Bbmaj7 → Asus)
+  im–closed   Incident Management, Close Incident, the sign-off dialog: a lighter pulse (Gm9 → Asus), a riser into
+              Sign and close
+  closed–end  Sign and close (on the bar line), closed: D major on the downbeat, bells
   end–        end card: Dadd9 rings out, fade
 Called by tools/music.py as score(M, total, scenes, cues) with M = the music module (shared instruments).
 """
@@ -24,7 +27,7 @@ def score(M, total, S, cues):
     s = lambda k: S[k]["start"]
     buf = np.zeros((int((total + 3) * SR), 2))
     t1 = 1.0                                   # the first downbeat (the product line)
-    a0, ln, cl, cd, en = s("alarm"), s("lanes"), s("closure"), s("closed"), s("end")
+    a0, ln, cl, im, cd, en = s("alarm"), s("dispatch"), s("evidence"), s("im"), s("closed"), s("end")
     fn = s("fence")
 
     # black: a riser and a low swell into the first downbeat
@@ -47,9 +50,12 @@ def score(M, total, S, cues):
     for j in range(int((cl - ln) / BEAT + 1e-6)):
         if j % 2 == 1:
             add(buf, ln + j * BEAT, M.clap(), 0.07, pan=0.1)
-    # evidence: the lift, a riser into the close
-    sec(buf, cl, cd, ["Bbmaj7", "Asus"], 1, pad_fc=2300, pad_g=0.38, bass_mode="halves", bass_g=0.17,
+    # evidence: the lift
+    sec(buf, cl, im, ["Bbmaj7", "Asus"], 1, pad_fc=2300, pad_g=0.38, bass_mode="halves", bass_g=0.17,
         arp_g=0.09, kick_mode="half", kick_g=0.24, hat_mode="off", hat_g=0.04)
+    # Incident Management, the duty manager's sign-off: a lighter pulse, a riser into Sign and close
+    sec(buf, im, cd, ["Gm9", "Asus"], 1, pad_fc=2000, pad_g=0.38, bass_mode="halves", bass_g=0.15,
+        arp_g=0.07, kick_mode="one", kick_g=0.2, hat_mode="off", hat_g=0.03)
     add(buf, cd - BAR / 2, M.riser(BAR / 2, 250, 3800), 0.13)
     # signed and closed: D major on the downbeat, bells; a lighter pulse
     add(buf, cd, M.kick(1.0), 0.42)

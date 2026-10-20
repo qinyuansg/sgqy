@@ -267,18 +267,19 @@ def score(total, S):
     add(buf, 0.0, drone, 0.15)
     # the alarm view opens itself: a lift, a slow pulse, a held bass; the riser lands on the tone
     add(buf, a0 - 1.0, riser(1.0, 160, 2400), 0.12)
-    section(buf, a0, e("verify"), ["Dm9", "Bbmaj7"], 2, pad_fc=1500, pad_g=0.34, bass_mode="hold", bass_g=0.15,
+    # (the investigation and the SOP step 1 decision hold the same slow pulse, up to Confirm intrusion)
+    section(buf, a0, e("decide"), ["Dm9", "Bbmaj7"], 2, pad_fc=1500, pad_g=0.34, bass_mode="hold", bass_g=0.15,
             kick_mode="one", kick_g=0.18, drums_from=a0 + 0.6)
-    # confirmed, incident raised, three lanes, dispatch: the arpeggio comes in, the pulse stays slow
-    section(buf, s("confirmed"), s("running"), ["Gm9", "Asus", "Dm9", "Bbmaj7"], 2, pad_fc=1800, pad_g=0.34, bass_mode="halves",
+    # incident raised, the SOP steps, dispatch: the arpeggio comes in, the pulse stays slow
+    section(buf, s("raised"), s("running"), ["Gm9", "Asus", "Dm9", "Bbmaj7"], 2, pad_fc=1800, pad_g=0.34, bass_mode="halves",
             bass_g=0.17, arp_g=0.08, kick_mode="one", kick_g=0.2, hat_mode="off", hat_g=0.03)
-    # response running, exception, on scene, outcomes: steady and confident, still minor
+    # response running, PTZ hand-over, contained and handed to police: steady and confident, still minor
     section(buf, s("running"), s("closure"), ["Dm9", "Fmaj7", "Gm9", "Asus"], 2, pad_fc=2000, pad_g=0.36, bass_mode="quarters",
             bass_g=0.16, arp_g=0.09, kick_mode="half", kick_g=0.2, hat_mode="off", hat_g=0.035)
     # the closure checklist: lighter, the pulse eases
     section(buf, s("closure"), s("signoff"), ["Bbmaj7", "Fmaj7", "Gm9", "Asus"], 2, pad_fc=2200, pad_g=0.36, bass_mode="halves",
             bass_g=0.15, arp_g=0.07, kick_mode="one", kick_g=0.16)
-    # the duty manager's sign-off: IV - V - I into D major on the success cue, ringing under the closed state
+    # the duty manager's Close Incident and sign-off: IV - V - I into D major on the success cue, ringing under the closed state
     o0 = s("signoff")
     tres = first("success", o0, e("signoff"))
     add(buf, o0, pad(CH["Gmaj7"], (tres - o0) / 2 + 0.3, fc=2000), 0.4)
