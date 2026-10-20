@@ -97,3 +97,24 @@ Clock chip (scenario time) · operator-clicks counter (0 → 3) · opening slate
 3. Which actions are pre-authorised for Critical, which need approval, and what happens when the approver is unavailable?
 4. What evidence proves resolution: containment, police handover, area sweep, runway restoration, fence made safe?
 5. What stops premature closure or signing on someone else's behalf (evidence gate, authenticated sign-off, locked audit)?
+
+## 7. V11 fidelity (supersedes the layout in §3 — product owner, 20 Oct)
+
+The flow must live inside the **original V11 screens**; no invented tabs, rails or header parts.
+
+| v2 concept | Where it lives in V11 |
+|---|---|
+| Alarm view opens itself | The **Active Alarms panel opens automatically** on the Critical fence alarm (event head, the **three camera tiles**: PTZ 7-02 live big, CAM 7-11 pre-alarm replay, LiDAR L-5B), and the **3D viewer Locates automatically** to segment 5-14 with the nearest-cameras list and the PTZ 7-02 live player floating in the viewer (the AF-04/AF-05 pattern). |
+| Verification (corroboration, authorised-activity check) | **Investigation tab** (default tab): *System* entries — "3 alarms linked · one track" with time, sensor and *Health OK* per row; "Authorised-activity check" with its sources (permit-to-work, patrol roster, gate access, maintenance) and Clear / Found / Unknown. |
+| Decision: Confirm intrusion / Authorised activity / False alarm | **SOP Flow tab**, step 1 *Verify the alarm* as a **Critical Action** step with those three buttons (the V11 critical-step style with action buttons). |
+| Incident raised from the alarm | On confirm: toast "Incident PER-005 raised from alarm AGF-5-14 · history inherited"; the header's **Incident Management** button shows "1 new". |
+| Response lanes | **SOP Flow steps**: 2 *Dispatch Patrol 2* (Critical Action, Dispatch / Choose another, tag "Pre-authorised · SOP-PER-02 §3.1"); 3 *Airport Police* with checklist items requested → contacted → acknowledged (Sgt. Lim) → responding (AP-12) → on scene, tag "Pre-authorised §3.2"; 4 *Tower / aviation safety* items notified → ATC decision "Runway 02L arrivals held · ATC supervisor Tan" → restriction active → restored, tag "Authority: ATC"; 5 *Keep target in view* (Auto); each item with its time. Duty manager informed/acknowledged as an item. |
+| Exception | Camera tile 1 shows "PTZ 7-02 · video lost 02:16:40" and swaps to **PTZ 7-03**; Investigation gets a *System* entry "PTZ 7-02 video lost · PTZ 7-03 took over 02:16:42 · LiDAR T-07 tracking". |
+| Outcomes | SOP step 6 *Contain and hand over* items: contained 02:18:08 → intercepted 02:19:30 → detained 02:20:05 → police on scene 02:24:10 → handed to police 02:26:30; patrol radio entries (*Arjun (radio)*) in the Investigation timeline. |
+| Evidence-gated close | SOP step 7 *Secure, close and report*: the six evidence items as checked items with sources, the rule "Closing is blocked until every item is complete", Critical Action **Submit for sign-off**. |
+| Authenticated sign-off | The duty manager's **Incident Management page** (V11 1600-wide page): PER-005 row "Pending sign-off", detail pane with **Remarks / SOP Flow** tabs (V11), **Close Incident** → sign dialog (evidence list, badge + PIN) → row *Closed · Daniel L.*. |
+| Alternative path | Investigation shows "Permit-to-work PTW-2231 · Found"; SOP step 1 **Authorised activity** → alarm cleared with reason, "no incident raised". |
+
+Header, Real Time Alerts, Device Status and footer buttons stay exactly as V11 (`lib/v11.mjs`); the search placeholder reads "Search…".
+The lockdown-status pill and user chip are dropped to stay true to V11 (kept as proposals in §2).
+**Operator clicks: 4** — SOP Flow tab · Confirm intrusion · Dispatch Patrol 2 · Submit for sign-off (v1: 11). Duty manager: Close Incident + Sign and close on his own Incident Management page.
