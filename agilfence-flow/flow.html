@@ -1,0 +1,845 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AgilFence Operator Flow</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#000;overflow:hidden;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;color:#e8edf4;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;border:0;background:none}
+#fit{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;overflow:hidden;
+  background:radial-gradient(ellipse at 58% 48%,#0c1428 0%,#060a15 55%,#020309 100%)}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0}
+#fade{position:absolute;inset:0;background:#000;pointer-events:none;z-index:50}
+
+/* ---------- map ---------- */
+#map{position:absolute;left:0;top:0;width:1920px;height:1080px}
+#vignette{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 62% 58% at 58% 52%,rgba(3,5,12,0) 45%,rgba(3,5,12,.88) 100%)}
+#pins{position:absolute;left:0;top:0;width:0;height:0}
+.pin{position:absolute;left:0;top:0;width:0;height:0;will-change:transform}
+.stem{position:absolute;left:-1px;width:2px}
+.ico{position:absolute;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.lab{position:absolute;white-space:nowrap;font-size:13px;font-weight:500;padding:5px 10px;border-radius:6px;background:rgba(10,14,22,.92)}
+.tlabel{position:absolute;font-size:11px;font-weight:600;color:#e9eef6;transform:translate(-50%,-50%);text-shadow:0 1px 2px #000}
+.seg{position:absolute;white-space:nowrap;font-size:12px;font-weight:600;color:#9cc3ff;transform:translate(-50%,-50%);text-shadow:0 1px 3px #000}
+
+/* ---------- chrome ---------- */
+.glass{position:absolute;background:rgba(27,33,45,.95);border:1px solid rgba(255,255,255,.06);border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,.55)}
+#top{position:absolute;left:0;top:0;width:1920px;height:96px}
+#logo{position:absolute;left:46px;top:24px}
+#lock{position:absolute;left:122px;top:26px;height:44px;padding:0 20px;border-radius:6px;background:#c8352b;font-weight:600;font-size:17px;display:flex;align-items:center;gap:9px;box-shadow:0 0 0 1px rgba(255,255,255,.08) inset}
+#crumbs{position:absolute;left:470px;top:28px;height:40px;width:200px;background:#1d222b;border-radius:6px 0 0 6px;display:flex;align-items:center;gap:7px;padding:0 12px;font-size:14px;font-weight:500;color:#dfe5ee}
+#crumbs i{color:#7c8594;font-style:normal}
+#search{position:absolute;left:670px;top:28px;height:40px;width:680px;background:#2a2f38;border-radius:0 6px 6px 0;display:flex;align-items:center;gap:10px;padding:0 14px;font-size:14px;color:#8e97a5}
+#btnIM{position:absolute;left:1372px;top:24px;height:46px;width:262px;border:1.5px solid #d9dee6;border-radius:6px;display:flex;align-items:center;justify-content:center;gap:9px;font-weight:600;font-size:17px;background:rgba(6,9,15,.7)}
+#clockbox{position:absolute;left:1664px;top:22px;width:212px;height:52px;border:1px solid rgba(160,180,210,.25);border-radius:8px;background:rgba(6,9,15,.8);display:flex;flex-direction:column;justify-content:center;align-items:center}
+#clockbox small{font:600 9px 'JetBrains Mono',monospace;letter-spacing:2px;color:#8f9bb0}
+#clock{font:600 22px 'JetBrains Mono',monospace;letter-spacing:1px;color:#f2f6fb}
+
+#mtoggle{position:absolute;left:1598px;top:118px;display:flex;gap:12px;align-items:center}
+#mtoggle .seg2{display:flex;border-radius:6px;overflow:hidden;font-weight:600;font-size:17px}
+#mtoggle .seg2 span{padding:9px 14px;background:#1d2a44;color:#7f8fab}
+#mtoggle .seg2 span.on{background:#1f55c8;color:#fff}
+#mtoggle .lay{width:42px;height:40px;border-radius:6px;background:#1f55c8;display:flex;align-items:center;justify-content:center}
+
+#alerts{left:40px;top:108px;width:344px;height:650px;overflow:hidden}
+.pills{display:flex;gap:6px;justify-content:center;margin-top:14px}
+.pill{font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px}
+.pill.red{background:#d63b2f;color:#fff}.pill.yel{background:#d7a52a;color:#3a2b00}.pill.blu{background:#3b8fd8;color:#fff}
+#alerts h3{font-size:17px;font-weight:600;margin:20px 0 0 14px}
+.loc{display:flex;gap:6px;align-items:center;margin:6px 0 0 14px;color:#7bd26d;font-size:16px;text-decoration:underline;text-underline-offset:3px}
+.tabs3{display:flex;gap:16px;margin:22px 0 10px 18px;font-size:13px;color:#a9b2bf}
+.tabs3 b{color:#4c97ff;font-weight:500}
+#list{position:relative}
+.card{position:relative;overflow:hidden;border-left:3px solid #d7a52a;border-bottom:1px solid rgba(255,255,255,.05)}
+.card .in{padding:12px 14px 12px 12px;height:96px}
+.r1{display:flex;justify-content:space-between;align-items:center}
+.r1 b{font-size:16px;font-weight:500;color:#f1f4f8}
+.r1 time{font-size:11.5px;color:#9aa4b2}
+.card p{font-size:12.5px;color:#a3acb9;margin-top:5px;white-space:nowrap}
+.acts{display:flex;justify-content:space-between;margin-top:6px;font-size:13px;font-weight:500;padding-right:28px}
+.acts .lc{color:#4c97ff;display:flex;align-items:center;gap:6px}
+.acts .es{color:#f07b2b;display:flex;align-items:center;gap:6px}
+.card.crit{border-left-color:#e3392c;background:rgba(227,57,44,.07)}
+.card.crit.sel{background:rgba(255,255,255,.09)}
+.npill{font-size:11.5px;font-weight:600;background:#e5372b;color:#fff;padding:2px 8px;border-radius:5px}
+#devices{left:40px;top:942px;width:344px;height:100px;overflow:hidden}
+#devices h4{font-size:16px;font-weight:600;padding:16px 16px 12px;background:#1d222c}
+#devices .st{display:flex;gap:26px;padding:14px 16px;font-size:16px;color:#aab3c0}
+#devices .st b{color:#fff;margin-left:6px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+
+/* ---------- alarm panel ---------- */
+#alarm{left:1420px;top:104px;width:470px;height:952px;overflow:hidden;background:rgba(43,49,60,.98)}
+.ph{height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;background:#1f242d;font-weight:600;font-size:16px}
+.pb{padding:14px 18px}
+.meta{font-size:14px;color:#d3dae4;display:flex;gap:10px;align-items:center}
+.meta em{color:#8e98a6;font-style:normal;margin-left:6px}
+.ttl{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.ttl b{font-size:21px;font-weight:600}
+.desc{font-size:13.5px;color:#a9b2bf;line-height:1.55;margin-top:6px}
+.desc b{color:#fff;font-weight:600}
+.cams{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;height:236px}
+.tile{position:relative;background:#0b0d10;border-radius:4px;overflow:hidden}
+.tile .tl{position:absolute;top:0;left:0;right:0;height:26px;background:rgba(22,26,33,.96);font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;padding:0 8px;z-index:2}
+.tile svg.feed{position:absolute;left:0;top:26px;width:100%;height:calc(100% - 26px)}
+.col{display:grid;grid-template-rows:1fr 1fr;gap:8px}
+.badge{position:absolute;z-index:3;font-size:10.5px;font-weight:600;padding:2px 7px;border-radius:9px;white-space:nowrap}
+.tabs{display:grid;grid-template-columns:1fr 1fr;margin-top:14px;height:42px}
+.tabs div{display:flex;align-items:center;justify-content:center;background:#1c3363;color:#93a8cf;font-weight:600;font-size:15px}
+.tabs div.on{background:#1f55c8;color:#fff}
+.tabbody{position:relative;height:410px;background:#4a515d;overflow:hidden}
+#inv,#sop{position:absolute;inset:0;padding:12px 14px}
+.grp{margin-bottom:14px}
+.gh{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500}
+.gh time{margin-left:auto;font-size:12.5px;color:#d5dbe3;font-weight:400}
+.gdot{width:12px;height:12px;border-radius:50%;background:#2f8cff;box-shadow:0 0 0 3px rgba(47,140,255,.25)}
+.gs{font-size:12.5px;font-style:italic;color:#d0d5dc;margin:4px 0 4px 20px}
+.ev{display:grid;grid-template-columns:58px 12px 1fr auto;align-items:center;font-size:11.5px;margin-left:20px;height:19px;color:#e3e7ec}
+.ev time{color:#c2c8d0}
+.ev i{width:6px;height:6px;border-radius:50%;background:#ff4a3d}
+.ev i.b{background:#3d95ff}.ev i.w{background:#f2f4f7}
+.ev span{font-weight:600}
+.ev em{font-style:normal;color:#c2c8d0;font-size:11px}
+.rem{font-size:13px;color:#d6dbe2;margin-top:6px}
+.rin{margin-top:6px;height:30px;border-radius:5px;background:#555c68;border:1px solid #646b77;font-size:12px;color:#9aa2ad;padding:7px 10px}
+.step{position:relative;display:grid;grid-template-columns:30px 1fr auto 22px;align-items:center;height:48px;padding:0 10px}
+.step .n{width:20px;height:20px;border-radius:50%;background:#2f6fe4;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;font-style:normal}
+.step .lb{font-size:14.5px;font-weight:500;white-space:nowrap}
+.step::after{content:"";position:absolute;left:19px;top:35px;width:1px;height:11px;background:#9aa2ae}
+.tag{font-size:11px;padding:3px 8px;border-radius:4px;margin-right:12px;white-space:nowrap}
+.tag.bl{background:#2a4f93;color:#c4d8ff}.tag.gr{background:#5c636e;color:#d3d7dd}.tag.rd{background:#8e1d12;color:#fff;font-weight:600}
+.cb{width:20px;height:20px;border-radius:4px;background:#f2f4f7;border:1px solid #c9ced6;display:flex;align-items:center;justify-content:center}
+.cb svg{opacity:0}
+.cb.on{background:#2f7cf6;border-color:#2f7cf6}.cb.on svg{opacity:1}
+#s3{flex-direction:column}
+#s3h.pend{background:#bea27c}
+#s3h.pend .lb{color:#8e1d12;font-weight:600}
+#s3x{overflow:hidden;background:#7a4434;margin:0}
+#s3x .xi{padding:6px 14px 14px 40px;border-left:1px solid #9aa2ae;margin-left:19px;padding-left:20px}
+#s3x p{font-size:13.5px;color:#f2e6df}
+#s3x .bt{display:flex;gap:10px;margin-top:10px}
+#s3x button{height:36px;padding:0 16px;border-radius:5px;font-weight:600;font-size:14px}
+#btnDispatch{background:#1f55c8;border:1.5px solid #6c9bff !important}
+#btnOther{background:#5b5f66}
+.actions{display:grid;grid-template-columns:70px 1fr 1fr;gap:10px;margin-top:14px}
+.actions button{height:44px;border-radius:6px;font-weight:600;font-size:16px;display:flex;align-items:center;justify-content:center;gap:8px}
+.b-clear{border:1px solid #6a717c !important;color:#c4cad3 !important}
+.b-esc{background:#d0392d}
+.b-ack{background:#1f55c8}
+
+/* ---------- modal ---------- */
+#backdrop{position:absolute;inset:0;background:rgba(2,4,9,.6)}
+#modal{position:absolute;left:510px;top:200px;width:900px;border-radius:16px;overflow:hidden;background:#2b313c;box-shadow:0 30px 80px rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.06)}
+.mh{height:54px;background:#1f242d;display:flex;align-items:center;justify-content:space-between;padding:0 24px;font-size:19px;font-weight:600}
+.mb{padding:22px 26px 24px}
+.mb .meta{font-size:17px}
+.mb .ttl b{font-size:24px}
+.mb .desc{font-size:16px}
+.mb hr{border:0;border-top:1px solid #4a515c;margin:16px 0 18px}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:0 12px}
+.f label,.mb .rl{display:block;font-size:19px;margin-bottom:8px}
+.f label i{color:#ff4a3d;font-style:normal}
+.sel{height:52px;border:1.5px solid #cfd5dd;border-radius:6px;background:#15181e;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font-size:18px}
+.hint{display:flex;gap:10px;align-items:center;font-size:14.5px;color:#aeb6c1;margin:12px 12px 16px}
+.mb .rl{padding:0 12px}
+.ta{margin:0 12px;min-height:104px;border:1.5px solid #cfd5dd;border-radius:6px;background:#15181e;padding:12px 16px;font-size:15.5px;line-height:1.6;color:#eef1f5}
+.caret{display:inline-block;width:2px;height:18px;background:#fff;vertical-align:-3px;margin-left:1px}
+.mact{display:grid;grid-template-columns:220px 1fr;gap:16px;margin-top:22px}
+.mact button{height:58px;border-radius:7px;font-size:21px;font-weight:600}
+.b-cancel{border:1.5px solid #6a717c !important;color:#c9ced6}
+#btnCreate{background:#d0392d}
+
+#toast{position:absolute;left:760px;top:112px;width:400px;height:50px;border-radius:10px;background:rgba(18,44,30,.96);border:1px solid #2fbf6a;display:flex;align-items:center;gap:12px;padding:0 18px;font-size:15px;font-weight:500;box-shadow:0 12px 30px rgba(0,0,0,.5)}
+
+/* ---------- incident management ---------- */
+#im{position:absolute;inset:0;background:#030509}
+#im .bar{position:absolute;left:0;top:70px;right:0;height:880px;background:#06080d}
+#imExit{position:absolute;left:1560px;top:104px;height:44px;width:300px;border:1.5px solid #d9dee6;border-radius:6px;display:flex;align-items:center;justify-content:center;gap:10px;font-weight:600;font-size:17px}
+#imBox{position:absolute;left:60px;top:176px;width:1800px;height:820px;background:#1d222a;border-radius:10px;overflow:hidden}
+#imL{position:absolute;left:0;top:0;width:1060px;height:100%}
+#imR{position:absolute;left:1060px;top:66px;width:740px;height:calc(100% - 66px);background:#262c35;border-top:3px solid #d63b2f;padding:16px 18px}
+.imh{display:flex;align-items:center;gap:12px;padding:26px 0 0 210px;font-size:22px;font-weight:600}
+.imh span{color:#8f98a5;font-weight:500}
+.imtabs{display:flex;gap:16px;margin:30px 0 0 20px;font-size:16px;color:#aab3bf}
+.imtabs b{color:#4c97ff;font-weight:500}
+.imtools{position:absolute;right:16px;top:86px;display:flex;gap:8px}
+.imtools div{height:40px;border-radius:5px;display:flex;align-items:center;gap:8px;padding:0 16px;font-size:15px;font-weight:600}
+.imfil{position:absolute;right:16px;top:14px;display:flex;gap:6px;z-index:2;white-space:nowrap}
+.imfil div{height:40px;border:1px solid #59606b;border-radius:4px;background:#14171c;display:flex;align-items:center;justify-content:space-between;padding:0 12px;font-size:14px;color:#d8dde4;gap:30px}
+.th{display:grid;grid-template-columns:90px 120px 140px 130px 120px 130px 1fr;padding:0 14px;margin-top:22px;height:40px;align-items:center;font-size:13px;font-weight:600;background:#20262e;color:#e0e5eb}
+.trow{display:grid;grid-template-columns:90px 120px 140px 130px 120px 130px 1fr;padding:0 14px;height:52px;align-items:center;font-size:13.5px;background:#2a3039;color:#e3e7ec}
+.chip{display:inline-block;font-size:12.5px;font-weight:600;padding:4px 10px;border-radius:5px;background:#c8352b;color:#fff}
+.showing{font-size:12.5px;color:#9aa3af;margin:14px 0 0 20px}
+.showing a{color:#4c97ff;margin-left:6px}
+.imr1{display:flex;gap:40px;font-size:13.5px;color:#c9cfd8}
+.imr2{display:flex;align-items:center;gap:8px;margin-top:10px}
+.imr2 b{font-size:20px;font-weight:600;margin-right:6px}
+.imr2 .dt{margin-left:auto;font-size:12.5px;background:#3c434e;padding:4px 10px;border-radius:5px}
+.imdesc{font-size:13.5px;color:#a3acb8;line-height:1.55;margin-top:6px}
+.imdesc b{color:#fff}
+.clips{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px;height:150px}
+.clip{position:relative;background:#0c0e12;overflow:hidden;border-radius:3px}
+.clip>svg{position:absolute;inset:0;width:100%;height:100%}
+.rec{position:absolute;right:8px;top:30px;font-size:10px;font-weight:700;color:#eef;background:rgba(0,0,0,.5);padding:1px 5px;border-radius:3px}
+.imtabs2{display:grid;grid-template-columns:1fr 1fr;margin-top:12px;height:38px}
+.imtabs2 div{display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;background:#363d48;color:#b6bec9}
+.imtabs2 div.on{background:#4a515d;color:#fff}
+.imsop{background:#4a515d;height:300px;padding:6px 6px}
+.imsop .step{height:44px}
+.imsop .step .lb{font-size:14px}
+.imsop .step::after{top:33px;height:9px}
+#imClose{margin-top:14px;width:100%;height:46px;border-radius:6px;background:#1f55c8;font-size:17px;font-weight:600}
+
+#cursor{position:absolute;left:0;top:0;z-index:40;filter:drop-shadow(0 2px 3px rgba(0,0,0,.6))}
+#ripple{position:absolute;left:0;top:0;width:0;height:0;z-index:39}
+#ripple i{position:absolute;left:-30px;top:-30px;width:60px;height:60px;border-radius:50%;border:3px solid rgba(255,255,255,.9)}
+.press{transform:scale(.95);filter:brightness(1.25)}
+</style>
+</head>
+<body>
+<div id="fit">
+ <div id="stage">
+  <svg id="map" viewBox="0 0 1920 1080">
+   <defs>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3"/></filter>
+    <filter id="glowB" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter>
+   </defs>
+   <g id="world"><g id="base"></g><g id="dyn"></g></g>
+  </svg>
+  <div id="vignette"></div>
+  <div id="pins"></div>
+
+  <div id="top">
+   <svg id="logo" width="50" height="48" viewBox="0 0 60 56"><path d="M30 5 L56 51 H4Z" fill="none" stroke="#e0362b" stroke-width="4" stroke-linejoin="round"/><path d="M30 18 L45 44 H15Z" fill="none" stroke="#e0362b" stroke-width="3.5" stroke-linejoin="round"/><path d="M4 51 L30 30 L56 51" fill="none" stroke="#e0362b" stroke-width="3" stroke-linejoin="round"/></svg>
+   <div id="lock"><svg width="18" height="18" viewBox="0 0 20 20"><path d="M10 1 L19 10 L10 19 L1 10Z" fill="#fff"/><path d="M10 5.5v6" stroke="#c8352b" stroke-width="2.2" stroke-linecap="round"/><circle cx="10" cy="14.4" r="1.3" fill="#c8352b"/></svg>Emergency Lockdown</div>
+   <div id="crumbs"><span>Main Airport</span><i>›</i><span>Airfield</span><i style="margin-left:auto;color:#cfd5dd">▾</i></div>
+   <div id="search"><svg width="16" height="16" viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="6" fill="none" stroke="#c9d0da" stroke-width="2.2"/><path d="M13 13l5 5" stroke="#c9d0da" stroke-width="2.2" stroke-linecap="round"/></svg>Search...</div>
+   <div id="btnIM"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="2"><path d="M9 3H3v14h14v-6"/><path d="M12 2h6v6M18 2l-8 8"/></svg>Incident Management</div>
+   <div id="clockbox"><small>SOC · LOCAL TIME</small><div id="clock">02:14:55</div></div>
+  </div>
+
+  <div id="mtoggle"><div class="seg2"><span class="on">2D Model</span><span>3D Model</span></div><div class="lay"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 12l9 5 9-5M3 16l9 5 9-5"/></svg></div></div>
+
+  <aside id="alerts" class="glass">
+   <div class="pills"><span class="pill red" id="pCrit">0 Critical</span><span class="pill yel">4 Warnings</span><span class="pill blu">1 Info</span></div>
+   <h3>Real Time Alerts</h3>
+   <div class="loc"><svg width="15" height="17" viewBox="0 0 16 20"><path d="M8 19s6-6.3 6-11A6 6 0 0 0 2 8c0 4.7 6 11 6 11z" fill="none" stroke="#7bd26d" stroke-width="2"/><circle cx="8" cy="8" r="2.2" fill="#7bd26d"/></svg>All terminals</div>
+   <div class="tabs3"><b>All</b><span>Open</span><span>On Hold</span></div>
+   <div id="list">
+    <div class="card crit" id="newCard"><div class="in">
+     <div class="r1"><b>Fence Sector 5</b><span class="npill" id="newPill">Now</span></div>
+     <p>Climb detected, verified by LiDAR (1.7 m)</p>
+     <div class="acts"><span class="lc" id="locate"><svg width="13" height="13" viewBox="0 0 14 14"><path d="M7 1l6 6-6 6-6-6z" fill="none" stroke="#4c97ff" stroke-width="1.8"/><circle cx="7" cy="7" r="1.6" fill="#4c97ff"/></svg>Locate</span><span class="es">↗ Escalate</span></div>
+    </div></div>
+    <div class="card"><div class="in"><div class="r1"><b>T1 Door C2</b><time>02:13 am</time></div><p>Same card used at T3 Door A17 at 02:09</p><div class="acts"><span class="lc">◈ Locate</span><span class="es">↗ Escalate</span></div></div></div>
+    <div class="card"><div class="in"><div class="r1"><b>T1 Departure Row K</b><time>02:12 am</time></div><p>Person in a closed area since 01:49</p><div class="acts"><span class="lc">◈ Locate</span><span class="es">↗ Escalate</span></div></div></div>
+    <div class="card"><div class="in"><div class="r1"><b>T2 Arrival Belt 5</b><time>02:11 am</time></div><p>Crowd forming near the belt</p><div class="acts"><span class="lc">◈ Locate</span><span class="es">↗ Escalate</span></div></div></div>
+    <div class="card"><div class="in"><div class="r1"><b>T2 Gate E5</b><time>02:04 am</time></div><p>Unattended bag reported</p><div class="acts"><span class="lc">◈ Locate</span><span class="es">↗ Escalate</span></div></div></div>
+   </div>
+  </aside>
+  <div id="devices" class="glass"><h4>Device Status</h4><div class="st"><span><i class="dot" style="background:#2fbf5f"></i>Online<b>4812</b></span><span><i class="dot" style="background:#e3392c"></i>Offline<b>6</b></span></div></div>
+
+  <section id="alarm" class="glass">
+   <div class="ph"><span>Active Alarms</span><span style="font-size:20px;font-weight:400">✕</span></div>
+   <div class="pb">
+    <div class="meta"><svg width="15" height="15" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="none" stroke="#c9d0da" stroke-width="2"/><path d="M10 5v5l3 2" fill="none" stroke="#c9d0da" stroke-width="2"/></svg>02:14:58 <em>ID:</em> AGF-5-14 <em>Code:</em> PER-005</div>
+    <div class="ttl"><b>Fence Sector 5</b><span class="npill">Now</span></div>
+    <p class="desc">AgilFence alarm on segment 5-14, LiDAR object 1.7 m<br>PTZ <b>7-02</b> on preset 5-14 · runway <b>02L</b> 150 m</p>
+    <div class="cams">
+     <div class="tile" id="tTh"><div class="tl"><span class="ci"></span>PTZ 7-02 · Thermal</div>
+      <span class="badge" id="bPreset" style="left:44px;top:34px;background:#1f55c8">On preset 5-14</span>
+      <span class="badge" id="bLive" style="right:8px;top:34px;background:#e3392c">● LIVE</span>
+      <svg class="feed" id="svTh" viewBox="0 0 213 210" preserveAspectRatio="xMidYMid slice"></svg></div>
+     <div class="col">
+      <div class="tile"><div class="tl"><span class="ci"></span>LiDAR L-5B · point cloud</div><svg class="feed" id="svLi" viewBox="0 0 213 88" preserveAspectRatio="xMidYMid slice"></svg></div>
+      <div class="tile"><div class="tl"><span class="ci"></span>CAM 7-11 · Sector 5 wide</div><svg class="feed" id="svWi" viewBox="0 0 213 88" preserveAspectRatio="xMidYMid slice"></svg></div>
+     </div>
+    </div>
+    <div class="tabs"><div id="tabInv" class="on">Investigation</div><div id="tabSop">SOP Flow</div></div>
+    <div class="tabbody">
+     <div id="inv">
+      <div class="grp">
+       <div class="gh iv"><i class="gdot"></i>System<time>02:15:12</time></div>
+       <div class="gs iv">4 alarms linked into this event</div>
+       <div class="ev iv"><time>02:14:58</time><i></i><span>Fence alarm (climb)</span><em>AgilFence 5-14</em></div>
+       <div class="ev iv"><time>02:15:01</time><i></i><span>Object 1.7 m</span><em>LiDAR L-5B</em></div>
+       <div class="ev iv"><time>02:15:03</time><i class="b"></i><span>PTZ 7-02 to preset 5-14</span><em>iPAMS / VMS</em></div>
+       <div class="ev iv"><time>02:15:12</time><i></i><span>Thermal: 1 person</span><em>PTZ 7-02</em></div>
+      </div>
+      <div class="grp">
+       <div class="gh iv"><i class="gdot"></i>System<time>02:15:06</time></div>
+       <div class="gs iv">Context checked</div>
+       <div class="ev iv"><time>02:15:05</time><i class="w"></i><span>No works booked · Sector 5</span><em>Permit system</em></div>
+       <div class="ev iv"><time>02:15:05</time><i class="w"></i><span>No patrol in Sector 5</span><em>Patrol app</em></div>
+       <div class="ev iv"><time>02:15:06</time><i class="w"></i><span>Wind 12 km/h · below threshold</span><em>Weather</em></div>
+      </div>
+      <div class="rem">Remarks</div>
+      <div class="rin">Add investigation note...</div>
+     </div>
+     <div id="sop">
+      <div class="step"><i class="n">1</i><span class="lb">Alarm located, cameras on target</span><span class="tag bl" id="t1">Auto · 02:15:03</span><span class="cb" id="c1"></span></div>
+      <div class="step"><i class="n">2</i><span class="lb">No works or patrols at Sector 5</span><span class="tag bl" id="t2">Auto · 02:15:05</span><span class="cb" id="c2"></span></div>
+      <div id="s3">
+       <div class="step" id="s3h"><i class="n">3</i><span class="lb">Dispatch Patrol 2</span><span class="tag rd" id="t3">Your approval</span><span class="cb" id="c3"></span></div>
+       <div id="s3x"><div class="xi"><p>Patrol 2 (Arjun + 1) · perimeter road · ETA 02:18:30</p><div class="bt"><button id="btnDispatch">Dispatch</button><button id="btnOther">Choose another</button></div></div></div>
+      </div>
+      <div class="step"><i class="n">4</i><span class="lb">Inform Airside Ops and tower</span><span class="tag bl" id="t4">Logged · 02:15:40</span><span class="cb" id="c4"></span></div>
+      <div class="step"><i class="n">5</i><span class="lb">Police call</span><span class="tag gr">Duty manager approval</span><span class="cb"></span></div>
+      <div class="step"><i class="n">6</i><span class="lb">Secure, close and report</span><span></span><span class="cb"></span></div>
+     </div>
+    </div>
+    <div class="actions"><button class="b-clear">Clear</button><button class="b-esc" id="btnEscalate"><svg width="17" height="17" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="2"><path d="M5 14V9a5 5 0 0 1 10 0v5l2 2H3z"/><path d="M8 18h4"/></svg>Escalate</button><button class="b-ack">Acknowledge</button></div>
+   </div>
+  </section>
+
+  <div id="toast"><svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="10" fill="#2fbf6a"/><path d="M6 11.5l3.3 3.2L16 8" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Incident <b>PER-005</b> created · Critical</span></div>
+
+  <div id="backdrop"></div>
+  <div id="modal">
+   <div class="mh"><span>Escalate Event</span><span style="font-size:24px;font-weight:400">✕</span></div>
+   <div class="mb">
+    <div class="meta"><svg width="18" height="18" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="none" stroke="#c9d0da" stroke-width="2"/><path d="M10 5v5l3 2" fill="none" stroke="#c9d0da" stroke-width="2"/></svg>02:14:58 <em>ID:</em> AGF-5-14 <em>Code:</em> PER-005</div>
+    <div class="ttl"><b>Fence Sector 5</b><span class="npill" style="font-size:14px">Now</span></div>
+    <p class="desc">AgilFence alarm on segment 5-14, LiDAR object 1.7 m<br>PTZ <b>7-02</b> on preset 5-14 · runway <b>02L</b> 150 m</p>
+    <hr>
+    <div class="frow">
+     <div class="f"><label>Category<i>*</i></label><div class="sel" id="fCat">Perimeter intrusion<span>▾</span></div></div>
+     <div class="f"><label>Severity Level<i>*</i></label><div class="sel" id="fSev">Critical<span>▾</span></div></div>
+    </div>
+    <p class="hint"><svg width="16" height="14" viewBox="0 0 16 14" fill="#aeb6c1"><rect x="0" y="0" width="3" height="2.4"/><rect x="5" y="0" width="11" height="2.4"/><rect x="0" y="5.8" width="3" height="2.4"/><rect x="5" y="5.8" width="11" height="2.4"/><rect x="0" y="11.6" width="3" height="2.4"/><rect x="5" y="11.6" width="11" height="2.4"/></svg>Pre-filled from the linked alarms and the SOP record. Edit if needed.</p>
+    <label class="rl">Remarks</label>
+    <div class="ta" id="fRem"></div>
+    <div class="mact"><button class="b-cancel">Cancel</button><button id="btnCreate">Create Incident</button></div>
+   </div>
+  </div>
+
+  <div id="im">
+   <div class="bar"></div>
+   <svg style="position:absolute;left:62px;top:100px" width="46" height="44" viewBox="0 0 60 56"><path d="M30 5 L56 51 H4Z" fill="none" stroke="#e0362b" stroke-width="4" stroke-linejoin="round"/><path d="M30 18 L45 44 H15Z" fill="none" stroke="#e0362b" stroke-width="3.5" stroke-linejoin="round"/><path d="M4 51 L30 30 L56 51" fill="none" stroke="#e0362b" stroke-width="3" stroke-linejoin="round"/></svg>
+   <div id="imExit">✕&nbsp; Exit Incident Management</div>
+   <div id="imBox">
+    <div id="imL">
+     <div class="imh">Incident Management <span>(24)</span><span class="chip" style="font-size:13px">5 Open</span></div>
+     <div class="imtabs"><b>All</b><span>Open</span><span>Closed</span></div>
+     <div class="imtools" style="right:16px"><div style="background:#1f55c8">⤓ Export</div><div style="border:1px solid #6a717c">Filter (0) ⚲</div></div>
+     <div class="th"><span>Status</span><span>Severity</span><span>Location</span><span>Date &amp; Time</span><span>Code</span><span>Closed By</span><span>Device ID</span></div>
+     <div class="trow" id="imRow"><span><i class="chip">Open</i></span><span><i class="chip">Critical</i></span><span>Fence Sector 5</span><span style="font-size:12.5px">Today, 02:14:58</span><span>PER-005</span><span>-</span><span>AGF-5-14</span></div>
+     <div class="showing">Showing 1 of 24 · <a>Clear search</a></div>
+    </div>
+     <div class="imfil"><div>Status · All ▾</div><div>Location ▾</div><div style="width:230px;justify-content:flex-start;gap:8px">⌕ <span id="imQ">PER-005</span></div><div style="background:#1f55c8;border-color:#1f55c8;font-weight:600">⌕ Search</div></div>
+    <div id="imR">
+     <div class="imr1"><span>Name: <b style="color:#fff;font-weight:500">AGILFENCE · SECTOR 5 · SEG 5-14</b></span><span>ID: <b style="color:#fff;font-weight:500">AGF-5-14</b></span><span>Code: <b style="color:#fff;font-weight:500">PER-005</b></span></div>
+     <div class="imr2"><b>Fence Sector 5</b><span class="chip">Critical</span><span class="chip">Open</span><span class="dt">Today, 02:14:58</span></div>
+     <p class="imdesc">Climb on segment 5-14 · LiDAR object 1.7 m · thermal: 1 person<br>Patrol 2 on scene <b>02:18:08</b> · handed to Airport Police <b>02:26:30</b></p>
+     <div class="clips">
+      <div class="clip"><div class="tl" style="position:absolute;left:0;top:0;right:0;height:24px;background:rgba(22,26,33,.9);font-size:11.5px;font-weight:600;display:flex;align-items:center;gap:6px;padding:0 8px;z-index:2"><span class="ci"></span>PTZ 7-02 · clip 02:15:03–02:18:50</div><span class="rec">REC</span><svg id="svC1" viewBox="0 0 352 150" preserveAspectRatio="xMidYMid slice"></svg></div>
+      <div class="clip"><div class="tl" style="position:absolute;left:0;top:0;right:0;height:24px;background:rgba(22,26,33,.9);font-size:11.5px;font-weight:600;display:flex;align-items:center;gap:6px;padding:0 8px;z-index:2"><span class="ci"></span>CAM 7-11 · replay 02:14:41</div><span class="rec">REC</span><svg id="svC2" viewBox="0 0 352 150" preserveAspectRatio="xMidYMid slice"></svg></div>
+     </div>
+     <div class="imtabs2"><div>Remarks</div><div class="on">SOP Flow · 5/6</div></div>
+     <div class="imsop" id="imSop">
+      <div class="step"><i class="n">1</i><span class="lb">Alarm located, cameras on target</span><span class="tag bl">Auto · 02:15:03</span><span class="cb on"></span></div>
+      <div class="step"><i class="n">2</i><span class="lb">No works or patrols at Sector 5</span><span class="tag bl">Auto · 02:15:05</span><span class="cb on"></span></div>
+      <div class="step"><i class="n">3</i><span class="lb">Dispatch Patrol 2</span><span class="tag bl">Approved · Nurul A. · 02:15:30</span><span class="cb on"></span></div>
+      <div class="step"><i class="n">4</i><span class="lb">Inform Airside Ops and tower</span><span class="tag bl">Logged · 02:15:40</span><span class="cb on"></span></div>
+      <div class="step"><i class="n">5</i><span class="lb">Police call</span><span class="tag bl">Approved · Daniel L. · 02:16:00</span><span class="cb on"></span></div>
+      <div class="step"><i class="n">6</i><span class="lb">Secure, close and report</span><span class="tag gr">Your sign-off · head of security</span><span class="cb" id="imC6"></span></div>
+     </div>
+     <button id="imClose">Close Incident</button>
+    </div>
+   </div>
+  </div>
+
+  <div id="ripple"><i></i></div>
+  <svg id="cursor" width="30" height="36" viewBox="0 0 30 36"><path d="M2 2 L2 28 L8.5 22 L13 32.5 L17.5 30.5 L13 20.5 L22 20.5 Z" fill="#fff" stroke="#111" stroke-width="2" stroke-linejoin="round"/></svg>
+ </div>
+ <div id="fade"></div>
+</div>
+
+<script>
+'use strict';
+const DUR = 35, FPS = 30;
+const $ = s => document.querySelector(s);
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const E = {
+  io: x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2,
+  o: x => 1 - Math.pow(1 - x, 3),
+  l: x => x,
+  back: x => { const c = 1.70158; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); }
+};
+const P = (t, a, b, e = E.io) => e(clamp((t - a) / (b - a)));
+const lerp = (a, b, k) => a + (b - a) * k;
+const frac = x => x - Math.floor(x);
+
+// keyframe track: [[t,{k:v}],...]; scale keys ('s') interpolate in log space
+function tr(keys, t) {
+  if (t <= keys[0][0]) return { ...keys[0][1] };
+  for (let i = 0; i < keys.length - 1; i++) {
+    const [t0, a] = keys[i], [t1, b] = keys[i + 1];
+    if (t <= t1) {
+      const k = E.io(clamp((t - t0) / (t1 - t0))), o = {};
+      for (const n in a) o[n] = n === 's' ? Math.exp(lerp(Math.log(a[n]), Math.log(b[n]), k)) : lerp(a[n], b[n], k);
+      return o;
+    }
+  }
+  return { ...keys[keys.length - 1][1] };
+}
+function rng(seed) { return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
+
+// ---------- projection (world units -> base screen px) ----------
+const TH = 18 * Math.PI / 180, CS = Math.cos(TH), SN = Math.sin(TH), K = 1.1, YC = .52;
+const OX = 1150 - K * (500 * CS - 220 * SN), OY = 560 - K * ((500 * SN + 220 * CS) * YC);
+const proj = (x, y, z = 0) => [OX + K * (x * CS - y * SN), OY + K * ((x * SN + y * CS) * YC - z)];
+const pt = p => p[0].toFixed(1) + ',' + p[1].toFixed(1);
+const poly = pts => 'M' + pts.map(p => pt(proj(...p))).join('L') + 'Z';
+const depth = (x, y) => x * SN + y * CS;
+
+const ALARM = [718, 8];
+const CAMS = {
+  ptz: { x: 668, y: 26, to: Math.atan2(8 - 26, 718 - 668), half: .38, R: 85 },
+  c711: { x: 792, y: 26, to: Math.atan2(8 - 26, 718 - 792), half: .3, R: 110 },
+  c712: { x: 850, y: 40, to: Math.atan2(8 - 40, 718 - 850), half: .2, R: 150 }
+};
+const ROUTE = [[606, 26], [640, 25], [700, 22]];
+
+function buildMap() {
+  const g = [];
+  let s = '';
+  for (let x = -1400; x <= 2400; x += 60) s += 'M' + pt(proj(x, -900)) + 'L' + pt(proj(x, 1300));
+  for (let y = -900; y <= 1300; y += 60) s += 'M' + pt(proj(-1400, y)) + 'L' + pt(proj(2400, y));
+  g.push(`<path d="${s}" stroke="rgba(70,110,200,.20)" stroke-width="1" vector-effect="non-scaling-stroke" fill="none"/>`);
+  const r = rng(7), dots = ['', '', ''];
+  for (let i = 0; i < 900; i++) {
+    const p = proj(-900 + r() * 2800, -700 + r() * 1900), sz = .8 + r() * 1.4;
+    dots[i % 3] += `M${p[0].toFixed(1)} ${p[1].toFixed(1)}h${sz.toFixed(1)}v${sz.toFixed(1)}h-${sz.toFixed(1)}z`;
+  }
+  ['.25', '.5', '.85'].forEach((o, i) => g.push(`<path d="${dots[i]}" fill="#cfe0ff" opacity="${o}"/>`));
+  // plate
+  g.push(`<path d="${poly([[0, 440, 0], [1000, 440, 0], [1000, 440, -9], [0, 440, -9]])}" fill="#0f1c3a"/>`);
+  g.push(`<path d="${poly([[1000, 0, 0], [1000, 440, 0], [1000, 440, -9], [1000, 0, -9]])}" fill="#16264d"/>`);
+  const plate = poly([[0, 0, 0], [1000, 0, 0], [1000, 440, 0], [0, 440, 0]]);
+  g.push(`<path d="${plate}" fill="none" stroke="#2f6bff" stroke-width="5" opacity=".55" filter="url(#glow)"/>`);
+  g.push(`<path d="${plate}" fill="#0a101c" stroke="#3b78ff" stroke-width="1.6"/>`);
+  g.push(`<path d="${poly([[40, 110, 0], [960, 110, 0], [960, 330, 0], [40, 330, 0]])}" fill="#0f1625"/>`);
+  // runways
+  for (const ry of [40, 372]) {
+    g.push(`<path d="${poly([[70, ry, 0], [930, ry, 0], [930, ry + 30, 0], [70, ry + 30, 0]])}" fill="#1a2232" stroke="#2c3a52" stroke-width=".8"/>`);
+    let d = '';
+    for (let x = 90; x < 910; x += 34) d += 'M' + pt(proj(x, ry + 15)) + 'L' + pt(proj(x + 18, ry + 15));
+    g.push(`<path d="${d}" stroke="#dfe6f2" stroke-width="1.6" opacity=".75"/>`);
+  }
+  // taxi lines
+  let tx = '';
+  for (const x of [150, 300, 470, 640, 830]) tx += 'M' + pt(proj(x, 70)) + 'L' + pt(proj(x, 110)) + 'M' + pt(proj(x, 330)) + 'L' + pt(proj(x, 372));
+  g.push(`<path d="${tx}" stroke="#c9a640" stroke-width=".8" opacity=".45"/>`);
+  // fence + posts + segment ticks
+  g.push(`<path d="${poly([[8, 8, 0], [992, 8, 0], [992, 432, 0], [8, 432, 0]])}" fill="none" stroke="#6f9cff" stroke-width="1" opacity=".75"/>`);
+  let posts = '';
+  for (let x = 8; x <= 992; x += 12.5) { const a = proj(x, 8, 0), b = proj(x, 8, 4); posts += `M${pt(a)}L${pt(b)}`; }
+  g.push(`<path d="${posts}" stroke="#7fa8ff" stroke-width=".7" opacity=".7"/>`);
+  let ticks = '';
+  for (let x = 500; x <= 950; x += 50) ticks += 'M' + pt(proj(x, 3)) + 'L' + pt(proj(x, 13));
+  g.push(`<path d="${ticks}" stroke="#a9c6ff" stroke-width="1.2"/>`);
+  // perimeter road
+  g.push(`<path d="M${pt(proj(20, 25))}L${pt(proj(980, 25))}" stroke="#25324a" stroke-width="5" opacity=".7"/>`);
+
+  // buildings & planes
+  const items = [];
+  const box = (x, y, w, d, h, z0 = 0) => items.push({ k: 'b', x, y, w, d, h, z0, dp: depth(x + w, y + d) });
+  const plane = (x, y, ang, sc = 1) => items.push({ k: 'p', x, y, ang, sc, dp: depth(x, y) });
+  const pier = (x, y, len) => {
+    box(x, y, 12, len, 8);
+    for (let py = y + 14; py < y + len; py += 26) { plane(x - 15, py, 0); plane(x + 27, py, Math.PI); }
+  };
+  // T1
+  box(55, 120, 40, 18, 7); box(55, 146, 40, 18, 7); box(55, 172, 34, 16, 7);
+  box(112, 160, 86, 60, 20); pier(124, 220, 70); pier(170, 220, 70);
+  // T2
+  box(268, 170, 80, 56, 20); pier(282, 226, 64); pier(322, 226, 64);
+  // T3 + tower
+  box(408, 158, 150, 84, 26); pier(440, 242, 78); pier(510, 242, 78);
+  box(378, 92, 12, 12, 62); box(375, 89, 18, 18, 8, 62);
+  // T4
+  box(610, 202, 72, 46, 16); pier(634, 248, 70);
+  // T5
+  box(760, 168, 140, 92, 26); pier(772, 260, 70); pier(822, 260, 70); pier(872, 260, 66);
+  box(820, 120, 26, 48, 10); box(870, 120, 26, 48, 10);
+  items.sort((a, b) => a.dp - b.dp);
+  const planeShape = [[12, 0], [9, 1.6], [3, 1.8], [-1, 11], [-4, 11], [-2, 1.8], [-8, 1.5], [-10.5, 5], [-12.5, 5], [-11.5, 0]];
+  for (const it of items) {
+    if (it.k === 'b') {
+      const { x, y, w, d, h, z0 } = it, z1 = z0 + h;
+      g.push(`<path d="${poly([[x, y + d, z0], [x + w, y + d, z0], [x + w, y + d, z1], [x, y + d, z1]])}" fill="#8592a7"/>`);
+      g.push(`<path d="${poly([[x + w, y, z0], [x + w, y + d, z0], [x + w, y + d, z1], [x + w, y, z1]])}" fill="#aeb9c9"/>`);
+      let fl = '';
+      for (let z = z0 + 4; z < z1 - 1; z += 4) fl += `M${pt(proj(x, y + d, z))}L${pt(proj(x + w, y + d, z))}L${pt(proj(x + w, y, z))}`;
+      if (fl) g.push(`<path d="${fl}" fill="none" stroke="#5d687b" stroke-width=".7" opacity=".7"/>`);
+      g.push(`<path d="${poly([[x, y, z1], [x + w, y, z1], [x + w, y + d, z1], [x, y + d, z1]])}" fill="#e3e8f0"/>`);
+    } else {
+      const c = Math.cos(it.ang), s2 = Math.sin(it.ang);
+      const full = planeShape.concat(planeShape.slice(1, -1).reverse().map(([a, b]) => [a, -b]));
+      const pts = full.map(([a, b]) => [it.x + (a * c - b * s2) * it.sc, it.y + (a * s2 + b * c) * it.sc, 1]);
+      g.push(`<path d="${poly(pts)}" fill="#f4f7fb" stroke="#9fb0c8" stroke-width=".4"/>`);
+    }
+  }
+  $('#base').innerHTML = g.join('');
+}
+
+// ---------- pins (HTML overlay, fixed pixel size) ----------
+const camSvg = c => `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.2" stroke-linejoin="round"><path d="M3 6l13 3-1.5 5L2 11z"/><path d="M16 9l4-1.5v5L15 12"/><path d="M6 12l-1 5H2"/></svg>`;
+const fenceSvg = `<svg width="18" height="18" viewBox="0 0 20 20" stroke="#fff" stroke-width="2"><path d="M4 3v14M8 3v14M12 3v14M16 3v14M2 7h16M2 13h16"/></svg>`;
+const pinsDef = {
+  T1: `<div class="tlabel">T1</div>`, T2: `<div class="tlabel">T2</div>`, T3: `<div class="tlabel">T3</div>`, T4: `<div class="tlabel">T4</div>`, T5: `<div class="tlabel">T5</div>`,
+  y1: `<div class="stem" style="top:-22px;height:22px;background:#d9a521"></div><div class="ico" style="left:-14px;top:-50px;width:28px;height:28px;background:#d9a521;border:2px solid #f3cd5a"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="#3b2c00" stroke-width="2.4"><circle cx="10" cy="10" r="6"/><circle cx="10" cy="10" r="1.5" fill="#3b2c00"/></svg></div>`,
+  y2: `<div class="stem" style="top:-22px;height:22px;background:#d9a521"></div><div class="ico" style="left:-14px;top:-50px;width:28px;height:28px;background:#d9a521;border:2px solid #f3cd5a"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="#3b2c00" stroke-width="2.4"><circle cx="7" cy="8" r="3"/><circle cx="14" cy="8" r="3"/><path d="M2 17c1-3 9-3 10 0M9 17c1-3 8-3 9 0"/></svg></div>`,
+  y3: `<div class="stem" style="top:-22px;height:22px;background:#d9a521"></div><div class="ico" style="left:-14px;top:-50px;width:28px;height:28px;background:#d9a521;border:2px solid #f3cd5a"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="#3b2c00" stroke-width="2.4"><rect x="4" y="6" width="12" height="10" rx="2"/><path d="M8 6V3h4v3"/></svg></div>`,
+  b1: `<div class="stem" style="top:-22px;height:22px;background:#3b9cff"></div><div class="ico" style="left:-14px;top:-50px;width:28px;height:28px;background:#1f62c4;border:2px solid #79bbff"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="2.2"><circle cx="10" cy="11" r="6"/><path d="M10 11V8M8 2h4"/></svg></div>`,
+  alarm: `<div class="stem" style="top:-58px;height:58px;background:#ff4a3d"></div><div class="ico" id="aIco" style="left:-20px;top:-98px;width:40px;height:40px;background:#e3392c;border:3px solid #fff;box-shadow:0 0 18px rgba(255,60,40,.8)">${fenceSvg}</div><div class="lab" id="aLab" style="left:34px;top:-94px;border:1.5px solid #ff4a3d;font-size:15px;font-weight:600">Sector 5 · Seg 5-14</div>`,
+  ptz: `<div class="stem" style="top:-34px;height:34px;background:#5fb8ff"></div><div class="ico" style="left:-17px;top:-68px;width:34px;height:34px;background:#0e1830;border:2px solid #7cc4ff">${camSvg('#e8f3ff')}</div><div class="lab" id="ptzLab" style="right:26px;top:-64px;border:1.5px solid #4fc3d9;color:#d9f6ff">PTZ 7-02 · on preset</div>`,
+  c711: `<div class="stem" style="top:-34px;height:34px;background:#5fb8ff"></div><div class="ico" style="left:-17px;top:-68px;width:34px;height:34px;background:#0e1830;border:2px solid #7cc4ff">${camSvg('#e8f3ff')}</div>`,
+  c712: `<div class="stem" style="top:-34px;height:34px;background:#5fb8ff"></div><div class="ico" style="left:-17px;top:-68px;width:34px;height:34px;background:#0e1830;border:2px solid #7cc4ff">${camSvg('#e8f3ff')}</div>`,
+  rwy: `<div class="lab" id="rwyLab" style="left:-70px;top:26px;border:1.5px solid #e6c34a;color:#fff6d6;font-size:14px">Runway 02L · 150 m</div>`,
+  patrol: `<div class="ico" style="left:-17px;top:-17px;width:34px;height:34px;background:#2fa24f;border:2px solid #b8f5c8;box-shadow:0 0 14px rgba(60,220,110,.7)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M4 15l2-6h12l2 6v3H4z"/><circle cx="8" cy="18" r="1.8" fill="#fff"/><circle cx="16" cy="18" r="1.8" fill="#fff"/><path d="M10 6h4"/></svg></div><div class="lab" style="left:-40px;top:24px;border:1.5px solid #3fc76b;color:#dfffe8">Patrol 2 · ETA 02:18:30</div>`
+};
+const SEGS = [['5-13', 675], ['5-14', 725], ['5-15', 775], ['5-16', 825], ['5-17', 875]];
+const pins = {};
+function buildPins() {
+  const host = $('#pins');
+  for (const id in pinsDef) { const d = document.createElement('div'); d.className = 'pin'; d.innerHTML = pinsDef[id]; host.appendChild(d); pins[id] = d; }
+  for (const [n] of SEGS) { const d = document.createElement('div'); d.className = 'pin'; d.innerHTML = `<div class="seg">${n}</div>`; host.appendChild(d); pins['s' + n] = d; }
+}
+const PINPOS = {
+  T1: [205, 160, 30], T2: [355, 170, 30], T3: [566, 158, 36], T4: [690, 202, 26], T5: [908, 168, 36],
+  y1: [125, 175, 20], y2: [160, 230, 8], y3: [300, 180, 20], b1: [640, 210, 16],
+  alarm: [ALARM[0], ALARM[1], 0], ptz: [CAMS.ptz.x, CAMS.ptz.y, 0], c711: [CAMS.c711.x, CAMS.c711.y, 0], c712: [CAMS.c712.x, CAMS.c712.y, 0],
+  rwy: [712, 56, 0]
+};
+
+// ---------- camera feeds ----------
+function buildFeeds() {
+  $('#svTh').innerHTML = `
+  <defs>
+   <linearGradient id="thSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1e1e1e"/><stop offset="1" stop-color="#3b3b3b"/></linearGradient>
+   <linearGradient id="thGnd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a3a3a"/><stop offset="1" stop-color="#1c1c1c"/></linearGradient>
+   <pattern id="chain" width="7" height="7" patternUnits="userSpaceOnUse"><path d="M0 0L7 7M7 0L0 7" stroke="#9a9a9a" stroke-width=".55"/></pattern>
+   <filter id="pg" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter>
+   <filter id="noise"><feTurbulence id="turb" type="fractalNoise" baseFrequency=".9" numOctaves="1" seed="1"/><feColorMatrix type="saturate" values="0"/></filter>
+  </defs>
+  <g id="thScene">
+   <rect x="-120" y="0" width="460" height="210" fill="url(#thSky)"/>
+   <path d="M-120 70 Q-60 40 0 60 T100 52 T200 64 T340 50 V0 H-120Z" fill="#141414"/>
+   <path d="M-120 92 Q-40 72 40 84 T190 80 T340 86 V120 H-120Z" fill="#454545"/>
+   <rect x="-120" y="120" width="460" height="90" fill="url(#thGnd)"/>
+   <rect x="-120" y="102" width="460" height="62" fill="url(#chain)" opacity=".85"/>
+   <path d="M-120 100H340" stroke="#a5a5a5" stroke-width="1.2" stroke-dasharray="3 2"/>
+   <path d="M-120 164H340" stroke="#a0a0a0" stroke-width="1.4"/>
+   <g stroke="#c8c8c8" stroke-width="2.2" id="posts"></g>
+   <g id="thPerson">
+    <g filter="url(#pg)" opacity=".7" fill="#fff"><circle cx="0" cy="-58" r="7"/><path d="M-9 -48h18l3 30h-4l1 38h-7l-1-30h-2l-1 30h-7l1-38h-4z"/></g>
+    <g fill="#f6f6f6"><circle cx="0" cy="-58" r="6.5"/><path d="M-9 -48h18l3 30h-4l1 38h-7l-1-30h-2l-1 30h-7l1-38h-4z"/><path d="M9 -46l12 -14 3 2-11 16z"/></g>
+   </g>
+   <g id="thBox"><rect id="thR" x="-15" y="-70" width="30" height="94" fill="none" stroke="#ff3b30" stroke-width="2" rx="2"/>
+    <g id="thTag"><rect x="-38" y="27" width="76" height="17" rx="3" fill="#e5372b"/><text id="thTxt" x="0" y="39" text-anchor="middle" font-size="10" font-weight="600" fill="#fff" font-family="Inter">Person 1.7 m</text></g></g>
+  </g>
+  <g id="thTrack" opacity="0"><rect x="52" y="22" width="110" height="150" fill="none" stroke="#bbb" stroke-width=".8" stroke-dasharray="3 3"/><text x="54" y="18" font-size="6.5" fill="#bbb" font-family="Inter" letter-spacing=".5">AUTO-TRACK</text></g>
+  <rect width="213" height="210" filter="url(#noise)" opacity=".13"/>`;
+  let ps = '';
+  for (let x = -112; x < 340; x += 28) ps += `<path d="M${x} 98V166"/>`;
+  $('#posts').innerHTML = ps;
+
+  // lidar points (human-shaped cloud)
+  const r = rng(11); LIDAR = [];
+  while (LIDAR.length < 170) {
+    const u = r(), y = -32 + r() * 64; let x;
+    if (y < -22) { const a = r() * 6.28; x = Math.cos(a) * 4 * r(); }
+    else if (y < 4) x = (r() - .5) * 13;
+    else x = (r() < .5 ? -3.5 : 3.5) + (r() - .5) * 4;
+    LIDAR.push([106 + x, 48 + y * .95, u]);
+  }
+  $('#svLi').innerHTML = `<rect width="213" height="88" fill="#06070a"/>
+   <g stroke="#1d2533" stroke-width=".6">${[...Array(9)].map((_, i) => `<path d="M${i * 26.6} 88L${106 + (i - 4) * 9} 20"/>`).join('')}<path d="M0 70H213M0 56H213M0 46H213M0 38H213"/></g>
+   <g id="liPts"></g>`;
+
+  $('#svWi').innerHTML = `<defs><radialGradient id="flood" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#e7d9a4" stop-opacity=".55"/><stop offset="1" stop-color="#e7d9a4" stop-opacity="0"/></radialGradient>
+   <linearGradient id="wiSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d1015"/><stop offset="1" stop-color="#20242b"/></linearGradient></defs>
+   <rect width="213" height="88" fill="url(#wiSky)"/><rect y="52" width="213" height="36" fill="#14171c"/>
+   <ellipse cx="160" cy="62" rx="60" ry="22" fill="url(#flood)"/><ellipse cx="190" cy="16" rx="40" ry="8" fill="url(#flood)" opacity=".5"/>
+   <g stroke="#d7dbe2" stroke-width="1.1" id="wiPosts"></g>
+   <path d="M0 18L205 36M0 82L205 44" stroke="#c6cbd3" stroke-width="1" fill="none"/>
+   <path d="M0 18L205 36" stroke="#e8ebef" stroke-width=".6" stroke-dasharray="2 2" transform="translate(0,-3)"/>
+   <rect id="wiBox" x="141" y="41" width="7" height="15" rx="2" fill="none" stroke="#ff3b30" stroke-width="1.6"/>`;
+  let wp = '';
+  for (let i = 0; i < 26; i++) { const x = 205 * (1 - Math.pow(.86, i)); wp += `<path d="M${x.toFixed(1)} ${(18 + 18 * x / 205).toFixed(1)}V${(82 - 38 * x / 205).toFixed(1)}"/>`; }
+  $('#wiPosts').innerHTML = wp;
+
+  // incident clips (static)
+  $('#svC1').innerHTML = `<rect width="352" height="150" fill="#1c1f25"/><rect y="104" width="352" height="46" fill="#2a2d33"/>
+   <g stroke="#c9cdd4" stroke-width="2">${[...Array(13)].map((_, i) => `<path d="M${10 + i * 28} 30V104"/>`).join('')}</g>
+   <path d="M0 30H352M0 104H352" stroke="#b9bec6" stroke-width="1.4"/><rect y="34" width="352" height="68" fill="url(#chain)" opacity=".5"/>
+   <ellipse cx="200" cy="120" rx="120" ry="24" fill="#e5dcb5" opacity=".18"/>
+   <g transform="translate(26,88)"><rect x="0" y="10" width="78" height="20" rx="5" fill="#eceff3"/><path d="M14 10l10-12h30l10 12z" fill="#dfe3e8"/><rect x="30" y="-6" width="16" height="4" fill="#3d7bff"/><circle cx="18" cy="31" r="6" fill="#222"/><circle cx="62" cy="31" r="6" fill="#222"/><rect x="24" y="-2" width="12" height="9" fill="#5c6c84"/><rect x="40" y="-2" width="12" height="9" fill="#5c6c84"/></g>
+   ${[[150, '#3d8bff', '#e1c13a'], [178, '#ff3b30', '#e9e9e9'], [206, '#3d8bff', '#e1c13a']].map(([x, c, f]) => `<g transform="translate(${x},70)"><circle cx="0" cy="0" r="5" fill="${f}"/><rect x="-6" y="6" width="12" height="24" rx="2" fill="${f}"/><rect x="-6" y="30" width="4" height="16" fill="#555"/><rect x="2" y="30" width="4" height="16" fill="#555"/><rect x="-11" y="-8" width="22" height="58" fill="none" stroke="${c}" stroke-width="2" rx="2"/></g>`).join('')}
+   <rect x="160" y="124" width="38" height="13" rx="2" fill="#e5372b"/><text x="179" y="134" font-size="9" fill="#fff" text-anchor="middle" font-family="Inter" font-weight="600">Person</text>`;
+  $('#svC2').innerHTML = `<rect width="352" height="150" fill="#16191e"/><rect y="104" width="352" height="46" fill="#24272c"/>
+   <g stroke="#c9cdd4" stroke-width="2">${[...Array(12)].map((_, i) => `<path d="M${18 + i * 30} 34V104"/>`).join('')}</g>
+   <path d="M0 34H352M0 104H352" stroke="#b9bec6" stroke-width="1.4"/><rect y="36" width="352" height="66" fill="url(#chain)" opacity=".45"/>
+   <ellipse cx="250" cy="118" rx="90" ry="20" fill="#e5dcb5" opacity=".15"/>
+   <g transform="translate(250,66)"><circle cx="0" cy="0" r="5" fill="#e3e3e3"/><rect x="-6" y="6" width="12" height="24" rx="2" fill="#e3e3e3"/><rect x="-6" y="30" width="4" height="16" fill="#777"/><rect x="2" y="30" width="4" height="16" fill="#777"/><rect x="-11" y="-8" width="22" height="58" fill="none" stroke="#e8b931" stroke-width="2" rx="2"/></g>
+   <rect x="222" y="122" width="56" height="13" rx="2" fill="#e8b931"/><text x="250" y="132" font-size="9" fill="#2b2100" text-anchor="middle" font-family="Inter" font-weight="600">Approaching</text>`;
+  document.querySelectorAll('.ci').forEach(e => e.innerHTML = camSvg('#fff'));
+  document.querySelectorAll('.cb').forEach(e => e.innerHTML = '<svg width="13" height="13" viewBox="0 0 14 14"><path d="M2.5 7.5l3 3 6-7" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+}
+let LIDAR = [];
+
+// ---------- timeline data ----------
+const CLK = [[0, 8095], [1.8, 8098], [6.4, 8103], [8.0, 8112], [14.6, 8120], [17.0, 8130], [18.6, 8140], [26.4, 8165], [28.6, 8172], [29.8, 9860], [35, 9866]];
+const CAMK = [
+  [0, { x: 960, y: 540, s: 1 }], [6.3, { x: 960, y: 540, s: 1 }],
+  [7.5, { x: 1650, y: 400, s: 2.15 }], [10.4, { x: 1650, y: 405, s: 2.25 }],
+  [11.4, { x: 1650, y: 800, s: 1.8 }], [13.0, { x: 1650, y: 800, s: 1.8 }],
+  [14.0, { x: 1330, y: 680, s: 1.36 }], [20.5, { x: 1330, y: 680, s: 1.36 }],
+  [21.2, { x: 960, y: 540, s: 1 }], [21.4, { x: 960, y: 540, s: 1 }],
+  [22.2, { x: 960, y: 570, s: 1.3 }], [26.5, { x: 960, y: 570, s: 1.3 }],
+  [27.3, { x: 960, y: 540, s: 1 }], [30.4, { x: 960, y: 540, s: 1 }],
+  [31.6, { x: 1430, y: 580, s: 1.3 }], [35, { x: 1430, y: 580, s: 1.36 }]
+];
+const ALS = proj(...ALARM);
+const MAPV = [[0, { px: 960, py: 540, s: 1, ax: 960, ay: 540 }], [3.7, { px: 960, py: 540, s: 1, ax: 960, ay: 540 }], [5.8, { px: ALS[0], py: ALS[1], s: 2.5, ax: 930, ay: 470 }]];
+const CLICKS = [['locate', 3.5], ['tabSop', 14.5], ['btnDispatch', 17.0], ['btnEscalate', 20.4], ['btnCreate', 26.2], ['btnIM', 28.4]];
+const REMARK = 'AgilFence alarm on segment 5-14 at 02:14:58, corroborated by LiDAR L-5B (object 1.7 m) and PTZ 7-02 thermal (1 person). Patrol 2 dispatched 02:15:30, approved by Nurul A.; Airside Ops and tower informed 02:15:40. Runway 02L 150 m.';
+let CUR = [], CLK_PTS = {}, NO_CAM = false;
+
+// ---------- render ----------
+let mv = { px: 960, py: 540, s: 1, ax: 960, ay: 540 };
+const toScr = p => [mv.ax + (p[0] - mv.px) * mv.s, mv.ay + (p[1] - mv.py) * mv.s];
+function place(el, w, op = 1) {
+  const p = toScr(proj(...w));
+  el.style.transform = `translate(${p[0].toFixed(1)}px,${p[1].toFixed(1)}px)`;
+  el.style.opacity = op; el.style.display = op <= 0.001 ? 'none' : '';
+}
+const show = (el, o) => { el.style.opacity = o; el.style.visibility = o <= .001 ? 'hidden' : 'visible'; };
+const ringPath = (cx, cy, r) => { let d = ''; for (let i = 0; i <= 36; i++) { const a = i / 36 * 6.2832; d += (i ? 'L' : 'M') + pt(proj(cx + Math.cos(a) * r, cy + Math.sin(a) * r * .9)); } return d + 'Z'; };
+const conePath = (c, ang) => { const pts = [[c.x, c.y, 0]]; for (let i = 0; i <= 12; i++) { const a = ang - c.half + i / 12 * c.half * 2; pts.push([c.x + Math.cos(a) * c.R, c.y + Math.sin(a) * c.R, 0]); } return poly(pts); };
+function clockStr(sec) { sec = Math.floor(sec); const h = Math.floor(sec / 3600), m = Math.floor(sec / 60) % 60, s = sec % 60; return [h, m, s].map(v => String(v).padStart(2, '0')).join(':'); }
+function interp(keys, t) { if (t <= keys[0][0]) return keys[0][1]; for (let i = 0; i < keys.length - 1; i++) { const [a, va] = keys[i], [b, vb] = keys[i + 1]; if (t <= b) return lerp(va, vb, (t - a) / (b - a)); } return keys[keys.length - 1][1]; }
+
+function render(t) {
+  const frame = Math.round(t * FPS);
+  // fade
+  $('#fade').style.opacity = Math.max(1 - P(t, 0, .8, E.l), P(t, DUR - 1.1, DUR - .1, E.l));
+
+  // global camera
+  let c = NO_CAM ? { x: 960, y: 540, s: 1 } : tr(CAMK, t);
+  const hw = 960 / c.s, hh = 540 / c.s;
+  c.x = clamp(c.x, hw, 1920 - hw); c.y = clamp(c.y, hh, 1080 - hh);
+  $('#stage').style.transform = `translate(960px,540px) scale(${c.s}) translate(${-c.x}px,${-c.y}px)`;
+
+  $('#clock').textContent = clockStr(interp(CLK, t));
+
+  // map view
+  mv = tr(MAPV, t);
+  $('#world').setAttribute('transform', `translate(${mv.ax} ${mv.ay}) scale(${mv.s}) translate(${-mv.px} ${-mv.py})`);
+  const zoomK = clamp((mv.s - 1) / 1.5);
+  const alarmOn = t > 1.9;
+  let dyn = '';
+  if (alarmOn) {
+    const a0 = proj(700, 8), a1 = proj(750, 8);
+    const blink = .65 + .35 * Math.sin(t * 9);
+    dyn += `<path d="M${pt(a0)}L${pt(a1)}" stroke="#ff3b30" stroke-width="6" opacity="${.6 * blink}" filter="url(#glow)"/><path d="M${pt(a0)}L${pt(a1)}" stroke="#ff5a4d" stroke-width="2.4"/>`;
+    dyn += `<path d="${ringPath(ALARM[0], ALARM[1] + 6, 14)}" fill="rgba(255,59,48,.28)" stroke="#ff3b30" stroke-width="1.2"/>`;
+    for (let k = 0; k < 2; k++) { const f = frac((t - 1.9) * .7 + k * .5); dyn += `<path d="${ringPath(ALARM[0], ALARM[1] + 6, 14 + f * 40)}" fill="none" stroke="#ff3b30" stroke-width="1.5" opacity="${(1 - f) * .9}"/>`; }
+  }
+  const coneO = P(t, 4.1, 4.8);
+  if (coneO > 0) {
+    const pa = lerp(CAMS.ptz.to + 1.2, CAMS.ptz.to, P(t, 4.5, 6.3));
+    dyn += `<g opacity="${coneO}">`;
+    for (const [k, ang] of [['ptz', pa], ['c711', CAMS.c711.to], ['c712', CAMS.c712.to]])
+      dyn += `<path d="${conePath(CAMS[k], ang)}" fill="rgba(90,170,255,.16)" stroke="rgba(130,195,255,.75)" stroke-width=".9"/>`;
+    dyn += '</g>';
+  }
+  const routeO = P(t, 17.2, 17.9);
+  const pp = P(t, 17.4, 35, E.l) * .62;
+  const patrolW = routeAt(pp);
+  if (routeO > 0) {
+    const rest = [patrolW, ...ROUTE.filter(r => r[0] > patrolW[0])].map(p => pt(proj(p[0], p[1], 0)));
+    dyn += `<path d="M${rest.join('L')}" fill="none" stroke="#3fdc6e" stroke-width="2.4" stroke-dasharray="7 5" stroke-dashoffset="${-t * 30}" opacity="${routeO}"/>`;
+  }
+  $('#dyn').innerHTML = dyn;
+
+  // pins
+  const termO = 1 - zoomK;
+  for (const k of ['T1', 'T2', 'T3', 'T4', 'T5']) place(pins[k], PINPOS[k], termO);
+  for (const k of ['y1', 'y2', 'y3', 'b1']) place(pins[k], PINPOS[k], termO);
+  place(pins.alarm, PINPOS.alarm, P(t, 1.9, 2.3, E.o));
+  pins.alarm.querySelector('#aIco').style.transform = `scale(${1 + .08 * Math.sin(t * 7)})`;
+  $('#aLab').textContent = t < 17 ? 'Sector 5 · Seg 5-14' : 'Seg 5-14 · Alarm';
+  show($('#aLab'), P(t, 4.8, 5.4));
+  for (const k of ['ptz', 'c711', 'c712']) place(pins[k], PINPOS[k], coneO);
+  $('#ptzLab').textContent = t < 6.3 ? 'PTZ 7-02 · to preset 5-14' : t < 17.6 ? 'PTZ 7-02 · on preset' : 'PTZ 7-02 · tracking';
+  show($('#ptzLab'), P(t, 5.0, 5.6));
+  place(pins.rwy, PINPOS.rwy, P(t, 5.4, 6.0));
+  $('#rwyLab').textContent = t < 18.6 ? 'Runway 02L · 150 m' : 'Runway 02L · tower informed';
+  place(pins.patrol, [patrolW[0], patrolW[1], 0], P(t, 17.3, 17.8));
+  for (const [n, x] of SEGS) place(pins['s' + n], [x, -14, 0], zoomK);
+
+  // left alerts
+  const nk = P(t, 1.8, 2.4, E.o);
+  $('#newCard').style.height = (nk * 109).toFixed(1) + 'px';
+  $('#newCard').style.opacity = nk;
+  $('#newCard').classList.toggle('sel', t > 3.5);
+  const pc = $('#pCrit'); pc.textContent = t < 1.9 ? '0 Critical' : '1 Critical';
+  pc.style.boxShadow = t > 1.9 && t < 3.2 ? `0 0 0 ${3 + 3 * Math.sin(t * 14)}px rgba(255,70,50,.45)` : 'none';
+  const np = $('#newPill');
+  np.textContent = t < 26.6 ? 'Now' : 'Escalated'; np.style.background = t < 26.6 ? '#e5372b' : '#c96a1f';
+
+  show($('#mtoggle'), 1 - P(t, 5.3, 5.8));
+
+  // alarm panel
+  const pk = P(t, 5.4, 6.2, E.o);
+  $('#alarm').style.transform = `translateX(${(1 - pk) * 520}px)`;
+  show($('#alarm'), pk > 0 ? 1 : 0);
+
+  // thermal feed
+  const pan = P(t, 4.6, 6.4);
+  const track = P(t, 17.4, 18.2);
+  const sway = Math.sin(t * 1.3) * 2 * track;
+  const zz = 1 + .35 * track;
+  $('#thScene').setAttribute('transform', `translate(106 112) scale(${zz}) translate(${-106 + (1 - pan) * 150} -112)`);
+  $('#thPerson').setAttribute('transform', `translate(${106 + sway} 160)`);
+  const det = P(t, 7.8, 8.1);
+  $('#thBox').setAttribute('transform', `translate(${106 + sway} 160)`);
+  $('#thBox').setAttribute('opacity', det);
+  $('#thTxt').textContent = t < 17.6 ? 'Person 1.7 m' : 'Person · tracking';
+  $('#thTrack').setAttribute('opacity', track);
+  $('#turb').setAttribute('seed', frame % 9);
+  const bp = $('#bPreset');
+  bp.textContent = t < 6.4 ? 'Moving to preset 5-14' : t < 17.6 ? 'On preset 5-14' : 'Auto-track';
+  bp.style.background = t < 6.4 ? '#59606b' : '#1f55c8';
+  $('#bLive').style.opacity = .55 + .45 * (Math.sin(t * 5) > 0 ? 1 : 0);
+
+  // lidar
+  const nPts = Math.floor(LIDAR.length * P(t, 6.3, 8.6, E.l));
+  const rj = rng(frame + 3);
+  let li = '';
+  for (let i = 0; i < nPts; i++) {
+    const [x, y, u] = LIDAR[i];
+    li += `<circle cx="${(x + (rj() - .5) * 1.2).toFixed(1)}" cy="${(y + (rj() - .5) * 1.2).toFixed(1)}" r="${(.7 + u * .6).toFixed(2)}" fill="${u > .5 ? '#ff6a2c' : '#ff3d1f'}"/>`;
+  }
+  $('#liPts').innerHTML = li;
+  $('#wiBox').setAttribute('opacity', t > 6.3 ? (Math.sin(t * 6) > -.3 ? 1 : .2) : 0);
+
+  // investigation rows
+  const ivs = document.querySelectorAll('#inv .iv');
+  ivs.forEach((el, i) => { const k = P(t, 10.6 + i * .22, 10.9 + i * .22, E.o); el.style.opacity = k; el.style.transform = `translateX(${(1 - k) * 14}px)`; });
+
+  // tabs
+  const sopOn = t >= 14.55;
+  $('#tabInv').classList.toggle('on', !sopOn); $('#tabSop').classList.toggle('on', sopOn);
+  show($('#inv'), sopOn ? 0 : 1); show($('#sop'), sopOn ? 1 : 0);
+  const chk = (id, tt) => { const el = $(id); el.classList.toggle('on', t >= tt); const k = P(t, tt, tt + .25, E.back); el.style.transform = t >= tt ? `scale(${.6 + .4 * k})` : ''; };
+  chk('#c1', 14.9); chk('#c2', 15.3); chk('#c3', 17.15); chk('#c4', 18.6);
+  show($('#t1'), P(t, 14.9, 15.2)); show($('#t2'), P(t, 15.3, 15.6)); show($('#t4'), P(t, 18.6, 18.9));
+  const ex = P(t, 15.6, 16.0) * (1 - P(t, 17.15, 17.6));
+  $('#s3x').style.height = (ex * 104).toFixed(1) + 'px';
+  const pend = t >= 15.6 && t < 17.15;
+  $('#s3h').classList.toggle('pend', pend);
+  const t3 = $('#t3');
+  if (t < 17.15) { t3.textContent = 'Your approval'; t3.className = 'tag rd'; show(t3, P(t, 15.6, 15.9)); }
+  else { t3.textContent = 'Approved · Nurul A. · 02:15:30'; t3.className = 'tag bl'; show(t3, 1); }
+
+  // modal
+  const mk = P(t, 20.7, 21.15, E.o) * (1 - P(t, 26.5, 26.85));
+  show($('#backdrop'), mk);
+  show($('#modal'), mk);
+  $('#modal').style.transform = `scale(${.94 + .06 * mk})`;
+  const fl = t > 21.9 && t < 22.9 ? .5 + .5 * Math.sin((t - 21.9) * 12) : 0;
+  for (const id of ['#fCat', '#fSev']) $(id).style.boxShadow = fl ? `0 0 0 ${2 + 3 * fl}px rgba(76,151,255,${.6 * fl})` : 'none';
+  const nch = Math.floor(REMARK.length * P(t, 22.3, 24.9, E.l));
+  const caretOn = t > 22.1 && t < 26.3 && (nch < REMARK.length || Math.floor(t * 2.5) % 2 === 0);
+  $('#fRem').innerHTML = REMARK.slice(0, nch) + (caretOn ? '<span class="caret"></span>' : '');
+
+  // toast
+  const tk = P(t, 26.9, 27.3, E.o) * (1 - P(t, 28.5, 28.8));
+  show($('#toast'), tk); $('#toast').style.transform = `translateY(${(1 - tk) * -16}px)`;
+
+  // incident management
+  const ik = P(t, 28.6, 29.2);
+  show($('#im'), ik);
+  $('#im').style.transform = `scale(${1.03 - .03 * ik})`;
+  const rk = P(t, 29.5, 29.9, E.o);
+  $('#imRow').style.opacity = rk; $('#imRow').style.transform = `translateY(${(1 - rk) * 12}px)`;
+  const dk = P(t, 29.8, 30.3);
+  $('#imR').style.opacity = dk;
+  document.querySelectorAll('#imSop .step').forEach((el, i) => { const k = P(t, 30.2 + i * .14, 30.5 + i * .14, E.o); el.style.opacity = k; el.style.transform = `translateX(${(1 - k) * 12}px)`; });
+  const pulse = t > 31.6 ? .5 + .5 * Math.sin((t - 31.6) * 5) : 0;
+  $('#imC6').style.boxShadow = pulse ? `0 0 0 ${2 + 4 * pulse}px rgba(76,151,255,${.7 * pulse})` : 'none';
+  $('#imClose').style.boxShadow = t > 32 ? `0 0 ${10 + 14 * pulse}px rgba(60,120,255,.6)` : 'none';
+
+  // cursor + clicks
+  if (CUR.length) {
+    const cu = tr(CUR, t);
+    $('#cursor').style.transform = `translate(${cu.x - 2}px,${cu.y - 2}px)`;
+    $('#cursor').style.opacity = cu.o;
+  }
+  let rip = null;
+  for (const [id, ct] of CLICKS) {
+    const el = $('#' + id);
+    el.classList.toggle('press', t >= ct - .02 && t < ct + .16);
+    if (t >= ct && t < ct + .5) rip = [id, ct];
+  }
+  if (rip) {
+    const k = (t - rip[1]) / .5, p = CLK_PTS[rip[0]];
+    $('#ripple').style.transform = `translate(${p.x}px,${p.y}px) scale(${.3 + k * .9})`;
+    $('#ripple').style.opacity = 1 - k;
+  } else $('#ripple').style.opacity = 0;
+}
+function routeAt(p) {
+  const segs = []; let L = 0;
+  for (let i = 0; i < ROUTE.length - 1; i++) { const d = Math.hypot(ROUTE[i + 1][0] - ROUTE[i][0], ROUTE[i + 1][1] - ROUTE[i][1]); segs.push(d); L += d; }
+  let d = p * L;
+  for (let i = 0; i < segs.length; i++) { if (d <= segs[i]) { const k = d / segs[i]; return [lerp(ROUTE[i][0], ROUTE[i + 1][0], k), lerp(ROUTE[i][1], ROUTE[i + 1][1], k)]; } d -= segs[i]; }
+  return ROUTE[ROUTE.length - 1];
+}
+
+// measure click targets in stage coordinates (camera disabled)
+function measure() {
+  NO_CAM = true;
+  const fit = $('#fit').getBoundingClientRect(), sc = fit.width / 1920;
+  const at = (id, t) => { render(t); const r = $('#' + id).getBoundingClientRect(); return { x: (r.left - fit.left + r.width / 2) / sc, y: (r.top - fit.top + r.height / 2) / sc }; };
+  const m = { locate: at('locate', 3.0), tabSop: at('tabSop', 14), btnDispatch: at('btnDispatch', 16.5), btnEscalate: at('btnEscalate', 19), btnCreate: at('btnCreate', 25), btnIM: at('btnIM', 27) };
+  NO_CAM = false;
+  for (const k in m) CLK_PTS[k] = m[k];
+  const v = (p, o, dx = 0, dy = 0) => ({ x: p.x + dx, y: p.y + dy, o });
+  CUR = [
+    [0, v(m.locate, 0, 520, 380)], [1.5, v(m.locate, 0, 520, 380)], [2.2, v(m.locate, 1, 420, 300)],
+    [3.3, v(m.locate, 1)], [4.6, v(m.locate, 1, 6, 10)], [5.2, v(m.locate, 0, 60, 60)],
+    [13.3, v(m.tabSop, 0, -160, 150)], [13.6, v(m.tabSop, 1, -150, 140)], [14.35, v(m.tabSop, 1)],
+    [15.7, v(m.tabSop, 1, -30, 60)], [16.75, v(m.btnDispatch, 1)], [17.6, v(m.btnDispatch, 1)],
+    [19.2, v(m.btnEscalate, 1, -60, -90)], [20.2, v(m.btnEscalate, 1)], [20.9, v(m.btnEscalate, 1, -20, 0)],
+    [24.6, v(m.btnCreate, 1, -80, 70)], [26.0, v(m.btnCreate, 1)], [26.6, v(m.btnCreate, 1, 10, 4)],
+    [28.2, v(m.btnIM, 1)], [28.7, v(m.btnIM, 1, 6, 8)], [29.2, v(m.btnIM, 0, 30, 40)], [35, v(m.btnIM, 0, 30, 40)]
+  ];
+}
+
+function fitWindow() {
+  const s = Math.min(innerWidth / 1920, innerHeight / 1080);
+  $('#fit').style.transform = `translate(${(innerWidth - 1920 * s) / 2}px,${(innerHeight - 1080 * s) / 2}px) scale(${s})`;
+}
+
+buildMap(); buildPins(); buildFeeds();
+const CAPTURE = new URLSearchParams(location.search).has('capture');
+if (!CAPTURE) fitWindow();
+measure();
+window.renderAt = render;
+window.DURATION = DUR; window.FPS = FPS;
+if (!CAPTURE) {
+  addEventListener('resize', () => { fitWindow(); });
+  let t0 = performance.now();
+  const loop = now => { const t = ((now - t0) / 1000) % (DUR + .5); render(Math.min(t, DUR)); requestAnimationFrame(loop); };
+  requestAnimationFrame(loop);
+} else render(0);
+</script>
+</body>
+</html>
