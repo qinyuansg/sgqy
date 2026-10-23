@@ -80,3 +80,10 @@ python3 -m http.server 8000   # then visit http://localhost:8000
 - Vanilla HTML/CSS/JS — no build step, no dependencies, works offline after first load.
 - Apple-inspired design system: iOS system palette, SF font stack, frosted-glass top bar, spring easing (`cubic-bezier(0.34, 1.56, 0.64, 1)`), 44pt+ touch targets, `prefers-reduced-motion` respected.
 - State in `localStorage`: task list, per-day completion log (status/reason/remark/time), streak, reminder preference.
+
+---
+
+## Other projects in this repo
+
+- `normanton-park/` — Normanton Park Blk 49 #05-20 资产本质与配置分析（中文深度报告 + 动画视频，2026-10-23）。See `normanton-park/README.md`; video at `normanton-park/video/normanton-park-05-20.mp4`.
+- `tofu-run/` — TOFU RUN, a 3D downhill snowboarding game (three.js).

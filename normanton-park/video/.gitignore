@@ -1,0 +1,7 @@
+# large / regenerable intermediates
+audio/cache/
+audio/narration.wav
+audio/mix.wav
+audio/mix.m4a
+out/video_silent.mp4
+out/render.log
