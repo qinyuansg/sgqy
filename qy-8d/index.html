@@ -1,0 +1,740 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>造物者视角 · QY 八维</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#05070f; --ink:#eaf0ff; --sub:#9aa6c8; --line:rgba(160,180,240,.22); --accent:#34d3b0; }
+  html,body { margin:0; height:100%; background:var(--bg); color:var(--ink); overflow:hidden;
+    font-family:"Noto Sans SC","PingFang SC","Hiragino Sans GB","Microsoft YaHei","WenQuanYi Zen Hei",sans-serif; }
+  #stage { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; }
+  canvas { display:block; cursor:pointer; box-shadow:0 0 80px rgba(0,0,0,.6); }
+  #ui { position:fixed; left:50%; bottom:14px; transform:translateX(-50%); width:min(560px,calc(100vw - 32px));
+    display:flex; gap:10px; align-items:center; padding:8px 12px; border-radius:14px;
+    background:rgba(10,15,35,.72); backdrop-filter:blur(10px); border:1px solid var(--line);
+    transition:opacity .4s; }
+  #ui.idle { opacity:0; }
+  #ui button { background:none; border:1px solid var(--line); color:var(--ink); border-radius:9px;
+    height:34px; min-width:34px; padding:0 10px; font:inherit; font-size:14px; cursor:pointer; white-space:nowrap; }
+  #ui button:hover { border-color:var(--accent); }
+  #seek { flex:1; accent-color:var(--accent); min-width:60px; }
+  #time { font:12px "JetBrains Mono",monospace; color:var(--sub); white-space:nowrap; }
+  #start { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:14px; background:rgba(3,5,12,.82); backdrop-filter:blur(6px); z-index:5; padding:16px; text-align:center; }
+  #start h1 { margin:0 0 4px; font-size:clamp(28px,7vw,44px); font-weight:900; letter-spacing:.06em; }
+  #start p { margin:0 0 10px; color:var(--sub); font-size:14px; }
+  #start button, #start label { font:inherit; font-size:16px; border-radius:12px; padding:12px 22px; cursor:pointer;
+    border:1px solid var(--line); background:rgba(255,255,255,.04); color:var(--ink); width:min(320px,100%); box-sizing:border-box; }
+  #start .primary { background:var(--accent); color:#04120e; border-color:var(--accent); font-weight:700; }
+  #start input { display:none; }
+  #ytwrap { position:fixed; right:12px; top:12px; width:200px; height:113px; border-radius:10px; overflow:hidden;
+    border:1px solid var(--line); display:none; z-index:4; background:#000; }
+  #ytwrap.on { display:block; }
+  #msg { position:fixed; top:12px; left:50%; transform:translateX(-50%); font-size:13px; color:var(--sub);
+    background:rgba(10,15,35,.85); padding:6px 12px; border-radius:8px; display:none; z-index:6; max-width:calc(100vw - 32px); }
+  body.render #ui, body.render #start, body.render #ytwrap, body.render #msg { display:none !important; }
+  body.render canvas { box-shadow:none; }
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="cv" width="1080" height="1920" aria-label="造物者视角：QY 八维优势解析动画"></canvas></div>
+
+<div id="start">
+  <h1>造物者视角</h1>
+  <p>QY 八维设计图解 · 约 2 分 30 秒 · 竖屏</p>
+  <button class="primary" id="goYT">▶ 播放（YouTube 背景音乐）</button>
+  <label>♪ 选择本地音乐文件再播放<input type="file" id="pick" accept="audio/*"></label>
+  <button id="goMute">静音播放</button>
+</div>
+
+<div id="ui" class="idle">
+  <button id="play" aria-label="播放/暂停">▶</button>
+  <input id="seek" type="range" min="0" max="150" step="0.05" value="0" aria-label="进度">
+  <span id="time">0:00 / 2:30</span>
+  <button id="mus" aria-label="音乐开关">♪ 开</button>
+</div>
+<div id="ytwrap"><div id="ytbox"></div></div>
+<div id="msg"></div>
+
+<script id="main">
+/* ============================================================
+   造物者视角 · QY 八维 —— 确定性时间轴动画
+   renderAt(t) 只依赖 t，可实时播放，也可逐帧导出视频。
+   ============================================================ */
+const W = 1080, H = 1920;
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+const FONT = '"Noto Sans SC","PingFang SC","Hiragino Sans GB","Microsoft YaHei","WenQuanYi Zen Hei",sans-serif';
+const MONO = '"JetBrains Mono","SFMono-Regular",Menlo,Consolas,"Noto Sans SC",monospace';
+const COL = { ink:'#EAF0FF', sub:'#9AA6C8', faint:'#5A6690', C:'#4C9BFF', J:'#A88BFF', D:'#F2A93B', T:'#34D3B0', neutral:'#8090C0' };
+const ENG = {
+  C: { name:'认知引擎', en:'INPUT',  color:COL.C, role:'输入' },
+  J: { name:'判断引擎', en:'DECIDE', color:COL.J, role:'决策' },
+  D: { name:'交付引擎', en:'OUTPUT', color:COL.D, role:'输出' },
+};
+
+/* 雷达顺序（与原图一致，顺时针自顶部） */
+const DIMS = [
+  { name:'跨域整合', short:'跨域', cur:8, tgt:9, eng:'C', part:'连接器',
+    essence:'把 A 领域的解法，迁移到 B 领域的问题',
+    logic:['创新 ≈ 旧要素的新组合', '连接的领域越多，可组合的空间越大'],
+    note:'你被设计成「连接器」，而不是「钻头」。' },
+  { name:'问题结构化', short:'结构', cur:8, tgt:9, eng:'C', part:'编译器',
+    essence:'把混沌，压缩成可执行的结构',
+    logic:['拆分：不重不漏', '排序：先做什么', '边界：不做什么'],
+    note:'问题定义对了，答案就完成了一半。' },
+  { name:'产品与商业判断', short:'产品', cur:7, tgt:9, eng:'J', part:'罗盘',
+    essence:'判断一件事，值不值得做',
+    logic:['价值 ≈ 痛点强度 × 发生频率 × 愿付代价', '判断力 = 被结果反复校准过的直觉'],
+    note:'缺的不是判断，是判断之后的「回测数据」。' },
+  { name:'体验与审美意识', short:'审美', cur:8, tgt:8, eng:'J', part:'滤镜',
+    essence:'对「好」的敏感度',
+    logic:['审美，是被压缩过的经验', '一眼看出哪里不对，比十页分析更快'],
+    note:'目标维持 8：已经够用，把资源让给短板。' },
+  { name:'AI 学习主动性', short:'AI', cur:7, tgt:8, eng:'C', part:'加速器',
+    essence:'学习速度 ≥ 环境变化速度',
+    logic:['AI 是杠杆——放大的是判断，不是勤奋', '工具会过时，「会学」不会'],
+    note:'不必追每个新工具，把 AI 焊进主线工作流。' },
+  { name:'组织协同与推动', short:'组织', cur:6, tgt:9, eng:'D', part:'传动轴', star:true,
+    essence:'让别人的时间，朝同一个目标流动',
+    logic:['推动力 ≈ 清晰目标 × 明确负责人 × 验收标准', '资源到位，团队才能独立交付'],
+    note:'个人的上限看能力，团队的上限看推动。' },
+  { name:'技术与现场深度', short:'技术', cur:6, tgt:9, eng:'D', part:'地基', star:true,
+    essence:'知道真实世界会在哪里坏掉',
+    logic:['性能 · 异常 · 成本 · 部署与运维', '真正的取舍，只发生在细节里'],
+    note:'没有深度的判断，只能停在 PPT 上。' },
+  { name:'成果证据与复用', short:'成果', cur:4, tgt:9, eng:'D', part:'出口', star:true,
+    essence:'把一次成功，变成可证明、可复制的资产',
+    logic:['没有基线，就没有「改善」', '没有第二个场景，就不算方法论'],
+    note:'它是整台机器的出口，也是最大的杠杆点。' },
+];
+/* 讲解顺序：认知 → 判断 → 交付 */
+const ORDER = [0, 1, 4, 2, 3, 6, 5, 7];
+
+/* ---------- 时间轴 ---------- */
+const DIM_T0 = 29, DIM_D = 9.5;
+const SCENES = [
+  { t0:0,   t1:8,   hud:'PROLOGUE · 序章',   draw:sIntro },
+  { t0:8,   t1:17,  hud:'STRUCTURE · 结构',  draw:sStructure },
+  { t0:17,  t1:29,  hud:'ENGINES · 引擎',    draw:sEngines },
+  ...ORDER.map((_, k) => ({ t0:DIM_T0 + k*DIM_D, t1:DIM_T0 + (k+1)*DIM_D,
+      hud:`DIM ${String(k+1).padStart(2,'0')}/08`, draw:(u,d)=>sDim(u,d,k) })),
+  { t0:105, t1:118, hud:'DIAGNOSIS · 诊断',  draw:sDiagnosis },
+  { t0:118, t1:129, hud:'FLYWHEEL · 飞轮',   draw:sFlywheel },
+  { t0:129, t1:139, hud:'TARGET · 目标',     draw:sTarget },
+  { t0:139, t1:150, hud:'EPILOGUE · 结语',   draw:sEnding },
+];
+const DURATION = 150;
+
+/* ---------- 数学 / 颜色 ---------- */
+const clamp = (v, a=0, b=1) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, p) => a + (b - a) * p;
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const eOut = p => 1 - Math.pow(1 - p, 3);
+const eIO = p => p < .5 ? 4*p*p*p : 1 - Math.pow(-2*p + 2, 3) / 2;
+const ap = (u, s, d=0.7) => eOut(seg(u, s, s + d));
+const sceneFade = (u, d, i=0.5, o=0.5) => Math.min(seg(u, 0, i), 1 - seg(u, d - o, d));
+function mulberry32(a){ return function(){ a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a);
+  t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const hex = h => { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
+const rgba = (h, a) => { const [r, g, b] = hex(h); return `rgba(${r},${g},${b},${a})`; };
+const mixc = (h1, h2, p) => { const a = hex(h1), b = hex(h2);
+  return '#' + a.map((v, i) => Math.round(v + (b[i] - v) * p).toString(16).padStart(2, '0')).join(''); };
+const ecol = i => ENG[DIMS[i].eng].color;
+
+/* ---------- 文字工具 ---------- */
+const font = o => `${o.w || 400} ${o.s || 40}px ${o.mono ? MONO : FONT}`;
+function T(str, x, y, o={}) {
+  const a = o.a ?? 1; if (a <= 0) return;
+  ctx.save(); ctx.globalAlpha *= a; ctx.font = font(o); ctx.fillStyle = o.c || COL.ink;
+  ctx.textAlign = o.al || 'left'; ctx.textBaseline = 'alphabetic'; ctx.letterSpacing = (o.ls || 0) + 'px';
+  if (o.glow) { ctx.shadowColor = o.glow; ctx.shadowBlur = o.gb || 24; }
+  ctx.fillText(str, x, y); ctx.restore();
+}
+/* 多段着色文字：segs = [[text, color, glow?], ...] */
+function TR(segs, x, y, o={}) {
+  const a = o.a ?? 1; if (a <= 0) return 0;
+  ctx.save(); ctx.globalAlpha *= a; ctx.font = font(o); ctx.letterSpacing = (o.ls || 0) + 'px'; ctx.textAlign = 'left';
+  const ws = segs.map(s => ctx.measureText(s[0]).width); const tw = ws.reduce((p, c) => p + c, 0);
+  let sx = o.al === 'center' ? x - tw/2 : o.al === 'right' ? x - tw : x;
+  segs.forEach((s, i) => { ctx.fillStyle = s[1] || o.c || COL.ink;
+    ctx.shadowColor = s[1] || 'transparent'; ctx.shadowBlur = s[2] || 0; ctx.fillText(s[0], sx, y); sx += ws[i]; });
+  ctx.restore(); return tw;
+}
+const NO_START = '，。、；：！？）」』》…—·';
+function wrap(str, maxW, o) {
+  ctx.save(); ctx.font = font(o); ctx.letterSpacing = (o.ls || 0) + 'px';
+  const lines = []; let cur = '';
+  for (const ch of str) {
+    if (ctx.measureText(cur + ch).width > maxW && cur && !NO_START.includes(ch)) { lines.push(cur); cur = ch === ' ' ? '' : ch; }
+    else cur += ch;
+  }
+  if (cur) lines.push(cur); ctx.restore(); return lines;
+}
+/* 上浮淡入 */
+function up(a, fn, dy=26) { if (a <= 0) return; ctx.save(); ctx.globalAlpha *= a; ctx.translate(0, (1 - a) * dy); fn(); ctx.restore(); }
+function rr(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
+function arrowHead(x, y, ang, size, color) {
+  ctx.save(); ctx.translate(x, y); ctx.rotate(ang); ctx.fillStyle = color; ctx.beginPath();
+  ctx.moveTo(0, 0); ctx.lineTo(-size, -size*0.55); ctx.lineTo(-size, size*0.55); ctx.closePath(); ctx.fill(); ctx.restore();
+}
+
+/* ---------- 背景 ---------- */
+const RB = mulberry32(7);
+const STARS = Array.from({ length:220 }, () => ({ x:RB()*W, y:RB()*H, z:.2 + RB()*.8, ph:RB()*6.28, sp:.5 + RB()*2 }));
+function nebula(x, y, r, c, a) {
+  const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, rgba(c, a)); g.addColorStop(1, rgba(c, 0));
+  ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r*2, r*2);
+}
+function drawBG(t) {
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#04060d'); g.addColorStop(.55, '#070c1f'); g.addColorStop(1, '#0a0f26');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  nebula(270 + Math.sin(t*.07)*120, 520 + Math.cos(t*.05)*90, 640, COL.C, .15);
+  nebula(820 + Math.cos(t*.06)*100, 1350 + Math.sin(t*.04)*120, 720, COL.J, .12);
+  nebula(540, 1950, 620, COL.T, .07);
+  ctx.strokeStyle = 'rgba(120,150,230,0.045)'; ctx.lineWidth = 1; ctx.beginPath();
+  for (let x = 0; x <= W; x += 60) { ctx.moveTo(x + .5, 0); ctx.lineTo(x + .5, H); }
+  for (let y = 0; y <= H; y += 60) { ctx.moveTo(0, y + .5); ctx.lineTo(W, y + .5); }
+  ctx.stroke();
+  for (const s of STARS) {
+    const y = (s.y + t*8*s.z) % H, a = (.25 + .75*(.5 + .5*Math.sin(t*s.sp + s.ph))) * s.z, r = 1.6*s.z + .4;
+    ctx.fillStyle = `rgba(210,225,255,${a*.8})`; ctx.fillRect(s.x, y, r, r);
+  }
+}
+function drawVignette() {
+  const g = ctx.createRadialGradient(W/2, H/2, H*.32, W/2, H/2, H*.75);
+  g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.55)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+}
+const fmt = t => `${Math.floor(t/60)}:${String(Math.floor(t%60)).padStart(2, '0')}`;
+function drawHUD(t) {
+  const a = seg(t, .8, 2) * (1 - seg(t, DURATION - 1.4, DURATION - .4)); if (a <= 0) return;
+  ctx.save(); ctx.globalAlpha = a;
+  ctx.strokeStyle = 'rgba(160,180,240,.35)'; ctx.lineWidth = 2;
+  const m = 40, l = 34;
+  [[m, m, 1, 1], [W - m, m, -1, 1], [m, H - m, 1, -1], [W - m, H - m, -1, -1]].forEach(([x, y, sx, sy]) => {
+    ctx.beginPath(); ctx.moveTo(x, y + sy*l); ctx.lineTo(x, y); ctx.lineTo(x + sx*l, y); ctx.stroke(); });
+  const sc = SCENES.find(s => t >= s.t0 && t < s.t1) || SCENES[SCENES.length - 1];
+  T('CREATOR VIEW // QY-8D', 70, 96, { mono:1, s:20, c:COL.faint, ls:3 });
+  T(sc.hud, W - 70, 96, { mono:1, s:20, c:COL.sub, al:'right', ls:3 });
+  const y = H - 74, x0 = 70, w = W - 140;
+  ctx.fillStyle = 'rgba(160,180,240,.15)'; ctx.fillRect(x0, y, w, 3);
+  ctx.fillStyle = COL.T; ctx.fillRect(x0, y, w * t / DURATION, 3);
+  ctx.fillStyle = 'rgba(160,180,240,.45)';
+  SCENES.forEach(s => ctx.fillRect(x0 + w * s.t0 / DURATION - 1, y - 5, 2, 13));
+  T('DESIGN SPEC · REV 2026.10.25', x0, y - 20, { mono:1, s:17, c:COL.faint, ls:2 });
+  T(`${fmt(t)} / ${fmt(DURATION)}`, x0 + w, y - 20, { mono:1, s:17, c:COL.faint, al:'right', ls:2 });
+  ctx.restore();
+}
+
+/* ---------- 雷达 ---------- */
+const ang = i => -Math.PI/2 + i*Math.PI/4;
+function drawRadar(o) {
+  const { cx, cy, R } = o, A = o.alpha ?? 1; if (A <= 0) return;
+  const P = (i, v) => [cx + Math.cos(ang(i))*R*v/10, cy + Math.sin(ang(i))*R*v/10];
+  const poly = vals => { ctx.beginPath(); vals.forEach((v, i) => { const [x, y] = P(i, v); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.closePath(); };
+  const hl = o.hl ?? -1, hlA = o.hlA ?? 0, engMix = o.eng ?? 0, t = o.time || 0;
+  ctx.save(); ctx.globalAlpha = A; ctx.lineJoin = 'round';
+  // 网格
+  const g = o.grid ?? 1;
+  if (g > 0) {
+    for (let k = 2; k <= 10; k += 2) {
+      poly(Array(8).fill(k * eOut(g)));
+      if (k === 10) { ctx.fillStyle = 'rgba(76,155,255,.035)'; ctx.fill(); }
+      ctx.strokeStyle = k === 10 ? 'rgba(160,180,240,.30)' : 'rgba(160,180,240,.12)'; ctx.lineWidth = k === 10 ? 2 : 1.2; ctx.stroke();
+    }
+  }
+  // 轴
+  const ax = o.axes ?? 1;
+  for (let i = 0; i < 8; i++) {
+    const p = eOut(clamp((ax - i/8*.6) / .4)); if (p <= 0) continue;
+    const isH = i === hl, c = mixc(COL.neutral, ecol(i), Math.max(engMix, isH ? hlA : 0));
+    const [x, y] = P(i, 10*p);
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x, y);
+    ctx.strokeStyle = isH ? c : rgba(c, .30 + .35*engMix); ctx.lineWidth = isH ? 2 + 3*hlA : 1.5 + engMix;
+    if (isH) { ctx.shadowColor = c; ctx.shadowBlur = 18*hlA; }
+    ctx.stroke(); ctx.shadowBlur = 0;
+    if (engMix > 0 && !o.cur) { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(x, y, 6*engMix, 0, 7); ctx.fill(); }
+  }
+  // 目标（虚线）
+  if ((o.tgt ?? 0) > 0) {
+    const p = eOut(o.tgt);
+    poly(DIMS.map(d => d.tgt * p));
+    ctx.fillStyle = rgba(COL.T, .05 * (o.tgtA ?? 1)); ctx.fill();
+    ctx.setLineDash([16, 11]); ctx.lineDashOffset = -t*24;
+    ctx.strokeStyle = rgba(COL.T, .9 * (o.tgtA ?? 1)); ctx.lineWidth = 3.5; ctx.stroke(); ctx.setLineDash([]);
+  }
+  // 当前（实线）
+  if ((o.cur ?? 0) > 0) {
+    const p = eOut(o.cur), vals = (o.vals || DIMS.map(d => d.cur)).map(v => v * p), c = o.curColor || COL.C;
+    if (o.ghost) { poly(DIMS.map(d => d.cur)); ctx.strokeStyle = rgba(COL.C, .45*o.ghost); ctx.lineWidth = 2; ctx.setLineDash([4, 6]); ctx.stroke(); ctx.setLineDash([]); }
+    poly(vals); ctx.fillStyle = rgba(c, .17); ctx.fill();
+    ctx.strokeStyle = c; ctx.lineWidth = 4.5; ctx.shadowColor = c; ctx.shadowBlur = 16; ctx.stroke(); ctx.shadowBlur = 0;
+    vals.forEach((v, i) => {
+      const [x, y] = P(i, v), isH = i === hl;
+      if (isH && hlA > 0) {
+        const ph = (t*1.2) % 1;
+        ctx.beginPath(); ctx.arc(x, y, 10 + ph*34, 0, 7); ctx.strokeStyle = rgba(ecol(i), (1 - ph)*.8*hlA); ctx.lineWidth = 3; ctx.stroke();
+      }
+      ctx.beginPath(); ctx.arc(x, y, isH ? 8 + 5*hlA : 8, 0, 7);
+      if (DIMS[i].star) { ctx.fillStyle = '#0b1330'; ctx.fill(); ctx.lineWidth = 4; ctx.strokeStyle = isH ? ecol(i) : c; ctx.stroke(); }
+      else { ctx.fillStyle = isH ? ecol(i) : c; ctx.fill(); ctx.lineWidth = 2.5; ctx.strokeStyle = '#EAF0FF'; ctx.stroke(); }
+    });
+  }
+  // 标签
+  const la = o.labels ?? 0;
+  if (la > 0) {
+    const ls = o.ls || 26, lo = o.lo ?? 48;
+    for (let i = 0; i < 8; i++) {
+      const pa = clamp((la - i/8*.5) / .5); if (pa <= 0) continue;
+      const d = DIMS[i], ca = Math.cos(ang(i)), sa = Math.sin(ang(i));
+      const lx = cx + ca*(R + lo), ly = cy + sa*(R + lo);
+      const al = ca > .3 ? 'left' : ca < -.3 ? 'right' : 'center';
+      const h = o.scores ? ls*2.3 : ls*1.15, ytop = ly - h/2 + sa*h/2;
+      const isH = i === hl, dim = hl >= 0 ? lerp(1, isH ? 1 : .38, hlA) : 1;
+      const nameC = isH ? mixc(COL.ink, ecol(i), hlA) : mixc(COL.ink, ecol(i), engMix*.85);
+      T(d.name + (d.star && o.stars ? '*' : ''), lx, ytop + ls*.9, { s:isH ? ls + 6*hlA : ls, w:700, c:nameC, al, a:pa*dim });
+      if (o.scores) {
+        const sp = o.tgtLabel ?? 1, sc = ecol(i);
+        const segs = [[String(d.cur), sc], [' → ', COL.sub], [String(d.tgt), COL.T]];
+        TR(sp < 1 ? segs.slice(0, 1).concat([[' → ' + d.tgt, rgba(COL.T, sp)]]) : segs, lx, ytop + ls*.9 + ls*1.3, { s:ls, w:900, al, a:pa*dim });
+      }
+    }
+  }
+  ctx.restore();
+}
+
+/* ================= 场景 ================= */
+
+/* 序章：粒子汇聚成八边形 */
+const IP = Array.from({ length:260 }, (_, k) => { const r = mulberry32(100 + k); return { sx:r()*W, sy:r()*H, e:k/260, sw:r()*2 - 1, sz:1 + r()*2.4, ph:r()*6.28 }; });
+function sIntro(u, d) {
+  ctx.save(); ctx.globalAlpha = 1 - seg(u, d - .7, d);
+  const cx = 540, cy = 720, R = 240, rot = u*.05;
+  const p = eIO(seg(u, .2, 2.8));
+  const vtx = i => [cx + R*Math.cos(ang(i) + rot), cy + R*Math.sin(ang(i) + rot)];
+  const oct = e => { const s = e*8, i = Math.floor(s) % 8, f = s - Math.floor(s), [x1, y1] = vtx(i), [x2, y2] = vtx(i + 1);
+    return [lerp(x1, x2, f), lerp(y1, y2, f)]; };
+  // 核心光
+  nebula(cx, cy, 340, COL.T, .12 + .08*Math.sin(u*2) * seg(u, 2.5, 3.5));
+  for (const q of IP) {
+    const [tx, ty] = oct(q.e), sw = (1 - p) * q.sw * 1.4;
+    let x = lerp(q.sx, tx, p), y = lerp(q.sy, ty, p);
+    const dx = x - cx, dy = y - cy, c = Math.cos(sw), s = Math.sin(sw);
+    x = cx + dx*c - dy*s; y = cy + dx*s + dy*c;
+    ctx.fillStyle = rgba(ecol(Math.floor(q.e*8)), .55 + .45*Math.sin(u*3 + q.ph));
+    ctx.beginPath(); ctx.arc(x, y, q.sz * (1 - .35*p), 0, 7); ctx.fill();
+  }
+  const oa = seg(u, 2.4, 3.4);
+  if (oa > 0) {
+    ctx.save(); ctx.globalAlpha *= oa; ctx.beginPath();
+    for (let i = 0; i < 8; i++) { const [x, y] = vtx(i); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+    ctx.closePath(); ctx.strokeStyle = 'rgba(234,240,255,.8)'; ctx.lineWidth = 2.5; ctx.shadowColor = COL.T; ctx.shadowBlur = 24; ctx.stroke(); ctx.restore();
+  }
+  const sa = eOut(seg(u, 3, 4.4));
+  for (let i = 0; i < 8 && sa > 0; i++) {
+    const [x, y] = vtx(i); ctx.strokeStyle = rgba(ecol(i), .6*sa); ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(lerp(cx, x, sa), lerp(cy, y, sa)); ctx.stroke();
+    ctx.fillStyle = ecol(i); ctx.shadowColor = ecol(i); ctx.shadowBlur = 16;
+    ctx.beginPath(); ctx.arc(x, y, 9*sa, 0, 7); ctx.fill(); ctx.shadowBlur = 0;
+  }
+  if (sa > 0) { ctx.fillStyle = rgba('#FFFFFF', .9*sa); ctx.beginPath(); ctx.arc(cx, cy, 6 + 2*Math.sin(u*4), 0, 7); ctx.fill(); }
+
+  T('CREATOR  VIEW', 540, 1110, { mono:1, s:26, c:COL.T, al:'center', ls:12, a:ap(u, 1.2) });
+  up(ap(u, 1.8, .9), () => T('造物者视角', 540, 1250, { s:136, w:900, al:'center', glow:rgba(COL.C, .8), gb:40, ls:8 }));
+  up(ap(u, 3.4), () => T('如果你是被设计出来的——', 540, 1380, { s:46, c:COL.sub, al:'center' }));
+  up(ap(u, 4.6), () => T('设计图，长什么样？', 540, 1465, { s:60, w:700, al:'center' }));
+  up(ap(u, 5.8), () => {
+    ctx.font = font({ s:30, w:500 }); ctx.letterSpacing = '4px';
+    const tw = ctx.measureText('QY · 八维设计图解').width + 64; ctx.letterSpacing = '0px';
+    rr(540 - tw/2, 1560, tw, 64, 32); ctx.strokeStyle = rgba(COL.T, .6); ctx.lineWidth = 2; ctx.stroke();
+    T('QY · 八维设计图解', 540, 1603, { s:30, w:500, al:'center', c:COL.T, ls:4 });
+  });
+  ctx.restore();
+}
+
+/* 结构：先看结构，再看分数 */
+function sStructure(u, d) {
+  ctx.save(); ctx.globalAlpha = sceneFade(u, d, .5, .6);
+  up(ap(u, .2), () => T('FIRST PRINCIPLES · 第一性原理', 540, 240, { mono:1, s:22, c:COL.T, al:'center', ls:5 }));
+  up(ap(u, .5), () => T('先看结构，再看分数', 540, 330, { s:66, w:900, al:'center' }));
+  drawRadar({ cx:540, cy:860, R:270, grid:seg(u, .3, 1.3), axes:seg(u, .8, 2.6), labels:seg(u, 1.6, 3.2), ls:27, lo:44,
+    eng:eIO(seg(u, 4.8, 6.2)), time:u });
+  up(ap(u, 3.4), () => T('8 个维度，不是一张清单', 540, 1420, { s:46, c:COL.sub, al:'center' }));
+  up(ap(u, 4.6), () => TR([['而是一台机器的 ', COL.ink], ['3 个引擎', COL.T, 20]], 540, 1515, { s:62, w:900, al:'center' }));
+  up(ap(u, 5.8), () => {
+    const items = ['C', 'J', 'D'].map(k => ENG[k]), gapX = 44;
+    ctx.font = font({ s:28, w:500 });
+    const ws = items.map(e => ctx.measureText(`${e.name} · ${e.role}`).width + 30);
+    let x = 540 - (ws.reduce((p, c) => p + c, 0) + gapX*2)/2;
+    items.forEach((e, j) => { ctx.fillStyle = e.color; ctx.beginPath(); ctx.arc(x + 9, 1611, 9, 0, 7); ctx.fill();
+      T(`${e.name} · ${e.role}`, x + 30, 1621, { s:28, w:500, c:e.color }); x += ws[j] + gapX; });
+  });
+  ctx.restore();
+}
+
+/* 引擎：输入 → 判断 → 输出 */
+function sEngines(u, d) {
+  ctx.save(); ctx.globalAlpha = sceneFade(u, d, .5, .6);
+  up(ap(u, .1), () => T('SYSTEM DESIGN · 系统设计', 540, 220, { mono:1, s:22, c:COL.T, al:'center', ls:5 }));
+  up(ap(u, .3), () => TR([['输入', COL.C], [' → ', COL.sub], ['判断', COL.J], [' → ', COL.sub], ['输出', COL.D]], 540, 305, { s:62, w:900, al:'center' }));
+  const BX = 100, BW = 820, BH = 196, ys = [390, 670, 950];
+  const groups = [['C', [0, 1, 4]], ['J', [2, 3]], ['D', [6, 5, 7]]];
+  groups.forEach(([k, ids], gi) => {
+    const a = ap(u, .6 + gi*1.0, .8), e = ENG[k], y = ys[gi];
+    up(a, () => {
+      rr(BX, y, BW, BH, 22); ctx.fillStyle = rgba(e.color, .08); ctx.fill(); ctx.strokeStyle = rgba(e.color, .6); ctx.lineWidth = 2; ctx.stroke();
+      T(e.name, BX + 32, y + 62, { s:40, w:900, c:e.color });
+      T(`${e.en} · ${e.role}`, BX + BW - 32, y + 60, { mono:1, s:22, c:COL.sub, al:'right', ls:3 });
+      let x = BX + 32;
+      ids.forEach((i, j) => {
+        const dd = DIMS[i], ca = ap(u, .9 + gi*1.0 + j*.18, .5); if (ca <= 0) return;
+        ctx.font = font({ s:24, w:500 }); const nw = ctx.measureText(dd.name).width;
+        ctx.font = font({ s:24, w:900 }); const sw = ctx.measureText(dd.cur + (dd.star ? '*' : '')).width;
+        const cw = nw + sw + 44;
+        ctx.save(); ctx.globalAlpha *= ca;
+        rr(x, y + 98, cw, 62, 31); ctx.fillStyle = rgba(e.color, .14); ctx.fill(); ctx.strokeStyle = rgba(e.color, .35); ctx.lineWidth = 1.5; ctx.stroke();
+        T(dd.name, x + 18, y + 138, { s:24, w:500 });
+        T(dd.cur + (dd.star ? '*' : ''), x + 26 + nw, y + 138, { s:24, w:900, c:dd.star ? COL.D : e.color });
+        ctx.restore(); x += cw + 12;
+      });
+    });
+    // 引擎之间的向下箭头
+    if (gi < 2) {
+      const pa = eOut(seg(u, 1.3 + gi*1.0, 1.9 + gi*1.0)); if (pa <= 0) return;
+      const y1 = y + BH + 8, y2 = ys[gi + 1] - 10;
+      ctx.save(); ctx.strokeStyle = rgba(COL.ink, .5); ctx.lineWidth = 3; ctx.setLineDash([8, 8]); ctx.lineDashOffset = -u*30;
+      ctx.beginPath(); ctx.moveTo(540, y1); ctx.lineTo(540, lerp(y1, y2, pa)); ctx.stroke(); ctx.restore();
+      if (pa > .95) arrowHead(540, y2, Math.PI/2, 16, rgba(COL.ink, .7));
+    }
+  });
+  // 复用回路
+  const la = eOut(seg(u, 3.8, 5.0));
+  if (la > 0) {
+    const pts = [[BX + BW + 6, 1048], [1010, 1048], [1010, 488], [BX + BW + 6, 488]];
+    const segL = [74, 560, 74], total = 708; let rem = total*la;
+    ctx.save(); ctx.lineWidth = 3; ctx.setLineDash([10, 8]); ctx.lineDashOffset = u*30;
+    const gr = ctx.createLinearGradient(0, 1048, 0, 488); gr.addColorStop(0, COL.D); gr.addColorStop(1, COL.C); ctx.strokeStyle = gr;
+    ctx.beginPath(); ctx.moveTo(...pts[0]); let last = pts[0];
+    for (let s = 0; s < 3 && rem > 0; s++) { const f = Math.min(1, rem / segL[s]); last = [lerp(pts[s][0], pts[s + 1][0], f), lerp(pts[s][1], pts[s + 1][1], f)]; ctx.lineTo(...last); rem -= segL[s]; }
+    ctx.stroke(); ctx.restore();
+    if (la > .98) arrowHead(BX + BW + 6, 488, Math.PI, 16, COL.C);
+    ['复', '用', '反', '哺'].forEach((ch, i) => T(ch, 1042, 715 + i*36, { s:28, w:700, c:mixc(COL.D, COL.C, i/3), al:'center', a:seg(u, 4.4, 5.2) }));
+  }
+  up(ap(u, 5.4), () => TR([['认知 + 判断：', COL.sub], ['7–8 分', COL.ink]], 540, 1290, { s:42, w:700, al:'center' }));
+  up(ap(u, 6.6), () => TR([['交付：', COL.sub], ['4–6 分', COL.D], ['，且 3 项都标着 ', COL.sub], ['*', COL.D]], 540, 1370, { s:42, w:700, al:'center' }));
+  up(ap(u, 8.0), () => TR([['机器很聪明，', COL.ink], ['但出口偏窄。', COL.D, 18]], 540, 1500, { s:60, w:900, al:'center' }));
+  up(ap(u, 9.4), () => T('* 证据较少、估计把握较低；低分不能直接等同于能力弱', 540, 1600, { s:25, c:rgba(COL.D, .85), al:'center' }));
+  ctx.restore();
+}
+
+/* 单个维度 */
+function sDim(u, d, k) {
+  const i = ORDER[k], m = DIMS[i], e = ENG[m.eng], c = e.color;
+  const ra = k === 0 ? seg(u, 0, .8) : k === 7 ? 1 - seg(u, d - .6, d) : 1;
+  const hlA = eOut(Math.min(seg(u, 0, .7), 1 - seg(u, d - .45, d)));
+  drawRadar({ cx:540, cy:600, R:220, alpha:ra, cur:1, tgt:1, tgtA:.45, labels:1, ls:23, lo:38, hl:i, hlA, time:u + k*DIM_D, stars:1 });
+
+  const ta = Math.min(seg(u, .15, .7), 1 - seg(u, d - .5, d)); if (ta <= 0) return;
+  ctx.save(); ctx.globalAlpha = ta;
+  const X = 90, XR = 990;
+  up(ap(u, .2), () => {
+    T(`DIM ${String(k + 1).padStart(2, '0')}/08 · ${e.name}`, X, 1010, { mono:1, s:23, c, ls:3 });
+    if (m.star) T('* 证据较少 · 低分 ≠ 能力弱', XR, 1010, { s:23, c:COL.D, al:'right' });
+  });
+  up(ap(u, .35, .8), () => {
+    T(m.name, X, 1110, { s:80, w:900, glow:rgba(c, .5), gb:24 });
+    T(`「${m.part}」`, XR, 1104, { s:44, w:700, c, al:'right' });
+  });
+  // 分数条
+  up(ap(u, .7), () => {
+    const fill = m.cur * eOut(seg(u, .8, 1.9)), tA = seg(u, 1.6, 2.3);
+    for (let j = 0; j < 10; j++) {
+      const x = X + j*60, y = 1158;
+      rr(x, y, 50, 24, 6);
+      if (j < Math.floor(fill)) { ctx.fillStyle = c; ctx.fill(); }
+      else if (j < fill) { ctx.save(); ctx.clip(); ctx.fillStyle = c; ctx.fillRect(x, y, 50*(fill - j), 24); ctx.restore(); rr(x, y, 50, 24, 6); ctx.strokeStyle = rgba(c, .4); ctx.lineWidth = 1.5; ctx.stroke(); }
+      else if (j < m.tgt) { ctx.setLineDash([5, 4]); ctx.strokeStyle = rgba(COL.T, .9*tA + .1); ctx.lineWidth = 2; ctx.stroke(); ctx.setLineDash([]); }
+      else { ctx.strokeStyle = 'rgba(160,180,240,.2)'; ctx.lineWidth = 1.5; ctx.stroke(); }
+    }
+    TR([[String(Math.round(fill) || 0), c], [' → ', COL.sub], [String(m.tgt), rgba(COL.T, tA*.9 + .1)]], XR, 1186, { s:48, w:900, al:'right' });
+  });
+  let y = 1300;
+  const label = (txt, yy, a) => up(a, () => {
+    ctx.font = font({ s:22, w:700 }); ctx.letterSpacing = '4px'; const w = ctx.measureText(txt).width + 30; ctx.letterSpacing = '0px';
+    rr(X, yy - 30, w, 40, 8); ctx.fillStyle = rgba(c, .16); ctx.fill();
+    T(txt, X + 15, yy - 2, { s:22, w:700, c, ls:4 });
+  });
+  label('本质', y, ap(u, 1.4));
+  const ess = wrap(m.essence, 900, { s:46, w:700 }); y += 66;
+  ess.forEach((ln, j) => { const yy = y + j*62; up(ap(u, 1.6 + j*.15), () => T(ln, X, yy, { s:46, w:700 })); }); y += ess.length*62 + 26;
+  label('底层逻辑', y, ap(u, 2.9));
+  y += 60;
+  m.logic.forEach((ln, j) => {
+    const lines = wrap(ln, 860, { s:34 });
+    lines.forEach((l2, q) => { const yy = y; up(ap(u, 3.2 + j*.7), () => { if (!q) T('→', X, yy, { s:34, w:700, c }); T(l2, X + 48, yy, { s:34, c:COL.ink }); }); y += 50; });
+  });
+  y += 30;
+  const ny = y;
+  up(ap(u, 5.6, .9), () => {
+    rr(X, ny, XR - X, 116, 14); ctx.fillStyle = rgba(c, .09); ctx.fill();
+    ctx.fillStyle = c; ctx.fillRect(X, ny, 6, 116);
+    T('造物者批注', X + 30, ny + 40, { s:22, w:700, c, ls:4 });
+    T(m.note, X + 30, ny + 92, { s:36, w:700 });
+  });
+  ctx.restore();
+}
+
+/* 诊断：管道 */
+const PX0 = 90, PX1 = 990, PSW = (PX1 - PX0) / 8, PCY = 600;
+const pH = k => DIMS[ORDER[k]].cur * 11;
+function pipeHalf(x) {
+  const c0 = PX0 + PSW/2; if (x <= c0) return pH(0);
+  const s = (x - c0) / PSW, k = Math.floor(s); if (k >= 7) return pH(7);
+  let f = clamp((s - k - .3) / .4); f = f*f*(3 - 2*f); return lerp(pH(k), pH(k + 1), f);
+}
+const PP = Array.from({ length:170 }, (_, n) => { const r = mulberry32(900 + n); const o = (r()*2 - 1)*.95; let xb = Infinity;
+  for (let x = PX0; x <= PX1; x += 2) if (pipeHalf(x) < Math.abs(o)*88 + 3) { xb = x; break; }
+  return { o, ph:r(), sp:.8 + r()*.4, xb }; });
+function sDiagnosis(u, d) {
+  ctx.save(); ctx.globalAlpha = sceneFade(u, d, .5, .6);
+  up(ap(u, .1), () => T('DIAGNOSIS · 形状诊断', 540, 220, { mono:1, s:22, c:COL.T, al:'center', ls:5 }));
+  up(ap(u, .3), () => TR([['输入端强，', COL.ink], ['输出端弱', COL.D, 18]], 540, 310, { s:66, w:900, al:'center' }));
+  const rv = eIO(seg(u, .8, 2.2));
+  T('INPUT', PX0, 430, { mono:1, s:20, c:COL.C, ls:4, a:rv });
+  T('OUTPUT', PX1, 430, { mono:1, s:20, c:COL.D, al:'right', ls:4, a:seg(u, 2, 2.4) });
+  ctx.save(); ctx.beginPath(); ctx.rect(0, 0, PX0 + (PX1 - PX0)*rv + 2, H); ctx.clip();
+  const gr = ctx.createLinearGradient(PX0, 0, PX1, 0);
+  for (let k = 0; k < 8; k++) gr.addColorStop((k + .5)/8, ecol(ORDER[k]));
+  ctx.beginPath();
+  for (let x = PX0; x <= PX1; x += 4) ctx.lineTo(x, PCY - pipeHalf(x));
+  for (let x = PX1; x >= PX0; x -= 4) ctx.lineTo(x, PCY + pipeHalf(x));
+  ctx.closePath(); ctx.globalAlpha *= .22; ctx.fillStyle = gr; ctx.fill(); ctx.globalAlpha /= .22;
+  ctx.lineWidth = 3; ctx.strokeStyle = gr;
+  [-1, 1].forEach(sg => { ctx.beginPath(); for (let x = PX0; x <= PX1; x += 4) ctx.lineTo(x, PCY + sg*pipeHalf(x)); ctx.stroke(); });
+  for (let k = 0; k < 8; k++) {
+    const i = ORDER[k], cxk = PX0 + PSW*(k + .5);
+    T(String(DIMS[i].cur), cxk, PCY - pH(k) - 18, { s:28, w:900, c:ecol(i), al:'center' });
+    T(DIMS[i].short, cxk, PCY + 128, { s:24, w:500, c:COL.sub, al:'center' });
+  }
+  ctx.restore();
+  // 粒子流
+  const pa = seg(u, 2, 2.6);
+  if (pa > 0) {
+    const L = PX1 - PX0 + 160;
+    for (const q of PP) {
+      const s = (q.ph*L + u*q.sp*170) % L; let x = PX0 - 20 + s, a = 1, col;
+      if (x > q.xb) { a = 1 - (x - q.xb)/140; x = q.xb; col = '#FF7A59'; }
+      else if (x > PX1) { a = 1 - (x - PX1)/140; col = COL.T; }
+      else col = ecol(ORDER[clamp(Math.floor((x - PX0)/PSW), 0, 7)]);
+      if (a <= 0 || x < PX0) continue;
+      ctx.fillStyle = rgba(col, a*pa*.9); ctx.beginPath(); ctx.arc(x, PCY + q.o*88, 3.2, 0, 7); ctx.fill();
+    }
+  }
+  // 引擎分组括号
+  const ba = seg(u, 1.8, 2.6);
+  [['C', 0, 2], ['J', 3, 4], ['D', 5, 7]].forEach(([k, a0, a1]) => {
+    const x0 = PX0 + PSW*a0 + 10, x1 = PX0 + PSW*(a1 + 1) - 10, e = ENG[k];
+    ctx.strokeStyle = rgba(e.color, .7*ba); ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x0, 748); ctx.lineTo(x0, 760); ctx.lineTo(x1, 760); ctx.lineTo(x1, 748); ctx.stroke();
+    T(e.name, (x0 + x1)/2, 802, { s:26, w:700, c:e.color, al:'center', a:ba });
+  });
+  up(ap(u, 2.8), () => T('流量，由最窄处决定。', 540, 890, { s:44, w:700, al:'center' }));
+  up(ap(u, 4.2), () => {
+    rr(90, 950, 900, 136, 18); ctx.fillStyle = 'rgba(255,255,255,.035)'; ctx.fill(); ctx.strokeStyle = 'rgba(160,180,240,.3)'; ctx.lineWidth = 1.5; ctx.stroke();
+    TR([['影响力 ≈ ', COL.ink], ['判断质量', COL.J], [' × ', COL.sub], ['交付转化', COL.D], [' × ', COL.sub], ['复用次数', COL.T]], 540, 1012, { s:38, w:700, al:'center' });
+    T('乘法结构：任何一项趋近 0，整体就趋近 0', 540, 1060, { s:26, c:COL.sub, al:'center' });
+  });
+  up(ap(u, 6.4), () => T('DEEPER · 更深一层', 540, 1190, { mono:1, s:22, c:COL.D, al:'center', ls:5 }));
+  up(ap(u, 6.8), () => TR([['交付引擎的 3 项，恰好都是', COL.ink], ['「证据较少」', COL.D]], 540, 1262, { s:38, al:'center' }));
+  up(ap(u, 8.0), () => TR([['而', COL.ink], ['成果证据', COL.D], ['，正是让其他维度', COL.ink], ['「被看见」', COL.T], ['的维度', COL.ink]], 540, 1330, { s:38, al:'center' }));
+  up(ap(u, 9.6, .9), () => T('它不是第 8 块短板，', 540, 1470, { s:60, w:900, al:'center' }));
+  up(ap(u, 10.4, .9), () => T('而是第 1 个杠杆。', 540, 1562, { s:60, w:900, c:COL.T, al:'center', glow:rgba(COL.T, .7), gb:28 }));
+  ctx.restore();
+}
+
+/* 飞轮 */
+const FW = [['选定主线', '只押一个场景'], ['拿到基线', '改善前的数字'], ['交付量化', '改善后的数字'], ['二次复验', '换场景再证一次'], ['沉淀方法', '可复用的模板']];
+function sFlywheel(u, d) {
+  ctx.save(); ctx.globalAlpha = sceneFade(u, d, .5, .6);
+  up(ap(u, .1), () => T('SOLUTION · 解法', 540, 220, { mono:1, s:22, c:COL.T, al:'center', ls:5 }));
+  up(ap(u, .3), () => T('主线飞轮', 540, 310, { s:66, w:900, al:'center' }));
+  const cx = 540, cy = 830, R = 270, fa = i => -Math.PI/2 + i*2*Math.PI/5, gap = Math.asin(78/R);
+  // 弧形箭头
+  for (let i = 0; i < 5; i++) {
+    const p = eOut(seg(u, 1 + i*.35, 1.5 + i*.35)); if (p <= 0) continue;
+    const a1 = fa(i) + gap, a2 = fa(i + 1) - gap, ae = lerp(a1, a2, p);
+    ctx.strokeStyle = rgba(COL.T, .6); ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(cx, cy, R, a1, ae); ctx.stroke();
+    if (p > .97) arrowHead(cx + R*Math.cos(a2), cy + R*Math.sin(a2), a2 + Math.PI/2, 16, rgba(COL.T, .85));
+  }
+  // 环绕光点
+  const ra = seg(u, 3, 3.6), rot = -Math.PI/2 + Math.max(0, u - 3)*1.15;
+  if (ra > 0) {
+    for (let k = 0; k < 14; k++) { const a = rot - k*.05; ctx.fillStyle = rgba(COL.T, ra*(1 - k/14)*.9);
+      ctx.beginPath(); ctx.arc(cx + R*Math.cos(a), cy + R*Math.sin(a), 9 - k*.5, 0, 7); ctx.fill(); }
+  }
+  const lap = ((rot + Math.PI/2) / (2*Math.PI/5));
+  for (let i = 0; i < 5; i++) {
+    const a = ap(u, .7 + i*.35, .6); if (a <= 0) continue;
+    const x = cx + R*Math.cos(fa(i)), y = cy + R*Math.sin(fa(i));
+    const act = ra > 0 ? Math.max(0, 1 - (((lap - i) % 5 + 5) % 5)/1.2) : 0;
+    ctx.save(); ctx.globalAlpha *= a;
+    ctx.beginPath(); ctx.arc(x, y, 62, 0, 7); ctx.fillStyle = '#0b1330'; ctx.fill();
+    ctx.lineWidth = 3; ctx.strokeStyle = COL.T; ctx.shadowColor = COL.T; ctx.shadowBlur = 8 + 30*act; ctx.stroke(); ctx.shadowBlur = 0;
+    T(String(i + 1).padStart(2, '0'), x, y + 11, { mono:1, s:32, w:700, c:COL.T, al:'center' });
+    const ca = Math.cos(fa(i));
+    let lx = x, ly = y, al = 'center';
+    if (i === 0) ly = y - 135; else if (ca > .5) { lx = x + 84; ly = y - 30; al = 'left'; }
+    else if (ca < -.5) { lx = x - 84; ly = y - 30; al = 'right'; } else ly = y + 102;
+    T(FW[i][0], lx, ly + 30, { s:32, w:700, al, c:mixc(COL.ink, COL.T, act) });
+    T(FW[i][1], lx, ly + 66, { s:23, al, c:COL.sub });
+    ctx.restore();
+  }
+  up(ap(u, 2.4), () => { T('成果密度', cx, cy + 8, { s:54, w:900, al:'center', glow:rgba(COL.T, .6), gb:24 });
+    T('OUTCOME DENSITY', cx, cy + 52, { mono:1, s:19, c:COL.sub, al:'center', ls:4 }); });
+  up(ap(u, 4.6), () => TR([['成果密度 = ', COL.T], ['同一主线上被验证的成果 ÷ 时间', COL.ink]], 540, 1310, { s:36, w:700, al:'center' }));
+  up(ap(u, 6.2), () => T('每转一圈，三块短板被一起拉高：', 540, 1400, { s:32, c:COL.sub, al:'center' }));
+  ['成果证据 ↑', '技术深度 ↑', '组织推动 ↑'].forEach((s, j) => up(ap(u, 6.9 + j*.3), () => {
+    const x = 90 + j*310; rr(x, 1440, 280, 72, 36); ctx.fillStyle = rgba(COL.D, .12); ctx.fill(); ctx.strokeStyle = rgba(COL.D, .6); ctx.lineWidth = 2; ctx.stroke();
+    T(s, x + 140, 1488, { s:32, w:700, c:COL.D, al:'center' }); }));
+  up(ap(u, 8.6), () => T('不换赛道，在同一条赛道上叠加。', 540, 1640, { s:44, w:900, c:COL.T, al:'center' }));
+  ctx.restore();
+}
+
+/* 目标形态 */
+const CARDS = [[7, ['先拿基线与改善数据，', '再到第二个场景复验']], [6, ['深入性能、异常、成本、', '部署运维，能判断取舍']], [5, ['明确负责人、资源、验收，', '让团队能独立交付']]];
+function sTarget(u, d) {
+  ctx.save(); ctx.globalAlpha = sceneFade(u, d, .5, .6);
+  up(ap(u, .1), () => T('DESIGN TARGET · 设计目标', 540, 200, { mono:1, s:22, c:COL.T, al:'center', ls:5 }));
+  up(ap(u, .3), () => T('从相对优势，到绝对优势', 540, 285, { s:58, w:900, al:'center' }));
+  const p = eIO(seg(u, 1.2, 4.2));
+  drawRadar({ cx:540, cy:770, R:280, grid:1, axes:1, cur:seg(u, 0, .6), vals:DIMS.map(dd => lerp(dd.cur, dd.tgt, p)),
+    curColor:mixc(COL.C, COL.T, p), ghost:seg(u, 1.2, 2), tgt:seg(u, .4, 1.2), tgtA:.6, labels:seg(u, .2, 1.2), ls:25, lo:44,
+    scores:1, tgtLabel:p, time:u, stars:1 });
+  CARDS.forEach(([i, desc], j) => up(ap(u, 4.6 + j*.4), () => {
+    const dd = DIMS[i], x = 60 + j*330, y = 1235;
+    rr(x, y, 300, 270, 22); ctx.fillStyle = rgba(COL.D, .07); ctx.fill(); ctx.strokeStyle = rgba(COL.D, .45); ctx.lineWidth = 1.5; ctx.stroke();
+    T(dd.name, x + 24, y + 52, { s:27, w:700 });
+    TR([[String(dd.cur), COL.D], [' → ', COL.sub], [String(dd.tgt), COL.T]], x + 24, y + 124, { s:52, w:900 });
+    desc.forEach((ln, q) => T(ln, x + 22, y + 184 + q*36, { s:21, c:COL.sub }));
+  }));
+  up(ap(u, 6.6), () => T('不比面积，不算总分——只把出口打开。', 540, 1615, { s:38, w:700, al:'center' }));
+  up(ap(u, 7.4), () => T('目标分用于安排投入，不是对未来表现的预测', 540, 1675, { s:24, c:COL.faint, al:'center' }));
+  ctx.restore();
+}
+
+/* 结语 */
+function sEnding(u, d) {
+  ctx.save(); ctx.globalAlpha = seg(u, 0, .6);
+  ctx.save(); ctx.translate(540, 900); ctx.rotate(u*.04); ctx.translate(-540, -900);
+  drawRadar({ cx:540, cy:900, R:430, alpha:.16, grid:1, axes:1, tgt:1, cur:1, vals:DIMS.map(dd => dd.tgt), curColor:COL.T, time:u });
+  ctx.restore();
+  up(ap(u, .4), () => T('BREAKTHROUGH', 540, 560, { mono:1, s:24, c:COL.T, al:'center', ls:10 }));
+  up(ap(u, .8), () => T('你的突破口', 540, 650, { s:46, c:COL.sub, al:'center', ls:6 }));
+  up(ap(u, 1.6, .9), () => T('持续提高', 540, 820, { s:108, w:900, al:'center' }));
+  up(ap(u, 2.2, .9), () => T('同一条主线上的', 540, 955, { s:108, w:900, al:'center' }));
+  up(ap(u, 2.9, 1), () => T('成果密度。', 540, 1120, { s:132, w:900, c:COL.T, al:'center', glow:rgba(COL.T, .8), gb:40 }));
+  up(ap(u, 4.6), () => T('造物者已经给了你：连接器、编译器、罗盘、滤镜。', 540, 1290, { s:32, c:COL.sub, al:'center' }));
+  up(ap(u, 5.7), () => T('剩下的，是把出口打开。', 540, 1375, { s:50, w:700, al:'center' }));
+  up(ap(u, 7.0), () => {
+    T('评分基于交流中的行为与产物做主观估计，未做独立绩效核实或同业抽样；', 540, 1610, { s:21, c:COL.faint, al:'center' });
+    T('* 项证据较少，低分 ≠ 能力弱；目标分用于安排投入，不计算总分。', 540, 1644, { s:21, c:COL.faint, al:'center' });
+  });
+  ctx.restore();
+  const k = seg(u, d - 1.2, d); if (k > 0) { ctx.fillStyle = `rgba(0,0,0,${k})`; ctx.fillRect(0, 0, W, H); }
+}
+
+/* ---------- 渲染入口 ---------- */
+function renderAt(t) {
+  t = clamp(t, 0, DURATION - 1e-3);
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.shadowBlur = 0; ctx.setLineDash([]);
+  drawBG(t);
+  for (const s of SCENES) if (t >= s.t0 && t < s.t1) s.draw(t - s.t0, s.t1 - s.t0);
+  drawVignette();
+  drawHUD(t);
+  const k0 = 1 - seg(t, 0, .6); if (k0 > 0) { ctx.fillStyle = `rgba(0,0,0,${k0})`; ctx.fillRect(0, 0, W, H); }
+}
+window.renderAt = renderAt; window.DURATION = DURATION;
+
+/* 预加载所有用到的字形（Google Fonts 按 unicode-range 分片） */
+const ALL_TEXT = [...new Set(document.getElementById('main').textContent + 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/·:.')].join('');
+window.__ready = (async () => {
+  try {
+    await Promise.race([Promise.all([
+      ...['400', '500', '700', '900'].map(w => document.fonts.load(`${w} 40px "Noto Sans SC"`, ALL_TEXT)),
+      ...['500', '700'].map(w => document.fonts.load(`${w} 20px "JetBrains Mono"`, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/·:.')),
+    ]), new Promise(r => setTimeout(r, 15000))]);
+  } catch (e) {}
+  renderAt(window.__t || 0);
+})();
+
+/* ================= 播放器 ================= */
+const RENDER = new URLSearchParams(location.search).has('render');
+function fit() {
+  const s = Math.min(innerWidth / W, innerHeight / H);
+  cv.style.width = (W*s) + 'px'; cv.style.height = (H*s) + 'px';
+}
+if (RENDER) {
+  document.body.classList.add('render'); cv.style.width = W + 'px'; cv.style.height = H + 'px';
+} else {
+  fit(); addEventListener('resize', fit);
+  const $ = id => document.getElementById(id);
+  const ui = $('ui'), seek = $('seek'), timeEl = $('time'), playBtn = $('play'), musBtn = $('mus'), msg = $('msg'), audio = new Audio();
+  seek.max = DURATION;
+  let playing = false, base = 0, startAt = 0, mode = 'off', musicOn = true, yt = null, ytReady = false;
+  const now = () => playing ? Math.min(DURATION, base + (performance.now() - startAt)/1000) : base;
+  const say = (s, ms=4000) => { msg.textContent = s; msg.style.display = 'block'; clearTimeout(say.t); say.t = setTimeout(() => msg.style.display = 'none', ms); };
+
+  function musicSync(t, play) {
+    if (!musicOn) return;
+    if (mode === 'yt' && ytReady) { try { yt.seekTo(t, true); play ? yt.playVideo() : yt.pauseVideo(); } catch (e) {} }
+    if (mode === 'file') { audio.currentTime = t; play ? audio.play().catch(() => {}) : audio.pause(); }
+  }
+  function musicPause() { if (mode === 'yt' && ytReady) try { yt.pauseVideo(); } catch (e) {} if (mode === 'file') audio.pause(); }
+  function play() { if (base >= DURATION - .05) base = 0; playing = true; startAt = performance.now(); playBtn.textContent = '❚❚'; musicSync(base, true); }
+  function pause() { base = now(); playing = false; playBtn.textContent = '▶'; musicPause(); }
+  function toggle() { playing ? pause() : play(); }
+  function seekTo(t) { base = clamp(t, 0, DURATION); if (playing) startAt = performance.now(); musicSync(base, playing); }
+
+  function loadYT() {
+    mode = 'yt'; $('ytwrap').classList.add('on');
+    const fail = () => { if (ytReady) return; mode = 'off'; $('ytwrap').classList.remove('on'); say('YouTube 音乐加载失败，可点「♪」选择本地音乐文件', 6000); };
+    window.onYouTubeIframeAPIReady = () => {
+      yt = new YT.Player('ytbox', { width:200, height:113, videoId:'zBGTEvt5Fbg',
+        playerVars:{ playsinline:1, controls:0, rel:0, modestbranding:1 },
+        events:{ onReady:() => { ytReady = true; yt.setVolume(70); musicSync(now(), playing); }, onError:fail } });
+    };
+    const s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api'; s.onerror = fail; document.head.appendChild(s);
+    setTimeout(fail, 10000);
+  }
+  const pick = $('pick');
+  pick.onchange = () => { const f = pick.files[0]; if (!f) return; audio.src = URL.createObjectURL(f); mode = 'file'; begin(); };
+  function begin() { $('start').style.display = 'none'; ui.classList.remove('idle'); play(); bump(); }
+  $('goYT').onclick = () => { loadYT(); begin(); };
+  $('goMute').onclick = () => { musicOn = false; musBtn.textContent = '♪ 关'; begin(); };
+  playBtn.onclick = toggle; cv.onclick = () => { if ($('start').style.display !== 'none') return; toggle(); };
+  seek.oninput = () => seekTo(+seek.value);
+  musBtn.onclick = () => {
+    if (mode === 'off') { pick.click(); return; }
+    musicOn = !musicOn; musBtn.textContent = musicOn ? '♪ 开' : '♪ 关';
+    musicOn ? musicSync(now(), playing) : musicPause();
+  };
+  addEventListener('keydown', e => { if (e.code === 'Space') { e.preventDefault(); toggle(); }
+    if (e.code === 'ArrowRight') seekTo(now() + 5); if (e.code === 'ArrowLeft') seekTo(now() - 5); });
+  let idleT; function bump() { ui.classList.remove('idle'); clearTimeout(idleT); idleT = setTimeout(() => playing && ui.classList.add('idle'), 2500); }
+  addEventListener('pointermove', bump); addEventListener('touchstart', bump);
+
+  (function loop() {
+    const t = now();
+    if (playing && t >= DURATION) { pause(); base = DURATION; bump(); }
+    renderAt(t); seek.value = t; timeEl.textContent = `${fmt(t)} / ${fmt(DURATION)}`;
+    requestAnimationFrame(loop);
+  })();
+}
+</script>
+</body>
+</html>
