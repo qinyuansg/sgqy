@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>身体三层模型</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&display=swap" rel="stylesheet" />
+<style>
+  :root { --bg: #06080d; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: #f4f4f5; font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif; }
+  body { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
+  canvas { background: var(--bg); max-height: 92vh; max-width: 96vw; display: block; box-shadow: 0 0 80px rgba(0,0,0,.6); }
+  #ui { display: flex; gap: 12px; align-items: center; font-size: 14px; color: #8b93a7; flex-wrap: wrap; justify-content: center; padding: 0 16px; }
+  #ui button, #ui label { background: #171c27; color: #f4f4f5; border: 1px solid #2a3142; border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+  #ui input[type=range] { width: 260px; }
+  body.render #ui { display: none; }
+  body.render canvas { max-height: none; max-width: none; box-shadow: none; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<div id="ui">
+  <button id="play">▶ 播放</button>
+  <input id="scrub" type="range" min="0" max="104" step="0.01" value="0" />
+  <span id="time">0.0s</span>
+  <label>🎵 选择你的背景音乐 <input id="audio" type="file" accept="audio/*" hidden /></label>
+  <span>（画面按 96 BPM、104 秒的起伏曲线设计）</span>
+</div>
+<script src="data.js"></script>
+<script>
+(() => {
+const D = window.HEALTH;
+const W = 1080, H = 1920, DUR = 104, BPM = 96, BEAT = 60 / BPM;
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+
+// ---------- palette ----------
+const C = {
+  bg: '#06080d', bg2: '#0d1119', card: '#121826', line: '#1f2738',
+  text: '#f4f4f5', muted: '#8b93a7', dim: '#4b5368',
+  yellow: '#ffe94d', sky: '#7dd3fc', rose: '#fb7185', mint: '#6ee7b7', violet: '#c4b5fd', orange: '#fdba74',
+};
+
+// ---------- easing / timing ----------
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, p) => a + (b - a) * p;
+const E = {
+  out: p => 1 - Math.pow(1 - p, 3),
+  in: p => p * p * p,
+  io: p => p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2,
+  back: p => { const c = 1.70158; return 1 + (c + 1) * Math.pow(p - 1, 3) + c * Math.pow(p - 1, 2); },
+  spring: p => 1 - Math.cos(p * Math.PI * 2.2) * Math.exp(-p * 5) ,
+};
+// progress of a segment starting at s, lasting d, with easing
+const seg = (t, s, d, ease = E.out) => ease(clamp((t - s) / d));
+const fadeInOut = (t, s, e, f = .5) => clamp((t - s) / f) * clamp((e - t) / f);
+// energy curve shared with music.py
+const ENERGY = [[0, .15], [8, .3], [22, .5], [40, .65], [57, .8], [58, 1], [74, .95], [90, .7], [98, .3], [104, 0]];
+const energyAt = t => { for (let i = 1; i < ENERGY.length; i++) if (t <= ENERGY[i][0]) { const [x0, y0] = ENERGY[i - 1], [x1, y1] = ENERGY[i]; return lerp(y0, y1, (t - x0) / (x1 - x0)); } return 0; };
+// beat pulse 0..1 (sharp attack, exponential decay)
+const beatPulse = t => { const ph = (t % BEAT) / BEAT; return Math.exp(-ph * 6); };
+
+// ---------- drawing helpers ----------
+function txt(s, x, y, { size = 48, weight = 400, color = C.text, align = 'left', alpha = 1, ls = 0, base = 'alphabetic' } = {}) {
+  ctx.save(); ctx.globalAlpha *= alpha; ctx.fillStyle = color; ctx.textAlign = align; ctx.textBaseline = base;
+  ctx.font = `${weight} ${size}px "Noto Sans SC", "PingFang SC", sans-serif`;
+  if (ls) ctx.letterSpacing = ls + 'px';
+  ctx.fillText(s, x, y); ctx.restore();
+}
+function rr(x, y, w, h, r, fill, stroke) {
+  ctx.beginPath(); ctx.roundRect(x, y, w, h, r);
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 2; ctx.stroke(); }
+}
+function line(pts, color, width = 4, dash) {
+  if (pts.length < 2) return;
+  ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  if (dash) ctx.setLineDash(dash);
+  ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]); ctx.stroke(); ctx.restore();
+}
+function dot(x, y, r, color) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = color; ctx.fill(); }
+function glow(x, y, r, color, a) { const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, color); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.save(); ctx.globalAlpha *= a; ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2); ctx.restore(); }
+// typewriter-ish reveal: returns substring by progress
+const reveal = (s, p) => s.slice(0, Math.round(s.length * clamp(p)));
+// 2-line wrapping for long sentences
+function para(lines, x, y, lh, opts) { lines.forEach((l, i) => txt(l, x, y + i * lh, opts)); }
+
+function chapter(t, s, n, title, sub) {
+  // small chapter marker at top
+  const a = fadeInOut(t, s, s + 99, .6);
+  const p = seg(t, s, .8);
+  ctx.save(); ctx.globalAlpha *= a;
+  txt(n, 80, 170 - (1 - p) * 20, { size: 30, weight: 700, color: C.yellow, ls: 6 });
+  txt(title, 80, 250 - (1 - p) * 20, { size: 68, weight: 900 });
+  if (sub) txt(sub, 80, 310, { size: 32, color: C.muted, alpha: seg(t, s + .4, .8) });
+  line([[80, 350], [80 + 920 * seg(t, s + .2, 1.2), 350]], C.line, 2);
+  ctx.restore();
+}
+
+// bars growing with stagger
+function bars(x, y, w, h, vals, maxV, p, color, { gap = .3, stagger = .6, labelEvery = 0, start = 1, highlight } = {}) {
+  const n = vals.length, bw = w / n;
+  for (let i = 0; i < n; i++) {
+    const lp = E.out(clamp((p * (1 + stagger) - (i / n) * stagger) / 1));
+    const bh = (vals[i] / maxV) * h * lp;
+    const col = highlight && highlight(i) ? C.rose : color;
+    ctx.fillStyle = col; ctx.globalAlpha *= 1;
+    rr(x + i * bw + bw * gap / 2, y + h - bh, bw * (1 - gap), bh, 4, col);
+    if (labelEvery && (i + start) % labelEvery === 1 - (start % labelEvery === 1 ? 0 : 0) && lp > 0) { }
+  }
+}
+
+// ---------- scenes ----------
+function sceneHook(t) { // 0 - 8
+  const a = fadeInOut(t, 0, 8.5, .8);
+  ctx.save(); ctx.globalAlpha = a;
+  // heartbeat ring  (72 bpm, matches the music heartbeat)
+  const hb = (t % (60 / 72)) / (60 / 72);
+  const pulse = Math.exp(-hb * 5) + .5 * Math.exp(-Math.max(0, hb - .22) * 6) * (hb > .22 ? 1 : 0);
+  const cx = W / 2, cy = 760;
+  glow(cx, cy, 420 + 80 * pulse, 'rgba(255,233,77,.25)', .9);
+  for (let k = 0; k < 3; k++) { ctx.beginPath(); ctx.arc(cx, cy, 150 + k * 70 + pulse * 18 * (k + 1), 0, Math.PI * 2); ctx.strokeStyle = `rgba(255,233,77,${.5 - k * .15})`; ctx.lineWidth = 2; ctx.stroke(); }
+  dot(cx, cy, 70 + pulse * 10, C.yellow);
+  txt('94', cx, cy + 20, { size: 54, weight: 900, color: C.bg, align: 'center' });
+  txt('bpm · 4 分钟前', cx, cy + 300, { size: 30, color: C.muted, align: 'center', alpha: seg(t, .6, .8) });
+
+  // lines appear on heartbeat count
+  const L = [
+    ['过去 3 个月，', 1.2], ['你的身体每天都在写日记。', 2.2],
+    ['5 个指标 · 60 多天 · 几万次心跳', 4.0], ['今天，我们把它读懂。', 5.6],
+  ];
+  L.forEach(([s, st], i) => {
+    const p = seg(t, st, .7);
+    const big = i === 3;
+    txt(s, W / 2, 1220 + i * 90 + (1 - p) * 30, { size: big ? 60 : 46, weight: big ? 900 : 400, color: big ? C.yellow : (i === 2 ? C.muted : C.text), align: 'center', alpha: p });
+  });
+  txt('—— 直达本质 · 底层逻辑 · 极致框架 ——', W / 2, 1700, { size: 28, color: C.dim, align: 'center', alpha: seg(t, 6.4, .8), ls: 4 });
+  ctx.restore();
+}
+
+function sceneOverview(t) { // 8 - 22
+  const S = 8, a = fadeInOut(t, S, 22.4, .6);
+  ctx.save(); ctx.globalAlpha = a;
+  chapter(t, S, '第一层', '先看全貌', '三个月、五个指标、一张图');
+  const cards = [
+    { k: '活动卡路里', v: '864', u: 'kcal / 天', c: C.yellow, note: '目标 300 · 完成 288%' },
+    { k: '睡眠评分', v: '86', u: 'Optimal', c: C.violet, note: '平均睡 6h18m' },
+    { k: '心率变异 HRV', v: '44', u: 'ms', c: C.sky, note: '范围 3 – 103' },
+    { k: '心率', v: '87', u: 'bpm', c: C.rose, note: '范围 54 – 143' },
+    { k: '血氧 SpO₂', v: '97', u: '%', c: C.mint, note: '范围 91 – 99' },
+  ];
+  // cards land on beats
+  cards.forEach((cd, i) => {
+    const st = S + 1.2 + i * BEAT * 1.6;
+    const p = seg(t, st, .7, E.back), ap = seg(t, st, .3);
+    const y = 420 + i * 215;
+    ctx.save(); ctx.globalAlpha *= ap;
+    ctx.translate(0, (1 - p) * 60);
+    rr(80, y, 830, 185, 24, C.card, C.line);
+    ctx.fillStyle = cd.c; rr(80, y, 12, 185, [24, 0, 0, 24], cd.c);
+    txt(cd.k, 130, y + 64, { size: 34, color: C.muted });
+    const cnt = Math.round(parseInt(cd.v) * seg(t, st, 1.0));
+    txt(String(cnt), 130, y + 148, { size: 80, weight: 900, color: cd.c });
+    txt(cd.u, 130 + ctx.measureText(String(cnt)).width * 0 + (String(cnt).length * 46) + 16, y + 148, { size: 32, color: C.muted });
+    txt(cd.note, 870, y + 112, { size: 30, color: C.muted, align: 'right', alpha: seg(t, st + .5, .6) });
+    ctx.restore();
+  });
+  // layering annotation after cards: three layers bracket
+  const lp = seg(t, S + 8.5, 1.2);
+  if (lp > 0) {
+    ctx.save(); ctx.globalAlpha *= lp;
+    const groups = [['输出层', 0, 0, C.yellow], ['恢复层', 1, 2, C.sky], ['基础层', 3, 4, C.mint]];
+    groups.forEach(([name, i0, i1, col], gi) => {
+      const y0 = 420 + i0 * 215, y1 = 420 + i1 * 215 + 185;
+      const gp = seg(t, S + 8.5 + gi * .5, .8);
+      line([[944, y0 + 10], [944, y0 + 10 + (y1 - y0 - 20) * gp]], col, 6);
+      txt(name, 962, (y0 + y1) / 2 + 12, { size: 28, weight: 700, color: col, alpha: gp });
+    });
+    // 旋转文字太挤，用底部说明
+    txt('五个数字其实只有三件事：你输出了多少 · 你恢复了多少 · 底座稳不稳', W / 2, 1570, { size: 32, color: C.text, align: 'center', alpha: seg(t, S + 10, .8) });
+    txt('接下来，一层一层拆。', W / 2, 1650, { size: 40, weight: 700, color: C.yellow, align: 'center', alpha: seg(t, S + 11.5, .8) });
+  }
+  ctx.restore();
+}
+
+function sceneOutput(t) { // 22 - 40
+  const S = 22, a = fadeInOut(t, S, 40.4, .6);
+  ctx.save(); ctx.globalAlpha = a;
+  chapter(t, S, '第二层 · 输出层', '你在高负荷运转', '活动卡路里 = 身体每天烧掉的“额外能量”');
+
+  // daily Oct bars
+  const X = 80, Y = 430, Wd = 920, Hd = 480;
+  const vals = D.calories.daily.oct.v, maxV = 1400;
+  // grid
+  [1400, 933, 467].forEach((g, i) => { const y = Y + Hd - (g / maxV) * Hd; line([[X, y], [X + Wd, y]], C.line, 1, [4, 8]); txt(g === 1400 ? '1400 kcal' : String(g), X, y - 10, { size: 22, color: C.dim }); });
+  // goal line
+  const gy = Y + Hd - (300 / maxV) * Hd;
+  const gp = seg(t, S + 3.2, .8);
+  line([[X, gy], [X + Wd * gp, gy]], C.rose, 3, [10, 8]);
+  txt('目标 300', X + Wd, gy - 12, { size: 26, color: C.rose, align: 'right', alpha: gp });
+  const bp = seg(t, S + 1, 2.2, p => p);
+  const bw = Wd / 31;
+  vals.forEach((v, i) => {
+    const lp = E.out(clamp(bp * 1.6 - (i / vals.length) * .6));
+    const bh = (v / maxV) * Hd * lp;
+    rr(X + i * bw + 3, Y + Hd - bh, bw - 6, bh, 3, i === 17 ? C.dim : C.yellow);
+  });
+  ['01', '07', '14', '21', '28'].forEach((l, i) => txt(l, X + [0, 6, 13, 20, 27][i] * bw + bw / 2, Y + Hd + 40, { size: 24, color: C.muted, align: 'center' }));
+  txt('2026 年 10 月 · 每日活动卡路里', X, Y - 50, { size: 26, color: C.muted, alpha: seg(t, S + .8, .5) });
+  // highlight the triple-peak 9-11
+  const hp = seg(t, S + 4.5, .8);
+  if (hp > 0) { ctx.save(); ctx.globalAlpha *= hp; rr(X + 8 * bw - 4, Y - 10, bw * 3 + 8, Hd + 20, 10, null, C.rose); txt('连续 3 天 1200+', X + 9.5 * bw, Y - 24, { size: 24, weight: 700, color: C.rose, align: 'center' }); ctx.restore(); }
+
+  // month averages
+  const my = 1120;
+  txt('三个月的日均值', 80, my - 30, { size: 26, color: C.muted, alpha: seg(t, S + 6, .5) });
+  const cols = [[623, C.dim], [676, C.muted], [864, C.yellow]];
+  cols.forEach(([v, col], i) => {
+    const st = S + 6.4 + i * BEAT * 2;
+    const p = seg(t, st, 1.0), cx = 80 + 160 + i * 300;
+    const h = (v / 1000) * 380 * p;
+    rr(cx - 90, my + 420 - h, 180, h, 10, col);
+    txt(Math.round(v * p) + '', cx, my + 420 - h - 18, { size: 54, weight: 900, color: i === 2 ? C.yellow : C.text, align: 'center', alpha: p });
+    txt(D.months[i], cx, my + 470, { size: 30, color: C.muted, align: 'center', alpha: p });
+  });
+  // arrow + delta
+  const dp = seg(t, S + 11, .9, E.back);
+  if (dp > 0) {
+    ctx.save(); ctx.globalAlpha *= clamp(dp);
+    ctx.translate(0, (1 - dp) * 30);
+    rr(110, my + 10, 400, 120, 60, C.yellow);
+    txt('+39%', 310, my + 95, { size: 72, weight: 900, color: C.bg, align: 'center' });
+    ctx.restore();
+  }
+  const cp = seg(t, S + 13.2, .8);
+  para(['8 月到 10 月，每天多烧 240 kcal，', '相当于每天多跑了 3 公里。'], W / 2, 1690, 64, { size: 40, align: 'center', alpha: cp });
+  txt('问题不是“动得够不够”，而是：身体跟上了吗？', W / 2, 1830, { size: 40, weight: 900, color: C.yellow, align: 'center', alpha: seg(t, S + 15.5, .8) });
+  ctx.restore();
+}
+
+function sceneRecovery(t) { // 40 - 58
+  const S = 40, a = fadeInOut(t, S, 58.2, .5);
+  ctx.save(); ctx.globalAlpha = a;
+  chapter(t, S, '第三层 · 恢复层', '平均值在撒谎', '睡眠与 HRV：真正决定你能走多远的两条线');
+
+  // ---- Sleep: score up, duration down ----
+  const X = 80, Y = 420, Wd = 920, Hd = 330;
+  txt('睡眠时长（上）  vs  睡眠评分（下）', X, Y - 20, { size: 28, color: C.muted, alpha: seg(t, S + .8, .5) });
+  rr(X, Y, Wd, Hd, 20, C.card, C.line);
+  const xs = [X + 160, X + 460, X + 760];
+  const scoreY = v => Y + 250 - (v - 60) / 40 * 110;
+  const durY = v => Y + 150 - (v - 360) / 60 * 110;
+  const sp = seg(t, S + 1.2, 1.6, p => p);
+  // score line (violet) reveals
+  const spts = D.sleep.score.map((v, i) => [xs[i], scoreY(v)]);
+  const dpts = D.sleep.asleepMin.map((v, i) => [xs[i], durY(v)]);
+  function partial(pts, p) { const out = [pts[0]]; const total = pts.length - 1; const k = p * total; for (let i = 1; i <= total; i++) { if (k >= i) out.push(pts[i]); else { const f = k - (i - 1); out.push([lerp(pts[i - 1][0], pts[i][0], f), lerp(pts[i - 1][1], pts[i][1], f)]); break; } } return out; }
+  line(partial(spts, sp), C.violet, 8);
+  const dp = seg(t, S + 3.4, 1.6, p => p);
+  line(partial(dpts, dp), C.sky, 8, [14, 10]);
+  D.months.forEach((m, i) => {
+    txt(m, xs[i], Y + Hd - 18, { size: 26, color: C.muted, align: 'center' });
+    const vis = sp * 2 >= i ? 1 : 0;
+    if (sp >= i / 2 - .01) { dot(spts[i][0], spts[i][1], 12, C.violet); txt(D.sleep.score[i] + ' 分', xs[i], spts[i][1] + 48, { size: 30, weight: 900, color: C.violet, align: 'center' }); }
+    if (dp >= i / 2 - .01) { dot(dpts[i][0], dpts[i][1], 12, C.sky); const mm = D.sleep.asleepMin[i]; txt(`${Math.floor(mm / 60)}h${String(mm % 60).padStart(2, '0')}m`, xs[i], dpts[i][1] - 26, { size: 30, weight: 900, color: C.sky, align: 'center' }); }
+  });
+  const sl = seg(t, S + 5.4, .8);
+  txt('分数 71 → 86 在涨，时长 6h42 → 6h18 在掉。', X + Wd / 2, Y + Hd + 56, { size: 34, weight: 700, align: 'center', alpha: sl });
+  txt('深睡占 24%（很好）把分数撑高了，但总量不到 7 小时。', X + Wd / 2, Y + Hd + 106, { size: 28, color: C.muted, align: 'center', alpha: seg(t, S + 6.4, .8) });
+
+  // ---- HRV fan ----
+  const Y2 = 960, H2 = 520;
+  txt('HRV：平均值纹丝不动，范围却在撕开', X, Y2 - 20, { size: 28, color: C.muted, alpha: seg(t, S + 8, .5) });
+  rr(X, Y2, Wd, H2, 20, C.card, C.line);
+  const hy = v => Y2 + H2 - 100 - (v / 110) * (H2 - 170);
+  D.months.forEach((m, i) => {
+    const st = S + 8.6 + i * BEAT * 2;
+    const p = seg(t, st, 1.2);
+    const cx = xs[i];
+    const mn = D.hrv.min[i], mx = D.hrv.max[i], av = D.hrv.avg[i];
+    const top = lerp(hy(av), hy(mx), p), bot = lerp(hy(av), hy(mn), p);
+    rr(cx - 22, top, 44, bot - top, 22, 'rgba(125,211,252,.25)');
+    line([[cx, top], [cx, bot]], C.sky, 3);
+    dot(cx, hy(av), 16, C.yellow);
+    txt(av + ' ms', cx + 34, hy(av) + 12, { size: 30, weight: 900, color: C.yellow, alpha: p });
+    txt(String(mx), cx, top - 16, { size: 28, weight: 700, color: C.mint, align: 'center', alpha: p });
+    txt(String(mn), cx, bot + 44, { size: 28, weight: 700, color: i === 2 ? C.rose : C.sky, align: 'center', alpha: p });
+    txt(m, cx, Y2 + H2 - 18, { size: 26, color: C.muted, align: 'center' });
+  });
+  // flat avg line
+  const fp = seg(t, S + 12.6, 1.0);
+  line([[xs[0], hy(44)], [lerp(xs[0], xs[2], fp), hy(44)]], C.yellow, 2, [8, 8]);
+  // floor collapsing arrow
+  const ap = seg(t, S + 13.4, 1.0);
+  if (ap > 0) { ctx.save(); ctx.globalAlpha *= ap; line([[xs[0] + 30, hy(20) + 30], [xs[2] - 30, hy(3) + 30]], C.rose, 4); txt('地板 20 → 11 → 3', (xs[1] + xs[2]) / 2, hy(26), { size: 26, weight: 900, color: C.rose, align: 'center' }); ctx.restore(); }
+  const cp = seg(t, S + 14.6, .8);
+  para(['HRV 均值 44 → 45 → 44，看起来“很稳”。', '但最低值 20 → 11 → 3：系统的底线在塌。'], W / 2, 1600, 60, { size: 36, weight: 700, align: 'center', alpha: cp });
+  txt('波动变大，不是能力变强，是稳定性在流失。', W / 2, 1760, { size: 40, weight: 900, color: C.rose, align: 'center', alpha: seg(t, S + 16.2, .8) });
+  ctx.restore();
+}
+
+function sceneEssence(t) { // 58 - 74  (drop)
+  const S = 58, a = fadeInOut(t, S, 74.3, .5);
+  ctx.save(); ctx.globalAlpha = a;
+  // flash on the drop
+  const flash = Math.exp(-(t - S) * 4) * (t >= S ? 1 : 0);
+  ctx.fillStyle = `rgba(255,233,77,${flash * .9})`; ctx.fillRect(0, 0, W, H);
+  chapter(t, S, '本质', '进步 = 负荷 × 恢复');
+  // formula big
+  const fp = seg(t, S + .1, .9, E.back);
+  ctx.save(); ctx.translate(W / 2, 640); ctx.scale(clamp(fp, .01, 1.2), clamp(fp, .01, 1.2));
+  txt('进步', -300, 0, { size: 96, weight: 900, align: 'center' });
+  txt('=', -110, 0, { size: 96, weight: 400, color: C.muted, align: 'center' });
+  txt('负荷', 60, 0, { size: 96, weight: 900, color: C.yellow, align: 'center' });
+  txt('×', 230, 0, { size: 96, weight: 400, color: C.muted, align: 'center' });
+  txt('恢复', 400, 0, { size: 96, weight: 900, color: C.sky, align: 'center' });
+  ctx.restore();
+  txt('不是“负荷 + 恢复”，是相乘：任何一项是 0，结果就是 0。', W / 2, 740, { size: 32, color: C.muted, align: 'center', alpha: seg(t, S + 1.2, .8) });
+
+  // two gauges: load up 39%, recovery flat
+  const gy = 900;
+  function gauge(cx, label, p, col, from, to, note) {
+    rr(cx - 230, gy, 460, 300, 24, C.card, C.line);
+    txt(label, cx, gy + 60, { size: 30, color: C.muted, align: 'center' });
+    // bar from→to
+    rr(cx - 180, gy + 120, 360, 36, 18, C.line);
+    rr(cx - 180, gy + 120, 360 * lerp(from, to, p), 36, 18, col);
+    txt(note, cx, gy + 230, { size: 44, weight: 900, color: col, align: 'center', alpha: p });
+  }
+  const g1 = seg(t, S + 2.2, 1.4), g2 = seg(t, S + 3.4, 1.4);
+  gauge(310, '负荷（活动卡路里）', g1, C.yellow, .62, .86, '+39%');
+  gauge(770, '恢复（HRV / 睡眠时长）', g2, C.sky, .44, .42, '0%  甚至 −6%');
+
+  const lines = [
+    ['你把发动机升级了 39%，', S + 5.6, C.text, 44, 900],
+    ['冷却系统还是原来那套。', S + 6.6, C.text, 44, 900],
+    ['HRV 三个月一条直线，不是稳定，', S + 8.4, C.muted, 34, 400],
+    ['是身体在说：我已经没有余量去“适应”了。', S + 9.4, C.muted, 34, 400],
+  ];
+  lines.forEach(([s, st, col, sz, wt], i) => { const p = seg(t, st, .7); txt(s, W / 2, 1290 + i * (i < 2 ? 70 : 56) + (i >= 2 ? 20 : 0) + (1 - p) * 20, { size: sz, weight: wt, color: col, align: 'center', alpha: p }); });
+
+  // triangle: 负荷 / 恢复 / 适应
+  const tp = seg(t, S + 11, 1.2, E.back);
+  if (tp > 0) {
+    ctx.save(); ctx.globalAlpha *= clamp(tp); const cx = W / 2, cy = 1690, r = 80 * clamp(tp, 0, 1);
+    const P = [[cx, cy - r], [cx - r * 1.1, cy + r * .7], [cx + r * 1.1, cy + r * .7]];
+    line([...P, P[0]], C.line, 3);
+    [['适应', C.mint, 0, -28], ['负荷', C.yellow, -60, 50], ['恢复', C.sky, 60, 50]].forEach(([n, col, dx, dy], i) => { dot(P[i][0], P[i][1], 14, col); txt(n, P[i][0] + dx, P[i][1] + dy, { size: 30, weight: 700, color: col, align: 'center' }); });
+    txt('“适应”只发生在恢复里，不发生在训练里。', cx, cy + r + 120, { size: 32, weight: 700, color: C.yellow, align: 'center', alpha: seg(t, S + 12.4, .8) });
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+function sceneFramework(t) { // 74 - 90
+  const S = 74, a = fadeInOut(t, S, 90.3, .5);
+  ctx.save(); ctx.globalAlpha = a;
+  chapter(t, S, '极致框架', '四条底层逻辑', '以后看任何健康数据，只用这四条');
+  const items = [
+    { n: '01', h: '看最低值，不看平均值', b: '平均值 44 很安稳，最低值 3 才是警报。系统的强度由最弱的一天决定。', c: C.rose,
+      draw: (x, y, p) => { const pts = [20, 11, 3]; pts.forEach((v, i) => { const h = v / 20 * 90 * p; rr(x + i * 50, y + 100 - h, 34, h, 4, i === 2 ? C.rose : C.dim); }); line([[x - 6, y + 100 - 44 / 20 * 90 * 0 - 50], [x + 150, y + 50]], C.yellow, 2, [6, 6]); } },
+    { n: '02', h: '时长先于分数', b: '86 分 Optimal 是“质量”，6h18m 是“数量”。质量再高，数量不够也在透支。', c: C.violet,
+      draw: (x, y, p) => { rr(x, y + 20, 150, 26, 13, C.line); rr(x, y + 20, 150 * .9 * p, 26, 13, C.violet); rr(x, y + 70, 150, 26, 13, C.line); rr(x, y + 70, 150 * .63 * p, 26, 13, C.sky); txt('分', x + 160, y + 42, { size: 22, color: C.muted }); txt('时', x + 160, y + 92, { size: 22, color: C.muted }); } },
+    { n: '03', h: '高输出日后面必须跟低输出日', b: '10 月 9–11 日连续三天 1200+，12 日睡眠掉到 68、HRV 掉到谷底。身体会自己“补账”。', c: C.yellow,
+      draw: (x, y, p) => { const v = [1160, 1200, 1180, 630]; v.forEach((h, i) => { const bh = h / 1200 * 100 * p; rr(x + i * 44, y + 110 - bh, 32, bh, 4, i < 3 ? C.yellow : C.rose); }); } },
+    { n: '04', h: '连续数据 ＞ 任何一次分析', b: '数据止于 10 月 17 日。过去一周是空白，再强的框架也解不了没有的数据。', c: C.mint,
+      draw: (x, y, p) => { rr(x, y + 50, 180, 20, 10, C.line); rr(x, y + 50, 180 * .72 * p, 20, 10, C.mint); if (p > .9) { txt('10/17', x + 130, y + 40, { size: 20, color: C.muted, align: 'center' }); txt('?', x + 165, y + 110, { size: 34, weight: 900, color: C.rose, align: 'center' }); } } },
+  ];
+  items.forEach((it, i) => {
+    const st = S + 1 + i * BEAT * 4;  // one item per bar
+    const p = seg(t, st, .8, E.back), ap = seg(t, st, .3);
+    const y = 400 + i * 350;
+    ctx.save(); ctx.globalAlpha *= ap; ctx.translate((1 - clamp(p)) * -60, 0);
+    rr(80, y, 920, 310, 24, C.card, C.line);
+    rr(80, y, 10, 310, [24, 0, 0, 24], it.c);
+    txt(it.n, 125, y + 70, { size: 30, weight: 900, color: it.c, ls: 2 });
+    txt(it.h, 200, y + 72, { size: 40, weight: 900 });
+    // body wrapped at ~20 chars
+    const b = it.b; const l1 = b.slice(0, 24), l2 = b.slice(24, 48), l3 = b.slice(48);
+    [l1, l2, l3].filter(Boolean).forEach((l, k) => txt(l, 125, y + 140 + k * 46, { size: 28, color: C.muted, alpha: seg(t, st + .4, .6) }));
+    it.draw(790, y + 150, seg(t, st + .6, 1.0));
+    ctx.restore();
+  });
+  txt('记住这四条，你已经比 App 的“Normal”多懂一层。', W / 2, 1840, { size: 32, color: C.yellow, weight: 700, align: 'center', alpha: seg(t, S + 13, .8) });
+  ctx.restore();
+}
+
+function sceneAction(t) { // 90 - 104
+  const S = 90, a = fadeInOut(t, S, 103.2, .7);
+  ctx.save(); ctx.globalAlpha = a;
+  chapter(t, S, '行动', '只做三件事');
+  const acts = [
+    ['① 睡眠时长拉到 7 小时', '提前 40 分钟上床，比任何补剂都有效', C.violet],
+    ['② 每周只盯一个数：HRV 最低值', '均值不动没关系，地板不能再往下掉', C.sky],
+    ['③ 高输出日之后，安排一天 ＜500 kcal', '让“适应”真的发生', C.yellow],
+  ];
+  acts.forEach(([h, b, col], i) => {
+    const st = S + 1 + i * BEAT * 2.4;
+    const p = seg(t, st, .8, E.back), ap = seg(t, st, .3);
+    const y = 420 + i * 230;
+    ctx.save(); ctx.globalAlpha *= ap; ctx.translate(0, (1 - clamp(p)) * 40);
+    rr(80, y, 920, 190, 24, C.card, C.line);
+    dot(140, y + 95, 18 + 6 * beatPulse(t) * energyAt(t), col);
+    txt(h, 200, y + 85, { size: 40, weight: 900 });
+    txt(b, 200, y + 145, { size: 28, color: C.muted });
+    ctx.restore();
+  });
+  // data gap timeline
+  const gp = seg(t, S + 6.5, 1.2);
+  if (gp > 0) {
+    ctx.save(); ctx.globalAlpha *= gp;
+    const X = 80, Y = 1180, Wd = 920;
+    txt('还有一件事：把戒指戴回去', X, Y, { size: 36, weight: 900, color: C.rose });
+    rr(X, Y + 40, Wd, 24, 12, C.line);
+    const days = 64; // Aug23 -> Oct25
+    const filled = 56 / days;
+    rr(X, Y + 40, Wd * filled * gp, 24, 12, C.mint);
+    for (let k = 0; k < 6; k++) rr(X + Wd * filled + 12 + k * 22, Y + 44, 10, 16, 3, C.rose);
+    txt('8/23', X, Y + 110, { size: 24, color: C.muted });
+    txt('10/17 之后无数据 → 今天', X + Wd, Y + 110, { size: 24, color: C.rose, align: 'right' });
+    ctx.restore();
+  }
+  // outro
+  const op = seg(t, S + 9.2, 1.0);
+  txt('身体从不缺数据，', W / 2, 1500, { size: 56, weight: 900, align: 'center', alpha: op });
+  txt('缺的是读懂它的框架。', W / 2, 1585, { size: 56, weight: 900, color: C.yellow, align: 'center', alpha: seg(t, S + 10, 1.0) });
+  txt('输出 · 恢复 · 基础  —  负荷 × 恢复 = 进步', W / 2, 1700, { size: 28, color: C.muted, align: 'center', alpha: seg(t, S + 11, 1), ls: 2 });
+  txt('数据来源：个人指环 App 2026.08–2026.10 · 仅供参考，不构成医疗建议', W / 2, 1820, { size: 22, color: C.dim, align: 'center', alpha: seg(t, S + 11.5, 1) });
+  ctx.restore();
+}
+
+// ---------- master draw ----------
+function draw(t) {
+  t = clamp(t, 0, DUR);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalAlpha = 1;
+  // background with slow gradient + beat vignette
+  const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, C.bg2); g.addColorStop(1, C.bg);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  const en = energyAt(t), bp = beatPulse(t);
+  // subtle breathing grid
+  ctx.save(); ctx.globalAlpha = .06 + .05 * en * bp; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1;
+  for (let x = 0; x <= W; x += 120) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+  for (let y = 0; y <= H; y += 120) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+  ctx.restore();
+  // beat scale (very subtle, scales with energy; none during the quiet hook)
+  const sc = 1 + (t >= 22 && t < 98 ? .006 * en * bp : 0);
+  ctx.save(); ctx.translate(W / 2, H / 2); ctx.scale(sc, sc); ctx.translate(-W / 2, -H / 2);
+
+  if (t < 8.6) sceneHook(t);
+  if (t >= 7.6 && t < 22.6) sceneOverview(t);
+  if (t >= 21.6 && t < 40.6) sceneOutput(t);
+  if (t >= 39.6 && t < 58.4) sceneRecovery(t);
+  if (t >= 57.6 && t < 74.5) sceneEssence(t);
+  if (t >= 73.6 && t < 90.5) sceneFramework(t);
+  if (t >= 89.6) sceneAction(t);
+  ctx.restore();
+
+  // vignette
+  const v = ctx.createRadialGradient(W / 2, H / 2, H * .35, W / 2, H / 2, H * .85);
+  v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, `rgba(0,0,0,${.55 - .15 * en * bp})`);
+  ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
+  // progress hairline
+  ctx.fillStyle = C.yellow; ctx.globalAlpha = .6; ctx.fillRect(0, H - 6, W * (t / DUR), 6); ctx.globalAlpha = 1;
+}
+
+// ---------- playback / render API ----------
+let playing = false, t0 = 0, startT = 0, audio = null;
+const scrub = document.getElementById('scrub'), timeEl = document.getElementById('time'), playBtn = document.getElementById('play');
+function setTime(t) { draw(t); scrub.value = t; timeEl.textContent = t.toFixed(1) + 's'; }
+function loop() {
+  if (!playing) return;
+  const t = audio && !audio.paused ? audio.currentTime : (performance.now() - startT) / 1000 + t0;
+  if (t >= DUR) { playing = false; playBtn.textContent = '▶ 播放'; setTime(DUR); if (audio) audio.pause(); return; }
+  setTime(t); requestAnimationFrame(loop);
+}
+playBtn.onclick = () => {
+  playing = !playing; playBtn.textContent = playing ? '❚❚ 暂停' : '▶ 播放';
+  if (playing) { t0 = parseFloat(scrub.value); if (t0 >= DUR) t0 = 0; startT = performance.now(); if (audio) { audio.currentTime = t0; audio.play(); } loop(); }
+  else if (audio) audio.pause();
+};
+scrub.oninput = () => { t0 = parseFloat(scrub.value); startT = performance.now(); if (audio) audio.currentTime = t0; setTime(t0); };
+document.getElementById('audio').onchange = e => { const f = e.target.files[0]; if (!f) return; audio = new Audio(URL.createObjectURL(f)); };
+window.addEventListener('keydown', e => { if (e.code === 'Space') { e.preventDefault(); playBtn.click(); } });
+
+window.__DUR = DUR;
+window.__seek = t => { draw(t); return true; };
+window.__ready = (async () => {
+  try { await Promise.all(['400', '700', '900'].map(w => document.fonts.load(`${w} 40px "Noto Sans SC"`))); await document.fonts.ready; } catch (e) {}
+  setTime(0); return true;
+})();
+if (location.search.includes('render')) document.body.classList.add('render');
+})();
+</script>
+</body>
+</html>
