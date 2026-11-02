@@ -17,6 +17,6 @@ done
 wait
 ffmpeg -y -loglevel error -f concat -safe 0 -i build/seg/list.txt -c copy build/video_noaudio.mp4
 ffmpeg -y -loglevel error -i build/video_noaudio.mp4 -i build/narration.wav -i build/music.wav \
-  -filter_complex "[1:a]aresample=48000,pan=stereo|c0=c0|c1=c0[v];[2:a]aresample=48000[m];[v][m]amix=inputs=2:normalize=0:duration=first[a]" \
-  -map 0:v -map "[a]" -c:v copy -c:a aac -b:a 192k -movflags +faststart -shortest NUCTECH_MW1000AA_Product_Ecosystem_Explainer.mp4
+  -filter_complex "[1:a]aresample=48000,pan=stereo|c0=c0|c1=c0[v];[2:a]aresample=48000[m];[v][m]amix=inputs=2:normalize=0:duration=first,loudnorm=I=-16:TP=-1.5:LRA=11,aresample=48000[a]" \
+  -map 0:v -map "[a]" -c:v copy -c:a aac -b:a 128k -movflags +faststart -shortest NUCTECH_MW1000AA_Product_Ecosystem_Explainer.mp4
 echo done
