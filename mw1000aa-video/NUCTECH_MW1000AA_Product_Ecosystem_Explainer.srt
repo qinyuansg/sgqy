@@ -1,0 +1,703 @@
+1
+00:00:01,500 --> 00:00:07,432
+This is the NUCTECH™ MW1000AA, a millimeter-wave body inspection device.
+
+2
+00:00:07,432 --> 00:00:12,459
+In the next few minutes we'll walk through its whole ecosystem: why it exists, what it is,
+
+3
+00:00:12,459 --> 00:00:18,495
+how it works, who is involved, where and when it's used, and the value chain and know-how behind it.
+
+4
+00:00:18,495 --> 00:00:24,296
+By the end, you should understand this product end to end: from physics, to passengers, to procurement.
+
+5
+00:00:25,946 --> 00:00:27,325
+Start with the problem.
+
+6
+00:00:27,325 --> 00:00:31,223
+Every checkpoint, at an airport, a border, a prison or a stadium,
+
+7
+00:00:31,223 --> 00:00:37,610
+must answer one question quickly: is this person carrying something dangerous under their clothing?
+
+8
+00:00:37,610 --> 00:00:42,557
+The classic walk-through metal detector is fast and cheap, but it only senses metal.
+
+9
+00:00:42,557 --> 00:00:48,013
+Ceramic knives, plastic explosives, liquids, powders and drugs walk straight through.
+
+10
+00:00:48,013 --> 00:00:51,548
+A manual pat-down catches more, but it is slow, intrusive,
+
+11
+00:00:51,548 --> 00:00:55,777
+inconsistent between officers, and uncomfortable for everyone.
+
+12
+00:00:55,777 --> 00:00:59,104
+Older X-ray backscatter body scanners could see more,
+
+13
+00:00:59,104 --> 00:01:06,145
+but they used ionizing radiation and produced revealing images, which raised health and privacy concerns.
+
+14
+00:01:06,145 --> 00:01:10,669
+So operators need screening that is safe, non-contact, automatic,
+
+15
+00:01:10,669 --> 00:01:15,263
+consistent, fast enough for peak hours, and respectful of privacy.
+
+16
+00:01:15,263 --> 00:01:21,321
+That gap is exactly where active millimeter-wave screening, and the MW1000AA, fit.
+
+17
+00:01:22,971 --> 00:01:25,122
+Here is the product.
+
+18
+00:01:25,122 --> 00:01:36,541
+The MW1000AA is a walk-in portal: about 1.4 m wide, 1.2 m deep and 2.5 m tall, weighing around 550 kg.
+
+19
+00:01:36,541 --> 00:01:39,664
+The passenger stands in a channel 750 mm wide.
+
+20
+00:01:39,664 --> 00:01:43,533
+The side panels house the millimeter-wave imaging system.
+
+21
+00:01:43,533 --> 00:01:51,519
+A 15-inch color touch screen gives the operator a simple interface, and LED indicators show status at a glance.
+
+22
+00:01:51,519 --> 00:01:57,301
+An optional foot metal detector in the floor checks shoes, so passengers may not need to take them off.
+
+23
+00:01:57,301 --> 00:02:05,285
+The key numbers: a 2-second scan, about 4 seconds per inspection, 1 kW of power, and under 60 dB of noise.
+
+24
+00:02:05,285 --> 00:02:08,898
+It runs on standard 110 or 220 volt mains.
+
+25
+00:02:08,898 --> 00:02:14,051
+It detects metallic and non-metallic weapons, IEDs, liquids, gels and drugs,
+
+26
+00:02:14,051 --> 00:02:20,017
+flags them automatically, and shows results on a cartoon figure instead of a body image.
+
+27
+00:02:20,017 --> 00:02:26,197
+It is certified to ECAC security scanner Standard 2.1 Type A, and carries the CE mark.
+
+28
+00:02:27,847 --> 00:02:31,342
+So how does it see through clothing? It starts with physics.
+
+29
+00:02:31,342 --> 00:02:35,944
+Millimeter waves are radio waves with wavelengths between 1 and 10 millimeters,
+
+30
+00:02:35,944 --> 00:02:38,783
+the band between microwaves and infrared.
+
+31
+00:02:38,783 --> 00:02:43,511
+They are non-ionizing: they don't carry enough energy to alter atoms or DNA.
+
+32
+00:02:43,511 --> 00:02:49,995
+And active scanners like this one transmit at very low power, typically far below a mobile phone.
+
+33
+00:02:49,995 --> 00:02:53,177
+Clothing fabric is almost transparent to these waves.
+
+34
+00:02:53,177 --> 00:02:56,179
+Human skin, full of water, reflects them strongly.
+
+35
+00:02:56,179 --> 00:02:59,662
+A hidden object, whether metal, plastic, liquid or powder,
+
+36
+00:02:59,662 --> 00:03:04,734
+reflects differently from skin, and that contrast is what the system detects.
+
+37
+00:03:04,734 --> 00:03:08,516
+It's called active because the device creates its own signal.
+
+38
+00:03:08,516 --> 00:03:13,723
+Antenna arrays in the side panels transmit and receive across a wide frequency band,
+
+39
+00:03:13,723 --> 00:03:18,760
+sampling the body from many positions, front and back, in about 2 seconds.
+
+40
+00:03:18,760 --> 00:03:25,110
+Wide bandwidth gives depth resolution, and the many antenna positions give height and width resolution.
+
+41
+00:03:25,110 --> 00:03:28,563
+A reconstruction algorithm then combines all the echoes,
+
+42
+00:03:28,563 --> 00:03:33,760
+a form of holography, into a 3D image of the body surface and anything on it.
+
+43
+00:03:33,760 --> 00:03:35,567
+Next comes the intelligence.
+
+44
+00:03:35,567 --> 00:03:40,474
+A neural network, trained with deep learning on large sets of labeled scans,
+
+45
+00:03:40,474 --> 00:03:43,960
+looks for anomalies that don't belong on a human body.
+
+46
+00:03:43,960 --> 00:03:47,315
+This is Automatic Threat Recognition, or ATR.
+
+47
+00:03:47,315 --> 00:03:48,427
+Finally, privacy.
+
+48
+00:03:48,427 --> 00:03:51,372
+The operator never needs to see a body image.
+
+49
+00:03:51,372 --> 00:03:55,167
+Any suspicious area is marked on a generic cartoon figure.
+
+50
+00:03:55,167 --> 00:03:59,967
+No alarm means a green light; an alarm shows exactly where to check.
+
+51
+00:04:01,617 --> 00:04:02,496
+Now, the people.
+
+52
+00:04:02,496 --> 00:04:06,624
+Many stakeholders touch this product, and each has different needs.
+
+53
+00:04:06,624 --> 00:04:11,591
+At the center is the passenger, who wants to be safe, fast, and treated with dignity.
+
+54
+00:04:11,591 --> 00:04:14,863
+Next is the screening officer, who guides the passenger,
+
+55
+00:04:14,863 --> 00:04:19,403
+reads the result, and does a targeted pat-down when there is an alarm.
+
+56
+00:04:19,403 --> 00:04:23,236
+Above them, the security supervisor and checkpoint manager plan lanes,
+
+57
+00:04:23,236 --> 00:04:26,806
+staffing and throughput, and own the performance numbers.
+
+58
+00:04:26,806 --> 00:04:32,217
+The checkpoint owner, such as an airport operator, customs agency, rail or metro operator,
+
+59
+00:04:32,217 --> 00:04:36,996
+prison service or building owner, buys the equipment and pays to run it.
+
+60
+00:04:36,996 --> 00:04:42,398
+Regulators and certifiers, such as ECAC in Europe and national civil aviation authorities,
+
+61
+00:04:42,398 --> 00:04:45,159
+set detection standards and approve equipment.
+
+62
+00:04:45,159 --> 00:04:48,610
+Data protection authorities set the privacy rules.
+
+63
+00:04:48,610 --> 00:04:54,448
+On the supply side sit NUCTECH's R&D, manufacturing and quality teams, their component suppliers,
+
+64
+00:04:54,448 --> 00:05:01,881
+local distributors and system integrators, and the field service engineers and trainers who keep the device running.
+
+65
+00:05:01,881 --> 00:05:07,508
+And around everyone is the public, whose trust depends on screening being effective, safe and fair.
+
+66
+00:05:09,158 --> 00:05:14,422
+Let's follow one passenger through the full flow, and watch what the officer sees at each step.
+
+67
+00:05:14,422 --> 00:05:15,817
+Step one: preparation.
+
+68
+00:05:15,817 --> 00:05:22,346
+The passenger divests: wallet, phone, keys and bulky outer layers go into a tray for the X-ray machine.
+
+69
+00:05:22,346 --> 00:05:25,902
+Signage and an officer guide them to the scanner.
+
+70
+00:05:25,902 --> 00:05:26,793
+Step two: entry.
+
+71
+00:05:26,793 --> 00:05:30,746
+The passenger steps into the channel and stands on the footprint marks.
+
+72
+00:05:30,746 --> 00:05:34,928
+If fitted, the foot metal detector is already checking their shoes.
+
+73
+00:05:34,928 --> 00:05:36,116
+Step three: the scan.
+
+74
+00:05:36,116 --> 00:05:39,626
+The passenger holds their arms slightly away from their sides,
+
+75
+00:05:39,626 --> 00:05:45,170
+with no need to raise them overhead, and stays still for 2 seconds while the arrays sweep.
+
+76
+00:05:45,170 --> 00:05:46,621
+Step four: processing.
+
+77
+00:05:46,621 --> 00:05:53,741
+Over the next couple of seconds the system reconstructs the 3D image and the ATR neural network analyzes it.
+
+78
+00:05:53,741 --> 00:05:56,564
+No human is looking at a body image.
+
+79
+00:05:56,564 --> 00:05:57,937
+Step five: the result.
+
+80
+00:05:57,937 --> 00:06:03,367
+If nothing is found, the screen and LED show a clear signal and the passenger walks on.
+
+81
+00:06:03,367 --> 00:06:07,062
+That's most passengers, in about 4 seconds in total.
+
+82
+00:06:07,062 --> 00:06:11,847
+If something is found, a box appears on the cartoon figure, say at the left ankle.
+
+83
+00:06:11,847 --> 00:06:16,031
+The officer pats down that area only, instead of the whole body.
+
+84
+00:06:16,031 --> 00:06:17,918
+Step six: resolution and exit.
+
+85
+00:06:17,918 --> 00:06:21,503
+The officer resolves the alarm, perhaps a forgotten item,
+
+86
+00:06:21,503 --> 00:06:28,296
+perhaps a real threat that is escalated under local procedures, and the passenger collects their belongings.
+
+87
+00:06:28,296 --> 00:06:32,231
+Results feed the checkpoint's statistics for supervisors.
+
+88
+00:06:33,881 --> 00:06:34,818
+Where is it used?
+
+89
+00:06:34,818 --> 00:06:38,190
+Anywhere people must be screened for concealed items.
+
+90
+00:06:38,190 --> 00:06:42,778
+In civil aviation, at central security checkpoints and transfer screening.
+
+91
+00:06:42,778 --> 00:06:44,762
+At customs and border crossings.
+
+92
+00:06:44,762 --> 00:06:47,444
+In train stations and metro systems.
+
+93
+00:06:47,444 --> 00:06:54,916
+In government buildings and secure agencies, military bases, prisons, courts and hospitals. At large events and venues.
+
+94
+00:06:54,916 --> 00:07:02,272
+And in loss prevention: factories, warehouses or mints, where the goal is to stop items leaving, not entering.
+
+95
+00:07:02,272 --> 00:07:08,262
+The site needs about 1.4 by 1.2 m of floor, 2.5 m of height, standard power,
+
+96
+00:07:08,262 --> 00:07:14,488
+and an indoor climate from −5 to 45 °C with humidity up to 93%, non-condensing.
+
+97
+00:07:14,488 --> 00:07:22,483
+The compact footprint means it can often sit beside, or replace, an existing metal detector lane.
+
+98
+00:07:24,133 --> 00:07:28,095
+When does each stakeholder get involved? Think of it as a lifecycle.
+
+99
+00:07:28,095 --> 00:07:34,731
+First, need and planning: a threat assessment, a new regulation, or passenger growth creates a requirement.
+
+100
+00:07:34,731 --> 00:07:40,949
+Then procurement: a tender, technical evaluation, and checks on certification and compliance.
+
+101
+00:07:40,949 --> 00:07:45,351
+Next, deployment: site survey, delivery, installation and commissioning,
+
+102
+00:07:45,351 --> 00:07:49,041
+followed by acceptance testing and operator training.
+
+103
+00:07:49,041 --> 00:07:54,135
+Then operation: every day, every shift, peaking at rush hours and holiday seasons,
+
+104
+00:07:54,135 --> 00:08:00,113
+with routine checks, preventive maintenance, and software and ATR updates over the years.
+
+105
+00:08:00,113 --> 00:08:05,868
+Finally, upgrade, refurbishment or end-of-life replacement, typically after many years of service.
+
+106
+00:08:05,868 --> 00:08:11,738
+The device's life-cycle equipment management feature supports tracking it through every stage.
+
+107
+00:08:13,388 --> 00:08:19,323
+Now zoom out to the value chain: how value is created, from research to a safer checkpoint.
+
+108
+00:08:19,323 --> 00:08:24,862
+It begins with R&D: millimeter-wave circuit and antenna design, imaging algorithms,
+
+109
+00:08:24,862 --> 00:08:30,934
+and AI models trained on large labeled datasets of people with and without concealed items,
+
+110
+00:08:30,934 --> 00:08:34,254
+across many body types and clothing styles.
+
+111
+00:08:34,254 --> 00:08:40,421
+Then components: millimeter-wave transceiver chips and antenna arrays, high-speed data acquisition,
+
+112
+00:08:40,421 --> 00:08:47,226
+computing hardware for reconstruction and AI, metal detector coils, touch screen, frame and enclosure.
+
+113
+00:08:47,226 --> 00:08:52,108
+Manufacturing and quality follow: assembly, calibration of the RF system,
+
+114
+00:08:52,108 --> 00:08:57,975
+and testing for detection, safety, electromagnetic compatibility and reliability.
+
+115
+00:08:57,975 --> 00:09:01,313
+Certification turns performance into market access:
+
+116
+00:09:01,313 --> 00:09:05,166
+ECAC testing, CE conformity, and national approvals.
+
+117
+00:09:05,166 --> 00:09:11,630
+Go-to-market comes next: direct sales, distributors and integrators, government tenders and financing.
+
+118
+00:09:11,630 --> 00:09:15,060
+Then deployment and integration, operations and training,
+
+119
+00:09:15,060 --> 00:09:21,196
+and after-sales service: maintenance contracts, spare parts, remote diagnostics and software upgrades.
+
+120
+00:09:21,196 --> 00:09:25,798
+That is where much of the long-term revenue and customer value lives.
+
+121
+00:09:25,798 --> 00:09:27,772
+Value flows back the other way.
+
+122
+00:09:27,772 --> 00:09:33,122
+Passengers get speed and dignity, operators get throughput and consistent detection,
+
+123
+00:09:33,122 --> 00:09:37,548
+regulators get compliance, and society gets safer public spaces.
+
+124
+00:09:39,198 --> 00:09:43,268
+What know-how does it take to build and run this? Picture a stack of layers.
+
+125
+00:09:43,268 --> 00:09:44,158
+At the bottom:
+
+126
+00:09:44,158 --> 00:09:48,095
+RF and millimeter-wave hardware engineering, meaning antennas,
+
+127
+00:09:48,095 --> 00:09:52,356
+transceivers, calibration and electromagnetic compatibility.
+
+128
+00:09:52,356 --> 00:09:59,456
+Above that: signal processing and 3D holographic reconstruction, fast enough to finish in about two seconds.
+
+129
+00:09:59,456 --> 00:10:03,834
+Then AI: data collection, labeling, model training and validation,
+
+130
+00:10:03,834 --> 00:10:07,733
+to maximize detection while minimizing false alarms.
+
+131
+00:10:07,733 --> 00:10:11,480
+Then software and user experience: the touch-screen interface,
+
+132
+00:10:11,480 --> 00:10:16,523
+the privacy-preserving cartoon display, device management and cybersecurity.
+
+133
+00:10:16,523 --> 00:10:24,013
+Then systems engineering: mechanical design, thermal and acoustic control, reliability and manufacturability.
+
+134
+00:10:24,013 --> 00:10:28,483
+And at the top, operational and regulatory know-how: checkpoint design,
+
+135
+00:10:28,483 --> 00:10:33,583
+staffing models, officer training, certification strategy and privacy compliance.
+
+136
+00:10:33,583 --> 00:10:37,899
+A great scanner in a badly designed lane still performs poorly.
+
+137
+00:10:39,549 --> 00:10:40,929
+How is success measured?
+
+138
+00:10:40,929 --> 00:10:43,967
+A few key performance indicators matter most.
+
+139
+00:10:43,967 --> 00:10:47,920
+Probability of detection: how reliably real threats are found.
+
+140
+00:10:47,920 --> 00:10:55,766
+False alarm rate: how often innocent passengers trigger an alarm, which drives pat-downs, staff workload and queues.
+
+141
+00:10:55,766 --> 00:11:01,595
+Throughput: with a 4-second inspection, the theoretical ceiling is about 900 people an hour.
+
+142
+00:11:01,595 --> 00:11:08,824
+In practice, divesting and alarm resolution set the pace, and third-party listings cite around 400 an hour.
+
+143
+00:11:08,824 --> 00:11:13,127
+Availability: uptime, mean time between failures, and repair time.
+
+144
+00:11:13,127 --> 00:11:17,495
+And total cost of ownership: purchase, installation, 1 kW of power,
+
+145
+00:11:17,495 --> 00:11:22,052
+service contracts, and, the biggest line item over time, staff.
+
+146
+00:11:22,052 --> 00:11:27,376
+ATR and the cartoon display move these numbers directly: fewer full-body pat-downs,
+
+147
+00:11:27,376 --> 00:11:31,896
+fewer officers per lane, and consistent decisions on every shift.
+
+148
+00:11:33,546 --> 00:11:35,895
+How does it compare with the alternatives?
+
+149
+00:11:35,895 --> 00:11:40,309
+Walk-through metal detectors are very fast and cheap, but metal only.
+
+150
+00:11:40,309 --> 00:11:43,252
+Pat-downs are flexible but slow and intrusive.
+
+151
+00:11:43,252 --> 00:11:48,689
+Backscatter X-ray images well, but uses ionizing radiation and raises privacy issues.
+
+152
+00:11:48,689 --> 00:11:55,600
+Passive millimeter-wave or terahertz cameras work at a distance, but generally with lower resolution.
+
+153
+00:11:55,600 --> 00:12:04,580
+Active millimeter-wave portals like the MW1000AA offer the best balance today: detection of metallic and non-metallic threats,
+
+154
+00:12:04,580 --> 00:12:09,877
+automatic recognition, no ionizing radiation, and privacy by design.
+
+155
+00:12:09,877 --> 00:12:15,701
+It competes in a global market with active millimeter-wave scanners from companies such as Leidos,
+
+156
+00:12:15,701 --> 00:12:17,900
+Rohde & Schwarz and Smiths Detection.
+
+157
+00:12:17,900 --> 00:12:21,407
+Buyers compare certification, false alarm rate, throughput,
+
+158
+00:12:21,407 --> 00:12:25,620
+footprint, cost of ownership, service coverage and supplier risk.
+
+159
+00:12:27,270 --> 00:12:31,170
+Finally, the considerations every buyer and operator should weigh.
+
+160
+00:12:31,170 --> 00:12:36,658
+False alarms from clothing folds, sweat, or items like belts and buttons add workload.
+
+161
+00:12:36,658 --> 00:12:39,529
+Passengers with prosthetics, medical devices,
+
+162
+00:12:39,529 --> 00:12:45,595
+or religious and cultural garments need respectful, well-trained alternative procedures.
+
+163
+00:12:45,595 --> 00:12:52,225
+Privacy and data governance: decide which images, if any, are stored, for how long, and who can access them.
+
+164
+00:12:52,225 --> 00:12:55,560
+Cybersecurity matters for any networked device.
+
+165
+00:12:55,560 --> 00:12:58,011
+And supplier and geopolitical risk.
+
+166
+00:12:58,011 --> 00:13:04,526
+NUCTECH, founded in 1997 from Tsinghua University, has been on the US Entity List since 2020,
+
+167
+00:13:04,526 --> 00:13:09,850
+and has faced EU scrutiny under the Foreign Subsidies Regulation since 2024.
+
+168
+00:13:09,850 --> 00:13:15,664
+Procurement teams should check the rules that apply in their own jurisdiction.
+
+169
+00:13:17,314 --> 00:13:18,624
+Let's recap.
+
+170
+00:13:18,624 --> 00:13:23,836
+Why: to find metallic and non-metallic threats under clothing, safely and quickly.
+
+171
+00:13:23,836 --> 00:13:28,985
+What: an active millimeter-wave walk-in portal with automatic threat recognition.
+
+172
+00:13:28,985 --> 00:13:35,538
+How: wide-band holographic 3D imaging plus deep learning, shown on a privacy-protecting cartoon.
+
+173
+00:13:35,538 --> 00:13:40,602
+Who: passengers, officers, managers, owners, regulators and the supply chain.
+
+174
+00:13:40,602 --> 00:13:46,061
+Where: airports, borders, transit, government, prisons, events and loss prevention.
+
+175
+00:13:46,061 --> 00:13:50,654
+When: a 2-second scan inside a lifecycle that spans many years.
+
+176
+00:13:50,654 --> 00:13:55,209
+That's the NUCTECH™ MW1000AA ecosystem, end to end.

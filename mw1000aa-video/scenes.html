@@ -1,0 +1,808 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MW1000AA Ecosystem Explainer</title>
+<link rel="stylesheet" href="style.css">
+<script src="timeline.js"></script>
+<script src="icons.js"></script>
+<script src="engine.js"></script>
+<script src="hooks.js"></script>
+</head>
+<body>
+<div id="stage">
+<div id="grid"></div>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="cartoon" viewBox="0 0 100 165">
+      <circle cx="50" cy="20" r="15" fill="currentColor"/>
+      <path d="M50 44 L50 96" stroke="currentColor" stroke-width="28" stroke-linecap="round"/>
+      <path d="M37 47 L27 100" stroke="currentColor" stroke-width="11" stroke-linecap="round"/>
+      <path d="M63 47 L73 100" stroke="currentColor" stroke-width="11" stroke-linecap="round"/>
+      <path d="M44 100 L41 156" stroke="currentColor" stroke-width="13" stroke-linecap="round"/>
+      <path d="M56 100 L59 156" stroke="currentColor" stroke-width="13" stroke-linecap="round"/>
+    </symbol>
+    <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#47d3ff"/>
+    </marker>
+    <marker id="ahg" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#36d98d"/>
+    </marker>
+    <marker id="aha" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#ffb12e"/>
+    </marker>
+    <filter id="blur8"><feGaussianBlur stdDeviation="8"/></filter>
+    <linearGradient id="skin" x1="0" x2="1"><stop offset="0" stop-color="#f3b593"/><stop offset="1" stop-color="#c07a5a"/></linearGradient>
+  </defs>
+</svg>
+
+<div id="hdr"><div id="hdrNum">01</div><div id="hdrTitle">WHY</div></div>
+<div id="brand"><b>NUCTECH™ MW1000AA</b> · Product ecosystem</div>
+
+<!-- ============================ 00 INTRO ============================ -->
+<section class="scene" id="sc-intro">
+  <svg class="abs" id="introWaves" style="left:0;top:0" width="1920" height="1080"></svg>
+  <img class="abs" src="assets/product.png" data-in="s+0.1" data-a="left" data-d="1.1" style="left:1180px;top:150px;height:740px">
+  <div class="abs scanline" id="introScan" style="left:1150px;width:600px;top:200px;height:5px"></div>
+  <div class="abs" style="left:130px;top:215px;width:1000px">
+    <div class="kicker" data-in="s+0.2">Product ecosystem explainer</div>
+    <div class="title-xl" data-in="s+0.4" style="margin-top:22px">NUCTECH<sup>™</sup><br>MW1000AA</div>
+    <div class="subtitle" data-in="s+0.8">Millimeter-wave body inspection device</div>
+  </div>
+  <div class="abs" style="left:130px;top:610px;width:1000px;display:flex;flex-wrap:wrap;gap:14px">
+    <span class="pill" data-in="1:why" data-a="pop"><span data-i="question-mark"></span>Why</span>
+    <span class="pill" data-in="1:what it is" data-a="pop"><span data-i="box"></span>What</span>
+    <span class="pill" data-in="1:how it works" data-a="pop"><span data-i="settings"></span>How</span>
+    <span class="pill" data-in="1:who is" data-a="pop"><span data-i="users"></span>Who</span>
+    <span class="pill" data-in="1:where" data-a="pop"><span data-i="map-pin"></span>Where</span>
+    <span class="pill" data-in="1:when" data-a="pop"><span data-i="calendar"></span>When</span>
+    <span class="pill" data-in="1:value chain" data-a="pop"><span data-i="route"></span>Value chain</span>
+    <span class="pill" data-in="1:know-how" data-a="pop"><span data-i="brain"></span>Know-how</span>
+  </div>
+  <div class="abs" style="left:130px;top:790px;display:flex;align-items:center;gap:18px;font-size:30px;font-weight:700">
+    <span class="badge" data-in="2:physics" data-a="pop"><span data-i="atom-2"></span>Physics</span>
+    <span class="arrow" data-in="2:physics+0.3" data-a="fade">→</span>
+    <span class="badge" data-in="2:passengers" data-a="pop"><span data-i="walk"></span>Passengers</span>
+    <span class="arrow" data-in="2:passengers+0.3" data-a="fade">→</span>
+    <span class="badge" data-in="2:procurement" data-a="pop"><span data-i="file-certificate"></span>Procurement</span>
+  </div>
+</section>
+
+<!-- ============================ 01 WHY ============================ -->
+<section class="scene" id="sc-why">
+  <div class="hl c" data-in="s+0.2" style="font-size:48px">Is this person carrying something dangerous <em>under their clothing?</em></div>
+  <!-- beat 0 visual -->
+  <div class="abs" data-in="0+1" data-out="1" style="left:430px;top:270px;width:1060px;height:560px">
+    <svg class="abs" style="left:0;top:0" width="420" height="560" viewBox="0 0 420 560">
+      <use href="#cartoon" x="60" y="10" width="300" height="495" style="color:#2a5a9a"/>
+      <rect class="pulseA" x="178" y="200" width="64" height="44" rx="8" fill="none" stroke="#ffb12e" stroke-width="4" stroke-dasharray="10 7"/>
+      <rect class="pulseA" x="120" y="250" width="40" height="70" rx="8" fill="none" stroke="#ffb12e" stroke-width="4" stroke-dasharray="10 7"/>
+      <rect class="pulseA" x="236" y="420" width="44" height="56" rx="8" fill="none" stroke="#ffb12e" stroke-width="4" stroke-dasharray="10 7"/>
+      <text x="300" y="120" font-size="120" font-weight="800" fill="#ffb12e" font-family="InterV">?</text>
+    </svg>
+    <div class="abs card" style="left:470px;top:40px;width:600px">
+      <h3 class="warn">Hidden under clothing</h3>
+      <ul>
+        <li><span data-i="tools" class="warn"></span>Metallic weapons</li>
+        <li><span data-i="alert-triangle" class="warn"></span>Non-metallic weapons (ceramic, plastic)</li>
+        <li><span data-i="bomb" class="warn"></span>IEDs and explosives</li>
+        <li><span data-i="bottle" class="warn"></span>Liquids and gels</li>
+        <li><span data-i="pill" class="warn"></span>Drugs and contraband</li>
+      </ul>
+    </div>
+  </div>
+  <!-- beats 1-3: today's options -->
+  <div class="abs card" data-in="1" data-out="4" style="left:120px;top:280px;width:540px;height:540px">
+    <div style="display:flex;gap:16px;align-items:center;margin-bottom:16px"><span class="icb"><span data-i="door-enter"></span></span><h3 style="margin:0">Walk-through<br>metal detector</h3></div>
+    <ul>
+      <li data-in="1:fast and cheap"><span data-i="circle-check" class="ok"></span>Fast, low cost</li>
+      <li data-in="1:only senses metal"><span data-i="circle-x" class="no"></span>Senses <b>metal only</b></li>
+    </ul>
+    <p class="mu" style="margin:14px 0 6px;font-size:20px" data-in="1:ceramic">Walks straight through:</p>
+    <ul>
+      <li data-in="1:ceramic"><span data-i="x" class="no"></span>Ceramic knives</li>
+      <li data-in="1:plastic"><span data-i="x" class="no"></span>Plastic explosives</li>
+      <li data-in="1:liquids"><span data-i="x" class="no"></span>Liquids</li>
+      <li data-in="1:powders"><span data-i="x" class="no"></span>Powders and drugs</li>
+    </ul>
+  </div>
+  <div class="abs card" data-in="2" data-out="4" style="left:690px;top:280px;width:540px;height:540px">
+    <div style="display:flex;gap:16px;align-items:center;margin-bottom:16px"><span class="icb a"><span data-i="hand-stop"></span></span><h3 style="margin:0">Manual<br>pat-down</h3></div>
+    <ul>
+      <li data-in="2:catches more"><span data-i="circle-check" class="ok"></span>Catches more item types</li>
+      <li data-in="2:slow"><span data-i="circle-x" class="no"></span>Slow</li>
+      <li data-in="2:intrusive"><span data-i="circle-x" class="no"></span>Intrusive</li>
+      <li data-in="2:inconsistent"><span data-i="circle-x" class="no"></span>Inconsistent between officers</li>
+      <li data-in="2:uncomfortable"><span data-i="circle-x" class="no"></span>Uncomfortable for everyone</li>
+    </ul>
+  </div>
+  <div class="abs card" data-in="3" data-out="4" style="left:1260px;top:280px;width:540px;height:540px">
+    <div style="display:flex;gap:16px;align-items:center;margin-bottom:16px"><span class="icb r"><span data-i="radioactive"></span></span><h3 style="margin:0">X-ray backscatter<br>body scanner</h3></div>
+    <ul>
+      <li data-in="3:see more"><span data-i="circle-check" class="ok"></span>Sees non-metallic items</li>
+      <li data-in="3:ionizing"><span data-i="circle-x" class="no"></span>Ionizing radiation</li>
+      <li data-in="3:revealing"><span data-i="circle-x" class="no"></span>Revealing body images</li>
+      <li data-in="3:health"><span data-i="circle-x" class="no"></span>Health &amp; privacy concerns</li>
+    </ul>
+  </div>
+  <!-- beat 4: requirements -->
+  <div class="abs" style="left:120px;top:300px;width:1680px;display:flex;justify-content:center;gap:16px;flex-wrap:wrap">
+    <span class="pill" data-in="4:safe" data-a="pop"><span data-i="shield-check"></span>Safe</span>
+    <span class="pill" data-in="4:non-contact" data-a="pop"><span data-i="hand-finger"></span>Non-contact</span>
+    <span class="pill" data-in="4:automatic" data-a="pop"><span data-i="sparkles"></span>Automatic</span>
+    <span class="pill" data-in="4:consistent" data-a="pop"><span data-i="list-check"></span>Consistent</span>
+    <span class="pill" data-in="4:fast enough" data-a="pop"><span data-i="clock"></span>Fast at peak</span>
+    <span class="pill" data-in="4:privacy" data-a="pop"><span data-i="eye-off"></span>Private</span>
+  </div>
+  <div class="abs arrow" data-in="4:that gap" data-a="down" style="left:940px;top:400px;font-size:64px">↓</div>
+  <div class="abs card glow" data-in="4:active millimeter" data-a="pop" style="left:560px;top:500px;width:800px;height:300px;display:flex;align-items:center;gap:34px">
+    <img src="assets/product.png" style="height:250px">
+    <div>
+      <div class="kicker" style="font-size:19px">The answer</div>
+      <div style="font-size:42px;font-weight:800;line-height:1.1;margin-top:10px">Active millimeter-wave screening</div>
+      <div style="font-size:28px;color:var(--cyan);font-weight:700;margin-top:12px">NUCTECH™ MW1000AA</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 02 WHAT ============================ -->
+<section class="scene" id="sc-what">
+  <div class="hl" data-in="s+0.2" style="font-size:48px">A compact <em>walk-in portal</em></div>
+  <img class="abs" src="assets/product.png" data-in="s+0.3" data-a="fade" data-d="1" style="left:150px;top:200px;height:620px">
+  <!-- dimensions (image box: 150..582 x 200..820, scale 0.478 of 903x1297 source) -->
+  <svg class="abs" style="left:0;top:0;overflow:visible" width="1920" height="1080">
+    <g stroke="#47d3ff" stroke-width="2.5" fill="none">
+      <path data-in="0:2.5" data-a="draw" d="M118 204 L118 816" marker-start="url(#ah)" marker-end="url(#ah)"/>
+      <path data-in="0:1.4" data-a="draw" d="M154 846 L578 846" marker-start="url(#ah)" marker-end="url(#ah)"/>
+    </g>
+    <g stroke="#9fd8ff" stroke-width="2" fill="#47d3ff">
+      <path data-in="1:LED" data-a="draw" fill="none" d="M384 257 L650 202"/>
+      <circle data-in="1:LED" data-a="pop" cx="384" cy="257" r="7"/>
+      <path data-in="1:side panels" data-a="draw" fill="none" d="M408 358 L650 302"/>
+      <circle data-in="1:side panels" data-a="pop" cx="408" cy="358" r="7"/>
+      <path data-in="1:750" data-a="draw" fill="none" d="M336 535 L650 402"/>
+      <circle data-in="1:750" data-a="pop" cx="336" cy="535" r="7"/>
+      <path data-in="1:15-inch" data-a="draw" fill="none" d="M537 530 L650 502"/>
+      <circle data-in="1:15-inch" data-a="pop" cx="537" cy="530" r="7"/>
+      <path data-in="2:foot" data-a="draw" fill="none" d="M348 766 L650 692"/>
+      <circle data-in="2:foot" data-a="pop" cx="348" cy="766" r="7"/>
+    </g>
+  </svg>
+  <div class="abs" data-in="0:2.5" data-a="fade" style="left:66px;top:590px;transform:rotate(-90deg);transform-origin:left top;font-size:22px;font-weight:700;color:var(--cyan);white-space:nowrap">H 2,498 mm</div>
+  <div class="abs" data-in="0:1.4" data-a="fade" style="left:300px;top:854px;font-size:22px;font-weight:700;color:var(--cyan)">W 1,408 mm</div>
+  <div class="abs" style="left:660px;top:180px;width:420px">
+    <div class="abs chip" data-in="1:LED" data-a="left" style="top:0;left:0"><span data-i="bulb"></span>LED status indicators</div>
+    <div class="abs chip" data-in="1:side panels" data-a="left" style="top:100px;left:0;white-space:normal;width:410px"><span data-i="antenna"></span>Side panels: MMW imaging arrays</div>
+    <div class="abs chip" data-in="1:750" data-a="left" style="top:200px;left:0"><span data-i="door-enter"></span>Channel 750 mm wide</div>
+    <div class="abs chip" data-in="1:15-inch" data-a="left" style="top:300px;left:0"><span data-i="device-tablet"></span>15″ color touch screen</div>
+    <div class="abs chip" data-in="2:foot" data-a="left" style="top:490px;left:0;white-space:normal;width:410px"><span data-i="shoe"></span>Foot metal detector (optional): shoes stay on</div>
+    <div class="abs chip" data-in="0:1.2 m deep" data-a="pop" style="top:610px;left:0"><span data-i="ruler-measure"></span>D 1,188 mm</div>
+    <div class="abs chip" data-in="0:550" data-a="pop" style="top:610px;left:220px"><span data-i="weight"></span>550 kg</div>
+  </div>
+
+  <!-- KPI tiles -->
+  <div class="abs" style="left:1120px;top:180px;width:690px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px">
+    <div class="tile" data-in="3:2-second" data-a="pop"><div class="big">2<small>s</small></div><div class="lbl">Scan time</div></div>
+    <div class="tile" data-in="3:4 seconds" data-a="pop"><div class="big">4<small>s</small></div><div class="lbl">Inspection time</div></div>
+    <div class="tile" data-in="3:1 kW" data-a="pop"><div class="big">1<small>kW</small></div><div class="lbl">Power consumption</div></div>
+    <div class="tile" data-in="3:60 dB" data-a="pop"><div class="big">&lt;60<small>dB(A)</small></div><div class="lbl">Operating noise</div></div>
+    <div class="tile" data-in="3:110" data-a="pop"><div class="big" style="font-size:38px">110/220<small>V</small></div><div class="lbl">AC, 50/60 Hz</div></div>
+    <div class="tile" data-in="3:2-second" data-a="pop"><div class="big" style="font-size:27px;padding:12px 0 11px">Non-contact</div><div class="lbl">Inspection mode</div></div>
+  </div>
+  <div class="abs card" data-in="4" style="left:1120px;top:468px;width:690px;padding:18px 22px">
+    <div class="mu" style="font-size:19px;font-weight:700;letter-spacing:.12em;margin-bottom:10px">DETECTS</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px">
+      <span class="chip" data-in="4:metallic" data-a="pop">Metallic weapons</span>
+      <span class="chip" data-in="4:non-metallic" data-a="pop">Non-metallic weapons</span>
+      <span class="chip" data-in="4:IEDs" data-a="pop">IEDs</span>
+      <span class="chip" data-in="4:liquids" data-a="pop">Liquids &amp; gels</span>
+      <span class="chip" data-in="4:drugs" data-a="pop">Drugs</span>
+    </div>
+  </div>
+  <div class="abs" style="left:1120px;top:640px;width:700px;display:flex;flex-wrap:wrap;gap:12px">
+    <span class="badge" data-in="4:automatically" data-a="pop" style="font-size:21px"><span data-i="sparkles"></span>Automatic threat recognition</span>
+    <span class="badge" data-in="4:cartoon" data-a="pop" style="font-size:21px"><span data-i="mood-smile"></span>Cartoon-figure privacy</span>
+    <span class="badge" data-in="4:certified" data-a="pop" style="font-size:21px;background:linear-gradient(135deg,rgba(54,217,141,.3),rgba(54,217,141,.1));border-color:rgba(54,217,141,.6)"><span data-i="certificate" class="ok"></span>ECAC SSc Standard 2.1 · Type A</span>
+    <span class="badge" data-in="4:CE mark" data-a="pop" style="font-size:21px;background:linear-gradient(135deg,rgba(54,217,141,.3),rgba(54,217,141,.1));border-color:rgba(54,217,141,.6)"><span data-i="circle-check" class="ok"></span>CE</span>
+  </div>
+</section>
+
+<!-- ============================ 03 HOW ============================ -->
+<section class="scene" id="sc-how">
+  <div class="hl" data-in="s+0.2" data-out="2" style="font-size:48px">It starts with <em>physics</em></div>
+  <div class="hl" data-in="2" data-out="3" style="font-size:48px">Clothing is <em>transparent</em>, skin <em>reflects</em></div>
+  <div class="hl" data-in="3" data-out="4" style="font-size:48px"><em>Active</em> imaging: transmit, receive, sweep</div>
+  <div class="hl" data-in="4" data-out="5" style="font-size:48px">Echoes become a <em>3D holographic image</em></div>
+  <div class="hl" data-in="5" data-out="6" style="font-size:48px">A <em>neural network</em> finds what doesn't belong</div>
+  <div class="hl" data-in="6" style="font-size:48px"><em>Privacy</em> by design: the cartoon figure</div>
+
+  <!-- P0/P1 spectrum -->
+  <div class="abs" data-in="0" data-out="2" style="left:160px;top:260px;width:1600px;height:600px">
+    <svg class="abs" style="left:0;top:0" width="1600" height="200"><path id="chirp" d="" stroke="#47d3ff" stroke-width="4" fill="none" opacity=".9"/></svg>
+    <div class="abs" style="left:0;top:210px;width:1600px;height:96px;display:flex;border-radius:16px;overflow:hidden;font-size:21px;font-weight:700;text-align:center">
+      <div style="flex:1.6;background:#16325c;display:flex;align-items:center;justify-content:center">Radio</div>
+      <div style="flex:1.3;background:#1b3e70;display:flex;align-items:center;justify-content:center">Microwave</div>
+      <div id="mmwSeg" style="flex:1.25;background:linear-gradient(135deg,#2f7dff,#47d3ff);color:#041226;display:flex;align-items:center;justify-content:center;font-weight:800">Millimeter<br>wave</div>
+      <div style="flex:1.2;background:#3a2c5e;display:flex;align-items:center;justify-content:center">Infrared</div>
+      <div style="flex:.55;background:linear-gradient(90deg,#ff5a5a,#ffd84a,#4ae06a,#4a9cff,#9b5aff);color:#041226;display:flex;align-items:center;justify-content:center;font-size:16px">Visible</div>
+      <div style="flex:.8;background:#4b2a6e;display:flex;align-items:center;justify-content:center">UV</div>
+      <div style="flex:1.1;background:#5c2238;display:flex;align-items:center;justify-content:center">X-ray</div>
+      <div style="flex:1.1;background:#6b1a26;display:flex;align-items:center;justify-content:center">Gamma</div>
+    </div>
+    <div class="abs chip" data-in="0:wavelengths" data-a="pop" style="left:470px;top:150px;background:rgba(4,18,38,.85)">λ 1–10 mm · ≈30–300 GHz</div>
+    <div class="abs note" style="left:0;top:318px;font-size:20px" data-in="0:radio waves" data-a="fade">← longer wavelength, lower energy</div>
+    <div class="abs note" style="right:0;top:318px;font-size:20px" data-in="0:radio waves" data-a="fade">shorter wavelength, higher energy →</div>
+    <!-- ionizing boundary -->
+    <svg class="abs" style="left:0;top:190px;overflow:visible" width="1600" height="180">
+      <path data-in="1" data-a="draw" d="M1206 0 L1206 150" stroke="#ff5a6e" stroke-width="3" stroke-dasharray="8 6"/>
+    </svg>
+    <div class="abs" data-in="1" data-a="right" style="left:0;top:360px;width:1196px;height:12px;border-radius:6px;background:linear-gradient(90deg,rgba(54,217,141,.15),rgba(54,217,141,.7))"></div>
+    <div class="abs" data-in="1" data-a="left" style="left:1216px;top:360px;width:384px;height:12px;border-radius:6px;background:linear-gradient(90deg,rgba(255,90,110,.8),rgba(255,90,110,.2))"></div>
+    <div class="abs" data-in="1" style="left:400px;top:384px;font-size:26px;font-weight:800;color:var(--green)">NON-IONIZING</div>
+    <div class="abs" data-in="1" style="left:1290px;top:384px;font-size:26px;font-weight:800;color:var(--red)">IONIZING</div>
+    <div class="abs card" data-in="1:atoms" style="left:60px;top:440px;width:700px;padding:18px 24px;display:flex;gap:18px;align-items:center">
+      <span class="icb g"><span data-i="atom-2"></span></span><p style="font-size:24px">Too little energy per photon to alter <b>atoms or DNA</b></p>
+    </div>
+    <div class="abs card" data-in="1:mobile phone" style="left:800px;top:440px;width:760px;padding:18px 24px;display:flex;gap:18px;align-items:center">
+      <span class="icb g"><span data-i="device-mobile"></span></span><p style="font-size:24px">Very low transmit power: typically <b>far below a mobile phone</b></p>
+    </div>
+  </div>
+
+  <!-- P2 cross-section -->
+  <div class="abs" data-in="2" data-out="3" style="left:200px;top:250px;width:1520px;height:620px">
+    <svg class="abs" style="left:0;top:0" width="1520" height="620" viewBox="0 0 1520 620">
+      <rect x="40" y="90" width="56" height="420" rx="12" fill="#1f4f8f" stroke="#47d3ff" stroke-width="2"/>
+      <g fill="#47d3ff">
+        <circle cx="68" cy="130" r="6"/><circle cx="68" cy="190" r="6"/><circle cx="68" cy="250" r="6"/><circle cx="68" cy="310" r="6"/><circle cx="68" cy="370" r="6"/><circle cx="68" cy="430" r="6"/><circle cx="68" cy="490" r="6"/>
+      </g>
+      <g id="xsWaves"></g>
+      <path d="M760 60 C780 120 740 180 760 240 C780 300 740 360 760 420 C780 480 740 540 760 580" stroke="#a9b8d6" stroke-width="5" stroke-dasharray="14 10" fill="none"/>
+      <path d="M1130 40 C1090 200 1090 420 1130 590 L1300 590 L1300 40 Z" fill="url(#skin)"/>
+      <rect x="1000" y="250" width="70" height="110" rx="10" fill="#ffb12e" stroke="#fff3" stroke-width="2"/>
+    </svg>
+    <div class="abs note" style="left:6px;top:530px;font-size:21px;color:var(--cyan);font-weight:700">Antenna array</div>
+    <div class="abs chip" data-in="2:clothing" data-a="pop" style="left:580px;top:-14px">Clothing: almost transparent</div>
+    <div class="abs chip" data-in="2:human skin" data-a="pop" style="left:1090px;top:-14px;border-color:rgba(243,181,147,.6);background:rgba(243,181,147,.12)">Skin (water-rich): strong reflection</div>
+    <div class="abs chip" data-in="2:hidden object" data-a="pop" style="left:640px;top:420px;border-color:rgba(255,177,46,.7);background:rgba(255,177,46,.14);color:#ffd590">Concealed object: different signature</div>
+  </div>
+
+  <!-- P3 top-down active sweep -->
+  <div class="abs" data-in="3" data-out="4" style="left:120px;top:240px;width:1680px;height:640px">
+    <svg class="abs" style="left:0;top:0" width="1680" height="640" viewBox="0 0 1680 640">
+      <text x="770" y="34" fill="#9fb3d4" font-size="20" font-family="InterV" text-anchor="middle">TOP VIEW</text>
+      <rect x="430" y="70" width="46" height="520" rx="10" fill="#1f4f8f" stroke="#47d3ff" stroke-width="2"/>
+      <rect x="1064" y="70" width="46" height="520" rx="10" fill="#1f4f8f" stroke="#47d3ff" stroke-width="2"/>
+      <g id="rays" stroke="#47d3ff" stroke-width="2" opacity=".8"></g>
+      <ellipse cx="770" cy="330" rx="150" ry="62" fill="#4f8fd8"/>
+      <circle cx="770" cy="330" r="44" fill="#f1c7a3"/>
+      <path d="M740 300 a44 44 0 0 1 60 0" fill="#3b2a20"/>
+      <circle id="dotL" cx="476" cy="100" r="11" fill="#fff"/>
+      <circle id="dotR" cx="1064" cy="100" r="11" fill="#fff"/>
+      <!-- chirp plot -->
+      <g transform="translate(1250,140)">
+        <rect x="0" y="0" width="380" height="250" rx="16" fill="rgba(16,38,72,.6)" stroke="rgba(140,190,255,.2)"/>
+        <path d="M40 210 L360 210 M40 210 L40 30" stroke="#6f86ab" stroke-width="2" marker-end="url(#ah)"/>
+        <path id="chirpPlot" d="" stroke="#47d3ff" stroke-width="4" fill="none"/>
+        <text x="200" y="240" fill="#9fb3d4" font-size="18" font-family="InterV" text-anchor="middle">time</text>
+        <text x="22" y="120" fill="#9fb3d4" font-size="18" font-family="InterV" text-anchor="middle" transform="rotate(-90 22 120)">frequency</text>
+      </g>
+      <!-- timer -->
+      <g transform="translate(180,330)">
+        <circle r="92" fill="none" stroke="rgba(140,190,255,.2)" stroke-width="14"/>
+        <circle id="sweepRing" r="92" fill="none" stroke="#47d3ff" stroke-width="14" stroke-linecap="round" transform="rotate(-90)" stroke-dasharray="578" stroke-dashoffset="578"/>
+        <text id="sweepTxt" y="14" fill="#fff" font-size="44" font-weight="800" font-family="InterV" text-anchor="middle">0.0 s</text>
+      </g>
+    </svg>
+    <div class="abs chip" data-in="3:antenna arrays" data-a="pop" style="left:330px;top:596px">Side-panel transmit/receive arrays</div>
+    <div class="abs chip" data-in="3:wide frequency" data-a="pop" style="left:1290px;top:410px">Wide frequency sweep</div>
+    <div class="abs chip" data-in="3:front and back" data-a="pop" style="left:660px;top:430px">Front &amp; back coverage</div>
+    <div class="abs note" style="left:110px;top:450px;font-size:21px;color:var(--muted)" data-in="3:2 seconds">one full scan ≈ 2 s</div>
+  </div>
+
+  <!-- P4 reconstruction -->
+  <div class="abs" data-in="4" data-out="5" style="left:120px;top:240px;width:1680px;height:640px">
+    <div class="abs card" style="left:0;top:20px;width:470px;height:520px;padding:20px">
+      <div class="mu" style="font-size:19px;font-weight:700;letter-spacing:.12em">RAW ECHOES</div>
+      <svg width="430" height="440" id="echoes"></svg>
+    </div>
+    <div class="abs" data-in="4:reconstruction" data-a="pop" style="left:510px;top:170px;width:400px;text-align:center">
+      <div class="arrow" style="font-size:70px">→</div>
+      <div class="badge" style="font-size:24px;justify-content:center;width:100%"><span data-i="cube-3d-sphere"></span>Holographic reconstruction</div>
+      <div class="note" style="font-size:19px;margin-top:10px;color:var(--muted)">combines every echo from every antenna position and frequency</div>
+    </div>
+    <div class="abs card" style="left:950px;top:20px;width:470px;height:520px;padding:20px" data-in="4:3D image">
+      <div class="mu" style="font-size:19px;font-weight:700;letter-spacing:.12em">3D SURFACE IMAGE</div>
+      <canvas id="cloud" width="430" height="450"></canvas>
+    </div>
+    <div class="abs" style="left:1450px;top:40px;width:230px;display:flex;flex-direction:column;gap:16px">
+      <div class="tile" data-in="4:bandwidth" data-a="left"><div style="font-size:22px;font-weight:800;color:var(--cyan)">Bandwidth</div><div class="lbl">→ depth (range) resolution</div></div>
+      <div class="tile" data-in="4:antenna positions" data-a="left"><div style="font-size:22px;font-weight:800;color:var(--cyan)">Antenna positions</div><div class="lbl">→ height &amp; width resolution</div></div>
+      <div class="tile" data-in="4:anything on it" data-a="left" style="border-color:rgba(255,177,46,.6)"><div style="font-size:22px;font-weight:800;color:var(--amber)">Anomaly</div><div class="lbl">object on the body surface</div></div>
+    </div>
+  </div>
+
+  <!-- P5 neural network -->
+  <div class="abs" data-in="5" data-out="6" style="left:120px;top:240px;width:1680px;height:640px">
+    <svg class="abs" style="left:0;top:0" width="1680" height="600" id="nn"></svg>
+    <div class="abs card" style="left:0;top:150px;width:260px;height:300px;text-align:center;padding:16px">
+      <div class="mu" style="font-size:18px;font-weight:700;letter-spacing:.1em">3D IMAGE IN</div>
+      <canvas id="cloudMini" width="200" height="230"></canvas>
+    </div>
+    <div class="abs card glow" data-in="5:anomalies" data-a="pop" style="left:1260px;top:150px;width:420px;height:300px">
+      <div class="mu" style="font-size:18px;font-weight:700;letter-spacing:.1em">ATR OUTPUT</div>
+      <div style="display:flex;gap:18px;align-items:center;margin-top:12px">
+        <svg width="110" height="182" viewBox="0 0 100 165"><use href="#cartoon" style="color:#2a5a9a"/><rect x="52" y="86" width="26" height="22" rx="4" fill="none" stroke="#ffb12e" stroke-width="4"/></svg>
+        <div><div style="font-size:30px;font-weight:800;color:var(--amber)">Anomaly</div><div style="font-size:22px;margin-top:6px">Region: <b>left hip</b></div></div>
+      </div>
+    </div>
+    <div class="abs chip" data-in="5:trained" data-a="pop" style="left:440px;top:540px"><span data-i="database"></span>Trained on large labeled scan datasets</div>
+    <div class="abs chip" data-in="5:automatic threat" data-a="pop" style="left:960px;top:540px"><span data-i="sparkles"></span>Automatic Threat Recognition (ATR)</div>
+  </div>
+
+  <!-- P6 privacy -->
+  <div class="abs" data-in="6" style="left:120px;top:250px;width:1680px;height:620px">
+    <div class="abs card" style="left:0;top:20px;width:430px;height:520px;text-align:center">
+      <div class="mu" style="font-size:19px;font-weight:700;letter-spacing:.12em">RAW BODY IMAGE</div>
+      <svg width="300" height="360" viewBox="0 0 100 165" style="margin-top:12px;filter:url(#blur8)"><use href="#cartoon" style="color:#7da7d8"/></svg>
+      <div class="abs" style="left:0;right:0;top:160px;text-align:center;font-size:110px;color:var(--red)" data-in="6:never needs" data-a="pop"><span data-i="eye-off"></span></div>
+      <div style="font-size:23px;font-weight:700;color:var(--red);margin-top:-6px" data-in="6:never needs">Not shown to the operator</div>
+    </div>
+    <div class="abs arrow" data-in="6:cartoon" data-a="right" style="left:460px;top:230px;font-size:80px">→</div>
+    <div class="abs screen" data-in="6:green light" data-a="pop" style="left:580px;top:20px;width:520px;height:520px;border-width:8px">
+      <div class="scr-top"><span>MW1000AA</span><span>Operator view</span></div>
+      <div style="display:flex;align-items:center;gap:26px;padding:34px">
+        <svg width="170" height="280" viewBox="0 0 100 165"><use href="#cartoon" style="color:#36d98d"/></svg>
+        <div><div style="font-size:54px;font-weight:800;color:var(--green)">CLEAR</div><div style="font-size:24px;color:var(--muted);margin-top:8px">Green light:<br>proceed</div></div>
+      </div>
+    </div>
+    <div class="abs screen" data-in="6:an alarm" data-a="pop" style="left:1150px;top:20px;width:520px;height:520px;border-width:8px">
+      <div class="scr-top"><span>MW1000AA</span><span>Operator view</span></div>
+      <div style="display:flex;align-items:center;gap:26px;padding:34px">
+        <svg width="170" height="280" viewBox="0 0 100 165"><use href="#cartoon" style="color:#2a5a9a"/><rect class="pulseA" x="52" y="86" width="26" height="22" rx="4" fill="none" stroke="#ffb12e" stroke-width="4"/></svg>
+        <div><div style="font-size:54px;font-weight:800;color:var(--amber)">ALARM</div><div style="font-size:24px;color:var(--muted);margin-top:8px">Check here:<br><b style="color:#fff">left hip</b></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 04 WHO ============================ -->
+<section class="scene" id="sc-who">
+  <div class="hl" data-in="s+0.2" style="font-size:46px">Who touches the product?</div>
+  <div class="abs" data-in="6" data-a="fade" data-d="1" style="left:90px;top:225px;width:1740px;height:650px;border:3px dashed rgba(160,139,255,.55);border-radius:40px"></div>
+  <div class="abs chip" data-in="6" data-a="pop" style="left:130px;top:205px;background:#1a1440;border-color:rgba(160,139,255,.7);color:#d6ccff"><span data-i="users-group"></span>THE PUBLIC · trust that screening is effective, safe and fair</div>
+  <svg class="abs" style="left:0;top:0" width="1920" height="1080">
+    <g stroke="rgba(71,211,255,.55)" stroke-width="3" fill="none" stroke-dasharray="2 9" stroke-linecap="round">
+      <path data-in="1" data-a="draw" d="M770 520 L560 380"/>
+      <path data-in="1:screening officer" data-a="draw" d="M770 560 L560 690"/>
+      <path data-in="2" data-a="draw" d="M800 610 L800 760"/>
+      <path data-in="3" data-a="draw" d="M900 560 L1050 690"/>
+      <path data-in="4" data-a="draw" d="M900 500 L1050 380"/>
+      <path data-in="4:data protection" data-a="draw" d="M800 450 L800 330"/>
+      <path data-in="5" data-a="draw" d="M1380 560 L1470 560"/>
+    </g>
+  </svg>
+  <!-- hub -->
+  <div class="abs" data-in="0" data-a="pop" style="left:690px;top:430px;width:220px;height:200px;border-radius:30px;background:radial-gradient(circle,#173b70,#0b1d3a);border:2px solid rgba(71,211,255,.6);display:flex;flex-direction:column;align-items:center;justify-content:center">
+    <img src="assets/product.png" style="height:140px">
+    <div style="font-size:18px;font-weight:800;margin-top:4px">MW1000AA</div>
+  </div>
+  <div class="node hi" data-in="1" data-a="pop" style="left:220px;top:300px"><span class="icb"><span data-i="walk"></span></span><div><h4>Passenger</h4><p>safe · fast · dignified</p></div></div>
+  <div class="node" data-in="1:screening officer" data-a="pop" style="left:220px;top:630px"><span class="icb"><span data-i="user-shield"></span></span><div><h4>Screening officer</h4><p>guides · reads result · targeted pat-down</p></div></div>
+  <div class="node" data-in="2" data-a="pop" style="left:635px;top:745px;width:330px"><span class="icb"><span data-i="presentation-analytics"></span></span><div><h4>Supervisor &amp; manager</h4><p>lanes · staffing · KPIs</p></div></div>
+  <div class="node" data-in="3" data-a="pop" style="left:1030px;top:630px;width:350px"><span class="icb v"><span data-i="building-airport"></span></span><div><h4>Checkpoint owner</h4><p>airport · customs · metro · prison · building</p></div></div>
+  <div class="node" data-in="4" data-a="pop" style="left:1030px;top:300px;width:350px"><span class="icb g"><span data-i="certificate"></span></span><div><h4>Regulators &amp; certifiers</h4><p>ECAC · civil aviation authorities</p></div></div>
+  <div class="node" data-in="4:data protection" data-a="pop" style="left:635px;top:250px;width:330px"><span class="icb g"><span data-i="shield-lock"></span></span><div><h4>Data protection</h4><p>privacy rules</p></div></div>
+  <!-- supply side -->
+  <div class="abs" data-in="5" data-a="fade" style="left:1470px;top:262px;width:330px;height:588px;border-radius:24px;background:rgba(255,177,46,.05);border:1px solid rgba(255,177,46,.3)"></div>
+  <div class="abs kicker" data-in="5" style="left:1494px;top:278px;font-size:18px;color:var(--amber)">Supply side</div>
+  <div class="node sm" data-in="5:R&D" data-a="left" style="left:1485px;top:318px"><span class="icb a"><span data-i="building-factory-2"></span></span><div><h4>NUCTECH</h4><p>R&amp;D · manufacturing · QA</p></div></div>
+  <div class="node sm" data-in="5:component suppliers" data-a="left" style="left:1485px;top:452px"><span class="icb a"><span data-i="cpu"></span></span><div><h4>Component suppliers</h4><p>RF chips · compute · parts</p></div></div>
+  <div class="node sm" data-in="5:distributors" data-a="left" style="left:1485px;top:586px"><span class="icb a"><span data-i="truck-delivery"></span></span><div><h4>Distributors &amp; integrators</h4><p>local sales · installation</p></div></div>
+  <div class="node sm" data-in="5:field service" data-a="left" style="left:1485px;top:720px"><span class="icb a"><span data-i="tool"></span></span><div><h4>Service &amp; trainers</h4><p>maintenance · training</p></div></div>
+</section>
+
+<!-- ============================ 05 FLOW ============================ -->
+<section class="scene" id="sc-flow">
+  <div class="steps" data-in="s+0.2">
+    <div class="step" id="st1"><b>1</b>Prepare</div>
+    <div class="step" id="st2"><b>2</b>Enter</div>
+    <div class="step" id="st3"><b>3</b>Scan · 2 s</div>
+    <div class="step" id="st4"><b>4</b>Process</div>
+    <div class="step" id="st5"><b>5</b>Result</div>
+    <div class="step" id="st6"><b>6</b>Resolve &amp; exit</div>
+  </div>
+  <div class="abs card" data-in="s+0.3" style="left:120px;top:250px;width:990px;height:600px;padding:0;overflow:hidden">
+    <svg width="990" height="600" viewBox="0 0 990 600" id="flowSvg">
+      <rect x="0" y="540" width="990" height="60" fill="rgba(140,190,255,.06)"/>
+      <path d="M0 540 L990 540" stroke="rgba(140,190,255,.35)" stroke-width="2"/>
+      <!-- x-ray -->
+      <g>
+        <rect x="20" y="470" width="250" height="70" fill="#22324d"/>
+        <rect x="40" y="380" width="200" height="92" rx="10" fill="#2c4268" stroke="#47d3ff55"/>
+        <rect x="60" y="400" width="160" height="60" rx="6" fill="#0d1a2e"/>
+        <rect id="tray" x="78" y="447" width="70" height="14" rx="3" fill="#8aa4c8"/>
+        <text x="145" y="572" fill="#9fb3d4" font-size="17" font-family="InterV" text-anchor="middle">X-ray (bags &amp; trays)</text>
+      </g>
+      <!-- portal (cutaway) -->
+      <g>
+        <rect x="395" y="183" width="180" height="357" rx="10" fill="rgba(160,190,230,.10)" stroke="#8aa4c8" stroke-width="3"/>
+        <rect x="395" y="183" width="180" height="26" rx="8" fill="#5d6f8c"/>
+        <rect id="ledBar" x="440" y="191" width="90" height="10" rx="5" fill="#7f8ea8"/>
+        <path d="M380 540 L395 530 L575 530 L590 540 Z" fill="#4d5c76"/>
+        <ellipse cx="470" cy="536" rx="16" ry="4" fill="#ff8a2a"/><ellipse cx="500" cy="536" rx="16" ry="4" fill="#ff8a2a"/>
+        <rect id="scanBar" x="400" y="210" width="170" height="6" rx="3" fill="#47d3ff" opacity="0"/>
+        <rect x="578" y="330" width="34" height="46" rx="4" fill="#1d2638" stroke="#8aa4c8"/>
+        <text x="485" y="168" fill="#9fb3d4" font-size="17" font-family="InterV" text-anchor="middle">MW1000AA (cutaway)</text>
+      </g>
+      <!-- exit table -->
+      <g>
+        <rect x="770" y="470" width="190" height="70" fill="#22324d"/>
+        <rect id="tray2" x="820" y="456" width="70" height="14" rx="3" fill="#8aa4c8" opacity="0"/>
+        <text x="865" y="572" fill="#9fb3d4" font-size="17" font-family="InterV" text-anchor="middle" id="exitLbl">Collect belongings</text>
+      </g>
+      <!-- officer -->
+      <g id="off" transform="translate(680,540)">
+        <g id="offLegL"><rect x="-20" y="-100" width="18" height="100" rx="9" fill="#1b2a44"/></g>
+        <g id="offLegR"><rect x="2" y="-100" width="18" height="100" rx="9" fill="#1b2a44"/></g>
+        <rect x="-31" y="-196" width="62" height="110" rx="20" fill="#24406e"/>
+        <rect x="-31" y="-160" width="62" height="12" fill="#ffd34a"/>
+        <g id="offArmL"><rect x="-46" y="-190" width="16" height="98" rx="8" fill="#24406e"/></g>
+        <g id="offArmR"><rect x="30" y="-190" width="16" height="98" rx="8" fill="#24406e"/></g>
+        <circle cx="0" cy="-220" r="21" fill="#d9a77f"/>
+        <path d="M-24 -228 L24 -228 L20 -246 L-20 -246 Z" fill="#14213a"/>
+        <text x="0" y="22" fill="#9fb3d4" font-size="16" font-family="InterV" text-anchor="middle">Officer</text>
+      </g>
+      <!-- passenger -->
+      <g id="pax" transform="translate(320,540)">
+        <g id="paxLegL"><rect x="-22" y="-100" width="20" height="100" rx="10" fill="#2a3f63"/></g>
+        <g id="paxLegR"><rect x="2" y="-100" width="20" height="100" rx="10" fill="#2a3f63"/></g>
+        <rect x="-32" y="-198" width="64" height="112" rx="22" fill="#5aa0e8"/>
+        <g id="paxArmL"><rect x="-48" y="-192" width="17" height="100" rx="8.5" fill="#5aa0e8"/></g>
+        <g id="paxArmR"><rect x="31" y="-192" width="17" height="100" rx="8.5" fill="#5aa0e8"/></g>
+        <circle cx="0" cy="-222" r="22" fill="#f1c7a3"/>
+        <path d="M-22 -226 a22 22 0 0 1 44 0 z" fill="#3b2a20"/>
+        <circle id="ankleRing" cx="12" cy="-12" r="26" fill="none" stroke="#ffb12e" stroke-width="5" opacity="0"/>
+      </g>
+      <g id="items">
+        <rect id="it1" x="0" y="0" width="22" height="14" rx="3" fill="#ffd34a"/>
+        <rect id="it2" x="0" y="0" width="12" height="22" rx="3" fill="#cfe3ff"/>
+        <circle id="it3" cx="0" cy="0" r="7" fill="#ff9d5a"/>
+      </g>
+      <g id="hand" opacity="0" transform="translate(0,0)"><circle r="16" fill="#d9a77f" stroke="#fff" stroke-width="2"/></g>
+      <!-- timer -->
+      <g transform="translate(800,60)" id="timerG">
+        <rect x="-150" y="-34" width="300" height="72" rx="16" fill="rgba(4,12,26,.8)" stroke="rgba(140,190,255,.3)"/>
+        <text id="flowTimer" x="0" y="14" fill="#fff" font-size="34" font-weight="800" font-family="InterV" text-anchor="middle">t = 0.0 s</text>
+      </g>
+      <text id="altLbl" x="40" y="70" fill="#ffb12e" font-size="26" font-weight="800" font-family="InterV" opacity="0">ALTERNATIVE OUTCOME: ALARM</text>
+    </svg>
+  </div>
+  <!-- operator screen -->
+  <div class="abs screen" data-in="s+0.4" data-a="left" style="left:1160px;top:250px;width:640px;height:600px">
+    <div class="scr-top"><span>NUCTECH MW1000AA · Lane 3</span><span id="scrClock">Operator</span></div>
+    <div class="scr-state" id="ss-ready">
+      <div style="display:flex;gap:30px;align-items:center;padding:40px 36px">
+        <svg width="170" height="280" viewBox="0 0 100 165"><use href="#cartoon" style="color:#34445f"/></svg>
+        <div>
+          <div style="font-size:46px;font-weight:800;color:var(--muted)">READY</div>
+          <div style="font-size:23px;color:var(--muted);margin-top:8px" id="readyTxt">Waiting for passenger</div>
+          <div style="font-size:22px;margin-top:22px" data-in="2:footprint"><span data-i="circle-check" class="ok"></span> On footprints</div>
+          <div style="font-size:22px;margin-top:10px" data-in="2:foot metal"><span data-i="circle-check" class="ok"></span> Foot metal detector: OK</div>
+        </div>
+      </div>
+    </div>
+    <div class="scr-state" id="ss-scan">
+      <div style="padding:46px 40px">
+        <div style="font-size:46px;font-weight:800;color:var(--cyan)">SCANNING…</div>
+        <div style="font-size:24px;color:var(--muted);margin-top:10px">Hold still · arms slightly out</div>
+        <div style="margin-top:40px;height:22px;border-radius:11px;background:rgba(140,190,255,.15);overflow:hidden"><div id="scanProg" style="height:100%;width:0;background:linear-gradient(90deg,#2f7dff,#47d3ff)"></div></div>
+        <div style="font-size:22px;color:var(--muted);margin-top:14px" id="scanPct">0.0 / 2.0 s</div>
+        <svg width="150" height="248" viewBox="0 0 100 165" style="position:absolute;right:60px;top:250px"><use href="#cartoon" style="color:#34445f"/></svg>
+      </div>
+    </div>
+    <div class="scr-state" id="ss-proc">
+      <div style="padding:46px 40px">
+        <div style="font-size:46px;font-weight:800;color:var(--violet)">PROCESSING…</div>
+        <div style="font-size:24px;margin-top:34px" data-in="4:reconstructs"><span data-i="cube-3d-sphere" class="cy"></span> 3D holographic reconstruction</div>
+        <div style="font-size:24px;margin-top:18px" data-in="4:neural network"><span data-i="brain" class="cy"></span> ATR neural network analysis</div>
+        <div style="font-size:24px;margin-top:18px" data-in="4:no human"><span data-i="eye-off" class="ok"></span> No body image displayed</div>
+      </div>
+    </div>
+    <div class="scr-state" id="ss-clear">
+      <div style="height:90px;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:50px;font-weight:800;color:#03140b">✓ CLEAR</div>
+      <div style="display:flex;gap:34px;align-items:center;padding:30px 40px">
+        <svg width="160" height="264" viewBox="0 0 100 165"><use href="#cartoon" style="color:#36d98d"/></svg>
+        <div><div style="font-size:30px;font-weight:800">No threat detected</div><div style="font-size:24px;color:var(--muted);margin-top:10px">Passenger proceeds</div><div style="font-size:24px;color:var(--cyan);margin-top:22px;font-weight:700">≈ 4 s total</div></div>
+      </div>
+    </div>
+    <div class="scr-state" id="ss-alarm">
+      <div style="height:90px;background:var(--amber);display:flex;align-items:center;justify-content:center;font-size:46px;font-weight:800;color:#241500">⚠ ALARM · 1 AREA</div>
+      <div style="display:flex;gap:34px;align-items:center;padding:30px 40px">
+        <svg width="160" height="264" viewBox="0 0 100 165"><use href="#cartoon" style="color:#2a5a9a"/><rect class="pulseA" x="48" y="138" width="22" height="22" rx="4" fill="none" stroke="#ffb12e" stroke-width="4"/></svg>
+        <div><div style="font-size:30px;font-weight:800">Targeted pat-down</div><div style="font-size:26px;color:var(--amber);margin-top:10px;font-weight:700">LEFT ANKLE only</div><div style="font-size:22px;color:var(--muted);margin-top:16px">instead of a full-body search</div></div>
+      </div>
+    </div>
+    <div class="scr-state" id="ss-done">
+      <div style="padding:46px 40px">
+        <div style="font-size:46px;font-weight:800;color:var(--green)">RESOLVED</div>
+        <div style="font-size:24px;margin-top:30px" data-in="7:resolves"><span data-i="circle-check" class="ok"></span> Alarm resolved by officer</div>
+        <div style="font-size:24px;margin-top:18px" data-in="7:escalated"><span data-i="alert-triangle" class="warn"></span> Real threat? Escalate per local SOP</div>
+        <div style="font-size:24px;margin-top:18px" data-in="7:collects"><span data-i="basket" class="cy"></span> Passenger collects belongings</div>
+        <div style="font-size:24px;margin-top:18px" data-in="7:statistics"><span data-i="chart-bar" class="cy"></span> Result logged → lane statistics</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 06 WHERE ============================ -->
+<section class="scene" id="sc-where">
+  <div class="hl" data-in="s+0.2" style="font-size:46px">Where is it used? <em>Anywhere people must be screened</em></div>
+  <img class="abs" id="airportImg" src="assets/airport.png" data-in="s+0.3" data-a="fade" data-d="1" style="left:120px;top:240px;width:1680px;border-radius:24px">
+  <div class="abs chip" data-in="0+0.6" data-out="1" data-a="pop" style="left:150px;top:270px;background:rgba(4,12,26,.85)">Datasheet render: airport checkpoint deployment</div>
+  <div class="abs" style="left:120px;top:250px;width:1680px;display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:186px;gap:20px" id="venues">
+    <div class="node big" style="position:relative;width:auto" data-in="1:civil aviation" data-out="3" data-a="pop"><span class="icb"><span data-i="plane"></span></span><div><h4>Civil aviation</h4><p>central security · transfer screening</p></div></div>
+    <div class="node big" style="position:relative;width:auto" data-in="1:customs" data-out="3" data-a="pop"><span class="icb"><span data-i="id"></span></span><div><h4>Customs &amp; borders</h4><p>land, sea and air crossings</p></div></div>
+    <div class="node big" style="position:relative;width:auto" data-in="1:train" data-out="3" data-a="pop"><span class="icb"><span data-i="train"></span></span><div><h4>Rail &amp; metro</h4><p>stations · transit hubs</p></div></div>
+    <div class="node big" style="position:relative;width:auto" data-in="2:government" data-out="3" data-a="pop"><span class="icb"><span data-i="building-bank"></span></span><div><h4>Government</h4><p>ministries · secure agencies</p></div></div>
+    <div class="node big" style="position:relative;width:auto" data-in="2:military" data-out="3" data-a="pop"><span class="icb"><span data-i="military-rank"></span></span><div><h4>Military bases</h4><p>entry control points</p></div></div>
+    <div class="node big" style="position:relative;width:auto" data-in="2:prisons" data-out="3" data-a="pop"><span class="icb"><span data-i="building-castle"></span></span><div><h4>Prisons &amp; courts</h4><p>visitors · staff · inmates</p></div></div>
+    <div class="node big" style="position:relative;width:auto" data-in="2:hospitals" data-out="3" data-a="pop"><span class="icb"><span data-i="building-hospital"></span></span><div><h4>Hospitals</h4><p>emergency · high-risk wards</p></div></div>
+    <div class="node big" style="position:relative;width:auto" data-in="2:events" data-out="3" data-a="pop"><span class="icb"><span data-i="building-stadium"></span></span><div><h4>Events &amp; venues</h4><p>stadiums · concerts · summits</p></div></div>
+    <div class="node big" style="position:relative;width:auto" data-in="2:loss prevention" data-out="3" data-a="pop"><span class="icb a"><span data-i="building-warehouse"></span></span><div><h4>Loss prevention</h4><p>factories · warehouses · mints (exit)</p></div></div>
+  </div>
+  <!-- site requirements -->
+  <div class="abs card" data-in="3" style="left:120px;top:240px;width:820px;height:610px">
+    <div class="mu" style="font-size:19px;font-weight:700;letter-spacing:.12em">SITE FOOTPRINT (TOP VIEW)</div>
+    <svg width="760" height="540" viewBox="0 0 760 540">
+      <g transform="translate(150,70)">
+        <rect data-in="3:floor" data-a="draw" x="0" y="0" width="422" height="356" fill="none" stroke="#47d3ff" stroke-width="3"/>
+        <rect x="0" y="0" width="98" height="356" fill="rgba(71,211,255,.12)" data-in="3:floor" data-a="fade"/>
+        <rect x="324" y="0" width="98" height="356" fill="rgba(71,211,255,.12)" data-in="3:floor" data-a="fade"/>
+        <rect x="98" y="0" width="226" height="356" fill="rgba(54,217,141,.08)" data-in="3:floor" data-a="fade"/>
+        <path d="M150 300 L150 60" stroke="#36d98d" stroke-width="3" marker-end="url(#ahg)" data-in="3:floor" data-a="draw"/>
+        <text x="211" y="190" fill="#36d98d" font-size="20" font-family="InterV" text-anchor="middle" data-in="3:floor">channel 750 mm</text>
+        <path d="M0 -26 L422 -26" stroke="#9fb3d4" stroke-width="2" marker-start="url(#ah)" marker-end="url(#ah)"/>
+        <text x="211" y="-36" fill="#fff" font-size="22" font-weight="700" font-family="InterV" text-anchor="middle">1,408 mm</text>
+        <path d="M-26 0 L-26 356" stroke="#9fb3d4" stroke-width="2" marker-start="url(#ah)" marker-end="url(#ah)"/>
+        <text x="-40" y="178" fill="#fff" font-size="22" font-weight="700" font-family="InterV" text-anchor="middle" transform="rotate(-90 -40 178)">1,188 mm</text>
+        <text x="211" y="400" fill="#9fb3d4" font-size="20" font-family="InterV" text-anchor="middle">Height 2,498 mm · channel 2,200 mm high · ramp extra</text>
+      </g>
+    </svg>
+  </div>
+  <div class="abs" style="left:980px;top:240px;width:820px;display:flex;flex-direction:column;gap:14px">
+    <div class="node" style="position:relative;width:auto" data-in="3:standard power" data-a="left"><span class="icb"><span data-i="plug"></span></span><div><h4>110/220 VAC · 50/60 Hz · 1 kW</h4><p>standard mains outlet</p></div></div>
+    <div class="node" style="position:relative;width:auto" data-in="3:indoor climate" data-a="left"><span class="icb"><span data-i="temperature"></span></span><div><h4>−5 °C to +45 °C operating</h4><p>storage −20 °C to +55 °C</p></div></div>
+    <div class="node" style="position:relative;width:auto" data-in="3:humidity" data-a="left"><span class="icb"><span data-i="droplet"></span></span><div><h4>0–93% humidity</h4><p>non-condensing</p></div></div>
+    <div class="node" style="position:relative;width:auto" data-in="3:compact footprint" data-a="left"><span class="icb g"><span data-i="arrows-exchange"></span></span><div><h4>Drops into existing lanes</h4><p>beside, or replacing, a metal detector · 550 kg</p></div></div>
+  </div>
+</section>
+
+<!-- ============================ 07 WHEN ============================ -->
+<section class="scene" id="sc-when">
+  <div class="hl" data-in="s+0.2" style="font-size:46px">When? <em>A lifecycle</em> measured in years, a scan measured in seconds</div>
+  <svg class="abs" style="left:0;top:0" width="1920" height="1080">
+    <path data-in="1" data-a="draw" data-d="2" d="M215 338 L1705 338" stroke="rgba(71,211,255,.5)" stroke-width="4"/>
+    <path data-in="4:finally" data-a="draw" data-d="1.8" d="M1705 612 C1705 632 1690 634 1650 634 L270 634 C232 634 215 632 215 614" stroke="#a08bff" stroke-width="3" fill="none" stroke-dasharray="8 8" marker-end="url(#ah)"/>
+  </svg>
+  <div class="abs" id="lifecycle" style="left:100px;top:300px;width:1720px;display:flex;justify-content:space-between">
+    <div class="lc" data-in="1:need" data-a="pop"><span class="icb"><span data-i="search"></span></span><h4>Need &amp; planning</h4><p>threat assessment · new rules · traffic growth</p><span class="who">Owner · Regulator</span></div>
+    <div class="lc" data-in="1:procurement" data-a="pop"><span class="icb"><span data-i="file-certificate"></span></span><h4>Procurement</h4><p>tender · technical evaluation · certification check</p><span class="who">Owner · NUCTECH · Distributor</span></div>
+    <div class="lc" data-in="2:deployment" data-a="pop"><span class="icb"><span data-i="truck-delivery"></span></span><h4>Deployment</h4><p>site survey · delivery · install · commission</p><span class="who">Integrator · Service</span></div>
+    <div class="lc" data-in="2:acceptance" data-a="pop"><span class="icb"><span data-i="school"></span></span><h4>Acceptance &amp; training</h4><p>acceptance tests · operator training</p><span class="who">Trainers · Officers</span></div>
+    <div class="lc" data-in="3" data-a="pop"><span class="icb g"><span data-i="activity-heartbeat"></span></span><h4>Operation</h4><p>every day, every shift · peaks at rush hours</p><span class="who">Officers · Passengers · Supervisors</span></div>
+    <div class="lc" data-in="3:maintenance" data-a="pop"><span class="icb a"><span data-i="refresh"></span></span><h4>Maintain &amp; update</h4><p>checks · preventive maintenance · ATR updates</p><span class="who">Service · NUCTECH</span></div>
+    <div class="lc" data-in="4:finally" data-a="pop"><span class="icb v"><span data-i="recycle"></span></span><h4>Upgrade / end of life</h4><p>refurbish · replace · next generation</p><span class="who">Owner · NUCTECH</span></div>
+  </div>
+  <div class="abs card" data-in="3:rush hours" style="left:120px;top:658px;width:860px;height:205px;padding:14px 24px">
+    <div class="mu" style="font-size:18px;font-weight:700;letter-spacing:.1em">A TYPICAL DAY · passenger volume (illustrative)</div>
+    <svg width="810" height="150" viewBox="0 0 810 160">
+      <path data-in="3:rush hours" data-a="draw" data-d="1.6" d="M0 140 C60 140 90 30 150 30 C210 30 230 110 300 110 C370 110 380 80 430 85 C480 90 520 120 560 110 C610 95 640 25 690 30 C740 35 770 120 810 135" stroke="#47d3ff" stroke-width="4" fill="none"/>
+      <text x="150" y="20" fill="#ffb12e" font-size="17" font-family="InterV" text-anchor="middle">morning peak</text>
+      <text x="690" y="20" fill="#ffb12e" font-size="17" font-family="InterV" text-anchor="middle">evening peak</text>
+      <text x="0" y="158" fill="#6f86ab" font-size="15" font-family="InterV">06:00</text><text x="780" y="158" fill="#6f86ab" font-size="15" font-family="InterV">22:00</text>
+    </svg>
+  </div>
+  <div class="abs card glow" data-in="4:life-cycle" data-a="pop" style="left:1020px;top:658px;width:780px;height:205px;display:flex;gap:22px;align-items:center">
+    <span class="icb v" style="width:90px;height:90px;font-size:54px"><span data-i="layout-dashboard"></span></span>
+    <div><div style="font-size:30px;font-weight:800">Life-cycle equipment management</div><div style="font-size:22px;color:var(--muted);margin-top:8px">datasheet feature: track the device's status, service and history from installation to retirement</div></div>
+  </div>
+</section>
+
+<!-- ============================ 08 VALUE CHAIN ============================ -->
+<section class="scene" id="sc-chain">
+  <div class="hl" data-in="s+0.2" style="font-size:46px">The value chain: <em>from lab to lane</em></div>
+  <div class="chev ghost first" data-in="s+0.30" data-a="fade" style="left:100px;top:240px;width:232px">R&amp;D</div>
+  <div class="chev ghost" data-in="s+0.42" data-a="fade" style="left:316px;top:240px;width:232px">Components</div>
+  <div class="chev ghost" data-in="s+0.54" data-a="fade" style="left:532px;top:240px;width:232px">Manufacturing &amp; QA</div>
+  <div class="chev ghost" data-in="s+0.66" data-a="fade" style="left:748px;top:240px;width:232px">Certification</div>
+  <div class="chev ghost" data-in="s+0.78" data-a="fade" style="left:964px;top:240px;width:232px">Go-to-market</div>
+  <div class="chev ghost" data-in="s+0.90" data-a="fade" style="left:1180px;top:240px;width:232px">Deployment &amp; integration</div>
+  <div class="chev ghost" data-in="s+1.02" data-a="fade" style="left:1396px;top:240px;width:232px">Operations &amp; training</div>
+  <div class="chev ghost" data-in="s+1.14" data-a="fade" style="left:1612px;top:240px;width:232px">After-sales service</div>
+  <div class="chev first" data-in="1" data-a="right" style="left:100px;top:240px;width:232px;background:#1a4e9c">R&amp;D</div>
+  <div class="chev" data-in="2" data-a="right" style="left:316px;top:240px;width:232px;background:#1b57ad">Components</div>
+  <div class="chev" data-in="3" data-a="right" style="left:532px;top:240px;width:232px;background:#1c60be">Manufacturing &amp; QA</div>
+  <div class="chev" data-in="4" data-a="right" style="left:748px;top:240px;width:232px;background:#1d69cf">Certification</div>
+  <div class="chev" data-in="5" data-a="right" style="left:964px;top:240px;width:232px;background:#1f74dc">Go-to-market</div>
+  <div class="chev" data-in="6" data-a="right" style="left:1180px;top:240px;width:232px;background:#2580e0">Deployment &amp; integration</div>
+  <div class="chev" data-in="6:operations" data-a="right" style="left:1396px;top:240px;width:232px;background:#2c8de3">Operations &amp; training</div>
+  <div class="chev" data-in="6:after-sales" data-a="right" style="left:1612px;top:240px;width:232px;background:linear-gradient(90deg,#2f9ae6,#47d3ff);color:#041226">After-sales service</div>
+  <div class="chcol" data-in="1+0.5" style="left:112px;top:360px"><span class="icb"><span data-i="microscope"></span></span><div data-in="1:antenna design">MMW circuits &amp; antennas</div><div data-in="1:imaging algorithms">Imaging algorithms</div><div data-in="1:AI models">AI trained on large labeled datasets</div><div data-in="1:body types">Many body types &amp; clothing</div></div>
+  <div class="chcol" data-in="2+0.5" style="left:328px;top:360px"><span class="icb"><span data-i="cpu"></span></span><div data-in="2:transceiver">MMW transceiver chips &amp; antenna arrays</div><div data-in="2:data acquisition">High-speed data acquisition</div><div data-in="2:computing">Compute for reconstruction &amp; AI</div><div data-in="2:metal detector">Metal-detector coils, screen, frame</div></div>
+  <div class="chcol" data-in="3+0.5" style="left:544px;top:360px"><span class="icb"><span data-i="building-factory-2"></span></span><div data-in="3:assembly">Assembly</div><div data-in="3:calibration">RF calibration</div><div data-in="3:testing">Detection, safety &amp; EMC tests</div><div data-in="3:reliability">Reliability</div></div>
+  <div class="chcol" data-in="4+0.5" style="left:760px;top:360px"><span class="icb g"><span data-i="certificate"></span></span><div data-in="4:ECAC">ECAC testing (SSc 2.1 Type A)</div><div data-in="4:CE">CE conformity</div><div data-in="4:national">National approvals</div><div data-in="4:market access">= market access</div></div>
+  <div class="chcol" data-in="5+0.5" style="left:976px;top:360px"><span class="icb"><span data-i="speakerphone"></span></span><div data-in="5:direct sales">Direct sales</div><div data-in="5:distributors">Distributors &amp; integrators</div><div data-in="5:tenders">Government tenders</div><div data-in="5:financing">Financing</div></div>
+  <div class="chcol" data-in="6+0.5" style="left:1192px;top:360px"><span class="icb"><span data-i="tools"></span></span><div>Site survey &amp; install</div><div>Integration with lane &amp; IT</div><div>Commissioning</div></div>
+  <div class="chcol" data-in="6:operations+0.5" style="left:1408px;top:360px"><span class="icb"><span data-i="school"></span></span><div>Officer training</div><div>Daily operation</div><div>Supervision &amp; KPIs</div></div>
+  <div class="chcol" data-in="6:after-sales+0.5" style="left:1624px;top:360px"><span class="icb a"><span data-i="tool"></span></span><div data-in="6:maintenance contracts">Maintenance contracts</div><div data-in="6:spare parts">Spare parts</div><div data-in="6:remote diagnostics">Remote diagnostics</div><div data-in="6:software upgrades">Software &amp; ATR upgrades</div><div data-in="6:long-term revenue" style="color:var(--amber);font-weight:700">Long-term revenue</div></div>
+  <!-- value back -->
+  <svg class="abs" style="left:0;top:0" width="1920" height="1080">
+    <path data-in="7" data-a="draw" data-d="1.2" d="M1820 726 L120 726" stroke="#36d98d" stroke-width="4" marker-end="url(#ahg)"/>
+    <text x="1820" y="712" fill="#36d98d" font-size="20" font-weight="800" font-family="InterV" text-anchor="end" data-in="7">VALUE DELIVERED ←</text>
+  </svg>
+  <div class="abs" style="left:120px;top:746px;width:1700px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+    <div class="node" style="position:relative;width:auto;padding:12px 16px" data-in="7:passengers" data-a="pop"><span class="icb g" style="width:50px;height:50px;font-size:30px"><span data-i="walk"></span></span><div><h4 style="font-size:21px">Passengers</h4><p>speed &amp; dignity</p></div></div>
+    <div class="node" style="position:relative;width:auto;padding:12px 16px" data-in="7:operators" data-a="pop"><span class="icb g" style="width:50px;height:50px;font-size:30px"><span data-i="building-airport"></span></span><div><h4 style="font-size:21px">Operators</h4><p>throughput · consistent detection</p></div></div>
+    <div class="node" style="position:relative;width:auto;padding:12px 16px" data-in="7:regulators" data-a="pop"><span class="icb g" style="width:50px;height:50px;font-size:30px"><span data-i="certificate"></span></span><div><h4 style="font-size:21px">Regulators</h4><p>compliance</p></div></div>
+    <div class="node" style="position:relative;width:auto;padding:12px 16px" data-in="7:society" data-a="pop"><span class="icb g" style="width:50px;height:50px;font-size:30px"><span data-i="users-group"></span></span><div><h4 style="font-size:21px">Society</h4><p>safer public spaces</p></div></div>
+  </div>
+</section>
+
+<!-- ============================ 09 KNOW-HOW ============================ -->
+<section class="scene" id="sc-know">
+  <div class="hl" data-in="s+0.2" style="font-size:46px">The know-how <em>stack</em></div>
+  <div class="abs" data-in="s+0.5" style="left:180px;top:250px;width:220px;height:600px">
+    <svg width="220" height="600"><path d="M110 570 L110 40" stroke="url(#kg)" stroke-width="6" marker-end="url(#ah)"/>
+      <defs><linearGradient id="kg" gradientUnits="userSpaceOnUse" x1="0" y1="570" x2="0" y2="40"><stop offset="0" stop-color="#2f7dff"/><stop offset="1" stop-color="#a08bff"/></linearGradient></defs></svg>
+    <div class="abs" style="left:0;top:580px;width:220px;text-align:center;font-size:22px;font-weight:700;color:var(--cyan)">Physics</div>
+    <div class="abs" style="left:0;top:-10px;width:220px;text-align:center;font-size:22px;font-weight:700;color:var(--violet)">People &amp; rules</div>
+  </div>
+  <div class="layer" data-in="1" data-a="up" style="top:770px;background:linear-gradient(90deg,#163f7d,#1d5bb0)"><span class="n">1</span><span class="icb" style="width:52px;height:52px;font-size:30px"><span data-i="antenna"></span></span><h4>RF &amp; millimeter-wave hardware</h4><p>antennas · transceivers · calibration · EMC</p></div>
+  <div class="layer" data-in="2" data-a="up" style="top:676px;background:linear-gradient(90deg,#174789,#2066bf)"><span class="n">2</span><span class="icb" style="width:52px;height:52px;font-size:30px"><span data-i="wave-sine"></span></span><h4>Signal processing &amp; 3D holography</h4><p>reconstruction fast enough for a ~2 s scan</p></div>
+  <div class="layer" data-in="3" data-a="up" style="top:582px;background:linear-gradient(90deg,#1d4a8c,#2b6fc4)"><span class="n">3</span><span class="icb" style="width:52px;height:52px;font-size:30px"><span data-i="brain"></span></span><h4>AI · automatic threat recognition</h4><p>data collection · labeling · training · validation · detection vs. false alarms</p></div>
+  <div class="layer" data-in="4" data-a="up" style="top:488px;background:linear-gradient(90deg,#2a3f8a,#4a5fc4)"><span class="n">4</span><span class="icb" style="width:52px;height:52px;font-size:30px"><span data-i="device-tablet"></span></span><h4>Software &amp; user experience</h4><p>touch UI · cartoon privacy display · device management · cybersecurity</p></div>
+  <div class="layer" data-in="5" data-a="up" style="top:394px;background:linear-gradient(90deg,#383a88,#5d58c0)"><span class="n">5</span><span class="icb" style="width:52px;height:52px;font-size:30px"><span data-i="settings"></span></span><h4>Systems engineering</h4><p>mechanical · thermal · acoustic (&lt;60 dB) · reliability · manufacturability</p></div>
+  <div class="layer" data-in="6" data-a="up" style="top:300px;background:linear-gradient(90deg,#4a3488,#7a55c4)"><span class="n">6</span><span class="icb v" style="width:52px;height:52px;font-size:30px"><span data-i="hierarchy-3"></span></span><h4>Operations &amp; regulatory</h4><p>lane design · staffing · officer training · certification · privacy compliance</p></div>
+  <div class="abs card" data-in="6:a great scanner" data-a="left" style="left:1580px;top:300px;width:260px;padding:20px;border-color:rgba(255,177,46,.6)">
+    <div style="font-size:56px;line-height:.6;color:var(--amber);font-weight:800">“</div>
+    <div style="font-size:23px;font-weight:700;line-height:1.35">A great scanner in a badly designed lane still performs poorly.</div>
+  </div>
+</section>
+
+<!-- ============================ 10 KPI ============================ -->
+<section class="scene" id="sc-kpi">
+  <div class="hl" data-in="s+0.2" style="font-size:46px">How success is measured</div>
+  <div class="abs card" data-in="1" style="left:120px;top:235px;width:820px;height:170px;display:flex;gap:22px;align-items:center">
+    <span class="icb g" style="width:84px;height:84px;font-size:50px"><span data-i="target"></span></span>
+    <div><h3 style="margin:0">Probability of detection (Pd)</h3><p>how reliably real threats are found · proven via ECAC certification testing</p></div>
+  </div>
+  <div class="abs card" data-in="1:false alarm" style="left:980px;top:235px;width:820px;height:170px;display:flex;gap:22px;align-items:center">
+    <span class="icb a" style="width:84px;height:84px;font-size:50px"><span data-i="alert-triangle"></span></span>
+    <div><h3 style="margin:0">False alarm rate (FAR)</h3><p>innocent passengers alarming → pat-downs, workload, queues</p></div>
+  </div>
+  <div class="abs card" data-in="2" style="left:120px;top:425px;width:820px;height:340px">
+    <h3><span data-i="users" class="cy"></span> Throughput (people per hour)</h3>
+    <div style="font-size:22px;color:var(--muted);margin:6px 0 12px">3,600 s ÷ 4 s per inspection</div>
+    <div style="display:flex;align-items:center;gap:16px;margin:10px 0">
+      <div style="width:190px;font-size:20px;color:var(--muted)">Theoretical ceiling</div>
+      <div style="flex:1;height:44px;background:rgba(140,190,255,.1);border-radius:10px;overflow:hidden"><div data-in="2:theoretical" data-a="grow" data-d="1.2" style="height:100%;width:100%;background:linear-gradient(90deg,#2f7dff,#47d3ff)"></div></div>
+      <div style="width:90px;font-size:32px;font-weight:800" data-in="2:theoretical" data-a="count" data-count="900" data-d="1.2">900</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;margin:10px 0">
+      <div style="width:190px;font-size:20px;color:var(--muted)">Reported in practice*</div>
+      <div style="flex:1;height:44px;background:rgba(140,190,255,.1);border-radius:10px;overflow:hidden"><div data-in="2:400" data-a="grow" data-d="1.2" style="height:100%;width:44.4%;background:linear-gradient(90deg,#1f9a63,#36d98d)"></div></div>
+      <div style="width:90px;font-size:32px;font-weight:800" data-in="2:400" data-a="count" data-count="400" data-fmt="" data-d="1.2">400</div>
+    </div>
+    <div class="note" style="margin-top:12px;font-size:18px" data-in="2:in practice">divesting and alarm resolution set the real pace · *third-party product listing (~400/h)</div>
+  </div>
+  <div class="abs card" data-in="3" style="left:980px;top:425px;width:820px;height:130px;display:flex;gap:22px;align-items:center">
+    <span class="icb" style="width:70px;height:70px;font-size:42px"><span data-i="gauge"></span></span>
+    <div><h3 style="margin:0">Availability</h3><p>uptime · mean time between failures · time to repair</p></div>
+  </div>
+  <div class="abs card" data-in="3:total cost" style="left:980px;top:572px;width:820px;height:193px;padding:18px 26px">
+    <h3 style="margin-bottom:10px"><span data-i="coins" class="cy"></span> Total cost of ownership</h3>
+    <div style="display:flex;flex-wrap:wrap;gap:10px">
+      <span class="chip" data-in="3:purchase" data-a="pop">Purchase</span>
+      <span class="chip" data-in="3:installation" data-a="pop">Installation</span>
+      <span class="chip" data-in="3:of power" data-a="pop">Power · 1 kW</span>
+      <span class="chip" data-in="3:service contracts" data-a="pop">Service contracts</span>
+      <span class="chip" data-in="3:staff" data-a="pop" style="background:rgba(255,177,46,.18);border-color:rgba(255,177,46,.7);color:#ffd590">Staff = biggest lifetime cost</span>
+    </div>
+  </div>
+  <div class="abs badge" data-in="4" data-a="pop" style="left:120px;top:785px;width:1680px;justify-content:center;font-size:25px">
+    <span data-i="sparkles"></span>ATR + cartoon display → fewer full-body pat-downs · fewer officers per lane · consistent decisions every shift
+  </div>
+</section>
+
+<!-- ============================ 11 ALTERNATIVES ============================ -->
+<section class="scene" id="sc-alt">
+  <div class="hl" data-in="s+0.2" style="font-size:46px">How it compares</div>
+  <div class="abs" data-in="0" data-out="3" style="left:120px;top:225px;width:1680px">
+    <table class="cmp">
+      <tr><th style="width:430px">Technology</th><th>Non-metallic threats</th><th>Speed</th><th>No ionizing radiation</th><th>Privacy</th><th>Automation</th></tr>
+      <tr data-in="1:walk-through"><td>Walk-through metal detector</td><td class="no"><i class="dot"></i></td><td class="ok"><i class="dot f"></i></td><td class="ok"><i class="dot f"></i></td><td class="ok"><i class="dot f"></i></td><td class="ok"><i class="dot f"></i></td></tr>
+      <tr data-in="1:pat-downs"><td>Manual pat-down</td><td class="warn"><i class="dot h"></i></td><td class="no"><i class="dot"></i></td><td class="ok"><i class="dot f"></i></td><td class="no"><i class="dot"></i></td><td class="no"><i class="dot"></i></td></tr>
+      <tr data-in="1:backscatter"><td>Backscatter X-ray</td><td class="ok"><i class="dot f"></i></td><td class="warn"><i class="dot h"></i></td><td class="no"><i class="dot"></i></td><td class="no"><i class="dot"></i></td><td class="warn"><i class="dot h"></i></td></tr>
+      <tr data-in="1:passive"><td>Passive MMW / terahertz camera</td><td class="warn"><i class="dot h"></i></td><td class="ok"><i class="dot f"></i></td><td class="ok"><i class="dot f"></i></td><td class="ok"><i class="dot f"></i></td><td class="warn"><i class="dot h"></i></td></tr>
+      <tr class="hi" data-in="2"><td>Active MMW portal · <span class="cy">MW1000AA</span></td><td class="ok"><i class="dot f"></i></td><td class="warn"><i class="dot h"></i></td><td class="ok"><i class="dot f"></i></td><td class="ok"><i class="dot f"></i></td><td class="ok"><i class="dot f"></i></td></tr>
+    </table>
+    <div class="note" style="margin-top:6px;font-size:18px" data-in="1:walk-through">Qualitative comparison: <span class="ok">●</span> strong <span class="warn">◐</span> partial <span class="no">○</span> weak</div>
+  </div>
+  <div class="abs card" data-in="3" style="left:120px;top:240px;width:800px;height:600px">
+    <h3>Active MMW peers (examples)</h3>
+    <div style="display:flex;flex-direction:column;gap:14px;margin-top:18px">
+      <div class="node" style="position:relative;width:auto" data-in="3:leidos" data-a="left"><span class="icb"><span data-i="building"></span></span><div><h4>Leidos</h4><p>ProVision family</p></div></div>
+      <div class="node" style="position:relative;width:auto" data-in="3:rohde" data-a="left"><span class="icb"><span data-i="building"></span></span><div><h4>Rohde &amp; Schwarz</h4><p>QPS family</p></div></div>
+      <div class="node" style="position:relative;width:auto" data-in="3:smiths" data-a="left"><span class="icb"><span data-i="building"></span></span><div><h4>Smiths Detection</h4><p>eqo family</p></div></div>
+      <div class="node hi" style="position:relative;width:auto" data-in="3:global market" data-a="left"><span class="icb"><span data-i="building-factory-2"></span></span><div><h4>NUCTECH</h4><p>MW1000AA</p></div></div>
+    </div>
+  </div>
+  <div class="abs card" data-in="3:buyers" style="left:960px;top:240px;width:840px;height:600px">
+    <h3>What buyers compare</h3>
+    <ul style="margin-top:12px">
+      <li data-in="3:certification"><span data-i="certificate" class="cy"></span>Certification (ECAC, national approvals)</li>
+      <li data-in="3:false alarm"><span data-i="alert-triangle" class="cy"></span>False alarm rate</li>
+      <li data-in="3:throughput"><span data-i="users" class="cy"></span>Throughput</li>
+      <li data-in="3:footprint"><span data-i="ruler-measure" class="cy"></span>Footprint &amp; installation</li>
+      <li data-in="3:cost of ownership"><span data-i="coins" class="cy"></span>Total cost of ownership</li>
+      <li data-in="3:service coverage"><span data-i="tool" class="cy"></span>Local service coverage</li>
+      <li data-in="3:supplier risk"><span data-i="shield-lock" class="cy"></span>Supplier &amp; compliance risk</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================ 12 RISKS ============================ -->
+<section class="scene" id="sc-risk">
+  <div class="hl" data-in="s+0.2" style="font-size:46px">Considerations to manage</div>
+  <div class="abs card" data-in="1" style="left:120px;top:230px;width:820px;height:300px">
+    <div style="display:flex;gap:16px;align-items:center"><span class="icb a"><span data-i="alert-triangle"></span></span><h3 style="margin:0">False alarms</h3></div>
+    <ul style="margin-top:10px"><li data-in="1:clothing folds">• Clothing folds, sweat, belts, buttons</li><li data-in="1:workload">• More pat-downs and officer workload</li><li class="mu" data-in="1:workload+1">→ divest guidance, ATR tuning, training</li></ul>
+  </div>
+  <div class="abs card" data-in="1:prosthetics" style="left:980px;top:230px;width:820px;height:300px">
+    <div style="display:flex;gap:16px;align-items:center"><span class="icb v"><span data-i="accessible"></span></span><h3 style="margin:0">Inclusion &amp; accommodation</h3></div>
+    <ul style="margin-top:10px"><li>• Prosthetics and medical devices</li><li data-in="1:religious">• Religious and cultural garments</li><li class="mu" data-in="1:respectful">→ respectful, well-trained alternative procedures</li></ul>
+  </div>
+  <div class="abs card" data-in="2" style="left:120px;top:550px;width:820px;height:300px">
+    <div style="display:flex;gap:16px;align-items:center"><span class="icb"><span data-i="lock"></span></span><h3 style="margin:0">Privacy, data &amp; cyber</h3></div>
+    <ul style="margin-top:10px"><li data-in="2:which images">• Which images (if any) are stored?</li><li data-in="2:how long">• For how long, and who can access them?</li><li data-in="2:cybersecurity">• Network security and patching</li></ul>
+  </div>
+  <div class="abs card" data-in="3" style="left:980px;top:550px;width:820px;height:300px;border-color:rgba(255,90,110,.55)">
+    <div style="display:flex;gap:16px;align-items:center"><span class="icb r"><span data-i="world"></span></span><h3 style="margin:0">Supplier &amp; geopolitical risk</h3></div>
+    <ul style="margin-top:10px">
+      <li data-in="3:founded">• Founded 1997, Tsinghua University origins</li>
+      <li data-in="3:entity list">• US Entity List since 2020</li>
+      <li data-in="3:eu scrutiny">• EU Foreign Subsidies Regulation scrutiny since 2024</li>
+      <li class="mu" data-in="3:procurement teams">→ check the rules in your own jurisdiction</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================ 13 RECAP ============================ -->
+<section class="scene" id="sc-recap">
+  <div class="hl" data-in="s+0.2" data-out="3+1" style="font-size:46px">The product <em>on one page</em></div>
+  <div class="abs" data-out="3+1" style="left:120px;top:230px;width:1680px;display:grid;grid-template-columns:repeat(3,1fr);gap:20px">
+    <div class="card" data-in="1:why" data-a="pop" style="height:290px"><div class="kicker">Why</div><p style="font-size:28px;margin-top:14px">Find metallic &amp; non-metallic threats under clothing: <b>safely and quickly</b></p></div>
+    <div class="card" data-in="1:what" data-a="pop" style="height:290px"><div class="kicker">What</div><p style="font-size:28px;margin-top:14px">Active MMW walk-in portal · ATR · 2 s scan · 4 s inspection · ECAC SSc 2.1 Type A · CE</p></div>
+    <div class="card" data-in="1:how" data-a="pop" style="height:290px"><div class="kicker">How</div><p style="font-size:28px;margin-top:14px">Wide-band 3D holographic imaging + deep learning, shown on a <b>privacy cartoon</b></p></div>
+    <div class="card" data-in="2:who" data-a="pop" style="height:290px"><div class="kicker">Who</div><p style="font-size:28px;margin-top:14px">Passengers · officers · managers · owners · regulators · supply chain · the public</p></div>
+    <div class="card" data-in="2:where" data-a="pop" style="height:290px"><div class="kicker">Where</div><p style="font-size:28px;margin-top:14px">Airports · borders · transit · government · prisons · events · loss prevention</p></div>
+    <div class="card" data-in="2:when" data-a="pop" style="height:290px"><div class="kicker">When</div><p style="font-size:28px;margin-top:14px">A <b>2-second scan</b> inside a lifecycle of many years: plan → buy → deploy → operate → maintain → renew</p></div>
+  </div>
+  <div class="abs" data-in="3+1" data-a="fade" data-d="1" style="left:0;top:180px;width:1920px;text-align:center">
+    <img src="assets/product.png" style="height:400px">
+    <div style="font-size:64px;font-weight:800;margin-top:10px">NUCTECH<sup>™</sup> MW1000AA</div>
+    <div style="font-size:32px;color:var(--cyan);font-weight:600;margin-top:6px">The product ecosystem, end to end</div>
+  </div>
+  <div class="abs note" data-in="3+1.5" data-a="fade" style="left:120px;right:120px;top:790px;text-align:center;font-size:18px;line-height:1.5">
+    Sources: NUCTECH MW1000AA datasheet (MW1000AA-EN V2.0); public reporting (ECAC, US BIS, European Commission). Throughput figure from a third-party product listing.<br>
+    Independent explainer, not produced or endorsed by NUCTECH. Visuals are illustrative and not to scale.
+  </div>
+</section>
+
+<div id="capbox"></div>
+<div id="prog"></div>
+</div>
+</body>
+</html>

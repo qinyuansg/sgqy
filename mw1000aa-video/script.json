@@ -1,0 +1,140 @@
+{
+  "voice": "af_heart",
+  "speed": 1.1,
+  "chapters": [
+    {"id": "intro", "num": "00", "title": "Introduction", "beats": [
+      {"cap": "This is the NUCTECH™ MW1000AA, a millimeter-wave body inspection device."},
+      {"cap": "In the next few minutes we'll walk through its whole ecosystem: why it exists, what it is, how it works, who is involved, where and when it's used, and the value chain and know-how behind it."},
+      {"cap": "By the end, you should understand this product end to end: from physics, to passengers, to procurement."}
+    ]},
+    {"id": "why", "num": "01", "title": "WHY · The problem", "beats": [
+      {"cap": "Start with the problem. Every checkpoint, at an airport, a border, a prison or a stadium, must answer one question quickly: is this person carrying something dangerous under their clothing?"},
+      {"cap": "The classic walk-through metal detector is fast and cheap, but it only senses metal. Ceramic knives, plastic explosives, liquids, powders and drugs walk straight through."},
+      {"cap": "A manual pat-down catches more, but it is slow, intrusive, inconsistent between officers, and uncomfortable for everyone."},
+      {"cap": "Older X-ray backscatter body scanners could see more, but they used ionizing radiation and produced revealing images, which raised health and privacy concerns."},
+      {"cap": "So operators need screening that is safe, non-contact, automatic, consistent, fast enough for peak hours, and respectful of privacy. That gap is exactly where active millimeter-wave screening, and the MW1000AA, fit."}
+    ]},
+    {"id": "what", "num": "02", "title": "WHAT · The product", "beats": [
+      {"cap": "Here is the product. The MW1000AA is a walk-in portal: about 1.4 m wide, 1.2 m deep and 2.5 m tall, weighing around 550 kg.",
+       "say": "Here is the product. The M W one thousand A-A is a walk-in portal: about one point four meters wide, one point two meters deep, and two and a half meters tall, weighing around five hundred and fifty kilograms."},
+      {"cap": "The passenger stands in a channel 750 mm wide. The side panels house the millimeter-wave imaging system. A 15-inch color touch screen gives the operator a simple interface, and LED indicators show status at a glance.",
+       "say": "The passenger stands in a channel seventy-five centimeters wide. The side panels house the millimeter-wave imaging system. A fifteen-inch color touch screen gives the operator a simple interface, and L-E-D indicators show status at a glance."},
+      {"cap": "An optional foot metal detector in the floor checks shoes, so passengers may not need to take them off."},
+      {"cap": "The key numbers: a 2-second scan, about 4 seconds per inspection, 1 kW of power, and under 60 dB of noise. It runs on standard 110 or 220 volt mains.",
+       "say": "The key numbers: a two-second scan, about four seconds per inspection, one kilowatt of power, and under sixty decibels of noise. It runs on standard one-ten or two-twenty volt mains."},
+      {"cap": "It detects metallic and non-metallic weapons, IEDs, liquids, gels and drugs, flags them automatically, and shows results on a cartoon figure instead of a body image. It is certified to ECAC security scanner Standard 2.1 Type A, and carries the CE mark.",
+       "say": "It detects metallic and non-metallic weapons, I-E-Ds, liquids, gels and drugs, flags them automatically, and shows results on a cartoon figure instead of a body image. It is certified to ee-cack security scanner standard two point one, Type A, and carries the C-E mark."}
+    ]},
+    {"id": "how", "num": "03", "title": "HOW · The technology", "beats": [
+      {"cap": "So how does it see through clothing? It starts with physics. Millimeter waves are radio waves with wavelengths between 1 and 10 millimeters, the band between microwaves and infrared.",
+       "say": "So how does it see through clothing? It starts with physics. Millimetre waves are radio waves with wavelengths between one and ten millimeters: the band between microwaves and infrared."},
+      {"cap": "They are non-ionizing: they don't carry enough energy to alter atoms or DNA. And active scanners like this one transmit at very low power, typically far below a mobile phone."},
+      {"cap": "Clothing fabric is almost transparent to these waves. Human skin, full of water, reflects them strongly. A hidden object, whether metal, plastic, liquid or powder, reflects differently from skin, and that contrast is what the system detects."},
+      {"cap": "It's called active because the device creates its own signal. Antenna arrays in the side panels transmit and receive across a wide frequency band, sampling the body from many positions, front and back, in about 2 seconds.",
+       "say": "It's called active because the device creates its own signal. Antenna arrays in the side panels transmit and receive across a wide frequency band, sampling the body from many positions, front and back, in about two seconds."},
+      {"cap": "Wide bandwidth gives depth resolution, and the many antenna positions give height and width resolution. A reconstruction algorithm then combines all the echoes, a form of holography, into a 3D image of the body surface and anything on it.",
+       "say": "Wide bandwidth gives depth resolution, and the many antenna positions give height and width resolution. A reconstruction algorithm then combines all the echoes, a form of holography, into a three-D image of the body surface and anything on it."},
+      {"cap": "Next comes the intelligence. A neural network, trained with deep learning on large sets of labeled scans, looks for anomalies that don't belong on a human body. This is Automatic Threat Recognition, or ATR.",
+       "say": "Next comes the intelligence. A neural network, trained with deep learning on large sets of labeled scans, looks for anomalies that don't belong on a human body. This is Automatic Threat Recognition, or A-T-R."},
+      {"cap": "Finally, privacy. The operator never needs to see a body image. Any suspicious area is marked on a generic cartoon figure. No alarm means a green light; an alarm shows exactly where to check."}
+    ]},
+    {"id": "who", "num": "04", "title": "WHO · The stakeholders", "beats": [
+      {"cap": "Now, the people. Many stakeholders touch this product, and each has different needs."},
+      {"cap": "At the center is the passenger, who wants to be safe, fast, and treated with dignity. Next is the screening officer, who guides the passenger, reads the result, and does a targeted pat-down when there is an alarm."},
+      {"cap": "Above them, the security supervisor and checkpoint manager plan lanes, staffing and throughput, and own the performance numbers."},
+      {"cap": "The checkpoint owner, such as an airport operator, customs agency, rail or metro operator, prison service or building owner, buys the equipment and pays to run it."},
+      {"cap": "Regulators and certifiers, such as ECAC in Europe and national civil aviation authorities, set detection standards and approve equipment. Data protection authorities set the privacy rules.",
+       "say": "Regulators and certifiers, such as ee-cack in Europe and national civil aviation authorities, set detection standards and approve equipment. Data protection authorities set the privacy rules."},
+      {"cap": "On the supply side sit NUCTECH's R&D, manufacturing and quality teams, their component suppliers, local distributors and system integrators, and the field service engineers and trainers who keep the device running.",
+       "say": "On the supply side sit Nuctech's R and D, manufacturing and quality teams, their component suppliers, local distributors and system integrators, and the field service engineers and trainers who keep the device running."},
+      {"cap": "And around everyone is the public, whose trust depends on screening being effective, safe and fair."}
+    ]},
+    {"id": "flow", "num": "05", "title": "END-TO-END FLOW · The passenger journey", "beats": [
+      {"cap": "Let's follow one passenger through the full flow, and watch what the officer sees at each step."},
+      {"cap": "Step one: preparation. The passenger divests: wallet, phone, keys and bulky outer layers go into a tray for the X-ray machine. Signage and an officer guide them to the scanner."},
+      {"cap": "Step two: entry. The passenger steps into the channel and stands on the footprint marks. If fitted, the foot metal detector is already checking their shoes."},
+      {"cap": "Step three: the scan. The passenger holds their arms slightly away from their sides, with no need to raise them overhead, and stays still for 2 seconds while the arrays sweep.",
+       "say": "Step three: the scan. The passenger holds their arms slightly away from their sides, with no need to raise them overhead, and stays still for two seconds while the arrays sweep."},
+      {"cap": "Step four: processing. Over the next couple of seconds the system reconstructs the 3D image and the ATR neural network analyzes it. No human is looking at a body image.",
+       "say": "Step four: processing. Over the next couple of seconds the system reconstructs the three-D image, and the A-T-R neural network analyzes it. No human is looking at a body image."},
+      {"cap": "Step five: the result. If nothing is found, the screen and LED show a clear signal and the passenger walks on. That's most passengers, in about 4 seconds in total.",
+       "say": "Step five: the result. If nothing is found, the screen and L-E-D show a clear signal, and the passenger walks on. That's most passengers, in about four seconds in total."},
+      {"cap": "If something is found, a box appears on the cartoon figure, say at the left ankle. The officer pats down that area only, instead of the whole body."},
+      {"cap": "Step six: resolution and exit. The officer resolves the alarm, perhaps a forgotten item, perhaps a real threat that is escalated under local procedures, and the passenger collects their belongings. Results feed the checkpoint's statistics for supervisors."}
+    ]},
+    {"id": "where", "num": "06", "title": "WHERE · Deployment", "beats": [
+      {"cap": "Where is it used? Anywhere people must be screened for concealed items."},
+      {"cap": "In civil aviation, at central security checkpoints and transfer screening. At customs and border crossings. In train stations and metro systems."},
+      {"cap": "In government buildings and secure agencies, military bases, prisons, courts and hospitals. At large events and venues. And in loss prevention: factories, warehouses or mints, where the goal is to stop items leaving, not entering."},
+      {"cap": "The site needs about 1.4 by 1.2 m of floor, 2.5 m of height, standard power, and an indoor climate from −5 to 45 °C with humidity up to 93%, non-condensing. The compact footprint means it can often sit beside, or replace, an existing metal detector lane.",
+       "say": "The site needs about one point four by one point two meters of floor, two and a half meters of height, standard power, and an indoor climate from minus five to forty-five degrees Celsius, with humidity up to ninety-three percent, non-condensing. The compact footprint means it can often sit beside, or replace, an existing metal detector lane."}
+    ]},
+    {"id": "when", "num": "07", "title": "WHEN · The lifecycle", "beats": [
+      {"cap": "When does each stakeholder get involved? Think of it as a lifecycle."},
+      {"cap": "First, need and planning: a threat assessment, a new regulation, or passenger growth creates a requirement. Then procurement: a tender, technical evaluation, and checks on certification and compliance."},
+      {"cap": "Next, deployment: site survey, delivery, installation and commissioning, followed by acceptance testing and operator training."},
+      {"cap": "Then operation: every day, every shift, peaking at rush hours and holiday seasons, with routine checks, preventive maintenance, and software and ATR updates over the years.",
+       "say": "Then operation: every day, every shift, peaking at rush hours and holiday seasons, with routine checks, preventive maintenance, and software and A-T-R updates over the years."},
+      {"cap": "Finally, upgrade, refurbishment or end-of-life replacement, typically after many years of service. The device's life-cycle equipment management feature supports tracking it through every stage."}
+    ]},
+    {"id": "chain", "num": "08", "title": "VALUE CHAIN · From lab to lane", "beats": [
+      {"cap": "Now zoom out to the value chain: how value is created, from research to a safer checkpoint."},
+      {"cap": "It begins with R&D: millimeter-wave circuit and antenna design, imaging algorithms, and AI models trained on large labeled datasets of people with and without concealed items, across many body types and clothing styles.",
+       "say": "It begins with R and D: millimeter-wave circuit and antenna design, imaging algorithms, and A-I models trained on large labeled datasets of people with and without concealed items, across many body types and clothing styles."},
+      {"cap": "Then components: millimeter-wave transceiver chips and antenna arrays, high-speed data acquisition, computing hardware for reconstruction and AI, metal detector coils, touch screen, frame and enclosure.",
+       "say": "Then components: millimeter-wave transceiver chips and antenna arrays, high-speed data acquisition, computing hardware for reconstruction and A-I, metal detector coils, touch screen, frame and enclosure."},
+      {"cap": "Manufacturing and quality follow: assembly, calibration of the RF system, and testing for detection, safety, electromagnetic compatibility and reliability.",
+       "say": "Manufacturing and quality follow: assembly, calibration of the R-F system, and testing for detection, safety, electromagnetic compatibility and reliability."},
+      {"cap": "Certification turns performance into market access: ECAC testing, CE conformity, and national approvals.",
+       "say": "Certification turns performance into market access: ee-cack testing, C-E conformity, and national approvals."},
+      {"cap": "Go-to-market comes next: direct sales, distributors and integrators, government tenders and financing."},
+      {"cap": "Then deployment and integration, operations and training, and after-sales service: maintenance contracts, spare parts, remote diagnostics and software upgrades. That is where much of the long-term revenue and customer value lives."},
+      {"cap": "Value flows back the other way. Passengers get speed and dignity, operators get throughput and consistent detection, regulators get compliance, and society gets safer public spaces."}
+    ]},
+    {"id": "know", "num": "09", "title": "KNOW-HOW · The technology stack", "beats": [
+      {"cap": "What know-how does it take to build and run this? Picture a stack of layers."},
+      {"cap": "At the bottom: RF and millimeter-wave hardware engineering, meaning antennas, transceivers, calibration and electromagnetic compatibility.",
+       "say": "At the bottom: R-F and millimeter-wave hardware engineering, meaning antennas, transceivers, calibration and electromagnetic compatibility."},
+      {"cap": "Above that: signal processing and 3D holographic reconstruction, fast enough to finish in about two seconds.",
+       "say": "Above that: signal processing and three-D holographic reconstruction, fast enough to finish in about two seconds."},
+      {"cap": "Then AI: data collection, labeling, model training and validation, to maximize detection while minimizing false alarms.",
+       "say": "Then A-I: data collection, labeling, model training and validation, to maximize detection while minimizing false alarms."},
+      {"cap": "Then software and user experience: the touch-screen interface, the privacy-preserving cartoon display, device management and cybersecurity."},
+      {"cap": "Then systems engineering: mechanical design, thermal and acoustic control, reliability and manufacturability."},
+      {"cap": "And at the top, operational and regulatory know-how: checkpoint design, staffing models, officer training, certification strategy and privacy compliance. A great scanner in a badly designed lane still performs poorly."}
+    ]},
+    {"id": "kpi", "num": "10", "title": "VALUE & KPIs · How success is measured", "beats": [
+      {"cap": "How is success measured? A few key performance indicators matter most."},
+      {"cap": "Probability of detection: how reliably real threats are found. False alarm rate: how often innocent passengers trigger an alarm, which drives pat-downs, staff workload and queues."},
+      {"cap": "Throughput: with a 4-second inspection, the theoretical ceiling is about 900 people an hour. In practice, divesting and alarm resolution set the pace, and third-party listings cite around 400 an hour.",
+       "say": "Throughput: with a four-second inspection, the theoretical ceiling is about nine hundred people an hour. In practice, divesting and alarm resolution set the pace, and third-party listings cite around four hundred an hour."},
+      {"cap": "Availability: uptime, mean time between failures, and repair time. And total cost of ownership: purchase, installation, 1 kW of power, service contracts, and, the biggest line item over time, staff.",
+       "say": "Availability: uptime, mean time between failures, and repair time. And total cost of ownership: purchase, installation, one kilowatt of power, service contracts, and, the biggest line item over time, staff."},
+      {"cap": "ATR and the cartoon display move these numbers directly: fewer full-body pat-downs, fewer officers per lane, and consistent decisions on every shift.",
+       "say": "A-T-R and the cartoon display move these numbers directly: fewer full-body pat-downs, fewer officers per lane, and consistent decisions on every shift."}
+    ]},
+    {"id": "alt", "num": "11", "title": "ALTERNATIVES · The landscape", "beats": [
+      {"cap": "How does it compare with the alternatives?"},
+      {"cap": "Walk-through metal detectors are very fast and cheap, but metal only. Pat-downs are flexible but slow and intrusive. Backscatter X-ray images well, but uses ionizing radiation and raises privacy issues. Passive millimeter-wave or terahertz cameras work at a distance, but generally with lower resolution."},
+      {"cap": "Active millimeter-wave portals like the MW1000AA offer the best balance today: detection of metallic and non-metallic threats, automatic recognition, no ionizing radiation, and privacy by design.",
+       "say": "Active millimeter-wave portals like the M W one thousand A-A offer the best balance today: detection of metallic and non-metallic threats, automatic recognition, no ionizing radiation, and privacy by design."},
+      {"cap": "It competes in a global market with active millimeter-wave scanners from companies such as Leidos, Rohde & Schwarz and Smiths Detection. Buyers compare certification, false alarm rate, throughput, footprint, cost of ownership, service coverage and supplier risk.",
+       "say": "It competes in a global market with active millimeter-wave scanners from companies such as Leidos, Rohde and Schwarz, and Smiths Detection. Buyers compare certification, false alarm rate, throughput, footprint, cost of ownership, service coverage, and supplier risk."}
+    ]},
+    {"id": "risk", "num": "12", "title": "CONSIDERATIONS · Risks to manage", "beats": [
+      {"cap": "Finally, the considerations every buyer and operator should weigh."},
+      {"cap": "False alarms from clothing folds, sweat, or items like belts and buttons add workload. Passengers with prosthetics, medical devices, or religious and cultural garments need respectful, well-trained alternative procedures."},
+      {"cap": "Privacy and data governance: decide which images, if any, are stored, for how long, and who can access them. Cybersecurity matters for any networked device."},
+      {"cap": "And supplier and geopolitical risk. NUCTECH, founded in 1997 from Tsinghua University, has been on the US Entity List since 2020, and has faced EU scrutiny under the Foreign Subsidies Regulation since 2024. Procurement teams should check the rules that apply in their own jurisdiction.",
+       "say": "And supplier and geopolitical risk. Nuctech, founded in nineteen ninety-seven from Ching-hwa University, has been on the U.S. Entity List since twenty twenty, and has faced E.U. scrutiny under the Foreign Subsidies Regulation since twenty twenty-four. Procurement teams should check the rules that apply in their own jurisdiction."}
+    ]},
+    {"id": "recap", "num": "13", "title": "RECAP · The product on one page", "beats": [
+      {"cap": "Let's recap."},
+      {"cap": "Why: to find metallic and non-metallic threats under clothing, safely and quickly. What: an active millimeter-wave walk-in portal with automatic threat recognition. How: wide-band holographic 3D imaging plus deep learning, shown on a privacy-protecting cartoon.",
+       "say": "Why: to find metallic and non-metallic threats under clothing, safely and quickly. What: an active millimeter-wave walk-in portal with automatic threat recognition. How: wide-band holographic three-D imaging plus deep learning, shown on a privacy-protecting cartoon."},
+      {"cap": "Who: passengers, officers, managers, owners, regulators and the supply chain. Where: airports, borders, transit, government, prisons, events and loss prevention. When: a 2-second scan inside a lifecycle that spans many years.",
+       "say": "Who: passengers, officers, managers, owners, regulators, and the supply chain. Where: airports, borders, transit, government, prisons, events, and loss prevention. When: a two-second scan, inside a lifecycle that spans many years."},
+      {"cap": "That's the NUCTECH™ MW1000AA ecosystem, end to end."}
+    ]}
+  ]
+}
