@@ -1,0 +1,1315 @@
+1
+00:00:00,350 --> 00:00:00,762
+Welcome.
+
+2
+00:00:00,812 --> 00:00:06,945
+This is the product recap of the Beijing security conference held on the third and fourth of November 2026.
+
+3
+00:00:06,995 --> 00:00:15,556
+It is built for the Chief Product Officer and the leadership team, and it covers every product ecosystem we discovered, who uses it, who pays for it,
+
+4
+00:00:15,606 --> 00:00:19,081
+how the value chain works, and what it means for our roadmap.
+
+5
+00:00:19,131 --> 00:00:25,668
+The material behind this video is nine documents: six AI-generated transcripts of booth and meeting conversations,
+
+6
+00:00:25,718 --> 00:00:30,985
+two strategy infographics prepared after day one, and the NUCTECH millimeter-wave datasheet.
+
+7
+00:00:31,035 --> 00:00:37,572
+One warning before we begin: the transcripts are noisy and were never checked against audio, so vendor identities,
+
+8
+00:00:37,622 --> 00:00:42,137
+prices and performance claims are treated as signals to validate, not as facts.
+
+9
+00:00:42,187 --> 00:00:50,690
+The thesis that runs through the whole recap is simple: our opportunity is to move from selling security devices to delivering connected operations,
+
+10
+00:00:50,740 --> 00:00:56,295
+where every alert becomes actionable, assigned and auditable on the ISMP V11 core we already own.
+
+11
+00:00:57,595 --> 00:00:59,585
+Here is how the video is organised.
+
+12
+00:00:59,635 --> 00:01:03,257
+Part one draws the ecosystem map and the operating value chain.
+
+13
+00:01:03,307 --> 00:01:10,602
+Part two goes deep on the four products our leadership flagged as top priority: smart glasses, millimeter-wave body screening,
+
+14
+00:01:10,652 --> 00:01:13,808
+facial multi-parameter AI, and fence intrusion sensing.
+
+15
+00:01:13,858 --> 00:01:18,938
+Part three covers the connected-operations signals from the security and compute booths.
+
+16
+00:01:18,988 --> 00:01:21,736
+Part four covers identity and controlled assets.
+
+17
+00:01:21,786 --> 00:01:28,090
+Part five distils the intelligence-layer know-how from the vertical large-model session at Peking University.
+
+18
+00:01:28,140 --> 00:01:31,237
+Part six parks the adjacent categories on a watchlist.
+
+19
+00:01:31,287 --> 00:01:39,223
+And part seven is the synthesis for the Chief Product Officer: stakeholders, prioritisation, product model, roadmap, the ninety-day plan,
+
+20
+00:01:39,273 --> 00:01:42,371
+the decisions each executive must take, and the risks.
+
+21
+00:01:43,671 --> 00:01:45,137
+Let us start with the map.
+
+22
+00:01:45,187 --> 00:01:48,109
+Everything we met in Beijing fits into five layers.
+
+23
+00:01:48,159 --> 00:01:56,503
+At the bottom is frontline sensing and wearables: smart patrol glasses with and without cameras, a patrol watch, millimeter-wave body screening,
+
+24
+00:01:56,553 --> 00:02:03,965
+fence force and vibration sensing, biometric capture devices, passport readers, and smart gun cabinets with ultra-wideband tags.
+
+25
+00:02:04,015 --> 00:02:12,067
+Above it is edge AI and compute: edge nodes that pull video from third-party recorders, cameras with built-in compute trained per industry,
+
+26
+00:02:12,117 --> 00:02:14,923
+heterogeneous compute servers, and managed racks.
+
+27
+00:02:14,973 --> 00:02:19,936
+The middle layer is platform and orchestration, which is where our own ISMP V11 lives,
+
+28
+00:02:19,986 --> 00:02:26,698
+alongside response plans that drive drones and unmanned vehicles, digital twins, and integrated building management.
+
+29
+00:02:26,748 --> 00:02:33,227
+The intelligence layer holds vertical large models, MCP agents, facial attribute AI, and text search over video.
+
+30
+00:02:33,277 --> 00:02:37,249
+And at the top are adjacent categories we should watch but not pilot.
+
+31
+00:02:37,299 --> 00:02:45,409
+Keep this map in mind: our strategic position is the platform layer, and every lower-layer product is a candidate sensor or actuator for it.
+
+32
+00:02:46,709 --> 00:02:49,944
+The second idea to hold onto is the operating value chain.
+
+33
+00:02:49,994 --> 00:02:52,946
+Value is not created when a sensor detects something.
+
+34
+00:02:52,996 --> 00:03:02,179
+It is created when the detection is verified with evidence, assigned to an accountable owner, resolved with a confirmed outcome, and audited in a traceable record.
+
+35
+00:03:02,229 --> 00:03:07,503
+Almost every booth we visited sells the detect step: a camera, an algorithm, a scanner, a box.
+
+36
+00:03:07,553 --> 00:03:10,108
+Very few connect it to assignment and closure.
+
+37
+00:03:10,158 --> 00:03:17,585
+In fact, vendors themselves told us that the Chinese market is component-driven, highly competitive, and weak on system integration.
+
+38
+00:03:17,635 --> 00:03:20,020
+That is exactly the gap our platform fills.
+
+39
+00:03:20,070 --> 00:03:27,893
+Throughout this video, when we assess a product, the question is always: where does it plug into detect, verify, assign, resolve and audit,
+
+40
+00:03:27,943 --> 00:03:30,499
+and what does it add to the complete workflow?
+
+41
+00:03:31,799 --> 00:03:33,716
+Product one: smart patrol glasses.
+
+42
+00:03:33,766 --> 00:03:34,873
+We saw two flavours.
+
+43
+00:03:34,923 --> 00:03:39,908
+Camera glasses stream a first-person view to a command centre and run face recognition.
+
+44
+00:03:39,958 --> 00:03:45,984
+Display-only glasses, with no camera, show prompts, watch-lists, a teleprompter or live data on the lens,
+
+45
+00:03:46,034 --> 00:03:50,092
+and are controlled by a single tap to confirm and a double tap to exit.
+
+46
+00:03:50,142 --> 00:03:56,110
+The why is hands-free capture and prompting for people who walk: patrol officers, guards and inspectors.
+
+47
+00:03:56,160 --> 00:04:03,806
+The who includes public-security and traffic police who need long shifts, private security companies, inspectors, and remote experts.
+
+48
+00:04:03,856 --> 00:04:09,362
+The where is patrol routes, checkpoints and campuses, with the feed landing in a command centre.
+
+49
+00:04:09,412 --> 00:04:15,148
+Civilian versions are already on Taobao for vloggers, which tells you the hardware is commoditising.
+
+50
+00:04:15,198 --> 00:04:20,067
+The when is now: demo units exist and the vendor suggested we buy one or two to test.
+
+51
+00:04:20,117 --> 00:04:28,689
+The how matters most for us: Bluetooth pairing to a phone or standalone Android with mobile device management, prescription lenses fitted per wearer,
+
+52
+00:04:28,739 --> 00:04:29,615
+and, critically,
+
+53
+00:04:29,665 --> 00:04:37,600
+the vendor can hand us the original image so that we do feature extraction and matching in our own backend and only the result flows back.
+
+54
+00:04:38,900 --> 00:04:39,841
+What is our role?
+
+55
+00:04:39,891 --> 00:04:41,474
+We should not build glasses.
+
+56
+00:04:41,524 --> 00:04:50,684
+We partner for the terminal and the base SDK, and we own the task definition, the SOP, the evidence chain and the audit, reusing the platform we already have.
+
+57
+00:04:50,734 --> 00:04:59,370
+The product flow is: capture on site, run one targeted detection matched to one job, confirm with a human on the lens, and create a task in ISMP V11.
+
+58
+00:04:59,420 --> 00:05:08,115
+The commercial hypothesis is terminal plus industry workflow licence plus training and support, always benchmarked against a phone doing the same job.
+
+59
+00:05:08,165 --> 00:05:16,160
+Concerns raised on the floor were cyber-security of pushing video to a backend, sovereignty of face features, and real-shift battery life.
+
+60
+00:05:16,210 --> 00:05:23,738
+Before any pilot, the CTO needs a sample unit to answer: which model and camera, which streaming interfaces, where the model runs,
+
+61
+00:05:23,788 --> 00:05:27,061
+what the offline behaviour is, and who controls the data.
+
+62
+00:05:27,111 --> 00:05:35,106
+The COO should accept only on task results: completion time, first-time completion rate, usable-image rate, and actual frontline adoption.
+
+63
+00:05:35,156 --> 00:05:39,420
+Only if a repeatable operational gain over the phone appears do we expand.
+
+64
+00:05:40,720 --> 00:05:43,182
+Product two: millimeter-wave body screening.
+
+65
+00:05:43,232 --> 00:05:48,778
+The what is non-contact detection of items hidden in or under clothing, metallic and non-metallic,
+
+66
+00:05:48,828 --> 00:05:53,003
+with automatic threat recognition and a privacy-preserving cartoon figure.
+
+67
+00:05:53,053 --> 00:05:56,943
+The why is replacing pat-downs and the stop-and-raise-your-arms pose.
+
+68
+00:05:56,993 --> 00:06:04,137
+The booth pitch was: bind the person's face, walk through, the result appears, and the officer gives pass or no-pass feedback.
+
+69
+00:06:04,187 --> 00:06:04,651
+Who pays?
+
+70
+00:06:04,701 --> 00:06:08,819
+The airport's equipment department, not the airlines and not immigration.
+
+71
+00:06:08,869 --> 00:06:13,444
+Other buyers are customs, border, rail transit, prisons and government buildings.
+
+72
+00:06:13,494 --> 00:06:14,643
+Where is it deployed?
+
+73
+00:06:14,693 --> 00:06:23,208
+Beijing, Shanghai Pudong, Xinjiang, Tianjin and Wuhan in China, three units in Nigeria, and none yet in Southeast Asia, which is an open field for us.
+
+74
+00:06:23,258 --> 00:06:28,347
+The when is now, and the vendor is actively going to Dubai and Amsterdam to find partners.
+
+75
+00:06:28,397 --> 00:06:30,517
+The how is active holographic imaging.
+
+76
+00:06:30,567 --> 00:06:38,682
+The MW1000AA datasheet lists a two-second scan and a four-second inspection with a brief stand, while the booth unit claims continuous walking.
+
+77
+00:06:38,732 --> 00:06:41,765
+That gap is the single most important thing to verify.
+
+78
+00:06:41,815 --> 00:06:51,072
+Field pain points we heard: metal plates in shoes still trigger alarms, European height requirements, and queues when screening is pushed to the building entrance.
+
+79
+00:06:52,372 --> 00:06:57,018
+The buying decision for millimeter wave hinges on certification, not image quality.
+
+80
+00:06:57,068 --> 00:07:03,638
+The vendor holds only the Chinese civil-aviation approval at the highest national level, with no TSA or ECAC listing.
+
+81
+00:07:03,688 --> 00:07:09,975
+They said Singapore sits in the middle: it wants the price but also the certification, and that is the headache.
+
+82
+00:07:10,025 --> 00:07:17,103
+The vendor itself is a radar company with three lines: body screening, tank-level radar for petrochemicals, and traffic radar,
+
+83
+00:07:17,153 --> 00:07:21,573
+built on its own sixty-five nanometre chips, which are expensive at low volume.
+
+84
+00:07:21,623 --> 00:07:25,024
+They offer remote diagnostics and a self-check at every boot.
+
+85
+00:07:25,074 --> 00:07:26,835
+For us there are four judgments.
+
+86
+00:07:26,885 --> 00:07:31,022
+Detection boundary, tested separately for metallic and non-metallic items.
+
+87
+00:07:31,072 --> 00:07:36,906
+Lane efficiency, measured as real peak throughput, nuisance alarms and re-check time for the whole lane.
+
+88
+00:07:36,956 --> 00:07:42,620
+Users and deployment, including passenger guidance and an explainable alarm location for the officer.
+
+89
+00:07:42,670 --> 00:07:51,785
+And the ST product and revenue model, linking the scanner to identity, gates and ISMP V11 and testing a device plus lane integration plus lifecycle service offer.
+
+90
+00:07:51,835 --> 00:07:58,801
+The gate before any commercial introduction is a site acceptance with customer-approved target items and the operating flow.
+
+91
+00:08:00,101 --> 00:08:02,430
+Product three: facial multi-parameter AI.
+
+92
+00:08:02,480 --> 00:08:07,650
+Leadership saw a demo that reads identity, age, expression and blood pressure from a face.
+
+93
+00:08:07,700 --> 00:08:12,987
+The product discipline here is to split it into four capabilities and judge each separately.
+
+94
+00:08:13,037 --> 00:08:21,515
+Identity verification is mature: liveness detection is now standard on every Chinese face camera, and face plus QR is the most popular combination.
+
+95
+00:08:21,565 --> 00:08:27,374
+We align it with reader and gate flows and accept on false-accept, false-reject and live performance.
+
+96
+00:08:27,424 --> 00:08:33,813
+Age estimation is an apparent range with error, fine for validated analytics but never for a boundary decision.
+
+97
+00:08:33,863 --> 00:08:41,470
+Expression analysis classifies visible expression; the day-two demo tagged emotion, gender, mask, glasses, hand in pocket and smile.
+
+98
+00:08:41,520 --> 00:08:45,531
+The output is not inner emotion, and we must not infer danger from it.
+
+99
+00:08:45,581 --> 00:08:52,318
+Blood-pressure estimation is probably video-based photoplethysmography, but the vendor did not confirm the mechanism.
+
+100
+00:08:52,368 --> 00:08:56,495
+It needs an independent reference-device study and a clear intended use.
+
+101
+00:08:56,545 --> 00:08:57,771
+It is not a diagnosis.
+
+102
+00:08:57,821 --> 00:09:07,401
+We also learned that iris cameras cost around three thousand RMB and sell poorly, while palm-vein cameras are cheaper but niche, used only for classified-unit access.
+
+103
+00:09:08,701 --> 00:09:10,573
+That gives us two validation paths.
+
+104
+00:09:10,623 --> 00:09:14,089
+Path A takes identity straight into our existing access control.
+
+105
+00:09:14,139 --> 00:09:20,846
+We reuse our identity management and gate workflows, take the original image from the vendor and do the matching ourselves,
+
+106
+00:09:20,896 --> 00:09:25,735
+and accept on false-accept and false-reject rates under real lighting, masks and glasses.
+
+107
+00:09:25,785 --> 00:09:28,482
+Path B treats health estimation as evidence-first.
+
+108
+00:09:28,532 --> 00:09:35,348
+We need validity against a reference device with independent subjects, robustness across lighting, skin tone, age and motion,
+
+109
+00:09:35,398 --> 00:09:41,061
+and a clear statement of intended use before we look at target-market regulation, consent and liability.
+
+110
+00:09:41,111 --> 00:09:49,521
+The hard rule for the whole company: until that evidence exists, health estimates never enter a safety release decision or an automated disposition chain.
+
+111
+00:09:49,571 --> 00:09:58,585
+For the Chief Marketing Officer, this means packaging identity, entrance and perimeter value separately, and describing health features strictly within the evidence.
+
+112
+00:09:59,885 --> 00:10:02,603
+Product four: fence force and vibration sensing.
+
+113
+00:10:02,653 --> 00:10:11,253
+The product essence is detecting an intrusion attempt through the force, deformation or vibration a fence experiences, then turning that into a zoned,
+
+114
+00:10:11,303 --> 00:10:13,041
+located and dispatchable event.
+
+115
+00:10:13,091 --> 00:10:19,153
+The sensing method, whether tension, sensing cable or fibre, still has to be confirmed with the exhibitor.
+
+116
+00:10:19,203 --> 00:10:27,111
+The value chain is disturbance, sensing and processing with on-site calibration, zone alarm with location, video verification in ISMP V11,
+
+117
+00:10:27,161 --> 00:10:32,128
+and dispatch with closure and audit, potentially with the patrol glasses feed attached.
+
+118
+00:10:32,178 --> 00:10:40,201
+Acceptance must cover three cases: real intrusions, measured on detection, location error and latency; non-intrusion disturbances like wind,
+
+119
+00:10:40,251 --> 00:10:48,332
+rain and animals, measured as nuisance alarms per kilometre per day; and equipment and link faults, measured on visibility and recovery time.
+
+120
+00:10:48,382 --> 00:10:54,099
+Our role is to partner for the sensor and own zoning, video linkage, event flow, dispatch and audit,
+
+121
+00:10:54,149 --> 00:10:58,193
+after checking the overlap with the perimeter products we already sell.
+
+122
+00:10:58,243 --> 00:11:06,093
+The commercial test is sensor plus installation and calibration plus platform linkage plus maintenance, proven on one real fence segment.
+
+123
+00:11:07,393 --> 00:11:11,526
+Now the connected-operations signals from the security and compute booths.
+
+124
+00:11:11,576 --> 00:11:13,956
+Signal one is NVR-connected edge analytics.
+
+125
+00:11:14,006 --> 00:11:21,135
+A vendor showed an edge node that connects to existing third-party network video recorders, Dahua was named, pulls the streams,
+
+126
+00:11:21,185 --> 00:11:28,483
+and lets the operator search video with text for a person or a trajectory, running at around sixteen times speed on a small model.
+
+127
+00:11:28,533 --> 00:11:34,079
+The why is powerful: it adds intelligence to the installed camera estate without replacing cameras.
+
+128
+00:11:34,129 --> 00:11:37,018
+The who is control-room operators and investigators.
+
+129
+00:11:37,068 --> 00:11:39,788
+The when is demo-ready but not fully productised.
+
+130
+00:11:39,838 --> 00:11:44,366
+For us, this is the prove-first pilot of the whole strategy: video plus incident.
+
+131
+00:11:44,416 --> 00:11:47,362
+The edge node becomes the sensor for the verify step.
+
+132
+00:11:47,412 --> 00:11:54,201
+The proof we need is which recorders and APIs are supported, the retrieval quality, the latency, and the cost per stream.
+
+133
+00:11:55,501 --> 00:11:57,525
+Signal two is response orchestration.
+
+134
+00:11:57,575 --> 00:12:06,044
+One vendor described a control layer that can command any embodied terminal: cameras, robots, unmanned vehicles and drones, with pre-set response plans.
+
+135
+00:12:06,094 --> 00:12:12,042
+Their example: a camera detects a fight, a drone flies to the zone, captures faces, and performs dispersal.
+
+136
+00:12:12,092 --> 00:12:20,057
+Another booth showed a patrol watch that receives alerts and short videos, with a voice command on the watch triggering an action on the phone.
+
+137
+00:12:20,107 --> 00:12:25,606
+The buyer motivation was stated clearly: management and public security care about the closed loop,
+
+138
+00:12:25,656 --> 00:12:29,978
+and leaders want the first eighty percent of routine work removed from people.
+
+139
+00:12:30,028 --> 00:12:38,273
+The product implication for us is to make incident ownership, dispatch and closure the reusable workflow, with terminals interchangeable underneath.
+
+140
+00:12:38,323 --> 00:12:46,848
+The proof we need is live versus staged dispatch, acknowledgement and retries, proof of closure, and clear rules of engagement for any autonomous action.
+
+141
+00:12:48,148 --> 00:12:51,590
+Signal three is digital twin and integrated building management.
+
+142
+00:12:51,640 --> 00:12:57,810
+A vendor showed a 3D-model platform used to place devices before a building is built and to operate it afterwards,
+
+143
+00:12:57,860 --> 00:13:03,539
+with an operations centre showing surrounding construction, schedules and all connected building systems.
+
+144
+00:13:03,589 --> 00:13:09,105
+Their IBMS controls ventilation, drainage, chillers and lighting through DDC controllers and gateways.
+
+145
+00:13:09,155 --> 00:13:16,143
+They serve factories, construction sites and hospitals across government and industry, and the group already has an overseas arm.
+
+146
+00:13:16,193 --> 00:13:24,218
+For us the implication is to connect incidents to assets and locations, and to partner for the specialist building functions rather than build them.
+
+147
+00:13:24,268 --> 00:13:33,493
+The proof needed is a live rather than recorded demo, the asset identifiers and data model, read and write access to building points, and the integration effort per site.
+
+148
+00:13:34,793 --> 00:13:37,022
+Signal four is managed compute and racks.
+
+149
+00:13:37,072 --> 00:13:45,360
+We saw smart power racks that report temperature, humidity, power draw and compute status to a central platform, with cabinet doors that open by face,
+
+150
+00:13:45,410 --> 00:13:46,472
+card or fingerprint.
+
+151
+00:13:46,522 --> 00:13:55,032
+They are air-cooled, sealed, with cold and hot aisles, and the largest deployments are airports and an aviation command centre, in the thousands of units.
+
+152
+00:13:55,082 --> 00:14:02,147
+Hikvision has an AI box small enough to sit inside a drone dock, which tells you edge compute is spreading to very small scenes.
+
+153
+00:14:02,197 --> 00:14:10,151
+The product implication is that infrastructure belongs in our deployment and service economics, sized to a measured workload rather than a demo.
+
+154
+00:14:10,201 --> 00:14:18,989
+For the Chief Financial Officer: hardware, cooling, power and support are a recurring line in every connected-operations deal, and the rack decides the margin.
+
+155
+00:14:20,289 --> 00:14:25,544
+Some compute economics were quoted on the floor, and every figure is a quote to verify.
+
+156
+00:14:25,594 --> 00:14:30,118
+A Huawei eight-card AI server was priced around seven hundred thousand RMB.
+
+157
+00:14:30,168 --> 00:14:36,704
+Domestic chips were claimed to reach seventy to eighty percent of an NVIDIA 3090 or 4090 after optimisation.
+
+158
+00:14:36,754 --> 00:14:40,058
+Two 5090 cards were around fifteen and a half thousand.
+
+159
+00:14:40,108 --> 00:14:45,851
+A twenty-six-billion-parameter model was said to cost twenty to thirty thousand dollars to run.
+
+160
+00:14:45,901 --> 00:14:52,559
+Vertical-model vendors run private GPUs because customers refuse cloud, and our customers behave the same way.
+
+161
+00:14:52,609 --> 00:14:58,230
+The token-based AI apps we saw, virtual try-on and digital humans, live or die by token cost.
+
+162
+00:14:58,280 --> 00:15:06,706
+The rule for our product decisions: benchmark the real workload across edge and on-prem options on quality, latency, uptime and total cost.
+
+163
+00:15:06,756 --> 00:15:16,768
+And keep the roles clear: AI assists with evidence and drafts, accountable operators control dispatch, access and closure, and economics are measured, never assumed.
+
+164
+00:15:18,068 --> 00:15:21,943
+The edge-AI vision vendors we met organise their algorithms by industry.
+
+165
+00:15:21,993 --> 00:15:24,396
+Public security wants face and licence plate.
+
+166
+00:15:24,446 --> 00:15:27,722
+Safety production wants helmet, vest and behaviour detection.
+
+167
+00:15:27,772 --> 00:15:31,320
+Construction wants twenty-four-hour supervision of compliant work.
+
+168
+00:15:31,370 --> 00:15:39,824
+Cameras ship with front-end compute, custom models are trained from collected images and pushed to the device, and a backend platform aggregates everything.
+
+169
+00:15:39,874 --> 00:15:43,913
+The money is moving: public-security budgets have been tight for two years,
+
+170
+00:15:43,963 --> 00:15:51,164
+so vendors are chasing central state-owned enterprises such as the power grids, and safety-production regulation driven by accidents.
+
+171
+00:15:51,214 --> 00:15:53,617
+For us, this split mirrors our buyers abroad.
+
+172
+00:15:53,667 --> 00:15:57,160
+Industry model packs are a partner input, not something to build.
+
+173
+00:15:57,210 --> 00:16:03,212
+And demand follows regulation and incidents, so the roadmap should align to compliance triggers in each market.
+
+174
+00:16:03,262 --> 00:16:11,280
+One more observation: domestic security construction in China has peaked, and government projects are hardware-heavy with little money for software,
+
+175
+00:16:11,330 --> 00:16:13,897
+which is why these vendors are looking overseas.
+
+176
+00:16:15,197 --> 00:16:17,619
+Part four: identity and controlled assets.
+
+177
+00:16:17,669 --> 00:16:26,035
+On biometric capture we saw dual-finger, single-finger and rolled fingerprint capture, four-finger slap for visas and airports, and palm print,
+
+178
+00:16:26,085 --> 00:16:31,038
+with references in prisons in Turkey and a Brazilian state driving-licence programme.
+
+179
+00:16:31,088 --> 00:16:34,098
+For us these are components to source, not to build.
+
+180
+00:16:34,148 --> 00:16:44,103
+Passport readers offer OCR of the data page and chip decoding in about three seconds, with no data retention by default because the law requires it, and multilingual OCR.
+
+181
+00:16:44,153 --> 00:16:46,340
+Face is the default modality in China.
+
+182
+00:16:46,390 --> 00:16:50,519
+Face plus QR is the common pairing, and liveness is standard and cheap.
+
+183
+00:16:50,569 --> 00:16:54,050
+Iris cameras cost around three thousand RMB and sell poorly.
+
+184
+00:16:54,100 --> 00:16:58,111
+Palm vein is cheaper but niche, used only for classified-unit access.
+
+185
+00:16:58,161 --> 00:17:02,760
+Our identity line should therefore treat face, QR and card as tiered assurance,
+
+186
+00:17:02,810 --> 00:17:11,177
+source fingerprint and palm capture for border and licensing programmes, and keep iris and palm vein as options for the highest-security rooms.
+
+187
+00:17:12,477 --> 00:17:16,164
+Gun and ammunition management is a regulated asset-control product.
+
+188
+00:17:16,214 --> 00:17:22,858
+Smart cabinets have per-weapon locks, cabinet types per weapon class, a master controller that decides which lock opens,
+
+189
+00:17:22,908 --> 00:17:26,038
+and face authentication before an officer draws a weapon.
+
+190
+00:17:26,088 --> 00:17:34,239
+A national standard governs anywhere guns are stored, permits are verified, and the data is reported to national level, not just to the department.
+
+191
+00:17:34,289 --> 00:17:39,761
+Users are police stations down to the smallest county town, and army and armed-police sentry posts.
+
+192
+00:17:39,811 --> 00:17:48,185
+The off-post alarm is clever and cheap: an ultra-wideband tag inside the weapon and a base unit at the post, detecting leaving rather than positioning,
+
+193
+00:17:48,235 --> 00:17:50,695
+with a range of roughly three hundred metres.
+
+194
+00:17:50,745 --> 00:17:57,780
+For us this is the same product pattern as the key, cabinet and rack management we already run for military and critical sites,
+
+195
+00:17:57,830 --> 00:18:00,514
+and a repeatable compliance-driven buying motion.
+
+196
+00:18:00,564 --> 00:18:08,491
+Validation means confirming the standards in each target market, integration to our identity and audit, and real duty-cycle tests for the tags.
+
+197
+00:18:09,791 --> 00:18:11,616
+Part five: the intelligence layer.
+
+198
+00:18:11,666 --> 00:18:19,008
+On the afternoon of day two we met a Peking University research institute that deploys vertical large models in medicine and industry.
+
+199
+00:18:19,058 --> 00:18:20,828
+Their paradigm is worth adopting.
+
+200
+00:18:20,878 --> 00:18:24,800
+Start from the customer's scenario and knowledge base, not from a model.
+
+201
+00:18:24,850 --> 00:18:30,481
+Build an expert-confirmed evaluation set first, which they called the biggest human value contribution.
+
+202
+00:18:30,531 --> 00:18:35,556
+Measure, then diagnose where points are lost: retrieval, summarisation or complex reasoning.
+
+203
+00:18:35,606 --> 00:18:39,472
+Govern the data, cleaning noise and conflicts with graphs and ontology.
+
+204
+00:18:39,522 --> 00:18:44,988
+Then keep runtime errors, fix without touching the model where possible, and fine-tune periodically.
+
+205
+00:18:45,038 --> 00:18:52,434
+They were clear that fine-tuning is not the default answer to a five percent error, and that open-source retrieval alone is not enough:
+
+206
+00:18:52,484 --> 00:18:54,420
+the system around it is the product.
+
+207
+00:18:54,470 --> 00:18:59,440
+They also argued that medicine and industry differ far less than in the digitalisation era,
+
+208
+00:18:59,490 --> 00:19:06,721
+and that predictive maintenance is already at eighty-five to ninety percent, so the value is an LLM interface for frontline workers.
+
+209
+00:19:06,771 --> 00:19:09,699
+Their speed is striking: systems in one to two months.
+
+210
+00:19:09,749 --> 00:19:17,091
+And in private deployment they use Qwen, DeepSeek, Mistral for Europe and Zhipu for state enterprises, because customers refuse cloud.
+
+211
+00:19:18,391 --> 00:19:20,471
+We asked the lab a direct question:
+
+212
+00:19:20,521 --> 00:19:28,079
+we want to expose our access-control functions as MCP services so robots and agents can open and close doors by conversation,
+
+213
+00:19:28,129 --> 00:19:30,453
+knowing this is critical and dangerous.
+
+214
+00:19:30,503 --> 00:19:37,453
+Their guidance: command-type operations belong on APIs via MCP, and search should be reserved for complex analysis.
+
+215
+00:19:37,503 --> 00:19:46,218
+Single tool calls are solved; the hard problem is tool selection when many capabilities combine, and search accuracy is bounded by MCP accuracy.
+
+216
+00:19:46,268 --> 00:19:54,070
+Most importantly, they recognised that our access rules, who can enter, when, which room, contractors, weekends, are an ontology,
+
+217
+00:19:54,120 --> 00:19:59,305
+and that outside vendors cannot replicate it because they do not understand our rules.
+
+218
+00:19:59,355 --> 00:20:08,009
+That is why ST is hard to copy: eleven generations over thirty years, un-clonable cards and secured readers, critical-infrastructure customers,
+
+219
+00:20:08,059 --> 00:20:10,809
+and the cyber-security discipline others skip.
+
+220
+00:20:10,859 --> 00:20:17,261
+The product principle: agents request, the ontology and policy engine decide, and every action is audited.
+
+221
+00:20:18,561 --> 00:20:21,319
+The dialogue also produced strategic insights.
+
+222
+00:20:21,369 --> 00:20:30,047
+First, generic platforms are the last era: ontology or model-building platforms sold to every industry are a dead end except for frontier labs;
+
+223
+00:20:30,097 --> 00:20:32,610
+build vertical and own your own knowledge.
+
+224
+00:20:32,660 --> 00:20:35,052
+Second, integration must become product.
+
+225
+00:20:35,102 --> 00:20:38,043
+System integration has no profit in the long run,
+
+226
+00:20:38,093 --> 00:20:45,428
+so thirty years of integration knowledge must be crystallised into ontology and product so each integration gets cheaper.
+
+227
+00:20:45,478 --> 00:20:54,949
+Third, small teams and fast loops: ten to twenty people, proposals in a day, proofs of concept in one to two months, and avoid slow state-enterprise cycles.
+
+228
+00:20:54,999 --> 00:21:00,809
+Fourth, talent and co-operation: large-model PhDs cost around three million RMB a year in China,
+
+229
+00:21:00,859 --> 00:21:06,912
+so package non-AI-heavy development to capable Chinese teams and do AI-deep work with an expert lab,
+
+230
+00:21:06,962 --> 00:21:10,086
+starting with one themed workshop for our engineers.
+
+231
+00:21:10,136 --> 00:21:20,035
+Fifth, geography: use Chinese brains for overseas terminals; Singapore is the gateway to ASEAN, and our critical-infrastructure markets do not compete with theirs.
+
+232
+00:21:20,085 --> 00:21:26,627
+Sixth, everything is private and on-prem, and cyber-security discipline is both a cost and a differentiator.
+
+233
+00:21:27,927 --> 00:21:31,398
+Part six: adjacent categories we should watch but not pilot.
+
+234
+00:21:31,448 --> 00:21:38,030
+A companion robot for the elderly with a camera, emergency calling and a psychology layer on top of a base model,
+
+235
+00:21:38,080 --> 00:21:44,017
+priced around one hundred thousand RMB at the show; its buyer is families and eldercare, not security.
+
+236
+00:21:44,067 --> 00:21:52,527
+AI virtual try-on that swaps clothing, including uniforms by rank, in thirty seconds, sold to clothing stores and live commerce on a token model.
+
+237
+00:21:52,577 --> 00:21:59,746
+Digital-human guides, demonstrated as a Su Dongpo persona, aimed at museums and reception, moving to on-prem token servers.
+
+238
+00:21:59,796 --> 00:22:07,259
+And humanoid or embodied robots, where even vendors admitted that most robots still lack the brain and the brain is still human.
+
+239
+00:22:07,309 --> 00:22:14,947
+The classification rule is simple: an adjacent product earns a pilot only when it adds a measurable step to detect, verify, assign,
+
+240
+00:22:14,997 --> 00:22:17,823
+resolve and audit for a paying security operator.
+
+241
+00:22:19,123 --> 00:22:20,595
+Part seven: the synthesis.
+
+242
+00:22:20,645 --> 00:22:22,176
+First, the stakeholder map.
+
+243
+00:22:22,226 --> 00:22:28,498
+For each product, the user, the buyer and the influencer are different people, and our position differs too.
+
+244
+00:22:28,548 --> 00:22:38,275
+Glasses are used by officers and guards, bought by police forces and security firms, gated by IT security and HR, and we partner for the terminal and own the workflow.
+
+245
+00:22:38,325 --> 00:22:46,705
+Millimeter wave is used by screening officers, bought by airport equipment departments, customs, rail and prisons, gated by aviation regulators,
+
+246
+00:22:46,755 --> 00:22:50,452
+and we integrate device, lane and ISMP with a lifecycle service.
+
+247
+00:22:50,502 --> 00:22:58,473
+Facial AI is bought by access-control owners for identity, while the health features have no defined buyer until the intended use is set.
+
+248
+00:22:58,523 --> 00:23:06,376
+Fence sensing is bought by perimeter owners such as utilities, ports, camps and airports, and we own zoning, video, dispatch and audit.
+
+249
+00:23:06,426 --> 00:23:10,767
+Video plus incident is our prove-first pilot with existing recorder owners.
+
+250
+00:23:10,817 --> 00:23:15,450
+Orchestration is bought by security operations leaders who want the closed loop.
+
+251
+00:23:15,500 --> 00:23:18,963
+Digital twin and racks share buyers with the analytics deal.
+
+252
+00:23:19,013 --> 00:23:23,822
+Biometric capture and passport readers are bought by border and licensing agencies.
+
+253
+00:23:23,872 --> 00:23:29,325
+And gun cabinets extend the key and cabinet management we already sell to police and military.
+
+254
+00:23:30,625 --> 00:23:36,600
+Second, prioritisation, plotted as strategic value against the evidence the floor actually proved.
+
+255
+00:23:36,650 --> 00:23:45,084
+Top right, high value and high evidence, is where we prove first and then scale: video plus incident on ISMP V11 using NVR edge analytics,
+
+256
+00:23:45,134 --> 00:23:50,125
+response orchestration from assignment to audit, fence intrusion as a zoned event,
+
+257
+00:23:50,175 --> 00:23:54,675
+and the vertical-model paradigm of evaluation sets and private deployment.
+
+258
+00:23:54,725 --> 00:24:01,253
+Top left, high value but low evidence, is where we validate fast: smart glasses on one job against a phone,
+
+259
+00:24:01,303 --> 00:24:08,200
+millimeter wave on walk-through and certification, MCP agents for access control, and facial identity into gates.
+
+260
+00:24:08,250 --> 00:24:17,422
+Bottom right, lower value but mature, is where we partner or source: digital twin and IBMS, racks and compute, biometric capture and passport readers,
+
+261
+00:24:17,472 --> 00:24:20,742
+and gun cabinets as an extension of our existing line.
+
+262
+00:24:20,792 --> 00:24:27,812
+Bottom left is the watchlist: facial blood pressure and expression, companion robots, humanoids and virtual try-on.
+
+263
+00:24:29,112 --> 00:24:30,600
+Third, the product model.
+
+264
+00:24:30,650 --> 00:24:38,907
+We own the platform core: one incident record and one operating model, with the event schema, permissions, incident state, audit trail,
+
+265
+00:24:38,957 --> 00:24:46,353
+the identity and access ontology, and versioned integration contracts, reusing ISMP V11 and building only validated gaps.
+
+266
+00:24:46,403 --> 00:24:55,275
+We configure the solution layer: SOPs, severity rules, escalation paths, dashboards, asset context and the industry model packs a customer needs.
+
+267
+00:24:55,325 --> 00:25:03,459
+And we adapt to the customer environment through six adapter families: video and analytics, access and building systems, field tools,
+
+268
+00:25:03,509 --> 00:25:06,782
+entrance screening, perimeter, and specialist systems.
+
+269
+00:25:06,832 --> 00:25:09,182
+Devices and algorithms are replaceable.
+
+270
+00:25:09,232 --> 00:25:15,704
+The event interface, the disposition responsibility, the evidence and the service experience stay with ST.
+
+271
+00:25:15,754 --> 00:25:23,826
+Product acceptance always includes auditability, failure recovery, offline behaviour, customer data rules and a named support owner.
+
+272
+00:25:25,126 --> 00:25:26,274
+Fourth, the roadmap.
+
+273
+00:25:26,324 --> 00:25:33,761
+Now, in the first three months, we validate: pilot video plus incident on one existing campus using the customer's recorders;
+
+274
+00:25:33,811 --> 00:25:37,355
+test a glasses sample on one job with a phone control group;
+
+275
+00:25:37,405 --> 00:25:45,979
+run the millimeter-wave walk and stop demo with target items and lane throughput while mapping the certification path; survey one fence segment;
+
+276
+00:25:46,029 --> 00:25:53,586
+test facial identity at one gate while keeping health features evidence-only; and run an MCP access-control spike with the lab,
+
+277
+00:25:53,636 --> 00:25:55,083
+starting with a workshop.
+
+278
+00:25:55,133 --> 00:26:04,068
+Next, from three to twelve months, we extend: connected patrol across phone, watch and glasses; fence zone events wired to video presets and dispatch;
+
+279
+00:26:04,118 --> 00:26:11,794
+a millimeter-wave lane at one checkpoint if certification is credible; compute sized from measured workload; partner model packs;
+
+280
+00:26:11,844 --> 00:26:14,849
+and our own evaluation set for operator assistance.
+
+281
+00:26:14,899 --> 00:26:21,916
+Later, in twelve to twenty-four months, we partner and platform: incidents linked to digital twin and building assets,
+
+282
+00:26:21,966 --> 00:26:29,582
+agent-ready access control under a policy engine, an entrance product family combining identity, screening and passport capture,
+
+283
+00:26:29,632 --> 00:26:36,710
+controlled-item cabinets, and regional expansion into Southeast Asian airports and Middle East critical infrastructure.
+
+284
+00:26:38,010 --> 00:26:40,217
+Fifth, the ninety-day validation plan.
+
+285
+00:26:40,267 --> 00:26:42,771
+Days one to thirty: demand and feasibility.
+
+286
+00:26:42,821 --> 00:26:50,017
+Interview three buyers or operators, choose one workflow and baseline it, and confirm vendor SDK access and written scope.
+
+287
+00:26:50,067 --> 00:26:52,511
+The gate is an agreed pilot specification.
+
+288
+00:26:52,561 --> 00:26:55,124
+Days thirty-one to sixty: pilot and measure.
+
+289
+00:26:55,174 --> 00:27:01,658
+Connect one site in assisted mode and measure the complete task, including exceptions and frontline usability.
+
+290
+00:27:01,708 --> 00:27:03,855
+The gate is comparable pilot results.
+
+291
+00:27:03,905 --> 00:27:06,231
+Days sixty-one to ninety: business case.
+
+292
+00:27:06,281 --> 00:27:11,458
+Compare outcomes, total cost and repeat-deployment effort, and define the service model.
+
+293
+00:27:11,508 --> 00:27:13,477
+The gate is scale, revise or stop.
+
+294
+00:27:13,527 --> 00:27:21,792
+In parallel we bring back four evidence cards: glasses versus phone on one task, millimeter-wave walk and stop results with lane throughput,
+
+295
+00:27:21,842 --> 00:27:28,800
+split facial specifications with a blood-pressure reference study, and a fence survey with intrusion and weather logs.
+
+296
+00:27:28,850 --> 00:27:38,541
+The packaging to test is a platform and workflow licence plus integration plus annual support, and for devices, device plus lane integration plus lifecycle service.
+
+297
+00:27:39,841 --> 00:27:41,032
+Sixth, the decisions.
+
+298
+00:27:41,082 --> 00:27:48,778
+The CEO confirms one use case, the sponsor and gated funding, and brings back a named pilot customer with agreed decision criteria.
+
+299
+00:27:48,828 --> 00:27:58,356
+The CTO owns the architecture spike and technical vendor validation, including the MCP security model, and brings back integration proof and a workload benchmark.
+
+300
+00:27:58,406 --> 00:28:04,563
+The CMO owns discovery, positioning and packaging, selling outcomes supported by evidence, with entrance,
+
+301
+00:28:04,613 --> 00:28:09,293
+patrol and perimeter packaged separately and health claims kept within evidence.
+
+302
+00:28:09,343 --> 00:28:16,979
+The COO owns pilot operations and service readiness: SOPs, response accountability, nuisance-alarm handling and support ownership.
+
+303
+00:28:17,029 --> 00:28:24,547
+The CFO sets the investment cap and the economics gate, covering hardware, compute, licensing, support and token versus on-prem,
+
+304
+00:28:24,597 --> 00:28:29,809
+and brings back total cost per site and the margin model for device plus service bundles.
+
+305
+00:28:29,859 --> 00:28:37,318
+The Chief Commercial Officer owns partner and channel strategy: SDK and API terms with the glasses, scanner and sensor vendors,
+
+306
+00:28:37,368 --> 00:28:42,225
+the certification roadmap with the scanner vendor, co-operation terms with the lab,
+
+307
+00:28:42,275 --> 00:28:47,487
+and regional entry into Southeast Asian airports and Middle East critical infrastructure.
+
+308
+00:28:47,537 --> 00:28:52,040
+Product Management coordinates the pilot specification and the decision pack.
+
+309
+00:28:52,090 --> 00:28:59,075
+The decision proposed is to sponsor a scoped validation and return with measured operator value and a go or no-go case.
+
+310
+00:29:00,375 --> 00:29:02,474
+Seventh, success criteria and risks.
+
+311
+00:29:02,524 --> 00:29:08,624
+Value is measured in minutes per incident, acknowledgement and closure time, and avoidable repeat work.
+
+312
+00:29:08,674 --> 00:29:13,101
+Quality is false and missed alerts, task completion and frontline adoption.
+
+313
+00:29:13,151 --> 00:29:19,668
+Economics is integration days, total cost of hardware, compute, licensing and support, and willingness to pay.
+
+314
+00:29:19,718 --> 00:29:25,339
+We scale only with measured operator benefit, viable economics and a repeatable delivery model.
+
+315
+00:29:25,389 --> 00:29:30,175
+The risks: the evidence itself is noisy; the scanner lacks Western certification;
+
+316
+00:29:30,225 --> 00:29:35,727
+video and face data leaving devices raise sovereignty and cyber questions; health estimation,
+
+317
+00:29:35,777 --> 00:29:42,772
+expression inference and autonomous drone actions carry regulatory exposure; compute and token costs can erase margin;
+
+318
+00:29:42,822 --> 00:29:50,353
+the scanner's chip supply is low-volume; and the organisational shift from an integration mindset to a product mindset is real.
+
+319
+00:29:50,403 --> 00:29:55,368
+Everything here is a proposal to validate, not a demonstrated end-to-end capability.
+
+320
+00:29:56,668 --> 00:29:58,626
+To close, the one-page takeaway.
+
+321
+00:29:58,676 --> 00:30:01,890
+Make every alert actionable, assigned and auditable.
+
+322
+00:30:01,940 --> 00:30:04,651
+Prove video plus incident on ISMP V11 first.
+
+323
+00:30:04,701 --> 00:30:10,237
+Validate glasses, millimeter wave, facial identity and fence sensing with evidence cards.
+
+324
+00:30:10,287 --> 00:30:13,061
+Partner for digital twins, racks and sensors.
+
+325
+00:30:13,111 --> 00:30:16,638
+Adopt the evaluation-set discipline for every AI feature.
+
+326
+00:30:16,688 --> 00:30:20,906
+And keep agents behind the policy engine, with every action audited.
+
+327
+00:30:20,956 --> 00:30:22,726
+That is the recap of Beijing.
+
+328
+00:30:22,776 --> 00:30:32,202
+Use it to align the CTO, CMO, COO, CFO and CCO on one scoped validation, and return in ninety days with measured operator value and a go or no-go case.
+
+329
+00:30:32,252 --> 00:30:32,830
+Thank you.
