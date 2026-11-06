@@ -1,6 +1,19 @@
-# Beijing Conference 2026 — CPO Recap Video
+# Beijing Conference 2026 — recap videos
 
-Narrated recap of the 3–4 November 2026 Beijing security conference, built for the Chief Product Officer and the C-suite (CEO, CTO, CMO, COO, CFO, CCO).
+Two narrated recaps of the 3–4 November 2026 Beijing security conference, built for the Chief Product Officer and the C-suite.
+
+## Customer-first motion video (current)
+
+| File | What it is |
+|---|---|
+| `Beijing_2026_Customer_Recap.mp4` | Story-driven motion video: cold open, one chapter per customer (MINDEF/SAF, ICA, ROAMS, Police, DSTA, HTX, Airport, Data centre), synthesis. 26 scenes, 24.3 minutes, 1080p 25 fps, English voice-over, embedded soft subtitles |
+| `Beijing_2026_Customer_Recap.srt` | The same subtitles as a separate file |
+| `Beijing_2026_Customer_Recap_script.md` | Full narration, scene by scene |
+| `build/scenes2.py`, `build/engine.js`, `build/build2.py` | Source: scene data, the animation engine (deterministic render at any time T, captured frame by frame through Playwright into ffmpeg), the builder |
+
+Each customer chapter runs problem → what Beijing showed (animated flow) → how it fits and what we must prove.
+
+## Product-centric slide recap (earlier version)
 
 | File | What it is |
 |---|---|

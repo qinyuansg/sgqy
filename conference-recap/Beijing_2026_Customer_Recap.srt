@@ -1,0 +1,679 @@
+1
+00:00:00,350 --> 00:00:06,514
+Two in the morning at a camp perimeter. A fence moves, and nobody is sure whether it was the wind or a person.
+
+2
+00:00:06,564 --> 00:00:12,840
+Six in the morning at an airport security lane. The queue is forty people deep and every alarm means a pat-down.
+
+3
+00:00:12,890 --> 00:00:20,522
+Nine in the morning at a land checkpoint. A passport takes too long, a face does not match, and a car has four occupants nobody can see.
+
+4
+00:00:20,572 --> 00:00:27,244
+Eight customers. Different nights, same question: can an alert become an action, fast, by the right person, with proof?
+
+5
+00:00:27,294 --> 00:00:34,700
+In Beijing, on the third and fourth of November 2026, we went looking for answers. This is what we found, told customer by customer.
+
+6
+00:00:36,000 --> 00:00:38,501
+These are the customers this story is about.
+
+7
+00:00:38,551 --> 00:00:42,560
+MINDEF and the SAF, with camps, sentry posts and armouries to protect.
+
+8
+00:00:42,610 --> 00:00:45,460
+ICA, which runs the land, sea and air checkpoints.
+
+9
+00:00:45,510 --> 00:00:48,939
+ROAMS, where a few operators watch many sites from one room.
+
+10
+00:00:48,989 --> 00:00:52,244
+The Police, whose officers walk, respond and investigate.
+
+11
+00:00:52,294 --> 00:00:56,767
+DSTA, which has to prove a system works and what it costs before it is bought.
+
+12
+00:00:56,817 --> 00:01:00,710
+HTX, which brings new science into the Home Team quickly and safely.
+
+13
+00:01:00,760 --> 00:01:04,015
+The airports, where security must not slow the passenger.
+
+14
+00:01:04,065 --> 00:01:08,016
+And data centres, where racks, doors and assets are the crown jewels.
+
+15
+00:01:08,066 --> 00:01:18,164
+All of them already run on, or next to, our ISMP V11 platform. Everything we saw in Beijing is judged by one test: does it make their alert actionable, assigned and auditable?
+
+16
+00:01:19,464 --> 00:01:23,306
+Start with the airport, because it is where the trade-off is most visible.
+
+17
+00:01:23,356 --> 00:01:28,829
+The screening officer on lane three has a simple job description: miss nothing, and keep the line moving.
+
+18
+00:01:28,879 --> 00:01:35,825
+Every metal detector alarm becomes a pat-down. Every pat-down is thirty seconds of a passenger's patience and an officer's attention.
+
+19
+00:01:35,875 --> 00:01:43,820
+The airport, not the airline, pays for the lane. The equipment department owns it, and when one lane gets new equipment, the other lanes ask for theirs.
+
+20
+00:01:43,870 --> 00:01:50,289
+And in Singapore the buyer wants two things at once: the price of a Chinese scanner and the certification of a Western one.
+
+21
+00:01:50,339 --> 00:01:59,178
+So the question for this customer is not 'is the imaging good'. It is: does the whole lane move faster, with fewer hands on passengers, and will the regulator accept it?
+
+22
+00:02:00,478 --> 00:02:06,830
+Here is the lane as the Beijing vendor described it, and as the NUCTECH datasheet documents a close relative of it.
+
+23
+00:02:06,880 --> 00:02:10,281
+The passenger's face is bound to their record at the entrance.
+
+24
+00:02:10,331 --> 00:02:22,083
+They walk through an active millimeter-wave portal. The datasheet version needs a two-second stand with arms slightly out; the booth unit claims continuous walking, and that difference is the whole business case.
+
+25
+00:02:22,133 --> 00:02:31,101
+Automatic threat recognition marks hidden items, metallic or not, on a cartoon figure, so privacy is protected and the officer gets a location, not a naked image.
+
+26
+00:02:31,151 --> 00:02:40,843
+The officer gives a pass or sends the passenger to a re-check, and only an alarm becomes an incident record on our platform, with the lane, the time and the evidence attached.
+
+27
+00:02:40,893 --> 00:02:50,752
+Three field realities we heard: metal plates in shoes still trigger alarms, Europe wants a two-metre portal, and pushing screening to the building entrance creates its own queue.
+
+28
+00:02:50,802 --> 00:02:58,768
+Deployed today in Beijing, Shanghai, Tianjin, Wuhan and Xinjiang, three units in Nigeria, and none yet in Southeast Asia. That is an open field.
+
+29
+00:03:00,068 --> 00:03:02,637
+So how does it fit the airport we already serve?
+
+30
+00:03:02,687 --> 00:03:12,186
+The airport needs a lane that moves faster with fewer pat-downs. The portal plus re-check only on marked items is exactly that, if the walk-through claim survives a real lane.
+
+31
+00:03:12,236 --> 00:03:21,135
+The airport needs a regulator that signs off. The vendor holds only China's civil-aviation approval, so the certification path must be mapped before anyone commits.
+
+32
+00:03:21,185 --> 00:03:32,593
+The airport wants one passenger journey from kerb to gate. Our biometrics line, a passport reader that does OCR and chip decoding in about three seconds, and the screening result can sit on one identity record.
+
+33
+00:03:32,643 --> 00:03:43,070
+Equipment must stay up, and the vendor offers remote diagnostics and a self-check at every boot. The compute behind it lives in the kind of smart racks airports already deploy by the thousand.
+
+34
+00:03:43,120 --> 00:03:50,872
+And the price has to be defensible: we test a device plus lane integration plus lifecycle service bundle against the pat-down minutes it saves.
+
+35
+00:03:50,922 --> 00:04:03,095
+What we must prove before the airport sees a proposal: a walk-versus-stop demo on a real lane, a customer-approved target-item list, peak throughput with nuisance and re-check numbers, and a certification roadmap in writing.
+
+36
+00:04:04,395 --> 00:04:05,431
+Now the checkpoint.
+
+37
+00:04:05,481 --> 00:04:13,832
+At nine in the morning the officer sees a bus, a motorcycle and a car with four occupants, all at once. Each needs an identity decision in seconds.
+
+38
+00:04:13,882 --> 00:04:22,004
+A passport is read, a face is compared, sometimes a fingerprint is taken for a visa. If any step is slow or uncertain, the whole lane backs up.
+
+39
+00:04:22,054 --> 00:04:27,433
+The law says what may be kept: a reader that holds passport data is a liability, not a feature.
+
+40
+00:04:27,483 --> 00:04:35,091
+And the car is the blind spot. The officer can see the driver's face through the window, but not what the four occupants are carrying.
+
+41
+00:04:35,141 --> 00:04:41,892
+ICA's question is about assurance per second: how much identity certainty can a lane produce without stopping the flow?
+
+42
+00:04:43,192 --> 00:04:48,223
+Beijing gave us the pieces of an identity stack, each one already in production somewhere.
+
+43
+00:04:48,273 --> 00:04:58,160
+A passport reader that does both OCR of the data page and chip decoding in about three seconds, multilingual, and with no data retention by default because the law requires it.
+
+44
+00:04:58,210 --> 00:05:11,032
+Face recognition where liveness detection is now standard and cheap on every camera, and where face plus QR is the most common pairing. Iris is around three thousand RMB per camera and sells poorly; palm vein is cheap but niche.
+
+45
+00:05:11,082 --> 00:05:18,824
+Fingerprint capture: dual-finger, rolled and four-finger slap, already used for visas, airports and a Brazilian driving-licence programme.
+
+46
+00:05:18,874 --> 00:05:24,808
+The same walk-through screening as the airport, which at rail stations is used mainly to find large items.
+
+47
+00:05:24,858 --> 00:05:34,124
+And a vendor willing to quote vehicle occupant screening through a sixty-by-sixty centimetre window on a robotic arm, with a four-person side-by-side demo requested.
+
+48
+00:05:34,174 --> 00:05:44,512
+Our part is the record: every step lands on one identity record with tiered assurance and an audit trail, which is what our identity management already does for the checkpoints we run.
+
+49
+00:05:45,812 --> 00:05:48,787
+For ICA the assembly is about assurance per second.
+
+50
+00:05:48,837 --> 00:05:55,906
+Identity decisions in seconds: reader, face and liveness on one record, with fingerprint only where the risk demands it.
+
+51
+00:05:55,956 --> 00:06:04,804
+Zero unnecessary retention: readers configured to keep nothing, and face features extracted and matched in our own backend so only results are stored.
+
+52
+00:06:04,854 --> 00:06:14,474
+The car interior made visible: a vehicle screening prototype, with image quality through glass and the lane geometry proven before anyone designs a lane around it.
+
+53
+00:06:14,524 --> 00:06:21,652
+Trust that scales with risk: face, QR and card as tiers, with iris and palm vein reserved for the highest-security rooms.
+
+54
+00:06:21,702 --> 00:06:32,864
+To prove: reader throughput and OCR accuracy on our document set, face error rates under masks, glasses and lighting, the vehicle screening geometry, and a retention and data-flow sign-off.
+
+55
+00:06:34,164 --> 00:06:36,149
+Now the Police, and two people at once.
+
+56
+00:06:36,199 --> 00:06:43,456
+The patrol officer walks with a radio in one hand and a phone in the other. The watch-list is in a system; the face in front of them is not.
+
+57
+00:06:43,506 --> 00:06:51,546
+When something happens, the response is a chain of calls. Who acknowledged, who went, what they found and when it was closed live in four different places.
+
+58
+00:06:51,596 --> 00:06:59,479
+The investigator in the control room has the opposite problem: hours of video from recorders of three brands, and a question that takes a day to answer.
+
+59
+00:06:59,529 --> 00:07:06,630
+And before the shift even starts, there is the armoury, with weapons that must be issued, tracked and returned under a national standard.
+
+60
+00:07:06,680 --> 00:07:14,250
+Leaders on the Beijing floor said it plainly: they want the first eighty percent of routine work taken off people, with a closed loop on the rest.
+
+61
+00:07:15,550 --> 00:07:18,136
+Two wearables stood out for the officer on foot.
+
+62
+00:07:18,186 --> 00:07:32,198
+Smart glasses in two flavours: camera glasses that stream a first-person view to a command centre and run face recognition, and display-only glasses with no camera that show a watch-list, a prompt or a teleprompter on the lens, confirmed with a single tap.
+
+63
+00:07:32,248 --> 00:07:38,844
+A patrol watch that receives alerts and short videos, where a voice command on the wrist triggers an action on the phone.
+
+64
+00:07:38,894 --> 00:07:50,049
+The vendor will hand us the original image so that feature extraction and matching happen in our backend and only the result returns, which answers the first question any police IT security team will ask.
+
+65
+00:07:50,099 --> 00:08:02,297
+Prescription lenses are fitted per wearer, pairing is Bluetooth to a phone or standalone Android under mobile device management, and the battery claim was up to eight hours, with the controller doubling as the battery pack.
+
+66
+00:08:02,347 --> 00:08:11,031
+The loop we would build: capture, match, prompt, officer confirms, task created, every step on the record. The glasses are a terminal; the loop is the product.
+
+67
+00:08:12,330 --> 00:08:15,160
+For response and investigation, three more signals.
+
+68
+00:08:15,210 --> 00:08:28,485
+A control layer that commands any embodied terminal with pre-set plans: a camera detects a fight, a drone flies to the zone, captures faces and performs dispersal. Powerful, and it needs rules of engagement before any autonomous action.
+
+69
+00:08:28,535 --> 00:08:42,600
+An edge node that connects to existing recorders, Dahua was named, and lets the investigator search video with text for a person or a trajectory at around sixteen times speed. The installed camera estate becomes searchable without replacing a camera.
+
+70
+00:08:42,650 --> 00:08:54,231
+And for the armoury: smart cabinets with per-weapon locks, a master controller, and face authentication before an officer draws a weapon, with data reported to national level because a standard requires it.
+
+71
+00:08:54,281 --> 00:09:06,314
+At a sentry post, an ultra-wideband tag inside the weapon and a base unit at the post raise an alarm the moment the weapon leaves, with a range of roughly three hundred metres. Presence, not positioning, and cheap.
+
+72
+00:09:06,364 --> 00:09:17,098
+What we must prove for the Police: glasses versus a phone on one real task, the edge node's supported recorders and retrieval quality, and the rules of engagement for any autonomous response.
+
+73
+00:09:18,399 --> 00:09:22,092
+Back to the fence at two in the morning, because that is MINDEF's night.
+
+74
+00:09:22,142 --> 00:09:28,225
+The duty officer has kilometres of perimeter, a handful of patrols, and a sensor that cannot tell wind from a climber.
+
+75
+00:09:28,275 --> 00:09:35,191
+Every false alarm sends a patrol out and teaches the team to trust the system a little less. Every missed one is the one that matters.
+
+76
+00:09:35,241 --> 00:09:46,471
+Inside the camp, the rules are stricter than anywhere else: who may enter which room, when, as a contractor or on a weekend. Cards must be impossible to clone, readers impossible to tap, and nothing may touch a cloud.
+
+77
+00:09:46,521 --> 00:09:50,525
+And the armoury and the key press are the same problem in a different cabinet.
+
+78
+00:09:50,575 --> 00:09:58,427
+The question for this customer: can a disturbance become a located, verified, dispatched and closed event, at a nuisance rate the patrols can live with?
+
+79
+00:09:59,726 --> 00:10:09,770
+The fence product we saw senses force, deformation or vibration on the fence itself; whether by tension, sensing cable or fibre still has to be confirmed with the exhibitor.
+
+80
+00:10:09,820 --> 00:10:12,512
+A climb, a cut or a lift becomes a disturbance.
+
+81
+00:10:12,562 --> 00:10:24,940
+On-site calibration and zone mapping turn it into a located alarm, and the hard part, discriminating wind, rain, vegetation and animals from a person, is where comparable products use micro-deformation signatures.
+
+82
+00:10:24,990 --> 00:10:31,300
+On our platform, the zone alarm calls a camera preset so the duty officer sees the fence before anyone moves.
+
+83
+00:10:31,350 --> 00:10:41,743
+Then a task goes to the nearest patrol's phone, or to glasses, with the clip attached; the patrol acknowledges, captures evidence, and the event is closed with a full audit trail.
+
+84
+00:10:41,793 --> 00:10:55,630
+Acceptance must cover three cases: real intrusions, measured by detection, location error and latency; non-intrusions, measured as nuisance alarms per kilometre per day; and faults, measured by how visibly and quickly the system recovers.
+
+85
+00:10:55,680 --> 00:11:06,015
+Our role is clear: partner for the sensor, own the zoning, the video linkage, the dispatch and the audit, and first check the overlap with the perimeter products we already sell.
+
+86
+00:11:07,316 --> 00:11:10,898
+For the camp, the assembly is one access and asset fabric.
+
+87
+00:11:10,948 --> 00:11:20,792
+A perimeter the patrols trust: fence sensing, camera verification, dispatch and audit on our platform, piloted on one real fence segment before anything else.
+
+88
+00:11:20,842 --> 00:11:32,941
+Rooms, keys and weapons under one rule set: the identity ontology we already run, who, when, which room, contractor or weekend, extended to key presses and smart gun cabinets with presence tags.
+
+89
+00:11:32,991 --> 00:11:46,968
+Nothing clonable and nothing in the cloud: our un-clonable cards and secured readers stay, and if any AI is used it runs as a private model on our own GPUs, which is exactly how the Beijing lab deploys for its own customers.
+
+90
+00:11:47,018 --> 00:12:03,438
+Agents and robots that can ask but never decide: if doors are ever exposed as MCP services, the policy engine decides and every action is audited. The lab's advice was blunt: command-type operations belong on APIs, and tool selection at scale is the hard problem.
+
+91
+00:12:03,488 --> 00:12:15,649
+To prove: one fence segment with intrusion and weather logs, cabinet and tag survival in real duty cycles, a coverage test of the access-rule ontology, and offline and failure-recovery behaviour.
+
+92
+00:12:16,949 --> 00:12:20,088
+ROAMS is the customer that watches many sites from one room.
+
+93
+00:12:20,138 --> 00:12:27,689
+The night operator has twelve sites on the wall: different recorders, different building systems, different alarm panels, and one pair of eyes.
+
+94
+00:12:27,739 --> 00:12:35,450
+An alarm on site nine means switching tools, finding the right camera, finding the right person on site, and writing it all up afterwards by hand.
+
+95
+00:12:35,500 --> 00:12:44,061
+The buildings themselves generate half the noise: a chiller fault, a door held open, a rack running hot. None of it is security, all of it lands on the same desk.
+
+96
+00:12:44,111 --> 00:12:52,193
+What this customer wants is not another dashboard. It is one incident record that already knows the site, the asset, the SOP and the person who must act.
+
+97
+00:12:53,493 --> 00:12:57,090
+Three Beijing signals assemble into a remote operations loop.
+
+98
+00:12:57,140 --> 00:13:04,923
+Edge nodes that attach to the recorders a site already has and make the video searchable and analysable without a forklift upgrade.
+
+99
+00:13:04,973 --> 00:13:20,589
+A digital twin platform used from design to operations, with an operations centre that shows the building, its schedule and every connected system, on top of an IBMS that controls ventilation, drainage, chillers and lighting through DDC controllers and gateways.
+
+100
+00:13:20,639 --> 00:13:30,634
+And response orchestration where an event becomes a plan, and a plan becomes a task on a phone, a watch or a pair of glasses, with acknowledgement and proof of closure.
+
+101
+00:13:30,684 --> 00:13:40,141
+Our platform is the record in the middle: the event schema, the SOP, the asset and location context from the twin, and the audit trail across all twelve sites.
+
+102
+00:13:40,191 --> 00:13:50,426
+The smart racks we saw add the last piece: temperature, humidity, power and compute status on the same central view, with cabinet doors opened by face, card or fingerprint.
+
+103
+00:13:50,476 --> 00:14:05,135
+To prove: a live, not recorded, twin demo with real asset identifiers, read and write access to building points, which recorders the edge node supports, and the integration effort per site, because repeatability is the economics of this customer.
+
+104
+00:14:06,434 --> 00:14:10,057
+DSTA asks the questions every other customer is glad someone asks.
+
+105
+00:14:10,107 --> 00:14:14,398
+Does it actually work, on our data, in our environment, and how would we know?
+
+106
+00:14:14,448 --> 00:14:19,518
+What does it cost to run for ten years: hardware, cooling, power, licences, patches, people?
+
+107
+00:14:19,568 --> 00:14:24,582
+Is the supply chain stable, and what happens when a chip or a model is no longer available?
+
+108
+00:14:24,632 --> 00:14:30,425
+And can it be certified and secured to the standard the mission requires, with no cloud and no shortcuts?
+
+109
+00:14:30,475 --> 00:14:36,825
+Beijing had more to say to DSTA than any booth would admit, because the best answers came from a lab, not a vendor.
+
+110
+00:14:38,126 --> 00:14:44,932
+The Peking University institute deploys vertical models in hospitals and factories, and its method is DSTA's method.
+
+111
+00:14:44,982 --> 00:14:49,010
+Start from the customer's scenario and knowledge, never from a model.
+
+112
+00:14:49,060 --> 00:14:56,161
+Build an expert-confirmed evaluation set first. They called it the biggest human value contribution in the whole process.
+
+113
+00:14:56,211 --> 00:15:04,848
+Measure, then diagnose where points are lost: retrieval, summarisation or reasoning. Fine-tuning is not the default answer to a five-percent error.
+
+114
+00:15:04,898 --> 00:15:10,699
+Govern the data: clean noisy knowledge, resolve conflicts, use graphs and ontology where they help.
+
+115
+00:15:10,749 --> 00:15:19,151
+Fix without touching the model where possible, and fine-tune periodically from the accumulated set. Systems take one to two months, not a year.
+
+116
+00:15:19,201 --> 00:15:28,193
+Deploy privately on your own GPUs, because customers refuse cloud: Qwen for multilingual work, DeepSeek, Mistral for Europe, Zhipu for state enterprises.
+
+117
+00:15:28,243 --> 00:15:49,292
+On compute economics, the floor quoted a Huawei eight-card server at around seven hundred thousand RMB, domestic chips at seventy to eighty percent of an NVIDIA 3090 or 4090, and two 5090 cards at about fifteen and a half thousand. Every figure is a quote to verify, and the rule is to benchmark the real workload on quality, latency, uptime and total cost.
+
+118
+00:15:50,591 --> 00:15:53,091
+So the evidence pack for DSTA writes itself.
+
+119
+00:15:53,141 --> 00:16:00,221
+Does it work on our data? An evaluation set built with the customer's own experts, and scores before and after each change.
+
+120
+00:16:00,271 --> 00:16:10,017
+What does it cost to run? A workload benchmark across edge and on-prem options on quality, latency, uptime and total cost, with written quotes rather than booth figures.
+
+121
+00:16:10,067 --> 00:16:19,581
+Is the supply chain stable? The scanner's chips are sixty-five nanometre at low volume with a domestic transition under way, and model licences are checked up front.
+
+122
+00:16:19,631 --> 00:16:30,363
+Is it certified and secure? A certification roadmap per device, private deployment, and quarterly patching budgeted as a line item, which the Beijing side openly admitted it does not do.
+
+123
+00:16:30,413 --> 00:16:37,840
+That is the pack: evaluation set and baseline, benchmark with quotes, supply and licence review, security and certification plan.
+
+124
+00:16:39,140 --> 00:16:41,567
+HTX lives between a demo and a deployment.
+
+125
+00:16:41,617 --> 00:16:49,471
+Its job is to bring new science to the Police, ICA, prisons and civil defence in months, not years, and to know which claims are real.
+
+126
+00:16:49,521 --> 00:16:58,083
+In Beijing that meant faces that report emotion, age and blood pressure, robots that patrol, drones that respond, and algorithms sold by industry.
+
+127
+00:16:58,133 --> 00:17:08,170
+Each one comes with a regulatory edge: a health estimate is not a diagnosis, an expression is not an intent, and an autonomous drone needs rules before it needs a battery.
+
+128
+00:17:08,220 --> 00:17:16,428
+The question for HTX is a sorting question: what is ready for a Home Team pilot, what needs evidence first, and what belongs on a watchlist?
+
+129
+00:17:17,728 --> 00:17:20,686
+Sorted the way HTX sorts, Beijing splits cleanly.
+
+130
+00:17:20,736 --> 00:17:38,860
+Pilot now: facial identity into gates, because liveness is standard and the vendor will give us the raw image to match ourselves. Evidence first: facial blood pressure, which is probably video photoplethysmography but unconfirmed, and needs a reference study and an intended use before any claim.
+
+131
+00:17:38,910 --> 00:17:52,244
+Pilot now: edge AI model packs by industry, helmet and vest for safety, plates and faces for enforcement. Evidence first: expression and emotion tags, which are visible expression only and never an inference of danger.
+
+132
+00:17:52,294 --> 00:18:04,094
+Pilot now: response orchestration with staged dispatch and proof of closure. Evidence first: autonomous dispersal by drone, which needs rules of engagement and legal review before a live trial.
+
+133
+00:18:04,144 --> 00:18:17,785
+Pilot now: co-development with the Beijing lab, a proof of concept in one to two months, starting with one themed workshop for our engineers. Watch only: companion robots, humanoids, virtual try-on and digital-human guides.
+
+134
+00:18:17,835 --> 00:18:29,880
+To prove: an identity test at one gate, model-pack accuracy on our own footage, a staged-dispatch pilot with closure proof, and, only if pursued, a properly designed blood-pressure reference study.
+
+135
+00:18:31,180 --> 00:18:35,058
+The data centre's night is a maintenance window at three in the morning.
+
+136
+00:18:35,108 --> 00:18:44,607
+A contractor needs rack forty-two, and only rack forty-two, for ninety minutes. The security manager must grant it, see it, and prove afterwards that nothing else was touched.
+
+137
+00:18:44,657 --> 00:18:53,446
+The racks themselves have a pulse: temperature, humidity, power draw, a door that stayed open too long. Today that lives in a facilities tool, not a security one.
+
+138
+00:18:53,496 --> 00:18:59,721
+Assets walk: a drive, a tape, a laptop. The alarm that matters is 'this left the zone', not 'where is it on a map'.
+
+139
+00:18:59,771 --> 00:19:06,432
+And the perimeter and the lobby are the same story as every other customer, only with higher stakes per minute of downtime.
+
+140
+00:19:06,482 --> 00:19:13,088
+The question: one record, from the fence to the rack door, with the contractor, the rack, the time and the evidence on it.
+
+141
+00:19:14,389 --> 00:19:18,185
+From the fence to the rack door, every piece we need was on the floor.
+
+142
+00:19:18,235 --> 00:19:23,294
+The same fence sensing and camera verification as the camp, feeding the same incident record.
+
+143
+00:19:23,344 --> 00:19:32,634
+At the lobby and the cage, face, card or fingerprint, with liveness standard; the vendor's own words were 'make ours the same' when we asked about cabinet access by face.
+
+144
+00:19:32,684 --> 00:19:45,764
+Smart power racks whose doors open by identity, and whose temperature, humidity, power draw and compute status report to one central platform. Airports already run these by the thousand, in sealed, air-cooled rows with cold and hot aisles.
+
+145
+00:19:45,814 --> 00:19:58,016
+An ultra-wideband tag on an asset and a base unit on the zone: the alarm fires when the asset leaves, roughly three hundred metres of range, presence rather than positioning, and cheap enough to tag everything that matters.
+
+146
+00:19:58,066 --> 00:20:13,454
+Our platform already manages keys, cabinets and racks for military and critical sites. The data-centre version is the same product pattern with the rack telemetry added as a security signal, and the contractor's ninety minutes on rack forty-two as a time-boxed grant with evidence.
+
+147
+00:20:13,504 --> 00:20:20,980
+If a robot or an agent ever asks to open that cage, the answer comes from the policy engine, not the agent, and it is audited either way.
+
+148
+00:20:22,280 --> 00:20:25,050
+Step back and the eight stories are one picture.
+
+149
+00:20:25,100 --> 00:20:35,037
+In the middle is the platform we already own: one incident record, the SOP, dispatch, audit, and the identity ontology that outside vendors told us they cannot replicate.
+
+150
+00:20:35,087 --> 00:20:57,891
+Around it, each customer plugs in different sensors and terminals: fence and armoury for the camp, passport and face and vehicle screening for the checkpoint, edge nodes and the twin for remote operations, glasses and the watch for the officer, the evaluation pack for DSTA, sorted capabilities for HTX, the walk-through lane for the airport, rack doors and asset tags for the data centre.
+
+151
+00:20:57,941 --> 00:21:05,822
+Devices and algorithms are replaceable; the Chinese market itself is component-driven and weak on integration, several vendors said so.
+
+152
+00:21:05,872 --> 00:21:14,870
+The event interface, the responsibility for the response, the evidence and the service experience stay with us. That is the product, and that is the moat.
+
+153
+00:21:16,170 --> 00:21:19,490
+Where to start, customer by customer, gated by evidence.
+
+154
+00:21:19,540 --> 00:21:38,688
+In the first ninety days we prove: one fence segment for the camp, glasses against a phone for the Police, the walk-or-stop demo and certification roadmap for the airport, reader and face tests for ICA, the evaluation set and benchmark for DSTA, and a live twin demo with an edge node on one site for remote operations.
+
+155
+00:21:38,738 --> 00:21:58,727
+From three to twelve months we extend: the dispatch loop to patrol phones and glasses, video search for investigators and armoury cabinets, one walk-through lane if certification holds, rack telemetry and asset tags for the data centre, identity at one gate and model packs for HTX, and one incident record across three remote sites.
+
+156
+00:21:58,777 --> 00:22:18,767
+From twelve to twenty-four months the platform work: an entrance product family for ICA with a vehicle lane, agent-ready cage control behind the policy engine, twin and building assets linked to incidents, kerb-to-gate biometrics, the evidence pack as a standard deliverable, and health estimation only if a reference study earns it.
+
+157
+00:22:20,067 --> 00:22:24,040
+What leadership decides, so that each customer gets something back.
+
+158
+00:22:24,090 --> 00:22:32,326
+The CEO sponsors one scoped validation per customer cluster and sets the scale gate; the customer gets a named pilot with agreed criteria.
+
+159
+00:22:32,376 --> 00:22:40,432
+The CTO owns the architecture spike, vendor validation and the MCP security model; the customer gets integration proof and a benchmark.
+
+160
+00:22:40,482 --> 00:22:50,760
+The CMO packages entrance, patrol and perimeter value separately and keeps health claims inside the evidence; the customer gets an outcome narrative that matches their day.
+
+161
+00:22:50,810 --> 00:22:59,767
+The COO owns pilot operations: SOPs, an accountable responder, nuisance-alarm handling and support; the customer gets a response owner and a handover.
+
+162
+00:22:59,817 --> 00:23:08,774
+The CFO sets the investment cap and the economics gate, including token versus on-prem; the customer gets a price the equipment department can defend.
+
+163
+00:23:08,824 --> 00:23:18,021
+The CCO owns partner terms, the certification roadmap, the lab co-operation and regional entry; the customer gets signed scopes instead of booth promises.
+
+164
+00:23:18,071 --> 00:23:33,392
+Success is measured in the customer's units: minutes per incident, pat-down and patrol minutes saved, false and missed alerts, adoption, integration days and total cost. We scale only with measured benefit, viable economics and a repeatable delivery model.
+
+165
+00:23:34,692 --> 00:23:37,869
+Two in the morning, again. The fence in zone seven moves.
+
+166
+00:23:37,919 --> 00:23:42,964
+Twenty seconds later the duty officer is looking at a person climbing, not a sensor graph.
+
+167
+00:23:43,014 --> 00:23:49,588
+Forty-five seconds in, the task is on patrol B's phone with the clip attached; it is acknowledged, they are en route.
+
+168
+00:23:49,638 --> 00:24:00,968
+Six minutes later it is resolved with evidence, and seven minutes in it is closed, audited, on one record that the camp, the Police, the checkpoint, the airport and the data centre would all recognise.
+
+169
+00:24:01,018 --> 00:24:07,931
+That is what Beijing contributes, customer by customer: not devices, but the pieces of a loop we already own the middle of.
+
+170
+00:24:07,981 --> 00:24:17,216
+Make every alert actionable, assigned and auditable. Prove it on one customer, with their numbers, in ninety days, and bring back the case to scale, revise or stop.
