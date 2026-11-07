@@ -715,8 +715,8 @@ def render_scene(args):
         # 章节标签 + 全片进度条
         d = ImageDraw.Draw(frame)
         prog = (t0 + t) / total
-        d.rectangle((0, H - 6, W, H), fill=(255, 255, 255, 18))
-        d.rectangle((0, H - 6, int(W * prog), H), fill=GOLD + (200,))
+        d.rectangle((0, H - 6, W, H), fill=(40, 50, 68))
+        d.rectangle((0, H - 6, int(W * prog), H), fill=GOLD)
         arr = np.asarray(frame.convert("RGB"), dtype=np.float32)
         # 场景淡入淡出
         fin = min(1.0, t / 0.45)
