@@ -1,5 +1,7 @@
 # 🏠 HomeHero — Daily Tasks for House Helpers
 
+> **Also in this repo:** [`fastpass/`](fastpass/) — the AGIL® Secure FastPass product site (kerb-to-gate journey explorer, traveller app demo, command console). See [`fastpass/README.md`](fastpass/README.md).
+
 A simple, warm, mobile-first web app that helps a house helper know **what to do today**, tick tasks as done, and explain (in one tap) when something cannot be done — while giving the household full transparency on progress.
 
 **Zero install, zero backend, zero cost.** Open `index.html` in any phone browser (or host it on GitHub Pages) and it just works. All data is saved on the device.
