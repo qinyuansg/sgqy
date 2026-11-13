@@ -1,7 +1,7 @@
 ** Drc report for /home/user/sgqy/foyer-kiosk/hardware/sensorbar/kicad/sensorbar.kicad_pcb **
-** Created on 2026-11-13 20:46:46 **
+** Created on 2026-11-13 20:56:49 **
 
-** Found 84 DRC violations **
+** Found 82 DRC violations **
 [silk_overlap]: Silkscreen overlap
     Rule: board setup constraints silk; Severity: warning
     @(74.3400 mm, 2.3250 mm): Reference 'C17'
@@ -293,28 +293,20 @@
     Rule: board setup constraints silk; Severity: warning
     @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
     @(40.0000 mm, 0.4500 mm): Reference 'LED5'
-[clearance]: Clearance violation (netclass 'Default' clearance 0.1500 mm; actual 0.1283 mm)
-    Rule: netclass 'Default'; Severity: error
-    @(101.0750 mm, 9.5500 mm): Track [GND] on F.Cu, length 0.0354 mm
-    @(101.6000 mm, 9.7000 mm): Pad 5 [TOF_XSHUT] of U1 on F.Cu
-[clearance]: Clearance violation (netclass 'Default' clearance 0.1500 mm; actual 0.1283 mm)
-    Rule: netclass 'Default'; Severity: error
-    @(101.1000 mm, 9.5250 mm): Track [GND] on F.Cu, length 0.3750 mm
-    @(101.6000 mm, 9.7000 mm): Pad 5 [TOF_XSHUT] of U1 on F.Cu
 [hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.1968 mm)
     Rule: board setup constraints hole; Severity: error
     @(130.6500 mm, 9.8750 mm): Track [GND] on B.Cu, length 0.3536 mm
     @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
 [hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.1968 mm)
     Rule: board setup constraints hole; Severity: error
-    @(130.4000 mm, 10.1250 mm): Track [GND] on B.Cu, length 0.2250 mm
+    @(130.4000 mm, 10.1250 mm): Track [GND] on B.Cu, length 0.2000 mm
     @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
 
 ** Found 1 unconnected pads **
 [unconnected_items]: Missing connection between items
     Local override; Severity: error
     @(130.6714 mm, 13.1925 mm): Pad 2 [GND] of C6 on B.Cu
-    @(0.3000 mm, 0.3000 mm): Zone [GND] on B.Cu
+    @(130.2500 mm, 10.6000 mm): Track [GND] on F.Cu, length 0.2121 mm
 
 ** Found 0 Footprint errors **
 

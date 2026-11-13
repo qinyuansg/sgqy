@@ -50,7 +50,8 @@ def build() -> Circuit:
                     ref=ref, mpn="ICS-43434", mfr="TDK InvenSense",
                     desc=f"I2S MEMS microphone, bottom port ({'left' if lr is GND else 'right'} channel)")
         mk.wire({"VDD": V3, "GND": GND, "SCK": n("BCLK"), "WS": n("LRCLK"), "SD": n("MIC_SD"), "LR": lr})
-        c.C("100n", V3, GND, near=mk, mfr=GENERIC)
+        # top side, opposite the bottom-port mic: keeps the acoustic-port area clear
+        c.C("100n", V3, GND, near=mk, mfr=GENERIC, fields={"side": "top"})
     c.R("100k", n("MIC_SD"), GND, near=j, mfr=GENERIC, desc="Resistor 100k 0402 (I2S SD bus keeper)")
 
     c.group = "ir"

@@ -85,7 +85,7 @@ class Grid:
                         else:
                             continue
                     hole = pad.GetAttribute() == pcbnew.PAD_ATTRIB_NPTH
-                    r = 0 if same else infl + (0.1 if hole else 0.0)
+                    r = 0 if same else infl + (0.2 if hole else 0.0)
                     target = own if same else occ
                     mark(target, li, pcbnew.ToMM(box.GetLeft()) - r, pcbnew.ToMM(box.GetTop()) - r,
                          pcbnew.ToMM(box.GetRight()) + r, pcbnew.ToMM(box.GetBottom()) + r)

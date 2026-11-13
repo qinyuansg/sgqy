@@ -198,7 +198,7 @@ class BoardBuilder:
                 pos = anchor.GetPosition()
                 tx, ty = pos.x, pos.y
             fp = self.load(part)
-            side_bottom = anchor.IsFlipped()
+            side_bottom = anchor.IsFlipped() and part.fields.get("side") != "top"
             self.b.Add(fp)
             if side_bottom:
                 fp.Flip(fp.GetPosition(), False)
