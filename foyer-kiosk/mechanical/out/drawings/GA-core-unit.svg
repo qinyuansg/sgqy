@@ -112,7 +112,7 @@
 <line x1="10.0" y1="40.000000000000036" x2="10.0" y2="774.9999998855142" class="d"/><path d="M10.0,40.000000000000036 l-3.5,7 l7,0 z M10.0,774.9999998855142 l-3.5,-7 l7,0 z" class="a"/><text x="2.0" y="407.4999999427571" class="t" transform="rotate(-90 2.0 407.4999999427571)" text-anchor="middle">642</text>
 <line x1="336.2149532264463" y1="486.4953270332563" x2="386.2149532264463" y2="486.4953270332563" class="d"/><text x="390.2149532264463" y="491.4953270332563" class="t">display 250</text>
 <line x1="336.2149532264463" y1="113.202336437196" x2="386.2149532264463" y2="113.202336437196" class="d"/><text x="390.2149532264463" y="118.202336437196" class="t">576</text>
-<line x1="336.2149532264463" y1="90.3051401790803" x2="386.2149532264463" y2="90.3051401790803" class="d"/><text x="390.2149532264463" y="95.3051401790803" class="t">cameras 596</text>
+<line x1="336.2149532264463" y1="92.59485980489187" x2="386.2149532264463" y2="92.59485980489187" class="d"/><text x="390.2149532264463" y="97.59485980489187" class="t">cameras 594</text>
 <line x1="336.2149532264463" y1="532.2897195494877" x2="386.2149532264463" y2="532.2897195494877" class="d"/><text x="390.2149532264463" y="537.2897195494877" class="t">deck 210</text>
 </g>
 <text x="380.0" y="50" class="h" text-anchor="middle">FRONT</text>
@@ -235,7 +235,7 @@
 <text x="640" y="1150" class="n">Deck angle: <tspan font-weight="600">10°</tspan></text>
 <text x="640" y="1174" class="n">Display active area (portrait): <tspan font-weight="600">165.24 x 293.76</tspan></text>
 <text x="640" y="1198" class="n">Display bottom / top: <tspan font-weight="600">250 / 576</tspan></text>
-<text x="1220" y="1150" class="n">Camera centre line: <tspan font-weight="600">596</tspan></text>
+<text x="1220" y="1150" class="n">Camera centre line: <tspan font-weight="600">594</tspan></text>
 <text x="1220" y="1174" class="n">VESA 100 centre (rear): <tspan font-weight="600">425</tspan></text>
 <text x="1220" y="1198" class="n">Glass: <tspan font-weight="600">4 mm chem. strengthened, 2 mm reveal</tspan></text>
 <text x="1800" y="1150" class="n">Floor/wall kit: unit base above floor: <tspan font-weight="600">671</tspan></text>

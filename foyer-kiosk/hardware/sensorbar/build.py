@@ -79,16 +79,22 @@ def do_place(c):
 
 
 def do_route():
+    import shutil
     from eda.pcb import autoroute
     work = os.path.join(OUT, "route")
     os.makedirs(work, exist_ok=True)
     autoroute(os.path.join(OUT, f"{NAME}.kicad_pcb"), work, passes=40, timeout_s=1800)
+    shutil.copy(os.path.join(OUT, f"{NAME}.kicad_pcb"), os.path.join(OUT, f"{NAME}.routed.kicad_pcb"))
 
 
 def do_fab(c):
     from eda.pcb import add_pours, drc, fab_outputs, stitch, write_project
     write_project(os.path.join(OUT, f"{NAME}.kicad_pro"), RULES, CLASSES, c)  # nominal clearances for DRC
     pcb = os.path.join(OUT, f"{NAME}.kicad_pcb")
+    routed = os.path.join(OUT, f"{NAME}.routed.kicad_pcb")
+    if os.path.exists(routed):  # fab always starts from the freshly routed board (idempotent)
+        import shutil
+        shutil.copy(routed, pcb)
     add_pours(pcb, "GND", ("F.Cu", "B.Cu"), [(0.3, 0.3), (W - 0.3, 0.3), (W - 0.3, H - 0.3), (0.3, H - 0.3)])
     print("stitching vias added:", stitch(pcb, keepouts=()))
     from eda.repair import repair

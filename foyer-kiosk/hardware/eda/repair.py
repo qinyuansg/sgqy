@@ -105,7 +105,7 @@ class Grid:
         via_extra = max(0.0, self.via_d / 2 - self.width / 2)
         return occ & ~own, own, via_extra
 
-    def route(self, net, start, goal, start_layer, goal_layer):
+    def route(self, net, start, goal, start_layer, goal_layer, via_at_goal=False):
         occ, own, via_extra = self.build(net)
         L = len(self.layers)
         vx = int(math.ceil(via_extra / RES))
@@ -113,12 +113,13 @@ class Grid:
         gl = self.layers.index(goal_layer) if goal_layer in self.layers else 0
         s = (sl, *self.cell(*start)[::-1])
         g = (gl, *self.cell(*goal)[::-1])
-        for li, j, i in (s, g):
+        for li, j, i in ((s,) if via_at_goal else (s, g)):
             occ[li, max(0, j - 3):j + 4, max(0, i - 3):i + 4] = False
+        if via_at_goal and (occ[g[0], g[1], g[2]] or not self._via_free(occ, g[1], g[2], vx)):
+            return None
 
         def via_ok(j, i):
-            j0, i0 = max(0, j - vx), max(0, i - vx)
-            return not occ[:, j0:j + vx + 1, i0:i + vx + 1].any()
+            return self._via_free(occ, j, i, vx)
 
         moves = [(0, 1, 1.0), (0, -1, 1.0), (1, 0, 1.0), (-1, 0, 1.0),
                  (1, 1, 1.414), (1, -1, 1.414), (-1, 1, 1.414), (-1, -1, 1.414)]
@@ -126,7 +127,7 @@ class Grid:
         openq = [(h(s), 0.0, s)]
         came = {s: None}
         cost = {s: 0.0}
-        limit = 3_000_000
+        limit = 12_000_000
         while openq and limit:
             limit -= 1
             _, c, node = heapq.heappop(openq)
@@ -155,6 +156,11 @@ class Grid:
                     came[n] = node
                     heapq.heappush(openq, (nc + h(n), nc, n))
         return None
+
+    @staticmethod
+    def _via_free(occ, j, i, vx):
+        j0, i0 = max(0, j - vx), max(0, i - vx)
+        return not occ[:, j0:j + vx + 1, i0:i + vx + 1].any()
 
     def commit(self, net, path, width, via_d, via_drill):
         ni = self.b.FindNet(net)
@@ -207,7 +213,7 @@ def repair(board_path: str, report: str, clearance=0.2, width=0.2, via_d=0.6, vi
                 for k in range(16):
                     ang = 2 * math.pi * k / 16
                     px, py = x + r * math.cos(ang), y + r * math.sin(ang)
-                    path = grid.route(net, (x, y), (px, py), lid, lid)
+                    path = grid.route(net, (x, y), (px, py), lid, lid, via_at_goal=True)
                     if path:
                         best = path
                         break

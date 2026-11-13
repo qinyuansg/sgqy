@@ -1,7 +1,7 @@
 ** Drc report for /home/user/sgqy/foyer-kiosk/hardware/sensorbar/kicad/sensorbar.kicad_pcb **
-** Created on 2026-11-13 17:26:02 **
+** Created on 2026-11-13 17:27:25 **
 
-** Found 82 DRC violations **
+** Found 91 DRC violations **
 [silk_overlap]: Silkscreen overlap
     Rule: board setup constraints silk; Severity: warning
     @(34.3400 mm, 2.3250 mm): Reference 'C12'
@@ -204,6 +204,10 @@
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; Severity: warning
     @(130.0000 mm, 13.5000 mm): Reference 'MK2'
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; Severity: error
+    @(130.9500 mm, 10.5500 mm): Via [GND] on F.Cu - B.Cu
+    @(130.9000 mm, 11.0420 mm): Pad 4 [BCLK] of MK2 on B.Cu
 [silk_edge_clearance]: Silkscreen clipped by board edge
     Rule: board setup constraints silk; Severity: warning
     @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
@@ -300,16 +304,40 @@
     Rule: board setup constraints silk; Severity: warning
     @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
     @(160.0000 mm, 0.4500 mm): Reference 'LED20'
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1874 mm)
+    Rule: netclass 'Power'; Severity: error
+    @(130.9500 mm, 10.5500 mm): Via [GND] on F.Cu - B.Cu
+    @(143.0570 mm, 11.1374 mm): Track [SCL] on F.Cu, length 22.8630 mm
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.0920 mm)
+    Rule: netclass 'Power'; Severity: error
+    @(130.9500 mm, 10.5500 mm): Via [GND] on F.Cu - B.Cu
+    @(130.9000 mm, 11.0420 mm): Track [BCLK] on B.Cu, length 0.5620 mm
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.2420 mm)
+    Rule: board setup constraints hole; Severity: error
+    @(130.9000 mm, 11.0420 mm): Track [BCLK] on B.Cu, length 0.5620 mm
+    @(130.9500 mm, 10.5500 mm): Via [GND] on F.Cu - B.Cu
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1120 mm)
+    Rule: netclass 'Power'; Severity: error
+    @(130.9500 mm, 10.5500 mm): Via [GND] on F.Cu - B.Cu
+    @(131.4620 mm, 9.6177 mm): Track [BCLK] on B.Cu, length 1.4243 mm
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.0000 mm)
+    Rule: netclass 'Power'; Severity: error
+    @(130.9500 mm, 10.5500 mm): Via [GND] on F.Cu - B.Cu
+    @(130.9000 mm, 11.0420 mm): Pad 4 [BCLK] of MK2 on B.Cu
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1310 mm)
+    Rule: netclass 'Power'; Severity: error
+    @(130.9500 mm, 10.5000 mm): Track [GND] on B.Cu, length 0.0500 mm
+    @(130.9000 mm, 11.0420 mm): Pad 4 [BCLK] of MK2 on B.Cu
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1810 mm)
+    Rule: netclass 'Power'; Severity: error
+    @(130.9000 mm, 10.4500 mm): Track [GND] on B.Cu, length 0.0707 mm
+    @(130.9000 mm, 11.0420 mm): Pad 4 [BCLK] of MK2 on B.Cu
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0810 mm)
+    Rule: board setup constraints hole; Severity: error
+    @(130.9000 mm, 11.0420 mm): Pad 4 [BCLK] of MK2 on B.Cu
+    @(130.9500 mm, 10.5500 mm): Via [GND] on F.Cu - B.Cu
 
-** Found 3 unconnected pads **
-[unconnected_items]: Missing connection between items
-    Local override; Severity: error
-    @(0.3000 mm, 0.3000 mm): Zone [GND] on B.Cu
-    @(130.6625 mm, 9.7900 mm): Pad 3 [GND] of MK2 on B.Cu
-[unconnected_items]: Missing connection between items
-    Local override; Severity: error
-    @(41.7108 mm, 10.0500 mm): Track [+5V] on F.Cu, length 0.5733 mm
-    @(42.5345 mm, 8.0402 mm): Pad 1 [+5V] of C8 on F.Cu
+** Found 1 unconnected pads **
 [unconnected_items]: Missing connection between items
     Local override; Severity: error
     @(100.0000 mm, 11.3000 mm): Pad 9 [SDA] of U1 on F.Cu
