@@ -1,15 +1,43 @@
 ** Drc report for /home/user/sgqy/foyer-kiosk/hardware/sensorbar/kicad/sensorbar.kicad_pcb **
-** Created on 2026-11-13 18:32:31 **
+** Created on 2026-11-13 19:13:30 **
 
-** Found 137 DRC violations **
+** Found 167 DRC violations **
+[silk_overlap]: Silkscreen overlap
+    Rule: board setup constraints silk; Severity: warning
+    @(74.3400 mm, 2.3250 mm): Reference 'C17'
+    @(69.0500 mm, 1.2500 mm): Line on F.Silkscreen
+[silk_overlap]: Silkscreen overlap
+    Rule: board setup constraints silk; Severity: warning
+    @(90.3400 mm, 2.3250 mm): Reference 'C19'
+    @(85.0500 mm, 1.2500 mm): Line on F.Silkscreen
+[silk_overlap]: Silkscreen overlap
+    Rule: board setup constraints silk; Severity: warning
+    @(77.0500 mm, 1.2500 mm): Line on F.Silkscreen
+    @(82.3400 mm, 2.3250 mm): Reference 'C18'
+[silk_overlap]: Silkscreen overlap
+    Rule: board setup constraints silk; Severity: warning
+    @(53.0500 mm, 1.2500 mm): Line on F.Silkscreen
+    @(58.3400 mm, 2.3250 mm): Reference 'C15'
+[silk_overlap]: Silkscreen overlap
+    Rule: board setup constraints silk; Severity: warning
+    @(61.0500 mm, 1.2500 mm): Line on F.Silkscreen
+    @(66.3400 mm, 2.3250 mm): Reference 'C16'
+[silk_overlap]: Silkscreen overlap
+    Rule: board setup constraints silk; Severity: warning
+    @(42.3400 mm, 2.3250 mm): Reference 'C13'
+    @(37.0500 mm, 1.2500 mm): Line on F.Silkscreen
+[silk_overlap]: Silkscreen overlap
+    Rule: board setup constraints silk; Severity: warning
+    @(45.0500 mm, 1.2500 mm): Line on F.Silkscreen
+    @(50.3400 mm, 2.3250 mm): Reference 'C14'
+[silk_overlap]: Silkscreen overlap
+    Rule: board setup constraints silk; Severity: warning
+    @(40.0000 mm, 12.5600 mm): Line on F.Silkscreen
+    @(39.1785 mm, 12.2463 mm): Reference 'R3'
 [silk_overlap]: Silkscreen overlap
     Rule: board setup constraints silk; Severity: warning
     @(40.0000 mm, 8.6000 mm): Reference 'U2'
     @(39.9000 mm, 8.7578 mm): Line on F.Silkscreen
-[silk_overlap]: Silkscreen overlap
-    Rule: board setup constraints silk; Severity: warning
-    @(18.3400 mm, 2.3250 mm): Reference 'C10'
-    @(13.0500 mm, 1.2500 mm): Line on F.Silkscreen
 [silk_overlap]: Silkscreen overlap
     Rule: board setup constraints silk; Severity: warning
     @(29.0500 mm, 1.2500 mm): Line on F.Silkscreen
@@ -20,60 +48,52 @@
     @(26.3400 mm, 2.3250 mm): Reference 'C11'
 [silk_overlap]: Silkscreen overlap
     Rule: board setup constraints silk; Severity: warning
-    @(40.0000 mm, 12.5600 mm): Line on F.Silkscreen
-    @(39.1785 mm, 12.2463 mm): Reference 'R3'
+    @(13.0500 mm, 1.2500 mm): Line on F.Silkscreen
+    @(18.3400 mm, 2.3250 mm): Reference 'C10'
 [silk_overlap]: Silkscreen overlap
     Rule: board setup constraints silk; Severity: warning
-    @(45.0500 mm, 1.2500 mm): Line on F.Silkscreen
-    @(50.3400 mm, 2.3250 mm): Reference 'C14'
+    @(149.0500 mm, 1.2500 mm): Line on F.Silkscreen
+    @(154.3400 mm, 2.3250 mm): Reference 'C27'
 [silk_overlap]: Silkscreen overlap
     Rule: board setup constraints silk; Severity: warning
-    @(42.3400 mm, 2.3250 mm): Reference 'C13'
-    @(37.0500 mm, 1.2500 mm): Line on F.Silkscreen
-[silk_overlap]: Silkscreen overlap
-    Rule: board setup constraints silk; Severity: warning
-    @(98.3400 mm, 2.3250 mm): Reference 'C20'
-    @(93.0500 mm, 1.2500 mm): Line on F.Silkscreen
-[silk_overlap]: Silkscreen overlap
-    Rule: board setup constraints silk; Severity: warning
-    @(90.3400 mm, 2.3250 mm): Reference 'C19'
-    @(85.0500 mm, 1.2500 mm): Line on F.Silkscreen
-[silk_overlap]: Silkscreen overlap
-    Rule: board setup constraints silk; Severity: warning
-    @(82.3400 mm, 2.3250 mm): Reference 'C18'
-    @(77.0500 mm, 1.2500 mm): Line on F.Silkscreen
-[silk_overlap]: Silkscreen overlap
-    Rule: board setup constraints silk; Severity: warning
-    @(74.3400 mm, 2.3250 mm): Reference 'C17'
-    @(69.0500 mm, 1.2500 mm): Line on F.Silkscreen
-[silk_overlap]: Silkscreen overlap
-    Rule: board setup constraints silk; Severity: warning
-    @(66.3400 mm, 2.3250 mm): Reference 'C16'
-    @(61.0500 mm, 1.2500 mm): Line on F.Silkscreen
-[silk_overlap]: Silkscreen overlap
-    Rule: board setup constraints silk; Severity: warning
-    @(58.3400 mm, 2.3250 mm): Reference 'C15'
-    @(53.0500 mm, 1.2500 mm): Line on F.Silkscreen
-[silk_overlap]: Silkscreen overlap
-    Rule: board setup constraints silk; Severity: warning
-    @(157.0500 mm, 1.2500 mm): Line on F.Silkscreen
     @(162.3400 mm, 2.3250 mm): Reference 'C28'
+    @(157.0500 mm, 1.2500 mm): Line on F.Silkscreen
 [silk_overlap]: Silkscreen overlap
     Rule: board setup constraints silk; Severity: warning
     @(170.3400 mm, 2.3250 mm): Reference 'C29'
     @(165.0500 mm, 1.2500 mm): Line on F.Silkscreen
 [silk_overlap]: Silkscreen overlap
     Rule: board setup constraints silk; Severity: warning
-    @(154.3400 mm, 2.3250 mm): Reference 'C27'
-    @(149.0500 mm, 1.2500 mm): Line on F.Silkscreen
+    @(138.3400 mm, 2.3250 mm): Reference 'C25'
+    @(133.0500 mm, 1.2500 mm): Line on F.Silkscreen
 [silk_overlap]: Silkscreen overlap
     Rule: board setup constraints silk; Severity: warning
-    @(181.0500 mm, 1.2500 mm): Line on F.Silkscreen
-    @(186.3400 mm, 2.3250 mm): Reference 'C31'
+    @(130.3400 mm, 2.3250 mm): Reference 'C24'
+    @(125.0500 mm, 1.2500 mm): Line on F.Silkscreen
+[silk_overlap]: Silkscreen overlap
+    Rule: board setup constraints silk; Severity: warning
+    @(146.3400 mm, 2.3250 mm): Reference 'C26'
+    @(141.0500 mm, 1.2500 mm): Line on F.Silkscreen
+[silk_overlap]: Silkscreen overlap
+    Rule: board setup constraints silk; Severity: warning
+    @(114.3400 mm, 2.3250 mm): Reference 'C22'
+    @(109.0500 mm, 1.2500 mm): Line on F.Silkscreen
+[silk_overlap]: Silkscreen overlap
+    Rule: board setup constraints silk; Severity: warning
+    @(98.3400 mm, 2.3250 mm): Reference 'C20'
+    @(93.0500 mm, 1.2500 mm): Line on F.Silkscreen
+[silk_overlap]: Silkscreen overlap
+    Rule: board setup constraints silk; Severity: warning
+    @(106.3400 mm, 2.3250 mm): Reference 'C21'
+    @(101.0500 mm, 1.2500 mm): Line on F.Silkscreen
 [silk_overlap]: Silkscreen overlap
     Rule: board setup constraints silk; Severity: warning
     @(178.3400 mm, 2.3250 mm): Reference 'C30'
     @(173.0500 mm, 1.2500 mm): Line on F.Silkscreen
+[silk_overlap]: Silkscreen overlap
+    Rule: board setup constraints silk; Severity: warning
+    @(186.3400 mm, 2.3250 mm): Reference 'C31'
+    @(181.0500 mm, 1.2500 mm): Line on F.Silkscreen
 [silk_overlap]: Silkscreen overlap
     Rule: board setup constraints silk; Severity: warning
     @(189.0500 mm, 1.2500 mm): Line on F.Silkscreen
@@ -84,80 +104,87 @@
     @(117.0500 mm, 1.2500 mm): Line on F.Silkscreen
 [silk_overlap]: Silkscreen overlap
     Rule: board setup constraints silk; Severity: warning
-    @(101.0500 mm, 1.2500 mm): Line on F.Silkscreen
-    @(106.3400 mm, 2.3250 mm): Reference 'C21'
-[silk_overlap]: Silkscreen overlap
-    Rule: board setup constraints silk; Severity: warning
-    @(109.0500 mm, 1.2500 mm): Line on F.Silkscreen
-    @(114.3400 mm, 2.3250 mm): Reference 'C22'
-[silk_overlap]: Silkscreen overlap
-    Rule: board setup constraints silk; Severity: warning
-    @(125.0500 mm, 1.2500 mm): Line on F.Silkscreen
-    @(130.3400 mm, 2.3250 mm): Reference 'C24'
-[silk_overlap]: Silkscreen overlap
-    Rule: board setup constraints silk; Severity: warning
-    @(133.0500 mm, 1.2500 mm): Line on F.Silkscreen
-    @(138.3400 mm, 2.3250 mm): Reference 'C25'
-[silk_overlap]: Silkscreen overlap
-    Rule: board setup constraints silk; Severity: warning
-    @(146.3400 mm, 2.3250 mm): Reference 'C26'
-    @(141.0500 mm, 1.2500 mm): Line on F.Silkscreen
-[silk_overlap]: Silkscreen overlap
-    Rule: board setup constraints silk; Severity: warning
-    @(130.0000 mm, 13.5000 mm): Reference 'MK2'
     @(130.1914 mm, 14.3525 mm): Reference 'C6'
+    @(130.0000 mm, 13.5000 mm): Reference 'MK2'
 [silk_overlap]: Silkscreen overlap
     Rule: board setup constraints silk; Severity: warning
     @(130.0000 mm, 13.5000 mm): Reference 'MK2'
     @(130.0836 mm, 13.5525 mm): Line on B.Silkscreen
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; Severity: warning
-    @(40.0000 mm, 8.6000 mm): Reference 'U2'
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; Severity: warning
-    @(34.3400 mm, 2.3250 mm): Reference 'C12'
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; Severity: warning
-    @(18.3400 mm, 2.3250 mm): Reference 'C10'
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; Severity: warning
-    @(41.5675 mm, 11.0000 mm): Reference 'R2'
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; Severity: warning
-    @(10.3400 mm, 2.3250 mm): Reference 'C9'
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; Severity: warning
-    @(98.3400 mm, 2.3250 mm): Reference 'C20'
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; Severity: warning
-    @(154.3400 mm, 2.3250 mm): Reference 'C27'
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; Severity: warning
     @(74.3400 mm, 2.3250 mm): Reference 'C17'
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; Severity: warning
-    @(90.3400 mm, 2.3250 mm): Reference 'C19'
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; Severity: warning
     @(162.3400 mm, 2.3250 mm): Reference 'C28'
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; Severity: warning
-    @(138.3400 mm, 2.3250 mm): Reference 'C25'
+    @(40.0000 mm, 8.6000 mm): Reference 'U2'
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; Severity: warning
+    @(130.3400 mm, 2.3250 mm): Reference 'C24'
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; Severity: warning
     @(178.3400 mm, 2.3250 mm): Reference 'C30'
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; Severity: warning
-    @(26.3400 mm, 2.3250 mm): Reference 'C11'
+    @(170.3400 mm, 2.3250 mm): Reference 'C29'
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; Severity: warning
     @(106.3400 mm, 2.3250 mm): Reference 'C21'
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; Severity: warning
+    @(138.3400 mm, 2.3250 mm): Reference 'C25'
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; Severity: warning
+    @(154.3400 mm, 2.3250 mm): Reference 'C27'
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; Severity: warning
+    @(90.3400 mm, 2.3250 mm): Reference 'C19'
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; Severity: warning
+    @(41.5675 mm, 11.0000 mm): Reference 'R2'
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; Severity: warning
+    @(186.3400 mm, 2.3250 mm): Reference 'C31'
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; Severity: warning
+    @(58.3400 mm, 2.3250 mm): Reference 'C15'
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; Severity: warning
+    @(98.3400 mm, 2.3250 mm): Reference 'C20'
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; Severity: warning
+    @(10.3400 mm, 2.3250 mm): Reference 'C9'
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; Severity: warning
+    @(42.2612 mm, 13.3766 mm): Reference 'D3'
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; Severity: warning
+    @(194.3400 mm, 2.3250 mm): Reference 'C32'
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; Severity: warning
+    @(39.1785 mm, 12.2463 mm): Reference 'R3'
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; Severity: warning
     @(122.3400 mm, 2.3250 mm): Reference 'C23'
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; Severity: warning
+    @(18.3400 mm, 2.3250 mm): Reference 'C10'
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; Severity: warning
+    @(34.3400 mm, 2.3250 mm): Reference 'C12'
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; Severity: warning
+    @(82.3400 mm, 2.3250 mm): Reference 'C18'
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; Severity: warning
+    @(26.3400 mm, 2.3250 mm): Reference 'C11'
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; Severity: warning
     @(42.3400 mm, 2.3250 mm): Reference 'C13'
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; Severity: warning
+    @(66.3400 mm, 2.3250 mm): Reference 'C16'
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; Severity: warning
     @(146.3400 mm, 2.3250 mm): Reference 'C26'
@@ -166,45 +193,130 @@
     @(50.3400 mm, 2.3250 mm): Reference 'C14'
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; Severity: warning
-    @(82.3400 mm, 2.3250 mm): Reference 'C18'
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; Severity: warning
     @(114.3400 mm, 2.3250 mm): Reference 'C22'
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; Severity: warning
-    @(194.3400 mm, 2.3250 mm): Reference 'C32'
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; Severity: warning
-    @(66.3400 mm, 2.3250 mm): Reference 'C16'
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; Severity: warning
-    @(58.3400 mm, 2.3250 mm): Reference 'C15'
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; Severity: warning
-    @(130.3400 mm, 2.3250 mm): Reference 'C24'
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; Severity: warning
-    @(39.1785 mm, 12.2463 mm): Reference 'R3'
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; Severity: warning
-    @(186.3400 mm, 2.3250 mm): Reference 'C31'
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; Severity: warning
-    @(42.2612 mm, 13.3766 mm): Reference 'D3'
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; Severity: warning
-    @(170.3400 mm, 2.3250 mm): Reference 'C29'
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; Severity: warning
     @(130.0000 mm, 13.5000 mm): Reference 'MK2'
+[hole_near_hole]: Drilled holes too close together (board setup constraints min 0.2495 mm; actual 0.0000 mm)
+    Rule: board setup constraints; Severity: error
+    @(97.9500 mm, 7.4500 mm): Via [GND] on F.Cu - B.Cu
+    @(97.9500 mm, 7.5250 mm): Via [GND] on F.Cu - B.Cu
+[holes_co_located]: Drilled holes co-located
+    Local override; Severity: warning
+    @(96.2250 mm, 9.2500 mm): Via [GND] on F.Cu - B.Cu
+    @(96.2250 mm, 9.2500 mm): Via [GND] on F.Cu - B.Cu
+[hole_near_hole]: Drilled holes too close together (board setup constraints min 0.2495 mm; actual 0.0000 mm)
+    Rule: board setup constraints; Severity: error
+    @(106.4500 mm, 2.3250 mm): Via [+5V] on F.Cu - B.Cu
+    @(106.6250 mm, 2.3000 mm): Via [+5V] on F.Cu - B.Cu
+[hole_near_hole]: Drilled holes too close together (board setup constraints min 0.2495 mm; actual 0.0000 mm)
+    Rule: board setup constraints; Severity: error
+    @(18.6250 mm, 2.3000 mm): Via [+5V] on F.Cu - B.Cu
+    @(18.4500 mm, 2.3250 mm): Via [+5V] on F.Cu - B.Cu
+[hole_near_hole]: Drilled holes too close together (board setup constraints min 0.2495 mm; actual 0.0000 mm)
+    Rule: board setup constraints; Severity: error
+    @(66.4500 mm, 2.3250 mm): Via [+5V] on F.Cu - B.Cu
+    @(66.6250 mm, 2.3000 mm): Via [+5V] on F.Cu - B.Cu
+[hole_near_hole]: Drilled holes too close together (board setup constraints min 0.2495 mm; actual 0.0000 mm)
+    Rule: board setup constraints; Severity: error
+    @(42.6250 mm, 2.3000 mm): Via [+5V] on F.Cu - B.Cu
+    @(42.4500 mm, 2.3250 mm): Via [+5V] on F.Cu - B.Cu
+[hole_near_hole]: Drilled holes too close together (board setup constraints min 0.2495 mm; actual 0.0000 mm)
+    Rule: board setup constraints; Severity: error
+    @(90.6250 mm, 2.3000 mm): Via [+5V] on F.Cu - B.Cu
+    @(90.4500 mm, 2.3250 mm): Via [+5V] on F.Cu - B.Cu
+[hole_near_hole]: Drilled holes too close together (board setup constraints min 0.2495 mm; actual 0.0000 mm)
+    Rule: board setup constraints; Severity: error
+    @(10.4500 mm, 2.3250 mm): Via [+5V] on F.Cu - B.Cu
+    @(10.6250 mm, 2.3000 mm): Via [+5V] on F.Cu - B.Cu
+[hole_near_hole]: Drilled holes too close together (board setup constraints min 0.2495 mm; actual 0.0000 mm)
+    Rule: board setup constraints; Severity: error
+    @(186.4500 mm, 2.3250 mm): Via [+5V] on F.Cu - B.Cu
+    @(186.6250 mm, 2.3000 mm): Via [+5V] on F.Cu - B.Cu
+[hole_near_hole]: Drilled holes too close together (board setup constraints min 0.2495 mm; actual 0.0000 mm)
+    Rule: board setup constraints; Severity: error
+    @(98.6250 mm, 2.3000 mm): Via [+5V] on F.Cu - B.Cu
+    @(98.4500 mm, 2.3250 mm): Via [+5V] on F.Cu - B.Cu
+[hole_near_hole]: Drilled holes too close together (board setup constraints min 0.2495 mm; actual 0.0000 mm)
+    Rule: board setup constraints; Severity: error
+    @(58.4500 mm, 2.3250 mm): Via [+5V] on F.Cu - B.Cu
+    @(58.6250 mm, 2.3000 mm): Via [+5V] on F.Cu - B.Cu
+[hole_near_hole]: Drilled holes too close together (board setup constraints min 0.2495 mm; actual 0.0000 mm)
+    Rule: board setup constraints; Severity: error
+    @(170.6250 mm, 2.3000 mm): Via [+5V] on F.Cu - B.Cu
+    @(170.4500 mm, 2.3250 mm): Via [+5V] on F.Cu - B.Cu
+[hole_near_hole]: Drilled holes too close together (board setup constraints min 0.2495 mm; actual 0.0000 mm)
+    Rule: board setup constraints; Severity: error
+    @(154.4500 mm, 2.3250 mm): Via [+5V] on F.Cu - B.Cu
+    @(154.6250 mm, 2.3000 mm): Via [+5V] on F.Cu - B.Cu
+[hole_near_hole]: Drilled holes too close together (board setup constraints min 0.2495 mm; actual 0.0000 mm)
+    Rule: board setup constraints; Severity: error
+    @(34.4500 mm, 2.3250 mm): Via [+5V] on F.Cu - B.Cu
+    @(34.6250 mm, 2.3000 mm): Via [+5V] on F.Cu - B.Cu
+[hole_near_hole]: Drilled holes too close together (board setup constraints min 0.2495 mm; actual 0.0000 mm)
+    Rule: board setup constraints; Severity: error
+    @(26.6250 mm, 2.3000 mm): Via [+5V] on F.Cu - B.Cu
+    @(26.4500 mm, 2.3250 mm): Via [+5V] on F.Cu - B.Cu
+[hole_near_hole]: Drilled holes too close together (board setup constraints min 0.2495 mm; actual 0.0000 mm)
+    Rule: board setup constraints; Severity: error
+    @(74.6250 mm, 2.3000 mm): Via [+5V] on F.Cu - B.Cu
+    @(74.4500 mm, 2.3250 mm): Via [+5V] on F.Cu - B.Cu
+[hole_near_hole]: Drilled holes too close together (board setup constraints min 0.2495 mm; actual 0.0000 mm)
+    Rule: board setup constraints; Severity: error
+    @(114.4500 mm, 2.3250 mm): Via [+5V] on F.Cu - B.Cu
+    @(114.6250 mm, 2.3000 mm): Via [+5V] on F.Cu - B.Cu
+[hole_near_hole]: Drilled holes too close together (board setup constraints min 0.2495 mm; actual 0.0000 mm)
+    Rule: board setup constraints; Severity: error
+    @(162.6250 mm, 2.3000 mm): Via [+5V] on F.Cu - B.Cu
+    @(162.4500 mm, 2.3250 mm): Via [+5V] on F.Cu - B.Cu
+[hole_near_hole]: Drilled holes too close together (board setup constraints min 0.2495 mm; actual 0.0000 mm)
+    Rule: board setup constraints; Severity: error
+    @(138.6250 mm, 2.3000 mm): Via [+5V] on F.Cu - B.Cu
+    @(138.4500 mm, 2.3250 mm): Via [+5V] on F.Cu - B.Cu
+[hole_near_hole]: Drilled holes too close together (board setup constraints min 0.2495 mm; actual 0.0000 mm)
+    Rule: board setup constraints; Severity: error
+    @(122.4500 mm, 2.3250 mm): Via [+5V] on F.Cu - B.Cu
+    @(122.6250 mm, 2.3000 mm): Via [+5V] on F.Cu - B.Cu
+[hole_near_hole]: Drilled holes too close together (board setup constraints min 0.2495 mm; actual 0.0000 mm)
+    Rule: board setup constraints; Severity: error
+    @(130.6250 mm, 2.3000 mm): Via [+5V] on F.Cu - B.Cu
+    @(130.4500 mm, 2.3250 mm): Via [+5V] on F.Cu - B.Cu
+[hole_near_hole]: Drilled holes too close together (board setup constraints min 0.2495 mm; actual 0.0000 mm)
+    Rule: board setup constraints; Severity: error
+    @(82.6250 mm, 2.3000 mm): Via [+5V] on F.Cu - B.Cu
+    @(82.4500 mm, 2.3250 mm): Via [+5V] on F.Cu - B.Cu
+[hole_near_hole]: Drilled holes too close together (board setup constraints min 0.2495 mm; actual 0.0000 mm)
+    Rule: board setup constraints; Severity: error
+    @(178.4500 mm, 2.3250 mm): Via [+5V] on F.Cu - B.Cu
+    @(178.6250 mm, 2.3000 mm): Via [+5V] on F.Cu - B.Cu
+[hole_near_hole]: Drilled holes too close together (board setup constraints min 0.2495 mm; actual 0.0000 mm)
+    Rule: board setup constraints; Severity: error
+    @(146.6250 mm, 2.3000 mm): Via [+5V] on F.Cu - B.Cu
+    @(146.4500 mm, 2.3250 mm): Via [+5V] on F.Cu - B.Cu
+[hole_near_hole]: Drilled holes too close together (board setup constraints min 0.2495 mm; actual 0.0000 mm)
+    Rule: board setup constraints; Severity: error
+    @(50.6250 mm, 2.3000 mm): Via [+5V] on F.Cu - B.Cu
+    @(50.4500 mm, 2.3250 mm): Via [+5V] on F.Cu - B.Cu
 [silk_edge_clearance]: Silkscreen clipped by board edge
     Rule: board setup constraints silk; Severity: warning
     @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
-    @(160.0000 mm, 0.4500 mm): Reference 'LED20'
+    @(152.0000 mm, 0.4500 mm): Reference 'LED19'
 [silk_edge_clearance]: Silkscreen clipped by board edge
     Rule: board setup constraints silk; Severity: warning
     @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
-    @(8.0000 mm, 0.4500 mm): Reference 'LED1'
+    @(72.0000 mm, 0.4500 mm): Reference 'LED9'
+[silk_edge_clearance]: Silkscreen clipped by board edge
+    Rule: board setup constraints silk; Severity: warning
+    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
+    @(144.0000 mm, 0.4500 mm): Reference 'LED18'
+[silk_edge_clearance]: Silkscreen clipped by board edge
+    Rule: board setup constraints silk; Severity: warning
+    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
+    @(48.0000 mm, 0.4500 mm): Reference 'LED6'
+[silk_edge_clearance]: Silkscreen clipped by board edge
+    Rule: board setup constraints silk; Severity: warning
+    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
+    @(96.0000 mm, 0.4500 mm): Reference 'LED12'
 [silk_edge_clearance]: Silkscreen clipped by board edge
     Rule: board setup constraints silk; Severity: warning
     @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
@@ -216,7 +328,47 @@
 [silk_edge_clearance]: Silkscreen clipped by board edge
     Rule: board setup constraints silk; Severity: warning
     @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
+    @(160.0000 mm, 0.4500 mm): Reference 'LED20'
+[silk_edge_clearance]: Silkscreen clipped by board edge
+    Rule: board setup constraints silk; Severity: warning
+    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
+    @(88.0000 mm, 0.4500 mm): Reference 'LED11'
+[silk_edge_clearance]: Silkscreen clipped by board edge
+    Rule: board setup constraints silk; Severity: warning
+    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
+    @(176.0000 mm, 0.4500 mm): Reference 'LED22'
+[silk_edge_clearance]: Silkscreen clipped by board edge
+    Rule: board setup constraints silk; Severity: warning
+    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
+    @(64.0000 mm, 0.4500 mm): Reference 'LED8'
+[silk_edge_clearance]: Silkscreen clipped by board edge
+    Rule: board setup constraints silk; Severity: warning
+    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
+    @(120.0000 mm, 0.4500 mm): Reference 'LED15'
+[silk_edge_clearance]: Silkscreen clipped by board edge
+    Rule: board setup constraints silk; Severity: warning
+    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
+    @(128.0000 mm, 0.4500 mm): Reference 'LED16'
+[silk_edge_clearance]: Silkscreen clipped by board edge
+    Rule: board setup constraints silk; Severity: warning
+    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
+    @(80.0000 mm, 0.4500 mm): Reference 'LED10'
+[silk_edge_clearance]: Silkscreen clipped by board edge
+    Rule: board setup constraints silk; Severity: warning
+    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
+    @(192.0000 mm, 0.4500 mm): Reference 'LED24'
+[silk_edge_clearance]: Silkscreen clipped by board edge
+    Rule: board setup constraints silk; Severity: warning
+    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
+    @(136.0000 mm, 0.4500 mm): Reference 'LED17'
+[silk_edge_clearance]: Silkscreen clipped by board edge
+    Rule: board setup constraints silk; Severity: warning
+    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
     @(24.0000 mm, 0.4500 mm): Reference 'LED3'
+[silk_edge_clearance]: Silkscreen clipped by board edge
+    Rule: board setup constraints silk; Severity: warning
+    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
+    @(104.0000 mm, 0.4500 mm): Reference 'LED13'
 [silk_edge_clearance]: Silkscreen clipped by board edge
     Rule: board setup constraints silk; Severity: warning
     @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
@@ -228,31 +380,7 @@
 [silk_edge_clearance]: Silkscreen clipped by board edge
     Rule: board setup constraints silk; Severity: warning
     @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
-    @(104.0000 mm, 0.4500 mm): Reference 'LED13'
-[silk_edge_clearance]: Silkscreen clipped by board edge
-    Rule: board setup constraints silk; Severity: warning
-    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
-    @(176.0000 mm, 0.4500 mm): Reference 'LED22'
-[silk_edge_clearance]: Silkscreen clipped by board edge
-    Rule: board setup constraints silk; Severity: warning
-    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
-    @(128.0000 mm, 0.4500 mm): Reference 'LED16'
-[silk_edge_clearance]: Silkscreen clipped by board edge
-    Rule: board setup constraints silk; Severity: warning
-    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
-    @(144.0000 mm, 0.4500 mm): Reference 'LED18'
-[silk_edge_clearance]: Silkscreen clipped by board edge
-    Rule: board setup constraints silk; Severity: warning
-    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
-    @(96.0000 mm, 0.4500 mm): Reference 'LED12'
-[silk_edge_clearance]: Silkscreen clipped by board edge
-    Rule: board setup constraints silk; Severity: warning
-    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
-    @(192.0000 mm, 0.4500 mm): Reference 'LED24'
-[silk_edge_clearance]: Silkscreen clipped by board edge
-    Rule: board setup constraints silk; Severity: warning
-    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
-    @(48.0000 mm, 0.4500 mm): Reference 'LED6'
+    @(32.0000 mm, 0.4500 mm): Reference 'LED4'
 [silk_edge_clearance]: Silkscreen clipped by board edge
     Rule: board setup constraints silk; Severity: warning
     @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
@@ -264,70 +392,58 @@
 [silk_edge_clearance]: Silkscreen clipped by board edge
     Rule: board setup constraints silk; Severity: warning
     @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
-    @(136.0000 mm, 0.4500 mm): Reference 'LED17'
-[silk_edge_clearance]: Silkscreen clipped by board edge
-    Rule: board setup constraints silk; Severity: warning
-    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
-    @(120.0000 mm, 0.4500 mm): Reference 'LED15'
-[silk_edge_clearance]: Silkscreen clipped by board edge
-    Rule: board setup constraints silk; Severity: warning
-    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
-    @(88.0000 mm, 0.4500 mm): Reference 'LED11'
-[silk_edge_clearance]: Silkscreen clipped by board edge
-    Rule: board setup constraints silk; Severity: warning
-    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
-    @(64.0000 mm, 0.4500 mm): Reference 'LED8'
-[silk_edge_clearance]: Silkscreen clipped by board edge
-    Rule: board setup constraints silk; Severity: warning
-    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
-    @(152.0000 mm, 0.4500 mm): Reference 'LED19'
-[silk_edge_clearance]: Silkscreen clipped by board edge
-    Rule: board setup constraints silk; Severity: warning
-    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
-    @(80.0000 mm, 0.4500 mm): Reference 'LED10'
-[silk_edge_clearance]: Silkscreen clipped by board edge
-    Rule: board setup constraints silk; Severity: warning
-    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
-    @(72.0000 mm, 0.4500 mm): Reference 'LED9'
-[silk_edge_clearance]: Silkscreen clipped by board edge
-    Rule: board setup constraints silk; Severity: warning
-    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
-    @(32.0000 mm, 0.4500 mm): Reference 'LED4'
-[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1925 mm)
+    @(8.0000 mm, 0.4500 mm): Reference 'LED1'
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.0898 mm)
     Rule: netclass 'Power'; Severity: error
-    @(98.6250 mm, 10.2750 mm): Track [GND] on F.Cu, length 0.3250 mm
-    @(97.4986 mm, 8.7986 mm): Track [+3V3] on F.Cu, length 1.2748 mm
-[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1925 mm)
+    @(98.2750 mm, 10.4500 mm): Via [GND] on F.Cu - B.Cu
+    @(97.6352 mm, 9.8296 mm): Track [+3V3] on F.Cu, length 1.4311 mm
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.2148 mm)
+    Rule: board setup constraints hole; Severity: error
+    @(97.6352 mm, 9.8296 mm): Track [+3V3] on F.Cu, length 1.4311 mm
+    @(98.2750 mm, 10.4500 mm): Via [GND] on F.Cu - B.Cu
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1643 mm)
     Rule: netclass 'Power'; Severity: error
-    @(98.6250 mm, 10.2750 mm): Track [GND] on F.Cu, length 0.3250 mm
-    @(98.4000 mm, 9.7000 mm): Track [+3V3] on F.Cu, length 0.0150 mm
-[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1925 mm)
-    Rule: netclass 'Power'; Severity: error
-    @(98.4000 mm, 10.5000 mm): Track [GND] on F.Cu, length 0.3182 mm
-    @(97.4986 mm, 8.7986 mm): Track [+3V3] on F.Cu, length 1.2748 mm
-[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1925 mm)
-    Rule: netclass 'Power'; Severity: error
-    @(98.4000 mm, 10.5000 mm): Track [GND] on F.Cu, length 0.3182 mm
-    @(98.4000 mm, 9.7000 mm): Track [+3V3] on F.Cu, length 0.0150 mm
-[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1500 mm)
-    Rule: netclass 'Power'; Severity: error
-    @(115.6500 mm, 9.9000 mm): Via [GND] on F.Cu - B.Cu
-    @(114.7500 mm, 10.5000 mm): Pad 1 [IR_K1] of D2 on F.Cu
+    @(98.2750 mm, 10.4500 mm): Via [GND] on F.Cu - B.Cu
+    @(98.2629 mm, 9.7000 mm): Track [+3V3] on F.Cu, length 0.0529 mm
 [clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1500 mm)
     Rule: netclass 'Power'; Severity: error
     @(83.6500 mm, 9.9000 mm): Via [GND] on F.Cu - B.Cu
     @(82.7500 mm, 10.5000 mm): Pad 1 [IR_SET] of D1 on F.Cu
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1500 mm)
+    Rule: netclass 'Power'; Severity: error
+    @(115.6500 mm, 9.9000 mm): Via [GND] on F.Cu - B.Cu
+    @(114.7500 mm, 10.5000 mm): Pad 1 [IR_K1] of D2 on F.Cu
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1334 mm)
+    Rule: netclass 'Power'; Severity: error
+    @(44.1000 mm, 12.4500 mm): Via [+5V] on F.Cu - B.Cu
+    @(44.7834 mm, 11.8375 mm): Track [IR_SW] on F.Cu, length 3.5169 mm
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1925 mm)
+    Rule: netclass 'Power'; Severity: error
+    @(99.2063 mm, 10.4425 mm): Via [SCL] on F.Cu - B.Cu
+    @(99.2000 mm, 9.7000 mm): Pad 2 [GND] of U1 on F.Cu
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1835 mm)
+    Rule: netclass 'Power'; Severity: error
+    @(38.8625 mm, 12.8128 mm): Track [IR_PWM] on F.Cu, length 1.9331 mm
+    @(39.6885 mm, 13.4163 mm): Pad 2 [GND] of R3 on F.Cu
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1630 mm)
+    Rule: netclass 'Power'; Severity: error
+    @(71.6629 mm, 10.8410 mm): Track [BCLK] on B.Cu, length 2.6741 mm
+    @(72.4000 mm, 11.3840 mm): Pad 2 [GND] of C5 on B.Cu
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1765 mm)
+    Rule: netclass 'Power'; Severity: error
+    @(130.2190 mm, 12.6060 mm): Track [MIC_SD] on B.Cu, length 1.6470 mm
+    @(130.6714 mm, 13.1925 mm): Pad 2 [GND] of C6 on B.Cu
 [clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
     Rule: netclass 'Power'; Severity: error
-    @(8.3750 mm, 3.3881 mm): Track [LED_D1] on F.Cu, length 7.6262 mm
+    @(16.0012 mm, 3.3881 mm): Track [LED_D1] on F.Cu, length 7.6262 mm
     @(14.2500 mm, 4.0750 mm): Pad 2 [GND] of LED2 on F.Cu
 [clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
     Rule: netclass 'Power'; Severity: error
-    @(18.5498 mm, 3.0119 mm): Track [LED_D2] on F.Cu, length 0.5317 mm
+    @(15.9988 mm, 3.0119 mm): Track [LED_D2] on F.Cu, length 2.5510 mm
     @(17.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED2 on F.Cu
 [clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
     Rule: netclass 'Power'; Severity: error
-    @(15.9988 mm, 3.0119 mm): Track [LED_D2] on F.Cu, length 2.5510 mm
+    @(18.5498 mm, 3.0119 mm): Track [LED_D2] on F.Cu, length 0.5317 mm
     @(17.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED2 on F.Cu
 [clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1621 mm)
     Rule: netclass 'Power'; Severity: error
@@ -339,64 +455,64 @@
     @(30.2500 mm, 4.0750 mm): Pad 2 [GND] of LED4 on F.Cu
 [clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
     Rule: netclass 'Power'; Severity: error
-    @(34.5498 mm, 3.0119 mm): Track [LED_D4] on F.Cu, length 0.5320 mm
+    @(34.9260 mm, 3.3881 mm): Track [LED_D4] on F.Cu, length 0.5320 mm
     @(33.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED4 on F.Cu
 [clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
     Rule: netclass 'Power'; Severity: error
-    @(31.9988 mm, 3.0119 mm): Track [LED_D4] on F.Cu, length 2.5510 mm
+    @(34.5498 mm, 3.0119 mm): Track [LED_D4] on F.Cu, length 2.5510 mm
     @(33.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED4 on F.Cu
 [clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
     Rule: netclass 'Power'; Severity: error
-    @(34.9260 mm, 3.3881 mm): Track [LED_D4] on F.Cu, length 4.4292 mm
+    @(40.0012 mm, 3.3881 mm): Track [LED_D4] on F.Cu, length 5.0752 mm
     @(38.2500 mm, 4.0750 mm): Pad 2 [GND] of LED5 on F.Cu
-[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1649 mm)
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1787 mm)
     Rule: netclass 'Power'; Severity: error
-    @(40.3720 mm, 3.3851 mm): Track [LED_D5] on F.Cu, length 7.6262 mm
+    @(47.1571 mm, 3.3630 mm): Track [LED_D5] on F.Cu, length 1.0069 mm
     @(46.2500 mm, 4.0750 mm): Pad 2 [GND] of LED6 on F.Cu
 [clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
     Rule: netclass 'Power'; Severity: error
-    @(47.9988 mm, 3.0119 mm): Track [LED_D6] on F.Cu, length 2.5510 mm
-    @(49.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED6 on F.Cu
+    @(42.5498 mm, 3.0119 mm): Track [LED_D5] on F.Cu, length 0.4965 mm
+    @(41.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED5 on F.Cu
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1780 mm)
+    Rule: netclass 'Power'; Severity: error
+    @(42.9009 mm, 3.3630 mm): Track [LED_D5] on F.Cu, length 4.2562 mm
+    @(43.5000 mm, 2.8050 mm): Pad 1 [+5V] of C13 on F.Cu
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1870 mm)
+    Rule: netclass 'Power'; Severity: error
+    @(42.9009 mm, 3.3630 mm): Track [LED_D5] on F.Cu, length 4.2562 mm
+    @(46.2500 mm, 4.0750 mm): Pad 2 [GND] of LED6 on F.Cu
 [clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
     Rule: netclass 'Power'; Severity: error
-    @(50.9260 mm, 3.3881 mm): Track [LED_D6] on F.Cu, length 4.4286 mm
+    @(39.9988 mm, 3.0119 mm): Track [LED_D5] on F.Cu, length 2.5510 mm
+    @(41.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED5 on F.Cu
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1868 mm)
+    Rule: netclass 'Power'; Severity: error
+    @(55.6484 mm, 3.3632 mm): Track [LED_D6] on F.Cu, length 7.2983 mm
     @(54.2500 mm, 4.0750 mm): Pad 2 [GND] of LED7 on F.Cu
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1782 mm)
+    Rule: netclass 'Power'; Severity: error
+    @(55.6484 mm, 3.3632 mm): Track [LED_D6] on F.Cu, length 7.2983 mm
+    @(51.5000 mm, 2.8050 mm): Pad 1 [+5V] of C14 on F.Cu
 [clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
     Rule: netclass 'Power'; Severity: error
-    @(50.5498 mm, 3.0119 mm): Track [LED_D6] on F.Cu, length 0.5320 mm
-    @(49.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED6 on F.Cu
-[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1634 mm)
-    Rule: netclass 'Power'; Severity: error
-    @(63.9997 mm, 3.3866 mm): Track [LED_D7] on F.Cu, length 7.6262 mm
+    @(64.0012 mm, 3.3881 mm): Track [LED_D7] on F.Cu, length 7.6262 mm
     @(62.2500 mm, 4.0750 mm): Pad 2 [GND] of LED8 on F.Cu
-[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
-    Rule: netclass 'Power'; Severity: error
-    @(66.5498 mm, 3.0119 mm): Track [LED_D8] on F.Cu, length 0.5320 mm
-    @(65.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED8 on F.Cu
-[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
-    Rule: netclass 'Power'; Severity: error
-    @(66.9260 mm, 3.3881 mm): Track [LED_D8] on F.Cu, length 5.0752 mm
-    @(70.2500 mm, 4.0750 mm): Pad 2 [GND] of LED9 on F.Cu
 [clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
     Rule: netclass 'Power'; Severity: error
     @(63.9988 mm, 3.0119 mm): Track [LED_D8] on F.Cu, length 2.5510 mm
     @(65.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED8 on F.Cu
 [clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
     Rule: netclass 'Power'; Severity: error
-    @(74.9258 mm, 3.3881 mm): Track [LED_D9] on F.Cu, length 5.0754 mm
+    @(66.5498 mm, 3.0119 mm): Track [LED_D8] on F.Cu, length 0.5320 mm
+    @(65.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED8 on F.Cu
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
+    Rule: netclass 'Power'; Severity: error
+    @(66.9260 mm, 3.3881 mm): Track [LED_D8] on F.Cu, length 4.4286 mm
+    @(70.2500 mm, 4.0750 mm): Pad 2 [GND] of LED9 on F.Cu
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1634 mm)
+    Rule: netclass 'Power'; Severity: error
+    @(79.9997 mm, 3.3866 mm): Track [LED_D9] on F.Cu, length 7.6262 mm
     @(78.2500 mm, 4.0750 mm): Pad 2 [GND] of LED10 on F.Cu
-[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
-    Rule: netclass 'Power'; Severity: error
-    @(74.5496 mm, 3.0119 mm): Track [LED_D9] on F.Cu, length 0.5320 mm
-    @(73.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED9 on F.Cu
-[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
-    Rule: netclass 'Power'; Severity: error
-    @(71.9988 mm, 3.0119 mm): Track [LED_D9] on F.Cu, length 2.5508 mm
-    @(73.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED9 on F.Cu
-[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
-    Rule: netclass 'Power'; Severity: error
-    @(88.0012 mm, 3.3881 mm): Track [LED_D10] on F.Cu, length 5.0754 mm
-    @(86.2500 mm, 4.0750 mm): Pad 2 [GND] of LED11 on F.Cu
 [clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
     Rule: netclass 'Power'; Severity: error
     @(82.9258 mm, 3.3881 mm): Track [LED_D10] on F.Cu, length 0.5320 mm
@@ -407,60 +523,60 @@
     @(81.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED10 on F.Cu
 [clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
     Rule: netclass 'Power'; Severity: error
-    @(87.9988 mm, 3.0119 mm): Track [LED_D11] on F.Cu, length 2.5508 mm
-    @(89.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED11 on F.Cu
+    @(88.0012 mm, 3.3881 mm): Track [LED_D10] on F.Cu, length 5.0754 mm
+    @(86.2500 mm, 4.0750 mm): Pad 2 [GND] of LED11 on F.Cu
 [clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
     Rule: netclass 'Power'; Severity: error
     @(90.5496 mm, 3.0119 mm): Track [LED_D11] on F.Cu, length 0.5320 mm
     @(89.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED11 on F.Cu
 [clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
     Rule: netclass 'Power'; Severity: error
-    @(90.9258 mm, 3.3881 mm): Track [LED_D11] on F.Cu, length 5.0754 mm
+    @(90.9258 mm, 3.3881 mm): Track [LED_D11] on F.Cu, length 4.4381 mm
     @(94.2500 mm, 4.0750 mm): Pad 2 [GND] of LED12 on F.Cu
 [clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
     Rule: netclass 'Power'; Severity: error
-    @(98.5498 mm, 3.0119 mm): Track [LED_D12] on F.Cu, length 0.5320 mm
-    @(97.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED12 on F.Cu
-[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
+    @(87.9988 mm, 3.0119 mm): Track [LED_D11] on F.Cu, length 2.5508 mm
+    @(89.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED11 on F.Cu
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1767 mm)
     Rule: netclass 'Power'; Severity: error
-    @(95.9988 mm, 3.0119 mm): Track [LED_D12] on F.Cu, length 2.5510 mm
-    @(97.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED12 on F.Cu
-[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
+    @(103.5820 mm, 3.3617 mm): Track [LED_D12] on F.Cu, length 7.2334 mm
+    @(99.5000 mm, 2.8050 mm): Pad 1 [+5V] of C20 on F.Cu
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1883 mm)
     Rule: netclass 'Power'; Severity: error
-    @(98.9260 mm, 3.3881 mm): Track [LED_D12] on F.Cu, length 4.4290 mm
+    @(103.5820 mm, 3.3617 mm): Track [LED_D12] on F.Cu, length 7.2334 mm
     @(102.2500 mm, 4.0750 mm): Pad 2 [GND] of LED13 on F.Cu
-[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1634 mm)
-    Rule: netclass 'Power'; Severity: error
-    @(112.0000 mm, 3.3866 mm): Track [LED_D13] on F.Cu, length 7.6260 mm
-    @(110.2500 mm, 4.0750 mm): Pad 2 [GND] of LED14 on F.Cu
 [clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
     Rule: netclass 'Power'; Severity: error
-    @(111.9990 mm, 3.0119 mm): Track [LED_D14] on F.Cu, length 2.5510 mm
-    @(113.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED14 on F.Cu
+    @(112.0010 mm, 3.3881 mm): Track [LED_D13] on F.Cu, length 7.6260 mm
+    @(110.2500 mm, 4.0750 mm): Pad 2 [GND] of LED14 on F.Cu
 [clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
     Rule: netclass 'Power'; Severity: error
     @(114.5500 mm, 3.0119 mm): Track [LED_D14] on F.Cu, length 0.5319 mm
     @(113.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED14 on F.Cu
 [clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
     Rule: netclass 'Power'; Severity: error
-    @(114.9260 mm, 3.3881 mm): Track [LED_D14] on F.Cu, length 5.0750 mm
+    @(114.9260 mm, 3.3881 mm): Track [LED_D14] on F.Cu, length 4.4380 mm
     @(118.2500 mm, 4.0750 mm): Pad 2 [GND] of LED15 on F.Cu
 [clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
     Rule: netclass 'Power'; Severity: error
-    @(122.5500 mm, 3.0119 mm): Track [LED_D15] on F.Cu, length 0.5319 mm
-    @(121.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED15 on F.Cu
-[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
+    @(111.9990 mm, 3.0119 mm): Track [LED_D14] on F.Cu, length 2.5510 mm
+    @(113.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED14 on F.Cu
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1883 mm)
     Rule: netclass 'Power'; Severity: error
-    @(122.9260 mm, 3.3881 mm): Track [LED_D15] on F.Cu, length 4.4290 mm
+    @(120.3490 mm, 3.3617 mm): Track [LED_D15] on F.Cu, length 7.2130 mm
     @(126.2500 mm, 4.0750 mm): Pad 2 [GND] of LED16 on F.Cu
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1767 mm)
+    Rule: netclass 'Power'; Severity: error
+    @(120.3490 mm, 3.3617 mm): Track [LED_D15] on F.Cu, length 7.2130 mm
+    @(123.5000 mm, 2.8050 mm): Pad 1 [+5V] of C23 on F.Cu
 [clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
     Rule: netclass 'Power'; Severity: error
-    @(119.9990 mm, 3.0119 mm): Track [LED_D15] on F.Cu, length 2.5510 mm
-    @(121.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED15 on F.Cu
-[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1634 mm)
-    Rule: netclass 'Power'; Severity: error
-    @(136.0000 mm, 3.3866 mm): Track [LED_D16] on F.Cu, length 7.6260 mm
+    @(136.0010 mm, 3.3881 mm): Track [LED_D16] on F.Cu, length 7.6260 mm
     @(134.2500 mm, 4.0750 mm): Pad 2 [GND] of LED17 on F.Cu
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
+    Rule: netclass 'Power'; Severity: error
+    @(138.9260 mm, 3.3881 mm): Track [LED_D17] on F.Cu, length 5.0750 mm
+    @(142.2500 mm, 4.0750 mm): Pad 2 [GND] of LED18 on F.Cu
 [clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
     Rule: netclass 'Power'; Severity: error
     @(135.9990 mm, 3.0119 mm): Track [LED_D17] on F.Cu, length 2.5510 mm
@@ -471,62 +587,70 @@
     @(137.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED17 on F.Cu
 [clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
     Rule: netclass 'Power'; Severity: error
-    @(138.9260 mm, 3.3881 mm): Track [LED_D17] on F.Cu, length 4.4290 mm
-    @(142.2500 mm, 4.0750 mm): Pad 2 [GND] of LED18 on F.Cu
-[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1649 mm)
+    @(143.9990 mm, 3.0119 mm): Track [LED_D18] on F.Cu, length 2.5510 mm
+    @(145.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED18 on F.Cu
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
     Rule: netclass 'Power'; Severity: error
-    @(151.9980 mm, 3.3851 mm): Track [LED_D18] on F.Cu, length 7.6260 mm
+    @(146.5500 mm, 3.0119 mm): Track [LED_D18] on F.Cu, length 0.5319 mm
+    @(145.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED18 on F.Cu
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
+    Rule: netclass 'Power'; Severity: error
+    @(146.9260 mm, 3.3881 mm): Track [LED_D18] on F.Cu, length 4.4290 mm
     @(150.2500 mm, 4.0750 mm): Pad 2 [GND] of LED19 on F.Cu
-[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
-    Rule: netclass 'Power'; Severity: error
-    @(151.9990 mm, 3.0119 mm): Track [LED_D19] on F.Cu, length 2.5510 mm
-    @(153.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED19 on F.Cu
-[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
-    Rule: netclass 'Power'; Severity: error
-    @(154.5500 mm, 3.0119 mm): Track [LED_D19] on F.Cu, length 0.5317 mm
-    @(153.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED19 on F.Cu
-[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1621 mm)
-    Rule: netclass 'Power'; Severity: error
-    @(154.9260 mm, 3.3879 mm): Track [LED_D19] on F.Cu, length 4.3840 mm
-    @(158.2500 mm, 4.0750 mm): Pad 2 [GND] of LED20 on F.Cu
 [clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1634 mm)
     Rule: netclass 'Power'; Severity: error
-    @(160.3740 mm, 3.3866 mm): Track [LED_D20] on F.Cu, length 7.6260 mm
+    @(160.0000 mm, 3.3866 mm): Track [LED_D19] on F.Cu, length 7.6260 mm
+    @(158.2500 mm, 4.0750 mm): Pad 2 [GND] of LED20 on F.Cu
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
+    Rule: netclass 'Power'; Severity: error
+    @(159.9990 mm, 3.0119 mm): Track [LED_D20] on F.Cu, length 2.5510 mm
+    @(161.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED20 on F.Cu
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
+    Rule: netclass 'Power'; Severity: error
+    @(162.9260 mm, 3.3881 mm): Track [LED_D20] on F.Cu, length 5.0750 mm
     @(166.2500 mm, 4.0750 mm): Pad 2 [GND] of LED21 on F.Cu
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
+    Rule: netclass 'Power'; Severity: error
+    @(162.5500 mm, 3.0119 mm): Track [LED_D20] on F.Cu, length 0.5319 mm
+    @(161.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED20 on F.Cu
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
+    Rule: netclass 'Power'; Severity: error
+    @(170.5500 mm, 3.0119 mm): Track [LED_D21] on F.Cu, length 0.5317 mm
+    @(169.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED21 on F.Cu
 [clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
     Rule: netclass 'Power'; Severity: error
     @(167.9990 mm, 3.0119 mm): Track [LED_D21] on F.Cu, length 2.5510 mm
     @(169.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED21 on F.Cu
-[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
-    Rule: netclass 'Power'; Severity: error
-    @(170.5500 mm, 3.0119 mm): Track [LED_D21] on F.Cu, length 0.5319 mm
-    @(169.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED21 on F.Cu
-[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
-    Rule: netclass 'Power'; Severity: error
-    @(170.9260 mm, 3.3881 mm): Track [LED_D21] on F.Cu, length 5.0750 mm
-    @(174.2500 mm, 4.0750 mm): Pad 2 [GND] of LED22 on F.Cu
-[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
-    Rule: netclass 'Power'; Severity: error
-    @(178.5500 mm, 3.0119 mm): Track [LED_D22] on F.Cu, length 0.5317 mm
-    @(177.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED22 on F.Cu
 [clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1621 mm)
     Rule: netclass 'Power'; Severity: error
-    @(178.9260 mm, 3.3879 mm): Track [LED_D22] on F.Cu, length 4.3840 mm
+    @(170.9260 mm, 3.3879 mm): Track [LED_D21] on F.Cu, length 4.3840 mm
+    @(174.2500 mm, 4.0750 mm): Pad 2 [GND] of LED22 on F.Cu
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1634 mm)
+    Rule: netclass 'Power'; Severity: error
+    @(184.0000 mm, 3.3866 mm): Track [LED_D22] on F.Cu, length 7.6260 mm
     @(182.2500 mm, 4.0750 mm): Pad 2 [GND] of LED23 on F.Cu
 [clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
     Rule: netclass 'Power'; Severity: error
-    @(175.9990 mm, 3.0119 mm): Track [LED_D22] on F.Cu, length 2.5510 mm
-    @(177.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED22 on F.Cu
-[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1634 mm)
-    Rule: netclass 'Power'; Severity: error
-    @(192.0000 mm, 3.3866 mm): Track [LED_D23] on F.Cu, length 7.6260 mm
+    @(186.9260 mm, 3.3881 mm): Track [LED_D23] on F.Cu, length 5.0750 mm
     @(190.2500 mm, 4.0750 mm): Pad 2 [GND] of LED24 on F.Cu
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
+    Rule: netclass 'Power'; Severity: error
+    @(186.5500 mm, 3.0119 mm): Track [LED_D23] on F.Cu, length 0.5319 mm
+    @(185.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED23 on F.Cu
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1619 mm)
+    Rule: netclass 'Power'; Severity: error
+    @(183.9990 mm, 3.0119 mm): Track [LED_D23] on F.Cu, length 2.5510 mm
+    @(185.7500 mm, 2.3250 mm): Pad 4 [+5V] of LED23 on F.Cu
 
-** Found 1 unconnected pads **
+** Found 2 unconnected pads **
 [unconnected_items]: Missing connection between items
     Local override; Severity: error
-    @(130.6500 mm, 9.8000 mm): Track [GND] on F.Cu, length 0.8485 mm
-    @(130.6625 mm, 9.7900 mm): Pad 3 [GND] of MK2 on B.Cu
+    @(130.6714 mm, 13.1925 mm): Pad 2 [GND] of C6 on B.Cu
+    @(130.6750 mm, 13.2000 mm): Track [GND] on F.Cu, length 0.8485 mm
+[unconnected_items]: Missing connection between items
+    Local override; Severity: error
+    @(72.4000 mm, 11.3840 mm): Pad 2 [GND] of C5 on B.Cu
+    @(72.4000 mm, 11.3750 mm): Track [GND] on F.Cu, length 0.6364 mm
 
 ** Found 0 Footprint errors **
 

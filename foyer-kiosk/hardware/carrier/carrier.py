@@ -58,7 +58,7 @@ def build() -> Circuit:
     c = Circuit("carrier", "FYR-CB-01 Foyer VK-1 carrier board")
     S = all_stages()
     n = c.net
-    GND = n("GND", "Power")
+    GND = n("GND")  # plane net: Default class (no extra clearance needed for ground)
     V12 = n("+12V_BUS", "Power")
     V5CM = n("+5V_CM", "Power")
     V5 = n("+5V_AUX", "Power")

@@ -26,7 +26,7 @@ SHEETS = {"sensors": "Approach sensor and microphones", "ir": "850 nm IR flood",
 def build() -> Circuit:
     c = Circuit("sensorbar", "FYR-SB-01 Foyer VK-1 sensor bar")
     n = c.net
-    GND, V5, V3 = n("GND", "Power"), n("+5V", "Power"), n("+3V3", "Power")
+    GND, V5, V3 = n("GND"), n("+5V"), n("+3V3", "Power")  # GND/+5V are plane nets (Default class)
 
     c.group = "sensors"
     j = c.part("J", "TO CARRIER", "Connector_JST:JST_GH_SM15B-GHS-TB_1x15-1MP_P1.25mm_Horizontal",

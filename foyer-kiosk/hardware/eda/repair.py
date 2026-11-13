@@ -252,6 +252,16 @@ def fanout(board_path: str, nets, clearance=0.2, width=0.25, via_d=0.6, via_dril
     b = pcbnew.LoadBoard(board_path)
     grid = Grid(b, clearance, width, via_d)
     stats = {}
+    all_vias = [t.GetPosition() for t in b.GetTracks() if t.GetClass() == "PCB_VIA"]
+    holes = [p.GetPosition() for fp in b.GetFootprints() for p in fp.Pads() if p.GetDrillSize().x > 0]
+    min_pitch = via_d + 0.3  # keeps hole-to-hole >= 0.25 mm and copper apart
+
+    def spot_ok(px, py):
+        for q in all_vias + holes:
+            if math.hypot(pcbnew.ToMM(q.x) - px, pcbnew.ToMM(q.y) - py) < min_pitch:
+                return False
+        return True
+
     for net in nets:
         ok = fail = 0
         ni = b.FindNet(net)
@@ -270,8 +280,10 @@ def fanout(board_path: str, nets, clearance=0.2, width=0.25, via_d=0.6, via_dril
                 for r in (0.7, 1.0, 1.4, 1.9, 2.5):
                     for k in range(12):
                         a = 2 * math.pi * k / 12
-                        path = grid.route(net, (x, y), (x + r * math.cos(a), y + r * math.sin(a)), lid, lid,
-                                          via_at_goal=True)
+                        gx, gy = x + r * math.cos(a), y + r * math.sin(a)
+                        if not spot_ok(gx, gy):
+                            continue
+                        path = grid.route(net, (x, y), (gx, gy), lid, lid, via_at_goal=True)
                         if path:
                             best = path
                             break
@@ -288,6 +300,7 @@ def fanout(board_path: str, nets, clearance=0.2, width=0.25, via_d=0.6, via_dril
                 v.SetViaType(pcbnew.VIATYPE_THROUGH); v.SetLayerPair(pcbnew.F_Cu, pcbnew.B_Cu); v.SetNet(ni)
                 b.Add(v)
                 vias.append(pos)
+                all_vias.append(pos)
                 ok += 1
         stats[net] = (ok, fail)
         log(f"  fanout {net}: {ok} pads connected, {fail} failed")
