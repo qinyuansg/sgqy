@@ -43,7 +43,7 @@ edge, lock. The kiosk resumes automatically.
    visitor checks in; "paper low" alerts reappear only when the next roll runs low.
 
 Media: 80 mm direct-thermal badge stock, ≤ 100 mm roll OD, black-mark sensing.
-Adhesive badge stock must be qualified (see verification register V-12).
+Adhesive badge stock must be qualified (see verification register D-4).
 
 ## 4. Module replacement (< 5 min each)
 
