@@ -1,7 +1,7 @@
 Item,Qty,Description,Manufacturer,MPN / spec,US sourcing,Lifecycle / notes,FRU,Status
 1,1,Compute module 4 GB RAM / 32 GB eMMC / Wi-Fi 5 + BT 5.0,Raspberry Pi Ltd,CM5104032,"DigiKey, Mouser, PiShop.us, Newark","Production guaranteed to at least Jan 2036",Yes (with carrier tray),Selected
 2,1,Carrier board PCBA FYR-CB-01 (6-layer),Foyer (this design),hardware/carrier/fab,Any IPC-A-610 Class 2 EMS (US: e.g. Screaming Circuits / MacroFab),See hardware/carrier/fab/carrier-bom.csv,Yes,Released for EVT (see verification register)
-3,1,Sensor bar PCBA FYR-SB-01 (2-layer),Foyer (this design),hardware/sensorbar/fab,Any IPC-A-610 Class 2 EMS,See hardware/sensorbar/fab/sensorbar-bom.csv,Yes,Released for EVT (see verification register)
+3,1,Sensor bar PCBA FYR-SB-01 (4-layer),Foyer (this design),hardware/sensorbar/fab,Any IPC-A-610 Class 2 EMS,See hardware/sensorbar/fab/sensorbar-bom.csv,Yes,Released for EVT (see verification register)
 4,1,13.3 in PCAP touch display 1920x1080 zero-bezel (no stand),Elo Touch Solutions,E683595 (Elo 1302L),"CDW, Elo direct","Active; alt. Elo 1304L E968908 (IP54 front) pending DC-input confirmation",Yes,Selected
 5,1,Camera module RGB 12 MP wide (IMX708),Raspberry Pi Ltd,SC0874 (Camera Module 3 Wide),"DigiKey 17278644, Mouser",Active,Yes,Selected
 6,1,Camera module NoIR 12 MP wide (IMX708) - liveness,Raspberry Pi Ltd,SC0875 (Camera Module 3 Wide NoIR),"DigiKey, Mouser",Active,Yes,Selected

@@ -2,7 +2,7 @@
 
     /usr/bin/python3 sensorbar/build.py all
 
-Board frame: 200 x 22 mm, origin top-left; the top edge faces the top of the
+Board frame: 200 x 22 mm, 4 layers (F sig / In1 GND / In2 +5V / B sig), origin top-left; the top edge faces the top of the
 kiosk. LEDs run along the top edge behind the light guide; the IR emitters,
 ToF sensor and microphone ports sit on the centre line around the cameras,
 which mount on the enclosure bracket directly below this board.
@@ -57,7 +57,7 @@ def do_place(c):
     from eda.pcb import BoardBuilder, write_project
     pcb = os.path.join(OUT, f"{NAME}.kicad_pcb")
     write_project(os.path.join(OUT, f"{NAME}.kicad_pro"), RULES, CLASSES, c, route_margin=0.01)
-    bb = BoardBuilder(c, pcb, layers=2)
+    bb = BoardBuilder(c, pcb, layers=4)
     bb.outline_rounded_rect(W, H, 2.0)
     bb.edge_keepout(0.6)
     for i, x in enumerate((3.5, 56.0, 146.0, W - 3.5)):
@@ -73,6 +73,10 @@ def do_place(c):
     bb.put("U2", 40.0, 11.0, 0)                # IR driver
     bb.put_edge("J1", "bottom", 172.0, 0.0)
     bb.place_satellites((0.8, 0.8, W - 0.8, H - 0.8), margin=0.2, max_r=30)
+    # 4-layer stack: In1 solid GND, In2 +5V plane (present while routing -> vias, not traces)
+    full = [(0.3, 0.3), (W - 0.3, 0.3), (W - 0.3, H - 0.3), (0.3, H - 0.3)]
+    bb.zone("GND", "In1.Cu", full)
+    bb.zone("+5V", "In2.Cu", full)
     bb.text("FYR-SB-01 rev A", 12, 20.0, "F.SilkS", 0.9)
     bb.save()
     print(f"placed {len(bb.fps)} footprints -> {pcb}")
@@ -114,7 +118,7 @@ def do_fab(c):
         res = drc(pcb, rpt)
     json.dump(res, open(os.path.join(FAB, f"{NAME}-drc-summary.json"), "w"), indent=2)
     print("DRC:", res)
-    print("fab package:", fab_outputs(pcb, FAB, NAME, layers2=True))
+    print("fab package:", fab_outputs(pcb, FAB, NAME, copper=["F.Cu", "In1.Cu", "In2.Cu", "B.Cu"]))
 
 
 if __name__ == "__main__":

@@ -511,11 +511,11 @@ def drc(board_path: str, report: str) -> dict:
 
 
 # --------------------------------------------------------------- fab files
-def fab_outputs(board_path: str, outdir: str, name: str, layers2: bool = False):
+def fab_outputs(board_path: str, outdir: str, name: str, layers2: bool = False, copper=None):
     os.makedirs(outdir, exist_ok=True)
     g = os.path.join(outdir, "gerbers")
     os.makedirs(g, exist_ok=True)
-    copper = ["F.Cu", "B.Cu"] if layers2 else LAYER_NAMES
+    copper = copper or (["F.Cu", "B.Cu"] if layers2 else LAYER_NAMES)
     layers = ",".join(copper + ["F.Paste", "B.Paste", "F.SilkS", "B.SilkS", "F.Mask", "B.Mask", "Edge.Cuts"])
 
     def cli(*args):

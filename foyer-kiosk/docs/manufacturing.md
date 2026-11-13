@@ -6,13 +6,13 @@
 |---|---|---|
 | Files | `hardware/carrier/fab/carrier-gerbers.zip` (Gerber RS-274X + Excellon + drill map) | `hardware/sensorbar/fab/sensorbar-gerbers.zip` |
 | Size | 180 × 120 mm, R3 corners, 6 × M3 holes | 200 × 22 mm, 4 × M2.5 holes |
-| Layers | 6: F.Cu sig / In1 GND / In2 sig / In3 power (12 V, 5 V_CM, 5 V_AUX planes) / In4 GND / B.Cu sig | 2 |
+| Layers | 6: F.Cu sig / In1 GND / In2 sig / In3 power (12 V, 5 V_CM, 5 V_AUX planes) / In4 GND / B.Cu sig | 4: F.Cu sig / In1 GND / In2 +5 V / B.Cu sig |
 | Thickness | 1.6 mm, FR-4 Tg 170 | 1.6 mm FR-4 |
 | Copper | 1 oz outer, 1 oz inner (2 oz In3 recommended for the 12 V plane) | 1 oz |
 | Min track/space | 0.10 / 0.10 mm (CM5 escape), 0.127 mm default | 0.15 / 0.15 mm |
-| Min via | 0.45 / 0.20 mm through | 0.6 / 0.3 mm |
+| Min via | 0.45 / 0.20 mm through | 0.5 / 0.25 mm through |
 | Impedance | Controlled: 90 Ω diff (USB), 100 Ω diff (HDMI, MIPI, Ethernet MDI) — fab to tune widths to its stack-up | — |
-| Finish | ENIG (0.4 mm-pitch DF40 connectors) | ENIG or HASL LF |
+| Finish | ENIG (0.4 mm-pitch DF40 connectors) | ENIG (LGA ToF + microphones) |
 | Mask / silk | Matte black / white | Matte black / white |
 | Standards | IPC-6012 Class 2, IPC-A-600 | same |
 
