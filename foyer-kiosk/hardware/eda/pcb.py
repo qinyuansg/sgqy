@@ -422,6 +422,11 @@ def import_ses(board, ses_path: str):
 def add_pours(board_path: str, net: str, layers, poly, clearance=0.25):
     """Add outer-layer copper pours after routing (so the autorouter keeps those layers free)."""
     b = pcbnew.LoadBoard(board_path)
+    # custom-shaped pads (e.g. a microphone's ground ring) cannot take thermal spokes: connect them solid
+    for fp in b.GetFootprints():
+        for pad in fp.Pads():
+            if pad.GetNetname() == net and pad.GetShape() == pcbnew.PAD_SHAPE_CUSTOM:
+                pad.SetZoneConnection(pcbnew.ZONE_CONNECTION_FULL)
     for layer in layers:
         z = pcbnew.ZONE(b)
         z.SetLayer(b.GetLayerID(layer))

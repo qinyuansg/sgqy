@@ -1,7 +1,7 @@
 ** Drc report for /home/user/sgqy/foyer-kiosk/hardware/sensorbar/kicad/sensorbar.kicad_pcb **
-** Created on 2026-11-13 21:07:24 **
+** Created on 2026-11-13 21:15:05 **
 
-** Found 109 DRC violations **
+** Found 77 DRC violations **
 [silk_overlap]: Silkscreen overlap
     Rule: board setup constraints silk; Severity: warning
     @(37.0500 mm, 1.2500 mm): Line on F.Silkscreen
@@ -282,140 +282,16 @@
     Rule: board setup constraints silk; Severity: warning
     @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
     @(64.0000 mm, 0.4500 mm): Reference 'LED8'
-[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1500 mm)
-    Rule: netclass 'Power'; Severity: error
-    @(83.6500 mm, 9.9000 mm): Via [GND] on F.Cu - B.Cu
-    @(82.7500 mm, 10.5000 mm): Pad 1 [IR_SET] of D1 on F.Cu
-[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1500 mm)
-    Rule: netclass 'Power'; Severity: error
-    @(115.6500 mm, 9.9000 mm): Via [GND] on F.Cu - B.Cu
-    @(114.7500 mm, 10.5000 mm): Pad 1 [IR_K1] of D2 on F.Cu
-[clearance]: Clearance violation (netclass 'Default' clearance 0.1500 mm; actual 0.0869 mm)
-    Rule: netclass 'Default'; Severity: error
-    @(134.0000 mm, 4.3250 mm): Via [GND] on F.Cu - B.Cu
-    @(163.7710 mm, 4.7619 mm): Track [LED_DIN] on F.Cu, length 152.2722 mm
-[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.2119 mm)
-    Rule: board setup constraints hole; Severity: error
-    @(163.7710 mm, 4.7619 mm): Track [LED_DIN] on F.Cu, length 152.2722 mm
-    @(134.0000 mm, 4.3250 mm): Via [GND] on F.Cu - B.Cu
-[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0000 mm)
-    Rule: board setup constraints hole; Severity: error
-    @(130.3000 mm, 9.6750 mm): Track [GND] on B.Cu, length 0.0354 mm
-    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
-[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.1100 mm)
-    Rule: board setup constraints hole; Severity: error
-    @(129.6500 mm, 9.4750 mm): Track [GND] on B.Cu, length 0.0500 mm
-    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
-[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0000 mm)
-    Rule: board setup constraints hole; Severity: error
-    @(130.2500 mm, 9.6750 mm): Track [GND] on B.Cu, length 0.0500 mm
-    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
-[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0000 mm)
-    Rule: board setup constraints hole; Severity: error
-    @(129.8000 mm, 9.5250 mm): Track [GND] on B.Cu, length 0.0500 mm
-    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
-[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0000 mm)
-    Rule: board setup constraints hole; Severity: error
-    @(130.1500 mm, 9.6250 mm): Track [GND] on B.Cu, length 0.0354 mm
-    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
-[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0000 mm)
-    Rule: board setup constraints hole; Severity: error
-    @(130.0000 mm, 9.5750 mm): Track [GND] on B.Cu, length 0.0354 mm
-    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
-[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0000 mm)
-    Rule: board setup constraints hole; Severity: error
-    @(130.1750 mm, 9.6500 mm): Track [GND] on B.Cu, length 0.0500 mm
-    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
-[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0606 mm)
-    Rule: board setup constraints hole; Severity: error
-    @(130.3750 mm, 9.7000 mm): Track [GND] on B.Cu, length 0.0354 mm
-    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
-[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0070 mm)
-    Rule: board setup constraints hole; Severity: error
-    @(129.7750 mm, 9.5000 mm): Track [GND] on B.Cu, length 0.0354 mm
-    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
-[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.1297 mm)
-    Rule: board setup constraints hole; Severity: error
-    @(130.4500 mm, 9.7250 mm): Track [GND] on B.Cu, length 0.0354 mm
-    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
-[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.1459 mm)
-    Rule: board setup constraints hole; Severity: error
-    @(129.6250 mm, 9.4500 mm): Track [GND] on B.Cu, length 0.0354 mm
-    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
-[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0420 mm)
-    Rule: board setup constraints hole; Severity: error
-    @(129.7250 mm, 9.5000 mm): Track [GND] on B.Cu, length 0.0500 mm
-    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
-[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.2193 mm)
-    Rule: board setup constraints hole; Severity: error
-    @(129.5500 mm, 9.4250 mm): Track [GND] on B.Cu, length 0.0354 mm
-    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
-[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0000 mm)
-    Rule: board setup constraints hole; Severity: error
-    @(130.0750 mm, 9.6000 mm): Track [GND] on B.Cu, length 0.0354 mm
-    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
-[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0802 mm)
-    Rule: board setup constraints hole; Severity: error
-    @(130.4000 mm, 9.7250 mm): Track [GND] on B.Cu, length 0.0500 mm
-    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
-[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.1517 mm)
-    Rule: board setup constraints hole; Severity: error
-    @(130.4750 mm, 9.7500 mm): Track [GND] on B.Cu, length 0.0500 mm
-    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
-[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0000 mm)
-    Rule: board setup constraints hole; Severity: error
-    @(129.8750 mm, 9.5500 mm): Track [GND] on B.Cu, length 0.0500 mm
-    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
-[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0122 mm)
-    Rule: board setup constraints hole; Severity: error
-    @(130.3250 mm, 9.7000 mm): Track [GND] on B.Cu, length 0.0500 mm
-    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
-[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0747 mm)
-    Rule: board setup constraints hole; Severity: error
-    @(129.7000 mm, 9.4750 mm): Track [GND] on B.Cu, length 0.0354 mm
-    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
-[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0000 mm)
-    Rule: board setup constraints hole; Severity: error
-    @(129.9250 mm, 9.5500 mm): Track [GND] on B.Cu, length 0.0354 mm
-    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
-[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0000 mm)
-    Rule: board setup constraints hole; Severity: error
-    @(129.8500 mm, 9.5250 mm): Track [GND] on B.Cu, length 0.0354 mm
-    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
-[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0000 mm)
-    Rule: board setup constraints hole; Severity: error
-    @(129.9500 mm, 9.5750 mm): Track [GND] on B.Cu, length 0.0500 mm
-    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
-[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.1812 mm)
-    Rule: board setup constraints hole; Severity: error
-    @(129.5750 mm, 9.4500 mm): Track [GND] on B.Cu, length 0.0500 mm
-    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
-[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.2252 mm)
-    Rule: board setup constraints hole; Severity: error
-    @(130.5500 mm, 9.7750 mm): Track [GND] on B.Cu, length 0.0500 mm
-    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
-[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.2015 mm)
-    Rule: board setup constraints hole; Severity: error
-    @(130.5250 mm, 9.7500 mm): Track [GND] on B.Cu, length 0.0354 mm
-    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
-[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0000 mm)
-    Rule: board setup constraints hole; Severity: error
-    @(130.2250 mm, 9.6500 mm): Track [GND] on B.Cu, length 0.0354 mm
-    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
-[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0000 mm)
-    Rule: board setup constraints hole; Severity: error
-    @(130.1000 mm, 9.6250 mm): Track [GND] on B.Cu, length 0.0500 mm
-    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
-[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0000 mm)
-    Rule: board setup constraints hole; Severity: error
-    @(130.0250 mm, 9.6000 mm): Track [GND] on B.Cu, length 0.0500 mm
-    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
 
-** Found 1 unconnected pads **
+** Found 2 unconnected pads **
 [unconnected_items]: Missing connection between items
     Local override; Severity: error
+    @(0.3000 mm, 0.3000 mm): Zone [GND] on B.Cu
+    @(130.6625 mm, 9.7900 mm): Pad 3 [GND] of MK2 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; Severity: error
+    @(130.6625 mm, 9.7900 mm): Pad 3 [GND] of MK2 on B.Cu
     @(130.6714 mm, 13.1925 mm): Pad 2 [GND] of C6 on F.Cu
-    @(130.6250 mm, 9.8000 mm): Track [GND] on B.Cu, length 0.0250 mm
 
 ** Found 0 Footprint errors **
 
