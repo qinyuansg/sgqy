@@ -7,6 +7,7 @@ const fs = require('node:fs'), path = require('node:path'), os = require('node:o
 (async () => {
   const [url, out, nw = '3', fpsArg = '30'] = process.argv.slice(2);
   const workers = +nw, fps = +fpsArg;
+  fs.mkdirSync(path.dirname(path.resolve(out)), { recursive: true });
   const tmp = fs.mkdtempSync(path.join(path.dirname(path.resolve(out)), '.render-'));
   const browser = await chromium.launch();
   const open = async () => { const p = await browser.newPage(); p.on('pageerror', e => console.log('pageerror:', e.message)); await p.goto(url); await p.evaluate(() => window.__ready); return p; };
@@ -26,7 +27,7 @@ const fs = require('node:fs'), path = require('node:path'), os = require('node:o
     const a = w * per, b = Math.min(total, a + per);
     const seg = path.join(tmp, `seg${w}.mp4`);
     const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(fps), '-c:v', 'mjpeg', '-i', '-',
-      '-c:v', 'libx264', '-preset', 'slow', '-tune', 'animation', '-crf', '20', '-pix_fmt', 'yuv420p', '-threads', '2', '-g', String(fps * 2), seg], { stdio: ['pipe', 'inherit', 'inherit'] });
+      '-c:v', 'libx264', '-preset', 'slow', '-tune', 'animation', '-crf', '23', '-pix_fmt', 'yuv420p', '-threads', '2', '-g', String(fps * 2), seg], { stdio: ['pipe', 'inherit', 'inherit'] });
     for (let i = a; i < b; i++) {
       const data = await page.evaluate(t => window.__frame(t, 0.95), i / fps);
       const buf = Buffer.from(data.slice(data.indexOf(',') + 1), 'base64');

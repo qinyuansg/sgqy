@@ -6,7 +6,7 @@ A 2-minute animated story made **from a 3½-year-old's drawing**: every characte
 
 | | |
 |---|---|
-| ▶️ **Watch** | `The_Butterfly_Garden.mp4` (1080p, 30 fps, 2:02), or open `index.html` and tap play |
+| ▶️ **Watch** | `The_Butterfly_Garden_720p.mp4` (2:02, with music), or open `index.html` and tap play. Re-render the 1080p master with the command below |
 | ✍️ **Her name on screen** | open `index.html?name=Mia`, or re-render with a name (see below) |
 | 🎬 **AI-video prompt pack** | [`PROMPTS.md`](PROMPTS.md): style bible, character bible, 15 shot prompts, music prompt, read-along narration |
 

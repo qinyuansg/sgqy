@@ -119,7 +119,7 @@ Each block: **prompt** (copy-paste), then camera, sound and on-screen text. Add 
 
 ## 6. Read-along narration (record your own voice over the video!)
 
-Timestamps match `The_Butterfly_Garden.mp4`. A parent's voice beats any AI voice for a 3½-year-old. Pause where she wants to join in.
+Timestamps match the finished film. A parent's voice beats any AI voice for a 3½-year-old. Pause where she wants to join in.
 
 | Time | Narration |
 |---|---|

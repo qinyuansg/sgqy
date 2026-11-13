@@ -594,12 +594,12 @@ function drawFire(t, win, blocked, fizzle) {
     let x = O.x + Math.cos(ang) * d, y = O.y + Math.sin(ang) * d - 80 * age * age;
     let size = (46 + 300 * age) * (0.75 + 0.5 * h3) * (0.5 + 0.5 * bi);
     let steamy = 0;
-    if (blocked && x > FACE && y > wallTopW(t) - 20) { const e = x - FACE; x = FACE - e * 0.3; y += (h3 < 0.5 ? -1 : 1) * e * 1.05; size *= 1.15; steamy = clamp(e / 260); }
-    const p = age / L;
-    const tex = p < 0.18 ? TEX.dotY : p < 0.45 ? TEX.dotO : p < 0.75 ? TEX.dotR : null;
-    const al = Math.pow(1 - p, 0.7) * I * (1 - steamy * 0.6) * 0.85;
+    if (blocked && x > FACE && y > wallTopW(t) - 20) { const e = x - FACE; x = FACE - e * (0.45 + 0.35 * h1); y += (h3 < 0.5 ? -1 : 1) * e * (0.55 + 0.5 * h2); size *= 1.15; steamy = clamp(e / 260); }
+    const p = age / L, splashed = steamy > 0;
+    const tex = splashed ? (p < 0.5 ? TEX.dotO : p < 0.8 ? TEX.dotR : null) : p < 0.18 ? TEX.dotY : p < 0.45 ? TEX.dotO : p < 0.75 ? TEX.dotR : null;
+    const al = Math.pow(1 - p, 0.7) * I * (splashed ? 0.4 : 0.85);
     if (tex) stamp(tex, x, y, size, al);
-    if (p < 0.3) stamp(TEX.dotW, x, y, size * 0.35, al * 0.6);
+    if (p < 0.3 && !splashed) stamp(TEX.dotW, x, y, size * 0.35, al * 0.6);
   }
   ctx.globalCompositeOperation = 'source-over';
   // her drawn flames at the mouth
@@ -614,7 +614,7 @@ function drawFire(t, win, blocked, fizzle) {
   // warm light
   ctx.globalCompositeOperation = 'lighter';
   stamp(TEX.dotO, O.x + 120, O.y, 900 * I, 0.35 * I);
-  if (blocked) { const iy = O.y + Math.tan(O.dir) * (FACE - O.x); stamp(TEX.dotO, FACE - 60, iy, 800 * I, 0.4 * I * fz); }
+  if (blocked) { const iy = O.y + Math.tan(O.dir) * (FACE - O.x); stamp(TEX.dotO, FACE - 60, iy, 640 * I, 0.25 * I * fz); }
   else stamp(TEX.dotO, O.x + 700, O.y + 130, 900 * I, 0.25 * I);
   ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
   // steam where fire meets ice
@@ -625,8 +625,9 @@ function drawFire(t, win, blocked, fizzle) {
       const birth = a + 0.2 + k / r2, age = t - birth; if (age < 0 || age > L2) continue;
       const bi = fireI(birth, win); if (bi < 0.05) continue;
       const h = hash(k * 3.7 + a), h2 = hash(k * 5.3 + a), p = age / L2;
-      const x = FACE - 20 - h * 70 - 80 * age * h2, y = iy + (h2 - 0.5) * 300 - 160 * age - 50 * age * age;
-      stamp(TEX.steam, x, y, 70 + 230 * age, (1 - p) * 0.8 * bi);
+      const side = h < 0.5 ? -1 : 1;
+      const x = FACE - 30 - h * 60 - (120 + 260 * h2) * age, y = iy + (h2 - 0.5) * 260 - 90 * age * (0.6 + h) + side * 40 * age;
+      stamp(TEX.steam, x, y, 90 + 260 * age, Math.sin(Math.PI * Math.min(p * 1.6, 1)) * 0.5 * bi);
     }
   }
 }
@@ -924,7 +925,8 @@ function drawGlows(t, dn, ice, car) {
     stamp(tex, s[0], s[1], 300 + 60 * Math.sin(t * 24), 0.95);
     stamp(TEX.dotW, s[0], s[1], 44, 0.5);
     ctx.save(); ctx.translate(s[0], s[1]); ctx.rotate(t * 7);
-    ctx.fillStyle = red ? 'rgba(255,80,80,0.12)' : 'rgba(80,170,255,0.12)';
+    const ba = 0.12 * (1 - 0.8 * pa);
+    ctx.fillStyle = red ? `rgba(255,80,80,${ba})` : `rgba(80,170,255,${ba})`;
     ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, 1300, -0.18, 0.18); ctx.closePath(); ctx.fill(); ctx.restore();
   }
   ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
@@ -1174,7 +1176,7 @@ function render(t) {
   const fl = Math.max(env(t, C.world - 0.45, C.world + 0.55, 0.45, 0.55), env(t, C.outroA - 0.7, C.outroA + 0.6, 0.7, 0.6));
   if (fl > 0) { ctx.fillStyle = `rgba(255,252,240,${fl})`; ctx.fillRect(0, 0, W, H); }
   // storybook paper grain + vignette
-  ctx.globalCompositeOperation = 'multiply'; ctx.globalAlpha = 0.55; ctx.drawImage(TEX.grain, 0, 0);
+  ctx.globalCompositeOperation = 'multiply'; ctx.globalAlpha = 0.3; ctx.drawImage(TEX.grain, 0, 0);
   ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; ctx.drawImage(TEX.vignette, 0, 0);
   const end = inv(C.fadeOut, C.END - 0.2, t);
   if (end > 0) { ctx.fillStyle = `rgba(0,0,0,${E.sine(end)})`; ctx.fillRect(0, 0, W, H); }
