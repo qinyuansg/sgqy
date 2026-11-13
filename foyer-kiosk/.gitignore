@@ -6,3 +6,4 @@ hardware/*/kicad/*.kicad_prl
 hardware/*/kicad/fp-info-cache
 hardware/*/kicad/*-backups/
 *.lck
+hardware/logs/
