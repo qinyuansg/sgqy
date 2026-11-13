@@ -1,0 +1,45 @@
+# >>> foyer-vk1 (managed by os-image/build.sh; interface contract rev B) >>>
+[all]
+# I2C1 on GPIO2/3: VL53L1X, STUSB4500, INA238, TMP1075, ATECC608B
+dtparam=i2c_arm=on
+
+# Cameras. CAM0 = RGB face camera. CAM1 = NoIR liveness camera: the imx708
+# overlay targets CAM1 by default and has no "cam1" parameter (checked against
+# the overlay README/source), so CAM1 is the overlay without parameters.
+dtoverlay=imx708,cam0
+dtoverlay=imx708
+
+# I2S audio: MAX98357A amplifier + 2x ICS-43434 microphones (GPIO18-21)
+dtoverlay=googlevoicehat-soundcard
+
+# SK6812MINI status light bar (24 RGB LEDs) on GPIO13 via RP1 PIO -> /dev/leds0
+dtoverlay=ws2812-pio,gpio=13,num_leds=24
+
+# IR flood illuminator dimming: GPIO12 = PWM0 channel 0
+dtoverlay=pwm,pin=12,func=4
+
+# Service console J17 on GPIO14/15 (115200 8N1)
+enable_uart=1
+dtparam=uart0_console
+
+# Camera 1 I2C runs on GPIO0/1: never probe a HAT EEPROM there
+force_eeprom_read=0
+
+# Fan curve (first step at 55 C; firmware defaults for the higher steps)
+dtparam=fan_temp0=55000
+
+# The carrier's own 5 V regulator supplies 5 A to the CM5 (CC lines not wired)
+usb_max_current_enable=1
+
+# Boot-time line states so display, hubs and ToF work before the agent starts
+gpio=26=op,dh
+gpio=22=op,dh
+gpio=27=op,dh
+gpio=16=op,dl
+gpio=5=op,dl
+gpio=17,23=ip,pu
+gpio=4,6,24,25=ip,np
+
+disable_splash=1
+@RADIOS@
+# <<< foyer-vk1 <<<

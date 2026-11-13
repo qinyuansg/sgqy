@@ -1,0 +1,7 @@
+# Runtime dependencies (mirrors pyproject.toml). On the kiosk these are
+# installed from Debian packages, see os-image/files/foyer/provision.sh.
+aiohttp>=3.9
+PyYAML>=6.0
+cryptography>=41
+Pillow>=10.1
+qrcode>=7.4

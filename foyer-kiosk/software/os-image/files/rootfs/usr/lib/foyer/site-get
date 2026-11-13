@@ -1,0 +1,47 @@
+#!/usr/bin/python3
+"""Read a value from the site configuration for shell scripts.
+
+    site-get KEY [DEFAULT]      scalar (booleans print as true/false)
+    site-get --list KEY         one list item per line
+    site-get --keys KEY         mapping keys, one per line
+"""
+
+import sys
+
+import yaml
+
+SITE = "/etc/foyer/site.yaml"
+
+
+def lookup(data, dotted):
+    for part in dotted.split("."):
+        if not isinstance(data, dict) or part not in data:
+            return None
+        data = data[part]
+    return data
+
+
+def main(argv):
+    mode = "scalar"
+    if argv and argv[0] in ("--list", "--keys"):
+        mode, argv = argv[0][2:], argv[1:]
+    if not argv:
+        sys.exit(__doc__)
+    with open(SITE, encoding="utf-8") as fh:
+        value = lookup(yaml.safe_load(fh) or {}, argv[0])
+    if mode == "list":
+        for item in value or []:
+            print(item)
+    elif mode == "keys":
+        for key in (value or {}):
+            print(key)
+    elif value is None or value == "":
+        print(argv[1] if len(argv) > 1 else "")
+    elif isinstance(value, bool):
+        print("true" if value else "false")
+    else:
+        print(value)
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

@@ -1,0 +1,200 @@
+[
+ {
+  "file": "head_shell_a.stl",
+  "part": "head_shell",
+  "size_mm": [
+   250.0,
+   83.0,
+   215.0
+  ]
+ },
+ {
+  "file": "head_shell_b.stl",
+  "part": "head_shell",
+  "size_mm": [
+   250.0,
+   78.0,
+   215.0
+  ]
+ },
+ {
+  "file": "head_door_bezel_a.stl",
+  "part": "head_door_bezel",
+  "size_mm": [
+   250.0,
+   32.8,
+   215.0
+  ]
+ },
+ {
+  "file": "head_door_bezel_b.stl",
+  "part": "head_door_bezel",
+  "size_mm": [
+   250.0,
+   32.8,
+   215.0
+  ]
+ },
+ {
+  "file": "chassis_plate_a.stl",
+  "part": "chassis_plate",
+  "size_mm": [
+   240.0,
+   20.4,
+   177.5
+  ]
+ },
+ {
+  "file": "chassis_plate_b.stl",
+  "part": "chassis_plate",
+  "size_mm": [
+   240.0,
+   18.0,
+   177.5
+  ]
+ },
+ {
+  "file": "lectern_body.stl",
+  "part": "lectern_body",
+  "size_mm": [
+   250.0,
+   200.0,
+   212.0
+  ]
+ },
+ {
+  "file": "lectern_door.stl",
+  "part": "lectern_door",
+  "size_mm": [
+   243.0,
+   114.0,
+   203.0
+  ]
+ },
+ {
+  "file": "printer_drawer.stl",
+  "part": "printer_drawer",
+  "size_mm": [
+   151.5,
+   128.0,
+   18.0
+  ]
+ },
+ {
+  "file": "mount_plate.stl",
+  "part": "mount_plate",
+  "size_mm": [
+   200.0,
+   18.0,
+   244.0
+  ]
+ },
+ {
+  "file": "desk_stand_aaa.stl",
+  "part": "desk_stand",
+  "size_mm": [
+   150.0,
+   130.0,
+   10.0
+  ]
+ },
+ {
+  "file": "desk_stand_aab.stl",
+  "part": "desk_stand",
+  "size_mm": [
+   150.0,
+   130.0,
+   148.1
+  ]
+ },
+ {
+  "file": "desk_stand_aba.stl",
+  "part": "desk_stand",
+  "size_mm": [
+   150.0,
+   130.0,
+   10.0
+  ]
+ },
+ {
+  "file": "desk_stand_abb.stl",
+  "part": "desk_stand",
+  "size_mm": [
+   150.0,
+   130.0,
+   148.1
+  ]
+ },
+ {
+  "file": "desk_stand_b.stl",
+  "part": "desk_stand",
+  "size_mm": [
+   170.0,
+   10.0,
+   120.0
+  ]
+ },
+ {
+  "file": "floor_stand_aaaa.stl",
+  "part": "floor_stand",
+  "size_mm": [
+   210.0,
+   180.0,
+   244.0
+  ]
+ },
+ {
+  "file": "floor_stand_aaab.stl",
+  "part": "floor_stand",
+  "size_mm": [
+   210.0,
+   180.0,
+   244.0
+  ]
+ },
+ {
+  "file": "floor_stand_aaba.stl",
+  "part": "floor_stand",
+  "size_mm": [
+   210.0,
+   180.0,
+   244.0
+  ]
+ },
+ {
+  "file": "floor_stand_aabb.stl",
+  "part": "floor_stand",
+  "size_mm": [
+   210.0,
+   180.0,
+   244.0
+  ]
+ },
+ {
+  "file": "floor_stand_ab.stl",
+  "part": "floor_stand",
+  "size_mm": [
+   100.0,
+   50.0,
+   244.0
+  ]
+ },
+ {
+  "file": "floor_stand_ba.stl",
+  "part": "floor_stand",
+  "size_mm": [
+   100.0,
+   50.0,
+   244.0
+  ]
+ },
+ {
+  "file": "floor_stand_bb.stl",
+  "part": "floor_stand",
+  "size_mm": [
+   170.0,
+   50.0,
+   244.0
+  ]
+ }
+]

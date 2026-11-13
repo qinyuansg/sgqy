@@ -1,0 +1,9 @@
+[Unit]
+Description=Foyer VK-1 update requests from the agent (fleet command)
+
+[Path]
+PathExists=/run/foyer-ota/request
+Unit=foyer-ota.service
+
+[Install]
+WantedBy=paths.target

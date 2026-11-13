@@ -1,0 +1,178 @@
+{
+  "meta": { "name": "English" },
+  "chrome": {
+    "back": "Back",
+    "cancel": "Cancel",
+    "callReception": "Call reception",
+    "language": "Language",
+    "chooseLanguage": "Choose your language",
+    "accessibility": "Accessibility mode"
+  },
+  "a11y": { "progress": "Check-in progress" },
+  "keyboard": { "label": "Keyboard", "space": "space", "next": "Next", "done": "Done" },
+  "attract": {
+    "greeting": "Welcome.",
+    "greetingPresent": "Hello there.",
+    "title": "Check in for your visit.",
+    "lede": "Tap anywhere to begin. It takes about a minute.",
+    "cta": "Check in",
+    "invitationHint": "Have an invitation? Just scan its QR code below the screen.",
+    "accessibility": "Accessibility"
+  },
+  "start": {
+    "eyebrow": "Check in",
+    "title": "How would you like to check in?",
+    "invite": "I have an invitation",
+    "inviteText": "Scan the QR code from your invitation email or calendar.",
+    "walkup": "I don't have an invitation",
+    "walkupText": "Enter your details and we'll let your host know you're here."
+  },
+  "scan": {
+    "eyebrow": "Invitation",
+    "title": "Scan your invitation.",
+    "lede": "Hold the QR code on your phone about 10 cm below the screen, where the scanner glows.",
+    "waiting": "Ready to scan",
+    "looking": "Finding your invitation…",
+    "noInvite": "Enter my details instead"
+  },
+  "invite": {
+    "eyebrow": "Invitation found",
+    "title": "Welcome, {name}.",
+    "lede": "Please check that these details are right.",
+    "visiting": "Visiting",
+    "time": "Expected",
+    "company": "Company",
+    "notMe": "That's not me",
+    "confirm": "That's me"
+  },
+  "name": {
+    "eyebrow": "Your details",
+    "title": "What's your name?",
+    "first": "First name",
+    "last": "Last name",
+    "firstPlaceholder": "e.g. Anna",
+    "lastPlaceholder": "e.g. Eriksson"
+  },
+  "company": {
+    "eyebrow": "Your details",
+    "title": "Which company are you with?",
+    "lede": "Optional — leave it empty if you're visiting privately.",
+    "label": "Company",
+    "placeholder": "e.g. Utopia Consulting",
+    "skip": "Skip"
+  },
+  "host": {
+    "eyebrow": "Your host",
+    "title": "Who are you visiting?",
+    "label": "Search by name or team",
+    "placeholder": "Start typing a name",
+    "empty": "No one found. Check the spelling or call reception.",
+    "hint": "Type at least two letters."
+  },
+  "purpose": {
+    "eyebrow": "Your visit",
+    "title": "What brings you here today?",
+    "meeting": "Meeting",
+    "interview": "Interview",
+    "delivery": "Delivery",
+    "contractor": "Contractor work",
+    "other": "Something else"
+  },
+  "document": {
+    "eyebrow": "Identity",
+    "title": "Place your ID on the reader.",
+    "lede": "Passport photo page down, or an ID card face down, on the glass to the right of the screen.",
+    "stages": {
+      "detected": "Document detected",
+      "mrz": "Reading details",
+      "chip": "Reading the chip",
+      "verified": "Verified"
+    },
+    "doneTitle": "Thank you, {name}.",
+    "doneLede": "Your document has been read. You can take it back now.",
+    "passport": "Passport",
+    "id_card": "ID card",
+    "chipVerified": "Chip verified",
+    "retry": "Try again"
+  },
+  "face": {
+    "eyebrow": "Photo",
+    "title": "Let's take your badge photo.",
+    "lede": "Look at the camera above the screen and keep your face inside the circle.",
+    "take": "Take photo",
+    "retake": "Retake",
+    "use": "Use this photo",
+    "holdStill": "Hold still…",
+    "checking": "Checking…",
+    "goodTitle": "Looking good.",
+    "goodLede": "This photo will be printed on your visitor badge.",
+    "failTitle": "Let's try that again.",
+    "failLede": "We couldn't confirm a live photo. Remove sunglasses or a hat and face the camera. {left} tries left.",
+    "exhausted": "We couldn't take your photo. Please call reception and we'll help you."
+  },
+  "consent": {
+    "eyebrow": "Almost done",
+    "title": "Review and sign.",
+    "privacyTitle": "How we use your data",
+    "privacyText": "{company} records your name, company, host, ID document details and photo to manage building security. Your data is sent encrypted to our visitor system and erased from this kiosk immediately. It is kept for 30 days unless the law requires otherwise. You can ask reception for access or deletion at any time.",
+    "rulesTitle": "Site rules and confidentiality",
+    "rulesText": "Wear your badge visibly at all times and return it when you leave. Stay with your host outside public areas. Photography is not permitted. Anything confidential you see or hear during your visit must not be shared.",
+    "acceptPrivacy": "I have read the privacy notice",
+    "acceptRules": "I accept the site rules and confidentiality agreement",
+    "sign": "Sign here",
+    "clear": "Clear",
+    "continue": "Sign and check in"
+  },
+  "submit": {
+    "title": "Checking you in…",
+    "lede": "Sending your details securely and letting your host know.",
+    "retry": "Try again"
+  },
+  "done": {
+    "title": "You're all set, {name}.",
+    "notified": "{host} has been notified and will meet you here shortly.",
+    "pending": "Reception will confirm your visit in a moment. Please take a seat.",
+    "queued": "We're offline right now, so reception will notify {host} for you.",
+    "badgePrinting": "Your badge is printing",
+    "badgeText": "Take it from the slot below. Badge {number}, valid until {until}.",
+    "badgeTextProvisional": "Take it from the slot below. Badge {number}, provisional until reception confirms.",
+    "badgeCollect": "Collect your badge at reception",
+    "badgeCollectText": "Badge {number}",
+    "passTitle": "Mobile pass",
+    "passText": "Scan to add your visit to your phone.",
+    "finish": "Done",
+    "closing": "This screen resets in {s} s"
+  },
+  "idle": {
+    "title": "Are you still there?",
+    "text": "For your privacy, we'll clear your details soon.",
+    "stay": "I'm still here",
+    "restart": "Start over"
+  },
+  "call": {
+    "calling": "Calling reception…",
+    "callingText": "Someone will be with you in a moment.",
+    "connected": "You're connected",
+    "connectedText": "Speak normally — the microphones are above the screen.",
+    "end": "End call"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again or call reception.",
+    "agent_unreachable": "The kiosk is restarting. Please wait a moment.",
+    "vms_offline": "We can't reach the visitor system right now. Please call reception.",
+    "invitation_not_found": "We couldn't find that invitation. Try again or enter your details.",
+    "invalid_first_name": "Please enter your first name.",
+    "invalid_last_name": "Please enter your last name.",
+    "invalid_host": "Please choose who you're visiting.",
+    "document_timeout": "We didn't see a document. Place it on the reader and try again.",
+    "document_unreadable": "We couldn't read that document. Try again, photo page down.",
+    "document_expired": "This document has expired. Please call reception.",
+    "document_unsupported": "This document isn't supported. Please call reception.",
+    "camera_unavailable": "The camera isn't available. Please call reception.",
+    "face_attempts_exhausted": "We couldn't take your photo. Please call reception.",
+    "consent_required": "Please accept both agreements and sign.",
+    "signature_invalid": "Please sign again.",
+    "vms_rejected": "Your check-in couldn't be completed. Please call reception.",
+    "offline_queue_full": "The kiosk can't store more check-ins offline. Please call reception."
+  }
+}

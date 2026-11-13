@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1080, height=1920, initial-scale=1, user-scalable=no">
+  <meta name="color-scheme" content="light dark">
+  <title>Foyer</title>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/screens.css">
+  <script type="module" src="js/main.js"></script>
+</head>
+<body>
+  <div id="viewport">
+    <div id="app" class="app" data-screen="boot">
+      <div class="ambient" aria-hidden="true"><span class="orb orb--a"></span><span class="orb orb--b"></span></div>
+
+      <header class="topbar">
+        <div class="brand" id="brand"></div>
+        <ol class="progress" id="progress" aria-label=""></ol>
+        <div class="topbar__actions" id="topbar-actions"></div>
+      </header>
+
+      <main class="stage" id="stage" aria-live="polite"></main>
+
+      <footer class="dock" id="dock">
+        <div class="dock__start" id="dock-start"></div>
+        <div class="dock__reach" id="dock-reach"></div>
+        <div class="dock__end" id="dock-end"></div>
+      </footer>
+
+      <div class="layer" id="layer" hidden></div>
+      <div class="toast" id="toast" role="status" hidden></div>
+    </div>
+  </div>
+  <noscript>This kiosk requires JavaScript.</noscript>
+</body>
+</html>

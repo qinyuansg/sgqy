@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="210mm" height="297mm" viewBox="0 0 210 297">
+<rect width="210" height="297" fill="white"/>
+<style>.c{stroke:#000;stroke-width:0.3;fill:none}.k{stroke:#c00;stroke-width:0.4;fill:none}.t{font:3.5px sans-serif}.h{font:6px sans-serif;font-weight:700}</style>
+<text x="10" y="14" class="h">Foyer VK-1 — wall drilling template (print at 100 %)</text>
+<text x="10" y="21" class="t">Check: the 100 mm scale bar below must measure exactly 100 mm.</text>
+<line x1="10" y1="26" x2="110" y2="26" stroke="#000" stroke-width="0.6"/>
+<text x="112" y="27.5" class="t">100 mm</text>
+<rect x="5" y="30" width="200" height="240" rx="8" class="c" stroke-dasharray="2 1"/>
+<circle cx="25" cy="250" r="3.25" class="k"/><line x1="19" y1="250" x2="31" y2="250" class="k"/><line x1="25" y1="244" x2="25" y2="256" class="k"/><text x="30" y="246" class="t">Ø6.5 / M6 anchor</text>
+<circle cx="25" cy="50" r="3.25" class="k"/><line x1="19" y1="50" x2="31" y2="50" class="k"/><line x1="25" y1="44" x2="25" y2="56" class="k"/><text x="30" y="46" class="t">Ø6.5 / M6 anchor</text>
+<circle cx="185" cy="250" r="3.25" class="k"/><line x1="179" y1="250" x2="191" y2="250" class="k"/><line x1="185" y1="244" x2="185" y2="256" class="k"/><text x="190" y="246" class="t">Ø6.5 / M6 anchor</text>
+<circle cx="185" cy="50" r="3.25" class="k"/><line x1="179" y1="50" x2="191" y2="50" class="k"/><line x1="185" y1="44" x2="185" y2="56" class="k"/><text x="190" y="46" class="t">Ø6.5 / M6 anchor</text>
+<rect x="70" y="165" width="70" height="30" rx="15" class="k"/><text x="75" y="183" class="t">Cable entry (PoE++ Cat6A) — wall box behind</text>
+<line x1="105" y1="15" x2="105" y2="285" class="c" stroke-dasharray="4 2"/>
+<text x="107" y="25" class="t">Centre line of kiosk</text>
+<text x="10" y="285" class="t">Mount-plate centre is 1096 mm above finished floor (unit base 671 mm; deck front 861 mm, ADA counter height).</text>
+<text x="10" y="291" class="t">Use 4x M6 screws into studs, or M6 metal cavity anchors (min. 4 x 500 N). Level before tightening.</text>
+</svg>

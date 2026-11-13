@@ -1,0 +1,32 @@
+#!/bin/sh
+# Delegate the IR flood PWM channel (GPIO12 = RP1 PWM0 channel 0) to the
+# unprivileged agent and publish a stable path for it: /run/foyer-hw/ir-pwm.
+set -eu
+
+chip=""
+for candidate in /sys/class/pwm/pwmchip*; do
+  [ -e "${candidate}" ] || continue
+  case "$(readlink -f "${candidate}")" in
+    *1f00098000.pwm*) chip="${candidate}"; break ;;
+  esac
+done
+chip="${chip:-/sys/class/pwm/pwmchip0}"
+
+if [ ! -d "${chip}" ]; then
+  echo "foyer-hw-setup: no PWM chip found; IR flood unavailable" >&2
+  exit 0
+fi
+
+[ -d "${chip}/pwm0" ] || echo 0 > "${chip}/export"
+i=0
+while [ ! -w "${chip}/pwm0/duty_cycle" ] && [ "${i}" -lt 50 ]; do
+  sleep 0.1
+  i=$((i + 1))
+done
+for attr in period duty_cycle enable; do
+  chgrp foyer-hw "${chip}/pwm0/${attr}"
+  chmod g+w "${chip}/pwm0/${attr}"
+done
+
+mkdir -p /run/foyer-hw
+ln -sfn "$(readlink -f "${chip}")" /run/foyer-hw/ir-pwm

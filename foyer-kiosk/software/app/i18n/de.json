@@ -1,0 +1,178 @@
+{
+  "meta": { "name": "Deutsch" },
+  "chrome": {
+    "back": "Zurück",
+    "cancel": "Abbrechen",
+    "callReception": "Empfang anrufen",
+    "language": "Sprache",
+    "chooseLanguage": "Sprache wählen",
+    "accessibility": "Barrierefreier Modus"
+  },
+  "a11y": { "progress": "Fortschritt der Anmeldung" },
+  "keyboard": { "label": "Tastatur", "space": "Leerzeichen", "next": "Weiter", "done": "Fertig" },
+  "attract": {
+    "greeting": "Willkommen.",
+    "greetingPresent": "Hallo.",
+    "title": "Melden Sie sich hier an.",
+    "lede": "Tippen Sie irgendwo, um zu beginnen. Es dauert etwa eine Minute.",
+    "cta": "Anmelden",
+    "invitationHint": "Sie haben eine Einladung? Scannen Sie einfach den QR-Code unter dem Bildschirm.",
+    "accessibility": "Barrierefrei"
+  },
+  "start": {
+    "eyebrow": "Anmeldung",
+    "title": "Wie möchten Sie sich anmelden?",
+    "invite": "Ich habe eine Einladung",
+    "inviteText": "Scannen Sie den QR-Code aus Ihrer Einladungs-E-Mail oder Ihrem Kalender.",
+    "walkup": "Ich habe keine Einladung",
+    "walkupText": "Geben Sie Ihre Daten ein und wir informieren Ihren Gastgeber."
+  },
+  "scan": {
+    "eyebrow": "Einladung",
+    "title": "Scannen Sie Ihre Einladung.",
+    "lede": "Halten Sie den QR-Code auf Ihrem Telefon etwa 10 cm unter den Bildschirm, wo der Scanner leuchtet.",
+    "waiting": "Bereit zum Scannen",
+    "looking": "Einladung wird gesucht …",
+    "noInvite": "Stattdessen Daten eingeben"
+  },
+  "invite": {
+    "eyebrow": "Einladung gefunden",
+    "title": "Willkommen, {name}.",
+    "lede": "Bitte prüfen Sie, ob diese Angaben stimmen.",
+    "visiting": "Besuch bei",
+    "time": "Erwartet",
+    "company": "Unternehmen",
+    "notMe": "Das bin ich nicht",
+    "confirm": "Das bin ich"
+  },
+  "name": {
+    "eyebrow": "Ihre Angaben",
+    "title": "Wie heißen Sie?",
+    "first": "Vorname",
+    "last": "Nachname",
+    "firstPlaceholder": "z. B. Anna",
+    "lastPlaceholder": "z. B. Eriksson"
+  },
+  "company": {
+    "eyebrow": "Ihre Angaben",
+    "title": "Für welches Unternehmen sind Sie hier?",
+    "lede": "Optional – lassen Sie das Feld leer, wenn Sie privat zu Besuch sind.",
+    "label": "Unternehmen",
+    "placeholder": "z. B. Utopia Consulting",
+    "skip": "Überspringen"
+  },
+  "host": {
+    "eyebrow": "Ihr Gastgeber",
+    "title": "Wen besuchen Sie?",
+    "label": "Nach Name oder Team suchen",
+    "placeholder": "Namen eingeben",
+    "empty": "Niemand gefunden. Prüfen Sie die Schreibweise oder rufen Sie den Empfang an.",
+    "hint": "Geben Sie mindestens zwei Buchstaben ein."
+  },
+  "purpose": {
+    "eyebrow": "Ihr Besuch",
+    "title": "Was führt Sie heute zu uns?",
+    "meeting": "Besprechung",
+    "interview": "Vorstellungsgespräch",
+    "delivery": "Lieferung",
+    "contractor": "Dienstleistung",
+    "other": "Etwas anderes"
+  },
+  "document": {
+    "eyebrow": "Identität",
+    "title": "Legen Sie Ihren Ausweis auf das Lesegerät.",
+    "lede": "Reisepass mit der Bildseite nach unten oder Personalausweis mit der Vorderseite nach unten auf das Glas rechts neben dem Bildschirm.",
+    "stages": {
+      "detected": "Dokument erkannt",
+      "mrz": "Daten werden gelesen",
+      "chip": "Chip wird gelesen",
+      "verified": "Geprüft"
+    },
+    "doneTitle": "Danke, {name}.",
+    "doneLede": "Ihr Dokument wurde gelesen. Sie können es jetzt wieder an sich nehmen.",
+    "passport": "Reisepass",
+    "id_card": "Personalausweis",
+    "chipVerified": "Chip geprüft",
+    "retry": "Erneut versuchen"
+  },
+  "face": {
+    "eyebrow": "Foto",
+    "title": "Jetzt das Foto für Ihren Ausweis.",
+    "lede": "Schauen Sie in die Kamera über dem Bildschirm und halten Sie Ihr Gesicht im Kreis.",
+    "take": "Foto aufnehmen",
+    "retake": "Neu aufnehmen",
+    "use": "Dieses Foto verwenden",
+    "holdStill": "Bitte stillhalten …",
+    "checking": "Wird geprüft …",
+    "goodTitle": "Sieht gut aus.",
+    "goodLede": "Dieses Foto wird auf Ihren Besucherausweis gedruckt.",
+    "failTitle": "Versuchen wir es noch einmal.",
+    "failLede": "Wir konnten kein Live-Foto bestätigen. Nehmen Sie Sonnenbrille oder Hut ab und schauen Sie in die Kamera. Noch {left} Versuche.",
+    "exhausted": "Wir konnten Ihr Foto nicht aufnehmen. Bitte rufen Sie den Empfang an."
+  },
+  "consent": {
+    "eyebrow": "Fast geschafft",
+    "title": "Prüfen und unterschreiben.",
+    "privacyTitle": "Wie wir Ihre Daten verwenden",
+    "privacyText": "{company} erfasst Ihren Namen, Ihr Unternehmen, Ihren Gastgeber, Ausweisdaten und Ihr Foto zur Gebäudesicherheit. Ihre Daten werden verschlüsselt an unser Besuchersystem gesendet und sofort von diesem Terminal gelöscht. Sie werden 30 Tage gespeichert, sofern das Gesetz nichts anderes verlangt. Auskunft oder Löschung erhalten Sie jederzeit am Empfang.",
+    "rulesTitle": "Hausordnung und Vertraulichkeit",
+    "rulesText": "Tragen Sie Ihren Ausweis jederzeit sichtbar und geben Sie ihn beim Verlassen zurück. Bleiben Sie außerhalb öffentlicher Bereiche bei Ihrem Gastgeber. Fotografieren ist nicht gestattet. Vertrauliches, das Sie während Ihres Besuchs sehen oder hören, darf nicht weitergegeben werden.",
+    "acceptPrivacy": "Ich habe die Datenschutzhinweise gelesen",
+    "acceptRules": "Ich akzeptiere die Hausordnung und die Vertraulichkeitsvereinbarung",
+    "sign": "Hier unterschreiben",
+    "clear": "Löschen",
+    "continue": "Unterschreiben und anmelden"
+  },
+  "submit": {
+    "title": "Sie werden angemeldet …",
+    "lede": "Ihre Daten werden sicher übermittelt und Ihr Gastgeber wird informiert.",
+    "retry": "Erneut versuchen"
+  },
+  "done": {
+    "title": "Alles erledigt, {name}.",
+    "notified": "{host} wurde benachrichtigt und holt Sie gleich hier ab.",
+    "pending": "Der Empfang bestätigt Ihren Besuch gleich. Bitte nehmen Sie Platz.",
+    "queued": "Wir sind gerade offline – der Empfang informiert {host} für Sie.",
+    "badgePrinting": "Ihr Ausweis wird gedruckt",
+    "badgeText": "Entnehmen Sie ihn unten aus dem Schlitz. Ausweis {number}, gültig bis {until}.",
+    "badgeTextProvisional": "Entnehmen Sie ihn unten aus dem Schlitz. Ausweis {number}, vorläufig bis zur Bestätigung durch den Empfang.",
+    "badgeCollect": "Ausweis am Empfang abholen",
+    "badgeCollectText": "Ausweis {number}",
+    "passTitle": "Mobiler Pass",
+    "passText": "Scannen, um Ihren Besuch aufs Telefon zu holen.",
+    "finish": "Fertig",
+    "closing": "Dieser Bildschirm wird in {s} s zurückgesetzt"
+  },
+  "idle": {
+    "title": "Sind Sie noch da?",
+    "text": "Zum Schutz Ihrer Daten löschen wir Ihre Angaben gleich.",
+    "stay": "Ich bin noch da",
+    "restart": "Neu beginnen"
+  },
+  "call": {
+    "calling": "Empfang wird angerufen …",
+    "callingText": "Gleich ist jemand für Sie da.",
+    "connected": "Sie sind verbunden",
+    "connectedText": "Sprechen Sie ganz normal – die Mikrofone sind über dem Bildschirm.",
+    "end": "Auflegen"
+  },
+  "errors": {
+    "generic": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut oder rufen Sie den Empfang an.",
+    "agent_unreachable": "Das Terminal startet neu. Bitte einen Moment Geduld.",
+    "vms_offline": "Das Besuchersystem ist gerade nicht erreichbar. Bitte rufen Sie den Empfang an.",
+    "invitation_not_found": "Diese Einladung wurde nicht gefunden. Versuchen Sie es erneut oder geben Sie Ihre Daten ein.",
+    "invalid_first_name": "Bitte geben Sie Ihren Vornamen ein.",
+    "invalid_last_name": "Bitte geben Sie Ihren Nachnamen ein.",
+    "invalid_host": "Bitte wählen Sie aus, wen Sie besuchen.",
+    "document_timeout": "Kein Dokument erkannt. Legen Sie es auf das Lesegerät und versuchen Sie es erneut.",
+    "document_unreadable": "Das Dokument konnte nicht gelesen werden. Bitte erneut mit der Bildseite nach unten.",
+    "document_expired": "Dieses Dokument ist abgelaufen. Bitte rufen Sie den Empfang an.",
+    "document_unsupported": "Dieses Dokument wird nicht unterstützt. Bitte rufen Sie den Empfang an.",
+    "camera_unavailable": "Die Kamera ist nicht verfügbar. Bitte rufen Sie den Empfang an.",
+    "face_attempts_exhausted": "Wir konnten Ihr Foto nicht aufnehmen. Bitte rufen Sie den Empfang an.",
+    "consent_required": "Bitte stimmen Sie beiden Punkten zu und unterschreiben Sie.",
+    "signature_invalid": "Bitte unterschreiben Sie erneut.",
+    "vms_rejected": "Ihre Anmeldung konnte nicht abgeschlossen werden. Bitte rufen Sie den Empfang an.",
+    "offline_queue_full": "Das Terminal kann offline keine weiteren Anmeldungen speichern. Bitte rufen Sie den Empfang an."
+  }
+}

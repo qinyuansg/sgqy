@@ -1,0 +1,16 @@
+[Unit]
+Description=Unlock the Foyer VK-1 encrypted data partition (development images)
+DefaultDependencies=no
+After=systemd-udev-settle.service local-fs-pre.target
+Before=var-lib-foyer.mount
+Requires=dev-disk-by\x2dlabel-foyerdata.device
+After=dev-disk-by\x2dlabel-foyerdata.device
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/lib/foyer/foyer-data-unlock open
+ExecStop=/usr/lib/foyer/foyer-data-unlock close
+
+[Install]
+RequiredBy=var-lib-foyer.mount

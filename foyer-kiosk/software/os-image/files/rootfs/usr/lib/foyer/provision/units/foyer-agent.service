@@ -1,0 +1,66 @@
+[Unit]
+Description=Foyer VK-1 device agent
+After=network-online.target cups.service foyer-hw-setup.service
+Wants=network-online.target foyer-hw-setup.service
+RequiresMountsFor=/var/lib/foyer
+StartLimitIntervalSec=300
+StartLimitBurst=10
+
+[Service]
+Type=notify
+NotifyAccess=main
+User=foyer-agent
+Group=foyer-agent
+SupplementaryGroups=foyer-hw gpio i2c video input dialout audio render
+Environment=PYTHONPATH=/opt/foyer/current/agent PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+ExecStart=/usr/bin/python3 -m foyer_agent --config /etc/foyer/foyer.yaml
+WatchdogSec=30
+Restart=always
+RestartSec=2
+TimeoutStopSec=15
+
+# Secrets sealed by provisioning (systemd-creds); absent ones are simply not imported.
+ImportCredential=foyer-*
+
+# Session data only ever lives in memory or in this tmpfs, wiped per session.
+RuntimeDirectory=foyer foyer/session
+RuntimeDirectoryMode=0700
+# Offline queue (encrypted) on the data volume; OTA request drop box.
+ReadWritePaths=/var/lib/foyer /run/foyer-ota
+
+# Hardening
+UMask=0077
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+# /sys stays writable for the IR flood PWM attributes delegated by foyer-hw-setup.
+ProtectKernelTunables=no
+RestrictSUIDSGID=yes
+RestrictRealtime=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources @mount
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+DevicePolicy=closed
+DeviceAllow=char-gpiochip rw
+DeviceAllow=char-i2c rw
+DeviceAllow=char-input r
+DeviceAllow=char-ttyACM rw
+DeviceAllow=char-video4linux rw
+DeviceAllow=char-media rw
+DeviceAllow=char-dma_heap rw
+DeviceAllow=char-alsa rw
+DeviceAllow=/dev/leds0 rw
+
+[Install]
+WantedBy=multi-user.target

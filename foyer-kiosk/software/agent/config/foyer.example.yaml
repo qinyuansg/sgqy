@@ -1,0 +1,132 @@
+# Foyer VK-1 site configuration.
+#
+# One file configures both the device agent (all top-level sections except
+# `os`) and the first-boot provisioning of the OS image (`os`). The image build
+# bakes it into the gold master (/etc/foyer/site.yaml); on a development image
+# it can also be overridden on the boot partition as foyer/site.yaml.
+#
+# Secrets are never written here. `cred:NAME` references a systemd credential
+# that provisioning seals on the device (`os.secrets` below lists where each
+# one comes from); `env:` and `file:` references exist for development.
+
+device:
+  id: vk1-hq-lobby-01
+  site: HQ Lobby
+
+branding:
+  company: Northwind
+  welcome_location: Northwind HQ
+  accent: "#4F46E5"
+  logo: ""                # e.g. logo.svg, installed to /etc/foyer/branding/
+
+ui:
+  languages: [en, de]
+  default_language: en
+  theme: light            # light | dark | auto
+  idle_timeout_s: 45
+  idle_warning_s: 15
+  done_timeout_s: 20
+
+consent:
+  privacy_version: "2026-01"
+  rules_version: "2026-01"
+
+queue:
+  dir: /var/lib/foyer/queue
+  key: cred:foyer-queue-key
+  max_age_h: 24
+  max_items: 500
+
+vms:
+  adapter: rest
+  base_url: https://vms.example.com/api/v1
+  api_key: cred:foyer-vms-api-key
+  timeout_s: 10
+  # Map a real VMS API here (see agent/foyer_agent/vms/rest.py for defaults):
+  # endpoints:
+  #   hosts: {method: GET, path: /people, query: {search: "{query}", top: "{limit}"}}
+  # response_map:
+  #   hosts_list: value
+  #   host: {id: personId, name: displayName, department: org.unit}
+  webhook:
+    url: ""
+    secret: cred:foyer-webhook-secret
+
+identity:
+  # mTLS client identity; key held by the ATECC608B (see os-image/README.md).
+  client_cert: ""         # /etc/foyer/identity/device.crt
+  client_key: ""          # /etc/foyer/identity/device.key.pem (PKCS#11 URI PEM)
+
+hardware:
+  qr:
+    mode: hid             # hid (keyboard wedge) | serial (CDC-ACM)
+  id_reader:
+    adapter: stub         # replace with the vendor adapter (Regula / HID) before production
+  liveness:
+    adapter: stub
+    threshold: 0.85
+  printer:
+    queue: FoyerBadge
+    label: 62x100mm       # 62x100mm | 2.25x4in
+    lp_options: ["media=Custom.62x100mm"]
+    slow_lp_options: ["print-speed=slow"]
+  lightbar:
+    device: /dev/leds0
+    max_brightness: 0.6
+  tof:
+    enter_mm: 1200
+    exit_mm: 1600
+    roi: [8, 8]
+  display:
+    sleep_after_s: 600
+  tts:
+    engine: espeak-ng
+
+call:
+  adapter: stub           # stub | webrtc
+  url: ""                 # webrtc: https://desk.example.com/kiosk?device={device}
+
+monitoring:
+  heartbeat_url: https://fleet.example.com/api/heartbeat
+  heartbeat_token: cred:foyer-heartbeat-token
+  interval_s: 60
+  metrics_listen: ""      # e.g. 0.0.0.0:9101 (also open os.firewall.mgmt_cidrs)
+
+os:
+  hostname: foyer-vk1
+  timezone: Europe/Berlin
+  locale: en_GB.UTF-8
+  wifi:                   # optional; Ethernet/PoE needs no configuration
+    ssid: ""
+    psk_secret: ""        # name of a key under `secrets` (never the password itself)
+    country: DE
+  ssh:
+    enabled: false
+    authorized_keys: []   # public keys only; password login is always disabled
+  firewall:
+    mgmt_cidrs: []        # sources allowed to reach SSH / metrics, e.g. ["10.20.0.0/16"]
+  radios:
+    disable_wifi: false
+    disable_bluetooth: true
+  updates:
+    unattended_upgrades: true
+    reboot_window: "03:30"
+  ota:
+    channel_url: https://updates.example.com/foyer/stable/latest.json
+  identity:
+    backend: atecc608b    # atecc608b | software (development only)
+  storage:
+    root_size: 12G        # development (non-FDE) images: root size; the rest becomes the encrypted data partition
+  qr_scanner:             # USB IDs of the scanner on hub U13 port 2 (udev names it /dev/foyer/qr-*)
+    vendor_id: ""
+    product_id: ""
+  printer:
+    device_uri: ""        # e.g. usb://Brother/QL-820NWB?serial=...
+    model: ""             # CUPS driver/PPD name, see `lpinfo -m`
+  # Secret values come from files given to build.sh --secrets-dir (never from
+  # this file). First boot seals them with systemd-creds and shreds the copies;
+  # until then they sit in the gold master's root file system, so keep the
+  # image confidential (or enrol secrets after provisioning).
+  secrets:
+    foyer-vms-api-key: vms-api-key
+    foyer-heartbeat-token: heartbeat-token

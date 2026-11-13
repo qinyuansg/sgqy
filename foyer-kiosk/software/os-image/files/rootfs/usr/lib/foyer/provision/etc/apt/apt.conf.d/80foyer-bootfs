@@ -1,0 +1,3 @@
+// /boot/firmware is mounted read-only; open it only while dpkg runs.
+DPkg::Pre-Invoke { "mountpoint -q /boot/firmware && mount -o remount,rw /boot/firmware || true"; };
+DPkg::Post-Invoke { "mountpoint -q /boot/firmware && mount -o remount,ro /boot/firmware || true"; };

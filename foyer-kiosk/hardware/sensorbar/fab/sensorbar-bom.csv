@@ -1,0 +1,18 @@
+Designators,Qty,Value,Description,Manufacturer,MPN,Footprint,DNP,Provisional
+C1,1,22u,Capacitor 22u 10V X7R 0805,Any (to spec),,C_0805_2012Metric,,
+C2,1,10u,Capacitor 10u 10V X7R 0805,Any (to spec),,C_0805_2012Metric,,
+C3,1,4.7u,Capacitor 4.7u 10V X7R 0603,Any (to spec),,C_0603_1608Metric,,
+"C4,C5,C6,C8,C9,C10,C11,C12,C13,C14,C15,C16,C17,C18,C19,C20,C21,C22,C23,C24,C25,C26,C27,C28,C29,C30,C31,C32",28,100n,Capacitor 100n X7R 0402,Any (to spec),,C_0402_1005Metric,,
+C7,1,4.7u,Capacitor 4.7u 10V X7R 0805,Any (to spec),,C_0805_2012Metric,,
+"D1,D2",2,SFH 4725AS,"850 nm IR emitter, OSLON Black",ams OSRAM,SFH 4725AS A01,OSRAM_OSLON_Black_SFH4725AS_PROVISIONAL,,Land pattern to be checked against the ams OSRAM drawing
+D3,1,B240A,Schottky 40 V 2 A (freewheel),Diodes Inc,B240A-13-F,D_SMA,,
+J1,1,TO CARRIER,Cable to carrier J16 (15-pin GH),JST,SM15B-GHS-TB,JST_GH_SM15B-GHS-TB_1x15-1MP_P1.25mm_Horizontal,,
+L1,1,33uH,Power inductor 33 µH,Coilcraft,XAL5050-333MEB,L_Coilcraft_XAL5050-XXX,,
+"LED1,LED2,LED3,LED4,LED5,LED6,LED7,LED8,LED9,LED10,LED11,LED12,LED13,LED14,LED15,LED16,LED17,LED18,LED19,LED20,LED21,LED22,LED23,LED24",24,SK6812MINI,Addressable RGB LED 3.5x3.5 (status bar),Opsco,SK6812MINI,LED_SK6812MINI_PLCC4_3.5x3.5mm_P1.75mm,,
+MK1,1,ICS-43434,"I2S MEMS microphone, bottom port (left channel)",TDK InvenSense,ICS-43434,InvenSense_ICS-43434-6_3.5x2.65mm,,
+MK2,1,ICS-43434,"I2S MEMS microphone, bottom port (right channel)",TDK InvenSense,ICS-43434,InvenSense_ICS-43434-6_3.5x2.65mm,,
+R1,1,100k,Resistor 100k 0402 (I2S SD bus keeper),Any (to spec),,R_0402_1005Metric,,
+R2,1,0.15,Sense 0.15 Ω 1% 1206 (I_LED = 0.1 V / 0.15 Ω ≈ 670 mA),Vishay Dale,WSL1206R1500FEA,R_1206_3216Metric,,
+R3,1,10k,Resistor 10k 0402 (IR off by default),Any (to spec),,R_0402_1005Metric,,
+U1,1,VL53L1X,"ToF ranging sensor 4 m, I2C @0x29",STMicroelectronics,VL53L1CXV0FY/1,ST_VL53L1x,,
+U2,1,AL8860,40 V 1.5 A buck LED driver (IR flood),Diodes Inc,AL8860WT-7,TSOT-23-5,,

@@ -1,0 +1,34 @@
+Item,Qty,Description,Manufacturer,MPN / spec,US sourcing,Lifecycle / notes,FRU,Status
+1,1,Compute module 4 GB RAM / 32 GB eMMC / Wi-Fi 5 + BT 5.0,Raspberry Pi Ltd,CM5104032,"DigiKey, Mouser, PiShop.us, Newark","Production guaranteed to at least Jan 2036",Yes (with carrier tray),Selected
+2,1,Carrier board PCBA FYR-CB-01 (6-layer),Foyer (this design),hardware/carrier/fab,Any IPC-A-610 Class 2 EMS (US: e.g. Screaming Circuits / MacroFab),See hardware/carrier/fab/carrier-bom.csv,Yes,Released for EVT (see verification register)
+3,1,Sensor bar PCBA FYR-SB-01 (2-layer),Foyer (this design),hardware/sensorbar/fab,Any IPC-A-610 Class 2 EMS,See hardware/sensorbar/fab/sensorbar-bom.csv,Yes,Released for EVT (see verification register)
+4,1,13.3 in PCAP touch display 1920x1080 zero-bezel (no stand),Elo Touch Solutions,E683595 (Elo 1302L),"CDW, Elo direct","Active; alt. Elo 1304L E968908 (IP54 front) pending DC-input confirmation",Yes,Selected
+5,1,Camera module RGB 12 MP wide (IMX708),Raspberry Pi Ltd,SC0874 (Camera Module 3 Wide),"DigiKey 17278644, Mouser",Active,Yes,Selected
+6,1,Camera module NoIR 12 MP wide (IMX708) - liveness,Raspberry Pi Ltd,SC0875 (Camera Module 3 Wide NoIR),"DigiKey, Mouser",Active,Yes,Selected
+7,2,Camera cable 22-pin 0.5 mm to 15-pin 1 mm 200 mm,Raspberry Pi Ltd,SC1128 (Standard-Mini 200 mm),"DigiKey, Farnell",Active,Yes,Selected
+8,1,Fixed-mount 2D scanner (QR from phone screens) USB,Zebra Technologies,DS5502-SR (DS55 family),"CDW, Zebra partners","Active; replaces EOL DS457 (same mounting)",Yes,Selected
+9,1,Passport + ID reader: full-page OCR (MRZ/VIZ) + ePassport RFID (ICAO 9303) USB 3,DESKO GmbH,PENTA Scanner 4X Cube (OEM kiosk),"DESKO US channel","Linux SDK announced 2026; alt. Regula 70X8M (compliance review: Belarus origin) or HID ATOM",Yes,Selected - confirm Linux SDK in writing
+10,1,Kiosk thermal printer 80 mm with cutter/presenter 24 V USB,Custom S.p.A.,VKP80III (e.g. 915DX011700300),"Connection.com, Custom America",Active; adhesive badge media to be qualified at EVT; alt. Custom KPM180H / Star SK1-311 (linerless),Yes,Selected - media qualification open
+11,1,NFC / access badge encoder (option),HID Global,OMNIKEY 5127CK Mini (R51270010/20),"SHI, HID partners",Active; write/encode licence to confirm with HID,Yes,Option
+12,1,LTE fallback (option): USB LTE modem module,Telit Cinterion,LN920A6-WW in USB adapter or Telit USB terminal,"Telit partners","Active; carrier-certified (AT&T/T-Mobile/Verizon)",Yes,Option
+13,1,Speaker enclosed 2 W 8 ohm,PUI Audio,ASE04008MS-LWC25-2,DigiKey,Active,Yes,Selected
+14,1,Fan 40 x 40 x 10 mm 5 V PWM 4-pin,Noctua,NF-A4x10 5V PWM,"Amazon, Noctua US",Active,Yes,Selected
+15,1,RTC battery with JST SH cable,Raspberry Pi Ltd,SC1191,"DigiKey, PiShop.us",Active,Yes,Selected
+16,1,PoE++ PD module 12 V 89 W (on carrier),Silvertel,Ag59812-LPB,DigiKey 5061-AG59812-LPB-ND,Active (12-wk lead),No (on PCBA),Selected - footprint to verify
+17,1,Head shell (rear housing),Foyer (this design),mechanical/out/step/parts/head_shell.step,US CNC/sheet-metal shops (Protolabs / Xometry / SendCutSend),6063-T5 3 mm anodised,No,Released for EVT
+18,1,Head door bezel,Foyer (this design),head_door_bezel.step,Protolabs / Xometry,6063-T5 CNC anodised,Yes,Released for EVT
+19,1,Head front glass 4 mm (frit + IR windows + AR),Foyer (this design),head_glass.step / dxf/head_glass.dxf,"US cover-glass houses (e.g. Abrisa Technologies, Dynasil)","Chemically strengthened, black frit, IR-transparent ink at camera/ToF/IR windows",Yes,Released for EVT
+20,1,Chassis plate,Foyer (this design),chassis_plate.step,SendCutSend / Xometry,5052-H32 2 mm + PEM standoffs,No,Released for EVT
+21,1,Lectern body,Foyer (this design),lectern_body.step,Xometry / local sheet-metal,6063-T5 3 mm,No,Released for EVT
+22,1,Lectern drop-down door (deck + front),Foyer (this design),lectern_door.step,Xometry,6063-T5 3 mm,Yes,Released for EVT
+23,1,Deck glass 4 mm (reader window clear),Foyer (this design),deck_glass.step,Cover-glass house,Chemically strengthened; clear window over reader,Yes,Released for EVT
+24,1,Printer drawer + slides,Foyer (this design) + Accuride 3832 or equiv. slides,printer_drawer.step,"Xometry; slides: McMaster-Carr",5052-H32 2 mm,Yes,Released for EVT
+25,1,Mount plate (common to all kits),Foyer (this design),mount_plate.step / dxf/mount_plate.dxf,SendCutSend,6061-T6 6 mm powder coat,No,Released for EVT
+26,2,Constant-torque hinge (head door lift-up),Southco,E6-10-620F-50 (pair = 2 pcs),"Southco US, McMaster",12.4 N.m fwd per pair - door ~3 kg at 0.2 m needs ~6 N.m,Yes,Selected
+27,1,Keyed cam lock 19 mm (3/4 in) - single service lock,CompX National,C8051 keyed-alike (key code per site),"CompX, McMaster",Disc tumbler; upgrade to C8053/high-security cylinder if required,Yes,Selected
+28,2,Lectern door friction hinge,Southco,E6 series (light duty) or 2x continuous piano hinge 6063,Southco / McMaster,-,Yes,Selected
+29,1,Door switch (service/tamper) with GH 2-pin lead,Omron,D2F-01L + JST GHR-02V harness,DigiKey,Active,Yes,Selected
+30,1,Fastener + harness kit,Various,"M3/M4 stainless, M6 tamper-resistant (Torx Pin) screw, cable ties, Cat6A 0.5 m patch, HDMI 0.3 m slim, USB-A cables 0.3 m x 6, USB3 0.3 m, Micro-Fit 2-pin power leads x 3, JST GH 15-pin 0.4 m sensor-bar cable",McMaster-Carr / DigiKey / Molex,-,Yes,Selected
+31,1,Desk kit: weighted base + column,Foyer (this design),step/foyer-vk1-desk-kit.step,SendCutSend + local welder,S275 10 mm + 6063 column,-,Released for EVT
+32,1,Floor kit: base + 100 x 50 column,Foyer (this design),step/foyer-vk1-floor-kit.step,SendCutSend + 100x50x3 6063 extrusion (McMaster 1750T...),S275 12 mm (~13 kg) + extrusion,-,Released for EVT
+33,1,Wall kit: 4x M6 anchors + wall box adaptor,Hilti / Toggler,HHD-M6 or Toggler SnapToggle M6; 1-gang low-voltage bracket,Home Depot / McMaster,-,-,Selected

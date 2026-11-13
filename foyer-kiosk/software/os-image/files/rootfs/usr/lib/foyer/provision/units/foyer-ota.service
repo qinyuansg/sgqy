@@ -1,0 +1,14 @@
+[Unit]
+Description=Foyer VK-1 application update (signed release, health-checked, rollback)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/foyer/foyer-ota check
+ExecStartPost=-/usr/bin/rm -f /run/foyer-ota/request
+StateDirectory=foyer-ota
+Nice=10
+PrivateTmp=yes
+NoNewPrivileges=yes
+ProtectHome=yes

@@ -1,0 +1,90 @@
+/* Design tokens. The accent comes from branding (set on :root by main.js). */
+
+:root {
+  --accent: #4f46e5;
+  --accent-ink: #ffffff;
+  --accent-soft: color-mix(in oklab, var(--accent) 10%, var(--bg-elev));
+  --accent-line: color-mix(in oklab, var(--accent) 35%, transparent);
+
+  --bg: #f5f5f2;
+  --bg-elev: #ffffff;
+  --bg-sunken: #ececE8;
+  --ink: #0e0f12;
+  --ink-2: #4b4e57;
+  --ink-3: #8b8e97;
+  --line: rgba(14, 15, 18, 0.08);
+  --line-strong: rgba(14, 15, 18, 0.16);
+  --success: #12a150;
+  --success-soft: color-mix(in oklab, var(--success) 12%, var(--bg-elev));
+  --danger: #dc3b3f;
+  --danger-soft: color-mix(in oklab, var(--danger) 10%, var(--bg-elev));
+  --warn: #c27c0e;
+
+  --shadow-1: 0 1px 2px rgba(16, 24, 40, 0.04), 0 6px 20px rgba(16, 24, 40, 0.06);
+  --shadow-2: 0 2px 6px rgba(16, 24, 40, 0.05), 0 28px 72px rgba(16, 24, 40, 0.14);
+  --glow: color-mix(in oklab, var(--accent) 22%, transparent);
+
+  --font: "Inter", "Inter Variable", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Inter Display", "Inter", system-ui, sans-serif;
+
+  --text-scale: 1;
+  --fs-display: calc(96px * var(--text-scale));
+  --fs-h1: calc(68px * var(--text-scale));
+  --fs-h2: calc(46px * var(--text-scale));
+  --fs-body: calc(32px * var(--text-scale));
+  --fs-small: calc(26px * var(--text-scale));
+  --fs-micro: calc(22px * var(--text-scale));
+
+  --r-sm: 16px;
+  --r-md: 24px;
+  --r-lg: 36px;
+  --r-pill: 999px;
+
+  --target: 96px;          /* primary touch targets; never below 64px */
+  --gutter: 72px;
+  --topbar-h: 136px;
+  --dock-h: 152px;
+
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --t-fast: 160ms;
+  --t-med: 320ms;
+  --t-slow: 640ms;
+}
+
+:root[data-theme="dark"] {
+  --bg: #0b0c0f;
+  --bg-elev: #16181d;
+  --bg-sunken: #101216;
+  --ink: #f2f3f5;
+  --ink-2: #a9acb5;
+  --ink-3: #6f737d;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.16);
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-2: 0 32px 80px rgba(0, 0, 0, 0.55);
+  --glow: color-mix(in oklab, var(--accent) 35%, transparent);
+  --accent-soft: color-mix(in oklab, var(--accent) 18%, var(--bg-elev));
+}
+
+/* Accessibility mode: high contrast, larger text. Applies over either theme. */
+.app.a11y {
+  --bg: #ffffff;
+  --bg-elev: #ffffff;
+  --bg-sunken: #f1f1f1;
+  --ink: #000000;
+  --ink-2: #111111;
+  --ink-3: #333333;
+  --line: #000000;
+  --line-strong: #000000;
+  --accent: color-mix(in oklab, var(--brand-accent, #4f46e5) 78%, black);
+  --accent-soft: #ffffff;
+  --shadow-1: none;
+  --shadow-2: none;
+  --glow: transparent;
+  --text-scale: 1.14;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --t-fast: 1ms; --t-med: 1ms; --t-slow: 1ms; }
+}

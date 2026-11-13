@@ -1,0 +1,168 @@
+#!/usr/bin/env bash
+# Foyer VK-1 application updater (agent + UI). OS packages are updated by
+# unattended-upgrades; this handles signed application releases.
+#
+#   foyer-ota check                fetch latest.json from os.ota.channel_url and update
+#   foyer-ota install-local DIR    install from DIR (latest.json, .sig, tarball); used at provisioning
+#   foyer-ota status               print the state file
+#
+# A release is accepted only if latest.json carries a valid Ed25519 signature
+# from /etc/foyer/release-signing.pub, the tarball matches its SHA-256, and
+# the version is newer than the running one (no downgrades). After switching,
+# the agent must report healthy with the new version within 90 s, otherwise
+# the previous release is restored and the version is marked bad.
+set -euo pipefail
+
+# Paths are overridable for tests only.
+ROOT="${FOYER_OTA_ROOT:-/opt/foyer}"
+RELEASES="${ROOT}/releases"
+PUBKEY="${FOYER_OTA_PUBKEY:-/etc/foyer/release-signing.pub}"
+STATE_DIR="${FOYER_OTA_STATE_DIR:-/var/lib/foyer-ota}"
+STATE="${STATE_DIR}/state.json"
+HEALTH_URL=http://127.0.0.1:8080/healthz
+HEALTH_TIMEOUT=90
+
+log() { echo "foyer-ota: $*" >&2; }
+
+json_get() { python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))[sys.argv[2]])' "$1" "$2"; }
+
+state_set() { # key value [key value ...]
+  mkdir -p "${STATE_DIR}"
+  python3 - "${STATE}" "$@" <<'PY'
+import json, sys, time
+path, pairs = sys.argv[1], sys.argv[2:]
+try:
+    state = json.load(open(path))
+except (OSError, ValueError):
+    state = {}
+for key, value in zip(pairs[::2], pairs[1::2]):
+    if key == "bad_version":
+        state["bad_versions"] = sorted(set(state.get("bad_versions", [])) | {value})
+    else:
+        state[key] = value
+state["updated_at"] = int(time.time())
+tmp = path + ".tmp"
+json.dump(state, open(tmp, "w"), indent=2)
+__import__("os").replace(tmp, path)
+PY
+}
+
+is_bad() { [[ -f "${STATE}" ]] && python3 -c 'import json,sys; sys.exit(0 if sys.argv[2] in json.load(open(sys.argv[1])).get("bad_versions", []) else 1)' "${STATE}" "$1"; }
+
+current_version() { cat "${ROOT}/current/VERSION" 2>/dev/null || echo 0.0.0; }
+
+newer() { [[ "$1" != "$2" && "$(printf '%s\n%s\n' "$1" "$2" | sort -V | tail -n1)" == "$1" ]]; }
+
+healthy() {
+  local want="$1" deadline=$((SECONDS + HEALTH_TIMEOUT)) body
+  while ((SECONDS < deadline)); do
+    if body="$(curl -fsS --max-time 3 "${HEALTH_URL}" 2>/dev/null)" &&
+       [[ "$(python3 -c 'import json,sys; print(json.loads(sys.argv[1])["version"])' "${body}")" == "${want}" ]]; then
+      return 0
+    fi
+    sleep 3
+  done
+  return 1
+}
+
+switch_to() { # release-dir
+  ln -sfn "$1" "${ROOT}/current.new"
+  mv -T "${ROOT}/current.new" "${ROOT}/current"
+}
+
+restart_services() {
+  systemctl restart foyer-agent.service
+  systemctl try-restart foyer-kiosk.service
+}
+
+prune() {
+  local keep_current keep_previous
+  keep_current="$(readlink -f "${ROOT}/current")"
+  keep_previous="$(readlink -f "${ROOT}/previous" 2>/dev/null || true)"
+  for dir in "${RELEASES}"/*; do
+    [[ "${dir}" == "${keep_current}" || "${dir}" == "${keep_previous}" ]] || rm -rf "${dir}"
+  done
+}
+
+install_from() { # dir remote|local restart|no-restart
+  local dir="$1" mode="$2" restart="$3" version url sha tarball current staging target
+  openssl pkeyutl -verify -pubin -inkey "${PUBKEY}" -rawin -in "${dir}/latest.json" \
+    -sigfile "${dir}/latest.json.sig" >/dev/null 2>&1 || { log "manifest signature invalid"; state_set last_result bad-signature; return 1; }
+  version="$(json_get "${dir}/latest.json" version)"
+  url="$(json_get "${dir}/latest.json" url)"
+  sha="$(json_get "${dir}/latest.json" sha256)"
+  [[ "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { log "invalid version"; return 1; }
+  current="$(current_version)"
+  state_set last_check "$(date -u +%FT%TZ)" available "${version}"
+  if ! newer "${version}" "${current}"; then
+    log "up to date (${current})"
+    state_set last_result up-to-date current "${current}"
+    return 0
+  fi
+  if is_bad "${version}"; then
+    log "${version} failed before; skipping"
+    return 0
+  fi
+  tarball="${dir}/$(basename "${url}")"
+  if [[ "${mode}" == remote ]]; then
+    [[ "${url}" == https://* ]] || { log "release URL must be https"; return 1; }
+    curl --proto '=https' --tlsv1.2 -fsSL --retry 3 -o "${tarball}" "${url}"
+  fi
+  echo "${sha}  ${tarball}" | sha256sum -c --quiet - || { log "checksum mismatch"; state_set last_result bad-checksum; return 1; }
+
+  target="${RELEASES}/${version}"
+  staging="${RELEASES}/.staging-${version}"
+  rm -rf "${staging}" "${target}"
+  mkdir -p "${staging}"
+  tar -xzf "${tarball}" -C "${staging}" --no-same-owner --no-same-permissions
+  [[ "$(cat "${staging}/foyer-${version}/VERSION")" == "${version}" &&
+     -f "${staging}/foyer-${version}/agent/foyer_agent/__init__.py" &&
+     -f "${staging}/foyer-${version}/app/index.html" ]] || { log "malformed release"; rm -rf "${staging}"; return 1; }
+  mv "${staging}/foyer-${version}" "${target}"
+  rm -rf "${staging}"
+  chmod -R go-w "${target}"
+
+  if [[ -e "${ROOT}/current" ]]; then
+    ln -sfn "$(readlink -f "${ROOT}/current")" "${ROOT}/previous"
+  fi
+  switch_to "${target}"
+  log "switched to ${version}"
+  if [[ "${restart}" == restart ]]; then
+    restart_services
+    if ! healthy "${version}"; then
+      log "${version} failed its health check; rolling back to ${current}"
+      if [[ -e "${ROOT}/previous" ]]; then
+        switch_to "$(readlink -f "${ROOT}/previous")"
+        restart_services
+      fi
+      state_set last_result rolled-back bad_version "${version}" current "${current}"
+      return 1
+    fi
+  fi
+  state_set last_result updated current "${version}" previous "${current}"
+  prune
+}
+
+main() {
+  mkdir -p "${RELEASES}"
+  case "${1:-}" in
+    check)
+      local channel tmp
+      channel="$(/usr/lib/foyer/site-get os.ota.channel_url)"
+      [[ -n "${channel}" ]] || { log "no os.ota.channel_url configured"; exit 0; }
+      tmp="$(mktemp -d)"
+      trap 'rm -rf "${tmp}"' EXIT
+      curl --proto '=https' --tlsv1.2 -fsSL --retry 3 -o "${tmp}/latest.json" "${channel}"
+      curl --proto '=https' --tlsv1.2 -fsSL --retry 3 -o "${tmp}/latest.json.sig" "${channel}.sig"
+      install_from "${tmp}" remote restart
+      ;;
+    install-local)
+      [[ -d "${2:-}" ]] || { echo "usage: $0 install-local DIR" >&2; exit 2; }
+      install_from "$2" local "${3:-no-restart}"
+      ;;
+    status) cat "${STATE}" 2>/dev/null || echo "{}" ;;
+    *) echo "usage: $0 check|install-local DIR|status" >&2; exit 2 ;;
+  esac
+}
+
+main "$@"

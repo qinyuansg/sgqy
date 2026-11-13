@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+# Device identity on the ATECC608B secure element (I2C1 @0x60) for mTLS.
+#
+#   foyer-identity setup                configure cryptoauthlib PKCS#11 + OpenSSL provider (provisioning)
+#   foyer-identity csr COMMON_NAME      print a CSR signed by the secure element (factory enrolment)
+#   foyer-identity install-cert FILE    install the issued device certificate (chain allowed)
+#
+# The private key is generated/held inside the ATECC608B and never leaves it.
+# OpenSSL reaches it through pkcs11-provider; Python's ssl module loads the key
+# from a PEM file that wraps its PKCS#11 URI, so the agent needs no key file.
+set -euo pipefail
+
+IDENTITY_DIR=/etc/foyer/identity
+STORE=/var/lib/cryptoauthlib
+MODULE=/usr/local/lib/libcryptoauth.so
+OPENSSL_CNF=/etc/foyer/openssl-pkcs11.cnf
+TOKEN=FOYER
+KEY_URI="pkcs11:token=${TOKEN};object=device;type=private"
+
+provider_module() {
+  local dir
+  dir="$(openssl version -m | sed -E 's/^MODULESDIR: "(.*)"$/\1/')"
+  echo "${dir}/pkcs11.so"
+}
+
+setup() {
+  install -d -m 0755 /etc/cryptoauthlib "${IDENTITY_DIR}"
+  install -d -m 0750 -g foyer-agent "${STORE}"
+  printf 'filestore = %s\n' "${STORE}" > /etc/cryptoauthlib/cryptoauthlib.conf
+  # 8-bit I2C address 0xC0 (= 7-bit 0x60) on bus 1
+  cat > "${STORE}/0.conf" <<EOF
+label = ${TOKEN}
+interface = i2c,0xC0,1
+device = ATECC608B
+EOF
+  chgrp foyer-agent "${STORE}/0.conf"
+  chmod 0640 "${STORE}/0.conf"
+  install -d /usr/share/p11-kit/modules
+  printf 'module: %s\n' "${MODULE}" > /usr/share/p11-kit/modules/cryptoauthlib.module
+  cat > "${OPENSSL_CNF}" <<EOF
+openssl_conf = openssl_init
+
+[openssl_init]
+providers = provider_sect
+
+[provider_sect]
+default = default_sect
+pkcs11 = pkcs11_sect
+
+[default_sect]
+activate = 1
+
+[pkcs11_sect]
+module = $(provider_module)
+pkcs11-module-path = ${MODULE}
+activate = 1
+EOF
+  # PEM container for the key URI understood by pkcs11-provider's decoder.
+  python3 - "${KEY_URI}" > "${IDENTITY_DIR}/device.key.pem" <<'PY'
+import base64, sys
+
+def tlv(tag, data):
+    n = len(data)
+    length = bytes([n]) if n < 0x80 else bytes([0x80 | ((n.bit_length() + 7) // 8)]) + n.to_bytes((n.bit_length() + 7) // 8, "big")
+    return bytes([tag]) + length + data
+
+der = tlv(0x30, tlv(0x1A, b"PKCS#11 Provider URI v1.0") + tlv(0x0C, sys.argv[1].encode()))
+body = base64.encodebytes(der).decode()
+print("-----BEGIN PKCS#11 PROVIDER URI-----\n" + body + "-----END PKCS#11 PROVIDER URI-----")
+PY
+  chmod 0644 "${IDENTITY_DIR}/device.key.pem"
+  install -d /etc/systemd/system/foyer-agent.service.d
+  cat > /etc/systemd/system/foyer-agent.service.d/identity.conf <<EOF
+[Service]
+Environment=OPENSSL_CONF=${OPENSSL_CNF}
+ReadOnlyPaths=${STORE}
+EOF
+}
+
+case "${1:-}" in
+  setup) setup ;;
+  csr)
+    [[ -n "${2:-}" ]] || { echo "usage: $0 csr COMMON_NAME" >&2; exit 2; }
+    OPENSSL_CONF="${OPENSSL_CNF}" openssl req -new -key "${KEY_URI}" -subj "/CN=$2/O=Foyer VK-1" -sha256
+    ;;
+  install-cert)
+    [[ -f "${2:-}" ]] || { echo "usage: $0 install-cert FILE" >&2; exit 2; }
+    openssl x509 -in "$2" -noout -subject >/dev/null
+    install -m 0644 "$2" "${IDENTITY_DIR}/device.crt"
+    echo "set identity.client_cert: ${IDENTITY_DIR}/device.crt and identity.client_key: ${IDENTITY_DIR}/device.key.pem"
+    ;;
+  *) echo "usage: $0 setup|csr CN|install-cert FILE" >&2; exit 2 ;;
+esac

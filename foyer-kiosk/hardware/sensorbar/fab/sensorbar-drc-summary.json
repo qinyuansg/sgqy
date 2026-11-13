@@ -1,0 +1,19 @@
+{
+  "violations": 96,
+  "unconnected": 2,
+  "footprint_errors": 0,
+  "errors": 17,
+  "warnings": 81,
+  "by_severity": {
+    "warning": {
+      "silk_overlap": 27,
+      "silk_over_copper": 30,
+      "silk_edge_clearance": 24
+    },
+    "error": {
+      "clearance": 13,
+      "hole_clearance": 2,
+      "unconnected_items": 2
+    }
+  }
+}

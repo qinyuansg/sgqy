@@ -1,0 +1,20 @@
+[Unit]
+Description=Foyer VK-1 first-boot provisioning
+# Runs on the very first boot of the gold master, whether it was flashed directly
+# (development) or written by rpi-sb-provisioner (secure boot + full-disk encryption).
+ConditionPathExists=!/etc/foyer/provisioned
+After=network-online.target cloud-init.target time-sync.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/foyer/provision/provision.sh
+StandardOutput=journal+console
+StandardError=journal+console
+TimeoutStartSec=90min
+# Network or mirror hiccups: try again; completed steps are skipped.
+Restart=on-failure
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target

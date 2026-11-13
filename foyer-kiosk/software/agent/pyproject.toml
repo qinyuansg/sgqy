@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "foyer-agent"
+dynamic = ["version"]
+description = "Device agent for the Foyer VK-1 visitor enrolment kiosk"
+requires-python = ">=3.11"
+license = { text = "Proprietary" }
+# On the kiosk these come from Debian packages (python3-aiohttp, python3-yaml,
+# python3-cryptography, python3-pil, python3-qrcode); keep this list in sync
+# with requirements.txt and os-image/files/foyer/provision.sh.
+dependencies = [
+  "aiohttp>=3.9",
+  "PyYAML>=6.0",
+  "cryptography>=41",
+  "Pillow>=10.1",
+  "qrcode>=7.4",
+]
+
+[project.optional-dependencies]
+# Hardware bindings are only available on the device (Raspberry Pi OS packages
+# python3-libgpiod and python3-picamera2); the agent imports them lazily.
+dev = ["pytest>=8", "pytest-asyncio>=0.23"]
+
+[project.scripts]
+foyer-agent = "foyer_agent.__main__:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "foyer_agent.__version__" }
+
+[tool.setuptools.packages.find]
+include = ["foyer_agent*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+filterwarnings = ["error::RuntimeWarning"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B", "BLE", "UP", "SIM", "RUF"]
+# Optional no-op hooks (close) on ABCs are intentional.
+ignore = ["B027"]

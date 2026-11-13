@@ -1,0 +1,12 @@
+[Unit]
+Description=Foyer VK-1 hardware delegation (IR PWM channel, device links)
+After=systemd-udev-settle.service systemd-modules-load.service
+Before=foyer-agent.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/lib/foyer/foyer-hw-setup
+
+[Install]
+WantedBy=multi-user.target

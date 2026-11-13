@@ -1,0 +1,3 @@
+# Status light bar (ws2812-pio-rp1 -> /dev/leds0)
+KERNEL=="leds[0-9]*", GROUP="foyer-hw", MODE="0660"
+# I2C and GPIO are already group i2c / gpio on Raspberry Pi OS.
