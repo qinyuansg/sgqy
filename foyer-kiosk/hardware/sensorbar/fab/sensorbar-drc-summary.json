@@ -1,8 +1,8 @@
 {
   "violations": 77,
-  "unconnected": 2,
+  "unconnected": 1,
   "footprint_errors": 0,
-  "errors": 2,
+  "errors": 1,
   "warnings": 77,
   "by_severity": {
     "warning": {
@@ -11,7 +11,7 @@
       "silk_edge_clearance": 24
     },
     "error": {
-      "unconnected_items": 2
+      "unconnected_items": 1
     }
   }
 }

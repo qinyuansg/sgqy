@@ -71,6 +71,8 @@ def do_place(c):
     bb.put("D2", 116.0, 10.5, 0)
     bb.put("MK1", 70.0, 10.5, 0, bottom=True)  # bottom-port mics, ports face the front grille
     bb.put("MK2", 130.0, 10.5, 0, bottom=True)
+    bb.put("C40", 70.0, 6.8, 0)                # mic decoupling, top side, in open pour above each mic
+    bb.put("C41", 130.0, 6.8, 0)
     bb.put("U2", 40.0, 11.0, 0)                # IR driver
     bb.put_edge("J1", "bottom", 172.0, 0.0)
     bb.place_satellites((0.8, 0.8, W - 0.8, H - 0.8), margin=0.2, max_r=30)

@@ -1,5 +1,5 @@
 ** Drc report for /home/user/sgqy/foyer-kiosk/hardware/sensorbar/kicad/sensorbar.kicad_pcb **
-** Created on 2026-11-13 21:15:05 **
+** Created on 2026-11-13 21:23:28 **
 
 ** Found 77 DRC violations **
 [silk_overlap]: Silkscreen overlap
@@ -283,11 +283,7 @@
     @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
     @(64.0000 mm, 0.4500 mm): Reference 'LED8'
 
-** Found 2 unconnected pads **
-[unconnected_items]: Missing connection between items
-    Local override; Severity: error
-    @(0.3000 mm, 0.3000 mm): Zone [GND] on B.Cu
-    @(130.6625 mm, 9.7900 mm): Pad 3 [GND] of MK2 on B.Cu
+** Found 1 unconnected pads **
 [unconnected_items]: Missing connection between items
     Local override; Severity: error
     @(130.6625 mm, 9.7900 mm): Pad 3 [GND] of MK2 on B.Cu

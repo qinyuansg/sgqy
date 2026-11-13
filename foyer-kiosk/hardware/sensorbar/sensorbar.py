@@ -45,13 +45,13 @@ def build() -> Circuit:
     c.C("4.7u", V3, GND, size="0603", volt="10V", near=tof, mfr=GENERIC)
     c.C("100n", V3, GND, near=tof, mfr=GENERIC)
 
-    for ref, lr in (("MK1", GND), ("MK2", V3)):
+    for ref, lr, cref in (("MK1", GND, "C40"), ("MK2", V3, "C41")):
         mk = c.part("MK", "ICS-43434", "Sensor_Audio:InvenSense_ICS-43434-6_3.5x2.65mm", symbol="FY:ICS-43434",
                     ref=ref, mpn="ICS-43434", mfr="TDK InvenSense",
                     desc=f"I2S MEMS microphone, bottom port ({'left' if lr is GND else 'right'} channel)")
         mk.wire({"VDD": V3, "GND": GND, "SCK": n("BCLK"), "WS": n("LRCLK"), "SD": n("MIC_SD"), "LR": lr})
         # top side, opposite the bottom-port mic: keeps the acoustic-port area clear
-        c.C("100n", V3, GND, near=mk, mfr=GENERIC, fields={"side": "top"})
+        c.C("100n", V3, GND, near=mk, mfr=GENERIC, ref=cref)
     c.R("100k", n("MIC_SD"), GND, near=j, mfr=GENERIC, desc="Resistor 100k 0402 (I2S SD bus keeper)")
 
     c.group = "ir"
