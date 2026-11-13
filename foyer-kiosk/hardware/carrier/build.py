@@ -183,7 +183,7 @@ def do_route():
     from eda.repair import fanout
     pcb = os.path.join(OUT, f"{NAME}.kicad_pcb")
     autoroute(pcb, work, passes=60, timeout_s=7000, rounds=2, plane_nets=PLANE_NETS)
-    fanout(pcb, PLANE_NETS, clearance=0.15, width=0.2, via_d=0.45, via_drill=0.2)
+    fanout(pcb, PLANE_NETS, clearance=0.21, width=0.25, via_d=0.45, via_drill=0.2, reuse_r=0.6)
     shutil.copy(os.path.join(OUT, f"{NAME}.kicad_pcb"), os.path.join(OUT, f"{NAME}.routed.kicad_pcb"))
 
 

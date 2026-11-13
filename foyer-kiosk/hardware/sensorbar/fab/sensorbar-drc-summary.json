@@ -1,21 +1,18 @@
 {
-  "violations": 88,
-  "unconnected": 2,
+  "violations": 137,
+  "unconnected": 1,
   "footprint_errors": 0,
-  "errors": 8,
-  "warnings": 82,
+  "errors": 58,
+  "warnings": 80,
   "by_severity": {
     "warning": {
       "silk_overlap": 27,
       "silk_over_copper": 29,
-      "holes_co_located": 1,
-      "silk_edge_clearance": 24,
-      "track_dangling": 1
+      "silk_edge_clearance": 24
     },
     "error": {
-      "clearance": 4,
-      "hole_clearance": 2,
-      "unconnected_items": 2
+      "clearance": 57,
+      "unconnected_items": 1
     }
   }
 }
