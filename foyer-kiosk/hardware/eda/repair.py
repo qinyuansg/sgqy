@@ -133,9 +133,7 @@ class Grid:
         while openq and limit:
             limit -= 1
             _, c, node = heapq.heappop(openq)
-            if node[1:] == g[1:] and (node[0] == g[0] or own[g[0], g[1], g[2]]):
-                if node[0] != g[0]:
-                    node = (g[0], *node[1:]) if (g[0], *node[1:]) in came else node
+            if node[1:] == g[1:] and node[0] == g[0]:
                 path = []
                 while node is not None:
                     path.append(node)
@@ -246,7 +244,8 @@ def repair(board_path: str, report: str, clearance=0.2, width=0.2, via_d=0.6, vi
     return fixed
 
 
-def fanout(board_path: str, nets, clearance=0.2, width=0.25, via_d=0.6, via_drill=0.3, reuse_r=1.0, log=print) -> dict:
+def fanout(board_path: str, nets, clearance=0.2, width=0.25, via_d=0.6, via_drill=0.3, reuse_r=1.0, log=print,
+           via_in_pad=("GND",)) -> dict:
     """Give every SMD pad of each plane net a short stub to its own via (or reuse a same-net via
     within `reuse_r` mm). THT pads already reach every layer."""
     b = pcbnew.LoadBoard(board_path)
@@ -255,6 +254,7 @@ def fanout(board_path: str, nets, clearance=0.2, width=0.25, via_d=0.6, via_dril
     all_vias = [t.GetPosition() for t in b.GetTracks() if t.GetClass() == "PCB_VIA"]
     holes = [p.GetPosition() for fp in b.GetFootprints() for p in fp.Pads() if p.GetDrillSize().x > 0]
     min_pitch = via_d + 0.3  # keeps hole-to-hole >= 0.25 mm and copper apart
+    vip: list[str] = []
 
     def spot_ok(px, py):
         for q in all_vias + holes:
@@ -290,6 +290,15 @@ def fanout(board_path: str, nets, clearance=0.2, width=0.25, via_d=0.6, via_dril
                     if best:
                         break
                 if not best:
+                    if via_in_pad and net in via_in_pad:
+                        # last resort for ground: filled + capped via in the pad (fab note in the register)
+                        v = pcbnew.PCB_VIA(b)
+                        v.SetPosition(c); v.SetWidth(mm(via_d)); v.SetDrill(mm(via_drill))
+                        v.SetViaType(pcbnew.VIATYPE_THROUGH); v.SetLayerPair(pcbnew.F_Cu, pcbnew.B_Cu); v.SetNet(ni)
+                        b.Add(v); vias.append(c); all_vias.append(c)
+                        vip.append(f"{fp.GetReference()}.{pad.GetNumber()}")
+                        ok += 1
+                        continue
                     fail += 1
                     continue
                 grid.commit(net, best, width, via_d, via_drill)
@@ -304,5 +313,8 @@ def fanout(board_path: str, nets, clearance=0.2, width=0.25, via_d=0.6, via_dril
                 ok += 1
         stats[net] = (ok, fail)
         log(f"  fanout {net}: {ok} pads connected, {fail} failed")
+    if vip:
+        log(f"  via-in-pad (fill + cap required): {', '.join(vip)}")
+    stats["via_in_pad"] = vip
     pcbnew.SaveBoard(board_path, b)
     return stats

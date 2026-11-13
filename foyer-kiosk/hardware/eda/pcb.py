@@ -311,6 +311,14 @@ def unrouted(board) -> int:
     return board.GetConnectivity().GetUnconnectedCount(True)
 
 
+def mark_plane_layers(dsn: str, layers):
+    """Declare plane layers as `power` in the DSN so the autorouter keeps signals off them."""
+    text = open(dsn, encoding="utf-8").read()
+    for name in layers:
+        text = re.sub(r"(\(layer " + re.escape(name) + r"\s*\n\s*\(type )signal\)", r"\1power)", text)
+    open(dsn, "w", encoding="utf-8").write(text)
+
+
 def strip_plane_nets(dsn: str, nets):
     """Remove plane-connected nets from a Specctra DSN so the autorouter leaves them to the planes.
     Their pads stay in the design as obstacles; `repair.fanout` later connects them with vias."""
@@ -324,7 +332,7 @@ def strip_plane_nets(dsn: str, nets):
 
 
 def autoroute(board_path: str, workdir: str, passes: int = 100, timeout_s: int = 5400, rounds: int = 3,
-              log=print, plane_nets=()) -> int:
+              log=print, plane_nets=(), plane_layers=()) -> int:
     """Export DSN, run Freerouting, import the session; repeat (keeping existing copper) until
     nothing is left unrouted or `rounds` is reached. Returns the remaining unrouted count."""
     left = None
@@ -338,6 +346,8 @@ def autoroute(board_path: str, workdir: str, passes: int = 100, timeout_s: int =
             raise RuntimeError("DSN export failed")
         if plane_nets:
             strip_plane_nets(dsn, plane_nets)
+        if plane_layers:
+            mark_plane_layers(dsn, plane_layers)
         cmd = ["xvfb-run", "-a", "java", "-Xmx6g", "-jar", FREEROUTING, "-de", dsn, "-do", ses,
                "-mp", str(passes), "-mt", "1", "-oit", "0.1"]
         log(f"round {rnd}: " + " ".join(cmd))

@@ -14,6 +14,7 @@
 | Impedance | Controlled: 90 Ω diff (USB), 100 Ω diff (HDMI, MIPI, Ethernet MDI) — fab to tune widths to its stack-up | — |
 | Finish | ENIG (0.4 mm-pitch DF40 connectors) | ENIG (LGA ToF + microphones) |
 | Mask / silk | Matte black / white | Matte black / white |
+| Via-in-pad | None expected; if the build log lists any, fill + cap them (IPC-4761 Type VII) | Sensor bar C6 GND (mic decoupling): fill + cap |
 | Standards | IPC-6012 Class 2, IPC-A-600 | same |
 
 US fabs able to build both: e.g. Advanced Circuits, Sierra Circuits, Royal Circuits (quick-turn), OSH Park (sensor bar prototypes).

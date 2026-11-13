@@ -1,8 +1,8 @@
 {
-  "violations": 167,
-  "unconnected": 2,
+  "violations": 87,
+  "unconnected": 0,
   "footprint_errors": 0,
-  "errors": 88,
+  "errors": 6,
   "warnings": 81,
   "by_severity": {
     "warning": {
@@ -12,10 +12,10 @@
       "silk_edge_clearance": 24
     },
     "error": {
-      "hole_near_hole": 24,
-      "clearance": 61,
-      "hole_clearance": 1,
-      "unconnected_items": 2
+      "via_diameter": 1,
+      "drill_out_of_range": 1,
+      "clearance": 2,
+      "hole_clearance": 2
     }
   }
 }

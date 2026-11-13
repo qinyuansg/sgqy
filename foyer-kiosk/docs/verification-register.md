@@ -17,7 +17,7 @@ environment, and the gates that must close before PVT/mass production.
 | A-6 | Schematic ⇔ circuit model | KiCad `kicad-cli` netlist export of the generated schematic diffed against the model | 0 differences (both boards) |
 | A-7 | Power-stage values | Datasheet equations (TPS54560B SLVSF00, LM5176 SNVSAI1D) in `hardware/power/design_calcs.py` → `docs/power-design.md` | Values documented with equation numbers |
 | A-8 | Back-powering of CM5 GPIO | Design rule: all pull-ups on CM5 nets go to the CM5's own 3.3 V output | Enforced in code |
-| A-9 | PCB DRC | KiCad 7 DRC on the routed boards (see `hardware/*/fab/*-drc-summary.json`) | See §C for the current counts |
+| A-9 | PCB routing method | Signals autorouted by Freerouting on signal layers only (plane layers declared `power`); ground/plane nets stripped from autorouting and fanned out to the planes with a deterministic grid router; leftovers closed by an A* repair router; outer GND pours + stitching vias. Then KiCad 7 DRC on the routed boards (see `hardware/*/fab/*-drc-summary.json`) | See §C for the current counts |
 | A-10 | Enclosure fit | CadQuery interference check of every manufactured part against every purchased-module envelope | No interference except two hinge-knuckle contacts ≤ 6 mm³ (cosmetic, resolved in v2 geometry) |
 | A-11 | Print-bed fit | Every prototype chunk ≤ 250 mm in all axes | Pass (see `mechanical/out/print/print-manifest.json`) |
 | A-12 | ADA reach / counter height | Model parameters: deck front 861 mm (≤ 864), highest touch target in reach mode 1117 mm (≤ 1220) | Pass |
@@ -35,6 +35,7 @@ functions are drafted and flagged on the PCB Fab layer as `VERIFY_FOOTPRINT`.
 | B-3 | ams OSRAM SFH 4725AS (850 nm emitter) | Land pattern / thermal pad | `Foyer:OSRAM_OSLON_Black_SFH4725AS_PROVISIONAL`, sensor bar `D1`/`D2` |
 | B-4 | STUSB4500 application circuit | VBUS_VS_DISCH / DISCH / VSYS connections vs ST datasheet and AN5225; NVM image (PDO 5 V, 15 V/3 A, 20 V/3 A) | carrier `U2` sheet "Power input" |
 | B-5 | USB2514B strap configuration | CFG_SEL/NON_REM/LOCAL_PWR straps and PRTPWR polarity vs Microchip DS00001692 (default config with individual port power) | carrier `U11`/`U12` |
+| B-6 | Via-in-pad | Where the fan-out could not find room (listed as `via-in-pad` in the build log, e.g. sensor bar C6 GND next to the microphone port), a ground via sits in the pad: order **filled and capped vias (IPC-4761 Type VII)** for those, or move the part in KiCad | build logs, `*-drc.rpt` |
 
 ## C. Current DRC status
 
