@@ -342,7 +342,15 @@ def autoroute(board_path: str, workdir: str, passes: int = 100, timeout_s: int =
                "-mp", str(passes), "-mt", "1", "-oit", "0.1"]
         log(f"round {rnd}: " + " ".join(cmd))
         with open(os.path.join(workdir, f"freerouting{rnd}.log"), "w") as lf:
-            subprocess.run(cmd, stdout=lf, stderr=subprocess.STDOUT, timeout=timeout_s, check=False)
+            proc = subprocess.Popen(cmd, stdout=lf, stderr=subprocess.STDOUT, start_new_session=True)
+            try:
+                proc.wait(timeout=timeout_s)
+            except subprocess.TimeoutExpired:
+                import signal
+                os.killpg(proc.pid, signal.SIGKILL)  # take Xvfb and the JVM down with it
+                proc.wait()
+                log(f"round {rnd}: Freerouting timed out after {timeout_s} s")
+                break
         if not os.path.exists(ses):
             raise RuntimeError(f"Freerouting produced no session file; see freerouting{rnd}.log")
         # Freerouting writes the complete wiring (pre-existing + new) to the session. Replace the
