@@ -103,10 +103,12 @@ class Grid:
                     (0 if same else infl) + pcbnew.ToMM(t.GetWidth()) / 2)
         # vias need room for their own diameter on every layer
         via_extra = max(0.0, self.via_d / 2 - self.width / 2)
-        return occ & ~own, own, via_extra
+        # own copper never cancels another item's keep-out; endpoints inside own pads are snapped instead
+        return occ, own, via_extra
 
     def route(self, net, start, goal, start_layer, goal_layer, via_at_goal=False, allow_vias=True, max_cost=None):
         occ, own, via_extra = self.build(net)
+        self._last_occ = occ
         L = len(self.layers)
         vx = int(math.ceil(via_extra / RES))
         sl = self.layers.index(start_layer) if start_layer in self.layers else 0
@@ -177,6 +179,33 @@ class Grid:
                     heapq.heappush(openq, (nc + h(n), nc, n))
         return None
 
+    def _smooth(self, keep, net):
+        """Collapse 8-connected staircases: drop an intermediate point when the straight segment
+        that skips it stays on free cells of the same layer (checked on the last built grid)."""
+        occ = getattr(self, "_last_occ", None)
+        if occ is None or len(keep) < 3:
+            return keep
+        out = [keep[0]]
+        i = 0
+        while i < len(keep) - 1:
+            j = len(keep) - 1
+            while j > i + 1:
+                a, b = keep[i], keep[j]
+                if a[0] == b[0] and all(k[0] == a[0] for k in keep[i:j + 1]) and self._clear_line(occ[a[0]], a, b):
+                    break
+                j -= 1
+            out.append(keep[j])
+            i = j
+        return out
+
+    def _clear_line(self, layer_occ, a, b):
+        n = max(2, int(math.hypot(b[1] - a[1], b[2] - a[2]) / RES) * 2)
+        for t in np.linspace(0, 1, n):
+            ci, cj = self.cell(a[1] + t * (b[1] - a[1]), a[2] + t * (b[2] - a[2]))
+            if layer_occ[cj, ci]:
+                return False
+        return True
+
     @staticmethod
     def _via_free(occ, j, i, vx):
         j0, i0 = max(0, j - vx), max(0, i - vx)
@@ -197,6 +226,7 @@ class Grid:
             if abs(d1[0] * d2[1] - d1[1] * d2[0]) > 1e-9:
                 keep.append(b)
         keep.append(pts[-1])
+        keep = self._smooth(keep, net)
         for a, b in zip(keep, keep[1:]):
             if a[0] != b[0]:
                 v = pcbnew.PCB_VIA(self.b)
