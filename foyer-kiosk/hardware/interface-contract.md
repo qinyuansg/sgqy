@@ -18,7 +18,7 @@ modem on an internal hub port; camera-1 I2C clarified.
 |---|---|---|---|
 | I2C1 | GPIO2 SDA / GPIO3 SCL (1.8 kΩ pull-ups on CM5) | Sensor bar: VL53L1X ToF @0x29. Carrier: STUSB4500 USB-PD sink @0x28, INA238 power monitor @0x40, TMP1075 board temp @0x48, ATECC608B secure element @0x60 | `dtparam=i2c_arm=on` → `/dev/i2c-1` |
 | MIPI0 + SDA0/SCL0 | MIPI0 4-lane, I2C on CM5 pins 80/82 | Camera 0: Raspberry Pi Camera Module 3 Wide (SC0874, IMX708, RGB) — face capture | `dtoverlay=imx708,cam0` |
-| MIPI1 + ID_SD/ID_SC | MIPI1 4-lane, I2C on GPIO0/GPIO1 (CM5 pins 36/35) | Camera 1: Camera Module 3 Wide NoIR (SC0875) — IR liveness | `dtoverlay=imx708,cam1` (verify overlay naming at EVT bring-up) |
+| MIPI1 + ID_SD/ID_SC | MIPI1 4-lane, I2C on GPIO0/GPIO1 (CM5 pins 36/35) | Camera 1: Camera Module 3 Wide NoIR (SC0875) — IR liveness | `dtoverlay=imx708` (CAM1 is the overlay default; there is no `cam1` parameter) |
 | I2S (PCM) | GPIO18 BCLK, GPIO19 LRCLK, GPIO20 DIN (mics), GPIO21 DOUT (amp) | MAX98357A class-D amp (carrier, mono (L+R)/2) + 2× ICS-43434 I2S MEMS mics (sensor bar; L/R) | `dtoverlay=googlevoicehat-soundcard` (same MAX98357A + I2S-mic topology) |
 | PIO | GPIO13 | 24× SK6812MINI RGB status light bar (5 V level via SN74LVC1T45) | `dtoverlay=ws2812-pio,gpio=13,num_leds=24` (fallback: `piolib` userspace) |
 | UART0 | GPIO14 TX / GPIO15 RX | Service console header `J17` (JST GH 3) | `enable_uart=1`, 115200 8N1 |
@@ -58,7 +58,7 @@ modem on an internal hub port; camera-1 I2C clarified.
 * Bootloader EEPROM: `PSU_MAX_CURRENT=5000` (CM5 CC1/CC2 are not wired; the
   carrier's own 5 V regulator supplies 5 A).
 * `config.txt`: `dtparam=i2c_arm=on`, `dtoverlay=imx708,cam0`,
-  `dtoverlay=imx708,cam1`, `dtoverlay=googlevoicehat-soundcard`,
+  `dtoverlay=imx708`, `dtoverlay=googlevoicehat-soundcard`, `dtparam=uart0_console`,
   `dtoverlay=ws2812-pio,gpio=13,num_leds=24`, `enable_uart=1`,
   `force_eeprom_read=0`, `dtparam=fan_temp0=55000` (fan curve), `usb_max_current_enable=1`.
 * Storage encryption: provision with Raspberry Pi `rpi-sb-provisioner`
@@ -84,7 +84,10 @@ modem on an internal hub port; camera-1 I2C clarified.
 ## Power policy (device agent)
 
 * High power available = (`POE_HIPWR_n` low) OR (USB-C contract ≥ 60 W read
-  from STUSB4500 over I2C). Otherwise: printer slow mode, display ≤ 70 %
+  from STUSB4500 over I2C). The STUSB4500 NVM holds PDO1 = 5 V, PDO2 = 15 V / 2 A,
+  PDO3 = 20 V / 3 A, so a 3 A contract can only be the 20 V PDO; the agent
+  should read the negotiated RDO's object position (RDO status register) to know
+  the voltage exactly instead of assuming 20 V. Otherwise: printer slow mode, display ≤ 70 %
   brightness, IR flood ≤ 50 % duty, LED bar ≤ 30 %.
 * Printer rail only on while a badge job is queued (+ 30 s): idle < 12 W.
 * INA238 reports bus voltage/current/power for remote monitoring.

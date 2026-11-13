@@ -1,8 +1,8 @@
 {
-  "violations": 91,
-  "unconnected": 1,
+  "violations": 82,
+  "unconnected": 2,
   "footprint_errors": 0,
-  "errors": 10,
+  "errors": 2,
   "warnings": 82,
   "by_severity": {
     "warning": {
@@ -11,10 +11,7 @@
       "silk_edge_clearance": 24
     },
     "error": {
-      "solder_mask_bridge": 1,
-      "clearance": 6,
-      "hole_clearance": 2,
-      "unconnected_items": 1
+      "unconnected_items": 2
     }
   }
 }

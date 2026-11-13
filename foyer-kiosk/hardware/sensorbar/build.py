@@ -96,15 +96,20 @@ def do_fab(c):
         import shutil
         shutil.copy(routed, pcb)
     add_pours(pcb, "GND", ("F.Cu", "B.Cu"), [(0.3, 0.3), (W - 0.3, 0.3), (W - 0.3, H - 0.3), (0.3, H - 0.3)])
-    print("stitching vias added:", stitch(pcb, keepouts=()))
     from eda.repair import repair
     rpt = os.path.join(FAB, f"{NAME}-drc.rpt")
+    # 1) close signal gaps while the board is still open, 2) stitch ground, 3) close pour gaps
+    res = drc(pcb, rpt)
+    if res.get("unconnected"):
+        print(f"signal repair: {res['unconnected']} unconnected")
+        repair(pcb, rpt, clearance=0.16, width=0.15, via_d=0.5, via_drill=0.25)
+    print("stitching vias added:", stitch(pcb, keepouts=()))
     res = drc(pcb, rpt)
     for attempt in range(3):
         if not res.get("unconnected"):
             break
         print(f"repair pass {attempt + 1}: {res['unconnected']} unconnected")
-        if not repair(pcb, rpt, clearance=0.2, width=0.2, via_d=0.6, via_drill=0.3):
+        if not repair(pcb, rpt, clearance=0.16, width=0.15, via_d=0.5, via_drill=0.25):
             break
         res = drc(pcb, rpt)
     json.dump(res, open(os.path.join(FAB, f"{NAME}-drc-summary.json"), "w"), indent=2)

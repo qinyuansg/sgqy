@@ -132,7 +132,7 @@ after failures):
    dependencies from Debian (`python3-aiohttp`, `-yaml`, `-cryptography`,
    `-pil`, `-qrcode`, `-libgpiod`, `-picamera2`), `espeak-ng`, `cups` +
    `printer-driver-ptouch`, `ddcutil`, `nftables`, `unattended-upgrades`,
-   `cryptsetup`, `pkcs11-provider`, `rpifwcrypto`.
+   `cryptsetup`, `pkcs11-provider` (`rpi-fw-crypto` is already part of the base image).
 3. Accounts: `foyer-agent` and `foyer-kiosk` system users without a login
    shell; root locked; no first-user wizard.
 4. Secrets: generates the offline-queue key on the device and seals it, plus
@@ -201,10 +201,17 @@ heartbeat response (`{"commands":[{"type":"ota_check"}]}`).
 
 ## Status and things to verify at EVT bring-up
 
-* Built and tested here against a **synthetic** image only:
-  `downloads.raspberrypi.com` is not reachable from the build container. The
-  download/verify path was exercised against a local mirror with the same
-  redirect and `.sha256` layout.
+* **Real build done** (2026-11-13): `build.sh` resolved
+  `raspios_lite_arm64_latest` to `2026-10-06-raspios-trixie-arm64-lite.img.xz`,
+  verified its SHA-256 and produced `foyer-vk1-1.0.0-20261113.img.xz` (588 MB).
+  On the result: `e2fsck -fn` and `fsck.vfat -n` clean, every injected file
+  read back and checksum-verified, `cloud-init schema` valid for `user-data`
+  and `network-config`. Inspecting the base image confirmed: NoCloud seed on
+  the boot partition (`/etc/cloud/cloud.cfg.d/99_raspberry-pi.cfg`:
+  `seedfrom: file:///boot/firmware`), `resize` on the kernel command line,
+  `userconfig.service` enabled (disabled by the seed and by provisioning),
+  `rpi-fw-crypto` installed. The image has **not been booted** on a CM5.
+* `tests/test-synthetic.sh` covers the same pipeline offline (45 checks).
 * `dtoverlay=imx708` (no parameter) for CAM1: the overlay has a `cam0`
   parameter but no `cam1` one (CAM1 is its default); contract rev B lists
   `imx708,cam1`.
@@ -214,5 +221,5 @@ heartbeat response (`{"commands":[{"type":"ota_check"}]}`).
 * ATECC608B: cryptoauthlib slot config and the PKCS#11 URI PEM wrapper for
   `pkcs11-provider` need a hardware test; device certificate enrolment is a
   factory step.
-* `rpifwcrypto` package name and `rpi-fw-crypto` usage follow the
-  `rpi-sb-provisioner` pre-boot initramfs scripts.
+* First boot (packages, LUKS data partition, kiosk session) has only been
+  reviewed and shellchecked, not executed.

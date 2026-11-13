@@ -8,8 +8,8 @@ Targets: badge paper swap **< 1 min**, any module replaced **< 5 min**.
 1. Insert the service key in the lock on the **underside of the head door**
    (right-hand side, hidden under the glass lip) and turn ¼ turn.
 2. **Lift the head door** (glass + display) upwards; the constant-torque hinges
-   hold it at any angle up to 100°. The door switch reports a service event to
-   the fleet console (kiosk shows "Service in progress").
+   hold it at any angle up to 100°. The door switch reports `door_open` to the
+   fleet console and `/healthz`, so every opening is logged.
 3. The **lectern door** (deck glass + front panel) is now free: pull its top
    edge towards you and it drops down on its bottom hinges.
 
@@ -48,9 +48,9 @@ Adhesive badge stock must be qualified (see verification register V-12).
 ## 4. Module replacement (< 5 min each)
 
 All modules plug into standard connectors (USB-A, HDMI, Micro-Fit, JST GH).
-**Power the unit down first**: hold the on-screen power icon in the service
-menu, or press the service power button `SW1` on the carrier (CM5 shuts down
-cleanly; the light bar turns off).
+**Power the unit down first**: briefly press the service power button `SW1`
+on the carrier (the CM5 shuts down cleanly; the light bar turns off). Hold it
+for more than 5 s only if the OS is unresponsive (forced off).
 
 | Module | Retained by | Disconnect | Time |
 |---|---|---|---|
@@ -70,8 +70,9 @@ cleanly; the light bar turns off).
 FPC tip: the camera connectors (`J6`, `J7`) have a locking bar — lift the bar,
 insert the cable contacts-down, press the bar closed.
 
-After replacing a module, run **Service → Self-test**; replaced modules are
-recorded in the fleet console with their serial numbers.
+After replacing a module, close the doors and check `/healthz` (or the fleet
+console): every entry in `peripherals` must be true and `problems` empty.
+Then do one test check-in.
 
 ## 5. Preventive maintenance
 
@@ -91,8 +92,9 @@ recorded in the fleet console with their serial numbers.
   and power draw from the INA238 monitor, printer/paper status, peripheral
   presence, app version, last successful VMS sync) to the fleet endpoint, and
   exposes `/healthz` and `/metrics` on the management VLAN.
-* **Status light bar:** white breathing = booting · blue = ready · green = check-in
-  success · amber = reduced power or paper low · red = fault (see console).
+* **Status light bar:** shows the agent's states — idle, attention (visitor
+  approaching), busy, success and error. Faults are always detailed in
+  `/healthz` → `problems`.
 
 ## 7. Privacy during service
 
@@ -101,17 +103,18 @@ document data exist only in memory during the session. If the network is down,
 pending check-ins are held in an encrypted queue (≤ 24 h, then deleted).
 Replacing the compute tray or CM5 does **not** expose visitor data: the eMMC
 is encrypted with a key bound to that CM5's one-time-programmable device key.
-**Returned CM5 modules must still be wiped** (`Service → Decommission`) before
-leaving site.
+Returned CM5 modules should still be wiped before leaving site: boot them
+with `nRPIBOOT` held (`SW2`) and re-flash with `rpi-sb-provisioner`, which
+re-creates the encrypted volume with a fresh key.
 
 ## 8. Fault-finding
 
 | Symptom | Check |
 |---|---|
-| Black screen, light bar blue | Display 12 V lead `J13`, HDMI `J5`; `DISP_PWR_EN` state in the service menu |
+| Black screen, light bar on | Display 12 V lead `J13`, HDMI `J5`; display power rail (`DISP_PWR_EN`) |
 | "Camera not detected" | FPC seated and locked, contacts facing the right way; swap the cable |
-| Liveness always fails | IR window dirty or covered; check the IR flood in Service → Cameras (IR image) |
+| Liveness always fails | IR window dirty or covered; IR flood lead / sensor bar `J16` |
 | QR codes slow to read | Phone brightness; clean the scanner window area of the glass |
 | Printer error, rail off | Over-current on the 24 V rail (LM5176 3.3 A limit) — check for paper jam / printer fault |
-| Hub ports dead | `HUB_RESET_n`; a shorted USB device trips its TPS2065C (auto-recovers when removed) |
+| Hub ports dead | A shorted USB device trips its TPS2065C (auto-recovers when removed); reboot resets both hubs (`HUB_RESET_n`) |
 | Overheating warning | Fan connector `J18`; rear vents blocked by wall/stand accessories |

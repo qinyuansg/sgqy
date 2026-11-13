@@ -16,7 +16,7 @@ import numpy as np
 import pcbnew
 
 mm = pcbnew.FromMM
-RES = 0.05  # grid resolution, mm
+RES = 0.025  # grid resolution, mm
 
 ITEM = re.compile(r"@\(([-\d.]+) mm, ([-\d.]+) mm\): (\w+).*?\[([^\]]+)\].*? on (\S+)")
 
@@ -52,7 +52,7 @@ class Grid:
         L = len(self.layers)
         occ = np.zeros((L, self.ny, self.nx), dtype=bool)
         own = np.zeros((L, self.ny, self.nx), dtype=bool)
-        infl = self.clear + self.width / 2 + 2 * RES  # grid-rounding margin
+        infl = self.clear + self.width / 2 + RES  # grid-rounding margin
         e = int(self.edge / RES)
         occ[:, :e, :] = occ[:, -e:, :] = occ[:, :, :e] = occ[:, :, -e:] = True
 
@@ -113,8 +113,10 @@ class Grid:
         gl = self.layers.index(goal_layer) if goal_layer in self.layers else 0
         s = (sl, *self.cell(*start)[::-1])
         g = (gl, *self.cell(*goal)[::-1])
+        k = int(0.3 / RES)  # free the pad's own escape area (own-net copper is never an obstacle)
         for li, j, i in ((s,) if via_at_goal else (s, g)):
-            occ[li, max(0, j - 3):j + 4, max(0, i - 3):i + 4] = False
+            occ[li, max(0, j - k):j + k + 1, max(0, i - k):i + k + 1] &= ~own[li, max(0, j - k):j + k + 1, max(0, i - k):i + k + 1]
+            occ[li, max(0, j - 2):j + 3, max(0, i - 2):i + 3] = False
         if via_at_goal and (occ[g[0], g[1], g[2]] or not self._via_free(occ, g[1], g[2], vx)):
             return None
 
@@ -123,7 +125,7 @@ class Grid:
 
         moves = [(0, 1, 1.0), (0, -1, 1.0), (1, 0, 1.0), (-1, 0, 1.0),
                  (1, 1, 1.414), (1, -1, 1.414), (-1, 1, 1.414), (-1, -1, 1.414)]
-        h = lambda n: math.hypot(n[1] - g[1], n[2] - g[2])  # noqa: E731
+        h = lambda n: 1.3 * math.hypot(n[1] - g[1], n[2] - g[2])  # noqa: E731  (weighted A*)
         openq = [(h(s), 0.0, s)]
         came = {s: None}
         cost = {s: 0.0}
@@ -148,7 +150,7 @@ class Grid:
             if via_ok(j, i):
                 for nl in range(L):
                     if nl != li:
-                        nbrs.append(((nl, j, i), 40.0))
+                        nbrs.append(((nl, j, i), 40.0 * 0.05 / RES))
             for n, w in nbrs:
                 nc = c + w
                 if nc < cost.get(n, 1e18):

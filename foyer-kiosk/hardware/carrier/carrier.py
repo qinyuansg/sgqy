@@ -195,7 +195,7 @@ def build() -> Circuit:
 
     pdc = c.part("U", "STUSB4500", "Package_DFN_QFN:QFN-24-1EP_4x4mm_P0.5mm_EP2.7x2.7mm",
                  symbol="K7:Interface_USB:STUSB4500QTR", near=usbc, mpn="STUSB4500QTR", mfr="STMicroelectronics",
-                 desc="USB PD sink controller (NVM: PDO1 5V, PDO2 15V/3A, PDO3 20V/3A)",
+                 desc="USB PD sink controller (NVM: PDO1 5V, PDO2 15V/2A, PDO3 20V/3A)",
                  provisional="Application circuit to be reviewed against ST datasheet/AN5225 (ST site unreachable during design)")
     pdc.wire({"CC1": n("USBC_CC1"), "CC1DB": n("USBC_CC1"), "CC2": n("USBC_CC2"), "CC2DB": n("USBC_CC2"),
               "VDD": VBUSC, "VBUS_VS_DISCH": VBUSC, "DISCH": n("PD_DISCH"), "VSYS": GND, "GND": GND,

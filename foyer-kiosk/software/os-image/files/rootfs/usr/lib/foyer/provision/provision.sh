@@ -160,7 +160,6 @@ packages() {
   for attempt in 1 2 3; do
     if apt-get update && apt-get -y -o Dpkg::Options::=--force-confold full-upgrade &&
        apt-get -y --no-install-recommends install "${PACKAGES[@]}"; then
-      apt-get -y install rpifwcrypto 2>/dev/null || log "rpifwcrypto not available"
       return 0
     fi
     log "apt attempt ${attempt} failed"

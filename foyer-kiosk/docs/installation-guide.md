@@ -61,29 +61,32 @@ VESA 100), so the core unit is identical everywhere.
 2. Feed the patch lead through the grommet in the back wall and plug it into the
    RJ45 (`J1`) on the bottom edge of the carrier board. Dress the cable in the
    clip.
-3. Close the head door and lock it. The unit boots (~40 s); the status light bar
-   breathes **white** while booting, then **blue** when ready.
+3. Close the head door and lock it. The unit boots (≈ 40 s) to the attract
+   screen; the status light bar shows the idle state.
 
 ## 5. Commission (5 min)
 
-Provisioning is zero-touch when a site config is present. Two ways to give it one:
+Provisioning is zero-touch: the site configuration (`/etc/foyer/site.yaml` —
+VMS endpoint, Wi-Fi, language, branding, badge media, fleet endpoint) is baked
+into the image at the factory (`software/os-image/README.md`); development
+units also accept `foyer/site.yaml` on the boot partition. Secrets are never in
+the YAML — they are sealed on the device during provisioning, and the device
+authenticates with its ATECC608B identity.
 
-* **Pre-staged (recommended):** the site config YAML was written to the boot
-  partition before shipping (see `software/os-image/README.md`).
-* **On site:** plug a USB stick containing `foyer-site.yaml` into the internal
-  service USB-A port (`J12B`, behind the head door) — the agent imports it, wipes
-  it from the stick's copy log and asks for a reboot.
-
-Then, on the kiosk:
-1. Hold a finger on the top-left corner of the screen for 5 s → enter the
-   installer PIN (from the site config) → **Commissioning**.
-2. The self-test runs automatically: display/touch, both cameras (RGB + IR
-   liveness target), QR scanner, passport reader (insert the test card), NFC
-   (tap test badge), printer (prints a test badge), speaker + microphones (loopback),
-   ToF approach sensor, light bar, power (reports PoE class / USB-PD contract),
-   network/VMS reachability, clock, disk encryption status.
-3. Every line must show **PASS**. Tap **Finish** — the unit registers with the
-   fleet endpoint and appears online in the VMS console.
+On first power-up at the site:
+1. Wait for the attract screen (≈ 40 s; first boot of a development image that
+   still has to install packages takes several minutes and needs Internet).
+2. From a laptop on the management VLAN (or in the fleet console, which shows
+   the same data from the heartbeat) open `http://<kiosk>:<metrics port>/healthz`.
+   It must show `"status": "ok"`, an empty `problems` list, and every entry in
+   `peripherals` true: display/touch, both cameras, QR scanner, passport reader,
+   printer, NFC (if fitted), light bar, proximity sensor, audio, power monitor.
+   `door_open` must be false with the doors locked.
+3. Check the power class in `/metrics` (`foyer_power_*`): PoE high-power or
+   USB-PD ≥ 60 W. Otherwise the printer runs in slow mode — move to a Type 4 port.
+4. Do a real check-in with a test invitation QR code: scan a test passport,
+   take the face photo, accept the rules, collect the badge, and confirm the
+   host notification arrives in the VMS.
 
 ## 6. Hand-over
 
@@ -96,7 +99,8 @@ Then, on the kiosk:
 | Symptom | Cause / fix |
 |---|---|
 | No power, no LEDs | No PoE: check the switch port is PoE++ and enabled; try the USB-C PD charger |
-| Light bar **amber** pulsing | Low power class (PoE Type 2/3): kiosk works, printer is in slow mode — move to a Type 4 port |
-| Light bar **red** | Self-test failure — open Commissioning to see which module |
-| "VMS unreachable" | Firewall: allow outbound HTTPS 443 to the VMS host and fleet host; check proxy settings in the site config |
+| `/healthz` lists a peripheral as false | Re-seat that module's USB / FPC / power lead (Maintenance Manual §4) |
+| `door_open` true with doors shut | Door switch lead `J19` unplugged or switch misaligned |
+| "VMS unreachable" in the heartbeat | Firewall: allow outbound HTTPS 443 to the VMS host and fleet host; check proxy settings in the site config |
+| Printer slow | Low power class (PoE Type 2/3 or small USB-C charger) — move to a Type 4 port |
 | Printer test badge blank | Media loaded upside down (thermal side must face the print head) |

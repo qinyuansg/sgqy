@@ -51,7 +51,7 @@ def build() -> Circuit:
                     desc=f"I2S MEMS microphone, bottom port ({'left' if lr is GND else 'right'} channel)")
         mk.wire({"VDD": V3, "GND": GND, "SCK": n("BCLK"), "WS": n("LRCLK"), "SD": n("MIC_SD"), "LR": lr})
         c.C("100n", V3, GND, near=mk, mfr=GENERIC)
-    c.R("100k", n("MIC_SD"), GND, near=tof, mfr=GENERIC, desc="Resistor 100k 0402 (I2S SD bus keeper)")
+    c.R("100k", n("MIC_SD"), GND, near=j, mfr=GENERIC, desc="Resistor 100k 0402 (I2S SD bus keeper)")
 
     c.group = "ir"
     drv = c.part("U", "AL8860", "Package_TO_SOT_SMD:TSOT-23-5", symbol="K7:Driver_LED:AL8860WT", ref="U2",

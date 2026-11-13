@@ -193,9 +193,14 @@ def do_fab(c):
         import shutil
         shutil.copy(routed, pcb)
     add_pours(pcb, "GND", ("F.Cu", "B.Cu"), [(0.3, 0.3), (W - 0.3, 0.3), (W - 0.3, H - 0.3), (0.3, H - 0.3)])
-    print("stitching vias added:", stitch(pcb, keepouts=(CM5_KEEPOUT,)))
     from eda.repair import repair
     rpt = os.path.join(FAB, f"{NAME}-drc.rpt")
+    # 1) close signal gaps while the board is still open, 2) stitch ground, 3) close pour gaps
+    res = drc(pcb, rpt)
+    if res.get("unconnected"):
+        print(f"signal repair: {res['unconnected']} unconnected")
+        repair(pcb, rpt, clearance=0.15, width=0.15, via_d=0.45, via_drill=0.2)
+    print("stitching vias added:", stitch(pcb, keepouts=(CM5_KEEPOUT,)))
     res = drc(pcb, rpt)
     for attempt in range(3):
         if not res.get("unconnected"):
