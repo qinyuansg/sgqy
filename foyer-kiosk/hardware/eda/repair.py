@@ -105,7 +105,7 @@ class Grid:
         via_extra = max(0.0, self.via_d / 2 - self.width / 2)
         return occ & ~own, own, via_extra
 
-    def route(self, net, start, goal, start_layer, goal_layer, via_at_goal=False, allow_vias=True):
+    def route(self, net, start, goal, start_layer, goal_layer, via_at_goal=False, allow_vias=True, max_cost=None):
         occ, own, via_extra = self.build(net)
         L = len(self.layers)
         vx = int(math.ceil(via_extra / RES))
@@ -132,6 +132,8 @@ class Grid:
         while openq and limit:
             limit -= 1
             _, c, node = heapq.heappop(openq)
+            if max_cost is not None and c > max_cost:
+                return None  # only detours longer than allowed remain
             if node[1:] == g[1:] and node[0] == g[0]:
                 path = []
                 while node is not None:
@@ -212,7 +214,7 @@ def repair(board_path: str, report: str, clearance=0.2, width=0.2, via_d=0.6, vi
                 for k in range(16):
                     ang = 2 * math.pi * k / 16
                     px, py = x + r * math.cos(ang), y + r * math.sin(ang)
-                    path = grid.route(net, (x, y), (px, py), lid, lid, via_at_goal=True)
+                    path = grid.route(net, (x, y), (px, py), lid, lid, via_at_goal=True, max_cost=4 * r / RES)
                     if path:
                         best = path
                         break
@@ -231,7 +233,9 @@ def repair(board_path: str, report: str, clearance=0.2, width=0.2, via_d=0.6, vi
                 log(f"  FAILED stitch {net} at ({x:.2f},{y:.2f})")
             continue
         (x0, y0, _, _, l0), (x1, y1, _, _, l1) = ends
-        path = grid.route(net, (x0, y0), (x1, y1), b.GetLayerID(l0), b.GetLayerID(l1))
+        direct = math.hypot(x1 - x0, y1 - y0)
+        path = grid.route(net, (x0, y0), (x1, y1), b.GetLayerID(l0), b.GetLayerID(l1),
+                          max_cost=(3 * direct + 5.0) / RES + 400)
         if path:
             grid.commit(net, path, width, via_d, via_drill)
             fixed += 1
@@ -287,7 +291,8 @@ def fanout(board_path: str, nets, clearance=0.2, width=0.25, via_d=0.6, via_dril
                         gx, gy = x + r * math.cos(a), y + r * math.sin(a)
                         if not spot_ok(gx, gy):
                             continue
-                        path = grid.route(net, (x, y), (gx, gy), lid, lid, via_at_goal=True, allow_vias=False)
+                        path = grid.route(net, (x, y), (gx, gy), lid, lid, via_at_goal=True, allow_vias=False,
+                                          max_cost=4 * r / RES)
                         if path:
                             best = path
                             break

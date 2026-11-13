@@ -1,20 +1,20 @@
 {
-  "violations": 142,
-  "unconnected": 0,
+  "violations": 977,
+  "unconnected": 1,
   "footprint_errors": 0,
-  "errors": 46,
-  "warnings": 96,
+  "errors": 898,
+  "warnings": 80,
   "by_severity": {
     "warning": {
       "silk_overlap": 27,
       "silk_over_copper": 29,
-      "holes_co_located": 16,
       "silk_edge_clearance": 24
     },
     "error": {
-      "hole_near_hole": 2,
-      "clearance": 23,
-      "hole_clearance": 21
+      "solder_mask_bridge": 199,
+      "clearance": 499,
+      "hole_clearance": 199,
+      "unconnected_items": 1
     }
   }
 }
