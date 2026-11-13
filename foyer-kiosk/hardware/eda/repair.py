@@ -116,7 +116,6 @@ class Grid:
         k = int(0.3 / RES)  # free the pad's own escape area (own-net copper is never an obstacle)
         for li, j, i in ((s,) if via_at_goal else (s, g)):
             occ[li, max(0, j - k):j + k + 1, max(0, i - k):i + k + 1] &= ~own[li, max(0, j - k):j + k + 1, max(0, i - k):i + k + 1]
-            occ[li, max(0, j - 2):j + 3, max(0, i - 2):i + 3] = False
         if via_at_goal and (occ[g[0], g[1], g[2]] or not self._via_free(occ, g[1], g[2], vx)):
             return None
 
@@ -290,7 +289,7 @@ def fanout(board_path: str, nets, clearance=0.2, width=0.25, via_d=0.6, via_dril
                     if best:
                         break
                 if not best:
-                    if via_in_pad and net in via_in_pad:
+                    if via_in_pad and net in via_in_pad and spot_ok(x, y):
                         # last resort for ground: filled + capped via in the pad (fab note in the register)
                         v = pcbnew.PCB_VIA(b)
                         v.SetPosition(c); v.SetWidth(mm(via_d)); v.SetDrill(mm(via_drill))

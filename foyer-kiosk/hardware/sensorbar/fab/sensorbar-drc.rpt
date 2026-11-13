@@ -1,59 +1,31 @@
 ** Drc report for /home/user/sgqy/foyer-kiosk/hardware/sensorbar/kicad/sensorbar.kicad_pcb **
-** Created on 2026-11-13 19:25:06 **
+** Created on 2026-11-13 19:30:51 **
 
-** Found 87 DRC violations **
-[silk_overlap]: Silkscreen overlap
-    Rule: board setup constraints silk; Severity: warning
-    @(66.3400 mm, 2.3250 mm): Reference 'C16'
-    @(61.0500 mm, 1.2500 mm): Line on F.Silkscreen
-[silk_overlap]: Silkscreen overlap
-    Rule: board setup constraints silk; Severity: warning
-    @(58.3400 mm, 2.3250 mm): Reference 'C15'
-    @(53.0500 mm, 1.2500 mm): Line on F.Silkscreen
-[silk_overlap]: Silkscreen overlap
-    Rule: board setup constraints silk; Severity: warning
-    @(69.0500 mm, 1.2500 mm): Line on F.Silkscreen
-    @(74.3400 mm, 2.3250 mm): Reference 'C17'
-[silk_overlap]: Silkscreen overlap
-    Rule: board setup constraints silk; Severity: warning
-    @(45.0500 mm, 1.2500 mm): Line on F.Silkscreen
-    @(50.3400 mm, 2.3250 mm): Reference 'C14'
-[silk_overlap]: Silkscreen overlap
-    Rule: board setup constraints silk; Severity: warning
-    @(42.3400 mm, 2.3250 mm): Reference 'C13'
-    @(37.0500 mm, 1.2500 mm): Line on F.Silkscreen
-[silk_overlap]: Silkscreen overlap
-    Rule: board setup constraints silk; Severity: warning
-    @(40.0000 mm, 12.5600 mm): Line on F.Silkscreen
-    @(39.1785 mm, 12.2463 mm): Reference 'R3'
-[silk_overlap]: Silkscreen overlap
-    Rule: board setup constraints silk; Severity: warning
-    @(39.9000 mm, 8.7578 mm): Line on F.Silkscreen
-    @(40.0000 mm, 8.6000 mm): Reference 'U2'
-[silk_overlap]: Silkscreen overlap
-    Rule: board setup constraints silk; Severity: warning
-    @(26.3400 mm, 2.3250 mm): Reference 'C11'
-    @(21.0500 mm, 1.2500 mm): Line on F.Silkscreen
-[silk_overlap]: Silkscreen overlap
-    Rule: board setup constraints silk; Severity: warning
-    @(18.3400 mm, 2.3250 mm): Reference 'C10'
-    @(13.0500 mm, 1.2500 mm): Line on F.Silkscreen
+** Found 124 DRC violations **
 [silk_overlap]: Silkscreen overlap
     Rule: board setup constraints silk; Severity: warning
     @(34.3400 mm, 2.3250 mm): Reference 'C12'
     @(29.0500 mm, 1.2500 mm): Line on F.Silkscreen
 [silk_overlap]: Silkscreen overlap
     Rule: board setup constraints silk; Severity: warning
-    @(106.3400 mm, 2.3250 mm): Reference 'C21'
-    @(101.0500 mm, 1.2500 mm): Line on F.Silkscreen
+    @(26.3400 mm, 2.3250 mm): Reference 'C11'
+    @(21.0500 mm, 1.2500 mm): Line on F.Silkscreen
 [silk_overlap]: Silkscreen overlap
     Rule: board setup constraints silk; Severity: warning
-    @(117.0500 mm, 1.2500 mm): Line on F.Silkscreen
-    @(122.3400 mm, 2.3250 mm): Reference 'C23'
+    @(40.0000 mm, 8.6000 mm): Reference 'U2'
+    @(39.9000 mm, 8.7578 mm): Line on F.Silkscreen
 [silk_overlap]: Silkscreen overlap
     Rule: board setup constraints silk; Severity: warning
-    @(109.0500 mm, 1.2500 mm): Line on F.Silkscreen
-    @(114.3400 mm, 2.3250 mm): Reference 'C22'
+    @(40.0000 mm, 12.5600 mm): Line on F.Silkscreen
+    @(39.1785 mm, 12.2463 mm): Reference 'R3'
+[silk_overlap]: Silkscreen overlap
+    Rule: board setup constraints silk; Severity: warning
+    @(45.0500 mm, 1.2500 mm): Line on F.Silkscreen
+    @(50.3400 mm, 2.3250 mm): Reference 'C14'
+[silk_overlap]: Silkscreen overlap
+    Rule: board setup constraints silk; Severity: warning
+    @(53.0500 mm, 1.2500 mm): Line on F.Silkscreen
+    @(58.3400 mm, 2.3250 mm): Reference 'C15'
 [silk_overlap]: Silkscreen overlap
     Rule: board setup constraints silk; Severity: warning
     @(82.3400 mm, 2.3250 mm): Reference 'C18'
@@ -64,88 +36,113 @@
     @(85.0500 mm, 1.2500 mm): Line on F.Silkscreen
 [silk_overlap]: Silkscreen overlap
     Rule: board setup constraints silk; Severity: warning
-    @(93.0500 mm, 1.2500 mm): Line on F.Silkscreen
+    @(69.0500 mm, 1.2500 mm): Line on F.Silkscreen
+    @(74.3400 mm, 2.3250 mm): Reference 'C17'
+[silk_overlap]: Silkscreen overlap
+    Rule: board setup constraints silk; Severity: warning
+    @(42.3400 mm, 2.3250 mm): Reference 'C13'
+    @(37.0500 mm, 1.2500 mm): Line on F.Silkscreen
+[silk_overlap]: Silkscreen overlap
+    Rule: board setup constraints silk; Severity: warning
+    @(13.0500 mm, 1.2500 mm): Line on F.Silkscreen
+    @(18.3400 mm, 2.3250 mm): Reference 'C10'
+[silk_overlap]: Silkscreen overlap
+    Rule: board setup constraints silk; Severity: warning
+    @(66.3400 mm, 2.3250 mm): Reference 'C16'
+    @(61.0500 mm, 1.2500 mm): Line on F.Silkscreen
+[silk_overlap]: Silkscreen overlap
+    Rule: board setup constraints silk; Severity: warning
     @(98.3400 mm, 2.3250 mm): Reference 'C20'
+    @(93.0500 mm, 1.2500 mm): Line on F.Silkscreen
 [silk_overlap]: Silkscreen overlap
     Rule: board setup constraints silk; Severity: warning
     @(138.3400 mm, 2.3250 mm): Reference 'C25'
     @(133.0500 mm, 1.2500 mm): Line on F.Silkscreen
 [silk_overlap]: Silkscreen overlap
     Rule: board setup constraints silk; Severity: warning
-    @(125.0500 mm, 1.2500 mm): Line on F.Silkscreen
-    @(130.3400 mm, 2.3250 mm): Reference 'C24'
-[silk_overlap]: Silkscreen overlap
-    Rule: board setup constraints silk; Severity: warning
-    @(141.0500 mm, 1.2500 mm): Line on F.Silkscreen
     @(146.3400 mm, 2.3250 mm): Reference 'C26'
+    @(141.0500 mm, 1.2500 mm): Line on F.Silkscreen
 [silk_overlap]: Silkscreen overlap
     Rule: board setup constraints silk; Severity: warning
-    @(149.0500 mm, 1.2500 mm): Line on F.Silkscreen
-    @(154.3400 mm, 2.3250 mm): Reference 'C27'
+    @(130.3400 mm, 2.3250 mm): Reference 'C24'
+    @(125.0500 mm, 1.2500 mm): Line on F.Silkscreen
 [silk_overlap]: Silkscreen overlap
     Rule: board setup constraints silk; Severity: warning
-    @(194.3400 mm, 2.3250 mm): Reference 'C32'
-    @(189.0500 mm, 1.2500 mm): Line on F.Silkscreen
+    @(122.3400 mm, 2.3250 mm): Reference 'C23'
+    @(117.0500 mm, 1.2500 mm): Line on F.Silkscreen
+[silk_overlap]: Silkscreen overlap
+    Rule: board setup constraints silk; Severity: warning
+    @(101.0500 mm, 1.2500 mm): Line on F.Silkscreen
+    @(106.3400 mm, 2.3250 mm): Reference 'C21'
+[silk_overlap]: Silkscreen overlap
+    Rule: board setup constraints silk; Severity: warning
+    @(109.0500 mm, 1.2500 mm): Line on F.Silkscreen
+    @(114.3400 mm, 2.3250 mm): Reference 'C22'
 [silk_overlap]: Silkscreen overlap
     Rule: board setup constraints silk; Severity: warning
     @(178.3400 mm, 2.3250 mm): Reference 'C30'
     @(173.0500 mm, 1.2500 mm): Line on F.Silkscreen
 [silk_overlap]: Silkscreen overlap
     Rule: board setup constraints silk; Severity: warning
-    @(181.0500 mm, 1.2500 mm): Line on F.Silkscreen
-    @(186.3400 mm, 2.3250 mm): Reference 'C31'
-[silk_overlap]: Silkscreen overlap
-    Rule: board setup constraints silk; Severity: warning
-    @(170.3400 mm, 2.3250 mm): Reference 'C29'
-    @(165.0500 mm, 1.2500 mm): Line on F.Silkscreen
+    @(149.0500 mm, 1.2500 mm): Line on F.Silkscreen
+    @(154.3400 mm, 2.3250 mm): Reference 'C27'
 [silk_overlap]: Silkscreen overlap
     Rule: board setup constraints silk; Severity: warning
     @(162.3400 mm, 2.3250 mm): Reference 'C28'
     @(157.0500 mm, 1.2500 mm): Line on F.Silkscreen
 [silk_overlap]: Silkscreen overlap
     Rule: board setup constraints silk; Severity: warning
-    @(130.1914 mm, 14.3525 mm): Reference 'C6'
+    @(170.3400 mm, 2.3250 mm): Reference 'C29'
+    @(165.0500 mm, 1.2500 mm): Line on F.Silkscreen
+[silk_overlap]: Silkscreen overlap
+    Rule: board setup constraints silk; Severity: warning
+    @(186.3400 mm, 2.3250 mm): Reference 'C31'
+    @(181.0500 mm, 1.2500 mm): Line on F.Silkscreen
+[silk_overlap]: Silkscreen overlap
+    Rule: board setup constraints silk; Severity: warning
+    @(189.0500 mm, 1.2500 mm): Line on F.Silkscreen
+    @(194.3400 mm, 2.3250 mm): Reference 'C32'
+[silk_overlap]: Silkscreen overlap
+    Rule: board setup constraints silk; Severity: warning
     @(130.0000 mm, 13.5000 mm): Reference 'MK2'
+    @(130.1914 mm, 14.3525 mm): Reference 'C6'
 [silk_overlap]: Silkscreen overlap
     Rule: board setup constraints silk; Severity: warning
     @(130.0000 mm, 13.5000 mm): Reference 'MK2'
     @(130.0836 mm, 13.5525 mm): Line on B.Silkscreen
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; Severity: warning
-    @(106.3400 mm, 2.3250 mm): Reference 'C21'
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; Severity: warning
-    @(42.2612 mm, 13.3766 mm): Reference 'D3'
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; Severity: warning
-    @(146.3400 mm, 2.3250 mm): Reference 'C26'
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; Severity: warning
-    @(41.5675 mm, 11.0000 mm): Reference 'R2'
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; Severity: warning
-    @(26.3400 mm, 2.3250 mm): Reference 'C11'
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; Severity: warning
-    @(170.3400 mm, 2.3250 mm): Reference 'C29'
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; Severity: warning
-    @(90.3400 mm, 2.3250 mm): Reference 'C19'
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; Severity: warning
     @(34.3400 mm, 2.3250 mm): Reference 'C12'
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; Severity: warning
-    @(18.3400 mm, 2.3250 mm): Reference 'C10'
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; Severity: warning
-    @(98.3400 mm, 2.3250 mm): Reference 'C20'
+    @(130.3400 mm, 2.3250 mm): Reference 'C24'
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; Severity: warning
     @(82.3400 mm, 2.3250 mm): Reference 'C18'
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; Severity: warning
-    @(194.3400 mm, 2.3250 mm): Reference 'C32'
+    @(74.3400 mm, 2.3250 mm): Reference 'C17'
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; Severity: warning
+    @(90.3400 mm, 2.3250 mm): Reference 'C19'
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; Severity: warning
+    @(146.3400 mm, 2.3250 mm): Reference 'C26'
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; Severity: warning
+    @(138.3400 mm, 2.3250 mm): Reference 'C25'
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; Severity: warning
+    @(66.3400 mm, 2.3250 mm): Reference 'C16'
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; Severity: warning
+    @(162.3400 mm, 2.3250 mm): Reference 'C28'
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; Severity: warning
+    @(40.0000 mm, 8.6000 mm): Reference 'U2'
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; Severity: warning
+    @(18.3400 mm, 2.3250 mm): Reference 'C10'
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; Severity: warning
     @(58.3400 mm, 2.3250 mm): Reference 'C15'
@@ -154,95 +151,64 @@
     @(122.3400 mm, 2.3250 mm): Reference 'C23'
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; Severity: warning
-    @(50.3400 mm, 2.3250 mm): Reference 'C14'
+    @(26.3400 mm, 2.3250 mm): Reference 'C11'
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; Severity: warning
-    @(74.3400 mm, 2.3250 mm): Reference 'C17'
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; Severity: warning
-    @(42.3400 mm, 2.3250 mm): Reference 'C13'
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; Severity: warning
-    @(178.3400 mm, 2.3250 mm): Reference 'C30'
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; Severity: warning
-    @(154.3400 mm, 2.3250 mm): Reference 'C27'
+    @(41.5675 mm, 11.0000 mm): Reference 'R2'
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; Severity: warning
     @(10.3400 mm, 2.3250 mm): Reference 'C9'
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; Severity: warning
-    @(66.3400 mm, 2.3250 mm): Reference 'C16'
+    @(98.3400 mm, 2.3250 mm): Reference 'C20'
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; Severity: warning
-    @(40.0000 mm, 8.6000 mm): Reference 'U2'
+    @(42.2612 mm, 13.3766 mm): Reference 'D3'
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; Severity: warning
-    @(39.1785 mm, 12.2463 mm): Reference 'R3'
+    @(154.3400 mm, 2.3250 mm): Reference 'C27'
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; Severity: warning
-    @(162.3400 mm, 2.3250 mm): Reference 'C28'
+    @(170.3400 mm, 2.3250 mm): Reference 'C29'
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; Severity: warning
-    @(138.3400 mm, 2.3250 mm): Reference 'C25'
+    @(42.3400 mm, 2.3250 mm): Reference 'C13'
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; Severity: warning
     @(186.3400 mm, 2.3250 mm): Reference 'C31'
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; Severity: warning
+    @(39.1785 mm, 12.2463 mm): Reference 'R3'
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; Severity: warning
+    @(106.3400 mm, 2.3250 mm): Reference 'C21'
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; Severity: warning
+    @(178.3400 mm, 2.3250 mm): Reference 'C30'
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; Severity: warning
+    @(50.3400 mm, 2.3250 mm): Reference 'C14'
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; Severity: warning
     @(114.3400 mm, 2.3250 mm): Reference 'C22'
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; Severity: warning
-    @(130.3400 mm, 2.3250 mm): Reference 'C24'
+    @(194.3400 mm, 2.3250 mm): Reference 'C32'
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; Severity: warning
     @(130.0000 mm, 13.5000 mm): Reference 'MK2'
-[via_diameter]: Via diameter (netclass 'Default' min diameter 0.5000 mm; actual 0.4500 mm)
-    Rule: netclass 'Default'; Severity: error
-    @(130.6714 mm, 13.1925 mm): Via [GND] on F.Cu - B.Cu
-[drill_out_of_range]: Drill out of range (netclass 'Default' min width 0.2500 mm; actual 0.2000 mm)
-    Rule: netclass 'Default'; Severity: error
-    @(130.6714 mm, 13.1925 mm): Via [GND] on F.Cu - B.Cu
+[hole_near_hole]: Drilled holes too close together (board setup constraints min 0.2495 mm; actual 0.0000 mm)
+    Rule: board setup constraints; Severity: error
+    @(99.0750 mm, 9.2250 mm): Via [GND] on F.Cu - B.Cu
+    @(99.1000 mm, 9.3000 mm): Via [GND] on F.Cu - B.Cu
 [holes_co_located]: Drilled holes co-located
     Local override; Severity: warning
     @(97.5000 mm, 6.6750 mm): Via [GND] on F.Cu - B.Cu
     @(97.5000 mm, 6.6750 mm): Via [GND] on F.Cu - B.Cu
-[silk_edge_clearance]: Silkscreen clipped by board edge
-    Rule: board setup constraints silk; Severity: warning
-    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
-    @(144.0000 mm, 0.4500 mm): Reference 'LED18'
-[silk_edge_clearance]: Silkscreen clipped by board edge
-    Rule: board setup constraints silk; Severity: warning
-    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
-    @(104.0000 mm, 0.4500 mm): Reference 'LED13'
-[silk_edge_clearance]: Silkscreen clipped by board edge
-    Rule: board setup constraints silk; Severity: warning
-    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
-    @(152.0000 mm, 0.4500 mm): Reference 'LED19'
-[silk_edge_clearance]: Silkscreen clipped by board edge
-    Rule: board setup constraints silk; Severity: warning
-    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
-    @(40.0000 mm, 0.4500 mm): Reference 'LED5'
-[silk_edge_clearance]: Silkscreen clipped by board edge
-    Rule: board setup constraints silk; Severity: warning
-    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
-    @(72.0000 mm, 0.4500 mm): Reference 'LED9'
-[silk_edge_clearance]: Silkscreen clipped by board edge
-    Rule: board setup constraints silk; Severity: warning
-    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
-    @(96.0000 mm, 0.4500 mm): Reference 'LED12'
-[silk_edge_clearance]: Silkscreen clipped by board edge
-    Rule: board setup constraints silk; Severity: warning
-    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
-    @(64.0000 mm, 0.4500 mm): Reference 'LED8'
-[silk_edge_clearance]: Silkscreen clipped by board edge
-    Rule: board setup constraints silk; Severity: warning
-    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
-    @(112.0000 mm, 0.4500 mm): Reference 'LED14'
-[silk_edge_clearance]: Silkscreen clipped by board edge
-    Rule: board setup constraints silk; Severity: warning
-    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
-    @(48.0000 mm, 0.4500 mm): Reference 'LED6'
+[holes_co_located]: Drilled holes co-located
+    Local override; Severity: warning
+    @(163.2500 mm, 16.5000 mm): Via [+5V] on F.Cu - B.Cu
+    @(163.2500 mm, 16.5000 mm): Via [+5V] on F.Cu - B.Cu
 [silk_edge_clearance]: Silkscreen clipped by board edge
     Rule: board setup constraints silk; Severity: warning
     @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
@@ -250,7 +216,7 @@
 [silk_edge_clearance]: Silkscreen clipped by board edge
     Rule: board setup constraints silk; Severity: warning
     @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
-    @(32.0000 mm, 0.4500 mm): Reference 'LED4'
+    @(16.0000 mm, 0.4500 mm): Reference 'LED2'
 [silk_edge_clearance]: Silkscreen clipped by board edge
     Rule: board setup constraints silk; Severity: warning
     @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
@@ -258,27 +224,15 @@
 [silk_edge_clearance]: Silkscreen clipped by board edge
     Rule: board setup constraints silk; Severity: warning
     @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
-    @(80.0000 mm, 0.4500 mm): Reference 'LED10'
+    @(152.0000 mm, 0.4500 mm): Reference 'LED19'
 [silk_edge_clearance]: Silkscreen clipped by board edge
     Rule: board setup constraints silk; Severity: warning
     @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
-    @(24.0000 mm, 0.4500 mm): Reference 'LED3'
+    @(144.0000 mm, 0.4500 mm): Reference 'LED18'
 [silk_edge_clearance]: Silkscreen clipped by board edge
     Rule: board setup constraints silk; Severity: warning
     @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
-    @(88.0000 mm, 0.4500 mm): Reference 'LED11'
-[silk_edge_clearance]: Silkscreen clipped by board edge
-    Rule: board setup constraints silk; Severity: warning
-    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
-    @(160.0000 mm, 0.4500 mm): Reference 'LED20'
-[silk_edge_clearance]: Silkscreen clipped by board edge
-    Rule: board setup constraints silk; Severity: warning
-    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
-    @(184.0000 mm, 0.4500 mm): Reference 'LED23'
-[silk_edge_clearance]: Silkscreen clipped by board edge
-    Rule: board setup constraints silk; Severity: warning
-    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
-    @(128.0000 mm, 0.4500 mm): Reference 'LED16'
+    @(40.0000 mm, 0.4500 mm): Reference 'LED5'
 [silk_edge_clearance]: Silkscreen clipped by board edge
     Rule: board setup constraints silk; Severity: warning
     @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
@@ -286,7 +240,7 @@
 [silk_edge_clearance]: Silkscreen clipped by board edge
     Rule: board setup constraints silk; Severity: warning
     @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
-    @(120.0000 mm, 0.4500 mm): Reference 'LED15'
+    @(184.0000 mm, 0.4500 mm): Reference 'LED23'
 [silk_edge_clearance]: Silkscreen clipped by board edge
     Rule: board setup constraints silk; Severity: warning
     @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
@@ -294,31 +248,227 @@
 [silk_edge_clearance]: Silkscreen clipped by board edge
     Rule: board setup constraints silk; Severity: warning
     @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
-    @(176.0000 mm, 0.4500 mm): Reference 'LED22'
-[silk_edge_clearance]: Silkscreen clipped by board edge
-    Rule: board setup constraints silk; Severity: warning
-    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
-    @(16.0000 mm, 0.4500 mm): Reference 'LED2'
+    @(32.0000 mm, 0.4500 mm): Reference 'LED4'
 [silk_edge_clearance]: Silkscreen clipped by board edge
     Rule: board setup constraints silk; Severity: warning
     @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
     @(168.0000 mm, 0.4500 mm): Reference 'LED21'
-[clearance]: Clearance violation (netclass 'Default' clearance 0.1500 mm; actual 0.0000 mm)
-    Rule: netclass 'Default'; Severity: error
-    @(130.6714 mm, 13.1925 mm): Via [GND] on F.Cu - B.Cu
-    @(131.5460 mm, 12.8720 mm): Track [SCL] on In2.Cu, length 31.2330 mm
-[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.1205 mm)
+[silk_edge_clearance]: Silkscreen clipped by board edge
+    Rule: board setup constraints silk; Severity: warning
+    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
+    @(112.0000 mm, 0.4500 mm): Reference 'LED14'
+[silk_edge_clearance]: Silkscreen clipped by board edge
+    Rule: board setup constraints silk; Severity: warning
+    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
+    @(64.0000 mm, 0.4500 mm): Reference 'LED8'
+[silk_edge_clearance]: Silkscreen clipped by board edge
+    Rule: board setup constraints silk; Severity: warning
+    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
+    @(160.0000 mm, 0.4500 mm): Reference 'LED20'
+[silk_edge_clearance]: Silkscreen clipped by board edge
+    Rule: board setup constraints silk; Severity: warning
+    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
+    @(176.0000 mm, 0.4500 mm): Reference 'LED22'
+[silk_edge_clearance]: Silkscreen clipped by board edge
+    Rule: board setup constraints silk; Severity: warning
+    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
+    @(72.0000 mm, 0.4500 mm): Reference 'LED9'
+[silk_edge_clearance]: Silkscreen clipped by board edge
+    Rule: board setup constraints silk; Severity: warning
+    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
+    @(128.0000 mm, 0.4500 mm): Reference 'LED16'
+[silk_edge_clearance]: Silkscreen clipped by board edge
+    Rule: board setup constraints silk; Severity: warning
+    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
+    @(48.0000 mm, 0.4500 mm): Reference 'LED6'
+[silk_edge_clearance]: Silkscreen clipped by board edge
+    Rule: board setup constraints silk; Severity: warning
+    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
+    @(88.0000 mm, 0.4500 mm): Reference 'LED11'
+[silk_edge_clearance]: Silkscreen clipped by board edge
+    Rule: board setup constraints silk; Severity: warning
+    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
+    @(96.0000 mm, 0.4500 mm): Reference 'LED12'
+[silk_edge_clearance]: Silkscreen clipped by board edge
+    Rule: board setup constraints silk; Severity: warning
+    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
+    @(80.0000 mm, 0.4500 mm): Reference 'LED10'
+[silk_edge_clearance]: Silkscreen clipped by board edge
+    Rule: board setup constraints silk; Severity: warning
+    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
+    @(104.0000 mm, 0.4500 mm): Reference 'LED13'
+[silk_edge_clearance]: Silkscreen clipped by board edge
+    Rule: board setup constraints silk; Severity: warning
+    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
+    @(24.0000 mm, 0.4500 mm): Reference 'LED3'
+[silk_edge_clearance]: Silkscreen clipped by board edge
+    Rule: board setup constraints silk; Severity: warning
+    @(2.0000 mm, 0.0000 mm): Line on Edge.Cuts
+    @(120.0000 mm, 0.4500 mm): Reference 'LED15'
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.2350 mm)
     Rule: board setup constraints hole; Severity: error
-    @(131.5460 mm, 12.8720 mm): Track [SCL] on In2.Cu, length 31.2330 mm
-    @(130.6714 mm, 13.1925 mm): Via [GND] on F.Cu - B.Cu
-[clearance]: Clearance violation (netclass 'Default' clearance 0.1500 mm; actual 0.0000 mm)
-    Rule: netclass 'Default'; Severity: error
-    @(130.6714 mm, 13.1925 mm): Via [GND] on F.Cu - B.Cu
-    @(131.8460 mm, 13.3684 mm): Track [MIC_SD] on In2.Cu, length 46.2686 mm
+    @(130.5250 mm, 10.3500 mm): Track [GND] on F.Cu, length 1.1250 mm
+    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1797 mm)
+    Rule: netclass 'Power'; Severity: error
+    @(99.0000 mm, 9.6250 mm): Track [GND] on F.Cu, length 0.0500 mm
+    @(98.4000 mm, 9.7000 mm): Track [+3V3] on F.Cu, length 0.1371 mm
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1522 mm)
+    Rule: netclass 'Power'; Severity: error
+    @(98.9750 mm, 9.6500 mm): Track [GND] on F.Cu, length 0.0354 mm
+    @(98.4000 mm, 9.7000 mm): Track [+3V3] on F.Cu, length 0.1371 mm
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1879 mm)
+    Rule: netclass 'Power'; Severity: error
+    @(99.0000 mm, 9.5750 mm): Track [GND] on F.Cu, length 0.0354 mm
+    @(98.4000 mm, 9.7000 mm): Track [+3V3] on F.Cu, length 0.1371 mm
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1500 mm)
+    Rule: netclass 'Power'; Severity: error
+    @(98.9750 mm, 10.2500 mm): Track [GND] on F.Cu, length 0.6000 mm
+    @(98.4000 mm, 9.7000 mm): Track [+3V3] on F.Cu, length 0.1371 mm
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.0000 mm)
+    Rule: netclass 'Power'; Severity: error
+    @(163.9041 mm, 14.3338 mm): Via [GND] on F.Cu - B.Cu
+    @(132.4200 mm, 14.6009 mm): Track [+3V3] on B.Cu, length 32.7510 mm
 [hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0000 mm)
     Rule: board setup constraints hole; Severity: error
-    @(131.8460 mm, 13.3684 mm): Track [MIC_SD] on In2.Cu, length 46.2686 mm
+    @(132.4200 mm, 14.6009 mm): Track [+3V3] on B.Cu, length 32.7510 mm
+    @(163.9041 mm, 14.3338 mm): Via [GND] on F.Cu - B.Cu
+[clearance]: Clearance violation (netclass 'Default' clearance 0.1500 mm; actual 0.0979 mm)
+    Rule: netclass 'Default'; Severity: error
+    @(163.9041 mm, 14.3338 mm): Via [GND] on F.Cu - B.Cu
+    @(165.3220 mm, 13.8859 mm): Track [BCLK] on B.Cu, length 30.1540 mm
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.2229 mm)
+    Rule: board setup constraints hole; Severity: error
+    @(165.3220 mm, 13.8859 mm): Track [BCLK] on B.Cu, length 30.1540 mm
+    @(163.9041 mm, 14.3338 mm): Via [GND] on F.Cu - B.Cu
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1500 mm)
+    Rule: netclass 'Power'; Severity: error
+    @(115.6500 mm, 9.9000 mm): Via [GND] on F.Cu - B.Cu
+    @(114.7500 mm, 10.5000 mm): Pad 1 [IR_K1] of D2 on F.Cu
+[clearance]: Clearance violation (netclass 'Default' clearance 0.1500 mm; actual 0.0000 mm)
+    Rule: netclass 'Default'; Severity: error
     @(130.6714 mm, 13.1925 mm): Via [GND] on F.Cu - B.Cu
+    @(169.4050 mm, 12.8563 mm): Track [TOF_XSHUT] on F.Cu, length 64.6490 mm
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.1112 mm)
+    Rule: board setup constraints hole; Severity: error
+    @(169.4050 mm, 12.8563 mm): Track [TOF_XSHUT] on F.Cu, length 64.6490 mm
+    @(130.6714 mm, 13.1925 mm): Via [GND] on F.Cu - B.Cu
+[clearance]: Clearance violation (netclass 'Power' clearance 0.2000 mm; actual 0.1500 mm)
+    Rule: netclass 'Power'; Severity: error
+    @(84.3500 mm, 11.1000 mm): Via [GND] on F.Cu - B.Cu
+    @(85.2500 mm, 10.5000 mm): Pad 2 [IR_K1] of D1 on F.Cu
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0658 mm)
+    Rule: board setup constraints hole; Severity: error
+    @(130.3750 mm, 9.9000 mm): Track [GND] on B.Cu, length 0.0354 mm
+    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0000 mm)
+    Rule: board setup constraints hole; Severity: error
+    @(130.0000 mm, 10.0250 mm): Track [GND] on B.Cu, length 0.0354 mm
+    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0232 mm)
+    Rule: board setup constraints hole; Severity: error
+    @(129.7750 mm, 10.1000 mm): Track [GND] on B.Cu, length 0.0354 mm
+    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.2034 mm)
+    Rule: board setup constraints hole; Severity: error
+    @(130.5250 mm, 9.8500 mm): Track [GND] on B.Cu, length 0.0354 mm
+    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.2261 mm)
+    Rule: board setup constraints hole; Severity: error
+    @(130.5500 mm, 9.8250 mm): Track [GND] on B.Cu, length 0.0500 mm
+    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0000 mm)
+    Rule: board setup constraints hole; Severity: error
+    @(130.0750 mm, 10.0000 mm): Track [GND] on B.Cu, length 0.0354 mm
+    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0000 mm)
+    Rule: board setup constraints hole; Severity: error
+    @(130.2500 mm, 9.9250 mm): Track [GND] on B.Cu, length 0.0500 mm
+    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.1247 mm)
+    Rule: board setup constraints hole; Severity: error
+    @(129.6500 mm, 10.1250 mm): Track [GND] on B.Cu, length 0.0500 mm
+    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0000 mm)
+    Rule: board setup constraints hole; Severity: error
+    @(130.1500 mm, 9.9750 mm): Track [GND] on B.Cu, length 0.0354 mm
+    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0000 mm)
+    Rule: board setup constraints hole; Severity: error
+    @(129.8750 mm, 10.0500 mm): Track [GND] on B.Cu, length 0.0500 mm
+    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.1948 mm)
+    Rule: board setup constraints hole; Severity: error
+    @(129.5750 mm, 10.1500 mm): Track [GND] on B.Cu, length 0.0500 mm
+    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.1330 mm)
+    Rule: board setup constraints hole; Severity: error
+    @(130.4500 mm, 9.8750 mm): Track [GND] on B.Cu, length 0.0354 mm
+    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0000 mm)
+    Rule: board setup constraints hole; Severity: error
+    @(130.2250 mm, 9.9500 mm): Track [GND] on B.Cu, length 0.0354 mm
+    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0000 mm)
+    Rule: board setup constraints hole; Severity: error
+    @(129.9250 mm, 10.0500 mm): Track [GND] on B.Cu, length 0.0354 mm
+    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0000 mm)
+    Rule: board setup constraints hole; Severity: error
+    @(130.0250 mm, 10.0000 mm): Track [GND] on B.Cu, length 0.0500 mm
+    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.1595 mm)
+    Rule: board setup constraints hole; Severity: error
+    @(129.6250 mm, 10.1500 mm): Track [GND] on B.Cu, length 0.0354 mm
+    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0000 mm)
+    Rule: board setup constraints hole; Severity: error
+    @(130.1750 mm, 9.9500 mm): Track [GND] on B.Cu, length 0.0500 mm
+    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0580 mm)
+    Rule: board setup constraints hole; Severity: error
+    @(129.7250 mm, 10.1000 mm): Track [GND] on B.Cu, length 0.0500 mm
+    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0894 mm)
+    Rule: board setup constraints hole; Severity: error
+    @(129.7000 mm, 10.1250 mm): Track [GND] on B.Cu, length 0.0354 mm
+    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.1538 mm)
+    Rule: board setup constraints hole; Severity: error
+    @(130.4750 mm, 9.8500 mm): Track [GND] on B.Cu, length 0.0500 mm
+    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.2320 mm)
+    Rule: board setup constraints hole; Severity: error
+    @(129.5500 mm, 10.1750 mm): Track [GND] on B.Cu, length 0.0354 mm
+    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0181 mm)
+    Rule: board setup constraints hole; Severity: error
+    @(130.3250 mm, 9.9000 mm): Track [GND] on B.Cu, length 0.0500 mm
+    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0000 mm)
+    Rule: board setup constraints hole; Severity: error
+    @(130.1000 mm, 9.9750 mm): Track [GND] on B.Cu, length 0.0500 mm
+    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0000 mm)
+    Rule: board setup constraints hole; Severity: error
+    @(129.8500 mm, 10.0750 mm): Track [GND] on B.Cu, length 0.0354 mm
+    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0000 mm)
+    Rule: board setup constraints hole; Severity: error
+    @(129.9500 mm, 10.0250 mm): Track [GND] on B.Cu, length 0.0500 mm
+    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0839 mm)
+    Rule: board setup constraints hole; Severity: error
+    @(130.4000 mm, 9.8750 mm): Track [GND] on B.Cu, length 0.0500 mm
+    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0040 mm)
+    Rule: board setup constraints hole; Severity: error
+    @(130.3000 mm, 9.9250 mm): Track [GND] on B.Cu, length 0.0354 mm
+    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0000 mm)
+    Rule: board setup constraints hole; Severity: error
+    @(129.8000 mm, 10.0750 mm): Track [GND] on B.Cu, length 0.0500 mm
+    @(130.0000 mm, 9.7900 mm): NPTH pad of MK2
 
 ** Found 0 unconnected pads **
 
