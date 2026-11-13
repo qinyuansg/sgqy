@@ -230,5 +230,15 @@ if __name__ == "__main__":
         do_place(circ)
     if step in ("route", "all"):
         do_route()
+    if step == "import":  # import an externally produced Freerouting session: build.py import <file.ses>
+        import shutil
+        import pcbnew
+        from eda.pcb import import_ses
+        pcb = os.path.join(OUT, f"{NAME}.kicad_pcb")
+        b = pcbnew.LoadBoard(pcb)
+        import_ses(b, sys.argv[2])
+        pcbnew.SaveBoard(pcb, b)
+        shutil.copy(pcb, os.path.join(OUT, f"{NAME}.routed.kicad_pcb"))
+        print("imported", sys.argv[2])
     if step in ("fab", "all"):
         do_fab(circ)
