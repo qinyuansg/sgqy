@@ -181,7 +181,7 @@ def do_route():
     work = os.path.join(OUT, "route")
     os.makedirs(work, exist_ok=True)
     pcb = os.path.join(OUT, f"{NAME}.kicad_pcb")
-    autoroute(pcb, work, passes=60, timeout_s=7000, rounds=2, plane_nets=PLANE_NETS, plane_layers=("In1.Cu", "In3.Cu", "In4.Cu"))
+    autoroute(pcb, work, passes=8, timeout_s=10800, rounds=1, plane_nets=PLANE_NETS, plane_layers=("In1.Cu", "In3.Cu", "In4.Cu"))
     shutil.copy(os.path.join(OUT, f"{NAME}.kicad_pcb"), os.path.join(OUT, f"{NAME}.routed.kicad_pcb"))
 
 
