@@ -110,14 +110,14 @@ def do_fab(c):
     res = drc(pcb, rpt)
     if res.get("unconnected"):
         print(f"signal repair: {res['unconnected']} unconnected")
-        repair(pcb, rpt, clearance=0.16, width=0.15, via_d=0.5, via_drill=0.25)
+        repair(pcb, rpt, clearance=0.17, width=0.15, via_d=0.5, via_drill=0.25)
     print("stitching vias added:", stitch(pcb, keepouts=()))
     res = drc(pcb, rpt)
     for attempt in range(3):
         if not res.get("unconnected"):
             break
         print(f"repair pass {attempt + 1}: {res['unconnected']} unconnected")
-        if not repair(pcb, rpt, clearance=0.16, width=0.15, via_d=0.5, via_drill=0.25):
+        if not repair(pcb, rpt, clearance=0.17, width=0.15, via_d=0.5, via_drill=0.25):
             break
         res = drc(pcb, rpt)
     json.dump(res, open(os.path.join(FAB, f"{NAME}-drc-summary.json"), "w"), indent=2)

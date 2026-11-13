@@ -52,7 +52,7 @@ class Grid:
         L = len(self.layers)
         occ = np.zeros((L, self.ny, self.nx), dtype=bool)
         own = np.zeros((L, self.ny, self.nx), dtype=bool)
-        infl = self.clear + self.width / 2 + RES  # grid-rounding margin
+        infl = self.clear + self.width / 2 + 2 * RES  # grid-rounding margin
         e = int(self.edge / RES)
         occ[:, :e, :] = occ[:, -e:, :] = occ[:, :, :e] = occ[:, :, -e:] = True
 
@@ -113,9 +113,28 @@ class Grid:
         gl = self.layers.index(goal_layer) if goal_layer in self.layers else 0
         s = (sl, *self.cell(*start)[::-1])
         g = (gl, *self.cell(*goal)[::-1])
-        k = int(0.3 / RES)  # free the pad's own escape area (own-net copper is never an obstacle)
-        for li, j, i in ((s,) if via_at_goal else (s, g)):
-            occ[li, max(0, j - k):j + k + 1, max(0, i - k):i + k + 1] &= ~own[li, max(0, j - k):j + k + 1, max(0, i - k):i + k + 1]
+        k = int(0.3 / RES)
+
+        def snap(node):
+            """If an endpoint cell is blocked, move it to the nearest free cell on its own copper."""
+            li, j, i = node
+            if not occ[li, j, i]:
+                return node
+            best, bd = None, 1e9
+            for dj in range(-k, k + 1):
+                for di in range(-k, k + 1):
+                    jj, ii = j + dj, i + di
+                    if 0 <= jj < self.ny and 0 <= ii < self.nx and own[li, jj, ii] and not occ[li, jj, ii]:
+                        d = dj * dj + di * di
+                        if d < bd:
+                            best, bd = (li, jj, ii), d
+            return best
+
+        s = snap(s)
+        if not via_at_goal:
+            g = snap(g)
+        if s is None or g is None:
+            return None
         if via_at_goal and (occ[g[0], g[1], g[2]] or not self._via_free(occ, g[1], g[2], vx)):
             return None
 
