@@ -1,20 +1,20 @@
 {
-  "violations": 124,
+  "violations": 142,
   "unconnected": 0,
   "footprint_errors": 0,
-  "errors": 42,
-  "warnings": 82,
+  "errors": 46,
+  "warnings": 96,
   "by_severity": {
     "warning": {
       "silk_overlap": 27,
       "silk_over_copper": 29,
-      "holes_co_located": 2,
+      "holes_co_located": 16,
       "silk_edge_clearance": 24
     },
     "error": {
-      "hole_near_hole": 1,
-      "hole_clearance": 32,
-      "clearance": 9
+      "hole_near_hole": 2,
+      "clearance": 23,
+      "hole_clearance": 21
     }
   }
 }

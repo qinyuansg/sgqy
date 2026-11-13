@@ -105,7 +105,7 @@ class Grid:
         via_extra = max(0.0, self.via_d / 2 - self.width / 2)
         return occ & ~own, own, via_extra
 
-    def route(self, net, start, goal, start_layer, goal_layer, via_at_goal=False):
+    def route(self, net, start, goal, start_layer, goal_layer, via_at_goal=False, allow_vias=True):
         occ, own, via_extra = self.build(net)
         L = len(self.layers)
         vx = int(math.ceil(via_extra / RES))
@@ -144,7 +144,7 @@ class Grid:
                 nj, ni = j + dj, i + di
                 if 0 <= nj < self.ny and 0 <= ni < self.nx and not occ[li, nj, ni]:
                     nbrs.append(((li, nj, ni), w))
-            if via_ok(j, i):
+            if allow_vias and via_ok(j, i):
                 for nl in range(L):
                     if nl != li:
                         nbrs.append(((nl, j, i), 40.0 * 0.05 / RES))
@@ -261,6 +261,11 @@ def fanout(board_path: str, nets, clearance=0.2, width=0.25, via_d=0.6, via_dril
                 return False
         return True
 
+    def vip_ok(net, px, py):
+        occ, _, extra = grid.build(net)
+        i, j = grid.cell(px, py)
+        return grid._via_free(occ, j, i, int(math.ceil(extra / RES)))
+
     for net in nets:
         ok = fail = 0
         ni = b.FindNet(net)
@@ -282,14 +287,14 @@ def fanout(board_path: str, nets, clearance=0.2, width=0.25, via_d=0.6, via_dril
                         gx, gy = x + r * math.cos(a), y + r * math.sin(a)
                         if not spot_ok(gx, gy):
                             continue
-                        path = grid.route(net, (x, y), (gx, gy), lid, lid, via_at_goal=True)
+                        path = grid.route(net, (x, y), (gx, gy), lid, lid, via_at_goal=True, allow_vias=False)
                         if path:
                             best = path
                             break
                     if best:
                         break
                 if not best:
-                    if via_in_pad and net in via_in_pad and spot_ok(x, y):
+                    if via_in_pad and net in via_in_pad and spot_ok(x, y) and vip_ok(net, x, y):
                         # last resort for ground: filled + capped via in the pad (fab note in the register)
                         v = pcbnew.PCB_VIA(b)
                         v.SetPosition(c); v.SetWidth(mm(via_d)); v.SetDrill(mm(via_drill))
