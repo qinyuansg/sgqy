@@ -244,3 +244,52 @@ def repair(board_path: str, report: str, clearance=0.2, width=0.2, via_d=0.6, vi
     pcbnew.ZONE_FILLER(b).Fill(b.Zones())
     pcbnew.SaveBoard(board_path, b)
     return fixed
+
+
+def fanout(board_path: str, nets, clearance=0.2, width=0.25, via_d=0.6, via_drill=0.3, reuse_r=1.0, log=print) -> dict:
+    """Give every SMD pad of each plane net a short stub to its own via (or reuse a same-net via
+    within `reuse_r` mm). THT pads already reach every layer."""
+    b = pcbnew.LoadBoard(board_path)
+    grid = Grid(b, clearance, width, via_d)
+    stats = {}
+    for net in nets:
+        ok = fail = 0
+        ni = b.FindNet(net)
+        vias = [t.GetPosition() for t in b.GetTracks() if t.GetClass() == "PCB_VIA" and t.GetNetname() == net]
+        for fp in b.GetFootprints():
+            for pad in fp.Pads():
+                if pad.GetNetname() != net or pad.GetAttribute() != pcbnew.PAD_ATTRIB_SMD:
+                    continue
+                c = pad.GetPosition()
+                if any(math.hypot(pcbnew.ToMM(v.x - c.x), pcbnew.ToMM(v.y - c.y)) < reuse_r for v in vias):
+                    ok += 1
+                    continue
+                lid = pad.GetLayer()
+                x, y = pcbnew.ToMM(c.x), pcbnew.ToMM(c.y)
+                best = None
+                for r in (0.7, 1.0, 1.4, 1.9, 2.5):
+                    for k in range(12):
+                        a = 2 * math.pi * k / 12
+                        path = grid.route(net, (x, y), (x + r * math.cos(a), y + r * math.sin(a)), lid, lid,
+                                          via_at_goal=True)
+                        if path:
+                            best = path
+                            break
+                    if best:
+                        break
+                if not best:
+                    fail += 1
+                    continue
+                grid.commit(net, best, width, via_d, via_drill)
+                end = best[-1]
+                pos = pcbnew.VECTOR2I(mm(grid.x0 + end[2] * RES), mm(grid.y0 + end[1] * RES))
+                v = pcbnew.PCB_VIA(b)
+                v.SetPosition(pos); v.SetWidth(mm(via_d)); v.SetDrill(mm(via_drill))
+                v.SetViaType(pcbnew.VIATYPE_THROUGH); v.SetLayerPair(pcbnew.F_Cu, pcbnew.B_Cu); v.SetNet(ni)
+                b.Add(v)
+                vias.append(pos)
+                ok += 1
+        stats[net] = (ok, fail)
+        log(f"  fanout {net}: {ok} pads connected, {fail} failed")
+    pcbnew.SaveBoard(board_path, b)
+    return stats

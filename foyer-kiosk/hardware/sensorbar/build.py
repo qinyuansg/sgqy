@@ -27,6 +27,7 @@ NAME = "sensorbar"
 W, H = 200.0, 22.0
 RULES = {"min_clearance": 0.15, "min_track_width": 0.15, "min_via_diameter": 0.5, "min_through_hole_diameter": 0.25,
          "min_hole_clearance": 0.25, "min_copper_edge_clearance": 0.3}
+PLANE_NETS = ("GND", "+5V")   # In1 / In2 planes: connected by fan-out vias, not by the autorouter
 CLASSES = [
     {"name": "Default", "track_width": 0.2, "clearance": 0.15, "via_diameter": 0.6, "via_drill": 0.3},
     {"name": "Power", "track_width": 0.6, "clearance": 0.2, "via_diameter": 0.8, "via_drill": 0.4},
@@ -87,7 +88,10 @@ def do_route():
     from eda.pcb import autoroute
     work = os.path.join(OUT, "route")
     os.makedirs(work, exist_ok=True)
-    autoroute(os.path.join(OUT, f"{NAME}.kicad_pcb"), work, passes=40, timeout_s=1800)
+    from eda.repair import fanout
+    pcb = os.path.join(OUT, f"{NAME}.kicad_pcb")
+    autoroute(pcb, work, passes=40, timeout_s=1800, rounds=2, plane_nets=PLANE_NETS)
+    fanout(pcb, PLANE_NETS, clearance=0.16, width=0.25, via_d=0.5, via_drill=0.25)
     shutil.copy(os.path.join(OUT, f"{NAME}.kicad_pcb"), os.path.join(OUT, f"{NAME}.routed.kicad_pcb"))
 
 

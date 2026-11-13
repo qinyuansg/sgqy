@@ -38,6 +38,7 @@ RULES = {
     "min_via_annular_width": 0.1, "min_hole_clearance": 0.2, "min_hole_to_hole": 0.25,
     "min_copper_edge_clearance": 0.3, "min_silk_clearance": 0.0,
 }
+PLANE_NETS = ("GND",)   # solid In1/In4 planes: fan-out vias instead of autorouted traces
 CLASSES = [
     {"name": "Default", "track_width": 0.127, "clearance": 0.127, "via_diameter": 0.45, "via_drill": 0.2},
     {"name": "Power", "track_width": 0.6, "clearance": 0.2, "via_diameter": 0.6, "via_drill": 0.3},
@@ -179,7 +180,10 @@ def do_route():
     from eda.pcb import autoroute
     work = os.path.join(OUT, "route")
     os.makedirs(work, exist_ok=True)
-    autoroute(os.path.join(OUT, f"{NAME}.kicad_pcb"), work, passes=60)
+    from eda.repair import fanout
+    pcb = os.path.join(OUT, f"{NAME}.kicad_pcb")
+    autoroute(pcb, work, passes=60, timeout_s=7000, rounds=2, plane_nets=PLANE_NETS)
+    fanout(pcb, PLANE_NETS, clearance=0.15, width=0.2, via_d=0.45, via_drill=0.2)
     shutil.copy(os.path.join(OUT, f"{NAME}.kicad_pcb"), os.path.join(OUT, f"{NAME}.routed.kicad_pcb"))
 
 
