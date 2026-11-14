@@ -48,7 +48,25 @@ class Grid:
         return int(round((x - self.x0) / RES)), int(round((y - self.y0) / RES))
 
     def build(self, net: str):
-        """Blocked-cell masks per layer for everything not on `net`."""
+        """Blocked-cell masks per layer for everything not on `net`.
+
+        Cached for the last net built: adding copper of the same net never changes the obstacle
+        map for that net, so a fan-out of hundreds of pads rasterises the board once. `commit`
+        and `add_via` drop the cache when copper of another net is added."""
+        cached = getattr(self, "_cache", None)
+        if cached is not None and cached[0] == net:
+            return cached[1]
+        self._cache = None  # free the previous masks before allocating new ones
+        res = self._build(net)
+        self._cache = (net, res)
+        return res
+
+    def invalidate(self, net: str):
+        """Copper of `net` was added: masks built for any other net are stale."""
+        if getattr(self, "_cache", None) is not None and self._cache[0] != net:
+            self._cache = None
+
+    def _build(self, net: str):
         L = len(self.layers)
         occ = np.zeros((L, self.ny, self.nx), dtype=bool)
         own = np.zeros((L, self.ny, self.nx), dtype=bool)
@@ -212,6 +230,7 @@ class Grid:
         return not occ[:, j0:j + vx + 1, i0:i + vx + 1].any()
 
     def commit(self, net, path, width, via_d, via_drill):
+        self.invalidate(net)
         ni = self.b.FindNet(net)
         added = 0
         pts = [(li, self.x0 + i * RES, self.y0 + j * RES) for li, j, i in path]
@@ -328,6 +347,8 @@ def fanout(board_path: str, nets, clearance=0.2, width=0.25, via_d=0.6, via_dril
                 if pad.GetNetname() != net or pad.GetAttribute() != pcbnew.PAD_ATTRIB_SMD:
                     continue
                 c = pad.GetPosition()
+                if (ok + fail) % 50 == 0 and ok + fail:
+                    log(f"  fanout {net}: {ok + fail} pads processed")
                 if any(math.hypot(pcbnew.ToMM(v.x - c.x), pcbnew.ToMM(v.y - c.y)) < reuse_r for v in vias):
                     ok += 1
                     continue
@@ -340,8 +361,9 @@ def fanout(board_path: str, nets, clearance=0.2, width=0.25, via_d=0.6, via_dril
                         gx, gy = x + r * math.cos(a), y + r * math.sin(a)
                         if not spot_ok(gx, gy):
                             continue
+                        # a stub may detour to twice its straight length; bounds failed searches
                         path = grid.route(net, (x, y), (gx, gy), lid, lid, via_at_goal=True, allow_vias=False,
-                                          max_cost=4 * r / RES)
+                                          max_cost=2 * r / RES + 20)
                         if path:
                             best = path
                             break
