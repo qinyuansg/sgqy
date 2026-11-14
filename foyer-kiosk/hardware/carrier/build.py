@@ -84,8 +84,8 @@ ANCHORS = {  # ref: (x, y, rotation)
     "U8": (160.0, 106.0, 0),     # 5 V AUX
     "U9": (152.0, 92.0, 0),      # 3.3 V
     "U10": (36.0, 30.0, 0),      # LM5176 24 V
-    "U11": (154.0, 36.0, 0),     # hub 1
-    "U12": (154.0, 62.0, 0),     # hub 2
+    "U11": (147.0, 34.0, 0),     # hub 1
+    "U12": (147.0, 64.0, 0),     # hub 2
     "U13": (90.0, 14.0, 0),      # audio amp
     "U15": (92.0, 40.0, 0),      # secure element
     "U16": (92.0, 48.0, 0),      # temperature
@@ -163,7 +163,7 @@ def do_place(c):
         bb.put(roles.get(ref, ref), x, y, r)
     for ref, (x, y, r) in MISC.items():
         bb.put(roles.get(ref, ref), x, y, r)
-    bb.place_satellites((1.0, 1.0, W - 1.0, H - 1.0), margin=0.25)
+    bb.place_satellites((1.0, 1.0, W - 1.0, H - 1.0), margin=0.6)
     # copper zones: solid GND on In1/In4, power planes on In3, GND pour on outer layers
     full = [(0.3, 0.3), (W - 0.3, 0.3), (W - 0.3, H - 0.3), (0.3, H - 0.3)]
     bb.zone("GND", "In1.Cu", full)
@@ -226,6 +226,9 @@ def do_fab(c):
         print(f"repair pass {attempt + 1}: {res['unconnected']} unconnected")
         if not repair(pcb, rpt, clearance=0.15, width=0.15, via_d=0.45, via_drill=0.2):
             break
+        res = drc(pcb, rpt)
+    from eda.repair import dedupe_vias
+    if dedupe_vias(pcb):
         res = drc(pcb, rpt)
     json.dump(res, open(os.path.join(FAB, f"{NAME}-drc-summary.json"), "w"), indent=2)
     print("DRC:", res)

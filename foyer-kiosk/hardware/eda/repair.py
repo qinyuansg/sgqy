@@ -417,3 +417,39 @@ def fanout(board_path: str, nets, clearance=0.2, width=0.25, via_d=0.6, via_dril
     stats["via_in_pad"] = vip
     pcbnew.SaveBoard(board_path, b)
     return stats
+
+
+def dedupe_vias(board_path: str, min_hole_gap=0.25, log=print) -> int:
+    """Merge same-net vias whose drilled holes are closer than `min_hole_gap` (left behind when two
+    routers drop a via at almost the same spot): keep the first, move the other's track ends onto it."""
+    b = pcbnew.LoadBoard(board_path)
+    vias = [t for t in b.GetTracks() if t.GetClass() == "PCB_VIA"]
+    tracks = [t for t in b.GetTracks() if t.GetClass() == "PCB_TRACK"]
+    removed: set[int] = set()
+    n = 0
+    for i, keep in enumerate(vias):
+        if id(keep) in removed:
+            continue
+        kp = keep.GetPosition()
+        for dup in vias[i + 1:]:
+            if id(dup) in removed or dup.GetNetCode() != keep.GetNetCode():
+                continue
+            dp = dup.GetPosition()
+            gap = pcbnew.ToMM(int(math.hypot(dp.x - kp.x, dp.y - kp.y))) - \
+                (pcbnew.ToMM(keep.GetDrill()) + pcbnew.ToMM(dup.GetDrill())) / 2
+            if gap >= min_hole_gap:
+                continue
+            for t in tracks:
+                if t.GetNetCode() != dup.GetNetCode():
+                    continue
+                if t.GetStart() == dp:
+                    t.SetStart(pcbnew.VECTOR2I(kp.x, kp.y))
+                if t.GetEnd() == dp:
+                    t.SetEnd(pcbnew.VECTOR2I(kp.x, kp.y))
+            removed.add(id(dup))
+            b.Remove(dup)
+            n += 1
+    if n:
+        pcbnew.SaveBoard(board_path, b)
+    log(f"dedupe_vias: merged {n} vias")
+    return n
