@@ -38,7 +38,10 @@ RULES = {
     "min_via_annular_width": 0.1, "min_hole_clearance": 0.2, "min_hole_to_hole": 0.25,
     "min_copper_edge_clearance": 0.3, "min_silk_clearance": 0.0,
 }
-PLANE_NETS = ("GND",)   # solid In1/In4 planes: fan-out vias instead of autorouted traces
+PLANE_NETS = ("GND",)
+SPLIT_PLANE_NETS = ("+12V_BUS", "+5V_CM", "+5V_AUX")  # In3 split plane: pads over their region get vias
+# parts whose own pin pitch is finer than their nets' netclass clearance (RJ45 PoE pairs, USB-C VBUS, buck IC)
+PITCH_EXCEPTIONS = ("J1", "J2", "U9")   # solid In1/In4 planes: fan-out vias instead of autorouted traces
 CLASSES = [
     {"name": "Default", "track_width": 0.127, "clearance": 0.127, "via_diameter": 0.45, "via_drill": 0.2},
     {"name": "Power", "track_width": 0.6, "clearance": 0.2, "via_diameter": 0.6, "via_drill": 0.3},
@@ -61,10 +64,10 @@ HOLES = ((4, 4), (W - 4, 4), (4, H - 4), (W - 4, H - 4), (86, 4), (94, H - 4))
 EDGE = [  # ref, edge, position along edge, inset (negative = protrudes past the edge)
     ("J1", "bottom", 16.0, -1.0),    # RJ45 PoE++ (protrudes 1 mm into the cable recess)
     ("J2", "bottom", 66.0, -0.5),    # USB-C
-    ("J7", "top", 104.0, 1.0),       # CAM1 FPC
-    ("J6", "top", 122.0, 1.0),       # CAM0 FPC
-    ("J5", "top", 140.0, 0.0),       # HDMI to display
-    ("J16", "top", 160.0, 1.0),      # sensor bar
+    ("J7", "top", 103.5, 1.0),       # CAM1 FPC
+    ("J6", "top", 121.5, 1.0),       # CAM0 FPC
+    ("J5", "top", 139.5, 0.0),       # HDMI to display
+    ("J16", "top", 160.6, 1.0),      # sensor bar
     ("J10", "right", 24.0, -0.5),    # USB touch | scanner
     ("J11", "right", 44.0, -0.5),    # USB printer | NFC
     ("J12", "right", 64.0, -0.5),    # USB LTE | service
@@ -137,10 +140,11 @@ def do_sch(c):
 
 
 def do_place(c):
-    from eda.pcb import BoardBuilder, write_project
+    from eda.pcb import BoardBuilder, pitch_exception_rules, write_project
     os.makedirs(OUT, exist_ok=True)
     pcb_path = os.path.join(OUT, f"{NAME}.kicad_pcb")
-    write_project(os.path.join(OUT, f"{NAME}.kicad_pro"), RULES, CLASSES, c, route_margin=0.01)
+    write_project(os.path.join(OUT, f"{NAME}.kicad_pro"), RULES, CLASSES, c, route_margin=0.01,
+                  custom_rules=pitch_exception_rules(PITCH_EXCEPTIONS))
     bb = BoardBuilder(c, pcb_path)
     bb.outline_rounded_rect(W, H, 3.0)
     bb.edge_keepout(0.6)
@@ -186,13 +190,18 @@ def do_route():
     # board is still empty. The router sees this copper as keep-outs.
     from eda.repair import fanout
     fanout(pcb, PLANE_NETS, clearance=0.15, width=0.15, via_d=0.45, via_drill=0.2, reuse_r=0.6)
-    autoroute(pcb, work, passes=8, timeout_s=10800, rounds=1, plane_nets=PLANE_NETS, plane_layers=("In1.Cu", "In3.Cu", "In4.Cu"))
+    # same for the In3 power islands (Power class: 0.6/0.3 vias), only for pads over their own island
+    fanout(pcb, SPLIT_PLANE_NETS, clearance=0.2, width=0.4, via_d=0.6, via_drill=0.3, reuse_r=0.8,
+           via_in_pad=(), inside_zone=True)
+    autoroute(pcb, work, passes=8, timeout_s=10800, rounds=1, plane_nets=PLANE_NETS, plane_layers=("In1.Cu", "In3.Cu", "In4.Cu"),
+              protect_nets=SPLIT_PLANE_NETS)
     shutil.copy(os.path.join(OUT, f"{NAME}.kicad_pcb"), os.path.join(OUT, f"{NAME}.routed.kicad_pcb"))
 
 
 def do_fab(c):
-    from eda.pcb import add_pours, drc, fab_outputs, stitch, write_project
-    write_project(os.path.join(OUT, f"{NAME}.kicad_pro"), RULES, CLASSES, c)  # nominal clearances for DRC
+    from eda.pcb import add_pours, drc, fab_outputs, pitch_exception_rules, stitch, write_project
+    write_project(os.path.join(OUT, f"{NAME}.kicad_pro"), RULES, CLASSES, c,  # nominal clearances for DRC
+                  custom_rules=pitch_exception_rules(PITCH_EXCEPTIONS))
     os.makedirs(FAB, exist_ok=True)
     pcb = os.path.join(OUT, f"{NAME}.kicad_pcb")
     routed = os.path.join(OUT, f"{NAME}.routed.kicad_pcb")

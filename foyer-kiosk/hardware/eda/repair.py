@@ -321,10 +321,17 @@ def repair(board_path: str, report: str, clearance=0.2, width=0.2, via_d=0.6, vi
 
 
 def fanout(board_path: str, nets, clearance=0.2, width=0.25, via_d=0.6, via_drill=0.3, reuse_r=1.0, log=print,
-           via_in_pad=("GND",)) -> dict:
+           via_in_pad=("GND",), inside_zone=False) -> dict:
     """Give every SMD pad of each plane net a short stub to its own via (or reuse a same-net via
-    within `reuse_r` mm). THT pads already reach every layer."""
+    within `reuse_r` mm). THT pads already reach every layer. With `inside_zone`, only pads that
+    lie over a zone of their own net are fanned out (split planes: the rest must be routed)."""
     b = pcbnew.LoadBoard(board_path)
+    zones = {}
+    for z in b.Zones():
+        zones.setdefault(z.GetNetname(), []).append(z)
+
+    def over_own_zone(net, pos):
+        return any(z.Outline().Contains(pcbnew.VECTOR2I(pos.x, pos.y)) for z in zones.get(net, []))
     grid = Grid(b, clearance, width, via_d)
     stats = {}
     all_vias = [t.GetPosition() for t in b.GetTracks() if t.GetClass() == "PCB_VIA"]
@@ -347,11 +354,18 @@ def fanout(board_path: str, nets, clearance=0.2, width=0.25, via_d=0.6, via_dril
         ok = fail = 0
         ni = b.FindNet(net)
         vias = [t.GetPosition() for t in b.GetTracks() if t.GetClass() == "PCB_VIA" and t.GetNetname() == net]
+        ends = [p for t in b.GetTracks() if t.GetClass() == "PCB_TRACK" and t.GetNetname() == net
+                for p in (t.GetStart(), t.GetEnd())]
         for fp in b.GetFootprints():
             for pad in fp.Pads():
                 if pad.GetNetname() != net or pad.GetAttribute() != pcbnew.PAD_ATTRIB_SMD:
                     continue
                 c = pad.GetPosition()
+                if inside_zone and not over_own_zone(net, c):
+                    continue
+                if any(pad.HitTest(p) for p in ends):  # already has its own stub (pre-route fan-out)
+                    ok += 1
+                    continue
                 if (ok + fail) % 50 == 0 and ok + fail:
                     log(f"  fanout {net}: {ok + fail} pads processed")
                 if any(math.hypot(pcbnew.ToMM(v.x - c.x), pcbnew.ToMM(v.y - c.y)) < reuse_r for v in vias):

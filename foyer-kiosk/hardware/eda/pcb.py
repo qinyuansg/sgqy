@@ -28,8 +28,9 @@ def V(x, y):
 
 # ----------------------------------------------------------------- project
 def write_project(path_pro: str, rules: dict, classes: list[dict], circuit: Circuit, template: dict | None = None,
-                  route_margin: float = 0.0):
-    """Write a KiCad 7 .kicad_pro with design rules and net classes.
+                  route_margin: float = 0.0, custom_rules: str | None = None):
+    """Write a KiCad 7 .kicad_pro with design rules and net classes (and an optional
+    .kicad_dru with custom rules next to it).
 
     `route_margin` inflates class clearances while autorouting so that the router's coordinate
     rounding never lands below the nominal clearance that DRC checks afterwards."""
@@ -64,6 +65,23 @@ def write_project(path_pro: str, rules: dict, classes: list[dict], circuit: Circ
         {"diameter": d, "drill": r} for d, r in sorted({(c["via_diameter"], c["via_drill"]) for c in classes})]
     with open(path_pro, "w", encoding="utf-8") as f:
         json.dump(pro, f, indent=2)
+    dru = path_pro[:-len(".kicad_pro")] + ".kicad_dru"
+    if custom_rules:
+        with open(dru, "w", encoding="utf-8") as f:
+            f.write("(version 1)\n" + custom_rules.strip() + "\n")
+    elif os.path.exists(dru):
+        os.remove(dru)
+
+
+def pitch_exception_rules(refs, min_clearance: float = 0.1) -> str:
+    """Pads of one connector/IC sit at the part's own pitch: the netclass clearance (e.g. 2 mm
+    PoE isolation, 0.2 mm power) applies to other circuits, not between the part's own pins."""
+    out = []
+    for r in refs:
+        out.append(f'(rule "pin pitch of {r}"\n  (condition "A.Type == \'Pad\' && B.Type == \'Pad\' && '
+                   f"A.insideCourtyard('{r}') && B.insideCourtyard('{r}')\")\n"
+                   f"  (constraint clearance (min {min_clearance}mm)))")
+    return "\n".join(out)
 
 
 # ------------------------------------------------------------------- board
@@ -311,6 +329,14 @@ def unrouted(board) -> int:
     return board.GetConnectivity().GetUnconnectedCount(True)
 
 
+def protect_wiring(dsn: str, nets):
+    """Mark pre-placed copper of `nets` (split-plane fan-out) as protected so the router keeps it."""
+    text = open(dsn, encoding="utf-8").read()
+    for name in nets:
+        text = re.sub(r"(\(net " + re.escape(name) + r"\)\s*\(type )route\)", r"\1protect)", text)
+    open(dsn, "w", encoding="utf-8").write(text)
+
+
 def mark_plane_layers(dsn: str, layers):
     """Declare plane layers as `power` in the DSN so the autorouter keeps signals off them."""
     text = open(dsn, encoding="utf-8").read()
@@ -382,7 +408,7 @@ def strip_plane_nets(dsn: str, nets):
 
 
 def autoroute(board_path: str, workdir: str, passes: int = 100, timeout_s: int = 5400, rounds: int = 3,
-              log=print, plane_nets=(), plane_layers=()) -> int:
+              log=print, plane_nets=(), plane_layers=(), protect_nets=()) -> int:
     """Export DSN, run Freerouting, import the session; repeat (keeping existing copper) until
     nothing is left unrouted or `rounds` is reached. Returns the remaining unrouted count."""
     left = None
@@ -398,6 +424,8 @@ def autoroute(board_path: str, workdir: str, passes: int = 100, timeout_s: int =
             strip_plane_nets(dsn, plane_nets)
         if plane_layers:
             mark_plane_layers(dsn, plane_layers)
+        if protect_nets:
+            protect_wiring(dsn, protect_nets)
         cmd = ["xvfb-run", "-a", "java", "-Xmx6g", "-jar", FREEROUTING, "-de", dsn, "-do", ses,
                "-mp", str(passes), "-mt", "1", "-oit", "0.1"]
         log(f"round {rnd}: " + " ".join(cmd))
