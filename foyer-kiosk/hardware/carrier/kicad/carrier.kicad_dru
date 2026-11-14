@@ -1,0 +1,10 @@
+(version 1)
+(rule "pin pitch of J1"
+  (condition "A.Type == 'Pad' && B.Type == 'Pad' && A.insideCourtyard('J1') && B.insideCourtyard('J1')")
+  (constraint clearance (min 0.1mm)))
+(rule "pin pitch of J2"
+  (condition "A.Type == 'Pad' && B.Type == 'Pad' && A.insideCourtyard('J2') && B.insideCourtyard('J2')")
+  (constraint clearance (min 0.1mm)))
+(rule "pin pitch of U9"
+  (condition "A.Type == 'Pad' && B.Type == 'Pad' && A.insideCourtyard('U9') && B.insideCourtyard('U9')")
+  (constraint clearance (min 0.1mm)))
