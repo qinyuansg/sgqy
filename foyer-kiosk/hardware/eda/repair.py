@@ -17,6 +17,7 @@ import pcbnew
 
 mm = pcbnew.FromMM
 RES = 0.025  # grid resolution, mm
+ASTAR_LIMIT = 3_000_000  # node expansions per search (bounds failed searches to ~1 min)
 
 ITEM = re.compile(r"@\(([-\d.]+) mm, ([-\d.]+) mm\): (\w+).*?\[([^\]]+)\].*? on (\S+)")
 
@@ -172,7 +173,7 @@ class Grid:
         openq = [(h(s), 0.0, s)]
         came = {s: None}
         cost = {s: 0.0}
-        limit = 3_000_000  # bounds failed searches (~1 min each)
+        limit = ASTAR_LIMIT
         while openq and limit:
             limit -= 1
             _, c, node = heapq.heappop(openq)
@@ -427,6 +428,28 @@ def dedupe_vias(board_path: str, min_hole_gap=0.25, log=print) -> int:
     tracks = [t for t in b.GetTracks() if t.GetClass() == "PCB_TRACK"]
     removed: set[int] = set()
     n = 0
+    # a via drilled into a same-net plated hole is redundant: the pad already spans every layer
+    for fp in b.GetFootprints():
+        for pad in fp.Pads():
+            if pad.GetAttribute() != pcbnew.PAD_ATTRIB_PTH or pad.GetDrillSize().x <= 0:
+                continue
+            pp, pr = pad.GetPosition(), pcbnew.ToMM(pad.GetDrillSize().x) / 2
+            for v in vias:
+                if id(v) in removed or v.GetNetCode() != pad.GetNetCode():
+                    continue
+                vp = v.GetPosition()
+                gap = pcbnew.ToMM(int(math.hypot(vp.x - pp.x, vp.y - pp.y))) - pr - pcbnew.ToMM(v.GetDrill()) / 2
+                if gap >= min_hole_gap:
+                    continue
+                for t in tracks:
+                    if t.GetNetCode() == v.GetNetCode():
+                        if t.GetStart() == vp:
+                            t.SetStart(pcbnew.VECTOR2I(pp.x, pp.y))
+                        if t.GetEnd() == vp:
+                            t.SetEnd(pcbnew.VECTOR2I(pp.x, pp.y))
+                removed.add(id(v))
+                b.Remove(v)
+                n += 1
     for i, keep in enumerate(vias):
         if id(keep) in removed:
             continue
