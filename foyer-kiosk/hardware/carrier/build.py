@@ -227,6 +227,13 @@ def do_fab(c):
         if not repair(pcb, rpt, clearance=0.15, width=0.15, via_d=0.45, via_drill=0.2):
             break
         res = drc(pcb, rpt)
+    import eda.repair as rep
+    rep.ASTAR_LIMIT, budget = 10_000_000, rep.ASTAR_LIMIT  # last tries: default-class width, deeper search
+    for attempt in range(2):
+        if not res.get("unconnected") or not repair(pcb, rpt, clearance=0.127, width=0.127, via_d=0.45, via_drill=0.2):
+            break
+        res = drc(pcb, rpt)
+    rep.ASTAR_LIMIT = budget
     from eda.repair import dedupe_vias
     if dedupe_vias(pcb):
         res = drc(pcb, rpt)

@@ -46,11 +46,29 @@ cosmetics (reference text over pads/edges), which the fab clips automatically.
 Any remaining **errors** listed there must be closed by a layout engineer in
 KiCad before ordering (see §D-1).
 
+| Board | Errors | Unconnected | Clearance / hole | Warnings (silkscreen) |
+|---|---|---|---|---|
+| FYR-SB-01 sensor bar | **0** | 0 | 0 | 77 |
+| FYR-CB-01 carrier | **42** | 42 | 0 | 327 (+1 dangling track stub) |
+
+Carrier connections the scripted routers could not close (net × count), all to
+be routed by hand in KiCad under D-1. None needs a placement change; most sit
+in the three densest spots — the HDMI connector `J5`, the second USB hub `U12`
+and its downstream ports, and the 24 V buck-boost `U10`:
+
+* power: `+3V3` ×8, `VBUS_C` ×5, `+24V_PRN`, `BB_VOUT`, `BB_HD2`, `VBAT`, `CHASSIS` ×2 (shield tie)
+* differential pairs: `POE_A1/A2/B1/B2` (PoE magnetics, 2 mm creepage class), `ETH_P3_P/N`,
+  `HDMI_D1_P/N`, `HDMI_CK_P`, `USB0_P`, `USB1_RX_P`, `USB_SCAN_P`, `USB_NFC_P`, `USB_LTE_P/N`, `USB_SVC_P` ×2
+* low-speed: `USB_TOUCH_FLT`, `U12_NR1`, `U12_CRFILT`, `U12_CFG1`, `DISP_PWR_EN`, `SPK_N`
+
+The diff pairs are re-routed under D-1 anyway (impedance / length matching), so
+this adds roughly half a day to that task.
+
 ## D. Gates before production
 
 | Gate | Item | Owner |
 |---|---|---|
-| D-1 | **Layout review in KiCad**: the boards were autorouted (Freerouting) with a scripted clean-up. A layout engineer must (a) re-route the high-speed pairs as length-matched, impedance-controlled differential pairs (USB 3 90 Ω, HDMI/MIPI/Ethernet 100 Ω) against the 6-layer stack-up chosen with the fab, (b) widen the 24 V/12 V/5 V power paths to copper pours, (c) close any DRC errors, (d) tidy silkscreen. Estimated 2–3 days. | Hardware |
+| D-1 | **Layout review in KiCad**: the boards were autorouted (Freerouting) with a scripted clean-up. A layout engineer must (a) re-route the high-speed pairs as length-matched, impedance-controlled differential pairs (USB 3 90 Ω, HDMI/MIPI/Ethernet 100 Ω) against the 6-layer stack-up chosen with the fab, (b) widen the 24 V/12 V/5 V power paths to copper pours, (c) close the 42 carrier connections listed in §C, (d) tidy silkscreen. Estimated 3 days. | Hardware |
 | D-2 | Close B-1 … B-5 | Hardware |
 | D-3 | EVT build (10 units): power-on, rail sequencing, PoE Class 8 negotiation on a Type 4 switch, USB-PD 20 V, LM5176/TPS54560B loop measurements (Bode), thermal at 70 W, all peripherals enumerate, camera bring-up (`imx708` on both ports), I2S audio loopback, light bar | Hardware + software |
 | D-4 | Printer badge-media qualification (adhesive vs. non-adhesive, cutter, black mark) with Custom America | Product |

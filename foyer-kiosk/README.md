@@ -84,6 +84,11 @@ circuits must be checked against vendor drawings that were not retrievable in
 the design environment, and the autorouted PCBs need a layout engineer's pass
 for controlled-impedance pairs and power copper before fabrication.
 
+| Board | KiCad DRC | Open items |
+|---|---|---|
+| Sensor bar FYR-SB-01 | 0 errors, 0 unconnected | layout review (D-1) |
+| Carrier FYR-CB-01 | 0 clearance/hole errors, **42 unconnected** | hand-route the 42 listed connections + layout review (D-1, ≈ 3 days) |
+
 ## Rebuilding everything
 
 ```bash
