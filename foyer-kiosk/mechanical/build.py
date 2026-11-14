@@ -8,6 +8,7 @@ Outputs (mechanical/out/):
   dxf/    flat outlines for laser-cut/glass suppliers (head glass, deck glass, mount plate, stand bases)
   drawings/  dimensioned general-arrangement drawings (SVG + PDF) and a 1:1 wall drilling template
   renders/   shaded product renders (PNG)
+  view/   whole-assembly STL previews (GitHub renders these in its 3D viewer)
 """
 from __future__ import annotations
 
@@ -37,6 +38,14 @@ def ensure(*d):
 
 
 # ------------------------------------------------------------------ STEP
+def export_view():
+    """Tessellate the assembly STEPs into STL previews (GitHub shows STL in an interactive 3D viewer)."""
+    d = ensure("view")
+    for name in ("foyer-vk1-assembly", "foyer-vk1-desk-kit", "foyer-vk1-floor-kit"):
+        shp = cq.importers.importStep(os.path.join(OUT, "step", f"{name}.step"))
+        cq.exporters.export(shp, os.path.join(d, f"{name}.stl"), tolerance=0.3, angularTolerance=0.3)
+
+
 def export_step(parts, purchased):
     d = ensure("step")
     pd = ensure("step", "parts")
@@ -335,6 +344,7 @@ def main():
     purchased = E.purchased()
     kits = E.kits()
     print("STEP ..."); export_step(parts, purchased)
+    print("view STL ..."); export_view()
     print("print set ..."); man = export_print(parts, kits)
     print(f"  {len(man)} printable chunks, largest {max(max(m['size_mm']) for m in man)} mm")
     print("DXF ..."); export_dxf(parts + [p for k in kits.values() for p in k])
