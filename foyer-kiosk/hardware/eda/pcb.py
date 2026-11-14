@@ -319,10 +319,60 @@ def mark_plane_layers(dsn: str, layers):
     open(dsn, "w", encoding="utf-8").write(text)
 
 
+def _plane_copper_to_keepouts(text: str, nets, margin_um: float = 30.0) -> str:
+    """Pre-placed copper of stripped plane nets (fan-out stubs and vias placed before routing)
+    would lose its net in the DSN. Move it from `wiring` into `structure` as keep-outs so the
+    autorouter routes around it. `margin_um` covers the gap between the DSN default clearance
+    and the larger signal-class clearances checked by DRC."""
+    names = "|".join(re.escape(n) for n in nets)
+    wire_re = re.compile(r"\n\s*\(wire \(path (\S+) ([\d.]+)((?:\s+-?[\d.]+)+)\)\s*\(net (?:" + names
+                         + r")\)\s*\(type \w+\)\)")
+    via_re = re.compile(r"\n\s*\(via \"([^\"]+)\"\s+(-?[\d.]+) (-?[\d.]+)\s*\(net (?:" + names
+                        + r")\)\s*\(type \w+\)\)")
+    layers = re.findall(r"\(layer (\S+)\s*\n\s*\(type", text.split("(placement", 1)[0])
+    keep = []
+
+    def seg_poly(layer, w, x0, y0, x1, y1):
+        h = w / 2 + margin_um
+        dx, dy = x1 - x0, y1 - y0
+        n = math.hypot(dx, dy)
+        ux, uy = (dx / n, dy / n) if n > 1e-6 else (1.0, 0.0)
+        px, py = -uy, ux
+        a = (x0 - ux * h, y0 - uy * h)
+        b = (x1 + ux * h, y1 + uy * h)
+        pts = [(a[0] + px * h, a[1] + py * h), (b[0] + px * h, b[1] + py * h),
+               (b[0] - px * h, b[1] - py * h), (a[0] - px * h, a[1] - py * h)]
+        pts.append(pts[0])
+        return f'    (keepout "" (polygon {layer} 0 ' + " ".join(f"{x:.1f} {y:.1f}" for x, y in pts) + "))"
+
+    def on_wire(mt):
+        layer, w = mt.group(1), float(mt.group(2))
+        c = [float(v) for v in mt.group(3).split()]
+        for i in range(0, len(c) - 3, 2):
+            keep.append(seg_poly(layer, w, c[i], c[i + 1], c[i + 2], c[i + 3]))
+        return ""
+
+    def on_via(mt):
+        d = re.search(r"_(\d+):", mt.group(1))
+        dia = float(d.group(1)) if d else 600.0
+        for layer in layers:
+            keep.append(f'    (keepout "" (circle {layer} {dia + 2 * margin_um:.1f} {mt.group(2)} {mt.group(3)}))')
+        return ""
+
+    text = wire_re.sub(on_wire, text)
+    text = via_re.sub(on_via, text)
+    if keep:
+        head, rest = text.split("\n  (placement", 1)
+        i = head.rstrip().rfind(")")  # closing paren of (structure
+        text = head[:i] + "\n".join(keep) + "\n  " + head[i:] + "\n  (placement" + rest
+    return text
+
+
 def strip_plane_nets(dsn: str, nets):
     """Remove plane-connected nets from a Specctra DSN so the autorouter leaves them to the planes.
     Their pads stay in the design as obstacles; `repair.fanout` later connects them with vias."""
     text = open(dsn, encoding="utf-8").read()
+    text = _plane_copper_to_keepouts(text, nets)
     head, tail = text.split("(network", 1)
     for name in nets:
         tok = re.escape(name)
@@ -367,7 +417,8 @@ def autoroute(board_path: str, workdir: str, passes: int = 100, timeout_s: int =
         # board's tracks with it only if the session really contains at least as much copper.
         ses_text = open(ses, encoding="utf-8").read()
         n_ses = ses_text.count("(wire") + ses_text.count("(via ")
-        existing = list(b.GetTracks())
+        # plane-net copper (pre-route fan-out) was passed as keep-outs, so it is not in the session
+        existing = [t for t in b.GetTracks() if t.GetNetname() not in plane_nets]
         if n_ses >= sum(1 for t in existing if t.GetClass() == "PCB_VIA") + 1:
             for t in existing:
                 b.Remove(t)

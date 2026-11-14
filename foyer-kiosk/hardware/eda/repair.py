@@ -70,7 +70,11 @@ class Grid:
         L = len(self.layers)
         occ = np.zeros((L, self.ny, self.nx), dtype=bool)
         own = np.zeros((L, self.ny, self.nx), dtype=bool)
-        infl = self.clear + self.width / 2 + 2 * RES  # grid-rounding margin
+        margin = self.width / 2 + 2 * RES  # half our track + grid-rounding margin
+
+        def infl(item, layer):
+            # the larger of our clearance and the other item's netclass clearance (DRC uses the max)
+            return max(self.clear, pcbnew.ToMM(item.GetOwnClearance(layer))) + margin
         e = int(self.edge / RES)
         occ[:, :e, :] = occ[:, -e:, :] = occ[:, :, :e] = occ[:, :, -e:] = True
 
@@ -103,22 +107,23 @@ class Grid:
                         else:
                             continue
                     hole = pad.GetAttribute() == pcbnew.PAD_ATTRIB_NPTH
-                    r = 0 if same else infl + (0.2 if hole else 0.0)
+                    r = 0 if same else infl(pad, layer) + (0.2 if hole else 0.0)
                     target = own if same else occ
                     mark(target, li, pcbnew.ToMM(box.GetLeft()) - r, pcbnew.ToMM(box.GetTop()) - r,
                          pcbnew.ToMM(box.GetRight()) + r, pcbnew.ToMM(box.GetBottom()) + r)
         for t in self.b.GetTracks():
             same = t.GetNetname() == net
             if t.GetClass() == "PCB_VIA":
+                r = 0 if same else infl(t, pcbnew.F_Cu)
                 for li in range(L):
                     seg(own if same else occ, li, t.GetPosition(), t.GetPosition(),
-                        (0 if same else infl) + pcbnew.ToMM(t.GetWidth()) / 2)
+                        r + pcbnew.ToMM(t.GetWidth()) / 2)
             else:
                 li = self.layers.index(t.GetLayer()) if t.GetLayer() in self.layers else None
                 if li is None:
                     continue
                 seg(own if same else occ, li, t.GetStart(), t.GetEnd(),
-                    (0 if same else infl) + pcbnew.ToMM(t.GetWidth()) / 2)
+                    (0 if same else infl(t, t.GetLayer())) + pcbnew.ToMM(t.GetWidth()) / 2)
         # vias need room for their own diameter on every layer
         via_extra = max(0.0, self.via_d / 2 - self.width / 2)
         # own copper never cancels another item's keep-out; endpoints inside own pads are snapped instead

@@ -181,6 +181,11 @@ def do_route():
     work = os.path.join(OUT, "route")
     os.makedirs(work, exist_ok=True)
     pcb = os.path.join(OUT, f"{NAME}.kicad_pcb")
+    # Ground fan-out first, as a layout engineer would: every GND pad (incl. the 0.4 mm-pitch CM5
+    # connector pins, whose vias go between the two contact rows) gets its stub + via while the
+    # board is still empty. The router sees this copper as keep-outs.
+    from eda.repair import fanout
+    fanout(pcb, PLANE_NETS, clearance=0.15, width=0.15, via_d=0.45, via_drill=0.2, reuse_r=0.6)
     autoroute(pcb, work, passes=8, timeout_s=10800, rounds=1, plane_nets=PLANE_NETS, plane_layers=("In1.Cu", "In3.Cu", "In4.Cu"))
     shutil.copy(os.path.join(OUT, f"{NAME}.kicad_pcb"), os.path.join(OUT, f"{NAME}.routed.kicad_pcb"))
 
