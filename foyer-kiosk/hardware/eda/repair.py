@@ -172,7 +172,7 @@ class Grid:
         openq = [(h(s), 0.0, s)]
         came = {s: None}
         cost = {s: 0.0}
-        limit = 12_000_000
+        limit = 3_000_000  # bounds failed searches (~1 min each)
         while openq and limit:
             limit -= 1
             _, c, node = heapq.heappop(openq)
