@@ -209,7 +209,7 @@
     "classes": [
       {
         "bus_width": 12,
-        "clearance": 0.127,
+        "clearance": 0.137,
         "diff_pair_gap": 0.15,
         "diff_pair_via_gap": 0.25,
         "diff_pair_width": 0.15,
@@ -226,7 +226,7 @@
       },
       {
         "bus_width": 12,
-        "clearance": 0.15,
+        "clearance": 0.16,
         "diff_pair_gap": 0.15,
         "diff_pair_via_gap": 0.25,
         "diff_pair_width": 0.15,
@@ -243,7 +243,7 @@
       },
       {
         "bus_width": 12,
-        "clearance": 0.15,
+        "clearance": 0.16,
         "diff_pair_gap": 0.15,
         "diff_pair_via_gap": 0.25,
         "diff_pair_width": 0.15,
@@ -260,7 +260,7 @@
       },
       {
         "bus_width": 12,
-        "clearance": 0.15,
+        "clearance": 0.16,
         "diff_pair_gap": 0.15,
         "diff_pair_via_gap": 0.25,
         "diff_pair_width": 0.15,
@@ -277,7 +277,7 @@
       },
       {
         "bus_width": 12,
-        "clearance": 2.0,
+        "clearance": 2.01,
         "diff_pair_gap": 0.15,
         "diff_pair_via_gap": 0.25,
         "diff_pair_width": 0.15,
@@ -294,7 +294,7 @@
       },
       {
         "bus_width": 12,
-        "clearance": 0.2,
+        "clearance": 0.21,
         "diff_pair_gap": 0.15,
         "diff_pair_via_gap": 0.25,
         "diff_pair_width": 0.15,
@@ -311,7 +311,7 @@
       },
       {
         "bus_width": 12,
-        "clearance": 0.15,
+        "clearance": 0.16,
         "diff_pair_gap": 0.15,
         "diff_pair_via_gap": 0.25,
         "diff_pair_width": 0.15,
