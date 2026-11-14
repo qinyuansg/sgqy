@@ -35,7 +35,7 @@ functions are drafted and flagged on the PCB Fab layer as `VERIFY_FOOTPRINT`.
 | B-3 | ams OSRAM SFH 4725AS (850 nm emitter) | Land pattern / thermal pad | `Foyer:OSRAM_OSLON_Black_SFH4725AS_PROVISIONAL`, sensor bar `D1`/`D2` |
 | B-4 | STUSB4500 application circuit | VBUS_VS_DISCH / DISCH / VSYS connections vs ST datasheet and AN5225; NVM image (PDO 5 V, 15 V/3 A, 20 V/3 A) | carrier `U2` sheet "Power input" |
 | B-5 | USB2514B strap configuration | CFG_SEL/NON_REM/LOCAL_PWR straps and PRTPWR polarity vs Microchip DS00001692 (default config with individual port power) | carrier `U11`/`U12` |
-| B-6 | Via-in-pad | Where the fan-out could not find room (listed as `via-in-pad` in the build log, e.g. sensor bar C6 GND next to the microphone port), a ground via sits in the pad: order **filled and capped vias (IPC-4761 Type VII)** for those, or move the part in KiCad | build logs, `*-drc.rpt` |
+| B-6 | Via-in-pad | Where the fan-out could not find room (listed as `via-in-pad` in the build log; the current sensor bar has none), a ground via sits in the pad: order **filled and capped vias (IPC-4761 Type VII)** for those, or move the part in KiCad | build logs, `*-drc.rpt` |
 
 ## C. Current DRC status
 
