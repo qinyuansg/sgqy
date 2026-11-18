@@ -1,5 +1,7 @@
 // Builds ai-concepts-explained.mp4 from content.js.
-// Needs: node + playwright (chromium), ffmpeg, festival + festvox-us-slt-hts (text2wave).
+// Needs: node + playwright (chromium), ffmpeg, and for the voice either
+//   kokoro-onnx + soundfile (pip) with the Kokoro model in ./kokoro (see fetch_voice.sh)  -> natural voice
+//   or festival + festvox-us-slt-hts (apt)                                               -> robotic fallback
 // Usage: node build.js [workdir]   (workdir defaults to ./build)
 const fs = require("fs");
 const path = require("path");
@@ -14,30 +16,50 @@ const W = 1920, H = 1080;
 fs.mkdirSync(WORK, { recursive: true });
 
 // ---------- speech ----------
-const SPEECH_FIXES = [
-  [/\bAI\b/g, "ay-eye"],
-  [/\bay P I's\b/g, "ay pee eyes"],
-  [/\bQdrant\b/g, "quadrant"],
-  [/\bWeaviate\b/g, "wee-vee-ate"],
-  [/\bPostgres\b/g, "post-gress"],
-  [/\bbehaviour\b/g, "behavior"],
-  [/\bneighbourhood\b/g, "neighborhood"],
-  [/\bkilometre\b/g, "kilometer"],
-  [/\bpersonalisation\b/g, "personalization"],
-  [/\bsummarise\b/g, "summarize"],
-  [/\borganised\b/g, "organized"],
-  [/\bmaths\b/g, "math"],
-  [/\bClaude\b/g, "Clawd"],
-];
-const forSpeech = (t) => SPEECH_FIXES.reduce((s, [re, r]) => s.replace(re, r), t);
+// Default voice: Kokoro-82M (natural, neural). Fallback: festival HTS (offline, robotic).
+//   KOKORO_DIR=/path/with/model.onnx+voices/  VOICE=af_heart  SPEED=1.0
+const KOKORO_DIR = process.env.KOKORO_DIR || path.join(__dirname, "kokoro");
+const ENGINE = fs.existsSync(path.join(KOKORO_DIR, "model.onnx")) ? "kokoro" : "festival";
+const VOICE = process.env.VOICE || "af_heart";
+const SPEED = process.env.SPEED || "1.0";
+const TAG = ENGINE === "kokoro" ? `kokoro-${VOICE}-${SPEED}` : "festival";
 
-function tts(text, file) {
-  const txt = file.replace(/\.wav$/, ".txt");
-  fs.writeFileSync(txt, forSpeech(text) + "\n");
-  const raw = file.replace(/\.wav$/, ".raw.wav");
-  execFileSync("text2wave", ["-eval", "(voice_cmu_us_slt_arctic_hts)", txt, "-o", raw]);
-  // normalise loudness a little and resample to 48k mono
+const FIXES = {
+  kokoro: [
+    [/\b2024\b/g, "twenty twenty-four"],
+    [/\bQdrant\b/g, "quadrant"],
+    [/\bPostgres\b/g, "post-gress"],
+  ],
+  festival: [
+    [/\bAI\b/g, "ay-eye"], [/\bLLM\b/g, "L L M"], [/\bMCP\b/g, "M C P"], [/\bRAG\b/g, "rag"],
+    [/\bChatGPT\b/g, "Chat G P T"], [/\bAPIs\b/g, "ay pee eyes"], [/\bUSB-C\b/g, "U S B C"], [/\bEU\b/g, "E U"],
+    [/\bRLHF\b/g, "R L H F"], [/\bCRM\b/g, "C R M"], [/\bQdrant\b/g, "quadrant"], [/\bWeaviate\b/g, "wee-vee-ate"],
+    [/\bPostgres\b/g, "post-gress"], [/\bbehaviour\b/g, "behavior"], [/\bneighbourhood\b/g, "neighborhood"],
+    [/\bkilometre\b/g, "kilometer"], [/\bpersonalisation\b/g, "personalization"], [/\bsummarise\b/g, "summarize"],
+    [/\borganised\b/g, "organized"], [/\bmaths\b/g, "math"], [/\bClaude\b/g, "Clawd"],
+  ],
+};
+const forSpeech = (t) => FIXES[ENGINE].reduce((s, [re, r]) => s.replace(re, r), t);
+
+// raw speech -> 48 kHz mono, gently loudness-normalised
+const finish = (raw, file) =>
   execFileSync("ffmpeg", ["-y", "-v", "error", "-i", raw, "-af", "highpass=f=70,loudnorm=I=-16:TP=-1.5:LRA=11", "-ar", "48000", "-ac", "1", file]);
+
+function synthesize(list) { // list: [{say, wav}]
+  if (!list.length) return;
+  const raws = list.map((s) => s.wav.replace(/\.wav$/, ".raw.wav"));
+  if (ENGINE === "kokoro") {
+    const jobs = path.join(WORK, "tts-jobs.json");
+    fs.writeFileSync(jobs, JSON.stringify(list.map((s, i) => ({ text: forSpeech(s.say), out: raws[i] }))));
+    execFileSync("python3", [path.join(__dirname, "tts_kokoro.py"), KOKORO_DIR, VOICE, SPEED, jobs], { stdio: "inherit" });
+  } else {
+    list.forEach((s, i) => {
+      const txt = raws[i].replace(/\.raw\.wav$/, ".txt");
+      fs.writeFileSync(txt, forSpeech(s.say) + "\n");
+      execFileSync("text2wave", ["-eval", "(voice_cmu_us_slt_arctic_hts)", txt, "-o", raws[i]]);
+    });
+  }
+  list.forEach((s, i) => finish(raws[i], s.wav));
 }
 const dur = (f) => parseFloat(execFileSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", f]).toString());
 
@@ -182,15 +204,14 @@ C.outro.forEach((s, i) => segs.push({ id: `99_outro_${i}`, say: s.say, html: () 
   }
   for (const s of segs) {
     s.png = path.join(WORK, s.id + ".png");
-    s.wav = path.join(WORK, s.id + ".wav");
-    if (fs.existsSync(s.png) && fs.existsSync(s.wav) && !process.env.FRESH) continue; // cached
+    s.wav = path.join(WORK, `${s.id}.${TAG}.wav`);
     await page.setContent(s.html(), { waitUntil: "load" });
     await page.evaluate(() => document.fonts.ready);
     await page.screenshot({ path: s.png });
-    tts(s.say, s.wav);
   }
   await browser.close();
-  console.log(`rendered ${segs.length} slides + narration`);
+  console.log(`rendered ${segs.length} slides; narration engine: ${ENGINE} (${TAG})`);
+  synthesize(segs.filter((s) => process.env.FRESH || !fs.existsSync(s.wav)));
 
   // ---------- per-segment clips (frame-exact), crossfading from the previous slide ----------
   const lead = 0.4; // silence before the very first words

@@ -27,7 +27,7 @@ module.exports = {
         "An AI model does not read whole words. It reads small chunks called tokens. One token is roughly three quarters of a word.",
         "This matters because you pay per token, and every limit, like how much a model can read at once, is counted in tokens.",
         "Embeddings turn a piece of text into a long list of numbers. Texts with similar meaning end up close together, so king sits near queen, and refund sits near money back.",
-        "For you: tokens are your cost and speed meter. Embeddings are the engine behind smart search, recommendations, and rag.",
+        "For you: tokens are your cost and speed meter. Embeddings are the engine behind smart search, recommendations, and RAG.",
       ],
     },
     {
@@ -57,7 +57,7 @@ module.exports = {
       ],
       takeaway: "It is probabilistic, not a database. Design products for “usually right”, with checks.",
       say: [
-        "Number 3. L L M concepts. A large language model is a super-powered autocomplete that has read a large part of the internet.",
+        "Number 3. LLM concepts. A large language model is a super-powered autocomplete that has read a large part of the internet.",
         "It works by predicting the next token, one at a time. It is not looking facts up in a database. It is producing the most likely continuation.",
         "It is trained in stages. First it reads a huge amount of text. Then it is trained to follow instructions and be helpful and safe.",
         "Four words to know. The context window is its short-term memory. Temperature controls how creative it is. The knowledge cutoff is when its reading stopped. And a hallucination is a confident answer that is simply wrong.",
@@ -75,7 +75,7 @@ module.exports = {
       takeaway: "Models are becoming a commodity. Your edge is your data, your workflow and your user experience.",
       say: [
         "Number 4. AI chat assistants. Think of the model as a powerful engine, and the chat assistant as the car that people can actually drive.",
-        "Chat G P T, Claude, Gemini and Copilot are all a model wrapped inside a product.",
+        "ChatGPT, Claude, Gemini and Copilot are all a model wrapped inside a product.",
         "The wrapper adds the useful parts: conversation history, standing instructions, file upload, web search, and memory of the user.",
         "Users judge the whole experience. They rarely know, or care, which model is behind it.",
         "For you: models are becoming a commodity. Your real edge is your data, your workflow, and your user experience.",
@@ -125,11 +125,11 @@ module.exports = {
       ],
       takeaway: "The default pattern for enterprise AI on private knowledge. No retraining needed.",
       say: [
-        "Number 7. Rag, which stands for retrieval augmented generation. Think of an open-book exam. The model looks up the right pages before it answers.",
+        "Number 7. RAG, which stands for retrieval augmented generation. Think of an open-book exam. The model looks up the right pages before it answers.",
         "Step one: retrieve the most relevant passages from your own data, usually with the vector database we just covered.",
         "Step two: put those passages into the prompt. Step three: the model writes its answer using them, and can cite its sources.",
-        "This means fewer hallucinations and answers that are always up to date. But remember, garbage in, garbage out. Rag is only as good as its retrieval.",
-        "For you: rag is the default pattern for enterprise AI on private knowledge. And you don't need to retrain any model.",
+        "This means fewer hallucinations and answers that are always up to date. But remember, garbage in, garbage out. RAG is only as good as its retrieval.",
+        "For you: RAG is the default pattern for enterprise AI on private knowledge. And you don't need to retrain any model.",
       ],
     },
     {
@@ -142,11 +142,11 @@ module.exports = {
       ],
       takeaway: "Rule of thumb: prompt → RAG → fine-tune. Most teams never need step three.",
       say: [
-        "Number 8. Fine-tuning versus rag versus prompting. Prompting is giving instructions. Rag is handing over a reference book. Fine-tuning is sending the model to training school.",
+        "Number 8. Fine-tuning versus RAG versus prompting. Prompting is giving instructions. RAG is handing over a reference book. Fine-tuning is sending the model to training school.",
         "Always start with prompting. It takes minutes, it's cheap, and it's easy to change.",
-        "Add rag when the model needs facts it doesn't know, like your policies, or facts that change often, like prices or stock.",
+        "Add RAG when the model needs facts it doesn't know, like your policies, or facts that change often, like prices or stock.",
         "Use fine-tuning when you need a very consistent style, format, or a niche skill, at large scale. It is costly, slower to change, and needs good training data.",
-        "For you: the rule of thumb is prompt first, then rag, then fine-tune. Most teams never need step three.",
+        "For you: the rule of thumb is prompt first, then RAG, then fine-tune. Most teams never need step three.",
       ],
     },
     {
@@ -161,7 +161,7 @@ module.exports = {
       say: [
         "Number 9. AI agents. This is the move from an advisor who tells you what to do, to an assistant who actually does it.",
         "An agent is a language model running in a loop. It thinks, takes an action with a tool, looks at the result, and repeats until the job is done.",
-        "The tools can be web search, ay P I's, running code, sending email, booking calendars, or querying databases.",
+        "The tools can be web search, APIs, running code, sending email, booking calendars, or querying databases.",
         "So instead of following a fixed script, it works towards a goal with some independence.",
         "For you: agents move AI from answering questions to completing tasks. That means bigger value, and bigger risk. Decide clearly what it may do alone, and what needs a human.",
       ],
@@ -227,11 +227,11 @@ module.exports = {
       ],
       takeaway: "Lower integration cost and less lock-in. Make your product MCP-ready — and vet the servers you trust.",
       say: [
-        "Number 13. M C P, the model context protocol. Think of it as U S B C for AI. One standard plug between AI apps and your tools and data.",
+        "Number 13. MCP, the model context protocol. Think of it as USB-C for AI. One standard plug between AI apps and your tools and data.",
         "It is an open standard, introduced by Anthropic in 2024, and now widely adopted across the industry.",
-        "You build a connector once, for example to Slack, Google Drive, or your C R M, and any M C P ready AI application can use it.",
+        "You build a connector once, for example to Slack, Google Drive, or your CRM, and any MCP-ready AI application can use it.",
         "It exposes tools, data, and prompt templates in one standard way, so you stop building custom integrations for every model.",
-        "For you: M C P lowers integration cost and reduces lock-in. Make your own product M C P ready, so AI assistants can plug into it. And only connect servers you trust, because each one is a door into your data.",
+        "For you: MCP lowers integration cost and reduces lock-in. Make your own product MCP-ready, so AI assistants can plug into it. And only connect servers you trust, because each one is a door into your data.",
       ],
     },
     {
@@ -261,7 +261,7 @@ module.exports = {
       ],
       takeaway: "No evals, no launch. Evals are your product-quality spec.",
       say: [
-        "Number 15. L L M evaluations, or evals. These are report cards and unit tests for your AI.",
+        "Number 15. LLM evaluations, or evals. These are report cards and unit tests for your AI.",
         "You build a test set of real examples, each with a description of what a good answer looks like.",
         "Then you score the answers, using simple rules, human reviewers, or another language model acting as a judge.",
         "You re-run the evals on every change, a new prompt, a new model, or new data, so you catch anything that got worse.",
@@ -295,9 +295,9 @@ module.exports = {
       ],
       takeaway: "Don’t lock into one model. Invest in the platform layers that will outlive any model.",
       say: [
-        "Number 17. L L M system architecture. The model is the engine, but you still need the rest of the car.",
+        "Number 17. LLM system architecture. The model is the engine, but you still need the rest of the car.",
         "A typical system has layers: the user facing app, an orchestration layer with the business logic, a model gateway, and one or more models behind it.",
-        "Around that sit your data and rag pipeline, tools, caching, logging and monitoring, guardrails, and evals.",
+        "Around that sit your data and RAG pipeline, tools, caching, logging and monitoring, guardrails, and evals.",
         "The model gateway is important. It lets you switch between providers, or use cheaper models for easy tasks, without rebuilding everything.",
         "For you: don't lock into one model. Invest in the platform layers that will outlive any single model.",
       ],
@@ -316,7 +316,7 @@ module.exports = {
         "Input checks stop problems coming in: prompt injection attacks, harmful requests, and sensitive data that should never reach the model.",
         "Output checks stop problems going out: wrong facts, toxic language, leaked personal data, or answers in the wrong format.",
         "On top of that: give agents only the permissions they need, require human approval for risky actions, red-team your system by attacking it yourself, and keep audit logs.",
-        "For you: trust is the product. Good safety lets you move faster, not slower. And keep an eye on regulation, like the E U AI act.",
+        "For you: trust is the product. Good safety lets you move faster, not slower. And keep an eye on regulation, like the EU AI Act.",
       ],
     },
     {
@@ -331,7 +331,7 @@ module.exports = {
       say: [
         "Number 19. Reinforcement learning. It's like training a dog with treats. Good behaviour gets rewarded, so it happens more often.",
         "The model learns by trial and error, guided by a reward signal, instead of just copying examples.",
-        "R L H F, reinforcement learning from human feedback, is where people rank answers, and the model learns to prefer the good ones. That is what made chatbots genuinely helpful.",
+        "RLHF, reinforcement learning from human feedback, is where people rank answers, and the model learns to prefer the good ones. That is what made chatbots genuinely helpful.",
         "More recently, models are rewarded for results that can be checked, like correct maths or code that passes tests. That created today's reasoning models, which think longer before they answer.",
         "For you: this is why models keep getting better at reasoning. And your users' feedback, every thumbs up and thumbs down, is valuable fuel for improvement.",
       ],
@@ -382,7 +382,7 @@ module.exports = {
       say: [
         "Number 22. AI system design. This is the architect's blueprint that puts all the other building blocks together.",
         "Always start from the user problem and the success metrics. Not from the model, and not from the latest hype.",
-        "Then pick the building blocks you need: prompts, rag, agents, M C P tools, memory, guardrails, and evals.",
+        "Then pick the building blocks you need: prompts, RAG, agents, MCP tools, memory, guardrails, and evals.",
         "Design for quality, cost, speed, and safety, and assume the model will be replaced, probably within a year.",
         "For you: your job is to choose the right problems, define what good looks like, and build a learning loop that makes the product better every week.",
       ],
@@ -394,7 +394,7 @@ module.exports = {
       say: "Let's wrap up with three things to remember.",
     },
     {
-      say: "One. Start simple. Prompt first, then rag, then agents. Two. Measure everything: quality with evals, and money with cost per task. Three. Build for change, because the models will keep improving, and your platform should let you swap them easily. Thanks for watching.",
+      say: "One. Start simple. Prompt first, then RAG, then agents. Two. Measure everything: quality with evals, and money with cost per task. Three. Build for change, because the models will keep improving, and your platform should let you swap them easily. Thanks for watching.",
     },
   ],
 
