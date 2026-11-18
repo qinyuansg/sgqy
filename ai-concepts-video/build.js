@@ -183,6 +183,7 @@ C.outro.forEach((s, i) => segs.push({ id: `99_outro_${i}`, say: s.say, html: () 
   for (const s of segs) {
     s.png = path.join(WORK, s.id + ".png");
     s.wav = path.join(WORK, s.id + ".wav");
+    if (fs.existsSync(s.png) && fs.existsSync(s.wav) && !process.env.FRESH) continue; // cached
     await page.setContent(s.html(), { waitUntil: "load" });
     await page.evaluate(() => document.fonts.ready);
     await page.screenshot({ path: s.png });
@@ -210,14 +211,12 @@ C.outro.forEach((s, i) => segs.push({ id: `99_outro_${i}`, say: s.say, html: () 
     const mp4 = path.join(WORK, s.id + ".mp4");
     const prev = i > 0 ? segs[i - 1].png : s.png;
     const xf = i > 0 ? s.xf : 0.8;
-    const blend = i > 0
-      ? `[1:v][0:v]blend=all_expr='A*min(T/${xf}\\,1)+B*(1-min(T/${xf}\\,1))',format=yuv420p`
-      : `[1:v]fade=t=in:st=0:d=${xf},format=yuv420p`;
-    execFileSync("ffmpeg", ["-y", "-v", "error",
-      "-loop", "1", "-framerate", String(FPS), "-i", prev,
-      "-loop", "1", "-framerate", String(FPS), "-i", s.png,
-      "-filter_complex", blend, "-frames:v", String(frames), "-r", String(FPS),
-      "-c:v", "libx264", "-preset", "medium", "-tune", "stillimage", "-crf", "20", "-pix_fmt", "yuv420p", mp4]);
+    const loopIn = (png, secs) => ["-loop", "1", "-framerate", String(FPS), "-t", String(secs), "-i", png];
+    const args = i > 0
+      ? [...loopIn(prev, xf), ...loopIn(s.png, d), "-filter_complex", `[0:v][1:v]xfade=transition=fade:duration=${xf}:offset=0,format=yuv420p`]
+      : [...loopIn(s.png, d), "-vf", `fade=t=in:st=0:d=${xf},format=yuv420p`];
+    execFileSync("ffmpeg", ["-y", "-v", "error", ...args, "-frames:v", String(frames), "-r", String(FPS),
+      "-c:v", "libx264", "-preset", "veryfast", "-tune", "stillimage", "-crf", "20", "-pix_fmt", "yuv420p", mp4]);
     list.push(`file '${mp4}'`);
   });
   fs.writeFileSync(path.join(WORK, "list.txt"), list.join("\n") + "\n");
