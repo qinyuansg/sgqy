@@ -119,8 +119,8 @@ module.exports = {
       n: 7, color: "#259a6c", title: "RAG (Retrieval-Augmented Generation)",
       analogy: "An open-book exam: the model looks up the right pages before it answers.",
       points: [
-        "1. Retrieve the most relevant passages from your data",
-        "2. Put them into the prompt  3. The model answers using them, with sources",
+        "Retrieve: find the most relevant passages in your own data",
+        "Augment and generate: add them to the prompt; the model answers from them and cites sources",
         "Fewer hallucinations, always up to date — but only as good as the retrieval",
       ],
       takeaway: "The default pattern for enterprise AI on private knowledge. No retraining needed.",

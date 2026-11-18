@@ -1,24 +1,24 @@
 0:00 Introduction
-0:21 1. Tokens and embeddings
-1:06 2. Prompt engineering
-1:50 3. LLM concepts
-2:42 4. AI chat assistants
-3:21 5. Vector databases
-3:59 6. Vector indexing
-4:49 7. RAG (Retrieval-Augmented Generation)
-5:36 8. Fine-tuning vs RAG vs prompting
-6:22 9. AI agents
-7:05 10. Agentic patterns
-7:46 11. Multi-agent architectures
-8:29 12. Designing an AI agent
-9:09 13. MCP (Model Context Protocol)
-10:03 14. AI coding workflow
-10:45 15. LLM evaluations
-11:24 16. Context engineering
-12:09 17. LLM system architecture
-12:52 18. Guardrails and safety
-13:41 19. Reinforcement learning
-14:32 20. Cost and scaling
-15:22 21. Agent memory and state
-16:05 22. AI system design
-16:45 Recap
+0:20 1. Tokens and embeddings
+1:04 2. Prompt engineering
+1:44 3. LLM concepts
+2:35 4. AI chat assistants
+3:12 5. Vector databases
+3:47 6. Vector indexing
+4:35 7. RAG (Retrieval-Augmented Generation)
+5:19 8. Fine-tuning vs RAG vs prompting
+6:04 9. AI agents
+6:45 10. Agentic patterns
+7:23 11. Multi-agent architectures
+8:03 12. Designing an AI agent
+8:41 13. MCP (Model Context Protocol)
+9:33 14. AI coding workflow
+10:12 15. LLM evaluations
+10:47 16. Context engineering
+11:28 17. LLM system architecture
+12:09 18. Guardrails and safety
+12:54 19. Reinforcement learning
+13:43 20. Cost and scaling
+14:28 21. Agent memory and state
+15:09 22. AI system design
+15:47 Recap
