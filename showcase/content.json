@@ -1,0 +1,122 @@
+{
+  "version": "0.1.0",
+  "branding": {
+    "title": "Product Showcase",
+    "titleAccent": "Showcase",
+    "subtitle": "Explore our Kiosk, APICS\nand Nova Readers",
+    "footerText": "",
+    "logos": []
+  },
+  "ui": {
+    "resetButtonText": "RESET VIEW",
+    "nextButtonText": "NEXT",
+    "tapToExploreText": "TAP TO EXPLORE",
+    "inspectTitle": "Inspect",
+    "idleResetSeconds": 90
+  },
+  "background": {
+    "imageUrl": null
+  },
+  "products": [
+    {
+      "id": "kiosk",
+      "name": "Kiosk",
+      "description": "SAMPLE TEXT — one or two lines that say what the kiosk is and where it is used.",
+      "imageUrl": null,
+      "model3dUrl": null,
+      "placeholder": "kiosk",
+      "features": [
+        {
+          "id": "k_screen",
+          "title": "Touchscreen",
+          "icon": "screen",
+          "description": "SAMPLE TEXT — describe the display here. Use <b>bold</b> for key terms.\n\nA second paragraph can go on a new line.",
+          "hotspot": { "position": [0, 1.2, 0.2] }
+        },
+        {
+          "id": "k_camera",
+          "title": "Camera",
+          "icon": "camera",
+          "description": "SAMPLE TEXT — describe the camera here.",
+          "hotspot": { "position": [0, 1.5, 0.19] }
+        },
+        {
+          "id": "k_reader",
+          "title": "Card Reader",
+          "icon": "card",
+          "description": "SAMPLE TEXT — describe the card or document reader here.",
+          "hotspot": { "position": [0.17, 0.92, 0.28] }
+        },
+        {
+          "id": "k_printer",
+          "title": "Printer",
+          "icon": "printer",
+          "description": "SAMPLE TEXT — describe the printer here.",
+          "hotspot": { "position": [-0.14, 0.72, 0.22] }
+        }
+      ]
+    },
+    {
+      "id": "apics",
+      "name": "APICS",
+      "description": "SAMPLE TEXT — one or two lines that say what APICS is and what it does.",
+      "imageUrl": null,
+      "model3dUrl": null,
+      "placeholder": "cabinet",
+      "features": [
+        {
+          "id": "a_1",
+          "title": "Feature One",
+          "icon": "cpu",
+          "description": "SAMPLE TEXT — describe the first APICS highlight here.",
+          "hotspot": { "position": [0, 1.25, 0.26] }
+        },
+        {
+          "id": "a_2",
+          "title": "Feature Two",
+          "icon": "shield",
+          "description": "SAMPLE TEXT — describe the second APICS highlight here.",
+          "hotspot": { "position": [0.2, 0.8, 0.26] }
+        },
+        {
+          "id": "a_3",
+          "title": "Feature Three",
+          "icon": "signal",
+          "description": "SAMPLE TEXT — describe the third APICS highlight here.",
+          "hotspot": { "position": [-0.2, 0.4, 0.26] }
+        }
+      ]
+    },
+    {
+      "id": "nova",
+      "name": "Nova Readers",
+      "description": "SAMPLE TEXT — one or two lines that say what the Nova Readers are and where they are installed.",
+      "imageUrl": null,
+      "model3dUrl": null,
+      "placeholder": "reader",
+      "features": [
+        {
+          "id": "n_display",
+          "title": "Display",
+          "icon": "screen",
+          "description": "SAMPLE TEXT — describe the reader display here.",
+          "hotspot": { "position": [0, 1.12, 0.1] }
+        },
+        {
+          "id": "n_read",
+          "title": "Read Zone",
+          "icon": "signal",
+          "description": "SAMPLE TEXT — describe what the reader scans (card, QR, mobile) here.",
+          "hotspot": { "position": [0, 0.56, 0.1] }
+        },
+        {
+          "id": "n_status",
+          "title": "Status Light",
+          "icon": "light",
+          "description": "SAMPLE TEXT — describe the status indicator here.",
+          "hotspot": { "position": [0, 1.5, 0.09] }
+        }
+      ]
+    }
+  ]
+}
