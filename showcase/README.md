@@ -13,8 +13,10 @@ Everything shown — names, descriptions, features, hotspot positions, images an
 3D models — comes from one file, [`content.json`](content.json). No build step,
 no backend, no internet needed at runtime (three.js is bundled in `js/vendor`).
 
-> The products currently use **stand-in 3D shapes and sample text**. Replace
-> them as described below.
+> **Current content.** The Enrolment Kiosk is a real 3D model exported from the
+> Foyer VK-1 CAD (`tools/export_kiosk_glb.py`). APICS and the Nova readers are
+> illustrative shapes built in code (`js/placeholders.js`) until real models or
+> photos are supplied. All descriptions are draft copy for review.
 
 ## Run it
 

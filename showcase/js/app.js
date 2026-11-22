@@ -59,6 +59,7 @@ async function init() {
     ? rich(title).replace(rich(accent), `<span>${rich(accent)}</span>`)
     : rich(title);
   $('home-subtitle').innerHTML = rich(brand.subtitle);
+  $('sectors').replaceChildren(...(brand.sectors || []).map((t) => Object.assign(document.createElement('li'), { textContent: t })));
   $('btn-next-label').textContent = ui.nextButtonText || 'NEXT';
   $('btn-reset-label').textContent = ui.resetButtonText || 'RESET VIEW';
   $('explore-hint-text').textContent = ui.tapToExploreText || 'TAP TO EXPLORE';

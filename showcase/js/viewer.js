@@ -109,7 +109,7 @@ export function createViewer(stageEl, hotspotLayer, { edit = false } = {}) {
     const target = box.getCenter(new THREE.Vector3());
     const vFov = THREE.MathUtils.degToRad(camera.fov);
     const hFov = 2 * Math.atan(Math.tan(vFov / 2) * camera.aspect);
-    const wide = Math.max(size.x, size.z);
+    const wide = Math.max(size.x, size.z * 0.6);   // depth matters less when seen from the front
     const dist = Math.max(
       size.y / 2 / Math.tan(vFov / 2) / fill,
       wide / 2 / Math.tan(hFov / 2) / 0.72
@@ -152,13 +152,15 @@ export function createViewer(stageEl, hotspotLayer, { edit = false } = {}) {
   function setHotspots(features) {
     hotspotLayer.replaceChildren();
     hotspots = features.map((f, index) => {
+      const pin = f.hotspot && f.hotspot.position;
+      if (!pin) return { el: null, index, pos: null, feature: f };
       const el = document.createElement('button');
-      el.className = 'hotspot';
+      el.className = 'hotspot' + (f.hotspot.labelSide === 'left' ? ' tag-left' : '');
       el.innerHTML = '<span class="hotspot-pulse"></span><span class="hotspot-core"></span><span class="hotspot-tag"></span>';
       el.querySelector('.hotspot-tag').textContent = f.title;
       el.addEventListener('click', () => onTap(index));
       hotspotLayer.append(el);
-      return { el, index, pos: new THREE.Vector3(...((f.hotspot && f.hotspot.position) || [0, 1, 0])), feature: f };
+      return { el, index, pos: new THREE.Vector3(...pin), feature: f };
     });
     setActive(-1);
   }
@@ -166,6 +168,7 @@ export function createViewer(stageEl, hotspotLayer, { edit = false } = {}) {
   function setActive(index) {
     activeIndex = index;
     hotspots.forEach((h) => {
+      if (!h.el) return;
       h.el.classList.toggle('is-active', h.index === index);
       h.el.classList.toggle('is-dimmed', index >= 0 && h.index !== index);
     });
@@ -174,6 +177,7 @@ export function createViewer(stageEl, hotspotLayer, { edit = false } = {}) {
   function placeHotspots() {
     const w = stageEl.clientWidth, h = stageEl.clientHeight;
     for (const hs of hotspots) {
+      if (!hs.el) continue;
       tmp.copy(hs.pos).project(camera);
       const visible = tmp.z < 1 && Math.abs(tmp.x) < 1.2 && Math.abs(tmp.y) < 1.2;
       hs.el.style.display = visible ? '' : 'none';
@@ -188,6 +192,7 @@ export function createViewer(stageEl, hotspotLayer, { edit = false } = {}) {
     if (!current || current.flat || now < occlusionDue) return;
     occlusionDue = now + 200;
     for (const hs of hotspots) {
+      if (!hs.el) continue;
       const dist = camera.position.distanceTo(hs.pos);
       raycaster.set(camera.position, tmp.copy(hs.pos).sub(camera.position).normalize());
       raycaster.far = dist - 0.06;
@@ -200,6 +205,7 @@ export function createViewer(stageEl, hotspotLayer, { edit = false } = {}) {
     const hs = hotspots[index];
     if (!hs || !current) return;
     setActive(index);
+    if (!hs.pos) { flyTo(home.pos, home.target); return; }   // overview feature: no pin, full view
     const spec = hs.feature.hotspot || {};
     const height = current.box.max.y - current.box.min.y;
     // Narrow (portrait) screens see less width, so stand further back.
@@ -213,7 +219,7 @@ export function createViewer(stageEl, hotspotLayer, { edit = false } = {}) {
       // Look at the hotspot from outside the model, mostly from the front.
       const out = new THREE.Vector3(hs.pos.x - current.center.x, 0, hs.pos.z - current.center.z);
       if (current.flat || out.length() < 0.02) out.set(0, 0, 1);
-      out.normalize().lerp(new THREE.Vector3(0, 0, 1), 0.35).normalize();
+      out.normalize().lerp(new THREE.Vector3(0, 0, 1), 0.72).normalize();
       pos = hs.pos.clone().addScaledVector(out, dist);
       pos.y += dist * 0.12;
     }
@@ -362,7 +368,7 @@ function makePlatform() {
   c.width = c.height = 256;
   const g = c.getContext('2d');
   const grad = g.createRadialGradient(128, 128, 10, 128, 128, 128);
-  grad.addColorStop(0, 'rgba(53,224,200,0.55)');
+  grad.addColorStop(0, 'rgba(34,227,166,0.55)');
   grad.addColorStop(0.55, 'rgba(40,140,220,0.22)');
   grad.addColorStop(1, 'rgba(40,140,220,0)');
   g.fillStyle = grad;
@@ -379,7 +385,7 @@ function makePlatform() {
 
   const ring = new THREE.Group();
   ring.rotation.x = -Math.PI / 2;
-  const mat = new THREE.MeshBasicMaterial({ color: 0x7ff3e2, transparent: true, opacity: 0.7, depthWrite: false, toneMapped: false, side: THREE.DoubleSide });
+  const mat = new THREE.MeshBasicMaterial({ color: 0x7ff3cf, transparent: true, opacity: 0.7, depthWrite: false, toneMapped: false, side: THREE.DoubleSide });
   for (let i = 0; i < 3; i++) {
     const arc = new THREE.Mesh(new THREE.RingGeometry(0.7, 0.712, 64, 1, (i * Math.PI * 2) / 3, Math.PI * 0.5), mat);
     ring.add(arc);

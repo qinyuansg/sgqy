@@ -98,7 +98,112 @@ function reader(name) {
   return g;
 }
 
-const BUILDERS = { kiosk, cabinet, reader };
+// Modelled on the NOVA+ concept image: tall glass-fronted reader, camera bar
+// on top, sensor chin below, leaning back on a slim stand.
+function novaReader(name) {
+  const g = new THREE.Group();
+  box(g, 0.5, 0.04, 0.42, 0.02, shell(), 0, 0.02, -0.08);                 // foot
+  const arm = box(g, 0.14, 0.86, 0.06, 0.03, shell(), 0, 0.44, -0.16);     // stand
+  arm.rotation.x = 0.12;
+  box(g, 0.02, 0.1, 0.064, 0.008, glow(0x22e3a6, 1.8), -0.071, 0.6, -0.14).rotation.x = 0.12;
+
+  const head = new THREE.Group();
+  head.position.set(0, 1.2, 0.1);
+  head.rotation.x = -0.2;
+  g.add(head);
+  box(head, 0.5, 1.0, 0.09, 0.07, shell(), 0, 0, 0);                       // body
+  box(head, 0.44, 0.78, 0.012, 0.03, glass(), 0, 0.08, 0.045);             // glass face
+  screen(head, name, 0.36, 0.5, 0, 0.04, 0.0525);
+  box(head, 0.3, 0.035, 0.008, 0.012, glow(0xdfe9f5, 0.9), 0, 0.435, 0.05); // light bar
+  for (const x of [-0.045, 0.045]) {                                       // cameras
+    const lens = new THREE.Mesh(new THREE.CircleGeometry(0.022, 32), glow(0x4aa8ff, 0.7));
+    lens.position.set(x, 0.385, 0.0525);
+    head.add(lens);
+  }
+  const pad = new THREE.Mesh(new THREE.RingGeometry(0.028, 0.034, 4, 1, Math.PI / 4), glow(0xffffff, 0.9));
+  pad.scale.set(1.3, 0.8, 1);
+  pad.position.set(0, -0.25, 0.0525);
+  head.add(pad);
+  for (const x of [-0.05, 0.05]) {                                         // chin sensors
+    const eye = new THREE.Mesh(new THREE.CircleGeometry(0.024, 32), glass());
+    eye.position.set(x, -0.41, 0.0455);
+    head.add(eye);
+  }
+  return g;
+}
+
+// Generic self-service clearance kiosk: pedestal with a biometric head.
+function clearanceKiosk(name) {
+  const g = new THREE.Group();
+  box(g, 0.7, 0.05, 0.56, 0.02, graphite(), 0, 0.025, 0);
+  box(g, 0.44, 1.0, 0.3, 0.06, shell(), 0, 0.55, -0.04);                   // pedestal
+  box(g, 0.012, 0.9, 0.012, 0.004, glow(0x22e3a6, 1.4), -0.2, 0.55, 0.112);
+  box(g, 0.012, 0.9, 0.012, 0.004, glow(0x22e3a6, 1.4), 0.2, 0.55, 0.112);
+  box(g, 0.6, 0.08, 0.44, 0.03, shell(), 0, 1.02, 0.06);                   // deck
+  box(g, 0.26, 0.012, 0.2, 0.004, glass(), -0.13, 1.064, 0.12);            // passport reader window
+  box(g, 0.16, 0.02, 0.14, 0.008, graphite(), 0.18, 1.068, 0.14);          // fingerprint scanner
+  box(g, 0.1, 0.006, 0.08, 0.002, glow(0x22e3a6, 1.1), 0.18, 1.08, 0.14);
+  box(g, 0.6, 0.62, 0.14, 0.05, shell(), 0, 1.38, -0.08);                  // head
+  box(g, 0.52, 0.4, 0.012, 0.01, glass(), 0, 1.33, -0.006);
+  screen(g, name, 0.46, 0.34, 0, 1.33, 0.002);
+  box(g, 0.4, 0.07, 0.012, 0.02, glass(), 0, 1.61, -0.006);                // camera bar
+  for (const x of [-0.06, 0.06]) {
+    const lens = new THREE.Mesh(new THREE.CircleGeometry(0.02, 32), glow(0x4aa8ff, 0.8));
+    lens.position.set(x, 1.61, 0.001);
+    g.add(lens);
+  }
+  box(g, 0.2, 0.012, 0.012, 0.004, glow(0x22e3a6, 1.6), 0, 1.665, -0.006); // status light
+  return g;
+}
+
+// Nova (card + PIN) and Nova Plus (iris, face, QR, card, fingerprint) side by
+// side on a display panel. Layout follows the product slide description.
+function novaFamily() {
+  const g = new THREE.Group();
+  box(g, 1.3, 1.7, 0.04, 0.03, graphite(), 0, 0.85, -0.05);                // display panel
+  const lens = (x, y, z, r, mat) => {
+    const m = new THREE.Mesh(new THREE.CircleGeometry(r, 32), mat);
+    m.position.set(x, y, z);
+    g.add(m);
+  };
+  const cardIcon = (x, y, z) => {
+    box(g, 0.13, 0.085, 0.004, 0.012, glow(0xffffff, 0.5), x, y, z);
+    box(g, 0.115, 0.07, 0.005, 0.008, glass(), x, y, z);
+    box(g, 0.05, 0.008, 0.006, 0.003, glow(0x22e3a6, 1.4), x, y - 0.02, z);
+  };
+
+  // ---- Nova Plus (left)
+  const px = -0.3;
+  box(g, 0.42, 1.3, 0.09, 0.05, shell(), px, 0.9, 0.005);                  // body
+  box(g, 0.37, 0.96, 0.012, 0.03, glass(), px, 1.0, 0.05);                 // glass face
+  box(g, 0.2, 0.09, 0.05, 0.02, graphite(), px, 1.5, 0.04);                // iris module
+  lens(px - 0.045, 1.5, 0.066, 0.022, glow(0xb0483a, 0.7));
+  lens(px + 0.045, 1.5, 0.066, 0.022, glow(0xb0483a, 0.7));
+  for (let i = 0; i < 3; i++) box(g, 0.14, 0.006, 0.004, 0.002, graphite(), px, 1.405 + i * 0.012, 0.057); // speaker
+  lens(px - 0.05, 1.345, 0.0575, 0.02, glow(0x4aa8ff, 0.8));               // face cameras
+  lens(px + 0.05, 1.345, 0.0575, 0.02, glow(0x4aa8ff, 0.8));
+  box(g, 0.05, 0.036, 0.004, 0.006, glow(0x7a1010, 0.9), px + 0.135, 1.345, 0.057); // QR window
+  screen(g, 'Nova Plus', 0.32, 0.5, px, 1.03, 0.0575);
+  cardIcon(px, 0.66, 0.0575);
+  box(g, 0.42, 0.2, 0.1, 0.05, shell(), px, 0.36, 0.012);                  // base
+  box(g, 0.12, 0.1, 0.012, 0.02, glass(), px, 0.36, 0.062);                // fingerprint sensor
+  box(g, 0.08, 0.06, 0.004, 0.012, glow(0x22e3a6, 1.0), px, 0.36, 0.069);
+
+  // ---- Nova (right)
+  const nx = 0.33;
+  box(g, 0.38, 0.86, 0.08, 0.05, shell(), nx, 0.88, 0);
+  box(g, 0.33, 0.8, 0.012, 0.03, glass(), nx, 0.88, 0.04);
+  box(g, 0.2, 0.012, 0.004, 0.004, glow(0x22e3a6, 1.6), nx, 1.24, 0.047);  // status light
+  for (let r = 0; r < 4; r++) {                                            // touch keypad
+    for (let c = 0; c < 3; c++) {
+      box(g, 0.06, 0.06, 0.004, 0.014, glow(0xdfe9f5, 0.35), nx + (c - 1) * 0.085, 1.15 - r * 0.085, 0.047);
+    }
+  }
+  cardIcon(nx, 0.6, 0.047);
+  return g;
+}
+
+const BUILDERS = { kiosk, cabinet, reader, novaReader, clearanceKiosk, novaFamily };
 
 export function buildPlaceholder(kind, name) {
   return (BUILDERS[kind] || cabinet)(name);

@@ -1,8 +1,8 @@
 :root {
-  --bg: #050b14;
+  --bg: #0a1730;
   --ink: #eaf2ff;
   --ink-soft: #a9bbd4;
-  --accent: #35e0c8;
+  --accent: #22e3a6;
   --accent-2: #4aa8ff;
   --panel: rgba(10, 22, 40, 0.72);
   --line: rgba(120, 190, 255, 0.28);
@@ -33,7 +33,7 @@ svg { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width: 1
 .backdrop-glow {
   background:
     radial-gradient(60% 45% at 50% 38%, rgba(40, 120, 220, 0.34), transparent 70%),
-    radial-gradient(50% 30% at 50% 100%, rgba(53, 224, 200, 0.16), transparent 70%),
+    radial-gradient(50% 30% at 50% 100%, rgba(34, 227, 166, 0.16), transparent 70%),
     linear-gradient(#060f1e, #03070d);
 }
 .backdrop-image[style] + .backdrop-glow { opacity: 0.35; }
@@ -65,7 +65,7 @@ svg { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width: 1
 .hotspot-core {
   position: absolute; left: -13px; top: -13px; width: 26px; height: 26px; border-radius: 50%;
   background: rgba(5, 14, 26, 0.85); border: 3px solid var(--accent);
-  box-shadow: 0 0 14px rgba(53, 224, 200, 0.7);
+  box-shadow: 0 0 14px rgba(34, 227, 166, 0.7);
 }
 .hotspot-core::after { content: ""; position: absolute; inset: 5px; border-radius: 50%; background: #fff; }
 .hotspot-pulse {
@@ -78,6 +78,7 @@ svg { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width: 1
   font-size: 12px; font-weight: 600; letter-spacing: 0.03em;
   background: rgba(5, 14, 26, 0.82); border: 1px solid var(--line); border-radius: 6px;
 }
+.hotspot.tag-left .hotspot-tag { left: auto; right: 22px; }
 .hotspot.is-hidden { opacity: 0.18; }
 .hotspot.is-dimmed { opacity: 0; pointer-events: none; }
 .hotspot.is-active .hotspot-core { border-color: #fff; background: var(--accent); }
@@ -98,6 +99,10 @@ svg { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width: 1
 }
 .home-title span { color: var(--accent); }
 .home-subtitle { margin: 10px 0 0; font-size: clamp(15px, 2vw, 20px); font-weight: 500; color: var(--ink-soft); line-height: 1.35; }
+
+.sectors { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.sectors li { padding: 5px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); font-size: 12px; font-weight: 600; letter-spacing: 0.06em; color: var(--ink-soft); }
+.sectors:empty { display: none; }
 
 .lineup {
   flex: 1; min-height: 0; width: 100%; max-width: 1100px;
@@ -122,7 +127,7 @@ svg { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width: 1
 .pin-circle {
   position: absolute; inset: 0; border-radius: 50%; display: grid; place-items: center; font-size: 20px;
   background: rgba(5, 14, 26, 0.85); border: 2px solid var(--accent); color: var(--accent);
-  box-shadow: 0 0 18px rgba(53, 224, 200, 0.55);
+  box-shadow: 0 0 18px rgba(34, 227, 166, 0.55);
 }
 .pin-pulse { position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--accent); animation: pulse 2.2s ease-out infinite; }
 .product-name { margin-top: 8px; font-size: clamp(14px, 1.8vw, 18px); font-weight: 600; text-align: center; text-shadow: 0 2px 8px #000; }
@@ -145,7 +150,7 @@ svg { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width: 1
 .round-btn, .pill-btn {
   height: 46px; border-radius: 23px; display: inline-flex; align-items: center; justify-content: center; gap: 10px;
   background: var(--panel); border: 1.5px solid var(--accent); color: var(--accent);
-  box-shadow: 0 0 16px rgba(53, 224, 200, 0.3); backdrop-filter: blur(8px);
+  box-shadow: 0 0 16px rgba(34, 227, 166, 0.3); backdrop-filter: blur(8px);
   font-size: 20px;
 }
 .round-btn { width: 46px; }
@@ -170,8 +175,10 @@ svg { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width: 1
 .explore-hint.is-gone { opacity: 0; }
 @keyframes nudge { 50% { transform: translate(8px, -4px); } }
 
-.feature-row { display: flex; justify-content: center; gap: 10px; max-width: 100%; overflow-x: auto; padding: 2px; scrollbar-width: none; }
+.feature-row { display: flex; justify-content: flex-start; gap: 10px; max-width: 100%; overflow-x: auto; padding: 2px; scrollbar-width: none; }
 .feature-row::-webkit-scrollbar { display: none; }
+.feature-row > :first-child { margin-left: auto; }
+.feature-row > :last-child { margin-right: auto; }
 .feature-btn {
   flex: 0 0 104px; min-height: 84px; padding: 10px 6px; border-radius: 14px;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;

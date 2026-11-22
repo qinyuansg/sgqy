@@ -1,9 +1,14 @@
 {
-  "version": "0.1.0",
+  "version": "0.2.0",
   "branding": {
-    "title": "Product Showcase",
-    "titleAccent": "Showcase",
-    "subtitle": "Explore our Kiosk, APICS\nand Nova Readers",
+    "title": "AGIL® Secure Identity",
+    "titleAccent": "Identity",
+    "subtitle": "Biometric enrolment, passenger clearance and access\nfor airports, checkpoints and secure sites",
+    "sectors": [
+      "Airports & Checkpoints",
+      "Police & Homeland Security",
+      "Defence & Military Bases"
+    ],
     "footerText": "",
     "logos": []
   },
@@ -20,101 +25,301 @@
   "products": [
     {
       "id": "kiosk",
-      "name": "Kiosk",
-      "description": "SAMPLE TEXT — one or two lines that say what the kiosk is and where it is used.",
+      "name": "Enrolment Kiosk",
+      "description": "Self-service biometric enrolment: scan an ID, capture a live face, and issue a pass in one visit.",
       "imageUrl": null,
-      "model3dUrl": null,
-      "placeholder": "kiosk",
+      "model3dUrl": "assets/enrolment-kiosk.glb",
       "features": [
+        {
+          "id": "k_camera",
+          "title": "Face Cameras",
+          "icon": "camera",
+          "description": "A colour camera and an infrared camera work as a pair. Together they capture a quality-checked face photo and confirm that a <b>live person</b> is present, not a printed photo or a screen.\n\nInfrared illumination keeps capture consistent in bright lobbies and dim corridors alike.",
+          "hotspot": {
+            "position": [
+              0,
+              1.64,
+              0.137
+            ]
+          }
+        },
         {
           "id": "k_screen",
           "title": "Touchscreen",
           "icon": "screen",
-          "description": "SAMPLE TEXT — describe the display here. Use <b>bold</b> for key terms.\n\nA second paragraph can go on a new line.",
-          "hotspot": { "position": [0, 1.2, 0.2] }
+          "description": "A 13.3-inch portrait touchscreen walks each person through enrolment one step at a time, with on-screen and spoken prompts.\n\nA <b>reach mode</b> moves every control to the lower part of the screen for wheelchair users.",
+          "hotspot": {
+            "position": [
+              0,
+              1.406,
+              0.137
+            ]
+          }
         },
         {
-          "id": "k_camera",
-          "title": "Camera",
-          "icon": "camera",
-          "description": "SAMPLE TEXT — describe the camera here.",
-          "hotspot": { "position": [0, 1.5, 0.19] }
+          "id": "k_qr",
+          "title": "QR Scanner",
+          "icon": "scan",
+          "description": "Reads a QR code straight from a phone screen or a printed letter, so a pre-registered person is recognised immediately and only has to confirm their details.",
+          "hotspot": {
+            "position": [
+              -0.058,
+              1.168,
+              0.137
+            ],
+            "labelSide": "left"
+          }
         },
         {
-          "id": "k_reader",
-          "title": "Card Reader",
+          "id": "k_doc",
+          "title": "Passport & ID Reader",
           "icon": "card",
-          "description": "SAMPLE TEXT — describe the card or document reader here.",
-          "hotspot": { "position": [0.17, 0.92, 0.28] }
+          "description": "Place a passport or ID card face-down on the glass. The reader captures the full page, reads the printed text, and reads the <b>electronic chip</b> in an ePassport.\n\nThe chip photo is then compared with the live face, tying the document to the person holding it.",
+          "hotspot": {
+            "position": [
+              0,
+              1.132,
+              0.207
+            ]
+          }
         },
         {
           "id": "k_printer",
-          "title": "Printer",
+          "title": "Pass Printer",
           "icon": "printer",
-          "description": "SAMPLE TEXT — describe the printer here.",
-          "hotspot": { "position": [-0.14, 0.72, 0.22] }
+          "description": "Prints and cuts a pass or receipt as soon as enrolment is complete. The printer sits on a slide-out drawer, so paper can be changed from the front in under a minute.\n\nA mobile pass can be issued instead of paper.",
+          "hotspot": {
+            "position": [
+              0,
+              0.928,
+              0.285
+            ],
+            "labelSide": "left"
+          }
+        },
+        {
+          "id": "k_light",
+          "title": "Status Light",
+          "icon": "light",
+          "description": "A light bar across the top shows the kiosk's state from across the room: ready, in use, done, or needs attention. A presence sensor wakes the kiosk as someone approaches.",
+          "hotspot": {
+            "position": [
+              0.091,
+              1.678,
+              0.137
+            ],
+            "labelSide": "left"
+          }
+        },
+        {
+          "id": "k_install",
+          "title": "Fits Any Site",
+          "icon": "plug",
+          "description": "One core unit mounts on a <b>desk, wall or floor stand</b> and runs from a single network cable that also carries power.\n\nThe device starts only trusted software, encrypts its storage, and keeps no personal data once a record has been sent to the back-end system.",
+          "hotspot": {
+            "position": [
+              0,
+              0.481,
+              0.02
+            ]
+          }
+        },
+        {
+          "id": "k_use",
+          "title": "Where It's Used",
+          "icon": "shield",
+          "description": "<b>Airports:</b> enrol staff, contractors and travellers once, so later checkpoints only need a face.\n\n<b>Police:</b> register visitors and verify identity at the front counter without tying up an officer.\n\n<b>Defence:</b> enrol visitors and contractors at the camp gate before a pass is issued."
         }
       ]
     },
     {
       "id": "apics",
       "name": "APICS",
-      "description": "SAMPLE TEXT — one or two lines that say what APICS is and what it does.",
+      "description": "Self-service passenger clearance: document, face, iris and fingerprint checked at one kiosk.",
       "imageUrl": null,
       "model3dUrl": null,
-      "placeholder": "cabinet",
+      "placeholder": "clearanceKiosk",
       "features": [
         {
-          "id": "a_1",
-          "title": "Feature One",
-          "icon": "cpu",
-          "description": "SAMPLE TEXT — describe the first APICS highlight here.",
-          "hotspot": { "position": [0, 1.25, 0.26] }
+          "id": "a_camera",
+          "title": "Face & Iris Cameras",
+          "icon": "camera",
+          "description": "The camera bar captures the traveller's <b>face</b> and, using near-infrared light, the unique pattern of each <b>iris</b>.\n\nNear-infrared makes iris detail visible regardless of eye colour or ambient lighting, and both captures are quality-checked before they are accepted.",
+          "hotspot": {
+            "position": [
+              0,
+              1.61,
+              0.0
+            ]
+          }
         },
         {
-          "id": "a_2",
-          "title": "Feature Two",
+          "id": "a_screen",
+          "title": "Guided Screen",
+          "icon": "screen",
+          "description": "Clear, step-by-step prompts tell the traveller where to look and what to present, so first-time users clear without help from an officer.",
+          "hotspot": {
+            "position": [
+              0,
+              1.33,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "a_passport",
+          "title": "Passport Reader",
+          "icon": "card",
+          "description": "Reads the passport data page and the electronic chip, and checks the document's security features. The chip photo becomes the reference the live face is matched against.",
+          "hotspot": {
+            "position": [
+              -0.13,
+              1.07,
+              0.12
+            ],
+            "labelSide": "left"
+          }
+        },
+        {
+          "id": "a_finger",
+          "title": "Fingerprint Scanner",
+          "icon": "fingerprint",
+          "description": "A second biometric for travellers whose face or iris cannot be matched, and for clearance rules that require fingerprints.",
+          "hotspot": {
+            "position": [
+              0.18,
+              1.08,
+              0.14
+            ]
+          }
+        },
+        {
+          "id": "a_light",
+          "title": "Status Light",
+          "icon": "light",
+          "description": "Shows the traveller when to step up and when they are cleared, and shows supervising officers at a glance which kiosk needs assistance.",
+          "hotspot": {
+            "position": [
+              0,
+              1.665,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "a_use",
+          "title": "Where It's Used",
           "icon": "shield",
-          "description": "SAMPLE TEXT — describe the second APICS highlight here.",
-          "hotspot": { "position": [0.2, 0.8, 0.26] }
-        },
-        {
-          "id": "a_3",
-          "title": "Feature Three",
-          "icon": "signal",
-          "description": "SAMPLE TEXT — describe the third APICS highlight here.",
-          "hotspot": { "position": [-0.2, 0.4, 0.26] }
+          "description": "<b>Airports and checkpoints:</b> automated arrival and departure clearance that keeps queues moving while officers focus on the cases that need them.\n\n<b>Police and border agencies:</b> consistent identity checks against watchlists at every lane.\n\n<b>Defence:</b> controlled entry of personnel and visitors at base checkpoints."
         }
       ]
     },
     {
       "id": "nova",
       "name": "Nova Readers",
-      "description": "SAMPLE TEXT — one or two lines that say what the Nova Readers are and where they are installed.",
+      "description": "Modular door access readers: Nova for card and PIN, Nova Plus for multi-biometric access.",
       "imageUrl": null,
       "model3dUrl": null,
-      "placeholder": "reader",
+      "placeholder": "novaFamily",
       "features": [
         {
-          "id": "n_display",
-          "title": "Display",
+          "id": "n_iris",
+          "title": "Iris Recognition",
+          "icon": "scan",
+          "description": "<b>Nova Plus.</b> The iris module at the top reads the unique pattern of each iris under near-infrared light. It is contactless and gives the highest assurance of the reader's biometric modes.",
+          "hotspot": {
+            "position": [
+              -0.3,
+              1.5,
+              0.07
+            ]
+          }
+        },
+        {
+          "id": "n_face",
+          "title": "Face Recognition",
+          "icon": "camera",
+          "description": "<b>Nova Plus.</b> Twin cameras verify a face hands-free as the person walks up, with a liveness check so a photo or a screen is not accepted.",
+          "hotspot": {
+            "position": [
+              -0.3,
+              1.345,
+              0.06
+            ],
+            "labelSide": "left"
+          }
+        },
+        {
+          "id": "n_qr",
+          "title": "QR Code",
+          "icon": "scan",
+          "description": "<b>Nova Plus.</b> A scan window beside the cameras reads QR passes from a phone or a printed slip, for visitors and temporary access.",
+          "hotspot": {
+            "position": [
+              -0.165,
+              1.345,
+              0.06
+            ]
+          }
+        },
+        {
+          "id": "n_screen",
+          "title": "Touchscreen",
           "icon": "screen",
-          "description": "SAMPLE TEXT — describe the reader display here.",
-          "hotspot": { "position": [0, 1.12, 0.1] }
+          "description": "<b>Nova Plus.</b> Short on-screen guidance (come closer, look up, hold still) and a clear welcome when the door unlocks.",
+          "hotspot": {
+            "position": [
+              -0.3,
+              1.03,
+              0.06
+            ]
+          }
         },
         {
-          "id": "n_read",
-          "title": "Read Zone",
-          "icon": "signal",
-          "description": "SAMPLE TEXT — describe what the reader scans (card, QR, mobile) here.",
-          "hotspot": { "position": [0, 0.56, 0.1] }
+          "id": "n_card",
+          "title": "Card Tap",
+          "icon": "card",
+          "description": "<b>Nova and Nova Plus.</b> Tap a contactless access card on the card zone. Use it alone, or pair it with a PIN or a biometric for doors that need two factors.",
+          "hotspot": {
+            "position": [
+              -0.3,
+              0.66,
+              0.06
+            ],
+            "labelSide": "left"
+          }
         },
         {
-          "id": "n_status",
-          "title": "Status Light",
-          "icon": "light",
-          "description": "SAMPLE TEXT — describe the status indicator here.",
-          "hotspot": { "position": [0, 1.5, 0.09] }
+          "id": "n_finger",
+          "title": "Fingerprint",
+          "icon": "fingerprint",
+          "description": "<b>Nova Plus.</b> The sensor on the base matches a fingerprint by touch. It also serves as the fallback when a face or iris cannot be read, so an authorised person is not left at the door.",
+          "hotspot": {
+            "position": [
+              -0.3,
+              0.36,
+              0.075
+            ]
+          }
+        },
+        {
+          "id": "n_pin",
+          "title": "PIN Keypad",
+          "icon": "lock",
+          "description": "<b>Nova.</b> A touch keypad for PIN entry, used with a card for controlled doors such as control rooms and server rooms.",
+          "hotspot": {
+            "position": [
+              0.33,
+              1.02,
+              0.05
+            ]
+          }
+        },
+        {
+          "id": "n_use",
+          "title": "Where It's Used",
+          "icon": "shield",
+          "description": "<b>Airports:</b> staff access doors and identity confirmation before security screening.\n\n<b>Police:</b> restricted rooms such as armouries and evidence stores.\n\n<b>Defence:</b> secure zones and airlock doors where a card alone is not enough."
         }
       ]
     }
