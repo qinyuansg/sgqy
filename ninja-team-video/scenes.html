@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ninja Team Product OS</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07080b; --fg:#f5f5f7; --fg2:#c9cdd5; --mut:#8a909a; --line:#262a33; --card:#101217;
+  --acc:#5ec4ff; --acc-rgb:94,196,255; --ok:#3ad687; --ok-rgb:58,214,135;
+  --warn:#ffb84d; --warn-rgb:255,184,77; --bad:#ff6a5f; --bad-rgb:255,106,95;
+}
+html,body{width:1920px;height:1080px;overflow:hidden;background:#000}
+#stage{position:relative;width:1920px;height:1080px;overflow:hidden;color:var(--fg);
+  font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;
+  background:radial-gradient(1500px 820px at 50% -18%, #172138 0%, rgba(7,8,11,0) 66%), var(--bg)}
+.scene{position:absolute;inset:0;visibility:hidden}
+.abs{position:absolute}
+.cx{position:absolute;left:0;right:0;text-align:center}
+.disp{font-family:'Inter Display','Inter',sans-serif}
+.chap{position:absolute;left:120px;top:70px;font:600 19px/1 'Inter';letter-spacing:.24em;text-transform:uppercase;color:var(--mut);display:flex;align-items:center;gap:16px}
+.chap::before{content:'';width:30px;height:2px;background:var(--acc);display:block}
+.h1{font-family:'Inter Display','Inter';font-weight:700;font-size:72px;letter-spacing:-.025em;line-height:1.06}
+.lead{font-size:38px;line-height:1.35;color:var(--fg2);font-weight:400}
+.mut{color:var(--mut)}
+.acc{color:var(--acc)}
+.grad{background:linear-gradient(92deg,#ffffff 0%,#bfe6ff 45%,#5ec4ff 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.gradok{background:linear-gradient(92deg,#ffffff 0%,#b8f3d3 40%,#3ad687 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+svg.i{width:1em;height:1em;stroke-width:1.8;flex:none}
+.card{position:absolute;border-radius:28px;background:linear-gradient(180deg,#14171d 0%,#0e1014 100%);
+  border:1.5px solid color-mix(in srgb, var(--acc) calc(var(--h,0) * 100%), var(--line));
+  box-shadow:0 24px 60px rgba(0,0,0,.45), 0 0 calc(var(--h,0) * 70px) rgba(var(--acc-rgb), calc(var(--h,0) * .22))}
+.ibox{display:flex;align-items:center;justify-content:center;width:76px;height:76px;border-radius:22px;
+  background:rgba(var(--acc-rgb),.12);color:var(--acc);font-size:40px}
+.pill{display:inline-flex;align-items:center;gap:12px;border-radius:999px;padding:12px 26px;border:1.5px solid var(--line);background:#111419;font-size:26px;font-weight:600}
+.strike{position:absolute;left:-6px;right:-6px;top:54%;height:5px;border-radius:3px;background:var(--bad)}
+.rel{position:relative;display:inline-block}
+ul.b{list-style:none}
+ul.b li{position:relative;padding-left:26px;font-size:25px;line-height:1.38;color:var(--fg2);margin-top:14px}
+ul.b li::before{content:'';position:absolute;left:2px;top:15px;width:8px;height:8px;border-radius:50%;background:var(--acc)}
+svg.ov{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:visible}
+svg.ov path:not([fill]){fill:none}
+svg.ov path{stroke-linecap:round;stroke-linejoin:round}
+svg *{transform-box:fill-box;transform-origin:center}
+.draw{stroke-dasharray:1 1}
+#fade{position:absolute;inset:0;background:#000;opacity:0}
+#mtn{position:absolute;inset:0;opacity:0}
+
+/* ---------- s3 team cards ---------- */
+.role{top:300px;width:400px;height:560px;padding:40px 36px}
+.role h3{font:700 36px/1.1 'Inter Display','Inter';margin-top:30px;letter-spacing:-.01em}
+.role .tag{position:absolute;right:30px;top:40px;font:700 16px/1 'Inter';letter-spacing:.18em;text-transform:uppercase;color:var(--acc)}
+/* ---------- s4 principles ---------- */
+.tile{top:300px;width:312px;height:340px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px}
+.tile .n{position:absolute;left:26px;top:22px;font:600 18px/1 'Inter';color:var(--mut);letter-spacing:.1em}
+.tile .ic{font-size:64px;color:var(--acc)}
+.tile .t{font:700 32px/1.18 'Inter Display','Inter';margin-top:26px;letter-spacing:-.01em}
+.expl{top:760px;font:500 50px/1.3 'Inter Display','Inter';letter-spacing:-.015em;color:var(--fg)}
+/* ---------- s5 steps ---------- */
+.step{top:320px;width:300px;height:530px;padding:32px 28px}
+.step .num{width:50px;height:50px;border-radius:50%;border:2px solid var(--acc);color:var(--acc);display:flex;align-items:center;justify-content:center;font:700 24px 'Inter'}
+.step .ic{position:absolute;right:28px;top:32px;font-size:44px;color:var(--fg2)}
+.step h3{font:700 32px/1.15 'Inter Display','Inter';margin-top:30px;letter-spacing:-.01em}
+.step p{font-size:26px;line-height:1.42;color:var(--fg2);margin-top:20px}
+/* ---------- s6 loop ---------- */
+.node{top:300px;width:190px;height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;border-radius:24px}
+.node .ic{font-size:46px;color:var(--acc)}
+.node .t{font:600 23px/1.15 'Inter'}
+.node.dec{background:linear-gradient(180deg,#e9edf3,#c9d0da);border-color:#fff}
+.node.dec .ic,.node.dec .t{color:#0b0d11}
+.branch{left:1610px;width:226px;height:56px;border-radius:16px;display:flex;align-items:center;gap:14px;padding:0 20px;font:600 25px 'Inter';background:#12151a;border:1.5px solid var(--line)}
+.branch .ic{font-size:28px}
+.test{font:600 23px 'Inter';padding:10px 22px;border-radius:999px;background:#12151a;border:1.5px solid var(--line);color:var(--fg2)}
+.q{top:720px;width:520px}
+.q .k{font:700 24px 'Inter';color:var(--acc);letter-spacing:.1em}
+.q .t{font:700 50px/1.12 'Inter Display','Inter';margin-top:12px;letter-spacing:-.02em}
+/* ---------- s7 matrix ---------- */
+.quad{width:520px;height:340px;padding:30px 32px;border-radius:24px}
+.quad h4{font:700 34px/1 'Inter Display','Inter';display:flex;align-items:center;gap:14px}
+.quad p{font-size:27px;line-height:1.35;color:var(--fg2);margin-top:18px}
+.quad.prime{background:linear-gradient(180deg,rgba(var(--ok-rgb),.13),rgba(var(--ok-rgb),.05));border-color:color-mix(in srgb, var(--ok) calc(30% + var(--h,0) * 70%), transparent);box-shadow:0 0 calc(var(--h,0)*90px) rgba(var(--ok-rgb),calc(var(--h,0)*.25))}
+.quad.prime h4{color:var(--ok)}
+.quad.delay h4{color:var(--warn)}
+.quad.avoid h4{color:var(--bad)}
+.quad.delay{border-color:color-mix(in srgb, var(--warn) calc(var(--h,0) * 100%), var(--line))}
+.quad.avoid{border-color:color-mix(in srgb, var(--bad) calc(var(--h,0) * 100%), var(--line))}
+.chk{display:flex;gap:12px;align-items:center;font-size:23px;line-height:1.3;color:var(--fg);margin-top:16px;white-space:nowrap}
+.chk svg{color:var(--ok);font-size:24px}
+.verdict{left:1430px;width:420px;top:360px}
+.verdict .w{font:800 112px/1 'Inter Display','Inter';letter-spacing:-.035em}
+.verdict .s{font-size:34px;line-height:1.35;color:var(--fg2);margin-top:22px}
+/* ---------- s8 demo list ---------- */
+.row{left:120px;width:940px;height:86px;border-radius:22px;display:flex;align-items:center;gap:24px;padding:0 28px}
+.row .ic{width:52px;height:52px;border-radius:16px;background:rgba(var(--acc-rgb),.12);color:var(--acc);display:flex;align-items:center;justify-content:center;font-size:28px;flex:none}
+.row .t{font-size:29px;font-weight:500}
+.chip{display:inline-flex;align-items:center;gap:10px;padding:14px 24px;border-radius:16px;background:rgba(var(--acc-rgb),.10);border:1.5px solid rgba(var(--acc-rgb),.35);font:600 27px 'Inter';color:var(--fg)}
+/* ---------- s9 playbook ---------- */
+.mv{left:120px;width:1030px;height:76px;border-radius:20px;display:flex;align-items:center;gap:22px;padding:0 24px}
+.mv .n{width:46px;height:46px;border-radius:50%;background:#1b1f27;color:var(--fg);display:flex;align-items:center;justify-content:center;font:700 22px 'Inter';flex:none;border:1.5px solid color-mix(in srgb, var(--acc) calc(var(--h,0) * 100%), #2c313b)}
+.mv .t{font-size:27px;font-weight:500;color:var(--fg)}
+.kw{left:1240px;width:580px;top:420px;font:700 70px/1.08 'Inter Display','Inter';letter-spacing:-.03em}
+/* ---------- s10 week ---------- */
+.seg{top:350px;height:140px;border-radius:24px;padding:26px 30px;display:flex;flex-direction:column;justify-content:center}
+.seg .d{font:700 18px/1 'Inter';letter-spacing:.2em;text-transform:uppercase;color:var(--acc)}
+.seg .t{font:700 40px/1.1 'Inter Display','Inter';margin-top:14px;display:flex;align-items:center;gap:14px}
+.segp{top:520px;font-size:25px;line-height:1.42;color:var(--fg2)}
+/* ---------- s11 example ---------- */
+.ex{left:120px;width:1680px;height:88px;border-radius:22px;display:flex;align-items:center;gap:30px;padding:0 26px}
+.ex .l{width:220px;flex:none;display:flex;align-items:center;gap:12px;font:700 21px/1 'Inter';letter-spacing:.14em;text-transform:uppercase;color:var(--acc)}
+.ex .l svg{font-size:28px}
+.ex .t{font-size:29px;color:var(--fg)}
+/* ---------- s12 leaders ---------- */
+.lead3{top:260px;width:540px;height:440px;padding:38px 40px}
+.lead3 .hd{display:flex;align-items:center;gap:20px}
+.lead3 .hd .ibox{width:68px;height:68px;font-size:34px}
+.lead3 h3{font:700 40px/1 'Inter Display','Inter';letter-spacing:-.015em}
+.lead3 ul.b li{font-size:27px}
+/* ---------- s13 metrics ---------- */
+.met{width:400px;height:170px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:0 24px}
+.met .ic{font-size:44px;color:var(--acc)}
+.met .t{font:600 27px/1.2 'Inter'}
+/* ---------- s14 recap ---------- */
+.rc{width:500px;height:270px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.rc .n{font:800 150px/1 'Inter Display','Inter';letter-spacing:-.04em}
+.rc .t{font:600 34px/1 'Inter';color:var(--fg2);margin-top:14px}
+</style>
+</head>
+<body>
+<div id="stage">
+
+<!-- ================= global: mountains at dawn ================= -->
+<div id="mtn" data-k="@s1+0.1:in/2.8 @s2:out/1.0 s15.i1:in/2.2" data-fx="fade">
+  <svg class="ov" viewBox="0 0 1920 1080">
+    <defs>
+      <radialGradient id="glow" cx="72%" cy="64%" r="60%">
+        <stop offset="0" stop-color="#3a5680" stop-opacity=".55"/>
+        <stop offset=".45" stop-color="#1c2a44" stop-opacity=".35"/>
+        <stop offset="1" stop-color="#07080b" stop-opacity="0"/>
+      </radialGradient>
+      <linearGradient id="far" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22304a"/><stop offset="1" stop-color="#0b0f17"/></linearGradient>
+      <linearGradient id="mid" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#151d2b"/><stop offset="1" stop-color="#080a10"/></linearGradient>
+      <g id="climber" fill="#05070a" stroke="#05070a" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="7" cy="-43" r="6" stroke="none"/>
+        <rect x="-11" y="-38" width="11" height="17" rx="3" transform="rotate(14 -5 -30)" stroke="none"/>
+        <path d="M4 -35 L-1 -17" stroke-width="8" fill="none"/>
+        <path d="M-1 -17 L7 -8 L6 0" stroke-width="4.5" fill="none"/>
+        <path d="M-1 -17 L-7 -7 L-11 0" stroke-width="4.5" fill="none"/>
+        <path d="M4 -31 L13 -24" stroke-width="3.5" fill="none"/>
+        <path d="M13 -27 L19 0" stroke-width="2.2" fill="none"/>
+      </g>
+    </defs>
+    <rect width="1920" height="1080" fill="url(#glow)"/>
+    <path d="M0,770 L140,705 L260,738 L420,640 L560,716 L700,668 L860,742 L1010,650 L1160,712 L1320,598 L1480,690 L1640,628 L1800,706 L1920,668 L1920,1080 L0,1080Z" fill="url(#far)" opacity=".9"/>
+    <path d="M0,842 L180,782 L330,828 L520,752 L700,818 L880,772 L1040,842 L1240,762 L1400,818 L1600,752 L1760,804 L1920,772 L1920,1080 L0,1080Z" fill="url(#mid)"/>
+    <path d="M0,968 C300,946 650,884 1000,815 L1430,668 L1520,692 L1640,760 C1760,822 1850,850 1920,860 L1920,1080 L0,1080Z" fill="#040508"/>
+  </svg>
+</div>
+<svg class="ov" id="climbers" viewBox="0 0 1920 1080" style="pointer-events:none">
+  <use href="#climber" transform="translate(1120 774)" data-k="s1.f:in/1.0 @s2:gone s15.i1+0.6:in/1.2" data-fx="fade"/>
+  <use href="#climber" transform="translate(1200 746.5)" data-k="s1.f+0.18:in/1.0 @s2:gone s15.i1+0.8:in/1.2" data-fx="fade"/>
+  <use href="#climber" transform="translate(1280 719)" data-k="s1.f+0.36:in/1.0 @s2:gone s15.i1+1.0:in/1.2" data-fx="fade"/>
+  <use href="#climber" transform="translate(1360 691.5)" data-k="s1.f+0.54:in/1.0 @s2:gone s15.i1+1.2:in/1.2" data-fx="fade"/>
+</svg>
+
+<!-- ================= s1 cold open ================= -->
+<section class="scene" data-scene="s1">
+  <div class="cx disp" style="top:300px;font-size:76px;font-weight:600;letter-spacing:-.02em;color:var(--fg2)" data-k="s1.b:in s1.d:out">Not more meetings.</div>
+  <div class="cx disp" style="top:400px;font-size:76px;font-weight:600;letter-spacing:-.02em;color:var(--fg2)" data-k="s1.c:in s1.d:out">Not more slides.</div>
+  <div class="cx disp grad" style="top:300px;font-size:190px;font-weight:800;letter-spacing:-.045em;line-height:1.1" data-k="s1.d+0.15:in/1.1 s1.f:out" data-fx="scale">Evidence.</div>
+  <div class="cx disp" style="top:330px;display:flex;justify-content:center;gap:56px;font-size:64px;font-weight:700;letter-spacing:-.02em">
+    <span data-k="s1.f:in s1.i:out">Four people.</span>
+    <span data-k="s1.g:in s1.i:out">One loop.</span>
+    <span class="acc" data-k="s1.h:in s1.i:out">A different way to build.</span>
+  </div>
+  <div class="cx" style="top:215px" data-k="s1.i:in/1.3" data-fx="scale">
+    <div style="font:700 26px/1 'Inter';letter-spacing:.5em;color:var(--acc);text-indent:.5em">NINJA TEAM</div>
+    <div class="disp" style="font-size:124px;font-weight:800;letter-spacing:-.04em;line-height:1.02;margin-top:30px">Product<br>Operating System</div>
+    <div style="font-size:34px;color:var(--fg2);margin-top:34px">A 4-person strike team for POC, demo, and product validation.</div>
+  </div>
+</section>
+
+<!-- ================= s2 mission ================= -->
+<section class="scene" data-scene="s2">
+  <div class="chap">01 · The Mission</div>
+  <div data-k="s2.h:out" data-fx="static">
+    <div class="abs h1" style="left:120px;top:180px;font-size:88px" data-k="s2.a:in">What is a ninja team?</div>
+    <div class="abs lead" style="left:120px;top:300px" data-k="s2.b:in">A four-person, high-agency strike team — built for one job.</div>
+    <div class="abs card" style="left:120px;top:540px;width:450px;height:150px;border-style:dashed;display:flex;align-items:center;gap:22px;padding:0 34px;font-size:32px;color:var(--mut)" data-k="s2.c:in">
+      <i data-icon="cloud-fog" style="font-size:52px"></i><span>Unclear<br>opportunities</span></div>
+    <svg class="ov"><path class="draw" pathLength="1" d="M600,615 L830,615" stroke="#5ec4ff" stroke-width="4" data-k="s2.c+0.6:in/0.8" data-fx="draw"/>
+      <path d="M812,600 L834,615 L812,630" stroke="#5ec4ff" stroke-width="4" data-k="s2.c+1.2:in/0.3" data-fx="fade"/></svg>
+    <div class="abs pill" style="left:870px;top:440px;font-size:38px;padding:20px 34px;border-color:rgba(94,196,255,.5)" data-k="s2.d:in" data-fx="left"><i data-icon="activity" class="acc"></i>Validated signals</div>
+    <div class="abs pill" style="left:870px;top:572px;font-size:38px;padding:20px 34px;border-color:rgba(94,196,255,.5)" data-k="s2.e:in" data-fx="left"><i data-icon="magnet" class="acc"></i>Customer pull</div>
+    <div class="abs pill" style="left:870px;top:704px;font-size:38px;padding:20px 34px;border-color:rgba(94,196,255,.5)" data-k="s2.f:in" data-fx="left"><i data-icon="signpost" class="acc"></i>Product decisions</div>
+    <div class="abs disp" style="left:120px;top:880px;font-size:46px;font-weight:700;letter-spacing:-.02em" data-k="s2.g:in">Low effort. <span class="grad">High value.</span></div>
+  </div>
+  <div class="cx mut" style="top:250px;font-size:30px;letter-spacing:.2em;text-transform:uppercase;font-weight:600" data-k="s2.h:in">The part most people miss</div>
+  <div class="cx disp" style="top:380px;font-size:50px;font-weight:500;color:var(--mut)" data-k="s2.i:in">
+    <span class="rel">The goal is not to ship the final enterprise platform first.<span class="strike" data-k="s2.i$-0.4:in/0.7" data-fx="wipe"></span></span></div>
+  <div class="cx disp" style="top:510px;font-size:110px;font-weight:800;letter-spacing:-.04em" data-k="s2.j:in/1.0" data-fx="scale">The goal is <span class="grad">evidence.</span></div>
+  <div class="cx" style="top:720px;font-size:36px;color:var(--fg2)" data-k="s2.k2:in">Everything else flows from it.</div>
+</section>
+
+<!-- ================= s3 team ================= -->
+<section class="scene" data-scene="s3">
+  <div class="chap">02 · The Team</div>
+  <div data-k="s3.c:out" data-fx="static">
+    <div class="abs h1" style="left:120px;top:160px" data-k="s3.a:in">Four roles. One team.</div>
+    <div class="card role" style="left:120px" data-k="s3.a+0.9:dim s3.pm:hl s3.sa:dim s3.b:on">
+      <div class="ibox"><i data-icon="user"></i></div><div class="tag" data-k="s3.b:in" data-fx="fade">Direction</div>
+      <h3>Product Manager</h3>
+      <ul class="b">
+        <li data-k="s3.pm1:in" data-fx="left">Defines problem and success</li>
+        <li data-k="s3.pm2:in" data-fx="left">Chooses the wedge use case</li>
+        <li data-k="s3.pm3:in" data-fx="left">Runs priorities and customer learning</li>
+        <li data-k="s3.pm4:in" data-fx="left">Owns decision rhythm and narrative</li>
+      </ul>
+    </div>
+    <div class="card role" style="left:547px" data-k="s3.a+1.05:dim s3.sa:hl s3.fe:dim s3.b:on">
+      <div class="ibox"><i data-icon="layers"></i></div><div class="tag" data-k="s3.b+0.2:in" data-fx="fade">Architecture</div>
+      <h3>Solution Architect</h3>
+      <ul class="b">
+        <li data-k="s3.sa1:in" data-fx="left">Shapes the end-to-end system concept</li>
+        <li data-k="s3.sa2:in" data-fx="left">Reduces technical risk early</li>
+        <li data-k="s3.sa3:in" data-fx="left">Finds what can be reused vs. invented</li>
+        <li data-k="s3.sa4:in" data-fx="left">Translates the demo into scalable architecture</li>
+      </ul>
+    </div>
+    <div class="card role" style="left:973px" data-k="s3.a+1.2:dim s3.fe:hl s3.be:dim s3.b:on">
+      <div class="ibox"><i data-icon="monitor"></i></div><div class="tag" data-k="s3.b+0.4:in" data-fx="fade">Experience</div>
+      <h3>Front-End Dev</h3>
+      <ul class="b">
+        <li data-k="s3.fe1:in" data-fx="left">Builds visible user experience fast</li>
+        <li data-k="s3.fe2:in" data-fx="left">Makes the demo feel real and intuitive</li>
+        <li data-k="s3.fe3:in" data-fx="left">Turns concepts into clickable proof</li>
+        <li data-k="s3.fe4:in" data-fx="left">Captures workflow friction quickly</li>
+      </ul>
+    </div>
+    <div class="card role" style="left:1400px" data-k="s3.a+1.35:dim s3.be:hl s3.b:on">
+      <div class="ibox"><i data-icon="database"></i></div><div class="tag" data-k="s3.b+0.6:in" data-fx="fade">Logic</div>
+      <h3>Back-End Dev</h3>
+      <ul class="b">
+        <li data-k="s3.be1:in" data-fx="left">Builds core logic and integrations</li>
+        <li data-k="s3.be2:in" data-fx="left">Creates realistic data, APIs, rules</li>
+        <li data-k="s3.be3:in" data-fx="left">Makes workflow outcomes measurable</li>
+        <li data-k="s3.be4:in" data-fx="left">Stress-tests feasibility early</li>
+      </ul>
+    </div>
+    <div class="cx" style="top:910px;font-size:34px;color:var(--fg2)" data-k="s3.b+2.6:in">Four people = a complete product team, <span class="acc">in miniature.</span></div>
+  </div>
+  <div class="cx mut" style="top:230px;font-size:30px;letter-spacing:.2em;text-transform:uppercase;font-weight:600" data-k="s3.c:in">One thing to be clear about</div>
+  <div class="cx disp" style="top:330px;font-size:66px;font-weight:600;color:var(--fg2);letter-spacing:-.02em" data-k="s3.d:in">The PM is not a <span class="rel">project secretary.<span class="strike" data-k="s3.d$-0.2:in/0.6" data-fx="wipe"></span></span></div>
+  <div class="cx" style="top:440px;display:flex;justify-content:center;gap:28px;font-size:30px;color:var(--mut)">
+    <span class="pill" style="font-weight:500" data-k="s3.d2:in"><i data-icon="x"></i>Not the note-taker</span>
+    <span class="pill" style="font-weight:500" data-k="s3.d3:in"><i data-icon="x"></i>Not the status chaser</span>
+  </div>
+  <div class="cx disp" style="top:590px;font-size:100px;font-weight:800;letter-spacing:-.04em" data-k="s3.e:in/1.0" data-fx="scale">The PM is the <span class="grad">product captain.</span></div>
+  <div class="cx disp" style="top:735px;font-size:54px;font-weight:600;color:var(--fg2);letter-spacing:-.02em" data-k="s3.e2:in">The decision integrator.</div>
+  <div class="cx" style="top:860px;font-size:34px;color:var(--mut)" data-k="s3.e3:in">Everything the team learns <span class="acc">→</span> a decision.</div>
+</section>
+
+<!-- ================= s4 principles ================= -->
+<section class="scene" data-scene="s4">
+  <div class="chap">03 · First Principles</div>
+  <div class="abs h1" style="left:120px;top:160px" data-k="s4.a:in">Five first principles.</div>
+  <div class="card tile" style="left:120px" data-k="s4.a+0.9:dim s4.p1:hl s4.p2:dim s4.b:on"><div class="n">01</div><div class="ic"><i data-icon="zap"></i></div><div class="t">Speed to signal &gt;<br>speed to scale</div></div>
+  <div class="card tile" style="left:462px" data-k="s4.a+1.05:dim s4.p2:hl s4.p3:dim s4.b:on"><div class="n">02</div><div class="ic"><i data-icon="play"></i></div><div class="t">Demo before<br>bureaucracy</div></div>
+  <div class="card tile" style="left:804px" data-k="s4.a+1.2:dim s4.p3:hl s4.p4:dim s4.b:on"><div class="n">03</div><div class="ic"><i data-icon="target"></i></div><div class="t">Solve one<br>painful journey<br><span style="white-space:nowrap">end-to-end</span></div></div>
+  <div class="card tile" style="left:1146px" data-k="s4.a+1.35:dim s4.p4:hl s4.p5:dim s4.b:on"><div class="n">04</div><div class="ic"><i data-icon="chart-no-axes-column"></i></div><div class="t">Learning beats<br>assumptions</div></div>
+  <div class="card tile" style="left:1488px" data-k="s4.a+1.5:dim s4.p5:hl s4.b:on"><div class="n">05</div><div class="ic"><i data-icon="recycle"></i></div><div class="t">Reuse before<br>rebuild</div></div>
+  <div class="cx expl" data-k="s4.p1x:in s4.p2:out">Find out if <span class="acc">one</span> user cares — before you build for a million.</div>
+  <div class="cx expl" data-k="s4.p2x:in s4.p3:out">A demo answers in <span class="acc">10 minutes</span> what a document debates for 10 weeks.</div>
+  <div class="cx expl" data-k="s4.p3x:in s4.p4:out">Not ten features half-done. <span class="acc">One journey, done completely.</span></div>
+  <div class="cx expl" data-k="s4.p4x:in s4.p5:out">Every opinion is a hypothesis — <span class="acc">until a customer proves it.</span></div>
+  <div class="cx expl" data-k="s4.p5x:in s4.b:out">If it already works, use it. <span class="acc">Spend energy only where it's new.</span></div>
+  <div class="cx expl" style="font-size:60px;font-weight:700" data-k="s4.b+0.6:in">Simple to say. <span class="grad">Hard to live.</span></div>
+</section>
+
+<!-- ================= s5 insert into org ================= -->
+<section class="scene" data-scene="s5">
+  <div class="chap">04 · Plugging Into the Organization</div>
+  <div class="abs h1" style="left:120px;top:160px" data-k="s5.a:in">Five steps into the organization.</div>
+  <div class="card step" style="left:120px" data-k="s5.s1:hl s5.s2:on"><div class="num">1</div><div class="ic"><i data-icon="search"></i></div><h3>Find the<br>wedge</h3>
+    <p data-k="s5.s1x:in" data-fx="fade">One high-pain, high-visibility workflow — frustration is obvious, success is easy to observe.</p></div>
+  <div class="card step" style="left:465px" data-k="s5.s2:hl s5.s3:on"><div class="num">2</div><div class="ic"><i data-icon="lightbulb"></i></div><h3>Define the<br>hypothesis</h3>
+    <p data-k="s5.s2x:in" data-fx="fade">"If we show this outcome clearly, the customer will care, lean in, or ask for a next step."</p></div>
+  <div class="card step" style="left:810px" data-k="s5.s3:hl s5.s4:on"><div class="num">3</div><div class="ic"><i data-icon="layers"></i></div><h3>Build a<br>thin-slice POC</h3>
+    <p data-k="s5.s3x:in" data-fx="fade">Only the minimum workflow, data logic, and UI needed to prove customer value.</p></div>
+  <div class="card step" style="left:1155px" data-k="s5.s4:hl s5.s5:on"><div class="num">4</div><div class="ic"><i data-icon="monitor-play"></i></div><h3>Demo<br>with intent</h3>
+    <p data-k="s5.s4x:in" data-fx="fade">Test appetite, objections, trust, and operational fit — not just to impress.</p></div>
+  <div class="card step" style="left:1500px" data-k="s5.s5:hl s5.b:on"><div class="num">5</div><div class="ic"><i data-icon="circle-check"></i></div><h3>Convert signal into action</h3>
+    <p data-k="s5.s5x:in" data-fx="fade">Stop, refine, pilot, or productize. Feed results into roadmap and governance.</p></div>
+  <svg class="ov">
+    <path d="M428,400 L440,412 L428,424" stroke="#5ec4ff" stroke-width="3" data-k="s5.s2-0.1:in" data-fx="fade"/>
+    <path d="M773,400 L785,412 L773,424" stroke="#5ec4ff" stroke-width="3" data-k="s5.s3-0.1:in" data-fx="fade"/>
+    <path d="M1118,400 L1130,412 L1118,424" stroke="#5ec4ff" stroke-width="3" data-k="s5.s4-0.1:in" data-fx="fade"/>
+    <path d="M1463,400 L1475,412 L1463,424" stroke="#5ec4ff" stroke-width="3" data-k="s5.s5-0.1:in" data-fx="fade"/>
+  </svg>
+  <div class="cx disp" style="top:890px;font-size:46px;font-weight:700;letter-spacing:-.02em;display:flex;justify-content:center;gap:22px">
+    <span data-k="s5.b:in">Find</span><span class="acc" data-k="s5.b+0.5:in" data-fx="fade">→</span>
+    <span data-k="s5.b+0.6:in">Define</span><span class="acc" data-k="s5.b+1.1:in" data-fx="fade">→</span>
+    <span data-k="s5.b+1.2:in">Build</span><span class="acc" data-k="s5.b+1.7:in" data-fx="fade">→</span>
+    <span data-k="s5.b+1.8:in">Demo</span><span class="acc" data-k="s5.b+2.3:in" data-fx="fade">→</span>
+    <span class="grad" data-k="s5.b+2.4:in">Convert</span>
+  </div>
+  <div class="cx" style="top:968px;font-size:28px;color:var(--mut)" data-k="s5.b2:in" data-fx="fade">How a small team earns a big seat at the table.</div>
+</section>
+
+<!-- ================= s6 loop ================= -->
+<section class="scene" data-scene="s6">
+  <div class="chap">05 · The Loop</div>
+  <div class="abs h1" style="left:120px;top:150px;font-size:60px" data-k="s6.a:in">The POC <span class="acc">→</span> Demo <span class="acc">→</span> Product loop</div>
+  <div class="card node" style="left:120px" data-k="s6.n1:in"><div class="ic"><i data-icon="users"></i></div><div class="t">Customer<br>pain</div></div>
+  <div class="card node" style="left:366px" data-k="s6.n2+0.3:in"><div class="ic"><i data-icon="lightbulb"></i></div><div class="t">Hypothesis</div></div>
+  <div class="card node" style="left:612px" data-k="s6.n3+0.3:in"><div class="ic"><i data-icon="layers"></i></div><div class="t">POC</div></div>
+  <div class="card node" style="left:858px" data-k="s6.n4+0.3:in"><div class="ic"><i data-icon="monitor-play"></i></div><div class="t">Demo</div></div>
+  <div class="card node" style="left:1104px" data-k="s6.n5+0.3:in"><div class="ic"><i data-icon="users"></i></div><div class="t">Customer<br>reaction</div></div>
+  <div class="card node dec" style="left:1350px" data-k="s6.n6+0.3:in" data-fx="scale"><div class="ic"><i data-icon="signpost"></i></div><div class="t" style="font-weight:700">Decision</div></div>
+  <svg class="ov">
+    <g stroke="#5ec4ff" stroke-width="3.5">
+      <path class="draw" pathLength="1" d="M318,375 L356,375" data-k="s6.n2:in/0.4" data-fx="draw"/>
+      <path class="draw" pathLength="1" d="M564,375 L602,375" data-k="s6.n3:in/0.4" data-fx="draw"/>
+      <path class="draw" pathLength="1" d="M810,375 L848,375" data-k="s6.n4:in/0.4" data-fx="draw"/>
+      <path class="draw" pathLength="1" d="M1056,375 L1094,375" data-k="s6.n5:in/0.4" data-fx="draw"/>
+      <path class="draw" pathLength="1" d="M1302,375 L1340,375" data-k="s6.n6:in/0.4" data-fx="draw"/>
+      <path d="M345,366 L356,375 L345,384" data-k="s6.n2+0.3:in/0.2" data-fx="fade"/>
+      <path d="M591,366 L602,375 L591,384" data-k="s6.n3+0.3:in/0.2" data-fx="fade"/>
+      <path d="M837,366 L848,375 L837,384" data-k="s6.n4+0.3:in/0.2" data-fx="fade"/>
+      <path d="M1083,366 L1094,375 L1083,384" data-k="s6.n5+0.3:in/0.2" data-fx="fade"/>
+      <path d="M1329,366 L1340,375 L1329,384" data-k="s6.n6+0.3:in/0.2" data-fx="fade"/>
+    </g>
+    <g stroke="#8a909a" stroke-width="3">
+      <path class="draw" pathLength="1" d="M1540,375 L1572,375 L1572,267 L1606,267" data-k="s6.d1:in/0.5" data-fx="draw"/>
+      <path class="draw" pathLength="1" d="M1540,375 L1572,375 L1572,339 L1606,339" data-k="s6.d2:in/0.5" data-fx="draw"/>
+      <path class="draw" pathLength="1" d="M1540,375 L1572,375 L1572,411 L1606,411" data-k="s6.d3:in/0.5" data-fx="draw"/>
+      <path class="draw" pathLength="1" d="M1540,375 L1572,375 L1572,483 L1606,483" data-k="s6.d4:in/0.5" data-fx="draw"/>
+    </g>
+    <g stroke="#3a404b" stroke-width="3">
+      <path class="draw" pathLength="1" d="M124,478 L124,494 L552,494 L552,478" data-k="s6.t1:in/0.6" data-fx="draw"/>
+      <path class="draw" pathLength="1" d="M616,478 L616,494 L1044,494 L1044,478" data-k="s6.t2:in/0.6" data-fx="draw"/>
+      <path class="draw" pathLength="1" d="M1108,478 L1108,494 L1536,494 L1536,478" data-k="s6.t3:in/0.6" data-fx="draw"/>
+    </g>
+  </svg>
+  <div class="abs branch" style="top:239px;border-color:rgba(255,106,95,.5)" data-k="s6.d1+0.2:in" data-fx="left"><i data-icon="circle-x" style="color:var(--bad)"></i>Kill</div>
+  <div class="abs branch" style="top:311px" data-k="s6.d2+0.2:in" data-fx="left"><i data-icon="settings" class="acc"></i>Refine</div>
+  <div class="abs branch" style="top:383px;border-color:rgba(255,184,77,.5)" data-k="s6.d3+0.2:in" data-fx="left"><i data-icon="rocket" style="color:var(--warn)"></i>Pilot</div>
+  <div class="abs branch" style="top:455px;border-color:rgba(58,214,135,.5)" data-k="s6.d4+0.2:in" data-fx="left"><i data-icon="package" style="color:var(--ok)"></i>Productize</div>
+  <div class="abs" style="left:124px;width:428px;top:516px;text-align:center" data-k="s6.t1:in" data-fx="fade"><span class="test">Test appetite</span></div>
+  <div class="abs" style="left:616px;width:428px;top:516px;text-align:center" data-k="s6.t2:in" data-fx="fade"><span class="test">Test feasibility</span></div>
+  <div class="abs" style="left:1108px;width:428px;top:516px;text-align:center" data-k="s6.t3:in" data-fx="fade"><span class="test">Test business value</span></div>
+  <div class="cx disp" style="top:700px;font-size:56px;font-weight:700;letter-spacing:-.02em" data-k="s6.k:in s6.t0:out">Killing an idea is not failure.</div>
+  <div class="cx" style="top:800px;font-size:38px;color:var(--fg2)" data-k="s6.k+3.2:in s6.t0:out">Kill the wrong idea in <span class="acc">2 weeks</span> — not 2 years. That's a win.</div>
+  <div class="cx mut" style="top:650px;font-size:24px;letter-spacing:.22em;text-transform:uppercase;font-weight:600" data-k="s6.q0:in">Every demo must answer</div>
+  <div class="abs q" style="left:120px" data-k="s6.q1:in s6.b:hl"><div class="k">01</div><div class="t">Is the problem real?</div></div>
+  <div class="abs q" style="left:700px" data-k="s6.q2:in"><div class="k">02</div><div class="t">Is the value clear?</div></div>
+  <div class="abs q" style="left:1280px" data-k="s6.q3:in"><div class="k">03</div><div class="t">Is the solution believable?</div></div>
+  <div class="cx" style="top:930px;font-size:34px;color:var(--fg2)" data-k="s6.b:in">Three confident yeses — <span class="acc">or you're not done.</span></div>
+</section>
+
+<!-- ================= s7 task filter ================= -->
+<section class="scene" data-scene="s7">
+  <div class="chap">06 · The Task Filter</div>
+  <div class="abs h1" style="left:120px;top:110px;font-size:56px" data-k="s7.a:in">Low effort, high value.</div>
+  <svg class="ov" data-k="s7.ax:in" data-fx="fade">
+    <g stroke="#8a909a" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M262,906 L262,214"/><path d="M252,228 L262,212 L272,228"/>
+      <path d="M262,906 L1346,906"/><path d="M1332,896 L1348,906 L1332,916"/>
+    </g>
+  </svg>
+  <div class="abs" style="left:110px;top:500px;width:140px;text-align:center;font:600 22px/1.3 'Inter';color:var(--mut)" data-k="s7.ax:in" data-fx="fade">Value /<br>Learning<br>signal</div>
+  <div class="abs mut" style="left:190px;width:56px;text-align:right;top:226px;font-size:20px" data-k="s7.ax:in" data-fx="fade">High</div>
+  <div class="abs mut" style="left:190px;width:56px;text-align:right;top:868px;font-size:20px" data-k="s7.ax:in" data-fx="fade">Low</div>
+  <div class="abs" style="left:262px;width:1084px;top:926px;text-align:center;font:600 22px 'Inter';color:var(--mut)" data-k="s7.ax:in" data-fx="fade">Effort / Complexity</div>
+  <div class="abs mut" style="left:290px;top:926px;font-size:20px" data-k="s7.ax:in" data-fx="fade">Low</div>
+  <div class="abs mut" style="left:1296px;top:926px;font-size:20px" data-k="s7.ax:in" data-fx="fade">High</div>
+
+  <div class="card quad prime" style="left:290px;top:212px" data-k="s7.q4:hl">
+    <h4><i data-icon="target"></i>Prime Zone</h4>
+    <div class="chk" data-k="s7.l1:in" data-fx="left"><i data-icon="check"></i>Simulated end-to-end user journey</div>
+    <div class="chk" data-k="s7.l2:in" data-fx="left"><i data-icon="check"></i>Clickable front end + realistic rules</div>
+    <div class="chk" data-k="s7.l3:in" data-fx="left"><i data-icon="check"></i>One integration mocked or partly real</div>
+    <div class="chk" data-k="s7.l4:in" data-fx="left"><i data-icon="check"></i>Operational dashboard prototype</div>
+    <div class="chk" data-k="s7.l5:in" data-fx="left"><i data-icon="check"></i>Role-based workflow demo</div>
+  </div>
+  <div class="card quad delay" style="left:826px;top:212px" data-k="s7.q3:hl s7.q4:dim">
+    <h4><i data-icon="triangle-alert"></i>Delay</h4><p>Heavy platform work before signal</p></div>
+  <div class="card quad avoid" style="left:290px;top:568px" data-k="s7.q1:hl s7.q2:dim">
+    <h4><i data-icon="ban"></i>Avoid</h4><p>Perfect UI with no value proof</p></div>
+  <div class="card quad avoid" style="left:826px;top:568px" data-k="s7.q2:hl s7.q3:dim">
+    <h4><i data-icon="ban"></i>Avoid</h4><p>Architecture theatre</p></div>
+
+  <div class="abs verdict" data-k="s7.q1:in s7.q2:out"><div class="w" style="color:var(--bad)">Avoid.</div><div class="s">Looks beautiful.<br>Proves nothing.</div></div>
+  <div class="abs verdict" data-k="s7.q2+0.2:in s7.q3:out"><div class="w" style="color:var(--bad)">Avoid.</div><div class="s">Big diagrams.<br>No learning.</div></div>
+  <div class="abs verdict" data-k="s7.q3+0.2:in s7.q4:out"><div class="w" style="color:var(--warn)">Delay.</div><div class="s">It matters —<br>but not before signal.</div></div>
+  <div class="abs verdict" data-k="s7.q4+0.2:in s7.b:out"><div class="w gradok">Do this.</div><div class="s">High value.<br>Low effort.</div></div>
+  <div class="abs verdict" data-k="s7.b+0.2:in"><div class="w" style="font-size:72px;line-height:1.1">Maximum <span class="gradok">learning.</span><br>Minimum effort.</div></div>
+</section>
+
+<!-- ================= s8 good demos ================= -->
+<section class="scene" data-scene="s8">
+  <div class="chap">07 · What Great Demos Prove</div>
+  <div class="abs h1" style="left:120px;top:150px" data-k="s8.a:in">A great demo proves five things.</div>
+  <div class="card row" style="top:290px" data-k="s8.r1:hl s8.r2:on"><div class="ic"><i data-icon="target"></i></div><div class="t">User pain is real and urgent</div></div>
+  <div class="card row" style="top:396px" data-k="s8.r2:hl s8.r3:on"><div class="ic"><i data-icon="zap"></i></div><div class="t">Outcome is visible in minutes</div></div>
+  <div class="card row" style="top:502px" data-k="s8.r3:hl s8.r4:on"><div class="ic"><i data-icon="settings"></i></div><div class="t">Workflow feels operationally credible</div></div>
+  <div class="card row" style="top:608px" data-k="s8.r4:hl s8.r5:on"><div class="ic"><i data-icon="users"></i></div><div class="t">Stakeholders can imagine deployment</div></div>
+  <div class="card row" style="top:714px" data-k="s8.r5:hl s8.e0:on"><div class="ic"><i data-icon="circle-check"></i></div><div class="t">Next step is obvious</div></div>
+  <div class="card" style="left:1120px;top:290px;width:680px;height:510px;padding:40px" data-k="s8.e0:hl s8.b:on">
+    <div style="display:flex;align-items:center;gap:20px"><div class="ibox"><i data-icon="landmark"></i></div>
+      <div style="font:700 32px/1.2 'Inter Display','Inter'">Enterprise &amp; government:<br><span class="acc">a higher bar</span></div></div>
+    <div style="display:flex;flex-wrap:wrap;gap:16px;margin-top:40px">
+      <span class="chip" data-k="s8.e1:in" data-fx="pop"><i data-icon="shield-check" class="acc"></i>Trust</span>
+      <span class="chip" data-k="s8.e2:in" data-fx="pop"><i data-icon="puzzle" class="acc"></i>Integration fit</span>
+      <span class="chip" data-k="s8.e3:in" data-fx="pop"><i data-icon="wrench" class="acc"></i>Operational practicality</span>
+      <span class="chip" data-k="s8.e4:in" data-fx="pop"><i data-icon="scale" class="acc"></i>Policy awareness</span>
+    </div>
+    <div style="font-size:26px;color:var(--mut);margin-top:40px" data-k="s8.e4+1.0:in" data-fx="fade">— not only the wow factor.</div>
+  </div>
+  <div class="cx disp" style="top:878px;font-size:72px;font-weight:800;letter-spacing:-.03em" data-k="s8.b2:in" data-fx="scale"><span class="grad">Credible</span> beats cool.</div>
+</section>
+
+<!-- ================= s9 PM playbook ================= -->
+<section class="scene" data-scene="s9">
+  <div class="chap">08 · The PM Playbook</div>
+  <div data-k="s9.b:out" data-fx="static">
+    <div class="abs h1" style="left:120px;top:150px" data-k="s9.a:in">Your playbook. Seven moves.</div>
+    <div class="card mv" style="top:270px" data-k="s9.m1:hl s9.m2:on"><div class="n">1</div><div class="t">Start from customer pain, not available technology</div></div>
+    <div class="card mv" style="top:360px" data-k="s9.m2:hl s9.m3:on"><div class="n">2</div><div class="t">Frame a sharp wedge use case — narrow beats broad</div></div>
+    <div class="card mv" style="top:450px" data-k="s9.m3:hl s9.m4:on"><div class="n">3</div><div class="t">Drive a weekly rhythm: hypothesis, build, demo, learn</div></div>
+    <div class="card mv" style="top:540px" data-k="s9.m4:hl s9.m5:on"><div class="n">4</div><div class="t">Keep scope ruthless: smallest believable proof?</div></div>
+    <div class="card mv" style="top:630px" data-k="s9.m5:hl s9.m6:on"><div class="n">5</div><div class="t">Turn every reaction into product insight</div></div>
+    <div class="card mv" style="top:720px" data-k="s9.m6:hl s9.m7:on"><div class="n">6</div><div class="t">Protect team velocity from stakeholder noise</div></div>
+    <div class="card mv" style="top:810px" data-k="s9.m7:hl s9.b:on"><div class="n">7</div><div class="t">Turn validated signals into roadmap, pilot, governance</div></div>
+    <div class="abs kw" data-k="s9.m1+0.3:in s9.m2:out"><span class="grad">Pain</span> first.</div>
+    <div class="abs kw" data-k="s9.m2+0.3:in s9.m3:out">Narrow<br>beats <span class="grad">broad.</span></div>
+    <div class="abs kw" data-k="s9.m3+0.3:in s9.m4:out">A decision,<br><span class="grad">every week.</span></div>
+    <div class="abs kw" data-k="s9.m4+0.3:in s9.m5:out">Smallest<br><span class="grad">believable</span><br>proof.</div>
+    <div class="abs kw" data-k="s9.m5+0.3:in s9.m6:out"><span class="grad">Insight,</span><br>not notes.</div>
+    <div class="abs kw" data-k="s9.m6+0.3:in s9.m7:out">You are<br>the <span class="grad">shield.</span></div>
+    <div class="abs kw" data-k="s9.m7+0.3:in">Signal <span class="acc">→</span><br><span class="grad">action.</span></div>
+  </div>
+  <div class="cx mut" style="top:330px;font-size:30px;letter-spacing:.2em;text-transform:uppercase;font-weight:600" data-k="s9.b+0.3:in">If you remember one sentence</div>
+  <div class="cx disp" style="top:430px;font-size:112px;font-weight:800;letter-spacing:-.04em;line-height:1.08" data-k="s9.c:in/1.1" data-fx="scale">Maximize <span class="grad">learning</span><br>per unit of effort.</div>
+</section>
+
+<!-- ================= s10 weekly rhythm ================= -->
+<section class="scene" data-scene="s10">
+  <div class="chap">09 · The Weekly Rhythm</div>
+  <div class="abs h1" style="left:120px;top:150px" data-k="s10.a:in">One week. One decision.</div>
+  <div class="card seg" style="left:120px;width:320px" data-k="s10.w1:hl s10.w2:on"><div class="d">Monday</div><div class="t"><i data-icon="lightbulb" class="acc"></i>Hypothesis</div></div>
+  <div class="card seg" style="left:453px;width:580px" data-k="s10.w2:hl s10.w3:on"><div class="d">Tuesday – Thursday</div><div class="t"><i data-icon="hammer" class="acc"></i>Build</div></div>
+  <div class="card seg" style="left:1046px;width:300px" data-k="s10.w3:hl s10.w4:on"><div class="d">Friday</div><div class="t"><i data-icon="monitor-play" class="acc"></i>Demo</div></div>
+  <div class="card seg" style="left:1359px;width:441px" data-k="s10.w4:hl s10.b:on"><div class="d">Then</div><div class="t"><i data-icon="signpost" class="acc"></i>Learn &amp; decide</div></div>
+  <div class="abs segp" style="left:126px;width:305px" data-k="s10.w1+0.3:in" data-fx="fade">Agree on one sentence: what are we proving, and how will we know?</div>
+  <div class="abs segp" style="left:459px;width:540px" data-k="s10.w2+0.3:in" data-fx="fade">The thinnest slice that can prove it. Front end, back end, and architecture moving together.</div>
+  <div class="abs segp" style="left:1052px;width:290px" data-k="s10.w3+0.3:in" data-fx="fade">Real users. Watch their faces. Listen to their questions.</div>
+  <div class="abs segp" style="left:1365px;width:420px" data-k="s10.w4+0.3:in" data-fx="fade">Capture the signal. Make the call. Feed the roadmap.</div>
+  <svg class="ov">
+    <path class="draw" pathLength="1" d="M1580,700 C1580,790 1400,800 925,800 C450,800 270,790 270,712" stroke="#5ec4ff" stroke-width="3.5" data-k="s10.w4$-2.6:in/1.4" data-fx="draw"/>
+    <path d="M259,724 L270,708 L281,724" stroke="#5ec4ff" stroke-width="3.5" data-k="s10.w4$-1.3:in/0.3" data-fx="fade"/>
+  </svg>
+  <div class="cx" style="top:822px;font-size:26px;color:var(--mut)" data-k="s10.w4$-1.3:in" data-fx="fade">Next Monday — only sharper.</div>
+  <div class="cx disp" style="top:900px;font-size:60px;font-weight:800;letter-spacing:-.03em" data-k="s10.b:in" data-fx="scale">Every week, <span class="grad">a decision.</span></div>
+</section>
+
+<!-- ================= s11 worked example ================= -->
+<section class="scene" data-scene="s11">
+  <div class="chap">10 · A Worked Example</div>
+  <div class="abs" style="left:120px;top:140px;display:flex;align-items:center;gap:26px" data-k="s11.a:in">
+    <div class="h1" style="font-size:60px">Maintenance work orders</div>
+    <span class="pill" style="font-size:20px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);padding:10px 20px">Illustrative</span>
+  </div>
+  <div class="card ex" style="top:250px" data-k="s11.r1:hl s11.r2:on"><div class="l"><i data-icon="search"></i>Wedge</div><div class="t">Crews log defects on paper. Supervisors wait <b>days</b> to approve work orders.</div></div>
+  <div class="card ex" style="top:354px" data-k="s11.r2:hl s11.r3:on"><div class="l"><i data-icon="lightbulb"></i>Hypothesis</div><div class="t">See live defects + approve in <b>one tap</b> → supervisors will ask for a pilot.</div></div>
+  <div class="card ex" style="top:458px" data-k="s11.r3:hl s11.r4:on"><div class="l"><i data-icon="layers"></i>Thin slice</div><div class="t">One role-based workflow · realistic simulated data · maintenance system <b>mocked</b></div></div>
+  <div class="card ex" style="top:562px" data-k="s11.r4:hl s11.r5:on"><div class="l"><i data-icon="monitor-play"></i>Demo</div><div class="t">10 min: tablet logs defect → phone approves → dashboard updates <b>live</b></div></div>
+  <div class="card ex" style="top:666px" data-k="s11.r5:hl s11.r6:on"><div class="l"><i data-icon="message-square"></i>Reaction</div><div class="t" style="font-style:italic">“Can we try this with one crew, next month?”</div></div>
+  <div class="card ex" style="top:770px" data-k="s11.r6:hl s11.b:on"><div class="l"><i data-icon="signpost"></i>Decision</div>
+    <div class="t"><span class="pill" style="font-size:28px;border-color:rgba(255,184,77,.6);color:var(--warn);padding:8px 24px" data-k="s11.r6+0.6:in" data-fx="pop"><i data-icon="rocket"></i>PILOT</span></div></div>
+  <div class="cx disp" style="top:910px;font-size:46px;font-weight:700;letter-spacing:-.02em" data-k="s11.b:in">2 weeks · 4 people · <span class="grad">1 clear decision</span></div>
+</section>
+
+<!-- ================= s12 leadership ================= -->
+<section class="scene" data-scene="s12">
+  <div class="chap">11 · Leadership Style</div>
+  <div class="abs h1" style="left:120px;top:150px" data-k="s12.a:in">Learn from three leaders.</div>
+  <div class="card lead3" style="left:120px" data-k="s12.a+0.9:dim s12.j:hl s12.h:dim s12.s:on">
+    <div class="hd"><div class="ibox"><i data-icon="sparkles"></i></div><h3>Steve Jobs</h3></div>
+    <ul class="b" style="margin-top:20px">
+      <li data-k="s12.j1:in" data-fx="left">Obsess over user experience</li>
+      <li data-k="s12.j2:in" data-fx="left">Make the story simple</li>
+      <li data-k="s12.j3:in" data-fx="left">Say no to noise</li>
+      <li data-k="s12.j4:in" data-fx="left">Demo the future, not the features</li>
+    </ul></div>
+  <div class="card lead3" style="left:690px" data-k="s12.a+1.05:dim s12.h:hl s12.e:dim s12.s:on">
+    <div class="hd"><div class="ibox"><i data-icon="cpu"></i></div><h3>Jensen Huang</h3></div>
+    <ul class="b" style="margin-top:20px">
+      <li data-k="s12.h1:in" data-fx="left">Think full-stack, not in silos</li>
+      <li data-k="s12.h2:in" data-fx="left">Master the details that change outcomes</li>
+      <li data-k="s12.h3:in" data-fx="left">Tell a clear platform narrative</li>
+      <li data-k="s12.h4:in" data-fx="left">Relentlessly compound capability</li>
+    </ul></div>
+  <div class="card lead3" style="left:1260px" data-k="s12.a+1.2:dim s12.e:hl s12.s:on">
+    <div class="hd"><div class="ibox"><i data-icon="rocket"></i></div><h3>Elon Musk</h3></div>
+    <ul class="b" style="margin-top:20px">
+      <li data-k="s12.e1:in" data-fx="left">Reason from first principles</li>
+      <li data-k="s12.e2:in" data-fx="left">Remove unnecessary steps</li>
+      <li data-k="s12.e3:in" data-fx="left">Iterate faster than competitors think</li>
+      <li data-k="s12.e4:in" data-fx="left">Push for useful truth from real tests</li>
+    </ul></div>
+  <div class="card" style="left:120px;top:740px;width:1680px;height:220px;padding:34px 40px;display:flex;gap:32px" data-k="s12.s:hl s12.s3$:on">
+    <div class="ibox"><i data-icon="compass"></i></div>
+    <div>
+      <div style="font:700 38px/1.1 'Inter Display','Inter'">Your synthesis: be the <span class="grad">calm product captain.</span></div>
+      <div style="display:flex;gap:16px;margin-top:22px">
+        <span class="chip" style="font-size:24px;padding:10px 20px" data-k="s12.s2:in" data-fx="pop">Customer-obsessed</span>
+        <span class="chip" style="font-size:24px;padding:10px 20px" data-k="s12.s2+1.6:in" data-fx="pop">System-literate</span>
+        <span class="chip" style="font-size:24px;padding:10px 20px" data-k="s12.s2+3.3:in" data-fx="pop">First-principles &amp; fast</span>
+      </div>
+      <div style="font-size:25px;color:var(--fg2);margin-top:20px" data-k="s12.s3:in" data-fx="fade">Grounded in enterprise reality, cross-functional alignment, and disciplined product governance.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= s13 metrics ================= -->
+<section class="scene" data-scene="s13">
+  <div class="chap">12 · Metrics That Matter</div>
+  <div class="abs h1" style="left:120px;top:150px" data-k="s13.a:in">Metrics that matter.</div>
+  <div class="card met abs" style="left:120px;top:280px" data-k="s13.m1:in"><div class="ic"><i data-icon="timer"></i></div><div class="t">Time to first demo</div></div>
+  <div class="card met abs" style="left:547px;top:280px" data-k="s13.m2:in"><div class="ic"><i data-icon="users"></i></div><div class="t">Customer demos per month</div></div>
+  <div class="card met abs" style="left:973px;top:280px" data-k="s13.m3:in"><div class="ic"><i data-icon="chart-no-axes-column"></i></div><div class="t">Customer appetite score</div></div>
+  <div class="card met abs" style="left:1400px;top:280px" data-k="s13.m4:in"><div class="ic"><i data-icon="rocket"></i></div><div class="t">Pilot conversion rate</div></div>
+  <div class="card met abs" style="left:120px;top:476px" data-k="s13.m5:in"><div class="ic"><i data-icon="layers"></i></div><div class="t">Validated use cases</div></div>
+  <div class="card met abs" style="left:547px;top:476px" data-k="s13.m6:in"><div class="ic"><i data-icon="package"></i></div><div class="t">Reusable components created</div></div>
+  <div class="card met abs" style="left:973px;top:476px" data-k="s13.m7:in"><div class="ic"><i data-icon="signpost"></i></div><div class="t">Roadmap decisions accelerated</div></div>
+  <div class="card met abs" style="left:1400px;top:476px" data-k="s13.m8:in"><div class="ic"><i data-icon="percent"></i></div><div class="t">Low-effort / high-value ratio</div></div>
+  <div class="abs" style="left:120px;top:720px;width:1680px;display:flex;align-items:center;gap:40px">
+    <span class="mut" style="font-size:26px;letter-spacing:.18em;text-transform:uppercase;font-weight:600" data-k="s13.n:in">Not on the list</span>
+    <span class="rel" style="font-size:40px;font-weight:600;color:var(--mut)" data-k="s13.n1:in">Hours worked<span class="strike" data-k="s13.n1+0.5:in/0.4" data-fx="wipe"></span></span>
+    <span class="rel" style="font-size:40px;font-weight:600;color:var(--mut)" data-k="s13.n2:in">Tickets closed<span class="strike" data-k="s13.n2+0.5:in/0.4" data-fx="wipe"></span></span>
+    <span class="rel" style="font-size:40px;font-weight:600;color:var(--mut)" data-k="s13.n3:in">Slides produced<span class="strike" data-k="s13.n3+0.5:in/0.4" data-fx="wipe"></span></span>
+  </div>
+  <div class="cx disp" style="top:870px;font-size:68px;font-weight:800;letter-spacing:-.03em" data-k="s13.b:in" data-fx="scale">Measure <span class="grad">signal quality</span>, not activity.</div>
+</section>
+
+<!-- ================= s14 recap ================= -->
+<section class="scene" data-scene="s14">
+  <div class="chap">Recap</div>
+  <div class="abs h1" style="left:120px;top:150px" data-k="s14.a:in">Bring it all together.</div>
+  <div class="card rc abs" style="left:170px;top:280px" data-k="s14.r1:in" data-fx="scale"><div class="n grad">4</div><div class="t">people</div></div>
+  <div class="card rc abs" style="left:710px;top:280px" data-k="s14.r2:in" data-fx="scale"><div class="n grad">5</div><div class="t">principles</div></div>
+  <div class="card rc abs" style="left:1250px;top:280px" data-k="s14.r3:in" data-fx="scale"><div class="n grad">1</div><div class="t">loop</div></div>
+  <div class="card rc abs" style="left:170px;top:590px" data-k="s14.r4:in" data-fx="scale"><div class="n grad">4</div><div class="t">decisions</div></div>
+  <div class="card rc abs" style="left:710px;top:590px" data-k="s14.r5:in" data-fx="scale"><div class="n grad">3</div><div class="t">demo questions</div></div>
+  <div class="card rc abs" style="left:1250px;top:590px" data-k="s14.r6:in" data-fx="scale"><div class="n grad">7</div><div class="t">playbook moves</div></div>
+</section>
+
+<!-- ================= s15 core truth ================= -->
+<section class="scene" data-scene="s15">
+  <div data-k="s15.o:out/0.6" data-fx="static">
+    <div class="cx mut" style="top:220px;font-size:28px;letter-spacing:.24em;text-transform:uppercase;font-weight:600" data-k="s15.a:in">Core truth</div>
+    <div class="cx disp" style="top:290px;font-size:104px;font-weight:800;letter-spacing:-.04em" data-k="s15.a:in/1.0" data-fx="scale">A <span class="grad">leverage engine.</span></div>
+    <div class="cx" style="top:450px;font-size:40px;color:var(--fg2)" data-k="s15.b:in">It doesn't replace the product organization. <span class="acc">It de-risks it.</span></div>
+    <div class="cx" style="top:610px;display:flex;justify-content:center;gap:22px">
+      <span class="chip" data-k="s15.c1+1.6:in" data-fx="pop"><i data-icon="search" class="acc"></i>Discover demand</span>
+      <span class="chip" data-k="s15.c2:in" data-fx="pop"><i data-icon="circle-check" class="acc"></i>Validate value</span>
+      <span class="chip" data-k="s15.c3:in" data-fx="pop"><i data-icon="cpu" class="acc"></i>Reveal technical truth</span>
+      <span class="chip" data-k="s15.c4:in" data-fx="pop"><i data-icon="trending-up" class="acc"></i>Create momentum</span>
+    </div>
+  </div>
+  <div data-k="s15.i1-0.3:out/0.6" data-fx="static">
+    <div class="cx disp" style="top:300px;font-size:120px;font-weight:700;letter-spacing:-.04em" data-k="s15.o+0.25:in/1.2 s15.o2-0.1:out/0.5" data-fx="fade">One more thing.</div>
+    <div class="cx" style="top:330px;font-size:40px;color:var(--fg2)" data-k="s15.o2:in">The real product isn't the POC. It isn't even the demo.</div>
+    <div class="cx disp" style="top:460px;font-size:128px;font-weight:800;letter-spacing:-.045em" data-k="s15.o3:in/1.1" data-fx="scale">It's the <span class="grad">decision.</span></div>
+  </div>
+  <div class="cx disp" style="top:250px;display:flex;justify-content:center;align-items:center;gap:34px;font-size:84px;font-weight:800;letter-spacing:-.035em">
+    <span data-k="s15.i1:in">Ideas</span>
+    <span class="acc" style="font-weight:400" data-k="s15.i2-0.15:in" data-fx="left">→</span>
+    <span data-k="s15.i2:in">Evidence</span>
+    <span class="acc" style="font-weight:400" data-k="s15.i3-0.15:in" data-fx="left">→</span>
+    <span class="grad" data-k="s15.i3:in">Product decisions</span>
+  </div>
+  <div class="cx" style="top:410px;font-size:44px;color:var(--fg2);font-weight:500" data-k="s15.z:in">Now, go find your wedge.</div>
+  <div class="cx" style="top:520px;font:700 20px/1 'Inter';letter-spacing:.5em;text-indent:.5em;color:var(--mut)" data-k="s15.z$+1.2:in/1.5" data-fx="fade">NINJA TEAM · PRODUCT OPERATING SYSTEM</div>
+</section>
+
+<div id="fade" data-k="@end-2.2:in/2.2" data-fx="fade"></div>
+</div>
+
+<script>
+/*TIMELINE*/
+const STATES = {
+  in:  {o:1, x:0, y:0,   s:1, h:0, d:1},
+  on:  {o:1, x:0, y:0,   s:1, h:0, d:1},
+  hl:  {o:1, x:0, y:0,   s:1, h:1, d:1},
+  dim: {o:.3, x:0, y:0,  s:1, h:0, d:1},
+  out: {o:0, x:0, y:-14, s:1, h:0, d:1},
+  gone:{o:0, x:0, y:0,   s:1, h:0, d:1},
+};
+const DUR = {in:.75, on:.5, hl:.6, dim:.6, out:.5, gone:.01};
+function hiddenFor(fx){
+  const b = {o:0, x:0, y:0, s:1, h:0, d:0};
+  switch(fx){
+    case 'up': b.y = 30; break;
+    case 'left': b.x = -44; break;
+    case 'right': b.x = 44; break;
+    case 'scale': b.s = .93; break;
+    case 'pop': b.s = .75; break;
+    case 'draw': case 'wipe': b.o = 1; break;
+    case 'static': b.o = 1; b.d = 1; break;
+  }
+  return b;
+}
+const clamp = v => v < 0 ? 0 : v > 1 ? 1 : v;
+const easeOut = p => 1 - Math.pow(1 - p, 3);
+const easeInOut = p => p < .5 ? 4*p*p*p : 1 - Math.pow(-2*p + 2, 3)/2;
+const CH = ['o','x','y','s','h','d'];
+let ITEMS = [], SCENES = [];
+
+function refTime(ref, end){
+  const T = window.TIMELINE;
+  if (ref === '@end') return T.duration;
+  if (ref[0] === '@') {
+    const sc = T.scenes.find(s => s.id === ref.slice(1));
+    if (!sc) throw new Error('no scene ' + ref);
+    return end ? sc.end : sc.start;
+  }
+  const b = T.beats[ref];
+  if (!b) throw new Error('no beat ' + ref);
+  return end ? b.end : b.start;
+}
+
+function setup(){
+  const T = window.TIMELINE;
+  document.querySelectorAll('[data-k]').forEach(el => {
+    const fx = el.dataset.fx || (el.tagName === 'path' ? 'draw' : 'up');
+    const keys = el.dataset.k.trim().split(/\s+/).map(tok => {
+      const m = tok.match(/^(@?[A-Za-z0-9.]+?)(\$?)([+-]\d*\.?\d+)?:(\w+)(?:\/(\d*\.?\d+))?$/);
+      if (!m) throw new Error('bad token ' + tok);
+      const st = m[4];
+      if (!STATES[st]) throw new Error('bad state ' + tok);
+      let dur = m[5] ? parseFloat(m[5]) : DUR[st];
+      if ((fx === 'draw' || fx === 'wipe') && st === 'in' && !m[5]) dur = .9;
+      return {t: refTime(m[1], m[2] === '$') + (m[3] ? parseFloat(m[3]) : 0), st, dur};
+    }).sort((a, b) => a.t - b.t);
+    ITEMS.push({el, fx, keys, hidden: hiddenFor(fx), svg: el instanceof SVGElement});
+  });
+  document.querySelectorAll('[data-scene]').forEach(el => {
+    const idx = T.scenes.findIndex(s => s.id === el.dataset.scene);
+    const sc = T.scenes[idx];
+    SCENES.push({el, start: sc.start, end: sc.end, first: idx === 0, last: idx === T.scenes.length - 1});
+  });
+}
+
+function valueAt(it, t){
+  let v = it.hidden;
+  const ks = it.keys;
+  for (let i = 0; i < ks.length; i++){
+    const k = ks[i];
+    if (t < k.t) break;
+    const segEnd = (i + 1 < ks.length && ks[i+1].t <= t) ? ks[i+1].t : t;
+    let p = clamp((segEnd - k.t) / k.dur);
+    p = (k.st === 'out' || k.st === 'dim' || k.st === 'gone') ? easeInOut(p) : easeOut(p);
+    const to = STATES[k.st], nv = {};
+    for (const c of CH) nv[c] = v[c] + (to[c] - v[c]) * p;
+    v = nv;
+  }
+  return v;
+}
+
+window.seek = function(t){
+  let sig = '';
+  for (const s of SCENES){
+    const pin = s.first ? 1 : clamp((t - s.start) / .8);
+    const pout = s.last ? 1 : 1 - clamp((t - s.end) / .6);
+    const op = Math.min(easeInOut(pin), easeInOut(pout));
+    s.el.style.opacity = op;
+    s.el.style.visibility = op > 0.001 ? 'visible' : 'hidden';
+    sig += op.toFixed(3) + '|';
+  }
+  for (const it of ITEMS){
+    const v = valueAt(it, t);
+    const st = it.el.style;
+    st.opacity = v.o.toFixed(4);
+    st.visibility = v.o > 0.002 ? 'visible' : 'hidden';
+    if (it.svg && it.el.tagName !== 'svg') {
+      if (it.fx === 'draw') st.strokeDashoffset = (1 - v.d).toFixed(4);
+    } else {
+      st.transform = (v.x || v.y || v.s !== 1) ? `translate(${v.x.toFixed(2)}px,${v.y.toFixed(2)}px) scale(${v.s.toFixed(4)})` : '';
+      if (it.fx === 'wipe') st.clipPath = `inset(-30% ${((1 - v.d) * 100).toFixed(2)}% -30% 0)`;
+    }
+    st.setProperty('--h', v.h.toFixed(3));
+    sig += v.o.toFixed(3) + v.x.toFixed(1) + v.y.toFixed(1) + v.s.toFixed(4) + v.h.toFixed(3) + v.d.toFixed(3) + ';';
+  }
+  return sig;
+};
+window.__ready = (async () => { await document.fonts.ready; setup(); return true; })();
+</script>
+</body>
+</html>

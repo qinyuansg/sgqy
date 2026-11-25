@@ -1,0 +1,924 @@
+1
+00:00:02,600 --> 00:00:10,403
+Every once in a while, a small team comes along that changes how a big organization makes decisions.
+
+2
+00:00:10,803 --> 00:00:12,647
+Not with more meetings.
+
+3
+00:00:12,667 --> 00:00:14,689
+Not with more slides.
+
+4
+00:00:14,889 --> 00:00:16,441
+With evidence.
+
+5
+00:00:17,141 --> 00:00:20,933
+Today, I want to show you exactly how that team works.
+
+6
+00:00:21,133 --> 00:00:22,586
+Four people.
+
+7
+00:00:22,606 --> 00:00:23,910
+One loop.
+
+8
+00:00:23,930 --> 00:00:27,146
+And a completely different way to build products.
+
+9
+00:00:27,546 --> 00:00:31,594
+We call it the Ninja Team Product Operating System.
+
+10
+00:00:32,194 --> 00:00:33,746
+Let's begin.
+
+11
+00:00:35,396 --> 00:00:37,588
+So, what is a ninja team?
+
+12
+00:00:37,738 --> 00:00:43,685
+It's a four-person strike team. Small. High-agency. And built for one job.
+
+13
+00:00:43,735 --> 00:00:47,080
+Turning unclear opportunities into three things.
+
+14
+00:00:47,100 --> 00:00:48,823
+Validated signals.
+
+15
+00:00:48,843 --> 00:00:50,353
+Customer pull.
+
+16
+00:00:50,373 --> 00:00:52,437
+And product decisions.
+
+17
+00:00:52,537 --> 00:00:55,113
+With low effort, and high value.
+
+18
+00:00:55,613 --> 00:00:58,488
+Now, here's the part most people miss.
+
+19
+00:00:58,688 --> 00:01:04,272
+The goal of the ninja team is not to ship the final enterprise platform first.
+
+20
+00:01:04,572 --> 00:01:06,999
+The goal is to create evidence.
+
+21
+00:01:07,599 --> 00:01:10,239
+Remember that word. Evidence.
+
+22
+00:01:10,339 --> 00:01:13,683
+Everything else in this system flows from it.
+
+23
+00:01:15,533 --> 00:01:20,605
+Let's meet the team. Four roles. And every single one of them matters.
+
+24
+00:01:20,755 --> 00:01:22,848
+First, the product manager.
+
+25
+00:01:22,868 --> 00:01:26,995
+The PM defines the problem, and what success looks like.
+
+26
+00:01:27,015 --> 00:01:29,051
+Chooses the wedge use case.
+
+27
+00:01:29,071 --> 00:01:31,768
+Runs priorities and customer learning.
+
+28
+00:01:31,788 --> 00:01:35,239
+And owns the decision rhythm, and the narrative.
+
+29
+00:01:35,439 --> 00:01:37,681
+Second, the solution architect.
+
+30
+00:01:37,701 --> 00:01:40,249
+Shapes the end-to-end system concept.
+
+31
+00:01:40,269 --> 00:01:42,881
+Reduces technical risk, early.
+
+32
+00:01:42,901 --> 00:01:47,049
+Finds what can be reused, versus what must be invented.
+
+33
+00:01:47,069 --> 00:01:51,331
+And translates the demo into an architecture that can scale.
+
+34
+00:01:51,531 --> 00:01:53,859
+Third, the front-end developer.
+
+35
+00:01:53,879 --> 00:01:56,939
+Builds a visible user experience, fast.
+
+36
+00:01:56,959 --> 00:02:00,040
+Makes the demo feel real, and intuitive.
+
+37
+00:02:00,060 --> 00:02:02,821
+Turns concepts into clickable proof.
+
+38
+00:02:02,841 --> 00:02:06,825
+And captures workflow friction, the moment it shows up.
+
+39
+00:02:07,025 --> 00:02:09,609
+And fourth, the back-end developer.
+
+40
+00:02:09,629 --> 00:02:12,817
+Builds the core logic, and the integrations.
+
+41
+00:02:12,837 --> 00:02:16,516
+Creates realistic data, APIs, and rules.
+
+42
+00:02:16,536 --> 00:02:18,935
+Makes workflow outcomes measurable.
+
+43
+00:02:18,955 --> 00:02:21,872
+And stress-tests feasibility, early.
+
+44
+00:02:22,072 --> 00:02:25,044
+Direction. Architecture. Experience. Logic.
+
+45
+00:02:25,064 --> 00:02:31,240
+Put those four people together, and you have a complete product team, in miniature.
+
+46
+00:02:31,740 --> 00:02:35,127
+Now, I want to be really clear about one thing.
+
+47
+00:02:35,227 --> 00:02:38,956
+The product manager is not a project secretary.
+
+48
+00:02:38,976 --> 00:02:40,742
+Not the note-taker.
+
+49
+00:02:40,762 --> 00:02:43,594
+Not the person chasing status updates.
+
+50
+00:02:43,894 --> 00:02:46,656
+The PM is the product captain.
+
+51
+00:02:46,676 --> 00:02:48,883
+The decision integrator.
+
+52
+00:02:48,903 --> 00:02:53,847
+The one who takes everything the team learns, and turns it into a decision.
+
+53
+00:02:55,697 --> 00:03:00,535
+So how does this team think? It comes down to five first principles.
+
+54
+00:03:00,685 --> 00:03:03,845
+One. Speed to signal beats speed to scale.
+
+55
+00:03:03,865 --> 00:03:09,449
+Before you build for a million users, find out if one user actually cares.
+
+56
+00:03:09,749 --> 00:03:12,311
+Two. Demo before bureaucracy.
+
+57
+00:03:12,331 --> 00:03:18,107
+A working demo can answer in ten minutes what a document debates for ten weeks.
+
+58
+00:03:18,407 --> 00:03:21,781
+Three. Solve one painful journey, end to end.
+
+59
+00:03:21,801 --> 00:03:26,318
+Not ten features, half done. One journey, done completely.
+
+60
+00:03:26,618 --> 00:03:29,117
+Four. Learning beats assumptions.
+
+61
+00:03:29,137 --> 00:03:34,785
+Every opinion in the room is just a hypothesis, until a customer proves it.
+
+62
+00:03:35,085 --> 00:03:37,711
+And five. Reuse before rebuild.
+
+63
+00:03:37,731 --> 00:03:43,273
+If something already works, use it. Spend your energy only where it's truly new.
+
+64
+00:03:43,673 --> 00:03:47,226
+Five principles. Simple to say. Hard to live.
+
+65
+00:03:47,246 --> 00:03:51,219
+Great ninja teams live them every single day.
+
+66
+00:03:53,069 --> 00:03:56,233
+Now, a ninja team doesn't live in a vacuum.
+
+67
+00:03:56,253 --> 00:04:02,429
+It has to plug into the organization you already have. Here's how. Five steps.
+
+68
+00:04:02,629 --> 00:04:04,673
+Step one. Find the wedge.
+
+69
+00:04:04,693 --> 00:04:08,012
+Pick one high-pain, high-visibility workflow.
+
+70
+00:04:08,032 --> 00:04:13,626
+Where customer frustration is obvious, and success is easy to observe.
+
+71
+00:04:13,826 --> 00:04:16,467
+Step two. Define the hypothesis.
+
+72
+00:04:16,487 --> 00:04:20,237
+If we show this outcome clearly, the customer will care.
+
+73
+00:04:20,257 --> 00:04:25,354
+They'll lean in, give us their attention, or ask for a next-step discussion.
+
+74
+00:04:25,374 --> 00:04:28,535
+Write it down, before you build anything.
+
+75
+00:04:28,735 --> 00:04:31,759
+Step three. Build a thin-slice POC.
+
+76
+00:04:31,779 --> 00:04:37,837
+Only the minimum workflow, data logic, and interface needed to prove customer value.
+
+77
+00:04:37,857 --> 00:04:39,198
+Nothing more.
+
+78
+00:04:39,398 --> 00:04:41,569
+Step four. Demo with intent.
+
+79
+00:04:41,589 --> 00:04:43,410
+You're not there to impress.
+
+80
+00:04:43,430 --> 00:04:48,432
+You're there to test appetite, objections, trust, and operational fit.
+
+81
+00:04:48,632 --> 00:04:52,766
+And step five. Convert the signal into product action.
+
+82
+00:04:52,786 --> 00:04:55,981
+Decide. Stop, refine, pilot, or productize.
+
+83
+00:04:56,001 --> 00:05:00,887
+Then feed the results into the roadmap, and into governance.
+
+84
+00:05:01,287 --> 00:05:04,418
+Find. Define. Build. Demo. Convert.
+
+85
+00:05:04,468 --> 00:05:08,153
+That's how a small team earns a big seat at the table.
+
+86
+00:05:10,003 --> 00:05:14,137
+Which brings us to the heart of the whole system. The loop.
+
+87
+00:05:14,437 --> 00:05:20,682
+It starts with customer pain. Real pain. Not a technology looking for a problem.
+
+88
+00:05:20,732 --> 00:05:23,181
+The pain becomes a hypothesis.
+
+89
+00:05:23,201 --> 00:05:25,820
+The hypothesis becomes a POC.
+
+90
+00:05:25,840 --> 00:05:28,118
+The POC becomes a demo.
+
+91
+00:05:28,138 --> 00:05:30,935
+The demo produces a customer reaction.
+
+92
+00:05:30,955 --> 00:05:33,617
+And that reaction drives a decision.
+
+93
+00:05:33,817 --> 00:05:37,027
+And there are only four possible decisions.
+
+94
+00:05:37,047 --> 00:05:38,101
+Kill it.
+
+95
+00:05:38,121 --> 00:05:39,389
+Refine it.
+
+96
+00:05:39,409 --> 00:05:40,592
+Pilot it.
+
+97
+00:05:40,612 --> 00:05:42,548
+Or productize it.
+
+98
+00:05:42,848 --> 00:05:46,496
+And hear me on this. Killing an idea is not failure.
+
+99
+00:05:46,516 --> 00:05:51,995
+Killing the wrong idea in two weeks, instead of two years? That's a win.
+
+100
+00:05:52,495 --> 00:05:55,185
+Along the way, the loop tests three things.
+
+101
+00:05:55,205 --> 00:05:56,495
+Appetite.
+
+102
+00:05:56,515 --> 00:05:57,847
+Feasibility.
+
+103
+00:05:57,867 --> 00:05:59,696
+And business value.
+
+104
+00:06:00,096 --> 00:06:04,784
+And every demo, every single one, must answer three questions.
+
+105
+00:06:04,934 --> 00:06:06,955
+Is the problem real?
+
+106
+00:06:07,105 --> 00:06:09,020
+Is the value clear?
+
+107
+00:06:09,170 --> 00:06:11,533
+Is the solution believable?
+
+108
+00:06:11,933 --> 00:06:16,898
+If you can't answer all three with a confident yes, you're not done.
+
+109
+00:06:18,748 --> 00:06:22,967
+So how do you decide what to work on? You use a filter.
+
+110
+00:06:23,017 --> 00:06:27,295
+Picture two axes. Effort and complexity, along the bottom.
+
+111
+00:06:27,315 --> 00:06:30,606
+Value and learning signal, up the side.
+
+112
+00:06:30,806 --> 00:06:35,944
+Down here, low value, low effort. A perfect UI with no value proof.
+
+113
+00:06:35,964 --> 00:06:40,059
+It looks beautiful. It proves nothing. Avoid it.
+
+114
+00:06:40,259 --> 00:06:45,180
+Over here, high effort, low value. Architecture theatre. Big diagrams.
+
+115
+00:06:45,200 --> 00:06:48,211
+Heavy lifting. No learning. Avoid it.
+
+116
+00:06:48,411 --> 00:06:53,378
+Up here, high value, but high effort. Heavy platform work. It matters.
+
+117
+00:06:53,398 --> 00:06:57,003
+But not before you have signal. So, delay it.
+
+118
+00:06:57,303 --> 00:07:01,693
+And this. This is the prime zone. High value. Low effort.
+
+119
+00:07:01,843 --> 00:07:05,031
+A simulated, end-to-end user journey.
+
+120
+00:07:05,051 --> 00:07:09,092
+A clickable front end, with realistic back-end rules.
+
+121
+00:07:09,112 --> 00:07:12,705
+One key integration, mocked, or partially real.
+
+122
+00:07:12,725 --> 00:07:15,551
+An operational dashboard prototype.
+
+123
+00:07:15,571 --> 00:07:17,976
+And a role-based workflow demo.
+
+124
+00:07:18,176 --> 00:07:23,312
+This is where ninja teams live. Maximum learning. Minimum effort.
+
+125
+00:07:25,162 --> 00:07:30,043
+So, you've built your thin slice. What does a great demo actually prove?
+
+126
+00:07:30,063 --> 00:07:31,279
+Five things.
+
+127
+00:07:31,379 --> 00:07:34,703
+One. The user's pain is real, and urgent.
+
+128
+00:07:34,723 --> 00:07:40,394
+Two. The outcome is visible in minutes. Not after forty slides of preamble.
+
+129
+00:07:40,414 --> 00:07:43,757
+Three. The workflow feels operationally credible.
+
+130
+00:07:43,777 --> 00:07:47,109
+Like it could run on a real Monday morning.
+
+131
+00:07:47,129 --> 00:07:52,758
+Four. Stakeholders can imagine deploying it. They start asking: who would use this?
+
+132
+00:07:52,778 --> 00:07:54,655
+Where does it plug in?
+
+133
+00:07:54,675 --> 00:07:57,181
+And five. The next step is obvious.
+
+134
+00:07:57,201 --> 00:08:01,859
+Everyone leaves the room knowing exactly what happens next.
+
+135
+00:08:02,159 --> 00:08:06,503
+And in enterprise and government settings, the bar is higher.
+
+136
+00:08:06,523 --> 00:08:09,572
+Your demo must also prove four things.
+
+137
+00:08:09,592 --> 00:08:10,533
+Trust.
+
+138
+00:08:10,553 --> 00:08:12,261
+Integration fit.
+
+139
+00:08:12,281 --> 00:08:14,438
+Operational practicality.
+
+140
+00:08:14,458 --> 00:08:16,479
+And policy awareness.
+
+141
+00:08:16,779 --> 00:08:19,910
+Wow is nice. But wow is not enough.
+
+142
+00:08:19,960 --> 00:08:21,832
+Credible beats cool.
+
+143
+00:08:23,682 --> 00:08:28,414
+Now, let's talk about you. If you're running this team, here is your playbook.
+
+144
+00:08:28,434 --> 00:08:29,565
+Seven moves.
+
+145
+00:08:29,715 --> 00:08:34,488
+One. Start from customer pain, not from available technology.
+
+146
+00:08:34,538 --> 00:08:39,887
+Two. Frame a sharp wedge use case. Narrow beats broad. Every time.
+
+147
+00:08:39,937 --> 00:08:45,436
+Three. Drive a weekly decision rhythm. Hypothesis. Build. Demo. Learn.
+
+148
+00:08:45,486 --> 00:08:51,561
+Four. Keep scope ruthless. Always ask: what is the smallest believable proof?
+
+149
+00:08:51,611 --> 00:08:57,771
+Five. Translate every reaction into product insight. Not meeting notes. Insight.
+
+150
+00:08:57,821 --> 00:09:03,938
+Six. Protect the team's velocity from random stakeholder noise. You are the shield.
+
+151
+00:09:03,988 --> 00:09:10,852
+And seven. Turn validated signals into real action. Roadmap. Pilot. Governance.
+
+152
+00:09:11,252 --> 00:09:15,407
+And if you remember only one sentence, make it this one.
+
+153
+00:09:15,707 --> 00:09:19,755
+Your job is to maximize learning per unit of effort.
+
+154
+00:09:21,805 --> 00:09:25,554
+Let me show you what that weekly rhythm can look like.
+
+155
+00:09:25,604 --> 00:09:29,199
+Monday. Hypothesis. The team agrees on one sentence.
+
+156
+00:09:29,219 --> 00:09:33,791
+What are we trying to prove this week, and how will we know?
+
+157
+00:09:33,891 --> 00:09:38,554
+Tuesday through Thursday. Build. The thinnest slice that can prove it.
+
+158
+00:09:38,574 --> 00:09:42,653
+Front end, back end, and architecture, moving together.
+
+159
+00:09:42,753 --> 00:09:47,082
+Friday. Demo. Put it in front of real users. Watch their faces.
+
+160
+00:09:47,102 --> 00:09:49,297
+Listen to their questions.
+
+161
+00:09:49,397 --> 00:09:53,769
+And then, learn, and decide. Capture the signal. Make the call.
+
+162
+00:09:53,789 --> 00:09:57,605
+Next Monday, the loop starts again. Only sharper.
+
+163
+00:09:57,905 --> 00:10:01,911
+Every week, a decision. Not every quarter. Every week.
+
+164
+00:10:03,761 --> 00:10:06,721
+Let's make this real, with an example.
+
+165
+00:10:06,821 --> 00:10:10,151
+Field maintenance crews log defects on paper.
+
+166
+00:10:10,171 --> 00:10:15,289
+Supervisors wait days to approve work orders. Everyone is frustrated.
+
+167
+00:10:15,309 --> 00:10:18,911
+And everyone can see it. That's your wedge.
+
+168
+00:10:19,011 --> 00:10:20,070
+The hypothesis.
+
+169
+00:10:20,090 --> 00:10:27,539
+If supervisors can see live defects, and approve a work order in one tap, they'll ask for a pilot.
+
+170
+00:10:27,639 --> 00:10:32,843
+The thin slice. One role-based workflow. Realistic, simulated data.
+
+171
+00:10:32,863 --> 00:10:36,615
+The maintenance system integration? Mocked.
+
+172
+00:10:36,715 --> 00:10:41,476
+The demo. Ten minutes. A technician logs a defect on a tablet.
+
+173
+00:10:41,496 --> 00:10:46,907
+A supervisor approves it on a phone. The dashboard updates. Live.
+
+174
+00:10:47,007 --> 00:10:51,141
+The reaction. "Can we try this with one crew, next month?"
+
+175
+00:10:51,241 --> 00:10:53,262
+The decision. Pilot.
+
+176
+00:10:53,662 --> 00:10:56,736
+Two weeks. Four people. One clear decision.
+
+177
+00:10:56,756 --> 00:11:00,825
+That's the ninja team, working exactly as designed.
+
+178
+00:11:02,675 --> 00:11:07,107
+Now, how should you lead? Learn from three very different leaders.
+
+179
+00:11:07,207 --> 00:11:08,909
+From Steve Jobs.
+
+180
+00:11:08,929 --> 00:11:11,469
+Obsess over the user experience.
+
+181
+00:11:11,489 --> 00:11:13,347
+Make the story simple.
+
+182
+00:11:13,367 --> 00:11:14,991
+Say no to noise.
+
+183
+00:11:15,011 --> 00:11:18,035
+And demo the future, not the features.
+
+184
+00:11:18,235 --> 00:11:19,979
+From Jensen Huang.
+
+185
+00:11:19,999 --> 00:11:22,369
+Think full-stack, not in silos.
+
+186
+00:11:22,389 --> 00:11:25,122
+Master the details that change outcomes.
+
+187
+00:11:25,142 --> 00:11:27,320
+Tell a clear platform narrative.
+
+188
+00:11:27,340 --> 00:11:30,257
+And relentlessly compound capability.
+
+189
+00:11:30,457 --> 00:11:32,074
+From Elon Musk.
+
+190
+00:11:32,094 --> 00:11:34,101
+Reason from first principles.
+
+191
+00:11:34,121 --> 00:11:36,321
+Remove unnecessary steps.
+
+192
+00:11:36,341 --> 00:11:38,903
+Iterate faster than competitors think.
+
+193
+00:11:38,923 --> 00:11:42,352
+And push for useful truth, from real tests.
+
+194
+00:11:42,652 --> 00:11:46,167
+Your synthesis? Be the calm product captain.
+
+195
+00:11:46,217 --> 00:11:50,481
+Customer-obsessed, like Jobs. System-literate, like Jensen.
+
+196
+00:11:50,501 --> 00:11:54,169
+First-principles and speed-driven, like Elon.
+
+197
+00:11:54,219 --> 00:12:01,061
+But grounded in enterprise reality, cross-functional alignment, and disciplined product governance.
+
+198
+00:12:02,911 --> 00:12:07,898
+So how do you know it's working? You measure. But you measure the right things.
+
+199
+00:12:07,998 --> 00:12:09,792
+Time to first demo.
+
+200
+00:12:09,812 --> 00:12:11,777
+Customer demos per month.
+
+201
+00:12:11,797 --> 00:12:13,847
+Customer appetite score.
+
+202
+00:12:13,867 --> 00:12:15,861
+Pilot conversion rate.
+
+203
+00:12:15,881 --> 00:12:17,739
+Validated use cases.
+
+204
+00:12:17,759 --> 00:12:19,958
+Reusable components created.
+
+205
+00:12:19,978 --> 00:12:22,348
+Roadmap decisions accelerated.
+
+206
+00:12:22,368 --> 00:12:25,968
+And the ratio of low-effort to high-value work.
+
+207
+00:12:26,268 --> 00:12:29,051
+Now, notice what's not on this list.
+
+208
+00:12:29,071 --> 00:12:30,553
+Hours worked.
+
+209
+00:12:30,573 --> 00:12:31,990
+Tickets closed.
+
+210
+00:12:32,010 --> 00:12:33,818
+Slides produced.
+
+211
+00:12:34,018 --> 00:12:37,810
+Measure signal quality. Not activity volume.
+
+212
+00:12:39,660 --> 00:12:42,087
+So, let's bring it all together.
+
+213
+00:12:42,237 --> 00:12:43,690
+Four people.
+
+214
+00:12:43,710 --> 00:12:45,419
+Five principles.
+
+215
+00:12:45,439 --> 00:12:46,743
+One loop.
+
+216
+00:12:46,763 --> 00:12:48,430
+Four decisions.
+
+217
+00:12:48,450 --> 00:12:51,503
+Three questions every demo must answer.
+
+218
+00:12:51,523 --> 00:12:53,843
+And seven moves to run it all.
+
+219
+00:12:55,593 --> 00:12:58,681
+A ninja team is a leverage engine.
+
+220
+00:12:58,831 --> 00:13:03,583
+It doesn't replace the full product organization. It de-risks it.
+
+221
+00:13:03,783 --> 00:13:07,505
+It uses POCs and demos to discover demand.
+
+222
+00:13:07,525 --> 00:13:09,113
+Validate value.
+
+223
+00:13:09,133 --> 00:13:11,105
+Reveal technical truth.
+
+224
+00:13:11,125 --> 00:13:13,871
+And create momentum for the roadmap.
+
+225
+00:13:14,471 --> 00:13:16,663
+But... there's one more thing.
+
+226
+00:13:17,563 --> 00:13:23,254
+The ninja team's real product isn't the POC. It isn't even the demo.
+
+227
+00:13:23,454 --> 00:13:25,241
+It's the decision.
+
+228
+00:13:26,041 --> 00:13:27,914
+Move from ideas.
+
+229
+00:13:27,934 --> 00:13:29,402
+To evidence.
+
+230
+00:13:29,422 --> 00:13:31,507
+To product decisions.
+
+231
+00:13:32,407 --> 00:13:34,493
+Now, go find your wedge.
+
