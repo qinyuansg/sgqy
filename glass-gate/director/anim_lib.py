@@ -306,6 +306,21 @@ def set_linear(id_block):
             kp.interpolation = 'LINEAR'
 
 
+def key_steps(id_block, prop, pairs):
+    """Stepped keys on a custom property: pairs = [(frame, value), ...]; the value holds until the next key."""
+    path = f'["{prop}"]'
+    for f, v in pairs:
+        id_block[prop] = float(v)
+        id_block.keyframe_insert(path, frame=f)
+    ad = id_block.animation_data
+    from bpy_extras import anim_utils
+    cb = anim_utils.action_get_channelbag_for_slot(ad.action, ad.action_slot)
+    for fc in cb.fcurves:
+        if fc.data_path == path:
+            for kp in fc.keyframe_points:
+                kp.interpolation = 'CONSTANT'
+
+
 def project(scene, cam, point):
     """NDC of a world point for the scene's camera at the current frame: (x, y, depth); x,y in 0..1."""
     from bpy_extras.object_utils import world_to_camera_view

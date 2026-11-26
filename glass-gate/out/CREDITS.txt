@@ -1,0 +1,68 @@
+CLEAR PASSAGE — credits and licences
+====================================
+
+Everything on screen was modelled, shaded, lit, animated and rendered from scratch for this film in
+Blender 5.3 (Cycles) by scripts in this repository. No downloaded 3D models were used. The product,
+the name "HYALO G1" and every label, badge and screen text are made up; no real brand appears.
+
+
+MUSIC  (one track, in the film)
+
+  "Nowhere Land" by Kevin MacLeod (incompetech.com)
+  File     https://incompetech.com/music/royalty-free/mp3-royaltyfree/Nowhere%20Land.mp3
+  Site     https://incompetech.com/music/royalty-free/music.html   (search "Nowhere Land")
+  ISRC     USUAN1600051
+  Licence  Creative Commons Attribution 4.0 International (CC BY 4.0)
+           https://creativecommons.org/licenses/by/4.0/
+  Use on X Free with attribution. Publish this line with the video (post text or a reply):
+
+    Music: "Nowhere Land" by Kevin MacLeod (incompetech.com), licensed under Creative Commons: By Attribution 4.0 (https://creativecommons.org/licenses/by/4.0/)
+
+  Changes  Shortened and re-arranged on its own bar lines, filtered and level-automated before the
+           drop, ducked under the sound effects and mastered with them. Not time-stretched or
+           re-pitched (the recording is at 120 BPM, the tempo of the film).
+
+
+SOUND EFFECTS  (in the film)
+
+  No recordings and no sound libraries. Every effect (metal thunks, clacks, clicks, snaps, glass clinks
+  and slides, gear ticks, spring, screwdriver, servo, whooshes, riser, drop impact, power-up, shimmer,
+  UI chime, card tap, reader beep, final hit) and the room they share were synthesised for this film in
+  Python with numpy and scipy (sound/sfxlib.py). No credit is due to anyone.
+
+  The brief asked for Pixabay sound effects. pixabay.com answered this machine with a bot challenge,
+  which was not circumvented, so nothing from Pixabay is in the film.
+  Real recordings can be dropped into sound/sfx_override/<name>.wav and sound/mix.py will use them.
+
+
+DOWNLOADED BUT NOT IN THE FILM
+
+  HDRI "Studio Small 09" by Sergej Majboroda — Poly Haven, CC0 1.0 (public domain)
+  Page     https://polyhaven.com/a/studio_small_09
+  File     https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/studio_small_09_2k.hdr
+  API      https://api.polyhaven.com/assets?t=hdris&c=studio
+           https://api.polyhaven.com/files/studio_small_09
+  Used     only for background option D of the studio test (look/tests/ab_backgrounds.png). The chosen
+           dark studio uses no downloaded asset, so no frame of the film contains it.
+
+
+FONTS  (rendered into the made-up badge / screen / PCB textures in look/tex/)
+
+  Inter — SIL Open Font License 1.1          https://github.com/rsms/inter
+  JetBrains Mono — SIL Open Font License 1.1 https://github.com/JetBrains/JetBrainsMono
+  Read from the system's font folder at texture-build time; only the rendered PNGs are in the repo.
+
+
+SOFTWARE
+
+  Blender 5.3 as a Python module (bpy), Cycles, Open Image Denoise — GPL / Apache 2.0
+  FFmpeg (libx264, AAC) for the encode; numpy, scipy, Pillow, pyloudnorm for sound and checks.
+
+
+REFERENCE
+
+  Six photos of a speed gate supplied with the request were used as visual reference for proportions and
+  parts only. They are not in the repository and no logo or brand from them was reproduced.
+
+
+Downloads were made only from incompetech.com and Poly Haven (pixabay.com was tried and blocked).

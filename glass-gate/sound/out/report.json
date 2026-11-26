@@ -11,7 +11,7 @@
   "integrated_lufs_pyloudnorm": -16.01,
   "ffmpeg_ebur128": {
    "integrated_lufs": -16.0,
-   "lra_lu": 6.2,
+   "lra_lu": 6.3,
    "true_peak_dbtp": -1.7
   },
   "target": -16.0
@@ -24,11 +24,11 @@
  },
  "stems": {
   "null_test_residual_db": -141.6,
-  "sfx_lufs": -18.45,
-  "music_lufs": -19.0,
+  "sfx_lufs": -18.47,
+  "music_lufs": -18.99,
   "dc_offset": [
    -1.9e-05,
-   -1.6e-05
+   -1.5e-05
   ]
  },
  "sync": {
@@ -41,7 +41,7 @@
   "stem": {
    "events": 61,
    "worst_abs_ms": 1.438,
-   "mean_ms": -0.22,
+   "mean_ms": -0.218,
    "over_limit": [],
    "masked_not_measurable": [
     {
@@ -85,7 +85,7 @@
     "err_ms": 0.021
    },
    {
-    "t": 1.6,
+    "t": 1.8,
     "sfx": "whoosh",
     "part": "hook_lift_away",
     "mode": "end",
@@ -115,14 +115,14 @@
    {
     "t": 3.1333,
     "sfx": "screw",
-    "part": "BASE_anchor_1_L+BASE_anchor_1_R",
+    "part": "BASE_anchor_1_L",
     "mode": "lead",
     "err_ms": 0.012
    },
    {
     "t": 3.25,
     "sfx": "screw",
-    "part": "BASE_anchor_2_L+BASE_anchor_2_R",
+    "part": "BASE_anchor_2_L",
     "mode": "lead",
     "err_ms": 0.021
    },
@@ -644,35 +644,35 @@
     "sfx": "thunk_metal",
     "part": "BASE_rail_L",
     "err_ms": -0.708,
-    "clear_db": 96.6
+    "clear_db": 58.3
    },
    {
     "t": 2.5,
     "sfx": "thunk_metal",
     "part": "BASE_rail_R",
     "err_ms": -0.417,
-    "clear_db": 101.8
+    "clear_db": 101.9
    },
    {
     "t": 3.0,
     "sfx": "screw",
     "part": "BASE_anchor_0_L",
     "err_ms": 0.021,
-    "clear_db": 10.0
+    "clear_db": 9.3
    },
    {
     "t": 3.1333,
     "sfx": "screw",
-    "part": "BASE_anchor_1_L+BASE_anchor_1_R",
+    "part": "BASE_anchor_1_L",
     "err_ms": 0.104,
-    "clear_db": 10.4
+    "clear_db": 10.5
    },
    {
     "t": 3.25,
     "sfx": "screw",
-    "part": "BASE_anchor_2_L+BASE_anchor_2_R",
-    "err_ms": -0.021,
-    "clear_db": 12.2
+    "part": "BASE_anchor_2_L",
+    "err_ms": 0.083,
+    "clear_db": 11.5
    },
    {
     "t": 3.3667,
@@ -686,14 +686,14 @@
     "sfx": "click",
     "part": "ELE_cable_0_L+ELE_cable_0_R",
     "err_ms": -0.438,
-    "clear_db": 41.5
+    "clear_db": 40.5
    },
    {
     "t": 4.0,
     "sfx": "thunk_metal",
     "part": "DRV_motor_L",
     "err_ms": -0.458,
-    "clear_db": 97.7
+    "clear_db": 97.6
    },
    {
     "t": 4.5,
@@ -1036,7 +1036,7 @@
     "sfx": "card_tap",
     "part": "card",
     "err_ms": -0.375,
-    "clear_db": 131.3
+    "clear_db": 131.2
    },
    {
     "t": 20.36,
@@ -1101,10 +1101,10 @@
   "note": "ratio = largest second difference in the 14 ms around the point / 99.9th percentile of the surrounding 400 ms; a splice click would stand far above 1"
  },
  "ends": {
-  "first_frame_rms_db": -24.9,
+  "first_frame_rms_db": -24.0,
   "first_frame_music_rms_db": -25.2,
-  "first_100ms_rms_db": -27.2,
-  "first_sample_abs": 0.0009595155715942383,
+  "first_100ms_rms_db": -25.4,
+  "first_sample_abs": 0.0028318166732788086,
   "last_sample_abs": 0.0,
   "last_100ms_rms_db": -76.0,
   "last_500ms_rms_db": -55.3
@@ -1115,8 +1115,8 @@
    "t0": 0.0,
    "t1": 2.0,
    "busy": 0.3,
-   "mix_lufs": -22.1,
-   "sfx_lufs": -22.7,
+   "mix_lufs": -21.7,
+   "sfx_lufs": -22.5,
    "music_lufs": -27.7
   },
   {
@@ -1124,8 +1124,8 @@
    "t0": 2.0,
    "t1": 4.0,
    "busy": 0.6,
-   "mix_lufs": -18.9,
-   "sfx_lufs": -19.1,
+   "mix_lufs": -19.0,
+   "sfx_lufs": -19.2,
    "music_lufs": -30.4
   },
   {
@@ -1152,7 +1152,7 @@
    "t1": 12.0,
    "busy": 0.9,
    "mix_lufs": -14.9,
-   "sfx_lufs": -15.4,
+   "sfx_lufs": -15.3,
    "music_lufs": -25.1
   },
   {
@@ -1178,7 +1178,7 @@
    "t0": 16.0,
    "t1": 20.0,
    "busy": 0.2,
-   "mix_lufs": -13.1,
+   "mix_lufs": -13.0,
    "sfx_lufs": -18.9,
    "music_lufs": -13.9
   },
@@ -1188,7 +1188,7 @@
    "t1": 24.0,
    "busy": 0.5,
    "mix_lufs": -15.2,
-   "sfx_lufs": -19.3,
+   "sfx_lufs": -19.2,
    "music_lufs": -17.1
   },
   {
@@ -1205,14 +1205,14 @@
   "63": -7.4,
   "125": -5.8,
   "250": -7.1,
-  "500": -9.1,
+  "500": -9.2,
   "1000": -8.5,
   "2000": -13.0,
-  "4000": -18.2,
-  "8000": -18.1,
-  "16000": -26.6
+  "4000": -18.3,
+  "8000": -17.9,
+  "16000": -26.7
  },
- "energy_above_8k_db": -21.3,
+ "energy_above_8k_db": -21.1,
  "stereo": {
   "side_minus_mid_db": -8.2,
   "correlation": 0.735
@@ -1317,60 +1317,60 @@
    "held_from": 15.25
   },
   "master": {
-   "pre_gain_db": 2.775719628550175,
-   "limiter_max_reduction_db": 3.4501778830418335,
+   "pre_gain_db": 2.7892549414763232,
+   "limiter_max_reduction_db": 3.463713195970092,
    "limiter_deepest": [
     {
      "t": 14.5,
-     "db": 3.45
+     "db": 3.46
     },
     {
      "t": 14.5,
-     "db": 3.42
+     "db": 3.43
     },
     {
      "t": 14.753,
-     "db": 2.94
+     "db": 2.95
     },
     {
      "t": 16.038,
-     "db": 2.29
+     "db": 2.3
     },
     {
      "t": 14.75,
-     "db": 2.27
+     "db": 2.28
     },
     {
      "t": 10.249,
-     "db": 2.12
+     "db": 2.13
     },
     {
      "t": 10.25,
-     "db": 2.12
+     "db": 2.13
     },
     {
      "t": 16.05,
-     "db": 2.11
+     "db": 2.13
     },
     {
      "t": 14.55,
-     "db": 2.1
+     "db": 2.11
     },
     {
      "t": 13.149,
-     "db": 2.05
+     "db": 2.07
     },
     {
      "t": 13.15,
-     "db": 2.05
+     "db": 2.07
     },
     {
      "t": 12.999,
-     "db": 1.92
+     "db": 1.93
     },
     {
      "t": 13.0,
-     "db": 1.92
+     "db": 1.93
     },
     {
      "t": 14.8,
@@ -1378,15 +1378,15 @@
     },
     {
      "t": 6.499,
-     "db": 1.7
+     "db": 1.71
     },
     {
      "t": 6.5,
-     "db": 1.7
+     "db": 1.71
     }
    ],
-   "limiter_active_percent": 21.148157051282052,
-   "limiter_over_1db_percent": 2.9103365384615385
+   "limiter_active_percent": 21.24198717948718,
+   "limiter_over_1db_percent": 2.940544871794872
   },
   "events_placed": {
    "shimmer": 2,
@@ -1417,55 +1417,55 @@
   },
   "first_slam_t": 2.0,
   "held_from": 15.25,
-  "duck_db_max": 12.000000000003812,
-  "duck_db_mean_pre_drop": 9.783071984491162,
-  "render_seconds": 8.94,
+  "duck_db_max": 12.00000000000373,
+  "duck_db_mean_pre_drop": 9.783047817827343,
+  "render_seconds": 7.95,
   "overrides": {}
  },
  "effects_spectrum": {
   "third_octave_db_re_ref": {
-   "50": -2.8,
+   "50": -2.7,
    "62": -0.0,
-   "79": 4.7,
-   "99": 3.9,
+   "79": 4.8,
+   "99": 4.0,
    "125": 1.8,
    "157": -0.3,
    "198": -0.8,
    "250": -3.5,
-   "315": -2.1,
+   "315": -2.2,
    "397": -2.1,
-   "500": -2.6,
-   "630": -1.0,
+   "500": -2.7,
+   "630": -1.1,
    "794": 4.5,
    "1k": -1.1,
    "1.26k": 2.0,
    "1.59k": 0.7,
-   "2k": -2.4,
-   "2.52k": -5.9,
-   "3.17k": -7.2,
-   "4k": -8.1,
-   "5.04k": -6.7,
-   "6.35k": -5.7,
-   "8k": -7.0,
+   "2k": -2.3,
+   "2.52k": -5.7,
+   "3.17k": -7.0,
+   "4k": -8.4,
+   "5.04k": -7.0,
+   "6.35k": -5.3,
+   "8k": -6.6,
    "10.1k": -9.1,
    "12.7k": -12.1,
-   "16k": -18.4,
-   "20.2k": -23.8
+   "16k": -18.5,
+   "20.2k": -23.9
   },
   "target": "-3 dB/octave of band level from 1 kHz, reference = mean of the 500 Hz - 2 kHz bands",
   "air_bands_vs_target_db": {
-   "5.04k": 0.3,
-   "6.35k": 2.3,
-   "8k": 2.0,
+   "5.04k": -0.0,
+   "6.35k": 2.7,
+   "8k": 2.4,
    "10.1k": 0.9,
    "12.7k": -1.1
   },
   "harsh_bands_vs_target_db": {
-   "2.52k": -1.9,
-   "3.17k": -2.2,
-   "4k": -2.1
+   "2.52k": -1.7,
+   "3.17k": -2.0,
+   "4k": -2.4
   },
-  "top_16k_vs_target_db": -6.4,
+  "top_16k_vs_target_db": -6.5,
   "ok_air": true,
   "ok_harsh": true
  },
@@ -1491,8 +1491,8 @@
     }
    ],
    "margin_db": 2.1,
-   "peak_dbfs": -2.1,
-   "effects_before_it_db": -65.7,
+   "peak_dbfs": -2.2,
+   "effects_before_it_db": -24.0,
    "room_send_db": -28.0
   },
   "build": {
@@ -1525,7 +1525,7 @@
     {
      "name": "w5_top_rail",
      "t0": 12.0,
-     "music_k_db": -23.0
+     "music_k_db": -22.9
     },
     {
      "name": "w6_wings",
@@ -1537,8 +1537,8 @@
     1.6,
     2.1,
     1.4,
-    1.4,
-    1.9
+    1.5,
+    1.8
    ],
    "rise_db": 8.4,
    "hook_under_ref_wave_db": 1.0

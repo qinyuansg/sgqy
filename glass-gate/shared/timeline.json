@@ -1,5 +1,5 @@
 {
- "version": 9,
+ "version": 10,
  "fps": 60,
  "bpm": 120,
  "duration_s": 26.0,
@@ -69,7 +69,7 @@
  ],
  "cuts": [
   0.0,
-  1.6,
+  1.8,
   3.8,
   6.3,
   7.8,
@@ -89,11 +89,11 @@
   {
    "name": "01_hook",
    "t0": 0.0,
-   "t1": 1.6
+   "t1": 1.8
   },
   {
    "name": "02_base",
-   "t0": 1.6,
+   "t0": 1.8,
    "t1": 3.8
   },
   {
@@ -197,11 +197,11 @@
    "part": "hook_light_streak",
    "gain": 0.5,
    "pan": 0.0,
-   "dur": 1.1,
+   "dur": 1.3,
    "var": 0
   },
   {
-   "t": 1.6,
+   "t": 1.8,
    "sfx": "whoosh",
    "part": "hook_lift_away",
    "gain": 0.75,
@@ -214,7 +214,7 @@
    "sfx": "thunk_metal",
    "part": "BASE_rail_L",
    "gain": 1.0,
-   "pan": -0.34,
+   "pan": -0.32,
    "var": 1
   },
   {
@@ -222,7 +222,7 @@
    "sfx": "thunk_metal",
    "part": "BASE_rail_R",
    "gain": 1.0,
-   "pan": 0.51,
+   "pan": 0.45,
    "var": 7
   },
   {
@@ -230,25 +230,25 @@
    "sfx": "screw",
    "part": "BASE_anchor_0_L",
    "gain": 0.55,
-   "pan": 0.12,
+   "pan": 0.7,
    "var": 7,
    "dur": 0.18
   },
   {
    "t": 3.1333,
    "sfx": "screw",
-   "part": "BASE_anchor_1_L+BASE_anchor_1_R",
-   "gain": 0.605,
-   "pan": 0.24,
+   "part": "BASE_anchor_1_L",
+   "gain": 0.55,
+   "pan": 0.06,
    "var": 8,
    "dur": 0.18
   },
   {
    "t": 3.25,
    "sfx": "screw",
-   "part": "BASE_anchor_2_L+BASE_anchor_2_R",
-   "gain": 0.605,
-   "pan": -0.04,
+   "part": "BASE_anchor_2_L",
+   "gain": 0.55,
+   "pan": -0.22,
    "var": 9,
    "dur": 0.18
   },
@@ -257,7 +257,7 @@
    "sfx": "screw",
    "part": "BASE_anchor_3_L+BASE_anchor_3_R",
    "gain": 0.605,
-   "pan": -0.19,
+   "pan": 0.14,
    "var": 10,
    "dur": 0.18
   },
@@ -266,7 +266,7 @@
    "sfx": "click",
    "part": "ELE_cable_0_L+ELE_cable_0_R",
    "gain": 0.605,
-   "pan": 0.1,
+   "pan": 0.28,
    "var": 10
   },
   {

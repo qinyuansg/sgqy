@@ -12,10 +12,10 @@ from mathutils import Vector
 import anim_lib as al
 from anim_lib import Shot, smooth, smoother, ease_in, ease_out, clamp01
 
-VERSION = 9
+VERSION = 10
 DURATION = 26.0
-HOOK_END = 1.6
-SCATTER_T0 = 1.12
+HOOK_END = 1.8          # the hook runs into the first slam: parts are still leaving as the camera reaches the floor
+SCATTER_T0 = 1.34
 SCATTER_DIST = 3.4
 HOOK_BREATHE = 0.04
 DROP_T = 16.0
@@ -39,7 +39,7 @@ SECTIONS = [
 
 XL = -0.38       # left pedestal centre plane; the camera lives on the left/front side
 LEAD = 0.2       # every cut leads the downbeat by 0.2 s so the first landing of a wave is seen arriving
-CUT = dict(base=1.6, gears=4 - LEAD, stack=6.3, pcb=8 - LEAD, psu=9 - LEAD, glass=10 - LEAD, rail=12 - LEAD, wings=14 - LEAD,
+CUT = dict(base=HOOK_END, gears=4 - LEAD, stack=6.3, pcb=8 - LEAD, psu=9 - LEAD, glass=10 - LEAD, rail=12 - LEAD, wings=14 - LEAD,
            badge=15.0, wave=16.0, alive=18.0, card=20.0, drive=20.9, lane=21.95, hero=24.0)
 
 
@@ -287,6 +287,7 @@ SWEEP_W = 1500.0       # hook light streak
 SWEEP_X0, SWEEP_X1, SWEEP_Z = 0.3, 2.0, 1.3          # passes behind the hovering glass during the first second
 if os.environ.get('GG_SWEEP'):          # look experiments:  GG_SWEEP="x0,x1,z,watts"
     SWEEP_X0, SWEEP_X1, SWEEP_Z, SWEEP_W = (float(v) for v in os.environ['GG_SWEEP'].split(','))
+SPARK_BASE = 1500.0
 SPARK_W = 3500.0       # the look helper's hard spot at 9000 W clips the steel base rails to white in every shot
 SWEEP_FLOOR = 0.25     # how much of it reaches the floor (the look helper's floor twin)
 PASS_W = 420.0         # the "someone walks through" light
@@ -302,7 +303,7 @@ def extras(sc, parts, man, baked):
     for f in range(0, f_end):                       # off on the first frame of the next shot
         u = f / (f_end - 1)
         x = SWEEP_X0 + (SWEEP_X1 - SWEEP_X0) * smooth(u)
-        _key_light(sw, f, loc=(x, 1.15, SWEEP_Z), aim=(x * 0.35, 0.0, 0.9), energy=SWEEP_W * (0.55 + 0.45 * math.sin(math.pi * u)))
+        _key_light(sw, f, loc=(x, 1.15, SWEEP_Z), aim=(x * 0.35, 0.0, 0.9), energy=SWEEP_W * (0.55 + 0.45 * math.sin(math.pi * u)) * min(1.0, (1.0 - u) / 0.25))     # gone before the camera reaches the floor
     _key_light(sw, f_end, energy=0.0)
     al.set_linear(sw); al.set_linear(sw.data)
     # 2. in use: a tall warm light glides through the open lane (two faces, one toward each pedestal)
@@ -340,7 +341,8 @@ def after_aim(sc):
         sw.light_linking.receiver_collection = coll
     sp = bpy.data.objects.get('STUDIO_SPARK')
     if sp is not None and 'gg_energy' in sp:
-        sp['gg_energy'] = SPARK_W
+        # per shot: the base shot looks straight down the bare rail toward the spot, so it gets less of it
+        al.key_steps(sp, 'gg_energy', [(0, SPARK_W), (al.F(CUT['base']), SPARK_BASE), (al.F(CUT['gears']), SPARK_W)])
 
 
 def studio_dim(sc):
@@ -350,7 +352,7 @@ def studio_dim(sc):
 
 
 def access_card(sc, parts, man):
-    """A clear access card comes in from the upper left, taps the reader at T_TAP and lifts away."""
+    """A clear access card comes in from the upper right, taps the reader at T_TAP and lifts away."""
     import bpy
     from mathutils import Quaternion
     props = {p['name']: p for p in man.get('props', [])}
@@ -368,7 +370,7 @@ def access_card(sc, parts, man):
             m.hide_render = not v; m.hide_viewport = not v
             m.keyframe_insert('hide_render', frame=f); m.keyframe_insert('hide_viewport', frame=f)
     vis(0, False); vis(F(T_CARD_IN), True); vis(F(T_TAP + 0.62), False)
-    src = Vector((-0.30, -0.34, 0.26))          # where it comes from, relative to the rest pose
+    src = Vector((0.20, -0.17, 0.18))           # in from screen right and above, at the reader's distance (never through the lens)
     for f in range(F(T_CARD_IN), F(T_TAP + 0.62) + 1):
         t = f / al.FPS
         if t <= T_TAP:
@@ -378,7 +380,7 @@ def access_card(sc, parts, man):
             off = Vector((0, 0, al.rebound(t - T_TAP, 0.003, 9.0, 0.04))); tilt = 0.0
         else:
             u = ease_in((t - T_TAP - 0.14) / 0.48, 2.0)
-            off = Vector((-0.34, -0.30, 0.30)) * u; tilt = math.radians(-22) * u
+            off = Vector((0.26, -0.10, 0.24)) * u; tilt = math.radians(-22) * u
         ob.location = rest + off
         ob.rotation_quaternion = q0 @ Quaternion((0.6, 1.0, 0.0), tilt)
         ob.keyframe_insert('location', frame=f); ob.keyframe_insert('rotation_quaternion', frame=f)
@@ -388,7 +390,7 @@ def access_card(sc, parts, man):
 
 def fixed_events():
     return [
-        dict(t=0.0, sfx='shimmer', part='hook_light_streak', gain=0.5, pan=0.0, dur=1.1, var=0),
+        dict(t=0.0, sfx='shimmer', part='hook_light_streak', gain=0.5, pan=0.0, dur=1.3, var=0),
         dict(t=HOOK_END, sfx='whoosh', part='hook_lift_away', gain=0.75, pan=0.0, dur=0.55, var=0),
         dict(t=DROP_T, sfx='riser', part='pre_drop', gain=0.8, pan=0.0, dur=0.7, var=0),
         dict(t=DROP_T, sfx='impact_drop', part='drop', gain=1.0, pan=0.0, var=0),
@@ -462,6 +464,14 @@ def drift(u):                   # constant slow glide
     return u
 
 
+def base_ramp(u):               # wide for the two rail slams, then a fast push down to the rail for anchors and cables
+    if u < 0.38:
+        return 0.30 * u / 0.38
+    if u < 0.64:
+        return 0.30 + 0.40 * smooth((u - 0.38) / 0.26)
+    return 0.70 + 0.30 * (u - 0.64) / 0.36
+
+
 def hook_ramp(u):               # glide for 64 % of the shot, then rush toward the floor
     return 0.30 * (u / 0.64) if u < 0.64 else 0.30 + 0.70 * ease_in((u - 0.64) / 0.36, 2.0)
 
@@ -472,15 +482,15 @@ def shots(parts, man):
     S.append(Shot('01_hook', 0.0, CUT['base'],
                   pos=[(-2.02, -2.40, 1.50), (-1.86, -2.22, 1.46), (-0.84, -1.16, 0.34)],
                   target=[(-0.02, 0.0, 1.06), (-0.04, 0.0, 1.03), (-0.28, -0.26, 0.02)],
-                  focus=[(0.0, (XL, 0.0, 0.9)), (1.1, (XL, 0.0, 0.9)), (1.6, (XL, -0.3, 0.03))],
-                  lens=[(0.0, 50.0), (1.0, 50.0), (1.6, 40.0)], fstop=5.6, ramp=hook_ramp))
+                  focus=[(0.0, (XL, 0.0, 0.9)), (1.3, (XL, 0.0, 0.9)), (HOOK_END, (XL, -0.3, 0.03))],
+                  lens=[(0.0, 50.0), (1.2, 50.0), (HOOK_END, 40.0)], fstop=5.6, ramp=hook_ramp))
     # 2 BASE — low 3/4 down the rails: L rail slams in, R rail behind it, anchors spin in, cables drop into the channel
     S.append(Shot('02_base', CUT['base'], CUT['gears'],
-                  pos=[(-0.84, -1.16, 0.34), (-0.78, -1.06, 0.28), (-0.74, -0.98, 0.25)],
-                  target=[(-0.28, -0.26, 0.02), (-0.26, -0.22, 0.02)],
-                  focus=[(1.6, (XL, -0.45, 0.03)), (2.30, (XL, -0.45, 0.03)), (2.52, (0.38, -0.3, 0.03)), (2.85, (0.38, -0.3, 0.03)),
+                  pos=[(-0.84, -1.16, 0.34), (-0.80, -1.10, 0.31), (-0.57, -0.66, 0.14), (-0.55, -0.60, 0.125)],
+                  target=[(-0.28, -0.26, 0.02), (-0.28, -0.26, 0.02), (-0.34, -0.12, 0.03), (-0.34, -0.06, 0.03)],
+                  focus=[(HOOK_END, (XL, -0.45, 0.03)), (2.30, (XL, -0.45, 0.03)), (2.52, (0.38, -0.3, 0.03)), (2.85, (0.38, -0.3, 0.03)),
                          (3.0, (-0.35, -0.45, 0.03)), (3.375, (-0.35, 0.2, 0.03)), (3.5, (XL, -0.3, 0.03)), (3.8, (XL, -0.2, 0.03))],
-                  lens=40, fstop=2.8, ramp=fast_then_slow))
+                  lens=40, fstop=2.8, ramp=base_ramp))
     # 3 GEARS — macro hero on the planetary gearbox
     S.append(Shot('03_gears', CUT['gears'], CUT['stack'],
                   pos=[(-0.70, -0.34, 0.37), (-0.63, -0.25, 0.43), (-0.60, -0.20, 0.46)],

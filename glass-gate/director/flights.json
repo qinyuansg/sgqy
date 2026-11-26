@@ -1,8 +1,8 @@
 {
- "hook_end": 96,
+ "hook_end": 108,
  "cuts": [
   0,
-  96,
+  108,
   228,
   378,
   468,
@@ -20,7 +20,7 @@
  ],
  "flights": {
   "BASE_rail_L": {
-   "vis0": 96,
+   "vis0": 108,
    "land": 120
   },
   "BASE_rail_R": {
@@ -28,19 +28,19 @@
    "land": 150
   },
   "BASE_foot_0_L": {
-   "vis0": 96,
+   "vis0": 108,
    "land": 120
   },
   "BASE_foot_1_L": {
-   "vis0": 96,
+   "vis0": 108,
    "land": 120
   },
   "BASE_foot_2_L": {
-   "vis0": 96,
+   "vis0": 108,
    "land": 120
   },
   "BASE_foot_3_L": {
-   "vis0": 96,
+   "vis0": 108,
    "land": 120
   },
   "BASE_foot_0_R": {

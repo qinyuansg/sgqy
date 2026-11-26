@@ -29,7 +29,7 @@ near_cut = set()
 for c in cuts:
     near_cut.update((c - 1, c, c + 1))
 
-SW, SH = 360, 450
+SW, SH = 384, 480          # 4:5, divisible by the block grid (12 x 15) and by 4
 frames = list(range(a.start, a.end + 1))
 N = len(frames)
 luma = np.zeros((N, SH, SW), np.float32)
