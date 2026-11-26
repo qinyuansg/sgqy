@@ -58,6 +58,7 @@ class MB:
         self.f = []
         self.fm = []
         self.mat = mat
+        self.t = None          # optional per-vertex float (0..1 along a cable), exported as 'grow_t'
 
     def vert(self, p):
         self.v.append((float(p[0]), float(p[1]), float(p[2])))
@@ -105,8 +106,13 @@ class MB:
             self.f.append((flat[t[0]], flat[t[1]], flat[t[2]]))
             self.fm.append(m)
 
-    def add(self, other, M=None, mat=None):
+    def add(self, other, M=None, mat=None, t=None):
         i0 = len(self.v)
+        src = other.t if other.t is not None else ([float(t)] * len(other.v) if t is not None else None)
+        if src is not None or self.t is not None:
+            if self.t is None:
+                self.t = [0.0] * i0
+            self.t.extend(src if src is not None else [0.0] * len(other.v))
         if M is None:
             self.v.extend(other.v)
         elif other.v:
@@ -299,7 +305,7 @@ def _levels(z0, z1, bb, bt, segs):
 
 
 def prism(outline, z0, z1, bevel=0.0, segs=1, holes=(), hole_bevel=0.0, mat=None,
-          top_mat=None, bot_mat=None, bevel_top=None, bevel_bot=None, hole_segs=None, pockets=(), levels=None):
+          top_mat=None, bot_mat=None, bevel_top=None, bevel_bot=None, hole_segs=None, pockets=(), levels=None, support=0.0):
     """Extrude a CCW outline (with optional through holes) from z0 to z1 with
     bevelled top/bottom edges. bevel segs=1 -> 45 deg chamfer, >1 -> rounded.
     pockets: list of (outline, depth, bevel, floor_mat) blind pockets in the top face."""
@@ -338,6 +344,18 @@ def prism(outline, z0, z1, bevel=0.0, segs=1, holes=(), hole_bevel=0.0, mat=None
         mb.bridge(p1, p2, fm)
         mb.cap(p2, (), fm)
         ht.append(p0)
+    if support == 0 and segs >= 2 and (holes or pockets) and (bt > 0 or bb > 0):
+        support = 0.25          # smooth bevel + tessellated cap: keep the flat really flat
+    if support > 0:
+        def sup(loop, d):
+            pts = [(mb.v[i][0], mb.v[i][1]) for i in loop]
+            z = mb.v[loop[0]][2]
+            s = mb.loop([(x, y, z) for x, y in offset2d(pts, d)])
+            mb.bridge(loop, s)
+            return s
+        ob, ot = sup(ob, support), sup(ot, support)
+        hb = [sup(h, -support) for h in hb]
+        ht = [sup(h, -support) for h in ht]
     mb.cap(ob, hb, bot_mat)
     mb.cap(ot, ht, top_mat)
     return mb
@@ -468,10 +486,18 @@ def _frames(path, closed=False):
     return fr
 
 
-def tube(path, r, sides=10, mat=None, closed=False, caps=True):
+def tube(path, r, sides=10, mat=None, closed=False, caps=True, grow=False):
     mb = MB(mat or 'RUBBER')
     fr = _frames(path, closed)
     loops = []
+    if grow:
+        # arc-length parameter 0..1 along the path, stored per vertex
+        acc = [0.0]
+        for a_, b_ in zip(fr, fr[1:]):
+            acc.append(acc[-1] + (b_[0] - a_[0]).length)
+        mb.t = []
+        for s_ in acc:
+            mb.t.extend([s_ / (acc[-1] or 1.0)] * sides)
     for (p, t, n, b) in fr:
         loops.append(mb.loop([p + n * (r * cos(TAU * k / sides)) + b * (r * sin(TAU * k / sides)) for k in range(sides)]))
     for a, b in zip(loops, loops[1:]):

@@ -57,6 +57,7 @@ def make_cameras(scene):
     cam('CAM_LOW', (-1.9, -2.3, 0.22), (0.0, 0.0, 0.50), 40)
     cam('CAM_BACK', (-2.3, 2.6, 0.9), (0.0, 0.0, 0.50), 50)
     cam('CAM_FLOOR', (-1.3, -3.1, 2.7), (-0.25, -0.45, 0.0), 35)
+    cam('CAM_ENTRY', (0.62, -2.55, 1.02), (0.0, 0.10, 0.60), 40)      # down the lane, wings facing the lens
     return cams
 
 
@@ -104,8 +105,10 @@ def main():
     if a.save:
         bpy.ops.wm.save_as_mainfile(filepath=a.save if os.path.isabs(a.save) else os.path.join(ROOT, a.save))
     t1 = time.time()
+    c0 = time.process_time()
     dt = gg.render_still(sc, out)
-    print(f'[test] setup {t1 - t0:.1f}s render {dt:.1f}s  spp {sc.cycles.samples} threads {sc.render.threads} '
+    cpu = time.process_time() - c0          # CPU seconds over all threads: independent of how busy the shared box is
+    print(f'[test] setup {t1 - t0:.1f}s render {dt:.1f}s cpu {cpu:.1f}s  spp {sc.cycles.samples} threads {sc.render.threads} '
           f'{sc.render.resolution_x * sc.render.resolution_percentage // 100}x{sc.render.resolution_y * sc.render.resolution_percentage // 100} -> {out}')
 
 

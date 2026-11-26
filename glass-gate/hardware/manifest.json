@@ -116,6 +116,7 @@
   "GLASS_BODY",
   "GLASS_LENS",
   "GLASS_WING",
+  "LED_DIFFUSER",
   "LED_IR",
   "LED_STATUS",
   "LED_STRIP",
@@ -138,14 +139,24 @@
   "objects": [
    "LED_accent_entry_L",
    "LED_accent_entry_R",
+   "LED_accent_entry_diffuser_L",
+   "LED_accent_entry_diffuser_R",
    "LED_accent_exit_L",
    "LED_accent_exit_R",
+   "LED_accent_exit_diffuser_L",
+   "LED_accent_exit_diffuser_R",
    "LED_colring_L",
    "LED_colring_R",
+   "LED_colring_diffuser_L",
+   "LED_colring_diffuser_R",
    "RAIL_led_L",
    "RAIL_led_R",
+   "RAIL_led_diffuser_L",
+   "RAIL_led_diffuser_R",
    "WING_edgeled_L",
-   "WING_edgeled_R"
+   "WING_edgeled_R",
+   "WING_edgeled_diffuser_L",
+   "WING_edgeled_diffuser_R"
   ],
   "ranges": {
    "RAIL_led": [
@@ -168,7 +179,37 @@
     0.92,
     1.0
    ]
-  }
+  },
+  "diffusers": [
+   "LED_accent_entry_diffuser_L",
+   "LED_accent_entry_diffuser_R",
+   "LED_accent_exit_diffuser_L",
+   "LED_accent_exit_diffuser_R",
+   "LED_colring_diffuser_L",
+   "LED_colring_diffuser_R",
+   "RAIL_led_diffuser_L",
+   "RAIL_led_diffuser_R",
+   "WING_edgeled_diffuser_L",
+   "WING_edgeled_diffuser_R"
+  ],
+  "note": "every LED part has a child <name>_diffuser_<s> (material LED_DIFFUSER) carrying the same wave_u as the chips under it"
+ },
+ "grow_t": {
+  "attribute": "grow_t",
+  "domain": "POINT",
+  "objects": [
+   "ELE_cable_0_L",
+   "ELE_cable_0_R",
+   "ELE_cable_1_L",
+   "ELE_cable_1_R",
+   "ELE_cable_2_L",
+   "ELE_cable_2_R",
+   "ELE_cable_3_L",
+   "ELE_cable_3_R",
+   "RAIL_harness_L",
+   "RAIL_harness_R"
+  ],
+  "note": "0..1 along each cable from its first end to its last (plugs carry the value of their end). Optional: lets a cable be \"laid\" along its path (hide where grow_t > x) instead of dropping it in; cables 0 and 1 run under the column in the base channel."
  },
  "uv": {
   "SCREEN_LCD": "RAIL_lcd_<s>: 0..1 over the screen, v towards +Y (away from the user), u to the user's right",
@@ -176,7 +217,26 @@
   "BADGE": "RAIL_badge_<s>: 0..1 over the front face, v up, u to the right when seen from the lane",
   "PCB_GREEN": "ELE_pcb_<s> (and the small rail PCBs): 0..1 over the board"
  },
- "triangles": 792720,
+ "triangles": 868196,
+ "props": [
+  {
+   "name": "PROP_card",
+   "children": [
+    "PROP_card_inlay"
+   ],
+   "rest_location": [
+    -0.38,
+    -0.612,
+    1.0021
+   ],
+   "size": [
+    0.054,
+    0.0856,
+    0.0012
+   ],
+   "note": "lies flat, long side along Y, centred over the card-tap icon of the L rail, 1.5 mm above the lid; hidden or animated by the director"
+  }
+ ],
  "parts": [
   {
    "name": "BASE_foot_0_L",
@@ -446,7 +506,7 @@
     0.0,
     0.017
    ],
-   "triangles": 3372
+   "triangles": 4028
   },
   {
    "name": "BASE_rail_R",
@@ -476,7 +536,7 @@
     0.0,
     0.017
    ],
-   "triangles": 3372
+   "triangles": 4028
   },
   {
    "name": "BASE_anchor_0_L",
@@ -1220,13 +1280,13 @@
    "screw": false,
    "children": [],
    "bbox_min": [
-    -0.398,
-    -0.018,
+    -0.38998,
+    -0.00999,
     0.2413
    ],
    "bbox_max": [
-    -0.362,
-    0.0187,
+    -0.37004,
+    0.00999,
     0.9316
    ],
    "origin": [
@@ -1234,7 +1294,7 @@
     0.0,
     0.59
    ],
-   "triangles": 3068,
+   "triangles": 2012,
    "parent": "DRV_out_L"
   },
   {
@@ -1251,13 +1311,13 @@
    "screw": false,
    "children": [],
    "bbox_min": [
-    0.362,
-    -0.018,
+    0.37004,
+    -0.00999,
     0.2413
    ],
    "bbox_max": [
-    0.398,
-    0.0187,
+    0.38998,
+    0.00999,
     0.9316
    ],
    "origin": [
@@ -1265,7 +1325,7 @@
     0.0,
     0.59
    ],
-   "triangles": 3068,
+   "triangles": 2012,
    "parent": "DRV_out_R"
   },
   {
@@ -1283,20 +1343,20 @@
    "children": [],
    "bbox_min": [
     -0.42123,
-    -0.01791,
+    -0.018,
     0.2641
    ],
    "bbox_max": [
-    -0.36252,
-    0.01748,
-    0.3194
+    -0.362,
+    0.018,
+    0.3306
    ],
    "origin": [
     -0.38,
     0.0,
     0.292
    ],
-   "triangles": 7700
+   "triangles": 9108
   },
   {
    "name": "DRV_spring_R",
@@ -1312,21 +1372,21 @@
    "screw": false,
    "children": [],
    "bbox_min": [
-    0.36252,
-    -0.01791,
+    0.362,
+    -0.018,
     0.2641
    ],
    "bbox_max": [
     0.42123,
-    0.01748,
-    0.3194
+    0.018,
+    0.3306
    ],
    "origin": [
     0.38,
     0.0,
     0.292
    ],
-   "triangles": 7700
+   "triangles": 9108
   },
   {
    "name": "DRV_encdisc_L",
@@ -1344,19 +1404,19 @@
    "bbox_min": [
     -0.415,
     -0.035,
-    0.3436
+    0.34
    ],
    "bbox_max": [
     -0.345,
     0.035,
-    0.3564
+    0.36
    ],
    "origin": [
     -0.38,
     0.0,
     0.35
    ],
-   "triangles": 3740,
+   "triangles": 3864,
    "parent": "DRV_out_L"
   },
   {
@@ -1405,19 +1465,19 @@
    "bbox_min": [
     0.345,
     -0.035,
-    0.3436
+    0.34
    ],
    "bbox_max": [
     0.415,
     0.035,
-    0.3564
+    0.36
    ],
    "origin": [
     0.38,
     0.0,
     0.35
    ],
-   "triangles": 3740,
+   "triangles": 3864,
    "parent": "DRV_out_R"
   },
   {
@@ -1478,7 +1538,7 @@
     0.0,
     0.39
    ],
-   "triangles": 9980
+   "triangles": 11260
   },
   {
    "name": "DRV_cage_R",
@@ -1508,7 +1568,7 @@
     0.0,
     0.39
    ],
-   "triangles": 9980
+   "triangles": 11260
   },
   {
    "name": "GLS_column_L",
@@ -1598,7 +1658,7 @@
     0.0,
     0.658
    ],
-   "triangles": 8184,
+   "triangles": 10360,
    "parent": "WING_L"
   },
   {
@@ -1629,7 +1689,7 @@
     0.0,
     0.658
    ],
-   "triangles": 8184,
+   "triangles": 10360,
    "parent": "WING_R"
   },
   {
@@ -1955,14 +2015,14 @@
    "bbox_max": [
     -0.3522,
     0.60273,
-    0.1639
+    0.1585
    ],
    "origin": [
     -0.3925,
     0.0,
     0.0206
    ],
-   "triangles": 5816
+   "triangles": 5792
   },
   {
    "name": "ELE_cable_1_L",
@@ -1985,7 +2045,7 @@
    "bbox_max": [
     -0.3522,
     0.59073,
-    0.1639
+    0.1585
    ],
    "origin": [
     -0.399,
@@ -2013,16 +2073,16 @@
     0.0183
    ],
    "bbox_max": [
-    -0.375,
+    -0.3814,
     -0.103,
-    0.1639
+    0.1585
    ],
    "origin": [
     -0.4055,
     -0.33,
     0.0206
    ],
-   "triangles": 2812
+   "triangles": 2764
   },
   {
    "name": "ELE_cable_3_L",
@@ -2075,14 +2135,14 @@
    "bbox_max": [
     0.3946,
     0.60273,
-    0.1639
+    0.1585
    ],
    "origin": [
     0.3925,
     0.0,
     0.0206
    ],
-   "triangles": 5816
+   "triangles": 5792
   },
   {
    "name": "ELE_cable_1_R",
@@ -2105,7 +2165,7 @@
    "bbox_max": [
     0.4011,
     0.59073,
-    0.1639
+    0.1585
    ],
    "origin": [
     0.399,
@@ -2128,21 +2188,21 @@
    "screw": false,
    "children": [],
    "bbox_min": [
-    0.375,
+    0.3814,
     -0.6302,
     0.0183
    ],
    "bbox_max": [
     0.4086,
     -0.103,
-    0.1639
+    0.1585
    ],
    "origin": [
     0.4055,
     -0.33,
     0.0206
    ],
-   "triangles": 2812
+   "triangles": 2764
   },
   {
    "name": "ELE_cable_3_R",
@@ -2202,7 +2262,7 @@
     -0.62,
     0.48175
    ],
-   "triangles": 4608
+   "triangles": 6144
   },
   {
    "name": "GLS_post_exit_L",
@@ -2232,7 +2292,7 @@
     0.62,
     0.48175
    ],
-   "triangles": 4608
+   "triangles": 6144
   },
   {
    "name": "GLS_post_entry_R",
@@ -2262,7 +2322,7 @@
     -0.62,
     0.48175
    ],
-   "triangles": 4608
+   "triangles": 6144
   },
   {
    "name": "GLS_post_exit_R",
@@ -2292,7 +2352,7 @@
     0.62,
     0.48175
    ],
-   "triangles": 4608
+   "triangles": 6144
   },
   {
    "name": "GLS_clips_entry_L",
@@ -2546,14 +2606,16 @@
     1.0
    ],
    "screw": false,
-   "children": [],
+   "children": [
+    "LED_accent_entry_diffuser_L"
+   ],
    "bbox_min": [
     -0.336,
     -0.58,
     0.0305
    ],
    "bbox_max": [
-    -0.3194,
+    -0.3185,
     -0.564,
     0.266
    ],
@@ -2562,7 +2624,7 @@
     -0.572,
     0.15
    ],
-   "triangles": 816
+   "triangles": 2760
   },
   {
    "name": "LED_accent_exit_L",
@@ -2576,14 +2638,16 @@
     1.0
    ],
    "screw": false,
-   "children": [],
+   "children": [
+    "LED_accent_exit_diffuser_L"
+   ],
    "bbox_min": [
     -0.336,
     0.564,
     0.0305
    ],
    "bbox_max": [
-    -0.3194,
+    -0.3185,
     0.58,
     0.266
    ],
@@ -2592,7 +2656,7 @@
     0.572,
     0.15
    ],
-   "triangles": 816
+   "triangles": 2760
   },
   {
    "name": "LED_accent_entry_R",
@@ -2606,9 +2670,11 @@
     1.0
    ],
    "screw": false,
-   "children": [],
+   "children": [
+    "LED_accent_entry_diffuser_R"
+   ],
    "bbox_min": [
-    0.3194,
+    0.3185,
     -0.58,
     0.0305
    ],
@@ -2622,7 +2688,7 @@
     -0.572,
     0.15
    ],
-   "triangles": 816
+   "triangles": 2760
   },
   {
    "name": "LED_accent_exit_R",
@@ -2636,9 +2702,11 @@
     1.0
    ],
    "screw": false,
-   "children": [],
+   "children": [
+    "LED_accent_exit_diffuser_R"
+   ],
    "bbox_min": [
-    0.3194,
+    0.3185,
     0.564,
     0.0305
    ],
@@ -2652,7 +2720,7 @@
     0.572,
     0.15
    ],
-   "triangles": 816
+   "triangles": 2760
   },
   {
    "name": "LED_colring_L",
@@ -2666,15 +2734,17 @@
     1.0
    ],
    "screw": false,
-   "children": [],
+   "children": [
+    "LED_colring_diffuser_L"
+   ],
    "bbox_min": [
-    -0.43902,
-    -0.05902,
+    -0.441,
+    -0.061,
     0.9216
    ],
    "bbox_max": [
-    -0.32098,
-    0.05902,
+    -0.319,
+    0.061,
     0.9324
    ],
    "origin": [
@@ -2682,7 +2752,7 @@
     0.0,
     0.927
    ],
-   "triangles": 11996
+   "triangles": 16292
   },
   {
    "name": "LED_colring_R",
@@ -2696,15 +2766,17 @@
     1.0
    ],
    "screw": false,
-   "children": [],
+   "children": [
+    "LED_colring_diffuser_R"
+   ],
    "bbox_min": [
-    0.32098,
-    -0.05902,
+    0.319,
+    -0.061,
     0.9216
    ],
    "bbox_max": [
-    0.43902,
-    0.05902,
+    0.441,
+    0.061,
     0.9324
    ],
    "origin": [
@@ -2712,7 +2784,7 @@
     0.0,
     0.927
    ],
-   "triangles": 11996
+   "triangles": 16292
   },
   {
    "name": "RAIL_spine_L",
@@ -2728,13 +2800,13 @@
    "screw": false,
    "children": [],
    "bbox_min": [
-    -0.4476,
-    -0.6976,
+    -0.44445,
+    -0.69445,
     0.9334
    ],
    "bbox_max": [
-    -0.3124,
-    0.6976,
+    -0.31555,
+    0.69445,
     0.9916
    ],
    "origin": [
@@ -2758,13 +2830,13 @@
    "screw": false,
    "children": [],
    "bbox_min": [
-    0.3124,
-    -0.6976,
+    0.31555,
+    -0.69445,
     0.9334
    ],
    "bbox_max": [
-    0.4476,
-    0.6976,
+    0.44445,
+    0.69445,
     0.9916
    ],
    "origin": [
@@ -2786,23 +2858,25 @@
     1.0
    ],
    "screw": false,
-   "children": [],
+   "children": [
+    "RAIL_led_diffuser_L"
+   ],
    "bbox_min": [
-    -0.4489,
-    -0.6989,
-    0.934
+    -0.45,
+    -0.7,
+    0.9337
    ],
    "bbox_max": [
-    -0.3111,
-    0.6989,
-    0.9396
+    -0.31,
+    0.7,
+    0.9399
    ],
    "origin": [
     -0.38,
     0.0,
     0.9368
    ],
-   "triangles": 37584
+   "triangles": 52968
   },
   {
    "name": "RAIL_led_R",
@@ -2816,23 +2890,25 @@
     1.0
    ],
    "screw": false,
-   "children": [],
+   "children": [
+    "RAIL_led_diffuser_R"
+   ],
    "bbox_min": [
-    0.3111,
-    -0.6989,
-    0.934
+    0.31,
+    -0.7,
+    0.9337
    ],
    "bbox_max": [
-    0.4489,
-    0.6989,
-    0.9396
+    0.45,
+    0.7,
+    0.9399
    ],
    "origin": [
     0.38,
     0.0,
     0.9368
    ],
-   "triangles": 37584
+   "triangles": 52968
   },
   {
    "name": "RAIL_rfid_L",
@@ -2982,7 +3058,7 @@
     -0.395,
     0.986
    ],
-   "triangles": 2476
+   "triangles": 2604
   },
   {
    "name": "RAIL_lcd_R",
@@ -3012,7 +3088,7 @@
     -0.395,
     0.986
    ],
-   "triangles": 2476
+   "triangles": 2604
   },
   {
    "name": "RAIL_speaker_L",
@@ -3075,6 +3151,66 @@
    "triangles": 3988
   },
   {
+   "name": "RAIL_harness_L",
+   "side": "L",
+   "wave": 5,
+   "order": 8,
+   "kind": "cable",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.4414,
+    -0.64475,
+    0.933
+   ],
+   "bbox_max": [
+    -0.36475,
+    -0.40825,
+    0.98565
+   ],
+   "origin": [
+    -0.425,
+    -0.5,
+    0.93775
+   ],
+   "triangles": 2580
+  },
+  {
+   "name": "RAIL_harness_R",
+   "side": "R",
+   "wave": 5,
+   "order": 8,
+   "kind": "cable",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.36475,
+    -0.64475,
+    0.933
+   ],
+   "bbox_max": [
+    0.4414,
+    -0.40825,
+    0.98565
+   ],
+   "origin": [
+    0.425,
+    -0.5,
+    0.93775
+   ],
+   "triangles": 2580
+  },
+  {
    "name": "RAIL_lid_L",
    "side": "L",
    "wave": 5,
@@ -3102,7 +3238,7 @@
     0.0,
     0.97
    ],
-   "triangles": 6044
+   "triangles": 7236
   },
   {
    "name": "RAIL_lid_R",
@@ -3132,7 +3268,7 @@
     0.0,
     0.97
    ],
-   "triangles": 6044
+   "triangles": 7236
   },
   {
    "name": "RAIL_screw_0_L",
@@ -3522,7 +3658,7 @@
     -0.28,
     1.01456
    ],
-   "triangles": 4116
+   "triangles": 4416
   },
   {
    "name": "RAIL_campod_R",
@@ -3552,7 +3688,7 @@
     -0.28,
     1.01456
    ],
-   "triangles": 4116
+   "triangles": 4416
   },
   {
    "name": "RAIL_badge_L",
@@ -3750,15 +3886,17 @@
     0.0
    ],
    "screw": false,
-   "children": [],
+   "children": [
+    "WING_edgeled_diffuser_L"
+   ],
    "bbox_min": [
     -0.3174,
-    -0.0032,
+    -0.005,
     0.551
    ],
    "bbox_max": [
-    -0.3124,
-    0.0032,
+    -0.31095,
+    0.005,
     0.809
    ],
    "origin": [
@@ -3766,7 +3904,7 @@
     0.0,
     0.68
    ],
-   "triangles": 3256,
+   "triangles": 4244,
    "parent": "WING_L"
   },
   {
@@ -3781,15 +3919,17 @@
     0.0
    ],
    "screw": false,
-   "children": [],
+   "children": [
+    "WING_edgeled_diffuser_R"
+   ],
    "bbox_min": [
-    0.3124,
-    -0.0032,
+    0.31095,
+    -0.005,
     0.551
    ],
    "bbox_max": [
     0.3174,
-    0.0032,
+    0.005,
     0.809
    ],
    "origin": [
@@ -3797,7 +3937,7 @@
     0.0,
     0.68
    ],
-   "triangles": 3256,
+   "triangles": 4244,
    "parent": "WING_R"
   },
   {

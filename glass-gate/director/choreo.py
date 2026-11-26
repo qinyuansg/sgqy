@@ -12,7 +12,7 @@ from mathutils import Vector
 import anim_lib as al
 from anim_lib import Shot, smooth, smoother, ease_in, ease_out, clamp01
 
-VERSION = 5
+VERSION = 8
 DURATION = 26.0
 HOOK_END = 1.6
 SCATTER_T0 = 1.12
@@ -69,6 +69,16 @@ def lane(side):
     return (1.0, 0.0, 0.0) if side == 'L' else (-1.0, 0.0, 0.0)
 
 
+def front(side, lane_w=0.1, up=0.1):
+    """From the entry side (toward the camera), leaning a little toward the lane: never crosses the other pedestal."""
+    return (lane(side)[0] * lane_w, -1.0, up)
+
+
+def outside(side, up=0.12):
+    """From outside the pedestal, away from the lane."""
+    return (-lane(side)[0], 0.0, up)
+
+
 def R(base, tL, tR=None, **o):
     """A rule for both sides. tR None = together with L; a float = that time; 'off' = L time + offset given in o['r_off']."""
     return (base, tL, tL if tR is None else tR, o)
@@ -79,7 +89,11 @@ RULES = [
     # ---- wave 1: base (bar 2) ---------------------------------------------------------------------
     R('BASE_rail', 2.0, 2.5, dur=0.42, dist=0.9),
     R('BASE_foot_#', lambda i: 2.0, lambda i: 2.5, dur=0.42, dist=0.9, sfx=None, bounce=0.005, wobble=0.0, mode='none'),
-    R('BASE_anchor_#', lambda i: 3.0 + 0.125 * i, lambda i: 3.5 + 0.125 * (i // 2)),
+    R('BASE_anchor_#', lambda i: 3.0 + 0.125 * i),
+    # the base-channel cables go in before the drive unit sits on top of them
+    R('ELE_cable_0', 3.5, dur=0.28, dist=0.4, gain=0.55, group='harness', wobble=0.0),
+    R('ELE_cable_1', 3.5, dur=0.28, dist=0.4, sfx=None, group='harness', wobble=0.0),
+    R('ELE_cable_2', 3.5, dur=0.28, dist=0.4, sfx=None, group='harness', wobble=0.0),
     # ---- wave 2: drive unit, the macro hero (bars 3-4) --------------------------------------------
     R('DRV_motor', 4.0, dur=0.42, dist=0.75),
     R('DRV_brake', 4.5, dur=0.32, dist=0.4, twist=40.0),
@@ -87,11 +101,12 @@ RULES = [
     R('DRV_planet_#', lambda i: 5.25 + 0.25 * i, dur=0.28, dist=0.3, twist=60.0),
     R('DRV_sun', 6.0, dur=0.28, dist=0.3, twist=-60.0, gain=0.8, var=5),
     R('DRV_carrier', 6.125, dur=0.26, dist=0.32, sfx='clack', twist=40.0),
-    R('DRV_shaft', 6.5, dur=0.40, dist=0.95, sfx='click', gain=0.8, twist=90.0, wobble=0.15),
-    R('DRV_spring', 6.75, dur=0.30, dist=0.6, twist=-120.0),
-    R('DRV_encdisc', 6.875, dur=0.26, dist=0.5, sfx='click', twist=90.0, var=1),
-    R('DRV_encoder', 7.0, dur=0.24, dist=0.25, dirfn=lane, gain=0.6),
-    R('DRV_cage', 7.125, dur=0.28, dist=0.6, twist=40.0),
+    # spring and encoder disc sit on the shaft: the three arrive as one piece
+    R('DRV_shaft', 6.5, dur=0.40, dist=0.95, sfx='click', gain=0.8, twist=90.0, wobble=0.0, bounce=0.003, group='shaft'),
+    R('DRV_encdisc', 6.5, dur=0.40, dist=0.95, sfx=None, twist=90.0, wobble=0.0, bounce=0.003, group='shaft'),
+    R('DRV_spring', 6.5, dur=0.40, dist=0.95, twist=90.0, wobble=0.0, bounce=0.003, group='shaft', gain=0.5),
+    R('DRV_encoder', 6.75, dur=0.24, dist=0.3, dirfn=lambda s: (lane(s)[0] * 0.5, -0.5, 0.7), gain=0.6),
+    R('DRV_cage', 7.0, dur=0.28, dist=0.6, twist=40.0),
     R('GLS_column', 7.25, dur=0.46, dist=0.75, sfx=('glass_slide', 'glass_clink'), sfx_dur=0.4, k=1.9),
     R('WING_hub', 7.375, dur=0.28, dist=0.6, twist=60.0),
     R('WING_sleeve', 7.5, dur=0.44, dist=0.85, sfx=('glass_slide', 'glass_clink'), sfx_dur=0.38, k=1.9),
@@ -101,31 +116,31 @@ RULES = [
     R('LED_accent_entry', 8.625, 8.625, dur=0.26, dist=0.25, dirfn=lane),
     R('ELE_cable_3', 8.625, 8.625, dur=0.26, dist=0.3, sfx=None),
     R('ELE_psu', 9.0, 9.125, dur=0.38, dist=0.7),
-    R('ELE_sensor_exit', 9.25, 9.25, dur=0.28, dist=0.3, dirfn=lane, sfx='snap'),
-    R('LED_accent_exit', 9.25, 9.25, dur=0.26, dist=0.25, dirfn=lane, sfx=None),
-    R('ELE_cable_#', lambda i: 9.375 + 0.125 * i, dur=0.26, dist=0.28),
+    R('ELE_sensor_exit', 9.25, 9.375, dur=0.28, dist=0.3, dirfn=lane, sfx='snap'),
+    R('LED_accent_exit', 9.5, 9.5, dur=0.26, dist=0.25, dirfn=lane),
     # ---- wave 4: glass body (bar 6) ---------------------------------------------------------------
     R('GLS_post_entry', 10.0, 10.25, dur=0.5, dist=1.7, gain=1.0),
     R('GLS_post_exit', 10.5, 10.75, dur=0.5, dist=1.7, gain=0.9),
-    R('GLS_clips_entry', 11.0, 11.0, dur=0.24, dist=0.25),
-    R('GLS_clips_exit', 11.0, 11.0, dur=0.24, dist=0.25),
+    R('GLS_clips_entry', 10.875, 10.875, dur=0.2, dist=0.4, dirfn=outside),
+    R('GLS_clips_exit', 10.875, 10.875, dur=0.2, dist=0.4, dirfn=outside),
     R('GLS_panel_entry', 11.125, 11.25, dur=0.42, dist=1.6, sfx=('glass_slide', 'glass_clink'), sfx_dur=0.3, k=1.9),
     R('GLS_panel_exit', 11.375, 11.5, dur=0.42, dist=1.6, sfx=('glass_slide', 'glass_clink'), sfx_dur=0.3, k=1.9),
     # ---- wave 5: top rail (bar 7) -----------------------------------------------------------------
-    R('LED_colring', 12.0, 12.125, dur=0.24, dist=0.3, sfx=None),
-    R('RAIL_spine', 12.0, 12.125, dur=0.36, dist=0.6),
+    R('LED_colring', 12.0, 12.125, dur=0.36, dist=0.6, sfx=None, group='spine', wobble=0.35, bounce=0.005),
+    R('RAIL_spine', 12.0, 12.125, dur=0.36, dist=0.6, group='spine'),
     R('RAIL_led', 12.25, 12.25, dur=0.26, dist=0.3),
+    R('RAIL_harness', 12.375, dur=0.24, dist=0.3, sfx='click', gain=0.45),
     R('RAIL_rfid', 12.5, dur=0.24, dist=0.3, sfx='tap'),
     R('RAIL_qr', 12.625, dur=0.24, dist=0.3),
     R('RAIL_lcd', 12.75, dur=0.26, dist=0.32, sfx='clack'),
     R('RAIL_speaker', 12.875, dur=0.22, dist=0.28, sfx='click'),
     R('RAIL_lid', 13.0, 13.125, dur=0.42, dist=0.7, gain=1.0),
-    R('RAIL_campod', 13.25, dur=0.26, dist=0.3, sfx='click'),
+    R('RAIL_campod', 13.25, 13.375, dur=0.26, dist=0.3, sfx='click'),
     R('RAIL_screw_#', lambda i: 13.375 + 0.125 * (i // 2)),
     # ---- wave 6: wings (bar 8) --------------------------------------------------------------------
-    R('WING_clamp_a', 14.0, dur=0.24, dist=0.3, dirfn=lane),
-    R('WING_clamp_b', 14.125, dur=0.24, dist=0.3, dirfn=lane),
-    R('WING_edgeled', 14.25, dur=0.22, dist=0.25, dirfn=lane),
+    R('WING_clamp_a', 14.0, dur=0.24, dist=0.4, dirfn=front),
+    R('WING_clamp_b', 14.125, dur=0.24, dist=0.4, dirfn=front),
+    R('WING_edgeled', 14.25, dur=0.22, dist=0.4, dirfn=front),
     R('WING_leaf', 14.5, 14.75, dur=0.5, dist=1.3, dir=(0, 0, 1), sidefn=lambda s: tuple(0.004 * c for c in lane(s))),
     R('RAIL_badge', 15.25, dur=0.3, dist=0.3, dirfn=lane, sfx='tap', gain=0.85, wobble=0.0, bounce=0.0015),
 ]
@@ -180,12 +195,19 @@ def schedule(parts, man):
 
 
 # ---------------------------------------------------------------- hook (exploded hover)
-LIFT = {1: 0.0, 2: 0.08, 3: 0.10, 4: 0.46, 5: 0.56, 6: 0.10}
-EXPLODE = {   # per-part overrides: extra world offset on top of the wave formula
-    'BASE_anchor': (0, 0, 0.10), 'BASE_foot': (0, 0, 0.0),
-    'GLS_column': (0, 0, 0.50), 'WING_sleeve': (0, 0, 0.52), 'WING_hub': (0, 0, 0.34),
-    'DRV_shaft': (0, 0, 0.30), 'DRV_cage': (0, 0, 0.10),
-    'RAIL_lid': (0, 0, 0.12), 'RAIL_campod': (0, 0, 0.16), 'RAIL_screw': (0, 0, 0.18), 'RAIL_badge': (0, 0, 0.0),
+LIFT = {1: 0.0, 2: 0.06, 3: 0.12, 4: 0.50, 5: 0.74, 6: 0.06}
+EXPLODE = {   # per-part offsets (x toward the lane centre, y, z) that replace the wave formula
+    'BASE_rail': (0, 0, 0.0), 'BASE_foot': (0, 0, 0.0), 'BASE_anchor': (0, 0, 0.07),
+    'ELE_cable_0': (0, 0, 0.05), 'ELE_cable_1': (0, 0, 0.05), 'ELE_cable_2': (0, 0, 0.05), 'ELE_cable_3': (0, 0, 0.14),
+    'DRV_motor': (0, 0, 0.09), 'DRV_brake': (0, 0, 0.19), 'DRV_ring': (0, 0, 0.27), 'DRV_planet': (0, 0, 0.36), 'DRV_sun': (0, 0, 0.41),
+    'DRV_carrier': (0, 0, 0.47), 'DRV_spring': (0, 0, 0.74), 'DRV_encdisc': (0, 0, 0.74), 'DRV_encoder': (0.07, 0, 0.60), 'DRV_cage': (0, 0, 0.56),
+    'DRV_shaft': (0, 0, 0.74), 'GLS_column': (0, 0, 0.60), 'WING_hub': (0, 0, 0.74), 'WING_sleeve': (0, 0, 0.74),
+    'ELE_pcb': (0, 0, 0.14), 'ELE_psu': (0, 0, 0.14), 'ELE_sensor': (0.10, 0, 0.10), 'LED_accent': (0.10, 0, 0.16),
+    'GLS_post': (0, 0, 0.60), 'GLS_clips': (0, 0, 0.10), 'GLS_panel': (-0.20, 0, 0.42),
+    'LED_colring': (0, 0, 1.06), 'RAIL_spine': (0, 0, 0.84), 'RAIL_led': (0, 0, 0.78), 'RAIL_harness': (0, 0, 0.90),
+    'RAIL_rfid': (0, 0, 0.96), 'RAIL_qr': (0, 0, 1.00), 'RAIL_lcd': (0, 0, 0.96), 'RAIL_speaker': (0, 0, 1.00),
+    'RAIL_lid': (0, 0, 1.16), 'RAIL_campod': (0, 0, 1.25), 'RAIL_screw': (0, 0, 1.30), 'RAIL_badge': (0.10, 0, 1.16),
+    'WING_clamp': (0, -0.26, 0.10), 'WING_edgeled': (0, -0.34, 0.10), 'WING_leaf': (0, -0.46, 0.10),
 }
 
 
@@ -194,19 +216,26 @@ def explode_offset(part, man):
     w, o = i.get('wave', 3), i.get('order', 0)
     side = -1.0 if i.get('side') == 'L' else 1.0 if i.get('side') == 'R' else 0.0
     c = part.center
-    z = LIFT.get(w, 0.3) + 0.018 * o + 0.18 * c.z
-    y = c.y * 0.20
-    x = side * 0.035 * (w - 1)
-    if w == 1:
-        z = 0.0
-    if w == 6:
-        y -= 0.40; x = -side * 0.06
-    if part.name.startswith('GLS_panel'):
-        x += side * 0.22
-    for k, v in EXPLODE.items():
+    for k in sorted(EXPLODE, key=len, reverse=True):
         if part.name.startswith(k):
-            x += v[0]; y += v[1]; z += v[2]
-    return (x, y, z)
+            v = EXPLODE[k]
+            spread = 0.0 if k.startswith(('BASE_', 'ELE_cable_0', 'ELE_cable_1', 'ELE_cable_2')) else 0.10
+            return (-side * v[0], v[1] + c.y * spread, v[2])
+    return (0.0, c.y * 0.10, LIFT.get(w, 0.3) + 0.02 * o)
+
+
+HOVER_GROUPS = ('ELE_cable_0', 'ELE_cable_1', 'ELE_cable_2'), ('DRV_shaft', 'DRV_encdisc', 'DRV_spring', 'WING_hub', 'WING_sleeve'), ('WING_clamp', 'WING_edgeled', 'WING_leaf')
+
+
+def hover_key(part):
+    """Parts that share a key bob together (they touch or nest); None = sits on the floor, no bob."""
+    if part.name.startswith('BASE_rail') or part.name.startswith('BASE_foot'):
+        return None
+    side = part.info.get('side', 'C')
+    for i, g in enumerate(HOVER_GROUPS):
+        if any(part.name.startswith(k) for k in g):
+            return f'g{i}{side}'
+    return part.name
 
 
 def hook_spin(part):
@@ -295,6 +324,39 @@ def studio_dim(sc):
 
 
 def access_card(sc, parts, man):
+    """A clear access card comes in from the upper left, taps the reader at T_TAP and lifts away."""
+    import bpy
+    from mathutils import Quaternion
+    props = {p['name']: p for p in man.get('props', [])}
+    ob = bpy.data.objects.get('PROP_card')
+    if ob is None or 'PROP_card' not in props:
+        print('[choreo] no PROP_card in the gate: the card tap is sound only')
+        return []
+    F = al.F
+    rest = Vector(props['PROP_card']['rest_location'])
+    ob.rotation_mode = 'QUATERNION'
+    q0 = ob.rotation_quaternion.copy()
+    fam = [ob] + list(ob.children_recursive)
+    def vis(f, v):
+        for m in fam:
+            m.hide_render = not v; m.hide_viewport = not v
+            m.keyframe_insert('hide_render', frame=f); m.keyframe_insert('hide_viewport', frame=f)
+    vis(0, False); vis(F(T_CARD_IN), True); vis(F(T_TAP + 0.62), False)
+    src = Vector((-0.30, -0.34, 0.26))          # where it comes from, relative to the rest pose
+    for f in range(F(T_CARD_IN), F(T_TAP + 0.62) + 1):
+        t = f / al.FPS
+        if t <= T_TAP:
+            a = al.approach((t - T_CARD_IN) / (T_TAP - T_CARD_IN), 2.0)
+            off = src * a; tilt = math.radians(26) * a
+        elif t <= T_TAP + 0.14:
+            off = Vector((0, 0, al.rebound(t - T_TAP, 0.003, 9.0, 0.04))); tilt = 0.0
+        else:
+            u = ease_in((t - T_TAP - 0.14) / 0.48, 2.0)
+            off = Vector((-0.34, -0.30, 0.30)) * u; tilt = math.radians(-22) * u
+        ob.location = rest + off
+        ob.rotation_quaternion = q0 @ Quaternion((0.6, 1.0, 0.0), tilt)
+        ob.keyframe_insert('location', frame=f); ob.keyframe_insert('rotation_quaternion', frame=f)
+    al.set_linear(ob)
     return []
 
 
@@ -319,17 +381,31 @@ def fixed_events():
 
 
 def key_alive(sc, alive):
+    """The alive moment and the house lights. See look/alive.py for what each value does."""
     K = alive.key_alive
-    K(sc, 0, power=0.0, wave=-0.1, grant=0.0, screens=0.0, ir=0.0)
-    K(sc, al.F(DROP_T) - 1, power=0.0, wave=-0.1)
-    K(sc, al.F(DROP_T), power=1.0, wave=-0.05)
-    K(sc, al.F(DROP_T + 2.4), wave=1.1)
-    K(sc, al.F(17.9), screens=0.0, ir=0.0)
-    K(sc, al.F(18.6), screens=1.0, ir=1.0)
-    K(sc, al.F(T_GREEN - 0.1), grant=0.0)
-    K(sc, al.F(T_GREEN + 0.4), grant=1.0)
-    K(sc, al.F(T_CLOSE1 - 0.1), grant=1.0)
-    K(sc, al.F(T_CLOSE1 + 0.35), grant=0.0)
+    F = al.F
+    K(sc, 0, power=0.0, wave=-0.1, grant=0.0, screens=0.0, ir=0.0, house=1.0)
+    # the room holds its breath before the drop, then goes dark on it so the gate's own light carries the frame
+    K(sc, F(15.3), house=1.0)
+    K(sc, F(DROP_T) - 1, power=0.0, wave=-0.1, house=0.5)
+    K(sc, F(DROP_T), power=1.0, wave=-0.06, house=HOUSE_DROP)
+    K(sc, F(DROP_T + 2.4), wave=1.1)
+    K(sc, F(18.0), house=HOUSE_DROP)
+    K(sc, F(18.0) + 1, house=HOUSE_ALIVE)
+    K(sc, F(17.95), screens=0.0, ir=0.0)
+    K(sc, F(18.65), screens=1.0, ir=1.0)
+    # access granted: a green wave runs over the idle gate (grant 1 / wave -0.1 looks the same as grant 0 / wave 1.1)
+    K(sc, F(T_GREEN) - 1, grant=0.0, wave=1.1)
+    K(sc, F(T_GREEN), grant=1.0, wave=-0.1)
+    K(sc, F(T_GREEN + 0.5), wave=1.1)
+    # wings shut: back to idle
+    K(sc, F(T_CLOSE1 - 0.1), grant=1.0)
+    K(sc, F(T_CLOSE1 + 0.35), grant=0.0)
+    K(sc, F(T_HERO) - 1, house=HOUSE_ALIVE)
+    K(sc, F(T_HERO), house=HOUSE_HERO)
+
+
+HOUSE_DROP, HOUSE_ALIVE, HOUSE_HERO = 0.12, 0.30, 0.42
 
 
 # ---------------------------------------------------------------- shots
@@ -351,19 +427,19 @@ def hook_ramp(u):               # glide for 64 % of the shot, then rush toward t
 
 def shots(parts, man):
     S = []
-    # 1 HOOK — exploded gate hovering; ends rushing down to where the base will land
+    # 1 HOOK — the whole gate exploded and hovering, like a diagram; ends rushing down to where the base will land
     S.append(Shot('01_hook', 0.0, CUT['base'],
-                  pos=[(-1.36, -1.72, 0.80), (-1.22, -1.58, 0.84), (-0.80, -1.30, 0.26)],
-                  target=[(-0.16, 0.0, 0.88), (-0.18, 0.0, 0.86), (XL, -0.45, 0.04)],
-                  focus=[(0.0, (XL, 0.0, 0.75)), (1.1, (XL, 0.0, 0.75)), (1.6, (XL, -0.6, 0.03))],
-                  lens=40, fstop=4.0, ramp=hook_ramp))
-    # 2 BASE — floor-level macro looking down the rail, rack focus L rail -> R rail -> anchors
+                  pos=[(-2.02, -2.40, 1.50), (-1.86, -2.22, 1.46), (-1.02, -1.30, 0.46)],
+                  target=[(-0.02, 0.0, 1.06), (-0.04, 0.0, 1.03), (-0.32, -0.20, 0.02)],
+                  focus=[(0.0, (XL, 0.0, 0.9)), (1.1, (XL, 0.0, 0.9)), (1.6, (XL, -0.3, 0.03))],
+                  lens=[(0.0, 50.0), (1.0, 50.0), (1.6, 40.0)], fstop=5.6, ramp=hook_ramp))
+    # 2 BASE — low 3/4 down the rails: L rail slams in, R rail behind it, anchors spin in, cables drop into the channel
     S.append(Shot('02_base', CUT['base'], CUT['gears'],
-                  pos=[(-0.60, -1.12, 0.115), (-0.54, -1.02, 0.095), (-0.50, -0.96, 0.09)],
-                  target=[(-0.33, -0.20, 0.035), (-0.31, -0.15, 0.035)],
-                  focus=[(1.6, (XL, -0.66, 0.03)), (2.30, (XL, -0.66, 0.03)), (2.52, (0.38, -0.6, 0.03)), (2.85, (0.38, -0.6, 0.03)),
-                         (3.0, (-0.35, -0.45, 0.03)), (3.375, (-0.35, 0.30, 0.03)), (3.5, (0.35, -0.45, 0.03)), (3.7, (0.35, 0.0, 0.03))],
-                  lens=35, fstop=2.8, ramp=fast_then_slow))
+                  pos=[(-1.02, -1.30, 0.46), (-0.96, -1.20, 0.40), (-0.92, -1.12, 0.36)],
+                  target=[(-0.32, -0.20, 0.02), (-0.30, -0.16, 0.02)],
+                  focus=[(1.6, (XL, -0.45, 0.03)), (2.30, (XL, -0.45, 0.03)), (2.52, (0.38, -0.3, 0.03)), (2.85, (0.38, -0.3, 0.03)),
+                         (3.0, (-0.35, -0.45, 0.03)), (3.375, (-0.35, 0.2, 0.03)), (3.5, (XL, -0.3, 0.03)), (3.8, (XL, -0.2, 0.03))],
+                  lens=40, fstop=2.8, ramp=fast_then_slow))
     # 3 GEARS — macro hero on the planetary gearbox
     S.append(Shot('03_gears', CUT['gears'], CUT['stack'],
                   pos=[(-0.70, -0.34, 0.37), (-0.63, -0.25, 0.43), (-0.60, -0.20, 0.46)],
@@ -413,12 +489,12 @@ def shots(parts, man):
                   target=[(-0.31, -0.17, 0.968), (-0.31, -0.17, 0.968)],
                   focus=[(15.0, (-0.31, -0.17, 0.968))],
                   lens=70, fstop=8.0, ramp=drift))
-    # 11 WAVE — the drop: chase the light along the rail
+    # 11 WAVE — the drop: at the head of the LED line as the light races away down the rail, then pull back to see both
     S.append(Shot('11_wave', CUT['wave'], CUT['alive'],
-                  pos=[(-0.78, -1.16, 1.10), (-0.92, -0.80, 1.12), (-1.05, -0.20, 1.08), (-1.10, 0.35, 1.02)],
-                  target=[(XL, -0.62, 0.95), (XL, -0.25, 0.93), (XL, 0.25, 0.90), (-0.30, 0.55, 0.80)],
-                  focus=[(16.0, (XL, -0.62, 0.95)), (18.0, (XL, 0.3, 0.93))],
-                  lens=40, fstop=3.5, ramp=fast_then_slow))
+                  pos=[(-0.56, -1.02, 1.00), (-0.60, -1.10, 1.02), (-0.86, -1.42, 1.12), (-1.02, -1.66, 1.18)],
+                  target=[(-0.45, 0.30, 0.93), (-0.42, 0.25, 0.92), (-0.10, 0.10, 0.82), (0.0, 0.0, 0.74)],
+                  focus=[(16.0, (-0.45, -0.60, 0.94)), (16.9, (-0.45, 0.0, 0.93)), (18.0, (XL, -0.2, 0.9))],
+                  lens=[(16.0, 34.0), (18.0, 38.0)], fstop=3.5, ramp=slow_then_fast))
     # 12 ALIVE — front hero, the wing displays wake up
     S.append(Shot('12_alive', CUT['alive'], CUT['card'],
                   pos=[(0.30, -2.05, 0.74), (0.12, -1.92, 0.70), (0.0, -1.84, 0.68)],

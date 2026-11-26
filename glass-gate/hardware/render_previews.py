@@ -2,7 +2,8 @@
 
     /opt/blender-env/venv/bin/python hardware/render_previews.py <shot> [<shot> ...]
 
-shots: clay exploded gearbox gearbox_open reader glass pcb motor post wing rail top
+shots: see SHOTS below (clay, exploded, hero, glass, glass2, glass_seam, gearbox, gearbox_open, gear_top, motor, drive,
+reader, reader_top, reader_macro, rfid, pcb, pcb_open, psu, seam, clamp, base, column_top, speaker, lcd_side, post_out ...)
 """
 import sys, os, json, math
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -33,7 +34,7 @@ def add_area(name, loc, tgt, size, power, color=(1, 1, 1)):
     return o
 
 
-def studio(sc, dark=True):
+def studio(sc, dark=True, k=0.5):
     w = bpy.data.worlds.new('W')
     sc.world = w
     w.use_nodes = True
@@ -52,7 +53,6 @@ def studio(sc, dark=True):
     me.materials.append(m)
     sc.collection.objects.link(fl)
     fl.location.z = -0.0005
-    k = 0.5
     add_area('key', (1.8, -2.2, 2.6), (0, 0, 0.5), (2.0, 2.0), 900 * k)
     add_area('rim', (-2.2, 2.0, 1.8), (0, 0, 0.6), (1.2, 2.4), 700 * k, (0.85, 0.9, 1.0))
     add_area('fill', (-2.0, -2.4, 1.0), (0, 0, 0.5), (2.5, 1.5), 250 * k)
@@ -85,6 +85,21 @@ def plain_glass(lit=False):
         nt.links.new(g.outputs[0], mx.inputs[1])
         nt.links.new(tr.outputs[0], mx.inputs[2])
         nt.links.new(mx.outputs[0], out.inputs[0])
+
+
+def emit_diffusers(strength=14.0, color=(0.30, 0.28, 1.0, 1)):
+    """Proof look for the light guides: plain emission on LED_DIFFUSER (and the chips)."""
+    for n in ('LED_DIFFUSER', 'LED_STRIP'):
+        m = bpy.data.materials.get(n)
+        if not m:
+            continue
+        nt = m.node_tree
+        nt.nodes.clear()
+        out = nt.nodes.new('ShaderNodeOutputMaterial')
+        e = nt.nodes.new('ShaderNodeEmission')
+        e.inputs['Color'].default_value = color
+        e.inputs['Strength'].default_value = strength
+        nt.links.new(e.outputs[0], out.inputs[0])
 
 
 def clay():
@@ -152,6 +167,16 @@ SHOTS = {
     'top': ((0.0, -0.6, 1.9), (-0.2, -0.3, 0.9), 50, dict(glass='lit')),
     'seam': ((-0.38 + 0.25, -0.95, 1.02), (-0.38, -0.66, 0.94), 70, dict(glass='lit')),
     'gear_top': ((-0.38 + 0.03, -0.045, 0.40), (-0.38, 0, 0.222), 70, dict(glass='lit', hide=('GLS_column', 'DRV_cage', 'DRV_spring', 'DRV_encoder', 'DRV_encdisc', 'DRV_shaft', 'WING_', 'DRV_carrier'))),
+    'reader_top': ((-0.38 + 0.05, -0.80, 1.52), (-0.38, -0.46, 1.0), 50, dict(glass='lit')),
+    'speaker': ((-0.38 + 0.2, -0.12, 1.12), (-0.38, -0.215, 0.97), 70, dict(glass='lit')),
+    'column_top': ((-0.38 + 0.3, -0.35, 1.08), (-0.38, 0, 0.93), 60, dict(glass='lit')),
+    'post_out': ((-0.38 - 0.55, -1.05, 0.55), (-0.38, -0.62, 0.33), 50, dict(glass='lit')),
+    'lcd_side': ((-0.38 + 0.34, -0.5, 0.99), (-0.38, -0.41, 0.965), 70, dict(glass='lit')),
+    'glass_seam': ((-0.38 + 0.25, -0.95, 1.02), (-0.38, -0.66, 0.94), 70, dict(glass=True)),
+    'led_entry': ((0.25, -3.25, 1.3), (0.0, 0.0, 0.52), 40, dict(glass='lit', emit=True, light=0.06)),
+    'led_close': ((-0.38 + 0.5, -1.05, 1.13), (-0.38, -0.33, 0.93), 50, dict(glass='lit', emit=True, light=0.06)),
+    'led_column': ((-0.38 + 0.42, -0.42, 1.06), (-0.38, 0.02, 0.9), 60, dict(glass='lit', emit=True, light=0.06)),
+    'card': ((-0.38 + 0.16, -0.80, 1.13), (-0.38, -0.61, 1.0), 70, dict(glass='lit')),
     'base': ((-0.38 + 0.5, -0.5, 0.3), (-0.38, -0.2, 0.02), 50, dict(glass='lit', hide=('GLS_',))),
 }
 
@@ -161,7 +186,9 @@ def render(shot):
     bpy.ops.wm.open_mainfile(filepath=os.path.join(HERE, 'gate.blend'))
     sc = bpy.context.scene
     gg_common.setup_cycles(sc, 'test')
-    studio(sc, opt.get('dark', True))
+    studio(sc, opt.get('dark', True), opt.get('light', 0.5))
+    if opt.get('emit'):
+        emit_diffusers()
     if opt.get('glass'):
         plain_glass(lit=opt.get('glass') == 'lit')
     if opt.get('clay'):

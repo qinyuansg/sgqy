@@ -16,7 +16,7 @@ import numpy as np
 from scipy.sparse import coo_matrix
 from scipy.sparse.csgraph import connected_components
 import gg_common
-import parts_base, parts_drive, parts_elec, parts_glass, parts_rail, parts_wing
+import parts_base, parts_drive, parts_elec, parts_glass, parts_rail, parts_wing, parts_props
 
 PX = 0.38                      # pedestal centre plane |x|
 SHARP_ANGLE = math.radians(35.0)
@@ -44,6 +44,7 @@ MATS = {
     'CABLE_YELLOW': ((0.85, 0.60, 0.04, 1), 0.0, 0.5, 0.0, 0.0),
     'CABLE_WHITE': ((0.80, 0.80, 0.78, 1), 0.0, 0.5, 0.0, 0.0),
     'LED_STRIP': ((0.35, 0.30, 1.00, 1), 0.0, 0.3, 0.0, 2.0),
+    'LED_DIFFUSER': ((0.82, 0.84, 0.98, 0.7), 0.0, 0.55, 0.6, 0.0),
     'LED_IR': ((1.00, 0.15, 0.35, 1), 0.0, 0.3, 0.0, 2.0),
     'LED_STATUS': ((0.10, 1.00, 0.30, 1), 0.0, 0.3, 0.0, 2.0),
     'SCREEN_LCD': ((0.03, 0.04, 0.07, 1), 0.0, 0.08, 0.0, 0.0),
@@ -192,6 +193,9 @@ def make_object(name, part, side, coll):
         at = me.attributes.new('wave_u', 'FLOAT', 'POINT')
         w = np.clip(np.asarray(part['wave_fn'](v_mm), np.float32), 0.0, 1.0)
         at.data.foreach_set('value', w)
+    if mb.t is not None:
+        at = me.attributes.new('grow_t', 'FLOAT', 'POINT')
+        at.data.foreach_set('value', np.clip(np.asarray(mb.t, np.float32), 0.0, 1.0))
     ob = bpy.data.objects.new(name, me)
     ob.location = ow
     coll.objects.link(ob)
@@ -204,7 +208,7 @@ def apply_weighted_normals(objs):
     for ob in objs:
         md = ob.modifiers.new('wn', 'WEIGHTED_NORMAL')
         md.keep_sharp = True
-        md.weight = 50
+        md.weight = 100
         md.mode = 'FACE_AREA'
     dg = bpy.context.evaluated_depsgraph_get()
     for ob in objs:
@@ -288,6 +292,23 @@ def build(save=True, sides=('L', 'R')):
                 pl = by_name[par]['ow'][s]
             ob.parent = po
             ob.location = p['ow'][s] - pl
+    # ---- props (not part of the gate, not mirrored): the access card over the LEFT reader
+    prop_info, prop_parts = [], []
+    if 'L' in sides:
+        pc = bpy.data.collections.new('PROPS')
+        sc.collection.children.link(pc)
+        pp, info = parts_props.card()
+        for p in pp:
+            mesh_objs.append(make_object(p['name'], p, 'L', pc))
+        root = pp[0]['obj']['L']
+        for p in pp[1:]:
+            p['obj']['L'].parent = root
+            p['obj']['L'].location = p['ow']['L'] - pp[0]['ow']['L']
+        prop_parts = pp
+        info['rest_location'] = [round(float(x), 5) for x in pp[0]['ow']['L']]
+        info['size'] = [round(x * 0.001, 5) for x in info.pop('size_mm')]
+        info['note'] = 'lies flat, long side along Y, centred over the card-tap icon of the L rail, 1.5 mm above the lid; hidden or animated by the director'
+        prop_info.append(info)
     apply_weighted_normals(mesh_objs)
     bpy.context.view_layer.update()
     t2 = time.time()
@@ -338,6 +359,8 @@ def build(save=True, sides=('L', 'R')):
             if p.get('parent'):
                 e['parent'] = '%s_%s' % (p['parent'], s)
             mparts.append(e)
+    for p in prop_parts:
+        total += tris(p['obj']['L'])
     mparts.sort(key=lambda e: (e['wave'], e['order'], e['side'], e['name']))
     STATS['tris'] = total
     used = sorted({m.name for ob in mesh_objs for m in ob.data.materials})
@@ -371,12 +394,19 @@ def build(save=True, sides=('L', 'R')):
         'wave_u': {'attribute': 'wave_u', 'domain': 'POINT',
                    'objects': sorted(ob.name for ob in mesh_objs if 'wave_u' in ob.data.attributes),
                    'ranges': {'RAIL_led': [0.02, 0.88], 'LED_accent_entry': [0.03, 0.06], 'LED_colring': [0.47, 0.47],
-                              'LED_accent_exit': [0.89, 0.92], 'WING_edgeled': [0.92, 1.0]}},
+                              'LED_accent_exit': [0.89, 0.92], 'WING_edgeled': [0.92, 1.0]},
+                   'diffusers': sorted(ob.name for ob in mesh_objs if ob.name.rsplit('_', 1)[0].endswith('_diffuser')),
+                   'note': 'every LED part has a child <name>_diffuser_<s> (material LED_DIFFUSER) carrying the same wave_u as the chips under it'},
+        'grow_t': {'attribute': 'grow_t', 'domain': 'POINT',
+                   'objects': sorted(ob.name for ob in mesh_objs if 'grow_t' in ob.data.attributes),
+                   'note': ('0..1 along each cable from its first end to its last (plugs carry the value of their end). Optional: lets a cable be '
+                            '"laid" along its path (hide where grow_t > x) instead of dropping it in; cables 0 and 1 run under the column in the base channel.')},
         'uv': {'SCREEN_LCD': 'RAIL_lcd_<s>: 0..1 over the screen, v towards +Y (away from the user), u to the user\'s right',
                'SCREEN_WING': 'WING_display_<s>: 0..1 over the layer, v up, u to the right when seen from the entry side (-Y)',
                'BADGE': 'RAIL_badge_<s>: 0..1 over the front face, v up, u to the right when seen from the lane',
                'PCB_GREEN': 'ELE_pcb_<s> (and the small rail PCBs): 0..1 over the board'},
         'triangles': total,
+        'props': prop_info,
         'parts': mparts,
     }
     if save:

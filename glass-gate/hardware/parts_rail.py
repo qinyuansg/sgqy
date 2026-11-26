@@ -6,7 +6,10 @@ from parts_glass import LID_SCREWS, LID_Z1
 
 SPINE_Z0, SPINE_Z1 = 933.4, 936.4      # plate; modules stand on z = SPINE_Z1
 FLOOR = SPINE_Z1
-LED_HW = 67.95                          # half width of the LED flex band (outer face)
+SPINE_HW = 64.45                        # half width of the spine plate
+LED_HW = 64.8                           # half width of the LED flex band (outer face); chips reach 65.75
+DIFF_IN, DIFF_OUT = 66.0, 70.0          # frosted light guide round the rail: 4 mm deep, flush with the glass faces
+DIFF_Z0, DIFF_Z1 = 933.7, 939.9         # ... and 6.2 mm tall, filling the seam between post tops (933.0) and lid (940.3)
 LED_Z = 936.8
 MX = FRAME((0, 0, 0), (0, 1, 0), (0, 0, 1), (1, 0, 0))     # local (px,py,pz) -> (pz, px, py)
 
@@ -14,10 +17,11 @@ MX = FRAME((0, 0, 0), (0, 1, 0), (0, 0, 1), (1, 0, 0))     # local (px,py,pz) ->
 def led_chip():
     """One SMD LED: local x = along the strip, y = across, z = outward (emitting side)."""
     c = MB('PLASTIC_WHITE')
-    c.add(cbox(-1.6, 1.6, -1.2, 1.2, -0.02, 0.72, bevel=0.14, mat='PLASTIC_WHITE'))
-    c.add(cbox(-1.22, 1.22, -0.88, 0.88, 0.6, 0.95, bevel=0.1, mat='LED_STRIP'))
-    c.add(cbox(-2.15, -1.55, -0.8, 0.8, -0.02, 0.25, mat='PCB_GOLD'))
-    c.add(cbox(1.55, 2.15, -0.8, 0.8, -0.02, 0.25, mat='PCB_GOLD'))
+    c.add(cbox(-2.4, 2.4, -1.3, 1.3, -0.02, 0.72, bevel=0.14, mat='PLASTIC_WHITE'))
+    c.add(cbox(-2.1, 2.1, -1.0, 1.0, 0.6, 0.95, bevel=0.1, mat='LED_STRIP'))
+    c.add(cbox(-2.72, -2.35, -0.9, 0.9, -0.02, 0.25, mat='PCB_GOLD'))
+    c.add(cbox(2.35, 2.72, -0.9, 0.9, -0.02, 0.25, mat='PCB_GOLD'))
+    c.add(cbox(-0.55, 0.55, 1.75, 2.35, -0.02, 0.38, mat='CHIP_BLACK'))
     return c
 
 
@@ -43,7 +47,7 @@ def stadium_path(hw, straight, pitch):
 
 def spine():
     mb = MB('METAL_ALU')
-    W, L = 135.2, 1395.2
+    W, L = 2 * SPINE_HW, 1400.0 - 2 * (70.0 - SPINE_HW)
     holes = [rrect(30.0, 86.0, 15.0, 8, 0.0, y) for y in (-125.0, 125.0, 245.0, 365.0, 485.0)]
     holes += [circle(5.6, 20, -40.0, -602.0), circle(5.6, 20, -40.0, 602.0)]
     mb.add(prism(stadium(W, L, 48), SPINE_Z0, SPINE_Z1, bevel=0.5, holes=holes, hole_bevel=0.4, mat='METAL_ALU'))
@@ -66,30 +70,41 @@ def led_strip():
                  holes=[stadium(2 * (LED_HW - 0.25), straight + 2 * (LED_HW - 0.25), 48)], mat='PLASTIC_WHITE'))
     chip = led_chip()
     up = (0, 0, 1)
-    for (p, t, n) in stadium_path(LED_HW, straight, 6.4):
+    for (p, t, n) in stadium_path(LED_HW, straight, 5.6):
         M = FRAME((p[0], p[1], LED_Z), (t[0], t[1], 0), up, (n[0], n[1], 0))
         mb.add(chip, M)
+    wf = lambda v: 0.02 + 0.86 * (v[:, 1] + 700.0) / 1400.0
     part = P('RAIL_led', 5, 3, 'led', mb, (0, 0, LED_Z))
-    part['wave_fn'] = lambda v: 0.02 + 0.86 * (v[:, 1] + 700.0) / 1400.0
-    return part
+    part['wave_fn'] = wf
+    # continuous frosted light guide over the chips (child object, flies in with the strip)
+    d = prism(stadium(2 * DIFF_OUT, 1400.0 - 2 * (70.0 - DIFF_OUT), 64), DIFF_Z0, DIFF_Z1, bevel=0.5, segs=2,
+              holes=[stadium(2 * DIFF_IN, 1400.0 - 2 * (70.0 - DIFF_IN), 64)], hole_bevel=0.3, mat='LED_DIFFUSER')
+    dp = P('RAIL_led_diffuser', 5, 3, 'led', d, (0, 0, LED_Z), parent='RAIL_led', is_child=True)
+    dp['wave_fn'] = wf
+    return [part, dp]
 
 
 def colring():
     mb = MB('METAL_ALU')
-    mb.add(lathe(ring_profile(47.0, 57.8, 921.6, 932.4, 0.8, 2), 96, 'METAL_ALU'))
+    mb.add(lathe(ring_profile(47.0, 54.8, 921.6, 932.4, 0.8, 2), 96, 'METAL_ALU'))
     holes = [circle(13.2, 32)] + [circle(10.5, 24, 30.0 * cos(TAU * k / 6), 30.0 * sin(TAU * k / 6)) for k in range(6)]
     mb.add(prism(circle(47.6, 64), 924.0, 928.0, bevel=0.4, holes=holes, hole_bevel=0.3, mat='METAL_ALU'))
     _ball_bearing(mb, 7.06, 13.4, 922.2, 930.2, 9, n=40)
-    mb.add(ring(57.85, 58.1, 922.6, 931.4, 96, mat='PLASTIC_WHITE'))
+    mb.add(ring(54.85, 55.1, 922.6, 931.4, 96, mat='PLASTIC_WHITE'))
     chip = led_chip()
-    n = 56
+    n = 62
     for k in range(n):
         a = TAU * (k + 0.5) / n
-        M = FRAME((58.1 * cos(a), 58.1 * sin(a), 927.0), (-sin(a), cos(a), 0), (0, 0, 1), (cos(a), sin(a), 0))
+        M = FRAME((55.1 * cos(a), 55.1 * sin(a), 927.0), (-sin(a), cos(a), 0), (0, 0, 1), (cos(a), sin(a), 0))
         mb.add(chip, M)
+    wf = lambda v: 0.47 + 0.0 * v[:, 1]
     part = P('LED_colring', 5, 1, 'led', mb, (0, 0, 927))
-    part['wave_fn'] = lambda v: 0.47 + 0.0 * v[:, 1]
-    return part
+    part['wave_fn'] = wf
+    # the glow ring: 8.4 mm tall frosted band, 1 mm proud of the column
+    d = lathe(ring_profile(56.3, 61.0, 923.0, 931.4, 0.6, 2), 128, 'LED_DIFFUSER')
+    dp = P('LED_colring_diffuser', 5, 1, 'led', d, (0, 0, 927), parent='LED_colring', is_child=True)
+    dp['wave_fn'] = wf
+    return [part, dp]
 
 
 def accent(name, ysign):
@@ -98,11 +113,19 @@ def accent(name, ysign):
     mb.add(cbox(54.0, 57.0, y0 - 5, y0 + 5, 30.5, 266.0, bevel=0.4, r=0.8, mat='METAL_ALU'))
     mb.add(cbox(44.0, 58.0, y0 - 8, y0 + 8, 30.5, 33.5, bevel=0.5, r=1.2, mat='METAL_ALU'))
     mb.add(cap_screw(3.0, 0, n=12), T(48.5, y0, 33.45))
-    mb.add(prism(rrect(8.0, 124.0, 4.0, 8, y0, 200.0), 56.9, 60.6, bevel=1.2, segs=2, mat='LED_STRIP'), MX)
-    part = P(name, 5, 0, 'led', mb, (56.0, y0, 150.0))
+    mb.add(cbox(56.98, 57.25, y0 - 2.8, y0 + 2.8, 138.0, 262.0, mat='PLASTIC_WHITE'))
+    chip = led_chip()
+    for k in range(21):
+        mb.add(chip, FRAME((57.25, y0, 144.0 + 5.6 * k), (0, 0, 1), (0, -1, 0), (1, 0, 0)))
     u0 = 0.03 if ysign < 0 else 0.89
-    part['wave_fn'] = lambda v: u0 + 0.03 * np.clip((v[:, 2] - 138.0) / 124.0, 0.0, 1.0)
-    return part
+    wf = lambda v: u0 + 0.03 * np.clip((v[:, 2] - 138.0) / 124.0, 0.0, 1.0)
+    part = P(name, 5, 0, 'led', mb, (56.0, y0, 150.0))
+    part['wave_fn'] = wf
+    d = prism(rrect(9.0, 126.0, 4.5, 8, y0, 200.0), 58.45, 61.5, bevel=1.0, segs=2, mat='LED_DIFFUSER')
+    d.xf(MX)
+    dp = P(name + '_diffuser', 5, 0, 'led', d, (60.0, y0, 200.0), parent=name, is_child=True)
+    dp['wave_fn'] = wf
+    return [part, dp]
 
 
 # ---- reader modules ----------------------------------------------------------
@@ -283,6 +306,29 @@ def speaker():
     return P('RAIL_speaker', 5, 7, 'metal_small', mb, (cx, cy, 978.0))
 
 
+def harness():
+    """Thin signal leads from the reader modules along the spine floor to the grommet hole."""
+    zf = FLOOR + 1.35
+    xr = -59.9
+    gx, gy = -40.0, -602.0
+    mb = MB('CABLE_WHITE')
+    lx, ly = LCD_C[0] - 18.0, LCD_C[1] - 25.0 + 10.5
+    runs = [
+        ('CABLE_YELLOW', [(lx, ly, 970.6), (lx, ly, zf), (xr, ly, zf), (xr, -584.0, zf), (gx - 1.6, gy + 1.2, zf + 0.2), (gx - 1.6, gy + 1.2, 933.0)]),
+        ('CABLE_BLUE', [(QR_C[0] - 20.3, QR_C[1], 952.6), (QR_C[0] - 32.0, QR_C[1], 952.6), (QR_C[0] - 32.0, QR_C[1], zf + 2.7),
+                        (xr, QR_C[1], zf + 2.7), (xr, -588.0, zf + 2.7), (gx + 1.6, gy + 1.2, zf + 2.7), (gx + 1.6, gy + 1.2, 933.0)]),
+        ('CABLE_RED', [(RFID_C[0] + 14.0, RFID_C[1] - 26.2, 984.4), (RFID_C[0] + 14.0, RFID_C[1] - 31.5, 984.4), (RFID_C[0] + 14.0, RFID_C[1] - 31.5, zf),
+                       (RFID_C[0] - 20.0, RFID_C[1] - 31.5, zf), (gx, gy - 1.9, zf + 0.4), (gx, gy - 1.9, 933.0)]),
+    ]
+    for mat, pts in runs:
+        mb.add(tube(resample(fillet_path(pts, 3.0, 5), 6.0), 1.25, 8, mat, grow=True))
+    # two adhesive cable clips on the floor
+    for yy in (-470.0, -540.0):
+        mb.add(cbox(xr - 1.5, xr + 5.0, yy - 2.0, yy + 2.0, FLOOR + 0.02, FLOOR + 0.5, mat='PLASTIC_WHITE'), t=0.5)
+        mb.add(cbox(xr - 1.5, xr + 5.0, yy - 1.2, yy + 1.2, FLOOR + 0.4, zf + 4.6, bevel=0.3, mat='PLASTIC_WHITE'), t=0.5)
+    return P('RAIL_harness', 5, 8, 'cable', mb, (-45.0, -500.0, zf))
+
+
 def campod():
     t = 25.0
     c, s_ = cos(rad(t)), sin(rad(t))
@@ -332,5 +378,5 @@ def badge():
 
 def build():
     from parts_glass import lid
-    return ([accent('LED_accent_entry', -1), accent('LED_accent_exit', +1), colring(), spine(), led_strip(),
-             rfid(), qr(), lcd(), speaker(), lid()] + lid_screws() + [campod(), badge()])
+    return (accent('LED_accent_entry', -1) + accent('LED_accent_exit', +1) + colring() + [spine()] + led_strip() +
+            [rfid(), qr(), lcd(), speaker(), harness(), lid()] + lid_screws() + [campod(), badge()])

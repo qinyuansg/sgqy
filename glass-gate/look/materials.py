@@ -182,8 +182,13 @@ class B:
         return n
 
 
+MICRO_ROUGH = True      # False: constant roughness everywhere (measurement switch; no visible gain in speed, see NOTES)
+
+
 def _rough(b, base, var, size=60.0, scale=(1, 1, 1)):
     """Micro-roughness variation: base +- var, driven by object-space noise."""
+    if not MICRO_ROUGH:
+        return base
     n = b.noise(scale=scale, size=size)
     return b.m('MULTIPLY_ADD', n, 2 * var, base - var)
 

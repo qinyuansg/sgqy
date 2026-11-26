@@ -39,8 +39,9 @@ def open_gate(gate):
 
 
 def fix_screen_uvs(scene, verbose=True):
-    """Text must read correctly: on SCREEN_LCD / SCREEN_WING / BADGE faces the UV map must not be mirrored when the
-    face is seen from its front. Mirrored halves of the gate often are; flip U on those faces (in this copy only)."""
+    """Diagnostic / opt-in repair (apply(..., fix_uvs=True)), NOT used by default. If the screens or the badge of a
+    mirrored pedestal ever read back to front: flips U on SCREEN_LCD / SCREEN_WING / BADGE faces whose UV map is
+    mirrored when seen from the face's front (a heuristic: wrong for a single plane meant to be read from behind)."""
     fixed = []
     for ob in scene.objects:
         if ob.type != 'MESH' or not ob.data.uv_layers:
@@ -77,13 +78,14 @@ def fix_screen_uvs(scene, verbose=True):
     return fixed
 
 
-def apply(scene=None, studio_variant='dark', quality='default', led_mode=None):
+def apply(scene=None, studio_variant='dark', quality='default', led_mode=None, fix_uvs=False):
     scene = scene or bpy.context.scene
     ensure_textures()
     if led_mode:
         materials.LED_MODE = led_mode
     report = materials.apply_materials(scene)
-    fix_screen_uvs(scene)
+    if fix_uvs:         # off by default: hardware/gate.blend already has reading-correct UVs on both sides (checked)
+        fix_screen_uvs(scene)
     glow = alive.setup_alive(scene)
     st = studio.build_studio(studio_variant, scene)
     if scene.render.engine != 'CYCLES':

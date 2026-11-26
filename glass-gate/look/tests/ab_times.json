@@ -1,5 +1,34 @@
 {
- "dark_hero": 34.1,
- "dark_macro": 40.5,
- "violet_hero": 35.6
+ "dark_hero": {
+  "wall_s": 24.2,
+  "cpu_s": 45.1
+ },
+ "dark_macro": {
+  "wall_s": 35.6,
+  "cpu_s": 67.7
+ },
+ "violet_hero": {
+  "wall_s": 32.1,
+  "cpu_s": 61.7
+ },
+ "violet_macro": {
+  "wall_s": 46.5,
+  "cpu_s": 89.0
+ },
+ "highkey_hero": {
+  "wall_s": 34.0,
+  "cpu_s": 64.8
+ },
+ "highkey_macro": {
+  "wall_s": 49.0,
+  "cpu_s": 94.7
+ },
+ "hdri_hero": {
+  "wall_s": 25.7,
+  "cpu_s": 48.9
+ },
+ "hdri_macro": {
+  "wall_s": 37.9,
+  "cpu_s": 71.0
+ }
 }

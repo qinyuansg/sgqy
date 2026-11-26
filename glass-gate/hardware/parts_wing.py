@@ -15,13 +15,13 @@ def clamp(name, zc):
     a = rad(38.0)
     sad = arc(0, 0, 66.5, -a, a, 18) + arc(0, 0, 60.4, a, -a, 18)
     mb.add(prism(sad, z0, z1, bevel=1.2, segs=3, mat='METAL_STEEL'))
-    sw = 7.7      # half width of the jaw slot (leaf is +-6, rubber liners fill the rest)
+    sw = 8.2      # half width of the jaw slot (leaf is +-6, rubber liners fill most of the rest)
     jaw = [(63.0, -13.5), (100.0, -13.5)] + arc(100.0, -9.5, 4.0, -PI / 2, 0.0, 6)[1:] + \
-          [(104.0, -sw), (69.5, -sw), (69.5, sw), (104.0, sw)] + \
+          [(104.0, -sw), (68.9, -sw), (68.9, sw), (104.0, sw)] + \
           arc(100.0, 9.5, 4.0, 0.0, PI / 2, 6) + [(63.0, 13.5)]
     mb.add(prism(jaw, z0 + 2.0, z1 - 2.0, bevel=1.2, segs=3, mat='METAL_STEEL'))
     for sgn in (-1, 1):
-        y0_, y1_ = (6.36, sw + 0.05) if sgn > 0 else (-sw - 0.05, -6.36)
+        y0_, y1_ = (6.85, sw + 0.05) if sgn > 0 else (-sw - 0.05, -6.85)
         mb.add(cbox(71.0, 104.6, y0_, y1_, z0 + 1.2, z1 - 1.2, bevel=0.3, mat='RUBBER'))
         # machined relief line on each jaw face
         mb.add(cbox(66.0, 66.8, sgn * 13.2 - 0.5, sgn * 13.2 + 0.5, z0 + 6.0, z1 - 6.0, mat='METAL_DARK'))
@@ -46,13 +46,19 @@ def edge_led():
     mb.add(cbox(62.6, 66.4, -3.2, 3.2, z0, z1, bevel=0.4, r=0.6, mat='METAL_ALU'))
     mb.add(cbox(66.38, 66.65, -2.8, 2.8, z0 + 3.0, z1 - 3.0, mat='PLASTIC_WHITE'))
     chip = led_chip()
-    n = int((z1 - z0 - 12.0) / 6.4)
+    n = int((z1 - z0 - 12.0) / 5.6)
     for k in range(n + 1):
         z = z0 + 6.0 + (z1 - z0 - 12.0) * k / n
         mb.add(chip, FRAME((66.65, 0.0, z), (0, 0, 1), (0, -1, 0), (1, 0, 0)))
+    wf = lambda v: 0.92 + 0.08 * np.clip((v[:, 2] - z0) / (z1 - z0), 0.0, 1.0)
     part = P('WING_edgeled', 6, 1, 'led', mb, (64.5, 0.0, (z0 + z1) / 2), insert=(1, 0, 0), parent='WING')
-    part['wave_fn'] = lambda v: 0.92 + 0.08 * np.clip((v[:, 2] - z0) / (z1 - z0), 0.0, 1.0)
-    return part
+    part['wave_fn'] = wf
+    # frosted light guide: a U channel over the chips, facing the leaf's hinge edge (0.95 mm from it)
+    u = [(66.95, -5.0), (69.05, -5.0), (69.05, 5.0), (66.95, 5.0), (66.95, 3.4), (68.0, 3.4), (68.0, -3.4), (66.95, -3.4)]
+    d = prism(u, z0 + 3.0, z1 - 3.0, bevel=0.3, mat='LED_DIFFUSER')
+    dp = P('WING_edgeled_diffuser', 6, 1, 'led', d, (68.0, 0.0, (z0 + z1) / 2), insert=(1, 0, 0), parent='WING_edgeled', is_child=True)
+    dp['wave_fn'] = wf
+    return [part, dp]
 
 
 def display():
@@ -81,4 +87,4 @@ def build_wave2():
 
 
 def build():
-    return [clamp('WING_clamp_a', CLAMP_Z[0]), clamp('WING_clamp_b', CLAMP_Z[1]), edge_led(), leaf(), display()]
+    return [clamp('WING_clamp_a', CLAMP_Z[0]), clamp('WING_clamp_b', CLAMP_Z[1])] + edge_led() + [leaf(), display()]

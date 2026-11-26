@@ -98,10 +98,11 @@ def in_frame(part, off, f, margin=0.02):
 
 # ---------------------------------------------------------------- hook: exploded hover, then lift away
 HOOK_F = F(C.HOOK_END)
-rnd = random.Random(3)
 for n, part in parts.items():
     E = Vector(C.explode_offset(part, man))
-    ph = rnd.uniform(0, math.tau); bob = rnd.uniform(0.003, 0.007)
+    hk = C.hover_key(part)
+    rnd = random.Random(sum(map(ord, hk)) if hk else 0)
+    ph = rnd.uniform(0, math.tau); bob = rnd.uniform(0.003, 0.007) if hk else 0.0
     spin = C.hook_spin(part)
     t_go = C.SCATTER_T0 + C.scatter_delay(part)
     part.show(0, True)
@@ -116,6 +117,7 @@ for n, part in parts.items():
 
 # ---------------------------------------------------------------- build: fly-ins fitted to the frame
 extended, stuck = [], []
+plan = {}
 for n, s in by_part.items():
     part = parts[n]
     d = Vector(s.get('dir', part.info.get('insert_dir', (0, 0, 1)))).normalized()
@@ -133,9 +135,22 @@ for n, s in by_part.items():
             stuck.append(n)
         if dist != d0:
             extended.append((n, round(d0, 2), round(dist, 2)))
+    plan[n] = [d, dist, side, vis0]
+groups = {}                         # parts that touch travel as one piece: same distance, same motion
+for n, s in by_part.items():
+    if s.get('group'):
+        groups.setdefault((s['group'], parts[n].info.get('side')), []).append(n)
+for g, ns in groups.items():
+    dmax = max(plan[n][1] for n in ns)
+    for n in ns:
+        plan[n][1] = dmax
+for n, s in by_part.items():
+    part = parts[n]
+    d, dist, side, vis0 = plan[n]
+    gkey = s.get('group')
     al.fly_in(part, s['t'], dur=s.get('dur', 0.4), dist=dist, direction=d, twist_deg=s.get('twist', 0.0), k=s.get('k', 2.4),
               bounce=s.get('bounce', 0.004), wobble_deg=s.get('wobble', 0.6), turns=s.get('turns', 0.0),
-              seed=sum(map(ord, n)), side=side, show_from=vis0, mode='screw' if part.info.get('kind') == 'screw' else 'drop')
+              seed=sum(map(ord, gkey if gkey else n)), side=side, show_from=vis0, mode='screw' if part.info.get('kind') == 'screw' else 'drop')
 if extended:
     print(f'[fit] {len(extended)} flights lengthened to start out of frame:', extended)
 if stuck:
@@ -178,7 +193,8 @@ extra_events = C.extras(sc, parts, man, baked) or []
 # ---------------------------------------------------------------- alive moment
 if not a.no_alive:
     try:
-        from look import alive
+        sys.path.insert(0, gg.path('look'))
+        import alive
         C.key_alive(sc, alive)
         print('[alive] keyed')
     except Exception as e:
@@ -227,6 +243,9 @@ T = dict(version=C.VERSION, fps=FPS, bpm=120, duration_s=DUR, frames=NF, drop_t=
          sfx_vocabulary=sorted({e['sfx'] for e in events}), events=events)
 json.dump(T, open(a.timeline, 'w'), indent=1)
 print(f'[timeline] {len(events)} events -> {a.timeline}')
+
+flights = {n: dict(vis0=parts[n].fly[0], land=parts[n].fly[1]) for n in by_part if hasattr(parts[n], 'fly')}
+json.dump(dict(hook_end=HOOK_F, cuts=cuts, flights=flights), open(os.path.join(os.path.dirname(os.path.abspath(a.out)), 'flights.json'), 'w'), indent=1)
 
 sc.frame_set(0)
 bpy.ops.wm.save_as_mainfile(filepath=os.path.abspath(a.out), compress=True)

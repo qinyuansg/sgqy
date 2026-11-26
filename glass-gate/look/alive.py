@@ -41,7 +41,7 @@ PROPS = {   # name: (scene property, default, min, max)
     'house': ('gg_house', 1.0, 0.0, 1.0),
 }
 GLOW_COLLECTION = 'GG_ALIVE_GLOW'
-GLOW_GAIN = 3.5          # artistic multiplier on the physically matched glow-light power (pi^2 x LED_STRENGTH x area)
+GLOW_GAIN = 10.0         # artistic multiplier on the physically matched glow-light power (pi^2 x LED_STRENGTH x area)
 GLOW_EDGE = 0.10         # how soft a glow light switches on, in wave_u (lights are sparse, so softer than the strip)
 
 
@@ -306,3 +306,49 @@ def setup_alive(scene=None, max_lights=44, radius=0.012, verbose=True):
         tot = sum(o['gg_energy'] for o in lights)
         print(f'[alive] {len(lights)} glow lights for {len(samples)} LED polygons, {tot:.1f} W in total (steady)')
     return lights
+
+
+# ----------------------------------------------------------------------------------------------- optional bloom
+GLARE_GROUP = 'GG_GLARE'
+
+
+def setup_glare(scene=None, strength=0.35, threshold=3.0, size=0.45, saturation=1.25):
+    """OPTIONAL bloom, in Blender's compositor (applied to every render of this scene, saved with the .blend).
+
+    The LED chips are a couple of millimetres tall: in a wide shot they are thinner than a pixel and tone-map to a
+    white hairline. A fog-glow bloom puts their COLOUR back around them (and gives the hottest glass glints a small
+    halo). Only pixels brighter than `threshold` (scene-linear) bloom, so the unlit build is hardly touched.
+    Remove with remove_glare(scene). Costs well under a second per frame."""
+    scene = scene or bpy.context.scene
+    ng = bpy.data.node_groups.get(GLARE_GROUP)
+    if ng is not None:
+        bpy.data.node_groups.remove(ng)
+    ng = bpy.data.node_groups.new(GLARE_GROUP, 'CompositorNodeTree')
+    ng.interface.new_socket('Image', in_out='OUTPUT', socket_type='NodeSocketColor')
+    rl = ng.nodes.new('CompositorNodeRLayers'); rl.scene = scene
+    gl = ng.nodes.new('CompositorNodeGlare'); gl.name = 'Glare'
+    out = ng.nodes.new('NodeGroupOutput')
+
+    def put(key, value):
+        for s in gl.inputs:
+            if s.identifier == key or s.name == key:
+                s.default_value = value
+                return True
+        return False
+    put('Type', 'Bloom'); put('Quality', 'High')
+    put('Highlights Threshold', threshold); put('Highlights Smoothness', 0.5)
+    put('Strength', strength); put('Saturation', saturation); put('Size', size)
+    ng.links.new(rl.outputs['Image'], gl.inputs['Image'])
+    ng.links.new(gl.outputs['Image'], out.inputs[0])
+    scene.compositing_node_group = ng
+    scene.render.use_compositing = True
+    scene.render.compositor_device = 'CPU'       # the GPU compositor needs a display context and kills a headless bpy
+    return ng
+
+
+def remove_glare(scene=None):
+    scene = scene or bpy.context.scene
+    scene.compositing_node_group = None
+    ng = bpy.data.node_groups.get(GLARE_GROUP)
+    if ng is not None:
+        bpy.data.node_groups.remove(ng)

@@ -49,13 +49,20 @@ def _ecap(B, a, b, d, h):
     B.add(prism(half, h - 0.02, h + 0.03, mat='CHIP_BLACK'), T(a, b, 0))
 
 
-def _header(B, a, b, n, pitch=2.5, mat='PLASTIC_WHITE', depth=5.8, height=7.0):
+def _header(B, a, b, n, pitch=2.5, mat='PLASTIC_WHITE', depth=5.8, height=7.0, down=False):
+    """Shrouded pin header. down=False: opening faces the lane (+h), centred on (a, b).
+    down=True: right-angle, opening faces down (-b); the body then spans b-4 .. b+3, h 0..depth."""
     L = n * pitch + 2.4
-    B.add(prism(rrect(L, depth, 0.5, 2, a, b), 0.0, height, bevel=0.4, mat=mat,
-                pockets=[(rrect(L - 1.6, depth - 1.6, 0.2, 1, a, b), height - 1.6, 0.0)]))
+    H = MB(mat)
+    H.add(prism(rrect(L, depth, 0.5, 2), 0.0, height, bevel=0.4, mat=mat,
+                pockets=[(rrect(L - 1.6, depth - 1.6, 0.2, 1), height - 1.6, 0.0)]))
     for k in range(n):
         o = (k - (n - 1) / 2) * pitch
-        B.add(_cb(a + o - 0.32, a + o + 0.32, b - 0.32, b + 0.32, 1.0, height - 0.8, 'PCB_GOLD'))
+        H.add(_cb(o - 0.32, o + 0.32, -0.32, 0.32, 1.0, height - 0.8, 'PCB_GOLD'))
+    if down:
+        B.add(H, FRAME((a, b + 3.0, depth / 2), (1, 0, 0), (0, 0, 1), (0, -1, 0)))
+    else:
+        B.add(H, T(a, b, 0))
 
 
 def _smd(B, a, b, rot, kind):
@@ -107,8 +114,8 @@ def pcb():
         _ecap(B, a, b, d, h)
         ko(a - d / 2, a + d / 2, b - d / 2, b + d / 2)
     # --- connectors along the bottom edge
-    _header(B, CONN_A[0], CONN_A[1], 2, 5.0)
-    _header(B, CONN_B[0], CONN_B[1], 4)
+    _header(B, CONN_A[0], CONN_A[1], 2, 5.0, depth=7.0, down=True)      # body b 8..15 (z 158..165), plugs enter from below
+    _header(B, CONN_B[0], CONN_B[1], 4, depth=7.0, down=True)
     _header(B, 72.0, 12.0, 8)
     ko(10, 90, 6, 18, 2)
     # 2x10 pin header on the right edge
@@ -355,35 +362,36 @@ def sensor(name, ysign):
 # ---- wiring harness -----------------------------------------------------------
 CH_ZC = 20.6       # cable centre height in the base channel
 CH_XS = (-12.5, -19.0, -25.5)
-RISE_X = 2.0       # x of the cable risers in front of the PCB headers
+RISE_X = PCB_X + 3.5          # cable risers come straight up under the bottom-entry headers
+PLUG_Z0, PLUG_Z1 = PCB_Z0 + 1.0, PCB_Z0 + 8.5    # plug bodies end 0.3 mm short of the header pins
 
 
 def _cable(pts, r, mat, fr=7.0):
-    return tube(resample(fillet_path(pts, fr, 7), 8.0), r, 12, mat)
+    return tube(resample(fillet_path(pts, fr, 7), 8.0), r, 12, mat, grow=True)
 
 
 def cables():
     parts = []
     r = 2.1
     xt = PSU_X1 + 7.0              # under the PSU terminal block
-    zt = PSU_Z0 + TERM_B - 11.0 + 0.4
+    zt = PSU_Z0 + TERM_B - 11.0 - 0.3      # cable tips stop 0.3 mm under the terminal block
     # two power cables PSU -> PCB (red inner lane, blue middle lane)
     for i, (xc, zl, y_term, y_conn, mat) in enumerate(((CH_XS[0], 36.0, PSU_Y0 + 8.0 + 12.0 * 2 + 6.0, PCB_Y0 + CONN_A[0] - 2.5, 'CABLE_RED'),
                                                        (CH_XS[1], 42.0, PSU_Y0 + 8.0 + 12.0 * 1 + 6.0, PCB_Y0 + CONN_A[0] + 2.5, 'CABLE_BLUE'))):
-        pts = [(xt, y_term, zt + 2.0), (xt, y_term, zl), (xt, 554.0, zl), (xc, 554.0, zl), (xc, 554.0, CH_ZC),
-               (xc, -554.0, CH_ZC), (xc, -554.0, zl), (RISE_X, -554.0, zl), (RISE_X, y_conn, zl), (RISE_X, y_conn, PCB_Z0 + 11.0)]
+        pts = [(xt, y_term, zt - 0.2), (xt, y_term, zl), (xt, 554.0, zl), (xc, 554.0, zl), (xc, 554.0, CH_ZC),
+               (xc, -554.0, CH_ZC), (xc, -554.0, zl), (RISE_X, -554.0, zl), (RISE_X, y_conn, zl), (RISE_X, y_conn, PLUG_Z0 + 4.0)]
         mb = _cable(pts, r, mat)
-        mb.add(ring(r - 0.3, r + 0.7, zt - 4.5, zt + 0.5, 14, ch=0.2, mat='METAL_STEEL'), T(xt, y_term, 0))
-        mb.add(cbox(-5.6, 5.0, y_conn - 2.3, y_conn + 2.3, PCB_Z0 + 10.1, PCB_Z0 + 13.9, bevel=0.4, mat='PLASTIC_WHITE'))
+        mb.add(ring(r - 0.3, r + 0.7, zt - 5.0, zt, 14, ch=0.2, mat='METAL_STEEL'), T(xt, y_term, 0), t=0.0)
+        mb.add(cbox(PCB_X + 1.0, PCB_X + 6.0, y_conn - 2.3, y_conn + 2.3, PLUG_Z0, PLUG_Z1, bevel=0.3, mat='PLASTIC_WHITE'), t=1.0)
         parts.append(P('ELE_cable_%d' % i, 3, 2, 'cable', mb, (xc, 0.0, CH_ZC)))
     # signal cable PCB -> motor connector in the channel
     r2 = 2.0
     y_conn = PCB_Y0 + CONN_B[0]
-    pts = [(RISE_X, y_conn, PCB_Z0 + 11.0), (RISE_X, y_conn, 48.0), (RISE_X, -554.0, 48.0), (CH_XS[2], -554.0, 48.0),
+    pts = [(RISE_X, y_conn, PLUG_Z0 + 4.0), (RISE_X, y_conn, 48.0), (RISE_X, -554.0, 48.0), (CH_XS[2], -554.0, 48.0),
            (CH_XS[2], -554.0, CH_ZC), (CH_XS[2], -103.0, CH_ZC)]
     mb = _cable(pts, r2, 'CABLE_YELLOW')
-    mb.add(cbox(-5.6, 5.0, y_conn - 5.2, y_conn + 5.2, PCB_Z0 + 10.1, PCB_Z0 + 13.9, bevel=0.4, mat='PLASTIC_WHITE'))
-    mb.add(cbox(CH_XS[2] - 3.1, CH_XS[2] + 3.1, -115.0, -103.5, 18.3, 24.6, bevel=0.5, r=0.8, mat='PLASTIC_WHITE'))
+    mb.add(cbox(PCB_X + 1.0, PCB_X + 6.0, y_conn - 5.2, y_conn + 5.2, PLUG_Z0, PLUG_Z1, bevel=0.3, mat='PLASTIC_WHITE'), t=0.0)
+    mb.add(cbox(CH_XS[2] - 3.1, CH_XS[2] + 3.1, -115.0, -103.5, 18.3, 24.6, bevel=0.5, r=0.8, mat='PLASTIC_WHITE'), t=1.0)
     parts.append(P('ELE_cable_2', 3, 2, 'cable', mb, (CH_XS[2], -330.0, CH_ZC)))
     # multi-core up the entry post to the rail, with two cable ties
     yt = PCB_Y0 + TERM_TOP[0]
@@ -391,9 +399,10 @@ def cables():
     pts = [(-0.9, yt, zt2 - 1.0), (-0.9, yt, zt2 + 30.0), (-40.0, -602.0, zt2 + 90.0), (-40.0, -602.0, 931.0)]
     mb = _cable(pts, 2.8, 'CABLE_WHITE', fr=26.0)
     for zz in (640.0, 820.0):
-        mb.add(ring(2.6, 3.5, zz - 1.4, zz + 1.4, 14, ch=0.3, mat='PLASTIC_BLACK'), T(-40.0, -602.0, 0))
-        mb.add(cbox(-45.6, -43.2, -603.6, -600.4, zz - 1.6, zz + 1.6, bevel=0.3, mat='PLASTIC_BLACK'))
-    mb.add(ring(2.6, 4.4, 925.0, 931.2, 16, ch=0.5, mat='RUBBER'), T(-40.0, -602.0, 0))
+        tt = (zz - zt2) / (931.0 - zt2)
+        mb.add(ring(2.6, 3.5, zz - 1.4, zz + 1.4, 14, ch=0.3, mat='PLASTIC_BLACK'), T(-40.0, -602.0, 0), t=tt)
+        mb.add(cbox(-45.6, -43.2, -603.6, -600.4, zz - 1.6, zz + 1.6, bevel=0.3, mat='PLASTIC_BLACK'), t=tt)
+    mb.add(ring(2.6, 4.4, 925.0, 931.2, 16, ch=0.5, mat='RUBBER'), T(-40.0, -602.0, 0), t=1.0)
     parts.append(P('ELE_cable_3', 3, 2, 'cable', mb, (-20.0, -606.0, 680.0)))
     return parts
 

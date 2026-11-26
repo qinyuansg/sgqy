@@ -41,7 +41,7 @@ def post(name, ysign):
     if ysign < 0:
         o = [(x, -y) for x, y in o]
         i = [(x, -y) for x, y in i]
-    mb = prism(o, POST_Z0, POST_Z1, bevel=2.0, segs=2, holes=[i], hole_bevel=1.5, mat='GLASS_BODY')
+    mb = prism(o, POST_Z0, POST_Z1, bevel=2.0, segs=2, holes=[i], hole_bevel=1.5, mat='GLASS_BODY', support=0.5)
     return P(name, 4, 0, 'glass', mb, (0, ysign * 620.0, (POST_Z0 + POST_Z1) / 2))
 
 
@@ -108,17 +108,23 @@ def lid():
     top_holes, ceil_holes = [], []
     n = 28
     for (x, y) in LID_SCREWS:
+        s0 = mb.loop2(circle(3.6, n, x, y), LID_CEIL)
         h0 = mb.loop2(circle(3.0, n, x, y), LID_CEIL)
         h1 = mb.loop2(circle(2.7, n, x, y), LID_CEIL + 0.3)
         h2 = mb.loop2(circle(2.7, n, x, y), z1 - 2.8)
         h3 = mb.loop2(circle(5.5, n, x, y), z1)
-        mb.bridge(h0, h1)
-        mb.bridge(h1, h2)
-        mb.bridge(h2, h3)
-        ceil_holes.append(h0)
-        top_holes.append(h3)
-    mb.cap(cl[-1], ceil_holes)
-    mb.cap(ol[-1], top_holes)
+        s3 = mb.loop2(circle(6.1, n, x, y), z1)
+        for a, b in ((s0, h0), (h0, h1), (h1, h2), (h2, h3), (h3, s3)):
+            mb.bridge(a, b)
+        ceil_holes.append(s0)
+        top_holes.append(s3)
+    # support loops: the tessellated flats start 0.6 mm inside the bevel / fillet
+    sc = mb.loop2(offset2d(cav, cv[-1][0] + 0.6), LID_CEIL)
+    st = mb.loop2(offset2d(out, lv[-1][0] + 0.6), z1)
+    mb.bridge(cl[-1], sc)
+    mb.bridge(ol[-1], st)
+    mb.cap(sc, ceil_holes)
+    mb.cap(st, top_holes)
     return P('RAIL_lid', 5, 9, 'glass', mb, (0, 0, 970))
 
 

@@ -4,6 +4,8 @@
     st = studio.build_studio('dark')        # 'dark' | 'violet' | 'highkey' | 'hdri'
     st['rig'].rotation_euler.z = ...        # every light hangs on one empty: turn the whole rig
     studio.aim_rig(st['rig'], camera)       # ...or turn it so the rim lights sit behind the gate for this camera
+    studio.aim_rig_shots(scene, st['rig'], camera, cut_frames)     # one held key per shot (recommended)
+    studio.follow_camera(st['rig'], camera)                        # or a driver: the rig travels with the camera
 
 Every variant builds floor, backdrop, world and lights into the collection STUDIO and returns a dict:
     {'variant', 'collection', 'rig', 'floor', 'backdrop', 'world', 'lights': {name: object}, 'key', 'spark'}
@@ -357,7 +359,7 @@ def studio_dark(rig):
     sc = rig.scene
     world_gradient(rig, 'STUDIO_WORLD_dark', zenith=(0.002, 0.002, 0.005), horizon=(0.010, 0.009, 0.026), strength=1.0)
     m = floor_material('STUDIO_FLOOR_dark', (0.012, 0.012, 0.016), rough=0.6, rough_var=0.05, spec=0.0, coat=1.0, coat_rough=0.045,
-                       pool=((0.030, 0.030, 0.036), 0.9, 3.2), fade=((0.010, 0.009, 0.026), 9.0, 45.0))
+                       pool=((0.024, 0.024, 0.030), 0.9, 3.2), fade=((0.010, 0.009, 0.026), 9.0, 45.0))
     floor = rig.disc('STUDIO_FLOOR', 80.0, m)
     rig.out['floor'] = floor; rig.out['backdrop'] = None
     rig.out['key'] = rig.area('KEY', _rel(-25.0, 1.7, 3.3), TARGET, (2.4, 2.4), 180.0, color=(1.0, 0.97, 0.93), spread=math.radians(100))
@@ -370,8 +372,9 @@ def studio_violet(rig):
     """Deep blue-violet cyc: the round wall glows from a violet horizon into indigo black, polished violet-black floor,
     soft key, cool rims, hard spark. The glass picks the gradient up in every refraction."""
     world_gradient(rig, 'STUDIO_WORLD_violet', zenith=(0.002, 0.0015, 0.010), horizon=(0.008, 0.005, 0.03), strength=1.0)
-    m = floor_material('STUDIO_FLOOR_violet', (0.012, 0.009, 0.036), rough=0.6, rough_var=0.05, spec=0.0, coat=1.0, coat_rough=0.035,
-                       glow=((0.040, 0.016, 0.24), (0.0015, 0.001, 0.010), 1.0, 1.1, 7.0), fillet=2.6)
+    m = floor_material('STUDIO_FLOOR_violet', (0.007, 0.005, 0.020), rough=0.6, rough_var=0.05, spec=0.0, coat=1.0, coat_rough=0.045,
+                       pool=((0.018, 0.015, 0.040), 0.9, 3.2),
+                       glow=((0.022, 0.008, 0.125), (0.001, 0.0007, 0.007), 1.0, 1.3, 7.0), fillet=2.6)
     floor = rig.cyc('STUDIO_FLOOR', 7.5, 2.6, 7.0, m)
     rig.out['floor'] = floor; rig.out['backdrop'] = floor
     rig.out['key'] = rig.area('KEY', _rel(-25.0, 1.7, 3.3), TARGET, (2.4, 2.4), 180.0, color=(1.0, 0.96, 0.95), spread=math.radians(100))
@@ -488,6 +491,50 @@ def aim_rig(rig, camera, frame=None):
     return rig.rotation_euler.z
 
 
+def aim_rig_shots(scene, rig, camera, cut_frames, sample='mid'):
+    """Aim the rig once per shot and hold it (CONSTANT keys), so the light does not travel during a shot.
+    cut_frames = first frame of every shot, plus the last frame of the film, e.g. [0, 120, 300, ..., 1559].
+    The camera azimuth is sampled at the middle of each shot (sample='mid') or at its first frame ('start')."""
+    out = []
+    cur = scene.frame_current
+    for f0, f1 in zip(cut_frames[:-1], cut_frames[1:]):
+        fs = (f0 + f1) // 2 if sample == 'mid' else f0
+        scene.frame_set(fs)
+        rz = aim_rig(rig, camera)
+        rig.keyframe_insert('rotation_euler', index=2, frame=f0)
+        out.append((f0, rz))
+    ad = rig.animation_data
+    if ad and ad.action:
+        act = ad.action
+        fcs = []
+        if hasattr(act, 'layers'):
+            for layer in act.layers:
+                for strip in layer.strips:
+                    for cb in getattr(strip, 'channelbags', []):
+                        fcs.extend(cb.fcurves)
+        elif hasattr(act, 'fcurves'):
+            fcs.extend(act.fcurves)
+        for fc in fcs:
+            if fc.data_path == 'rotation_euler' and fc.array_index == 2:
+                for kp in fc.keyframe_points:
+                    kp.interpolation = 'CONSTANT'
+    scene.frame_set(cur)
+    return out
+
+
+def follow_camera(rig, camera):
+    """Alternative to keys: a driver turns the rig with the camera's azimuth all the time (the rig behaves as if it
+    were mounted on the camera crane; shadows on the floor then travel during an orbit)."""
+    rig.animation_data_clear()
+    fc = rig.driver_add('rotation_euler', 2)
+    d = fc.driver; d.type = 'SCRIPTED'
+    for name, tt in (('x', 'LOC_X'), ('y', 'LOC_Y')):
+        v = d.variables.new(); v.name = name; v.type = 'TRANSFORMS'
+        v.targets[0].id = camera; v.targets[0].transform_type = tt; v.targets[0].transform_space = 'WORLD_SPACE'
+    d.expression = f'atan2(y, x) - ({DESIGN_AZIMUTH:.6f})'
+    return fc
+
+
 def set_caustics(scene=None, mode='mnee', verbose=True):
     """Floor caustics. mode 'off' : coloured transparent glass shadows only (free).
                        mode 'mnee': Cycles shadow caustics (manifold next-event estimation) from the SPARK light through
@@ -513,3 +560,4 @@ def set_caustics(scene=None, mode='mnee', verbose=True):
     if verbose:
         print(f'[studio] caustics {mode}: {n} glass casters, light {spark.name if spark else None}, receiver {floor.name if floor else None}')
     return n
+

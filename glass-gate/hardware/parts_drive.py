@@ -260,12 +260,6 @@ def shaft():
         mb.bridge(a, b)
     mb.cap(loops[0])
     mb.cap(loops[-1])
-    # spring collar with a set screw
-    mb.add(ring(10.05, 18.0, 323.0, 329.0, 48, ch=0.6, mat='METAL_DARK'))
-    M = FRAME(Vector((0, 18.0, 326.0)), Vector((-1, 0, 0)), Vector((0, 0, 1)), Vector((0, 1, 0)))
-    mb.add(socket_head(1.7, 1.0, 1.7, 0.8, 12, mat='METAL_STEEL', z0=-0.3), M)
-    # feather keys sitting in the keyways (brass, a little proud)
-    mb.add(cbox(7.9, 10.9, -2.3, 2.3, 340.0, 370.0, bevel=0.4, r=0.5, mat='BRASS'))
     return P('DRV_shaft', 2, 6, 'metal_heavy', mb, (0, 0, 590), parent='DRV_out')
 
 
@@ -284,6 +278,9 @@ def spring():
     top = fillet_path([p1, p1 + t1 * 5.0, p1 + t1 * 5.0 + Vector((0, 0, 3.4))], 2.6, 5)[1:]
     path = leg + hx + top
     mb = tube(path, wr, 12, 'SPRING_STEEL')
+    # retaining collar above the spring (slides down the shaft with it), plain so it needs no rotation
+    mb.add(ring(10.05, 18.0, 323.0, 329.0, 48, ch=0.6, mat='METAL_DARK'))
+    mb.add(ring(10.05, 12.5, 328.6, 330.6, 40, ch=0.4, mat='METAL_STEEL'))
     return P('DRV_spring', 2, 7, 'spring', mb, (0, 0, 292))
 
 
@@ -326,6 +323,8 @@ def encoder():
                   (15.0, 355.8), (14.4, 356.4), (10.05, 356.4)], 48, 'METAL_ALU'))
     M = FRAME(Vector((-15.0, 0, 354.0)), Vector((0, -1, 0)), Vector((0, 0, 1)), Vector((-1, 0, 0)))
     dk.add(socket_head(1.5, 0.9, 1.5, 0.7, 12, mat='METAL_DARK', z0=-0.3), M)
+    # feather key that rides in the shaft keyway (a little proud of the hub, top and bottom)
+    dk.add(cbox(7.9, 10.9, -2.3, 2.3, 340.0, 360.0, bevel=0.4, r=0.5, mat='BRASS'))
     disc = P('DRV_encdisc', 2, 8, 'metal_small', dk, (0, 0, 350), parent='DRV_out')
     return [root, disc]
 
@@ -341,7 +340,7 @@ def cage():
         mb.add(cyl(2.0, 219.3, 397.0, 16, mat='METAL_STEEL'), T(x, y, 0))
         mb.add(hex_nut(7.0, 3.2, 1.9, 'BRASS', z0=396.05), T(x, y, 0))
         mb.add(lathe([(0, 399.2), (2.0, 399.2), (1.4, 399.9), (0, 399.9)], 16, 'METAL_STEEL'), T(x, y, 0))
-        mb.add(hex_nut(7.0, 3.6, 1.9, 'BRASS', z0=219.25), T(x, y, 0))
+        mb.add(hex_nut(5.5, 3.6, 1.9, 'BRASS', z0=219.25), T(x, y, 0))
         mb.add(hex_nut(7.0, 3.0, 1.9, 'BRASS', z0=380.9), T(x, y, 0))
     # spring stop collar on the 180 deg rod
     mb.add(ring(1.95, 5.2, 260.0, 272.0, 20, ch=0.5, mat='BRASS'), T(-46.0, 0, 0))

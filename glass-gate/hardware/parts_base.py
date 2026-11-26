@@ -12,7 +12,8 @@ CH_X0, CH_X1, CH_Y, CH_Z = -30.0, -8.0, 640.0, 18.0     # cable channel
 def base_rail():
     mb = MB('METAL_ALU')
     out = stadium(W, L, 40)
-    lv = [(1.0, BASE_Z0), (0.0, BASE_Z0 + 1.0), (0.0, BASE_Z1 - 3.0), (3.0, BASE_Z1)]
+    # side wall with a machined reveal groove, 3 mm top chamfer
+    lv = [(1.0, BASE_Z0), (0.0, BASE_Z0 + 1.0), (0.0, 11.0), (1.4, 11.6), (1.4, 14.4), (0.0, 15.0), (0.0, BASE_Z1 - 3.0), (3.0, BASE_Z1)]
     loops = [mb.loop2(offset2d(out, d) if d else out, z) for d, z in lv]
     for a, b in zip(loops, loops[1:]):
         mb.bridge(a, b)

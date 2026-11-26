@@ -18,12 +18,12 @@ TITLE = {'dark': 'A  dark studio', 'violet': 'B  blue-violet cyc', 'highkey': 'C
 def render(gate, variant, cam, out, extra=()):
     cmd = [PY, os.path.join(HERE, 'render_tests.py'), '--gate', gate, '--studio', variant, '--cam', cam, '--out', out, *extra]
     r = subprocess.run(cmd, capture_output=True, text=True)
-    m = re.search(r'\[test\] setup ([\d.]+)s render ([\d.]+)s', r.stdout)
+    m = re.search(r'\[test\] setup ([\d.]+)s render ([\d.]+)s cpu ([\d.]+)s', r.stdout)
     if not m:
         print(r.stdout[-2000:], r.stderr[-2000:])
         raise SystemExit(f'render failed: {variant} {cam}')
-    print(f'{variant:8s} {cam:6s} {m.group(2)} s')
-    return float(m.group(2))
+    print(f'{variant:8s} {cam:6s} wall {m.group(2)} s  cpu {m.group(3)} s')
+    return {'wall_s': float(m.group(2)), 'cpu_s': float(m.group(3))}
 
 
 def sheet(times, gate_label):
@@ -46,10 +46,10 @@ def sheet(times, gate_label):
             if os.path.exists(p):
                 sh.paste(Image.open(p).convert('RGB'), (x, y))
             t = times.get(f'{v}_{c}')
-            label = f'{c}  ·  {t:.0f} s' if t else c
-            d.rectangle([x, y + H - 34, x + 190, y + H], fill=(0, 0, 0))
+            label = f"{c}  ·  {t['cpu_s']:.0f} CPU-s" if isinstance(t, dict) else c
+            d.rectangle([x, y + H - 34, x + 230, y + H], fill=(0, 0, 0))
             d.text((x + 8, y + H - 29), label, font=font(20), fill=(235, 235, 235))
-    d.text((pad, sh.height - 34), f'{gate_label}  ·  test preset 540x675, 24 spp + OIDN, 2 threads  ·  same two cameras, light rig aimed per camera  ·  times = Cycles render time on the shared 4-core box',
+    d.text((pad, sh.height - 34), f'{gate_label}  ·  test preset 540x675, 24 spp + OIDN, 2 threads  ·  same two cameras, light rig aimed per camera  ·  CPU-s = CPU seconds of the render over all threads (the box is shared; wall time was 24-49 s)',
            font=font(18), fill=(170, 170, 180))
     out = os.path.join(HERE, 'tests', 'ab_backgrounds.png')
     sh.save(out)
