@@ -235,7 +235,66 @@ def wing_open_fraction(t):
     return al.rebound(t - T_CLOSE1, 0.016, 8.0, 0.05)
 
 
+def _area(sc, name, size, size_y, color, spread=None):
+    import bpy
+    ld = bpy.data.lights.new(name, 'AREA'); ld.shape = 'RECTANGLE'; ld.size = size; ld.size_y = size_y; ld.color = color
+    if spread is not None:
+        ld.spread = spread
+    ob = bpy.data.objects.new(name, ld); sc.collection.objects.link(ob)
+    ob.rotation_mode = 'QUATERNION'
+    return ob
+
+
+def _key_light(ob, f, loc=None, aim=None, energy=None):
+    if loc is not None:
+        ob.location = loc; ob.keyframe_insert('location', frame=f)
+        if aim is not None:
+            ob.rotation_quaternion = (Vector(aim) - Vector(loc)).to_track_quat('-Z', 'Y'); ob.keyframe_insert('rotation_quaternion', frame=f)
+    if energy is not None:
+        ob.data.energy = energy; ob.data.keyframe_insert('energy', frame=f)
+
+
+SWEEP_W = 2600.0       # hook light streak
+PASS_W = 420.0         # the "someone walks through" light
+
+
 def extras(sc, parts, man, baked):
+    """Director's own lights and props: the hook light streak, the light that passes through the lane,
+    the studio dimming around the drop, and the access card."""
+    F = al.F
+    # 1. hook: a long thin light sweeps behind the exploded gate so every polished edge flashes in turn
+    sw = _area(sc, 'DIR_sweep', 0.06, 3.2, (0.80, 0.88, 1.0), spread=math.radians(70))
+    f_end = F(HOOK_END)
+    for f in range(0, f_end + 1):
+        u = f / f_end
+        x = -1.9 + 3.3 * smooth(u)
+        _key_light(sw, f, loc=(x, 1.15, 1.9), aim=(x * 0.35, 0.0, 0.9), energy=SWEEP_W * (0.55 + 0.45 * math.sin(math.pi * u)))
+    _key_light(sw, f_end + 1, energy=0.0)
+    al.set_linear(sw); al.set_linear(sw.data)
+    # 2. in use: a tall warm light glides through the open lane (two faces, one toward each pedestal)
+    f0, f1 = F(T_PASS0), F(T_PASS1)
+    for sx in (-1, 1):
+        pl = _area(sc, f'DIR_pass_{"L" if sx < 0 else "R"}', 0.30, 1.45, (1.0, 0.86, 0.70), spread=math.radians(150))
+        _key_light(pl, f0 - 1, energy=0.0)
+        for f in range(f0, f1 + 1):
+            u = (f - f0) / (f1 - f0)
+            y = -2.3 + 4.3 * u
+            _key_light(pl, f, loc=(0.0, y, 0.90), aim=(sx * 1.0, y, 0.90), energy=PASS_W * math.sin(math.pi * u) ** 0.6)
+        _key_light(pl, f1 + 1, energy=0.0)
+        al.set_linear(pl); al.set_linear(pl.data)
+    ev = []
+    ev += studio_dim(sc)
+    ev += access_card(sc, parts, man)
+    return ev
+
+
+def studio_dim(sc):
+    """House lights: hold back before the drop, fall away on it so the gate's own light carries the frame,
+    come back for the hero. Filled in against the look helper's studio handles."""
+    return []
+
+
+def access_card(sc, parts, man):
     return []
 
 
