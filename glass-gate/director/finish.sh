@@ -6,7 +6,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 FR=${1:-renders/final}; MIX=${2:-sound/out/mix.wav}; OUT=${3:-out/clear_passage.mp4}
-TEMPORAL=${TEMPORAL:-atadenoise=0a=0.012:0b=0.03:1a=0.012:1b=0.03:2a=0.012:2b=0.03:s=5}
+TEMPORAL=${TEMPORAL:-atadenoise=0a=0.08:0b=0.16:1a=0.08:1b=0.16:2a=0.08:2b=0.16:s=7}
 SHARP=${SHARP:-unsharp=5:5:0.35:5:5:0.0}
 GRAIN=${GRAIN:-noise=c0s=2:c0f=t+u}
 CRF=${CRF:-14}
