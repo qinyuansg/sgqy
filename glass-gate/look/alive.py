@@ -1,0 +1,308 @@
+"""Helper B — the ALIVE system (the light wave that travels through the gate).
+
+Everything is driven by a handful of custom properties on the SCENE. The shaders read them through
+Attribute nodes (type 'View Layer'); the glow lights read them through drivers (simple expressions, no Python
+needed at render time). They are ordinary animatable properties, so the keys live in the scene's action and
+survive saving the .blend and re-opening it from another script.
+
+    import alive
+    alive.key_alive(scene, frame, power=None, wave=None, grant=None, screens=None, ir=None, house=None)
+
+    power    0..1       master. 0 = every emissive and every glow light is dark. 1 = alive.
+    wave     -0.1..1.1  wave front position in `wave_u` space. An LED switches on when the front passes its wave_u:
+                        hot white head, short tail, then the steady colour.
+    grant    0..1       0 = idle blue-violet, 1 = access-granted green. LEDs AHEAD of the front show `grant` x idle:
+                          first pass  : grant 0, wave -0.1 -> 1.1   dark gate lights up blue-violet
+                          green pass  : jump to grant 1 / wave -0.1 (looks identical to grant 0 / wave 1.1),
+                                        then wave -0.1 -> 1.1       green wave runs through the idle gate
+                          no wave     : keep wave at 1.1 and blend grant 0 <-> 1 for a plain cross-fade
+                        Screens and badge switch to their granted picture as grant crosses 0.5.
+    screens  0..1       boot of the reader LCD and the transparent wing displays (0 = black LCD, clear wings).
+    ir       0..1       the face-camera IR dots.
+    house    0..1       OPTIONAL studio dimmer (default 1 = untouched): scales every studio light, the world and the
+                        backdrop glow, so the LEDs can take over at the drop.
+
+Anything left None is not touched. Keys are LINEAR by default (pass interp='BEZIER' for eased keys).
+
+Convenience: set_alive(scene, **values) sets values without keys (for stills); key_first_wave() / key_grant_wave()
+write the canonical passes; setup_alive(scene) builds the glow lights (apply_look.py already calls it).
+"""
+import bpy, math
+from mathutils import Vector
+
+import materials as M
+
+PROPS = {   # name: (scene property, default, min, max)
+    'power': ('gg_power', 0.0, 0.0, 1.0),
+    'wave': ('gg_wave', -0.1, -0.1, 1.1),
+    'grant': ('gg_grant', 0.0, 0.0, 1.0),
+    'screens': ('gg_screens', 0.0, 0.0, 1.0),
+    'ir': ('gg_ir', 0.0, 0.0, 1.0),
+    'house': ('gg_house', 1.0, 0.0, 1.0),
+}
+GLOW_COLLECTION = 'GG_ALIVE_GLOW'
+GLOW_GAIN = 3.5          # artistic multiplier on the physically matched glow-light power (pi^2 x LED_STRENGTH x area)
+GLOW_EDGE = 0.10         # how soft a glow light switches on, in wave_u (lights are sparse, so softer than the strip)
+
+
+# ----------------------------------------------------------------------------------------------- properties
+def ensure_props(scene=None):
+    scene = scene or bpy.context.scene
+    M.ensure_ctrl(scene)
+    for name, (key, default, lo, hi) in PROPS.items():
+        if key not in scene:
+            scene[key] = float(default)
+        try:
+            scene.id_properties_ui(key).update(min=lo, max=hi, soft_min=lo, soft_max=hi, description=f'HYALO alive: {name}')
+        except Exception:
+            pass
+    return scene
+
+
+def set_alive(scene=None, **values):
+    """Set values immediately, no keyframes (for stills). e.g. set_alive(scene, power=1, wave=1.1, screens=1, ir=1)"""
+    scene = ensure_props(scene)
+    for name, v in values.items():
+        if v is None:
+            continue
+        scene[PROPS[name][0]] = float(v)
+    scene.update_tag()
+    for vl in scene.view_layers:
+        vl.update()
+
+
+def get_alive(scene=None):
+    scene = ensure_props(scene)
+    return {name: scene[key] for name, (key, *_r) in PROPS.items()}
+
+
+def _fcurves(idblock):
+    ad = idblock.animation_data
+    if ad is None or ad.action is None:
+        return []
+    act = ad.action
+    out = []
+    if hasattr(act, 'layers'):                       # Blender 4.4+ / 5.x layered actions
+        for layer in act.layers:
+            for strip in layer.strips:
+                for cb in getattr(strip, 'channelbags', []):
+                    out.extend(cb.fcurves)
+    elif hasattr(act, 'fcurves'):
+        out.extend(act.fcurves)
+    return out
+
+
+def key_alive(scene, frame, power=None, wave=None, grant=None, screens=None, ir=None, house=None, interp='LINEAR'):
+    """Insert keyframes at `frame` for every value that is not None."""
+    scene = ensure_props(scene)
+    given = dict(power=power, wave=wave, grant=grant, screens=screens, ir=ir, house=house)
+    for name, v in given.items():
+        if v is None:
+            continue
+        key, default, lo, hi = PROPS[name]
+        scene[key] = float(min(max(v, lo), hi))
+        path = f'["{key}"]'
+        scene.keyframe_insert(data_path=path, frame=frame)
+        for fc in _fcurves(scene):
+            if fc.data_path == path:
+                for kp in fc.keyframe_points:
+                    if abs(kp.co[0] - frame) < 1e-4:
+                        kp.interpolation = interp
+                fc.update()
+
+
+def clear_alive_keys(scene):
+    """Remove every alive keyframe (values stay as they are)."""
+    paths = {f'["{key}"]' for key, *_r in PROPS.values()}
+    ad = scene.animation_data
+    if ad is None or ad.action is None:
+        return
+    act = ad.action
+    if hasattr(act, 'layers'):
+        for layer in act.layers:
+            for strip in layer.strips:
+                for cb in getattr(strip, 'channelbags', []):
+                    for fc in [f for f in cb.fcurves if f.data_path in paths]:
+                        cb.fcurves.remove(fc)
+    else:
+        for fc in [f for f in act.fcurves if f.data_path in paths]:
+            act.fcurves.remove(fc)
+
+
+def key_first_wave(scene, f0, f1, power_frames=4, screens_at=None, screens_frames=45, ir_at=None):
+    """Canonical first pass: dark gate -> the wave runs f0..f1 -> steady idle.
+    Screens boot at `screens_at` (default: when the front reaches the reader, ~35 % of the pass)."""
+    key_alive(scene, f0 - 1, power=0.0, wave=-0.1, grant=0.0, screens=0.0, ir=0.0)
+    key_alive(scene, f0 + power_frames, power=1.0)
+    key_alive(scene, f0, wave=-0.1)
+    key_alive(scene, f1, wave=1.1)
+    s0 = screens_at if screens_at is not None else int(f0 + 0.35 * (f1 - f0))
+    key_alive(scene, s0, screens=0.0); key_alive(scene, s0 + screens_frames, screens=1.0)
+    i0 = ir_at if ir_at is not None else s0 + screens_frames // 2
+    key_alive(scene, i0, ir=0.0); key_alive(scene, i0 + 6, ir=1.0)
+
+
+def key_grant_wave(scene, f0, f1):
+    """Green pass: an idle gate (grant 0, wave 1.1) turns green as the front runs f0..f1.
+    Uses the look-alike jump (grant 0, wave 1.1) -> (grant 1, wave -0.1) between frame f0-1 and f0."""
+    key_alive(scene, f0 - 1, wave=1.1, grant=0.0)
+    key_alive(scene, f0, wave=-0.1, grant=1.0)
+    key_alive(scene, f1, wave=1.1, grant=1.0)
+
+
+def key_back_to_idle(scene, f0, f1):
+    """Green -> idle as a plain cross-fade (wave stays at 1.1)."""
+    key_alive(scene, f0, grant=1.0, wave=1.1)
+    key_alive(scene, f1, grant=0.0, wave=1.1)
+
+
+# ----------------------------------------------------------------------------------------------- wave_u safety net
+def _uses(ob, prefix):
+    return ob.type == 'MESH' and any(s.material and M.base_name(s.material.name) == prefix for s in ob.material_slots)
+
+
+def ensure_wave_u(scene=None, verbose=True):
+    """Every LED_STRIP mesh must carry the float point attribute `wave_u`. If one does not, derive it from the
+    world Y of its vertices (0.05 at the entry end .. 0.80 at the exit end) and say so."""
+    scene = scene or bpy.context.scene
+    fixed = []
+    for ob in scene.objects:
+        if not _uses(ob, 'LED_STRIP'):
+            continue
+        me = ob.data
+        at = me.attributes.get('wave_u')
+        if at is not None and at.domain == 'POINT' and at.data_type == 'FLOAT':
+            continue
+        if at is not None:
+            me.attributes.remove(at)
+        at = me.attributes.new('wave_u', 'FLOAT', 'POINT')
+        mw = ob.matrix_world
+        for i, v in enumerate(me.vertices):
+            y = (mw @ v.co).y
+            at.data[i].value = min(1.0, max(0.0, 0.05 + 0.75 * (y + 0.70) / 1.40))
+        fixed.append(ob.name)
+    if fixed and verbose:
+        print(f'[alive] WARNING: {len(fixed)} LED_STRIP meshes had no wave_u; derived from world Y: {fixed[:8]}{"..." if len(fixed) > 8 else ""}')
+    return fixed
+
+
+# ----------------------------------------------------------------------------------------------- glow lights
+def _led_samples(scene):
+    """(world centre, area, wave_u, object) for every LED_STRIP polygon."""
+    out = []
+    for ob in scene.objects:
+        if not _uses(ob, 'LED_STRIP'):
+            continue
+        me = ob.data
+        at = me.attributes.get('wave_u')
+        mw = ob.matrix_world
+        sc = abs(mw.to_scale().x * mw.to_scale().y * mw.to_scale().z) ** (2.0 / 3.0)
+        led_slots = {i for i, s in enumerate(ob.material_slots) if s.material and M.base_name(s.material.name) == 'LED_STRIP'}
+        for p in me.polygons:
+            if p.material_index not in led_slots:
+                continue
+            u = sum(at.data[v].value for v in p.vertices) / len(p.vertices) if at else 0.5
+            out.append((mw @ p.center, p.area * sc, u, ob))
+    return out
+
+
+def _cluster(samples, cell):
+    bins = {}
+    for co, area, u, ob in samples:
+        root = ob
+        while root.parent is not None:
+            root = root.parent
+        # fine across the lane (so the two sides of a rail get their own lights), coarse along it
+        key = (root.name, round(co.x / (cell * 0.2)), round(co.y / cell), round(co.z / (cell * 0.8)))
+        b = bins.setdefault(key, {'co': Vector(), 'area': 0.0, 'u': 0.0, 'obs': {}})
+        b['co'] += co * area; b['area'] += area; b['u'] += u * area
+        b['obs'][ob.name] = b['obs'].get(ob.name, 0.0) + area
+    out = []
+    for b in bins.values():
+        if b['area'] <= 0:
+            continue
+        out.append({'co': b['co'] / b['area'], 'area': b['area'], 'u': b['u'] / b['area'],
+                    'owner': max(b['obs'], key=b['obs'].get)})
+    return out
+
+
+def _driver_var(drv, name, scene, key):
+    v = drv.variables.new(); v.name = name; v.type = 'SINGLE_PROP'
+    t = v.targets[0]; t.id_type = 'SCENE'; t.id = scene; t.data_path = f'["{key}"]'
+
+
+def remove_glow(scene=None):
+    coll = bpy.data.collections.get(GLOW_COLLECTION)
+    if coll is None:
+        return
+    for ob in list(coll.objects):
+        data = ob.data
+        bpy.data.objects.remove(ob, do_unlink=True)
+        if data and data.users == 0:
+            bpy.data.lights.remove(data)
+    bpy.data.collections.remove(coll)
+
+
+def setup_alive(scene=None, max_lights=44, radius=0.012, verbose=True):
+    """Make the scene alive-ready: properties, wave_u safety net, and (LED_MODE 'hybrid') the glow lights.
+
+    Glow lights: the LED_STRIP polygons are clustered; each cluster gets one small sphere light at its centre,
+    parented to the LED object it stands for (so it follows the part), with the power the mesh itself would emit
+    (pi^2 x strength x area) and drivers that replay the shader's wave formula for its mean wave_u.
+    Idempotent: call it again after the LED objects changed.
+    """
+    scene = ensure_props(scene)
+    ensure_wave_u(scene, verbose)
+    remove_glow(scene)
+    led_mat = [m for m in bpy.data.materials if M.base_name(m.name) == 'LED_STRIP']
+    mode = led_mat[0].get('gg_led_mode', M.LED_MODE) if led_mat else M.LED_MODE
+    if mode != 'hybrid':
+        if verbose:
+            print('[alive] LED_MODE is "mesh": no glow lights, the LED meshes light the scene themselves')
+        return []
+    bpy.context.view_layer.update()
+    samples = _led_samples(scene)
+    if not samples:
+        if verbose:
+            print('[alive] no LED_STRIP geometry found: no glow lights')
+        return []
+    cell = 0.28
+    clusters = _cluster(samples, cell)
+    while len(clusters) > max_lights and cell < 3.0:
+        cell *= 1.25
+        clusters = _cluster(samples, cell)
+    coll = bpy.data.collections.new(GLOW_COLLECTION)
+    scene.collection.children.link(coll)
+    lights = []
+    for i, c in enumerate(sorted(clusters, key=lambda c: c['u'])):
+        ld = bpy.data.lights.new(f'GG_GLOW_{i:02d}', 'POINT')
+        ld.shadow_soft_size = radius
+        ld.use_shadow = True
+        base = math.pi ** 2 * M.LED_STRENGTH * c['area'] * GLOW_GAIN
+        ob = bpy.data.objects.new(ld.name, ld)
+        coll.objects.link(ob)
+        owner = bpy.data.objects.get(c['owner'])
+        ob.matrix_world.translation = c['co']
+        if owner is not None:
+            ob.parent = owner
+            ob.matrix_parent_inverse = owner.matrix_world.inverted()
+        ob['gg_wave_u'] = c['u']; ob['gg_energy'] = base
+        # diffuse light only: the LED mesh itself is what the camera, reflections and refractions see
+        ob.visible_camera = False; ob.visible_glossy = False; ob.visible_transmission = False
+        u = round(c['u'], 4)
+        on = f'clamp((w-{u})/{GLOW_EDGE}+0.5)'
+        head = f'{on}*(1-clamp((w-{u})/{M.LED_TAIL}))**2'
+        fc = ld.driver_add('energy'); d = fc.driver; d.type = 'SCRIPTED'
+        for n, k in (('p', 'gg_power'), ('w', 'gg_wave'), ('g', 'gg_grant')):
+            _driver_var(d, n, scene, k)
+        d.expression = f'{base:.5f}*p*({on}+(1-{on})*g+{M.LED_HEAD * 0.6:.2f}*{head})'
+        for ch in range(3):
+            fc = ld.driver_add('color', ch); d = fc.driver; d.type = 'SCRIPTED'
+            for n, k in (('w', 'gg_wave'), ('g', 'gg_grant')):
+                _driver_var(d, n, scene, k)
+            d.expression = f'lerp(lerp({M.COL_IDLE[ch]:.3f},{M.COL_GRANT[ch]:.3f},g*{on}),1.0,0.6*{head})'
+        lights.append(ob)
+    if verbose:
+        tot = sum(o['gg_energy'] for o in lights)
+        print(f'[alive] {len(lights)} glow lights for {len(samples)} LED polygons, {tot:.1f} W in total (steady)')
+    return lights

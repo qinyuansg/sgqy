@@ -1,0 +1,1380 @@
+{
+ "format": {
+  "samplerate": 48000,
+  "channels": 2,
+  "subtype": "PCM_24",
+  "frames": 1248000,
+  "seconds": 26.0,
+  "expected_frames": 1248000
+ },
+ "loudness": {
+  "integrated_lufs_pyloudnorm": -16.01,
+  "ffmpeg_ebur128": {
+   "integrated_lufs": -16.0,
+   "lra_lu": 5.9,
+   "true_peak_dbtp": -1.2
+  },
+  "target": -16.0
+ },
+ "true_peak": {
+  "dbtp_8x": -1.19,
+  "sample_peak_dbfs": -1.21,
+  "limit": -1.0,
+  "samples_at_full_scale": 0
+ },
+ "stems": {
+  "null_test_residual_db": -141.6,
+  "sfx_lufs": -19.09,
+  "music_lufs": -18.56,
+  "dc_offset": [
+   -1.8e-05,
+   -1.3e-05
+  ]
+ },
+ "sync": {
+  "limit_ms": 5.0,
+  "solo": {
+   "events": 76,
+   "worst_abs_ms": 0.813,
+   "over_limit": []
+  },
+  "stem": {
+   "events": 62,
+   "worst_abs_ms": 1.917,
+   "mean_ms": -0.35,
+   "over_limit": [],
+   "masked_not_measurable": [
+    {
+     "t": 2.0,
+     "sfx": "thunk_metal",
+     "part": "base_L",
+     "clear_db": -0.3
+    },
+    {
+     "t": 16.0,
+     "sfx": "impact_drop",
+     "part": "drop",
+     "clear_db": -2.1
+    },
+    {
+     "t": 18.0,
+     "sfx": "ui_boot",
+     "part": "screens_on",
+     "clear_db": -1.6
+    }
+   ]
+  },
+  "per_event_solo": [
+   {
+    "t": 0.0,
+    "sfx": "shimmer",
+    "part": "hook_light_streak",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 2.0,
+    "sfx": "whoosh",
+    "part": "hook_scatter",
+    "mode": "end",
+    "err_ms": -0.708
+   },
+   {
+    "t": 2.0,
+    "sfx": "thunk_metal",
+    "part": "base_L",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 2.5,
+    "sfx": "thunk_metal",
+    "part": "base_R",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 3.0,
+    "sfx": "screw",
+    "part": "anchor_L0",
+    "mode": "lead",
+    "err_ms": 0.542
+   },
+   {
+    "t": 3.125,
+    "sfx": "screw",
+    "part": "anchor_L1",
+    "mode": "lead",
+    "err_ms": 0.771
+   },
+   {
+    "t": 3.25,
+    "sfx": "screw",
+    "part": "anchor_L2",
+    "mode": "lead",
+    "err_ms": 0.542
+   },
+   {
+    "t": 3.375,
+    "sfx": "screw",
+    "part": "anchor_L3",
+    "mode": "lead",
+    "err_ms": 0.083
+   },
+   {
+    "t": 3.5,
+    "sfx": "screw",
+    "part": "anchor_R0",
+    "mode": "lead",
+    "err_ms": 0.563
+   },
+   {
+    "t": 3.625,
+    "sfx": "screw",
+    "part": "anchor_R1",
+    "mode": "lead",
+    "err_ms": 0.542
+   },
+   {
+    "t": 3.75,
+    "sfx": "screw",
+    "part": "anchor_R2",
+    "mode": "lead",
+    "err_ms": 0.042
+   },
+   {
+    "t": 3.875,
+    "sfx": "screw",
+    "part": "anchor_R3",
+    "mode": "lead",
+    "err_ms": 0.542
+   },
+   {
+    "t": 4.0,
+    "sfx": "thunk_metal",
+    "part": "motor",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 4.5,
+    "sfx": "clack",
+    "part": "brake",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 5.0,
+    "sfx": "thunk_metal",
+    "part": "ring_gear",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 5.25,
+    "sfx": "gear_tick",
+    "part": "planet_0",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 5.5,
+    "sfx": "gear_tick",
+    "part": "planet_1",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 5.75,
+    "sfx": "gear_tick",
+    "part": "planet_2",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 6.0,
+    "sfx": "gear_tick",
+    "part": "sun_gear",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 6.25,
+    "sfx": "clack",
+    "part": "carrier",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 6.5,
+    "sfx": "click",
+    "part": "output_shaft",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 6.75,
+    "sfx": "spring",
+    "part": "return_spring",
+    "mode": "start",
+    "err_ms": 0.0
+   },
+   {
+    "t": 7.0,
+    "sfx": "click",
+    "part": "encoder",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 7.75,
+    "sfx": "glass_slide",
+    "part": "column_tube",
+    "mode": "end",
+    "err_ms": -0.375
+   },
+   {
+    "t": 7.75,
+    "sfx": "glass_clink",
+    "part": "column_tube",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 8.0,
+    "sfx": "thunk_metal",
+    "part": "psu_L",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 8.25,
+    "sfx": "thunk_metal",
+    "part": "psu_R",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 8.5,
+    "sfx": "click",
+    "part": "pcb_L",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 8.75,
+    "sfx": "click",
+    "part": "pcb_R",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 9.0,
+    "sfx": "snap",
+    "part": "sensor_0",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 9.25,
+    "sfx": "snap",
+    "part": "sensor_1",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 9.5,
+    "sfx": "snap",
+    "part": "sensor_2",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 9.5625,
+    "sfx": "click",
+    "part": "cable_0",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 9.6875,
+    "sfx": "click",
+    "part": "cable_1",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 9.75,
+    "sfx": "snap",
+    "part": "sensor_3",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 9.8125,
+    "sfx": "click",
+    "part": "cable_2",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 9.9375,
+    "sfx": "click",
+    "part": "cable_3",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 10.0,
+    "sfx": "glass_clink",
+    "part": "post_front_L",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 10.25,
+    "sfx": "glass_clink",
+    "part": "post_front_R",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 10.5,
+    "sfx": "glass_clink",
+    "part": "post_rear_L",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 10.75,
+    "sfx": "glass_clink",
+    "part": "post_rear_R",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 11.25,
+    "sfx": "glass_slide",
+    "part": "side_panel_L",
+    "mode": "end",
+    "err_ms": -0.583
+   },
+   {
+    "t": 11.25,
+    "sfx": "glass_clink",
+    "part": "side_panel_L",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 11.75,
+    "sfx": "glass_slide",
+    "part": "side_panel_R",
+    "mode": "end",
+    "err_ms": -0.583
+   },
+   {
+    "t": 11.75,
+    "sfx": "glass_clink",
+    "part": "side_panel_R",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 12.0,
+    "sfx": "snap",
+    "part": "led_strip",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 12.25,
+    "sfx": "tap",
+    "part": "rfid_coil",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 12.5,
+    "sfx": "click",
+    "part": "qr_module",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 12.75,
+    "sfx": "clack",
+    "part": "lcd_module",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 13.0,
+    "sfx": "click",
+    "part": "camera_pod",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 13.25,
+    "sfx": "glass_clink",
+    "part": "rail_lid_L",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 13.5,
+    "sfx": "glass_clink",
+    "part": "rail_lid_R",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 13.5,
+    "sfx": "screw",
+    "part": "lid_screw_0",
+    "mode": "lead",
+    "err_ms": 0.5
+   },
+   {
+    "t": 13.625,
+    "sfx": "screw",
+    "part": "lid_screw_1",
+    "mode": "lead",
+    "err_ms": 0.542
+   },
+   {
+    "t": 13.75,
+    "sfx": "screw",
+    "part": "lid_screw_2",
+    "mode": "lead",
+    "err_ms": 0.813
+   },
+   {
+    "t": 13.875,
+    "sfx": "screw",
+    "part": "lid_screw_3",
+    "mode": "lead",
+    "err_ms": 0.063
+   },
+   {
+    "t": 14.0,
+    "sfx": "clack",
+    "part": "clamp_L",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 14.25,
+    "sfx": "clack",
+    "part": "clamp_R",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 14.5,
+    "sfx": "glass_clink",
+    "part": "wing_L",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 14.5,
+    "sfx": "lock_clunk",
+    "part": "wing_L",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 15.0,
+    "sfx": "glass_clink",
+    "part": "wing_R",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 15.0,
+    "sfx": "lock_clunk",
+    "part": "wing_R",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 15.25,
+    "sfx": "tap",
+    "part": "badge",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 16.0,
+    "sfx": "riser",
+    "part": "pre_drop",
+    "mode": "end",
+    "err_ms": -0.167
+   },
+   {
+    "t": 16.0,
+    "sfx": "impact_drop",
+    "part": "drop",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 16.0,
+    "sfx": "power_up",
+    "part": "light_wave",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 18.0,
+    "sfx": "ui_boot",
+    "part": "screens_on",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 20.0,
+    "sfx": "card_tap",
+    "part": "card",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 20.12,
+    "sfx": "beep_ok",
+    "part": "reader",
+    "mode": "start",
+    "err_ms": 0.062
+   },
+   {
+    "t": 20.25,
+    "sfx": "shimmer",
+    "part": "led_green",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 20.5,
+    "sfx": "servo",
+    "part": "wings_open",
+    "mode": "start",
+    "err_ms": 0.271
+   },
+   {
+    "t": 21.4,
+    "sfx": "lock_clunk",
+    "part": "wings_open_stop",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 22.0,
+    "sfx": "whoosh",
+    "part": "light_pass",
+    "mode": "end",
+    "err_ms": -0.688
+   },
+   {
+    "t": 22.75,
+    "sfx": "servo",
+    "part": "wings_close",
+    "mode": "start",
+    "err_ms": 0.292
+   },
+   {
+    "t": 23.5,
+    "sfx": "lock_clunk",
+    "part": "wings_closed",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 24.0,
+    "sfx": "final_hit",
+    "part": "hero",
+    "mode": "start",
+    "err_ms": 0.021
+   }
+  ],
+  "per_event_stem": [
+   {
+    "t": 2.5,
+    "sfx": "thunk_metal",
+    "part": "base_R",
+    "err_ms": -1.646,
+    "clear_db": 93.8
+   },
+   {
+    "t": 3.0,
+    "sfx": "screw",
+    "part": "anchor_L0",
+    "err_ms": -0.125,
+    "clear_db": 9.5
+   },
+   {
+    "t": 3.125,
+    "sfx": "screw",
+    "part": "anchor_L1",
+    "err_ms": -0.021,
+    "clear_db": 10.6
+   },
+   {
+    "t": 3.25,
+    "sfx": "screw",
+    "part": "anchor_L2",
+    "err_ms": -0.062,
+    "clear_db": 10.1
+   },
+   {
+    "t": 3.375,
+    "sfx": "screw",
+    "part": "anchor_L3",
+    "err_ms": -0.083,
+    "clear_db": 10.2
+   },
+   {
+    "t": 3.5,
+    "sfx": "screw",
+    "part": "anchor_R0",
+    "err_ms": -0.104,
+    "clear_db": 11.1
+   },
+   {
+    "t": 3.625,
+    "sfx": "screw",
+    "part": "anchor_R1",
+    "err_ms": 0.062,
+    "clear_db": 8.5
+   },
+   {
+    "t": 3.75,
+    "sfx": "screw",
+    "part": "anchor_R2",
+    "err_ms": 0.0,
+    "clear_db": 11.9
+   },
+   {
+    "t": 3.875,
+    "sfx": "screw",
+    "part": "anchor_R3",
+    "err_ms": 0.0,
+    "clear_db": 10.1
+   },
+   {
+    "t": 4.0,
+    "sfx": "thunk_metal",
+    "part": "motor",
+    "err_ms": -0.375,
+    "clear_db": 27.5
+   },
+   {
+    "t": 4.5,
+    "sfx": "clack",
+    "part": "brake",
+    "err_ms": -1.208,
+    "clear_db": 86.0
+   },
+   {
+    "t": 5.0,
+    "sfx": "thunk_metal",
+    "part": "ring_gear",
+    "err_ms": -1.292,
+    "clear_db": 93.7
+   },
+   {
+    "t": 5.25,
+    "sfx": "gear_tick",
+    "part": "planet_0",
+    "err_ms": -0.521,
+    "clear_db": 47.5
+   },
+   {
+    "t": 5.5,
+    "sfx": "gear_tick",
+    "part": "planet_1",
+    "err_ms": -0.375,
+    "clear_db": 31.0
+   },
+   {
+    "t": 5.75,
+    "sfx": "gear_tick",
+    "part": "planet_2",
+    "err_ms": -0.271,
+    "clear_db": 22.0
+   },
+   {
+    "t": 6.0,
+    "sfx": "gear_tick",
+    "part": "sun_gear",
+    "err_ms": -0.354,
+    "clear_db": 26.3
+   },
+   {
+    "t": 6.25,
+    "sfx": "clack",
+    "part": "carrier",
+    "err_ms": -0.229,
+    "clear_db": 16.3
+   },
+   {
+    "t": 6.5,
+    "sfx": "click",
+    "part": "output_shaft",
+    "err_ms": -0.354,
+    "clear_db": 31.6
+   },
+   {
+    "t": 6.75,
+    "sfx": "spring",
+    "part": "return_spring",
+    "err_ms": -0.583,
+    "clear_db": 55.6
+   },
+   {
+    "t": 7.0,
+    "sfx": "click",
+    "part": "encoder",
+    "err_ms": -0.375,
+    "clear_db": 33.0
+   },
+   {
+    "t": 7.75,
+    "sfx": "glass_clink",
+    "part": "column_tube",
+    "err_ms": 0.0,
+    "clear_db": 13.0
+   },
+   {
+    "t": 8.0,
+    "sfx": "thunk_metal",
+    "part": "psu_L",
+    "err_ms": 0.0,
+    "clear_db": 8.9
+   },
+   {
+    "t": 8.25,
+    "sfx": "thunk_metal",
+    "part": "psu_R",
+    "err_ms": -0.354,
+    "clear_db": 26.5
+   },
+   {
+    "t": 8.5,
+    "sfx": "click",
+    "part": "pcb_L",
+    "err_ms": -0.604,
+    "clear_db": 60.2
+   },
+   {
+    "t": 8.75,
+    "sfx": "click",
+    "part": "pcb_R",
+    "err_ms": -0.583,
+    "clear_db": 58.7
+   },
+   {
+    "t": 9.0,
+    "sfx": "snap",
+    "part": "sensor_0",
+    "err_ms": -0.542,
+    "clear_db": 57.4
+   },
+   {
+    "t": 9.25,
+    "sfx": "snap",
+    "part": "sensor_1",
+    "err_ms": -0.583,
+    "clear_db": 60.9
+   },
+   {
+    "t": 9.5,
+    "sfx": "snap",
+    "part": "sensor_2",
+    "err_ms": -0.562,
+    "clear_db": 55.9
+   },
+   {
+    "t": 9.5625,
+    "sfx": "click",
+    "part": "cable_0",
+    "err_ms": -0.083,
+    "clear_db": 13.5
+   },
+   {
+    "t": 9.6875,
+    "sfx": "click",
+    "part": "cable_1",
+    "err_ms": -0.354,
+    "clear_db": 32.1
+   },
+   {
+    "t": 9.75,
+    "sfx": "snap",
+    "part": "sensor_3",
+    "err_ms": -0.25,
+    "clear_db": 25.3
+   },
+   {
+    "t": 9.8125,
+    "sfx": "click",
+    "part": "cable_2",
+    "err_ms": -0.167,
+    "clear_db": 17.8
+   },
+   {
+    "t": 9.9375,
+    "sfx": "click",
+    "part": "cable_3",
+    "err_ms": -0.333,
+    "clear_db": 32.0
+   },
+   {
+    "t": 10.0,
+    "sfx": "glass_clink",
+    "part": "post_front_L",
+    "err_ms": -0.292,
+    "clear_db": 26.6
+   },
+   {
+    "t": 10.25,
+    "sfx": "glass_clink",
+    "part": "post_front_R",
+    "err_ms": -0.271,
+    "clear_db": 25.9
+   },
+   {
+    "t": 10.5,
+    "sfx": "glass_clink",
+    "part": "post_rear_L",
+    "err_ms": -0.271,
+    "clear_db": 30.0
+   },
+   {
+    "t": 10.75,
+    "sfx": "glass_clink",
+    "part": "post_rear_R",
+    "err_ms": -0.188,
+    "clear_db": 23.5
+   },
+   {
+    "t": 11.25,
+    "sfx": "glass_clink",
+    "part": "side_panel_L",
+    "err_ms": -0.104,
+    "clear_db": 13.6
+   },
+   {
+    "t": 11.75,
+    "sfx": "glass_clink",
+    "part": "side_panel_R",
+    "err_ms": -0.125,
+    "clear_db": 15.7
+   },
+   {
+    "t": 12.0,
+    "sfx": "snap",
+    "part": "led_strip",
+    "err_ms": -0.167,
+    "clear_db": 23.6
+   },
+   {
+    "t": 12.25,
+    "sfx": "tap",
+    "part": "rfid_coil",
+    "err_ms": 0.0,
+    "clear_db": 33.0
+   },
+   {
+    "t": 12.5,
+    "sfx": "click",
+    "part": "qr_module",
+    "err_ms": -0.562,
+    "clear_db": 55.9
+   },
+   {
+    "t": 12.75,
+    "sfx": "clack",
+    "part": "lcd_module",
+    "err_ms": -0.896,
+    "clear_db": 57.6
+   },
+   {
+    "t": 13.0,
+    "sfx": "click",
+    "part": "camera_pod",
+    "err_ms": -0.562,
+    "clear_db": 60.3
+   },
+   {
+    "t": 13.25,
+    "sfx": "glass_clink",
+    "part": "rail_lid_L",
+    "err_ms": -0.896,
+    "clear_db": 56.6
+   },
+   {
+    "t": 13.5,
+    "sfx": "glass_clink",
+    "part": "rail_lid_R",
+    "err_ms": -0.062,
+    "clear_db": 12.5
+   },
+   {
+    "t": 13.5,
+    "sfx": "screw",
+    "part": "lid_screw_0",
+    "err_ms": -0.062,
+    "clear_db": 12.5
+   },
+   {
+    "t": 13.625,
+    "sfx": "screw",
+    "part": "lid_screw_1",
+    "err_ms": 0.104,
+    "clear_db": 7.1
+   },
+   {
+    "t": 13.75,
+    "sfx": "screw",
+    "part": "lid_screw_2",
+    "err_ms": 0.021,
+    "clear_db": 9.5
+   },
+   {
+    "t": 13.875,
+    "sfx": "screw",
+    "part": "lid_screw_3",
+    "err_ms": -0.021,
+    "clear_db": 10.9
+   },
+   {
+    "t": 14.0,
+    "sfx": "clack",
+    "part": "clamp_L",
+    "err_ms": -0.417,
+    "clear_db": 35.5
+   },
+   {
+    "t": 14.25,
+    "sfx": "clack",
+    "part": "clamp_R",
+    "err_ms": -0.479,
+    "clear_db": 50.2
+   },
+   {
+    "t": 14.5,
+    "sfx": "glass_clink",
+    "part": "wing_L",
+    "err_ms": -0.896,
+    "clear_db": 52.6
+   },
+   {
+    "t": 14.5,
+    "sfx": "lock_clunk",
+    "part": "wing_L",
+    "err_ms": -0.896,
+    "clear_db": 52.6
+   },
+   {
+    "t": 15.0,
+    "sfx": "glass_clink",
+    "part": "wing_R",
+    "err_ms": -0.521,
+    "clear_db": 45.7
+   },
+   {
+    "t": 15.0,
+    "sfx": "lock_clunk",
+    "part": "wing_R",
+    "err_ms": -0.521,
+    "clear_db": 45.7
+   },
+   {
+    "t": 15.25,
+    "sfx": "tap",
+    "part": "badge",
+    "err_ms": 0.292,
+    "clear_db": 16.8
+   },
+   {
+    "t": 20.0,
+    "sfx": "card_tap",
+    "part": "card",
+    "err_ms": -1.917,
+    "clear_db": 130.1
+   },
+   {
+    "t": 20.12,
+    "sfx": "beep_ok",
+    "part": "reader",
+    "err_ms": 1.458,
+    "clear_db": 18.2
+   },
+   {
+    "t": 21.4,
+    "sfx": "lock_clunk",
+    "part": "wings_open_stop",
+    "err_ms": -0.125,
+    "clear_db": 23.1
+   },
+   {
+    "t": 23.5,
+    "sfx": "lock_clunk",
+    "part": "wings_closed",
+    "err_ms": -0.292,
+    "clear_db": 22.1
+   },
+   {
+    "t": 24.0,
+    "sfx": "final_hit",
+    "part": "hero",
+    "err_ms": -0.688,
+    "clear_db": 86.3
+   }
+  ]
+ },
+ "edits": {
+  "points": [
+   {
+    "t": 8.0,
+    "what": "music cut",
+    "music_click_ratio": 0.51,
+    "mix_click_ratio": 2.43
+   },
+   {
+    "t": 16.0,
+    "what": "music cut",
+    "music_click_ratio": 0.79,
+    "mix_click_ratio": 1.2
+   },
+   {
+    "t": 20.0,
+    "what": "music cut",
+    "music_click_ratio": 2.3,
+    "mix_click_ratio": 1.8
+   },
+   {
+    "t": 24.0,
+    "what": "final hit",
+    "music_click_ratio": 1.4,
+    "mix_click_ratio": 1.41
+   }
+  ],
+  "music_entry_at_drop_ms": -0.4,
+  "isolated_spikes_mix": 0,
+  "isolated_spikes_music": 0,
+  "note": "ratio = largest second difference in the 14 ms around the point / 99.9th percentile of the surrounding 400 ms; a splice click would stand far above 1"
+ },
+ "ends": {
+  "first_frame_rms_db": -16.6,
+  "first_frame_music_rms_db": -16.7,
+  "first_100ms_rms_db": -19.1,
+  "first_sample_abs": 0.0006070137023925781,
+  "last_sample_abs": 0.0,
+  "last_100ms_rms_db": -76.5,
+  "last_500ms_rms_db": -55.7
+ },
+ "sections": [
+  {
+   "name": "hook",
+   "t0": 0.0,
+   "t1": 2.0,
+   "busy": 0.3,
+   "mix_lufs": -17.8,
+   "sfx_lufs": -23.4,
+   "music_lufs": -19.0
+  },
+  {
+   "name": "w1_base",
+   "t0": 2.0,
+   "t1": 4.0,
+   "busy": 0.6,
+   "mix_lufs": -18.4,
+   "sfx_lufs": -19.9,
+   "music_lufs": -23.4
+  },
+  {
+   "name": "w2_drive",
+   "t0": 4.0,
+   "t1": 8.0,
+   "busy": 0.8,
+   "mix_lufs": -19.1,
+   "sfx_lufs": -21.3,
+   "music_lufs": -22.9
+  },
+  {
+   "name": "w3_electronics",
+   "t0": 8.0,
+   "t1": 10.0,
+   "busy": 0.9,
+   "mix_lufs": -19.0,
+   "sfx_lufs": -21.5,
+   "music_lufs": -22.7
+  },
+  {
+   "name": "w4_glass_body",
+   "t0": 10.0,
+   "t1": 12.0,
+   "busy": 0.9,
+   "mix_lufs": -16.8,
+   "sfx_lufs": -18.4,
+   "music_lufs": -21.9
+  },
+  {
+   "name": "w5_top_rail",
+   "t0": 12.0,
+   "t1": 14.0,
+   "busy": 1.0,
+   "mix_lufs": -17.3,
+   "sfx_lufs": -19.0,
+   "music_lufs": -21.9
+  },
+  {
+   "name": "w6_wings",
+   "t0": 14.0,
+   "t1": 16.0,
+   "busy": 0.8,
+   "mix_lufs": -16.7,
+   "sfx_lufs": -18.6,
+   "music_lufs": -21.0
+  },
+  {
+   "name": "drop_alive",
+   "t0": 16.0,
+   "t1": 20.0,
+   "busy": 0.2,
+   "mix_lufs": -12.9,
+   "sfx_lufs": -16.9,
+   "music_lufs": -14.2
+  },
+  {
+   "name": "in_use",
+   "t0": 20.0,
+   "t1": 24.0,
+   "busy": 0.5,
+   "mix_lufs": -15.0,
+   "sfx_lufs": -18.8,
+   "music_lufs": -16.9
+  },
+  {
+   "name": "hero_orbit",
+   "t0": 24.0,
+   "t1": 26.0,
+   "busy": 0.0,
+   "mix_lufs": -22.0,
+   "sfx_lufs": -23.6,
+   "music_lufs": -25.7
+  }
+ ],
+ "spectrum_octave_db_re_total": {
+  "63": -7.7,
+  "125": -6.0,
+  "250": -6.5,
+  "500": -8.1,
+  "1000": -10.4,
+  "2000": -12.3,
+  "4000": -15.0,
+  "8000": -23.4,
+  "16000": -32.8
+ },
+ "energy_above_8k_db": -27.4,
+ "stereo": {
+  "side_minus_mid_db": -7.6,
+  "correlation": 0.704
+ },
+ "build": {
+  "music": {
+   "bar": 2.0,
+   "bpm": 120.0,
+   "drop_t": 16.0,
+   "final_t": 24.0,
+   "duration": 26.0,
+   "segments": [
+    {
+     "t0": 0.0,
+     "t1": 8.0,
+     "src_t0": 0.0,
+     "src_bars": "1-4"
+    },
+    {
+     "t0": 8.0,
+     "t1": 16.0,
+     "src_t0": 72.0,
+     "src_bars": "37-40"
+    },
+    {
+     "t0": 16.0,
+     "t1": 20.0,
+     "src_t0": 16.0,
+     "src_bars": "9-10"
+    },
+    {
+     "t0": 20.0,
+     "t1": 26.0,
+     "src_t0": 124.0,
+     "src_bars": "63-65"
+    }
+   ],
+   "cuts": [
+    8.0,
+    16.0,
+    20.0
+   ],
+   "notes": [],
+   "natural_end": true,
+   "track": "Nowhere Land",
+   "source_bpm": 120.0,
+   "tempo_ratio": 1.0,
+   "stretch_percent": 0.0,
+   "build_steps": [
+    {
+     "section": "hook",
+     "t0": 0.0,
+     "lowpass_hz": 2500,
+     "trim_db": -4.0
+    },
+    {
+     "section": "w1_base",
+     "t0": 2.0,
+     "lowpass_hz": 550,
+     "trim_db": -2.0
+    },
+    {
+     "section": "w2_drive",
+     "t0": 4.0,
+     "lowpass_hz": 940,
+     "trim_db": -1.6
+    },
+    {
+     "section": "w3_electronics",
+     "t0": 8.0,
+     "lowpass_hz": 1605,
+     "trim_db": -1.2
+    },
+    {
+     "section": "w4_glass_body",
+     "t0": 10.0,
+     "lowpass_hz": 2742,
+     "trim_db": -0.8
+    },
+    {
+     "section": "w5_top_rail",
+     "t0": 12.0,
+     "lowpass_hz": 4683,
+     "trim_db": -0.4
+    },
+    {
+     "section": "w6_wings",
+     "t0": 14.0,
+     "lowpass_hz": 8000,
+     "trim_db": -0.0
+    }
+   ]
+  },
+  "master": {
+   "pre_gain_db": 2.3912388852769335,
+   "limiter_max_reduction_db": 2.0845079979391317,
+   "limiter_deepest": [
+    {
+     "t": 16.008,
+     "db": 2.08
+    },
+    {
+     "t": 14.499,
+     "db": 1.89
+    },
+    {
+     "t": 14.5,
+     "db": 1.89
+    },
+    {
+     "t": 16.05,
+     "db": 1.38
+    },
+    {
+     "t": 14.55,
+     "db": 1.13
+    },
+    {
+     "t": 13.503,
+     "db": 1.07
+    },
+    {
+     "t": 13.254,
+     "db": 1.01
+    },
+    {
+     "t": 10.003,
+     "db": 0.95
+    },
+    {
+     "t": 14.999,
+     "db": 0.81
+    },
+    {
+     "t": 15.0,
+     "db": 0.81
+    },
+    {
+     "t": 16.1,
+     "db": 0.79
+    },
+    {
+     "t": 13.55,
+     "db": 0.67
+    },
+    {
+     "t": 14.6,
+     "db": 0.65
+    },
+    {
+     "t": 13.3,
+     "db": 0.64
+    },
+    {
+     "t": 10.05,
+     "db": 0.59
+    }
+   ],
+   "limiter_active_percent": 9.763301282051282,
+   "limiter_over_1db_percent": 0.585176282051282
+  },
+  "events_placed": {
+   "shimmer": 2,
+   "whoosh": 2,
+   "thunk_metal": 6,
+   "screw": 12,
+   "clack": 5,
+   "gear_tick": 4,
+   "click": 10,
+   "spring": 1,
+   "glass_slide": 3,
+   "glass_clink": 11,
+   "snap": 5,
+   "tap": 2,
+   "lock_clunk": 4,
+   "riser": 1,
+   "impact_drop": 1,
+   "power_up": 1,
+   "ui_boot": 1,
+   "card_tap": 1,
+   "beep_ok": 1,
+   "servo": 2,
+   "final_hit": 1
+  },
+  "duck_db_max": 9.50000000000341,
+  "duck_db_mean_pre_drop": 7.691095187091098,
+  "render_seconds": 7.36,
+  "overrides": {}
+ },
+ "pass": {
+  "format": true,
+  "loudness": true,
+  "true_peak": true,
+  "sync": true,
+  "edits": true,
+  "ends": true
+ }
+}

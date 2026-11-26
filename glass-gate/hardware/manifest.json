@@ -1,0 +1,3870 @@
+{
+ "units": "m",
+ "brand": "HYALO G1",
+ "pedestal_x": 0.38,
+ "wing_open_angle_deg": {
+  "WING_L": 90,
+  "WING_R": -90
+ },
+ "gear": {
+  "sun": [
+   "DRV_sun_L",
+   "DRV_sun_R"
+  ],
+  "carrier": [
+   "DRV_out_L",
+   "DRV_out_R"
+  ],
+  "carrier_mesh": [
+   "DRV_carrier_L",
+   "DRV_carrier_R"
+  ],
+  "planets": [
+   "DRV_planet_0_L",
+   "DRV_planet_1_L",
+   "DRV_planet_2_L",
+   "DRV_planet_0_R",
+   "DRV_planet_1_R",
+   "DRV_planet_2_R"
+  ],
+  "ring": [
+   "DRV_ring_L",
+   "DRV_ring_R"
+  ],
+  "ratio": 4.0,
+  "teeth": {
+   "sun": 18,
+   "planet": 18,
+   "ring": 54
+  },
+  "module_mm": 1.5,
+  "planet_local_spin_per_carrier": -3.0,
+  "note": "Ring gear is fixed. Output angle a (rad, about +Z): set DRV_out_<s>.rotation_euler.z = a (pivot Empty on the column axis; carrier plate, 3 planets, output shaft and encoder disc are its children), DRV_sun_<s>.rotation_euler.z = ratio * a, each DRV_planet_<i>_<s>.rotation_euler.z = -3 * a (local spin about its own axis), WING_<s>.rotation_euler.z = a. Wing open: a = +90 deg for L, -90 deg for R."
+ },
+ "pivots": {
+  "WING_L": {
+   "location": [
+    -0.38,
+    0.0,
+    0.0
+   ],
+   "children": [
+    "WING_clamp_a_L",
+    "WING_clamp_b_L",
+    "WING_edgeled_L",
+    "WING_hub_L",
+    "WING_leaf_L",
+    "WING_sleeve_L"
+   ]
+  },
+  "DRV_out_L": {
+   "location": [
+    -0.38,
+    0.0,
+    0.0
+   ],
+   "children": [
+    "DRV_carrier_L",
+    "DRV_encdisc_L",
+    "DRV_planet_0_L",
+    "DRV_planet_1_L",
+    "DRV_planet_2_L",
+    "DRV_shaft_L"
+   ]
+  },
+  "WING_R": {
+   "location": [
+    0.38,
+    0.0,
+    0.0
+   ],
+   "children": [
+    "WING_clamp_a_R",
+    "WING_clamp_b_R",
+    "WING_edgeled_R",
+    "WING_hub_R",
+    "WING_leaf_R",
+    "WING_sleeve_R"
+   ]
+  },
+  "DRV_out_R": {
+   "location": [
+    0.38,
+    0.0,
+    0.0
+   ],
+   "children": [
+    "DRV_carrier_R",
+    "DRV_encdisc_R",
+    "DRV_planet_0_R",
+    "DRV_planet_1_R",
+    "DRV_planet_2_R",
+    "DRV_shaft_R"
+   ]
+  }
+ },
+ "materials": [
+  "BADGE",
+  "BRASS",
+  "CABLE_BLUE",
+  "CABLE_RED",
+  "CABLE_WHITE",
+  "CABLE_YELLOW",
+  "CAP_ALU",
+  "CHIP_BLACK",
+  "COPPER",
+  "GLASS_BODY",
+  "GLASS_LENS",
+  "GLASS_WING",
+  "LED_IR",
+  "LED_STATUS",
+  "LED_STRIP",
+  "METAL_ALU",
+  "METAL_DARK",
+  "METAL_STEEL",
+  "PCB_GOLD",
+  "PCB_GREEN",
+  "PLASTIC_BLACK",
+  "PLASTIC_WHITE",
+  "PRINT_WHITE",
+  "RUBBER",
+  "SCREEN_LCD",
+  "SCREEN_WING",
+  "SPRING_STEEL"
+ ],
+ "wave_u": {
+  "attribute": "wave_u",
+  "domain": "POINT",
+  "objects": [
+   "LED_accent_entry_L",
+   "LED_accent_entry_R",
+   "LED_accent_exit_L",
+   "LED_accent_exit_R",
+   "LED_colring_L",
+   "LED_colring_R",
+   "RAIL_led_L",
+   "RAIL_led_R",
+   "WING_edgeled_L",
+   "WING_edgeled_R"
+  ],
+  "ranges": {
+   "RAIL_led": [
+    0.02,
+    0.88
+   ],
+   "LED_accent_entry": [
+    0.03,
+    0.06
+   ],
+   "LED_colring": [
+    0.47,
+    0.47
+   ],
+   "LED_accent_exit": [
+    0.89,
+    0.92
+   ],
+   "WING_edgeled": [
+    0.92,
+    1.0
+   ]
+  }
+ },
+ "uv": {
+  "SCREEN_LCD": "RAIL_lcd_<s>: 0..1 over the screen, v towards +Y (away from the user), u to the user's right",
+  "SCREEN_WING": "WING_display_<s>: 0..1 over the layer, v up, u to the right when seen from the entry side (-Y)",
+  "BADGE": "RAIL_badge_<s>: 0..1 over the front face, v up, u to the right when seen from the lane",
+  "PCB_GREEN": "ELE_pcb_<s> (and the small rail PCBs): 0..1 over the board"
+ },
+ "triangles": 792720,
+ "parts": [
+  {
+   "name": "BASE_foot_0_L",
+   "side": "L",
+   "wave": 1,
+   "order": 0,
+   "kind": "metal_small",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.348,
+    -0.514,
+    0.0
+   ],
+   "bbox_max": [
+    -0.32,
+    -0.486,
+    0.0298
+   ],
+   "origin": [
+    -0.334,
+    -0.5,
+    0.002
+   ],
+   "triangles": 1992
+  },
+  {
+   "name": "BASE_foot_1_L",
+   "side": "L",
+   "wave": 1,
+   "order": 0,
+   "kind": "metal_small",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.44,
+    -0.514,
+    0.0
+   ],
+   "bbox_max": [
+    -0.412,
+    -0.486,
+    0.0298
+   ],
+   "origin": [
+    -0.426,
+    -0.5,
+    0.002
+   ],
+   "triangles": 1992
+  },
+  {
+   "name": "BASE_foot_2_L",
+   "side": "L",
+   "wave": 1,
+   "order": 0,
+   "kind": "metal_small",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.348,
+    0.486,
+    0.0
+   ],
+   "bbox_max": [
+    -0.32,
+    0.514,
+    0.0298
+   ],
+   "origin": [
+    -0.334,
+    0.5,
+    0.002
+   ],
+   "triangles": 1992
+  },
+  {
+   "name": "BASE_foot_3_L",
+   "side": "L",
+   "wave": 1,
+   "order": 0,
+   "kind": "metal_small",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.44,
+    0.486,
+    0.0
+   ],
+   "bbox_max": [
+    -0.412,
+    0.514,
+    0.0298
+   ],
+   "origin": [
+    -0.426,
+    0.5,
+    0.002
+   ],
+   "triangles": 1992
+  },
+  {
+   "name": "BASE_foot_0_R",
+   "side": "R",
+   "wave": 1,
+   "order": 0,
+   "kind": "metal_small",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.32,
+    -0.514,
+    0.0
+   ],
+   "bbox_max": [
+    0.348,
+    -0.486,
+    0.0298
+   ],
+   "origin": [
+    0.334,
+    -0.5,
+    0.002
+   ],
+   "triangles": 1992
+  },
+  {
+   "name": "BASE_foot_1_R",
+   "side": "R",
+   "wave": 1,
+   "order": 0,
+   "kind": "metal_small",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.412,
+    -0.514,
+    0.0
+   ],
+   "bbox_max": [
+    0.44,
+    -0.486,
+    0.0298
+   ],
+   "origin": [
+    0.426,
+    -0.5,
+    0.002
+   ],
+   "triangles": 1992
+  },
+  {
+   "name": "BASE_foot_2_R",
+   "side": "R",
+   "wave": 1,
+   "order": 0,
+   "kind": "metal_small",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.32,
+    0.486,
+    0.0
+   ],
+   "bbox_max": [
+    0.348,
+    0.514,
+    0.0298
+   ],
+   "origin": [
+    0.334,
+    0.5,
+    0.002
+   ],
+   "triangles": 1992
+  },
+  {
+   "name": "BASE_foot_3_R",
+   "side": "R",
+   "wave": 1,
+   "order": 0,
+   "kind": "metal_small",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.412,
+    0.486,
+    0.0
+   ],
+   "bbox_max": [
+    0.44,
+    0.514,
+    0.0298
+   ],
+   "origin": [
+    0.426,
+    0.5,
+    0.002
+   ],
+   "triangles": 1992
+  },
+  {
+   "name": "BASE_rail_L",
+   "side": "L",
+   "wave": 1,
+   "order": 1,
+   "kind": "metal_heavy",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.45,
+    -0.7,
+    0.004
+   ],
+   "bbox_max": [
+    -0.31,
+    0.7,
+    0.03
+   ],
+   "origin": [
+    -0.38,
+    0.0,
+    0.017
+   ],
+   "triangles": 3372
+  },
+  {
+   "name": "BASE_rail_R",
+   "side": "R",
+   "wave": 1,
+   "order": 1,
+   "kind": "metal_heavy",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.31,
+    -0.7,
+    0.004
+   ],
+   "bbox_max": [
+    0.45,
+    0.7,
+    0.03
+   ],
+   "origin": [
+    0.38,
+    0.0,
+    0.017
+   ],
+   "triangles": 3372
+  },
+  {
+   "name": "BASE_anchor_0_L",
+   "side": "L",
+   "wave": 1,
+   "order": 2,
+   "kind": "screw",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": true,
+   "children": [],
+   "bbox_min": [
+    -0.36,
+    -0.46,
+    0.004
+   ],
+   "bbox_max": [
+    -0.34,
+    -0.44,
+    0.0313
+   ],
+   "origin": [
+    -0.35,
+    -0.45,
+    0.0213
+   ],
+   "triangles": 1844
+  },
+  {
+   "name": "BASE_anchor_1_L",
+   "side": "L",
+   "wave": 1,
+   "order": 2,
+   "kind": "screw",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": true,
+   "children": [],
+   "bbox_min": [
+    -0.36,
+    -0.18,
+    0.004
+   ],
+   "bbox_max": [
+    -0.34,
+    -0.16,
+    0.0313
+   ],
+   "origin": [
+    -0.35,
+    -0.17,
+    0.0213
+   ],
+   "triangles": 1844
+  },
+  {
+   "name": "BASE_anchor_2_L",
+   "side": "L",
+   "wave": 1,
+   "order": 2,
+   "kind": "screw",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": true,
+   "children": [],
+   "bbox_min": [
+    -0.36,
+    0.16,
+    0.004
+   ],
+   "bbox_max": [
+    -0.34,
+    0.18,
+    0.0313
+   ],
+   "origin": [
+    -0.35,
+    0.17,
+    0.0213
+   ],
+   "triangles": 1844
+  },
+  {
+   "name": "BASE_anchor_3_L",
+   "side": "L",
+   "wave": 1,
+   "order": 2,
+   "kind": "screw",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": true,
+   "children": [],
+   "bbox_min": [
+    -0.36,
+    0.44,
+    0.004
+   ],
+   "bbox_max": [
+    -0.34,
+    0.46,
+    0.0313
+   ],
+   "origin": [
+    -0.35,
+    0.45,
+    0.0213
+   ],
+   "triangles": 1844
+  },
+  {
+   "name": "BASE_anchor_0_R",
+   "side": "R",
+   "wave": 1,
+   "order": 2,
+   "kind": "screw",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": true,
+   "children": [],
+   "bbox_min": [
+    0.34,
+    -0.46,
+    0.004
+   ],
+   "bbox_max": [
+    0.36,
+    -0.44,
+    0.0313
+   ],
+   "origin": [
+    0.35,
+    -0.45,
+    0.0213
+   ],
+   "triangles": 1844
+  },
+  {
+   "name": "BASE_anchor_1_R",
+   "side": "R",
+   "wave": 1,
+   "order": 2,
+   "kind": "screw",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": true,
+   "children": [],
+   "bbox_min": [
+    0.34,
+    -0.18,
+    0.004
+   ],
+   "bbox_max": [
+    0.36,
+    -0.16,
+    0.0313
+   ],
+   "origin": [
+    0.35,
+    -0.17,
+    0.0213
+   ],
+   "triangles": 1844
+  },
+  {
+   "name": "BASE_anchor_2_R",
+   "side": "R",
+   "wave": 1,
+   "order": 2,
+   "kind": "screw",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": true,
+   "children": [],
+   "bbox_min": [
+    0.34,
+    0.16,
+    0.004
+   ],
+   "bbox_max": [
+    0.36,
+    0.18,
+    0.0313
+   ],
+   "origin": [
+    0.35,
+    0.17,
+    0.0213
+   ],
+   "triangles": 1844
+  },
+  {
+   "name": "BASE_anchor_3_R",
+   "side": "R",
+   "wave": 1,
+   "order": 2,
+   "kind": "screw",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": true,
+   "children": [],
+   "bbox_min": [
+    0.34,
+    0.44,
+    0.004
+   ],
+   "bbox_max": [
+    0.36,
+    0.46,
+    0.0313
+   ],
+   "origin": [
+    0.35,
+    0.45,
+    0.0213
+   ],
+   "triangles": 1844
+  },
+  {
+   "name": "DRV_motor_L",
+   "side": "L",
+   "wave": 2,
+   "order": 0,
+   "kind": "metal_heavy",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.425,
+    -0.103,
+    0.01822
+   ],
+   "bbox_max": [
+    -0.335,
+    0.045,
+    0.2255
+   ],
+   "origin": [
+    -0.38,
+    0.0,
+    0.1
+   ],
+   "triangles": 57292
+  },
+  {
+   "name": "DRV_motor_R",
+   "side": "R",
+   "wave": 2,
+   "order": 0,
+   "kind": "metal_heavy",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.335,
+    -0.103,
+    0.01822
+   ],
+   "bbox_max": [
+    0.425,
+    0.045,
+    0.2255
+   ],
+   "origin": [
+    0.38,
+    0.0,
+    0.1
+   ],
+   "triangles": 57292
+  },
+  {
+   "name": "DRV_brake_L",
+   "side": "L",
+   "wave": 2,
+   "order": 1,
+   "kind": "metal_small",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.41518,
+    -0.031,
+    0.1696
+   ],
+   "bbox_max": [
+    -0.349,
+    0.031,
+    0.20095
+   ],
+   "origin": [
+    -0.38,
+    0.0,
+    0.186
+   ],
+   "triangles": 12848
+  },
+  {
+   "name": "DRV_brake_R",
+   "side": "R",
+   "wave": 2,
+   "order": 1,
+   "kind": "metal_small",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.349,
+    -0.031,
+    0.1696
+   ],
+   "bbox_max": [
+    0.41518,
+    0.031,
+    0.20095
+   ],
+   "origin": [
+    0.38,
+    0.0,
+    0.186
+   ],
+   "triangles": 12848
+  },
+  {
+   "name": "DRV_ring_L",
+   "side": "L",
+   "wave": 2,
+   "order": 2,
+   "kind": "gear",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.429,
+    -0.049,
+    0.1702
+   ],
+   "bbox_max": [
+    -0.331,
+    0.049,
+    0.22195
+   ],
+   "origin": [
+    -0.38,
+    0.0,
+    0.21
+   ],
+   "triangles": 15844
+  },
+  {
+   "name": "DRV_ring_R",
+   "side": "R",
+   "wave": 2,
+   "order": 2,
+   "kind": "gear",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.331,
+    -0.049,
+    0.1702
+   ],
+   "bbox_max": [
+    0.429,
+    0.049,
+    0.22195
+   ],
+   "origin": [
+    0.38,
+    0.0,
+    0.21
+   ],
+   "triangles": 15844
+  },
+  {
+   "name": "DRV_planet_0_L",
+   "side": "L",
+   "wave": 2,
+   "order": 3,
+   "kind": "gear",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.36785,
+    -0.015,
+    0.2087
+   ],
+   "bbox_max": [
+    -0.33815,
+    0.015,
+    0.2293
+   ],
+   "origin": [
+    -0.353,
+    0.0,
+    0.219
+   ],
+   "triangles": 8328,
+   "parent": "DRV_out_L"
+  },
+  {
+   "name": "DRV_planet_1_L",
+   "side": "L",
+   "wave": 2,
+   "order": 3,
+   "kind": "gear",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.40835,
+    0.00838,
+    0.2087
+   ],
+   "bbox_max": [
+    -0.37865,
+    0.03838,
+    0.2293
+   ],
+   "origin": [
+    -0.3935,
+    0.02338,
+    0.219
+   ],
+   "triangles": 8328,
+   "parent": "DRV_out_L"
+  },
+  {
+   "name": "DRV_planet_2_L",
+   "side": "L",
+   "wave": 2,
+   "order": 3,
+   "kind": "gear",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.40835,
+    -0.03838,
+    0.2087
+   ],
+   "bbox_max": [
+    -0.37865,
+    -0.00838,
+    0.2293
+   ],
+   "origin": [
+    -0.3935,
+    -0.02338,
+    0.219
+   ],
+   "triangles": 8328,
+   "parent": "DRV_out_L"
+  },
+  {
+   "name": "DRV_planet_0_R",
+   "side": "R",
+   "wave": 2,
+   "order": 3,
+   "kind": "gear",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.33815,
+    -0.015,
+    0.2087
+   ],
+   "bbox_max": [
+    0.36785,
+    0.015,
+    0.2293
+   ],
+   "origin": [
+    0.353,
+    0.0,
+    0.219
+   ],
+   "triangles": 8328,
+   "parent": "DRV_out_R"
+  },
+  {
+   "name": "DRV_planet_1_R",
+   "side": "R",
+   "wave": 2,
+   "order": 3,
+   "kind": "gear",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.37865,
+    0.00838,
+    0.2087
+   ],
+   "bbox_max": [
+    0.40835,
+    0.03838,
+    0.2293
+   ],
+   "origin": [
+    0.3935,
+    0.02338,
+    0.219
+   ],
+   "triangles": 8328,
+   "parent": "DRV_out_R"
+  },
+  {
+   "name": "DRV_planet_2_R",
+   "side": "R",
+   "wave": 2,
+   "order": 3,
+   "kind": "gear",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.37865,
+    -0.03838,
+    0.2087
+   ],
+   "bbox_max": [
+    0.40835,
+    -0.00838,
+    0.2293
+   ],
+   "origin": [
+    0.3935,
+    -0.02338,
+    0.219
+   ],
+   "triangles": 8328,
+   "parent": "DRV_out_R"
+  },
+  {
+   "name": "DRV_sun_L",
+   "side": "L",
+   "wave": 2,
+   "order": 4,
+   "kind": "gear",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.395,
+    -0.01485,
+    0.209
+   ],
+   "bbox_max": [
+    -0.365,
+    0.01485,
+    0.2318
+   ],
+   "origin": [
+    -0.38,
+    0.0,
+    0.219
+   ],
+   "triangles": 4048
+  },
+  {
+   "name": "DRV_sun_R",
+   "side": "R",
+   "wave": 2,
+   "order": 4,
+   "kind": "gear",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.365,
+    -0.01485,
+    0.209
+   ],
+   "bbox_max": [
+    0.395,
+    0.01485,
+    0.2318
+   ],
+   "origin": [
+    0.38,
+    0.0,
+    0.219
+   ],
+   "triangles": 4048
+  },
+  {
+   "name": "DRV_carrier_L",
+   "side": "L",
+   "wave": 2,
+   "order": 5,
+   "kind": "gear",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.40034,
+    -0.03024,
+    0.2079
+   ],
+   "bbox_max": [
+    -0.34615,
+    0.03024,
+    0.2506
+   ],
+   "origin": [
+    -0.38,
+    0.0,
+    0.236
+   ],
+   "triangles": 5152,
+   "parent": "DRV_out_L"
+  },
+  {
+   "name": "DRV_carrier_R",
+   "side": "R",
+   "wave": 2,
+   "order": 5,
+   "kind": "gear",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.34615,
+    -0.03024,
+    0.2079
+   ],
+   "bbox_max": [
+    0.40034,
+    0.03024,
+    0.2506
+   ],
+   "origin": [
+    0.38,
+    0.0,
+    0.236
+   ],
+   "triangles": 5152,
+   "parent": "DRV_out_R"
+  },
+  {
+   "name": "DRV_shaft_L",
+   "side": "L",
+   "wave": 2,
+   "order": 6,
+   "kind": "metal_heavy",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.398,
+    -0.018,
+    0.2413
+   ],
+   "bbox_max": [
+    -0.362,
+    0.0187,
+    0.9316
+   ],
+   "origin": [
+    -0.38,
+    0.0,
+    0.59
+   ],
+   "triangles": 3068,
+   "parent": "DRV_out_L"
+  },
+  {
+   "name": "DRV_shaft_R",
+   "side": "R",
+   "wave": 2,
+   "order": 6,
+   "kind": "metal_heavy",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.362,
+    -0.018,
+    0.2413
+   ],
+   "bbox_max": [
+    0.398,
+    0.0187,
+    0.9316
+   ],
+   "origin": [
+    0.38,
+    0.0,
+    0.59
+   ],
+   "triangles": 3068,
+   "parent": "DRV_out_R"
+  },
+  {
+   "name": "DRV_spring_L",
+   "side": "L",
+   "wave": 2,
+   "order": 7,
+   "kind": "spring",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.42123,
+    -0.01791,
+    0.2641
+   ],
+   "bbox_max": [
+    -0.36252,
+    0.01748,
+    0.3194
+   ],
+   "origin": [
+    -0.38,
+    0.0,
+    0.292
+   ],
+   "triangles": 7700
+  },
+  {
+   "name": "DRV_spring_R",
+   "side": "R",
+   "wave": 2,
+   "order": 7,
+   "kind": "spring",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.36252,
+    -0.01791,
+    0.2641
+   ],
+   "bbox_max": [
+    0.42123,
+    0.01748,
+    0.3194
+   ],
+   "origin": [
+    0.38,
+    0.0,
+    0.292
+   ],
+   "triangles": 7700
+  },
+  {
+   "name": "DRV_encdisc_L",
+   "side": "L",
+   "wave": 2,
+   "order": 8,
+   "kind": "metal_small",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.415,
+    -0.035,
+    0.3436
+   ],
+   "bbox_max": [
+    -0.345,
+    0.035,
+    0.3564
+   ],
+   "origin": [
+    -0.38,
+    0.0,
+    0.35
+   ],
+   "triangles": 3740,
+   "parent": "DRV_out_L"
+  },
+  {
+   "name": "DRV_encoder_L",
+   "side": "L",
+   "wave": 2,
+   "order": 8,
+   "kind": "pcb",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.3485,
+    -0.013,
+    0.341
+   ],
+   "bbox_max": [
+    -0.3314,
+    0.013,
+    0.3838
+   ],
+   "origin": [
+    -0.38,
+    0.0,
+    0.35
+   ],
+   "triangles": 796
+  },
+  {
+   "name": "DRV_encdisc_R",
+   "side": "R",
+   "wave": 2,
+   "order": 8,
+   "kind": "metal_small",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.345,
+    -0.035,
+    0.3436
+   ],
+   "bbox_max": [
+    0.415,
+    0.035,
+    0.3564
+   ],
+   "origin": [
+    0.38,
+    0.0,
+    0.35
+   ],
+   "triangles": 3740,
+   "parent": "DRV_out_R"
+  },
+  {
+   "name": "DRV_encoder_R",
+   "side": "R",
+   "wave": 2,
+   "order": 8,
+   "kind": "pcb",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.3314,
+    -0.013,
+    0.341
+   ],
+   "bbox_max": [
+    0.3485,
+    0.013,
+    0.3838
+   ],
+   "origin": [
+    0.38,
+    0.0,
+    0.35
+   ],
+   "triangles": 796
+  },
+  {
+   "name": "DRV_cage_L",
+   "side": "L",
+   "wave": 2,
+   "order": 9,
+   "kind": "metal_small",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.4312,
+    -0.05,
+    0.21925
+   ],
+   "bbox_max": [
+    -0.33,
+    0.05,
+    0.3999
+   ],
+   "origin": [
+    -0.38,
+    0.0,
+    0.39
+   ],
+   "triangles": 9980
+  },
+  {
+   "name": "DRV_cage_R",
+   "side": "R",
+   "wave": 2,
+   "order": 9,
+   "kind": "metal_small",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.33,
+    -0.05,
+    0.21925
+   ],
+   "bbox_max": [
+    0.4312,
+    0.05,
+    0.3999
+   ],
+   "origin": [
+    0.38,
+    0.0,
+    0.39
+   ],
+   "triangles": 9980
+  },
+  {
+   "name": "GLS_column_L",
+   "side": "L",
+   "wave": 2,
+   "order": 10,
+   "kind": "glass",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.44,
+    -0.06,
+    0.0305
+   ],
+   "bbox_max": [
+    -0.32,
+    0.06,
+    0.4
+   ],
+   "origin": [
+    -0.38,
+    0.0,
+    0.215
+   ],
+   "triangles": 3072
+  },
+  {
+   "name": "GLS_column_R",
+   "side": "R",
+   "wave": 2,
+   "order": 10,
+   "kind": "glass",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.32,
+    -0.06,
+    0.0305
+   ],
+   "bbox_max": [
+    0.44,
+    0.06,
+    0.4
+   ],
+   "origin": [
+    0.38,
+    0.0,
+    0.215
+   ],
+   "triangles": 3072
+  },
+  {
+   "name": "WING_hub_L",
+   "side": "L",
+   "wave": 2,
+   "order": 11,
+   "kind": "metal_small",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.4314,
+    -0.0514,
+    0.404
+   ],
+   "bbox_max": [
+    -0.3286,
+    0.0514,
+    0.914
+   ],
+   "origin": [
+    -0.38,
+    0.0,
+    0.658
+   ],
+   "triangles": 8184,
+   "parent": "WING_L"
+  },
+  {
+   "name": "WING_hub_R",
+   "side": "R",
+   "wave": 2,
+   "order": 11,
+   "kind": "metal_small",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.3286,
+    -0.0514,
+    0.404
+   ],
+   "bbox_max": [
+    0.4314,
+    0.0514,
+    0.914
+   ],
+   "origin": [
+    0.38,
+    0.0,
+    0.658
+   ],
+   "triangles": 8184,
+   "parent": "WING_R"
+  },
+  {
+   "name": "WING_sleeve_L",
+   "side": "L",
+   "wave": 2,
+   "order": 12,
+   "kind": "glass",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.44,
+    -0.06,
+    0.403
+   ],
+   "bbox_max": [
+    -0.32,
+    0.06,
+    0.92
+   ],
+   "origin": [
+    -0.38,
+    0.0,
+    0.6615
+   ],
+   "triangles": 3072,
+   "parent": "WING_L"
+  },
+  {
+   "name": "WING_sleeve_R",
+   "side": "R",
+   "wave": 2,
+   "order": 12,
+   "kind": "glass",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.32,
+    -0.06,
+    0.403
+   ],
+   "bbox_max": [
+    0.44,
+    0.06,
+    0.92
+   ],
+   "origin": [
+    0.38,
+    0.0,
+    0.6615
+   ],
+   "triangles": 3072,
+   "parent": "WING_R"
+  },
+  {
+   "name": "ELE_pcb_L",
+   "side": "L",
+   "wave": 3,
+   "order": 0,
+   "kind": "pcb",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.41,
+    -0.67,
+    0.0305
+   ],
+   "bbox_max": [
+    -0.36687,
+    -0.56,
+    0.44
+   ],
+   "origin": [
+    -0.3874,
+    -0.615,
+    0.29
+   ],
+   "triangles": 51748
+  },
+  {
+   "name": "ELE_psu_L",
+   "side": "L",
+   "wave": 3,
+   "order": 0,
+   "kind": "metal_heavy",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.419,
+    0.5619,
+    0.0305
+   ],
+   "bbox_max": [
+    -0.347,
+    0.662,
+    0.256
+   ],
+   "origin": [
+    -0.384,
+    0.612,
+    0.151
+   ],
+   "triangles": 21512
+  },
+  {
+   "name": "ELE_pcb_R",
+   "side": "R",
+   "wave": 3,
+   "order": 0,
+   "kind": "pcb",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.36687,
+    -0.67,
+    0.0305
+   ],
+   "bbox_max": [
+    0.41,
+    -0.56,
+    0.44
+   ],
+   "origin": [
+    0.3874,
+    -0.615,
+    0.29
+   ],
+   "triangles": 51748
+  },
+  {
+   "name": "ELE_psu_R",
+   "side": "R",
+   "wave": 3,
+   "order": 0,
+   "kind": "metal_heavy",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.347,
+    0.5619,
+    0.0305
+   ],
+   "bbox_max": [
+    0.419,
+    0.662,
+    0.256
+   ],
+   "origin": [
+    0.384,
+    0.612,
+    0.151
+   ],
+   "triangles": 21512
+  },
+  {
+   "name": "ELE_sensor_entry_L",
+   "side": "L",
+   "wave": 3,
+   "order": 1,
+   "kind": "pcb",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.342,
+    -0.62,
+    0.0305
+   ],
+   "bbox_max": [
+    -0.32,
+    -0.596,
+    0.88
+   ],
+   "origin": [
+    -0.328,
+    -0.608,
+    0.455
+   ],
+   "triangles": 9196
+  },
+  {
+   "name": "ELE_sensor_exit_L",
+   "side": "L",
+   "wave": 3,
+   "order": 1,
+   "kind": "pcb",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.342,
+    0.596,
+    0.0305
+   ],
+   "bbox_max": [
+    -0.32,
+    0.62,
+    0.88
+   ],
+   "origin": [
+    -0.328,
+    0.608,
+    0.455
+   ],
+   "triangles": 9196
+  },
+  {
+   "name": "ELE_sensor_entry_R",
+   "side": "R",
+   "wave": 3,
+   "order": 1,
+   "kind": "pcb",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.32,
+    -0.62,
+    0.0305
+   ],
+   "bbox_max": [
+    0.342,
+    -0.596,
+    0.88
+   ],
+   "origin": [
+    0.328,
+    -0.608,
+    0.455
+   ],
+   "triangles": 9196
+  },
+  {
+   "name": "ELE_sensor_exit_R",
+   "side": "R",
+   "wave": 3,
+   "order": 1,
+   "kind": "pcb",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.32,
+    0.596,
+    0.0305
+   ],
+   "bbox_max": [
+    0.342,
+    0.62,
+    0.88
+   ],
+   "origin": [
+    0.328,
+    0.608,
+    0.455
+   ],
+   "triangles": 9196
+  },
+  {
+   "name": "ELE_cable_0_L",
+   "side": "L",
+   "wave": 3,
+   "order": 2,
+   "kind": "cable",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.3946,
+    -0.6523,
+    0.0185
+   ],
+   "bbox_max": [
+    -0.3522,
+    0.60273,
+    0.1639
+   ],
+   "origin": [
+    -0.3925,
+    0.0,
+    0.0206
+   ],
+   "triangles": 5816
+  },
+  {
+   "name": "ELE_cable_1_L",
+   "side": "L",
+   "wave": 3,
+   "order": 2,
+   "kind": "cable",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.4011,
+    -0.6473,
+    0.0185
+   ],
+   "bbox_max": [
+    -0.3522,
+    0.59073,
+    0.1639
+   ],
+   "origin": [
+    -0.399,
+    0.0,
+    0.0206
+   ],
+   "triangles": 5744
+  },
+  {
+   "name": "ELE_cable_2_L",
+   "side": "L",
+   "wave": 3,
+   "order": 2,
+   "kind": "cable",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.4086,
+    -0.6302,
+    0.0183
+   ],
+   "bbox_max": [
+    -0.375,
+    -0.103,
+    0.1639
+   ],
+   "origin": [
+    -0.4055,
+    -0.33,
+    0.0206
+   ],
+   "triangles": 2812
+  },
+  {
+   "name": "ELE_cable_3_L",
+   "side": "L",
+   "wave": 3,
+   "order": 2,
+   "kind": "cable",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.4256,
+    -0.6128,
+    0.4225
+   ],
+   "bbox_max": [
+    -0.3781,
+    -0.5976,
+    0.9312
+   ],
+   "origin": [
+    -0.4,
+    -0.606,
+    0.68
+   ],
+   "triangles": 2628
+  },
+  {
+   "name": "ELE_cable_0_R",
+   "side": "R",
+   "wave": 3,
+   "order": 2,
+   "kind": "cable",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.3522,
+    -0.6523,
+    0.0185
+   ],
+   "bbox_max": [
+    0.3946,
+    0.60273,
+    0.1639
+   ],
+   "origin": [
+    0.3925,
+    0.0,
+    0.0206
+   ],
+   "triangles": 5816
+  },
+  {
+   "name": "ELE_cable_1_R",
+   "side": "R",
+   "wave": 3,
+   "order": 2,
+   "kind": "cable",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.3522,
+    -0.6473,
+    0.0185
+   ],
+   "bbox_max": [
+    0.4011,
+    0.59073,
+    0.1639
+   ],
+   "origin": [
+    0.399,
+    0.0,
+    0.0206
+   ],
+   "triangles": 5744
+  },
+  {
+   "name": "ELE_cable_2_R",
+   "side": "R",
+   "wave": 3,
+   "order": 2,
+   "kind": "cable",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.375,
+    -0.6302,
+    0.0183
+   ],
+   "bbox_max": [
+    0.4086,
+    -0.103,
+    0.1639
+   ],
+   "origin": [
+    0.4055,
+    -0.33,
+    0.0206
+   ],
+   "triangles": 2812
+  },
+  {
+   "name": "ELE_cable_3_R",
+   "side": "R",
+   "wave": 3,
+   "order": 2,
+   "kind": "cable",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.3781,
+    -0.6128,
+    0.4225
+   ],
+   "bbox_max": [
+    0.4256,
+    -0.5976,
+    0.9312
+   ],
+   "origin": [
+    0.4,
+    -0.606,
+    0.68
+   ],
+   "triangles": 2628
+  },
+  {
+   "name": "GLS_post_entry_L",
+   "side": "L",
+   "wave": 4,
+   "order": 0,
+   "kind": "glass",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.45,
+    -0.7,
+    0.0305
+   ],
+   "bbox_max": [
+    -0.31,
+    -0.54,
+    0.933
+   ],
+   "origin": [
+    -0.38,
+    -0.62,
+    0.48175
+   ],
+   "triangles": 4608
+  },
+  {
+   "name": "GLS_post_exit_L",
+   "side": "L",
+   "wave": 4,
+   "order": 0,
+   "kind": "glass",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.45,
+    0.54,
+    0.0305
+   ],
+   "bbox_max": [
+    -0.31,
+    0.7,
+    0.933
+   ],
+   "origin": [
+    -0.38,
+    0.62,
+    0.48175
+   ],
+   "triangles": 4608
+  },
+  {
+   "name": "GLS_post_entry_R",
+   "side": "R",
+   "wave": 4,
+   "order": 0,
+   "kind": "glass",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.31,
+    -0.7,
+    0.0305
+   ],
+   "bbox_max": [
+    0.45,
+    -0.54,
+    0.933
+   ],
+   "origin": [
+    0.38,
+    -0.62,
+    0.48175
+   ],
+   "triangles": 4608
+  },
+  {
+   "name": "GLS_post_exit_R",
+   "side": "R",
+   "wave": 4,
+   "order": 0,
+   "kind": "glass",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.31,
+    0.54,
+    0.0305
+   ],
+   "bbox_max": [
+    0.45,
+    0.7,
+    0.933
+   ],
+   "origin": [
+    0.38,
+    0.62,
+    0.48175
+   ],
+   "triangles": 4608
+  },
+  {
+   "name": "GLS_clips_entry_L",
+   "side": "L",
+   "wave": 4,
+   "order": 1,
+   "kind": "metal_small",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.4444,
+    -0.445,
+    0.0304
+   ],
+   "bbox_max": [
+    -0.42265,
+    -0.115,
+    0.052
+   ],
+   "origin": [
+    -0.435,
+    -0.28,
+    0.041
+   ],
+   "triangles": 512
+  },
+  {
+   "name": "GLS_clips_exit_L",
+   "side": "L",
+   "wave": 4,
+   "order": 1,
+   "kind": "metal_small",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.4444,
+    0.115,
+    0.0304
+   ],
+   "bbox_max": [
+    -0.42265,
+    0.445,
+    0.052
+   ],
+   "origin": [
+    -0.435,
+    0.28,
+    0.041
+   ],
+   "triangles": 512
+  },
+  {
+   "name": "GLS_clips_entry_R",
+   "side": "R",
+   "wave": 4,
+   "order": 1,
+   "kind": "metal_small",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.42265,
+    -0.445,
+    0.0304
+   ],
+   "bbox_max": [
+    0.4444,
+    -0.115,
+    0.052
+   ],
+   "origin": [
+    0.435,
+    -0.28,
+    0.041
+   ],
+   "triangles": 512
+  },
+  {
+   "name": "GLS_clips_exit_R",
+   "side": "R",
+   "wave": 4,
+   "order": 1,
+   "kind": "metal_small",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.42265,
+    0.115,
+    0.0304
+   ],
+   "bbox_max": [
+    0.4444,
+    0.445,
+    0.052
+   ],
+   "origin": [
+    0.435,
+    0.28,
+    0.041
+   ],
+   "triangles": 512
+  },
+  {
+   "name": "GLS_panel_entry_L",
+   "side": "L",
+   "wave": 4,
+   "order": 2,
+   "kind": "glass",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.44,
+    -0.5395,
+    0.036
+   ],
+   "bbox_max": [
+    -0.43,
+    -0.04,
+    0.9325
+   ],
+   "origin": [
+    -0.435,
+    -0.28975,
+    0.48425
+   ],
+   "triangles": 284
+  },
+  {
+   "name": "GLS_panel_exit_L",
+   "side": "L",
+   "wave": 4,
+   "order": 2,
+   "kind": "glass",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.44,
+    0.04,
+    0.036
+   ],
+   "bbox_max": [
+    -0.43,
+    0.5395,
+    0.9325
+   ],
+   "origin": [
+    -0.435,
+    0.28975,
+    0.48425
+   ],
+   "triangles": 284
+  },
+  {
+   "name": "GLS_panel_entry_R",
+   "side": "R",
+   "wave": 4,
+   "order": 2,
+   "kind": "glass",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.43,
+    -0.5395,
+    0.036
+   ],
+   "bbox_max": [
+    0.44,
+    -0.04,
+    0.9325
+   ],
+   "origin": [
+    0.435,
+    -0.28975,
+    0.48425
+   ],
+   "triangles": 284
+  },
+  {
+   "name": "GLS_panel_exit_R",
+   "side": "R",
+   "wave": 4,
+   "order": 2,
+   "kind": "glass",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.43,
+    0.04,
+    0.036
+   ],
+   "bbox_max": [
+    0.44,
+    0.5395,
+    0.9325
+   ],
+   "origin": [
+    0.435,
+    0.28975,
+    0.48425
+   ],
+   "triangles": 284
+  },
+  {
+   "name": "LED_accent_entry_L",
+   "side": "L",
+   "wave": 5,
+   "order": 0,
+   "kind": "led",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.336,
+    -0.58,
+    0.0305
+   ],
+   "bbox_max": [
+    -0.3194,
+    -0.564,
+    0.266
+   ],
+   "origin": [
+    -0.324,
+    -0.572,
+    0.15
+   ],
+   "triangles": 816
+  },
+  {
+   "name": "LED_accent_exit_L",
+   "side": "L",
+   "wave": 5,
+   "order": 0,
+   "kind": "led",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.336,
+    0.564,
+    0.0305
+   ],
+   "bbox_max": [
+    -0.3194,
+    0.58,
+    0.266
+   ],
+   "origin": [
+    -0.324,
+    0.572,
+    0.15
+   ],
+   "triangles": 816
+  },
+  {
+   "name": "LED_accent_entry_R",
+   "side": "R",
+   "wave": 5,
+   "order": 0,
+   "kind": "led",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.3194,
+    -0.58,
+    0.0305
+   ],
+   "bbox_max": [
+    0.336,
+    -0.564,
+    0.266
+   ],
+   "origin": [
+    0.324,
+    -0.572,
+    0.15
+   ],
+   "triangles": 816
+  },
+  {
+   "name": "LED_accent_exit_R",
+   "side": "R",
+   "wave": 5,
+   "order": 0,
+   "kind": "led",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.3194,
+    0.564,
+    0.0305
+   ],
+   "bbox_max": [
+    0.336,
+    0.58,
+    0.266
+   ],
+   "origin": [
+    0.324,
+    0.572,
+    0.15
+   ],
+   "triangles": 816
+  },
+  {
+   "name": "LED_colring_L",
+   "side": "L",
+   "wave": 5,
+   "order": 1,
+   "kind": "led",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.43902,
+    -0.05902,
+    0.9216
+   ],
+   "bbox_max": [
+    -0.32098,
+    0.05902,
+    0.9324
+   ],
+   "origin": [
+    -0.38,
+    0.0,
+    0.927
+   ],
+   "triangles": 11996
+  },
+  {
+   "name": "LED_colring_R",
+   "side": "R",
+   "wave": 5,
+   "order": 1,
+   "kind": "led",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.32098,
+    -0.05902,
+    0.9216
+   ],
+   "bbox_max": [
+    0.43902,
+    0.05902,
+    0.9324
+   ],
+   "origin": [
+    0.38,
+    0.0,
+    0.927
+   ],
+   "triangles": 11996
+  },
+  {
+   "name": "RAIL_spine_L",
+   "side": "L",
+   "wave": 5,
+   "order": 2,
+   "kind": "metal_heavy",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.4476,
+    -0.6976,
+    0.9334
+   ],
+   "bbox_max": [
+    -0.3124,
+    0.6976,
+    0.9916
+   ],
+   "origin": [
+    -0.38,
+    0.0,
+    0.935
+   ],
+   "triangles": 6092
+  },
+  {
+   "name": "RAIL_spine_R",
+   "side": "R",
+   "wave": 5,
+   "order": 2,
+   "kind": "metal_heavy",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.3124,
+    -0.6976,
+    0.9334
+   ],
+   "bbox_max": [
+    0.4476,
+    0.6976,
+    0.9916
+   ],
+   "origin": [
+    0.38,
+    0.0,
+    0.935
+   ],
+   "triangles": 6092
+  },
+  {
+   "name": "RAIL_led_L",
+   "side": "L",
+   "wave": 5,
+   "order": 3,
+   "kind": "led",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.4489,
+    -0.6989,
+    0.934
+   ],
+   "bbox_max": [
+    -0.3111,
+    0.6989,
+    0.9396
+   ],
+   "origin": [
+    -0.38,
+    0.0,
+    0.9368
+   ],
+   "triangles": 37584
+  },
+  {
+   "name": "RAIL_led_R",
+   "side": "R",
+   "wave": 5,
+   "order": 3,
+   "kind": "led",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.3111,
+    -0.6989,
+    0.934
+   ],
+   "bbox_max": [
+    0.4489,
+    0.6989,
+    0.9396
+   ],
+   "origin": [
+    0.38,
+    0.0,
+    0.9368
+   ],
+   "triangles": 37584
+  },
+  {
+   "name": "RAIL_rfid_L",
+   "side": "L",
+   "wave": 5,
+   "order": 4,
+   "kind": "pcb",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.418,
+    -0.65,
+    0.93645
+   ],
+   "bbox_max": [
+    -0.342,
+    -0.574,
+    0.99088
+   ],
+   "origin": [
+    -0.38,
+    -0.612,
+    0.989
+   ],
+   "triangles": 3932
+  },
+  {
+   "name": "RAIL_rfid_R",
+   "side": "R",
+   "wave": 5,
+   "order": 4,
+   "kind": "pcb",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.342,
+    -0.65,
+    0.93645
+   ],
+   "bbox_max": [
+    0.418,
+    -0.574,
+    0.99088
+   ],
+   "origin": [
+    0.38,
+    -0.612,
+    0.989
+   ],
+   "triangles": 3932
+  },
+  {
+   "name": "RAIL_qr_L",
+   "side": "L",
+   "wave": 5,
+   "order": 5,
+   "kind": "plastic",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.4055,
+    -0.5475,
+    0.93645
+   ],
+   "bbox_max": [
+    -0.3545,
+    -0.5025,
+    0.9914
+   ],
+   "origin": [
+    -0.38,
+    -0.525,
+    0.97
+   ],
+   "triangles": 2684
+  },
+  {
+   "name": "RAIL_qr_R",
+   "side": "R",
+   "wave": 5,
+   "order": 5,
+   "kind": "plastic",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.3545,
+    -0.5475,
+    0.93645
+   ],
+   "bbox_max": [
+    0.4055,
+    -0.5025,
+    0.9914
+   ],
+   "origin": [
+    0.38,
+    -0.525,
+    0.97
+   ],
+   "triangles": 2684
+  },
+  {
+   "name": "RAIL_lcd_L",
+   "side": "L",
+   "wave": 5,
+   "order": 6,
+   "kind": "pcb",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.428,
+    -0.478,
+    0.93645
+   ],
+   "bbox_max": [
+    -0.332,
+    -0.30628,
+    0.9912
+   ],
+   "origin": [
+    -0.38,
+    -0.395,
+    0.986
+   ],
+   "triangles": 2476
+  },
+  {
+   "name": "RAIL_lcd_R",
+   "side": "R",
+   "wave": 5,
+   "order": 6,
+   "kind": "pcb",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.332,
+    -0.478,
+    0.93645
+   ],
+   "bbox_max": [
+    0.428,
+    -0.30628,
+    0.9912
+   ],
+   "origin": [
+    0.38,
+    -0.395,
+    0.986
+   ],
+   "triangles": 2476
+  },
+  {
+   "name": "RAIL_speaker_L",
+   "side": "L",
+   "wave": 5,
+   "order": 7,
+   "kind": "metal_small",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.4045,
+    -0.2495,
+    0.93645
+   ],
+   "bbox_max": [
+    -0.3555,
+    -0.20039,
+    0.9904
+   ],
+   "origin": [
+    -0.38,
+    -0.225,
+    0.978
+   ],
+   "triangles": 3988
+  },
+  {
+   "name": "RAIL_speaker_R",
+   "side": "R",
+   "wave": 5,
+   "order": 7,
+   "kind": "metal_small",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.3555,
+    -0.2495,
+    0.93645
+   ],
+   "bbox_max": [
+    0.4045,
+    -0.20039,
+    0.9904
+   ],
+   "origin": [
+    0.38,
+    -0.225,
+    0.978
+   ],
+   "triangles": 3988
+  },
+  {
+   "name": "RAIL_lid_L",
+   "side": "L",
+   "wave": 5,
+   "order": 9,
+   "kind": "glass",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.45,
+    -0.7,
+    0.9403
+   ],
+   "bbox_max": [
+    -0.31,
+    0.7,
+    1.0
+   ],
+   "origin": [
+    -0.38,
+    0.0,
+    0.97
+   ],
+   "triangles": 6044
+  },
+  {
+   "name": "RAIL_lid_R",
+   "side": "R",
+   "wave": 5,
+   "order": 9,
+   "kind": "glass",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.31,
+    -0.7,
+    0.9403
+   ],
+   "bbox_max": [
+    0.45,
+    0.7,
+    1.0
+   ],
+   "origin": [
+    0.38,
+    0.0,
+    0.97
+   ],
+   "triangles": 6044
+  },
+  {
+   "name": "RAIL_screw_0_L",
+   "side": "L",
+   "wave": 5,
+   "order": 10,
+   "kind": "screw",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": true,
+   "children": [],
+   "bbox_min": [
+    -0.3327,
+    -0.5647,
+    0.9859
+   ],
+   "bbox_max": [
+    -0.3233,
+    -0.5553,
+    0.9999
+   ],
+   "origin": [
+    -0.328,
+    -0.56,
+    0.9999
+   ],
+   "triangles": 1436
+  },
+  {
+   "name": "RAIL_screw_1_L",
+   "side": "L",
+   "wave": 5,
+   "order": 10,
+   "kind": "screw",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": true,
+   "children": [],
+   "bbox_min": [
+    -0.4367,
+    -0.5647,
+    0.9859
+   ],
+   "bbox_max": [
+    -0.4273,
+    -0.5553,
+    0.9999
+   ],
+   "origin": [
+    -0.432,
+    -0.56,
+    0.9999
+   ],
+   "triangles": 1436
+  },
+  {
+   "name": "RAIL_screw_2_L",
+   "side": "L",
+   "wave": 5,
+   "order": 10,
+   "kind": "screw",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": true,
+   "children": [],
+   "bbox_min": [
+    -0.3327,
+    -0.0047,
+    0.9859
+   ],
+   "bbox_max": [
+    -0.3233,
+    0.0047,
+    0.9999
+   ],
+   "origin": [
+    -0.328,
+    0.0,
+    0.9999
+   ],
+   "triangles": 1436
+  },
+  {
+   "name": "RAIL_screw_3_L",
+   "side": "L",
+   "wave": 5,
+   "order": 10,
+   "kind": "screw",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": true,
+   "children": [],
+   "bbox_min": [
+    -0.4367,
+    -0.0047,
+    0.9859
+   ],
+   "bbox_max": [
+    -0.4273,
+    0.0047,
+    0.9999
+   ],
+   "origin": [
+    -0.432,
+    0.0,
+    0.9999
+   ],
+   "triangles": 1436
+  },
+  {
+   "name": "RAIL_screw_4_L",
+   "side": "L",
+   "wave": 5,
+   "order": 10,
+   "kind": "screw",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": true,
+   "children": [],
+   "bbox_min": [
+    -0.3327,
+    0.5553,
+    0.9859
+   ],
+   "bbox_max": [
+    -0.3233,
+    0.5647,
+    0.9999
+   ],
+   "origin": [
+    -0.328,
+    0.56,
+    0.9999
+   ],
+   "triangles": 1436
+  },
+  {
+   "name": "RAIL_screw_5_L",
+   "side": "L",
+   "wave": 5,
+   "order": 10,
+   "kind": "screw",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": true,
+   "children": [],
+   "bbox_min": [
+    -0.4367,
+    0.5553,
+    0.9859
+   ],
+   "bbox_max": [
+    -0.4273,
+    0.5647,
+    0.9999
+   ],
+   "origin": [
+    -0.432,
+    0.56,
+    0.9999
+   ],
+   "triangles": 1436
+  },
+  {
+   "name": "RAIL_screw_0_R",
+   "side": "R",
+   "wave": 5,
+   "order": 10,
+   "kind": "screw",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": true,
+   "children": [],
+   "bbox_min": [
+    0.3233,
+    -0.5647,
+    0.9859
+   ],
+   "bbox_max": [
+    0.3327,
+    -0.5553,
+    0.9999
+   ],
+   "origin": [
+    0.328,
+    -0.56,
+    0.9999
+   ],
+   "triangles": 1436
+  },
+  {
+   "name": "RAIL_screw_1_R",
+   "side": "R",
+   "wave": 5,
+   "order": 10,
+   "kind": "screw",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": true,
+   "children": [],
+   "bbox_min": [
+    0.4273,
+    -0.5647,
+    0.9859
+   ],
+   "bbox_max": [
+    0.4367,
+    -0.5553,
+    0.9999
+   ],
+   "origin": [
+    0.432,
+    -0.56,
+    0.9999
+   ],
+   "triangles": 1436
+  },
+  {
+   "name": "RAIL_screw_2_R",
+   "side": "R",
+   "wave": 5,
+   "order": 10,
+   "kind": "screw",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": true,
+   "children": [],
+   "bbox_min": [
+    0.3233,
+    -0.0047,
+    0.9859
+   ],
+   "bbox_max": [
+    0.3327,
+    0.0047,
+    0.9999
+   ],
+   "origin": [
+    0.328,
+    0.0,
+    0.9999
+   ],
+   "triangles": 1436
+  },
+  {
+   "name": "RAIL_screw_3_R",
+   "side": "R",
+   "wave": 5,
+   "order": 10,
+   "kind": "screw",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": true,
+   "children": [],
+   "bbox_min": [
+    0.4273,
+    -0.0047,
+    0.9859
+   ],
+   "bbox_max": [
+    0.4367,
+    0.0047,
+    0.9999
+   ],
+   "origin": [
+    0.432,
+    0.0,
+    0.9999
+   ],
+   "triangles": 1436
+  },
+  {
+   "name": "RAIL_screw_4_R",
+   "side": "R",
+   "wave": 5,
+   "order": 10,
+   "kind": "screw",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": true,
+   "children": [],
+   "bbox_min": [
+    0.3233,
+    0.5553,
+    0.9859
+   ],
+   "bbox_max": [
+    0.3327,
+    0.5647,
+    0.9999
+   ],
+   "origin": [
+    0.328,
+    0.56,
+    0.9999
+   ],
+   "triangles": 1436
+  },
+  {
+   "name": "RAIL_screw_5_R",
+   "side": "R",
+   "wave": 5,
+   "order": 10,
+   "kind": "screw",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": true,
+   "children": [],
+   "bbox_min": [
+    0.4273,
+    0.5553,
+    0.9859
+   ],
+   "bbox_max": [
+    0.4367,
+    0.5647,
+    0.9999
+   ],
+   "origin": [
+    0.432,
+    0.56,
+    0.9999
+   ],
+   "triangles": 1436
+  },
+  {
+   "name": "RAIL_campod_L",
+   "side": "L",
+   "wave": 5,
+   "order": 11,
+   "kind": "plastic",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.439,
+    -0.28972,
+    1.00035
+   ],
+   "bbox_max": [
+    -0.321,
+    -0.26668,
+    1.02809
+   ],
+   "origin": [
+    -0.38,
+    -0.28,
+    1.01456
+   ],
+   "triangles": 4116
+  },
+  {
+   "name": "RAIL_campod_R",
+   "side": "R",
+   "wave": 5,
+   "order": 11,
+   "kind": "plastic",
+   "insert_dir": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.321,
+    -0.28972,
+    1.00035
+   ],
+   "bbox_max": [
+    0.439,
+    -0.26668,
+    1.02809
+   ],
+   "origin": [
+    0.38,
+    -0.28,
+    1.01456
+   ],
+   "triangles": 4116
+  },
+  {
+   "name": "RAIL_badge_L",
+   "side": "L",
+   "wave": 5,
+   "order": 12,
+   "kind": "metal_small",
+   "insert_dir": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.30965,
+    -0.202,
+    0.958
+   ],
+   "bbox_max": [
+    -0.30815,
+    -0.138,
+    0.978
+   ],
+   "origin": [
+    -0.3089,
+    -0.17,
+    0.968
+   ],
+   "triangles": 156
+  },
+  {
+   "name": "RAIL_badge_R",
+   "side": "R",
+   "wave": 5,
+   "order": 12,
+   "kind": "metal_small",
+   "insert_dir": [
+    -1.0,
+    0.0,
+    0.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.30815,
+    -0.202,
+    0.958
+   ],
+   "bbox_max": [
+    0.30965,
+    -0.138,
+    0.978
+   ],
+   "origin": [
+    0.3089,
+    -0.17,
+    0.968
+   ],
+   "triangles": 156
+  },
+  {
+   "name": "WING_clamp_a_L",
+   "side": "L",
+   "wave": 6,
+   "order": 0,
+   "kind": "metal_small",
+   "insert_dir": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.3324,
+    -0.04094,
+    0.49
+   ],
+   "bbox_max": [
+    -0.2754,
+    0.04094,
+    0.55
+   ],
+   "origin": [
+    -0.3,
+    0.0,
+    0.52
+   ],
+   "triangles": 2400,
+   "parent": "WING_L"
+  },
+  {
+   "name": "WING_clamp_b_L",
+   "side": "L",
+   "wave": 6,
+   "order": 0,
+   "kind": "metal_small",
+   "insert_dir": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.3324,
+    -0.04094,
+    0.81
+   ],
+   "bbox_max": [
+    -0.2754,
+    0.04094,
+    0.87
+   ],
+   "origin": [
+    -0.3,
+    0.0,
+    0.84
+   ],
+   "triangles": 2400,
+   "parent": "WING_L"
+  },
+  {
+   "name": "WING_clamp_a_R",
+   "side": "R",
+   "wave": 6,
+   "order": 0,
+   "kind": "metal_small",
+   "insert_dir": [
+    -1.0,
+    0.0,
+    0.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.2754,
+    -0.04094,
+    0.49
+   ],
+   "bbox_max": [
+    0.3324,
+    0.04094,
+    0.55
+   ],
+   "origin": [
+    0.3,
+    0.0,
+    0.52
+   ],
+   "triangles": 2400,
+   "parent": "WING_R"
+  },
+  {
+   "name": "WING_clamp_b_R",
+   "side": "R",
+   "wave": 6,
+   "order": 0,
+   "kind": "metal_small",
+   "insert_dir": [
+    -1.0,
+    0.0,
+    0.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.2754,
+    -0.04094,
+    0.81
+   ],
+   "bbox_max": [
+    0.3324,
+    0.04094,
+    0.87
+   ],
+   "origin": [
+    0.3,
+    0.0,
+    0.84
+   ],
+   "triangles": 2400,
+   "parent": "WING_R"
+  },
+  {
+   "name": "WING_edgeled_L",
+   "side": "L",
+   "wave": 6,
+   "order": 1,
+   "kind": "led",
+   "insert_dir": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    -0.3174,
+    -0.0032,
+    0.551
+   ],
+   "bbox_max": [
+    -0.3124,
+    0.0032,
+    0.809
+   ],
+   "origin": [
+    -0.3155,
+    0.0,
+    0.68
+   ],
+   "triangles": 3256,
+   "parent": "WING_L"
+  },
+  {
+   "name": "WING_edgeled_R",
+   "side": "R",
+   "wave": 6,
+   "order": 1,
+   "kind": "led",
+   "insert_dir": [
+    -1.0,
+    0.0,
+    0.0
+   ],
+   "screw": false,
+   "children": [],
+   "bbox_min": [
+    0.3124,
+    -0.0032,
+    0.551
+   ],
+   "bbox_max": [
+    0.3174,
+    0.0032,
+    0.809
+   ],
+   "origin": [
+    0.3155,
+    0.0,
+    0.68
+   ],
+   "triangles": 3256,
+   "parent": "WING_R"
+  },
+  {
+   "name": "WING_leaf_L",
+   "side": "L",
+   "wave": 6,
+   "order": 2,
+   "kind": "wing",
+   "insert_dir": [
+    1.0,
+    0.0,
+    0.0
+   ],
+   "screw": false,
+   "children": [
+    "WING_display_L"
+   ],
+   "bbox_min": [
+    -0.31,
+    -0.006,
+    0.22
+   ],
+   "bbox_max": [
+    -0.012,
+    0.00675,
+    0.92
+   ],
+   "origin": [
+    -0.161,
+    0.0,
+    0.57
+   ],
+   "triangles": 1032,
+   "parent": "WING_L"
+  },
+  {
+   "name": "WING_leaf_R",
+   "side": "R",
+   "wave": 6,
+   "order": 2,
+   "kind": "wing",
+   "insert_dir": [
+    -1.0,
+    0.0,
+    0.0
+   ],
+   "screw": false,
+   "children": [
+    "WING_display_R"
+   ],
+   "bbox_min": [
+    0.012,
+    -0.006,
+    0.22
+   ],
+   "bbox_max": [
+    0.31,
+    0.00675,
+    0.92
+   ],
+   "origin": [
+    0.161,
+    0.0,
+    0.57
+   ],
+   "triangles": 1032,
+   "parent": "WING_R"
+  }
+ ]
+}

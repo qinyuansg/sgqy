@@ -1,0 +1,281 @@
+{
+ "objects": 124,
+ "problems": [],
+ "glass": {
+  "GLS_column_L": {
+   "neighbours": 19,
+   "intersections": {},
+   "min_gap_mm": 0.5,
+   "closest": "BASE_rail_L",
+   "nonmanifold": 0,
+   "boundary": 0,
+   "shells": 1,
+   "inverted": 0,
+   "volume_cm3": 1038.0274851043368,
+   "wall_mm": {
+    "min": 7.99,
+    "p05": 7.99,
+    "median": 12.92
+   }
+  },
+  "GLS_column_R": {
+   "neighbours": 19,
+   "intersections": {},
+   "min_gap_mm": 0.5,
+   "closest": "BASE_rail_R",
+   "nonmanifold": 0,
+   "boundary": 0,
+   "shells": 1,
+   "inverted": 0,
+   "volume_cm3": 1038.0274851043373,
+   "wall_mm": {
+    "min": 7.99,
+    "p05": 7.99,
+    "median": 12.92
+   }
+  },
+  "GLS_panel_entry_L": {
+   "neighbours": 10,
+   "intersections": {},
+   "min_gap_mm": 0.4,
+   "closest": "GLS_clips_entry_L",
+   "nonmanifold": 0,
+   "boundary": 0,
+   "shells": 1,
+   "inverted": 0,
+   "volume_cm3": 4469.986125519173,
+   "wall_mm": {
+    "min": 9.99,
+    "p05": 10.47,
+    "median": 22.4
+   }
+  },
+  "GLS_panel_entry_R": {
+   "neighbours": 10,
+   "intersections": {},
+   "min_gap_mm": 0.4,
+   "closest": "GLS_clips_entry_R",
+   "nonmanifold": 0,
+   "boundary": 0,
+   "shells": 1,
+   "inverted": 0,
+   "volume_cm3": 4469.9861255191745,
+   "wall_mm": {
+    "min": 9.99,
+    "p05": 10.47,
+    "median": 22.4
+   }
+  },
+  "GLS_panel_exit_L": {
+   "neighbours": 10,
+   "intersections": {},
+   "min_gap_mm": 0.4,
+   "closest": "GLS_clips_exit_L",
+   "nonmanifold": 0,
+   "boundary": 0,
+   "shells": 1,
+   "inverted": 0,
+   "volume_cm3": 4469.986125519173,
+   "wall_mm": {
+    "min": 9.99,
+    "p05": 10.47,
+    "median": 22.4
+   }
+  },
+  "GLS_panel_exit_R": {
+   "neighbours": 10,
+   "intersections": {},
+   "min_gap_mm": 0.4,
+   "closest": "GLS_clips_exit_R",
+   "nonmanifold": 0,
+   "boundary": 0,
+   "shells": 1,
+   "inverted": 0,
+   "volume_cm3": 4469.9861255191745,
+   "wall_mm": {
+    "min": 9.99,
+    "p05": 10.47,
+    "median": 22.4
+   }
+  },
+  "GLS_post_entry_L": {
+   "neighbours": 11,
+   "intersections": {},
+   "min_gap_mm": 0.4,
+   "closest": "RAIL_spine_L",
+   "nonmanifold": 0,
+   "boundary": 0,
+   "shells": 1,
+   "inverted": 0,
+   "volume_cm3": 3490.186779133481,
+   "wall_mm": {
+    "min": 6.34,
+    "p05": 6.54,
+    "median": 14.42
+   }
+  },
+  "GLS_post_entry_R": {
+   "neighbours": 11,
+   "intersections": {},
+   "min_gap_mm": 0.4,
+   "closest": "RAIL_spine_R",
+   "nonmanifold": 0,
+   "boundary": 0,
+   "shells": 1,
+   "inverted": 0,
+   "volume_cm3": 3490.1867791334844,
+   "wall_mm": {
+    "min": 6.34,
+    "p05": 6.54,
+    "median": 14.42
+   }
+  },
+  "GLS_post_exit_L": {
+   "neighbours": 9,
+   "intersections": {},
+   "min_gap_mm": 0.4,
+   "closest": "RAIL_spine_L",
+   "nonmanifold": 0,
+   "boundary": 0,
+   "shells": 1,
+   "inverted": 0,
+   "volume_cm3": 3490.1867791334744,
+   "wall_mm": {
+    "min": 6.34,
+    "p05": 6.54,
+    "median": 14.42
+   }
+  },
+  "GLS_post_exit_R": {
+   "neighbours": 9,
+   "intersections": {},
+   "min_gap_mm": 0.4,
+   "closest": "RAIL_spine_R",
+   "nonmanifold": 0,
+   "boundary": 0,
+   "shells": 1,
+   "inverted": 0,
+   "volume_cm3": 3490.186779133478,
+   "wall_mm": {
+    "min": 6.34,
+    "p05": 6.54,
+    "median": 14.42
+   }
+  },
+  "RAIL_lid_L": {
+   "neighbours": 14,
+   "intersections": {},
+   "min_gap_mm": 0.35,
+   "closest": "RAIL_badge_L",
+   "nonmanifold": 0,
+   "boundary": 0,
+   "shells": 1,
+   "inverted": 0,
+   "volume_cm3": 2718.839472655389,
+   "wall_mm": {
+    "min": 7.99,
+    "p05": 7.99,
+    "median": 9.7
+   }
+  },
+  "RAIL_lid_R": {
+   "neighbours": 14,
+   "intersections": {},
+   "min_gap_mm": 0.35,
+   "closest": "RAIL_badge_R",
+   "nonmanifold": 0,
+   "boundary": 0,
+   "shells": 1,
+   "inverted": 0,
+   "volume_cm3": 2718.839472655389,
+   "wall_mm": {
+    "min": 7.99,
+    "p05": 7.99,
+    "median": 9.7
+   }
+  },
+  "WING_leaf_L": {
+   "neighbours": 4,
+   "intersections": {},
+   "min_gap_mm": 0.36,
+   "closest": "WING_clamp_a_L",
+   "nonmanifold": 0,
+   "boundary": 0,
+   "shells": 1,
+   "inverted": 0,
+   "volume_cm3": 2485.1290274976013,
+   "wall_mm": {
+    "min": 11.99,
+    "p05": 12.21,
+    "median": 15.62
+   }
+  },
+  "WING_leaf_R": {
+   "neighbours": 4,
+   "intersections": {},
+   "min_gap_mm": 0.36,
+   "closest": "WING_clamp_a_R",
+   "nonmanifold": 0,
+   "boundary": 0,
+   "shells": 1,
+   "inverted": 0,
+   "volume_cm3": 2485.1290274976013,
+   "wall_mm": {
+    "min": 11.99,
+    "p05": 12.21,
+    "median": 15.62
+   }
+  },
+  "WING_sleeve_L": {
+   "neighbours": 9,
+   "intersections": {},
+   "min_gap_mm": 0.4,
+   "closest": "WING_clamp_a_L",
+   "nonmanifold": 0,
+   "boundary": 0,
+   "shells": 1,
+   "inverted": 0,
+   "volume_cm3": 1453.0537134747672,
+   "wall_mm": {
+    "min": 7.99,
+    "p05": 7.99,
+    "median": 12.92
+   }
+  },
+  "WING_sleeve_R": {
+   "neighbours": 9,
+   "intersections": {},
+   "min_gap_mm": 0.4,
+   "closest": "WING_clamp_a_R",
+   "nonmanifold": 0,
+   "boundary": 0,
+   "shells": 1,
+   "inverted": 0,
+   "volume_cm3": 1453.053713474767,
+   "wall_mm": {
+    "min": 7.99,
+    "p05": 7.99,
+    "median": 12.92
+   }
+  }
+ },
+ "triangles": 792720,
+ "bbox": [
+  [
+   -0.45,
+   -0.7,
+   0.0
+  ],
+  [
+   0.45,
+   0.7,
+   1.0281
+  ]
+ ],
+ "glass_intersections": 0,
+ "worst_gap_mm": [
+  0.35,
+  "RAIL_lid_L",
+  "RAIL_badge_L"
+ ]
+}

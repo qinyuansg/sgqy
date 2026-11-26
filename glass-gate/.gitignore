@@ -3,3 +3,6 @@ renders/
 *.blend1
 **/cache/
 **/tmp/
+*.blend
+sound/out/*.wav
+sound/**/tmp*/

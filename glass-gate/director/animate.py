@@ -44,89 +44,21 @@ names = set(parts)
 print(f'[animate] {len(parts)} animatable parts')
 
 # ---------------------------------------------------------------- schedule
-sched = C.schedule(parts, man)          # list of dicts: part, t, dur, dist, dir, twist, turns, sfx, gain, shake, k, bounce
+sched = C.schedule(parts, man)
 by_part = {}
 for s in sched:
     by_part.setdefault(s['part'], s)
 missing = [n for n in parts if n not in by_part]
 if missing:
     print(f'[warn] {len(missing)} parts have no landing in the schedule:', missing[:20])
-
-# every child must land after its parent
-for n, s in by_part.items():
+for n, s in by_part.items():        # every child must land after its parent
     p = parts[n].obj.parent
     while p is not None:
         if p.name in by_part and by_part[p.name]['t'] > s['t'] - s.get('dur', 0.4) + 1e-6:
             print(f'[warn] {n} flies at {s["t"] - s.get("dur", 0.4):.2f} before its parent {p.name} has landed ({by_part[p.name]["t"]:.2f})')
         p = p.parent
 
-# ---------------------------------------------------------------- hook: exploded hover, then lift away
-HOOK_END = C.HOOK_END
-rnd = random.Random(3)
-for n, part in parts.items():
-    E = Vector(C.explode_offset(part, man))
-    ph = rnd.uniform(0, math.tau); bob = rnd.uniform(0.004, 0.009)
-    spin = C.hook_spin(part)                      # rad/s about world Z for gears etc.
-    t_go = C.SCATTER_T0 + C.scatter_delay(part)   # when this part starts to leave
-    part.show(0, True)
-    f_end = F(HOOK_END)
-    for f in range(0, f_end):
-        t = f / FPS
-        off = E * (1.0 + C.HOOK_BREATHE * math.sin(math.pi * t / HOOK_END)) + Vector((0, 0, bob * math.sin(math.tau * 0.45 * t + ph)))
-        if t > t_go:
-            u = (t - t_go) / max(1e-3, HOOK_END - t_go)
-            off = off + Vector(C.scatter_dir(part)) * (C.SCATTER_DIST * al.ease_in(u, 2.6))
-        part.pose(f, off, spin * t, (0, 0, 1))
-    part.show(f_end, False)
-
-# ---------------------------------------------------------------- build: fly-ins
-events = []
-shakes = []
-for n, s in by_part.items():
-    part = parts[n]
-    al.fly_in(part, s['t'], dur=s.get('dur', 0.4), dist=s.get('dist', 0.6), direction=s.get('dir', part.info.get('insert_dir', (0, 0, 1))),
-              twist_deg=s.get('twist', 0.0), k=s.get('k', 2.4), bounce=s.get('bounce', 0.004), wobble_deg=s.get('wobble', 0.6),
-              turns=s.get('turns', 0.0), seed=hash(n) & 0xffff)
-    if s.get('shake'):
-        shakes.append((s['t'], s['shake']))
-
-for part in parts.values():
-    part.bake(names)
-    al.set_linear(part.obj)
-
-# ---------------------------------------------------------------- in use: wings + gear train
-wing_angle = man.get('wing_open_angle_deg', {})
-gear = man.get('gear', {})
-def wing_theta(t):
-    return C.wing_open_fraction(t)      # 0 closed .. 1 open (may overshoot slightly)
-use_f0, use_f1 = F(C.USE_T0), NF - 1
-def key_spin(obj, base_q, axis, ang, f):
-    obj.rotation_quaternion = base_q @ Quaternion(axis, ang)
-    obj.keyframe_insert('rotation_quaternion', frame=f)
-spin_objs = []
-for wn, deg in wing_angle.items():
-    o = bpy.data.objects.get(wn)
-    if o: spin_objs.append((o, math.radians(deg)))
-side_sign = {}
-for wn, deg in wing_angle.items():
-    side_sign[wn[-1]] = math.radians(deg)
-ratio = gear.get('ratio', 4.0)
-teeth = gear.get('teeth', {'sun': 18, 'planet': 18, 'ring': 54})
-for key, mult in (('carrier', 1.0), ('sun', ratio), ('planets', -teeth['ring'] / teeth['planet'])):
-    for gn in gear.get(key, []):
-        o = bpy.data.objects.get(gn)
-        if o: spin_objs.append((o, side_sign.get(gn[-1], math.radians(90)) * mult * C.GEAR_DIR))
-for o, full in spin_objs:
-    o.rotation_mode = 'QUATERNION'
-    base = parts[o.name].rest_rot.copy() if o.name in parts else o.rotation_quaternion.copy()
-    for f in range(use_f0, use_f1 + 1):
-        key_spin(o, base, (0, 0, 1), full * wing_theta(f / FPS), f)
-    al.set_linear(o)
-
-# ---------------------------------------------------------------- extras (card, light pass, sweep lights)
-extra_events = C.extras(sc, parts, man) or []
-
-# ---------------------------------------------------------------- camera
+# ---------------------------------------------------------------- camera (first: flights are fitted to the framing)
 cam = bpy.data.objects.get('DIRECTOR_CAM')
 if cam is None:
     cd = bpy.data.cameras.new('DIRECTOR_CAM'); cam = bpy.data.objects.new('DIRECTOR_CAM', cd); sc.collection.objects.link(cam)
@@ -136,11 +68,10 @@ cam.data.clip_start = 0.01; cam.data.clip_end = 100
 cam.data.dof.aperture_blades = 9
 sc.camera = cam
 shots = C.shots(parts, man)
+cuts = sorted({F(s.t0) for s in shots})
+shakes = [(s['t'], s['shake'] * C.shake_scale(s['t'])) for s in by_part.values() if s.get('shake')]
 baked = al.bake_camera(cam, shots, NF, shakes)
 al.set_linear(cam); al.set_linear(cam.data)
-
-# camera sanity: speed/acceleration spikes inside shots (hitches)
-cuts = sorted({F(s.t0) for s in shots})
 worst = []
 for f in range(2, NF):
     if f in cuts or f - 1 in cuts:
@@ -151,6 +82,99 @@ worst.sort(reverse=True)
 print('[camera] cuts at frames', cuts)
 print('[camera] largest frame-to-frame speed changes (m/frame):', [(round(d, 4), f) for d, f in worst[:6]])
 
+
+def shot_start(f):
+    return max(c for c in cuts if c <= f)
+
+
+def in_frame(part, off, f, margin=0.02):
+    """Is any corner of the part's bounding box, displaced by `off`, inside the frame at frame f?"""
+    for c in part.obj.bound_box:
+        x, y, z = al.cam_project(baked[min(f, NF - 1)], part.rest_world @ Vector(c) + off)
+        if z > 0 and -margin < x < 1 + margin and -margin < y < 1 + margin:
+            return True
+    return False
+
+
+# ---------------------------------------------------------------- hook: exploded hover, then lift away
+HOOK_F = F(C.HOOK_END)
+rnd = random.Random(3)
+for n, part in parts.items():
+    E = Vector(C.explode_offset(part, man))
+    ph = rnd.uniform(0, math.tau); bob = rnd.uniform(0.003, 0.007)
+    spin = C.hook_spin(part)
+    t_go = C.SCATTER_T0 + C.scatter_delay(part)
+    part.show(0, True)
+    for f in range(0, HOOK_F):
+        t = f / FPS
+        off = E * (1.0 + C.HOOK_BREATHE * math.sin(0.5 * math.pi * t / C.HOOK_END)) + Vector((0, 0, bob * math.sin(math.tau * 0.45 * t + ph)))
+        if t > t_go:
+            u = (t - t_go) / max(1e-3, C.HOOK_END - t_go)
+            off = off + Vector(C.scatter_dir(part)) * (C.SCATTER_DIST * al.ease_in(u, 2.4))
+        part.pose(f, off, spin * t, (0, 0, 1))
+    part.show(HOOK_F, False)
+
+# ---------------------------------------------------------------- build: fly-ins fitted to the frame
+extended, stuck = [], []
+for n, s in by_part.items():
+    part = parts[n]
+    d = Vector(s.get('dir', part.info.get('insert_dir', (0, 0, 1)))).normalized()
+    dist = s.get('dist', 0.6)
+    side = Vector(s['side']) if s.get('side') else None
+    fl, f0 = F(s['t']), F(s['t'] - s.get('dur', 0.4))
+    vis0 = max(f0, shot_start(fl), HOOK_F)
+    if vis0 == f0 and s.get('mode') != 'none':
+        d0 = dist
+        for _ in range(9):
+            if not in_frame(part, d * dist + (side or Vector()), f0):
+                break
+            dist *= 1.3
+        else:
+            stuck.append(n)
+        if dist != d0:
+            extended.append((n, round(d0, 2), round(dist, 2)))
+    al.fly_in(part, s['t'], dur=s.get('dur', 0.4), dist=dist, direction=d, twist_deg=s.get('twist', 0.0), k=s.get('k', 2.4),
+              bounce=s.get('bounce', 0.004), wobble_deg=s.get('wobble', 0.6), turns=s.get('turns', 0.0),
+              seed=sum(map(ord, n)), side=side, show_from=vis0, mode='screw' if part.info.get('kind') == 'screw' else 'drop')
+if extended:
+    print(f'[fit] {len(extended)} flights lengthened to start out of frame:', extended)
+if stuck:
+    print(f'[warn] {len(stuck)} parts still start inside the frame:', stuck)
+
+for part in parts.values():
+    part.bake(names)
+    al.set_linear(part.obj)
+
+# ---------------------------------------------------------------- in use: wings + gear train
+wing_angle = man.get('wing_open_angle_deg', {})
+gear = man.get('gear', {})
+side_open = {wn[-1]: math.radians(deg) for wn, deg in wing_angle.items()}
+teeth = gear.get('teeth', {'sun': 18, 'planet': 18, 'ring': 54})
+spin_objs = []
+for wn, deg in wing_angle.items():
+    o = bpy.data.objects.get(wn)
+    if o: spin_objs.append((o, math.radians(deg)))
+for key, mult in (('carrier', 1.0), ('sun', gear.get('ratio', 4.0)), ('planets', gear.get('planet_local_spin_per_carrier', -teeth['ring'] / teeth['planet']))):
+    for gn in gear.get(key, []):
+        o = bpy.data.objects.get(gn)
+        if o: spin_objs.append((o, side_open.get(gn[-1], math.radians(90)) * mult * C.GEAR_DIR))
+use_f0 = F(C.USE_T0)
+for o, full in spin_objs:
+    o.rotation_mode = 'QUATERNION'
+    base = parts[o.name].rest_rot.copy() if o.name in parts else o.rotation_quaternion.copy()
+    prev = None
+    for f in range(use_f0, NF):
+        q = base @ Quaternion((0, 0, 1), full * C.wing_open_fraction(f / FPS))
+        if prev is not None and q.dot(prev) < 0:
+            q = -q
+        prev = q
+        o.rotation_quaternion = q
+        o.keyframe_insert('rotation_quaternion', frame=f)
+    al.set_linear(o)
+
+# ---------------------------------------------------------------- extras (card, light pass, sweep lights, studio dimming)
+extra_events = C.extras(sc, parts, man, baked) or []
+
 # ---------------------------------------------------------------- alive moment
 if not a.no_alive:
     try:
@@ -158,44 +182,47 @@ if not a.no_alive:
         C.key_alive(sc, alive)
         print('[alive] keyed')
     except Exception as e:
+        import traceback; traceback.print_exc()
         print('[warn] alive keys not applied:', repr(e))
 
 # ---------------------------------------------------------------- timeline export (sound follows picture)
-def ndc(point, f):
-    sc.frame_set(f)
-    return al.project(sc, cam, point)
-
+events = []
+silent = []
 for n, s in by_part.items():
     if not s.get('sfx'):
         continue
     part = parts[n]
     f = F(s['t'])
-    x, y, z = ndc(part.rest_world.translation, f)
-    on = (-0.15 < x < 1.15) and (-0.15 < y < 1.15) and z > 0
+    x, y, z = al.cam_project(baked[f], part.rest_world @ (sum((Vector(c) for c in part.obj.bound_box), Vector()) / 8))
+    on = any(True for c in part.obj.bound_box
+             for (px, py, pz) in [al.cam_project(baked[f], part.rest_world @ Vector(c))] if pz > 0 and 0 <= px <= 1 and 0 <= py <= 1)
     gain = s.get('gain', 0.8) * (1.0 if on else C.OFFSCREEN_GAIN)
     if gain <= 0.01:
-        continue
+        silent.append(n); continue
     pan = max(-0.7, min(0.7, (x - 0.5) * 1.6)) if z > 0 else 0.0
-    for i, name in enumerate(s['sfx'] if isinstance(s['sfx'], (list, tuple)) else [s['sfx']]):
-        e = dict(t=round(f / FPS, 4), sfx=name, part=n, gain=round(gain, 3), pan=round(pan, 2), var=s.get('var', (hash(n) >> 4) % 12))
-        if name in ('glass_slide', 'screw', 'servo') or s.get('sfx_dur'):
-            e['dur'] = s.get('sfx_dur', s.get('dur', 0.4))
+    for name in (s['sfx'] if isinstance(s['sfx'], (list, tuple)) else [s['sfx']]):
+        e = dict(t=round(f / FPS, 4), sfx=name, part=n, gain=round(gain, 3), pan=round(pan, 2), var=s.get('var', sum(map(ord, n)) % 12))
+        if name == 'glass_slide':
+            e['dur'] = s.get('sfx_dur', 0.35)
+        elif name == 'screw':
+            e['dur'] = round(s.get('dur', 0.3) * 0.6, 3)
         events.append(e)
+if silent:
+    print(f'[sound] {len(silent)} landings are off screen and silent:', silent)
 events += extra_events + C.fixed_events()
 
-# merge duplicates that hit on the same frame with the same sound (mirror parts landing together)
-merged = {}
+merged = {}                 # mirror parts landing on the same frame share one (slightly louder) hit
 for e in events:
     k = (round(e['t'] * FPS), e['sfx'])
     if k in merged:
-        m = merged[k]; m['gain'] = round(min(1.0, max(m['gain'], e['gain']) * 1.12), 3); m['pan'] = round((m['pan'] + e['pan']) / 2, 2)
+        m = merged[k]; m['gain'] = round(min(1.0, max(m['gain'], e['gain']) * 1.1), 3); m['pan'] = round((m['pan'] + e['pan']) / 2, 2)
         m['part'] += '+' + e['part']
     else:
         merged[k] = dict(e)
 events = sorted(merged.values(), key=lambda e: e['t'])
 
 T = dict(version=C.VERSION, fps=FPS, bpm=120, duration_s=DUR, frames=NF, drop_t=C.DROP_T,
-         sections=C.SECTIONS, cuts=[c / FPS for c in cuts],
+         sections=C.SECTIONS, cuts=[round(c / FPS, 4) for c in cuts],
          shots=[dict(name=s.name, t0=s.t0, t1=s.t1) for s in shots],
          sfx_vocabulary=sorted({e['sfx'] for e in events}), events=events)
 json.dump(T, open(a.timeline, 'w'), indent=1)

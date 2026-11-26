@@ -128,30 +128,66 @@ class Part:
 
 
 def fly_in(part, t_land, dur=0.4, dist=0.6, direction=(0, 0, 1), twist_deg=0.0, k=2.4,
-           bounce=0.004, wobble_deg=0.6, settle=0.3, turns=0.0, seed=0):
+           bounce=0.004, wobble_deg=0.6, settle=0.3, turns=0.0, seed=0, side=None, show_from=None, mode='drop'):
     """Fly a part from `dist` metres away along `direction` (world, pointing FROM the seat TO where it
     comes from) and land it exactly at t_land with a micro-bounce and a wobble.
-    turns: full spins about the insert axis during travel (screws)."""
+    mode 'screw': arrive fast to 28 mm above the hole, then drive in at constant speed while turning `turns`.
+    side: clearance offset held during travel and closed in the last 22 %.
+    show_from: first visible frame (a flight that starts before a cut is only shown from the cut)."""
     d = Vector(direction).normalized()
     f0, fl, f1 = F(t_land - dur), F(t_land), F(t_land + settle)
     rnd = random.Random(seed)
     perp = d.orthogonal().normalized()
     perp = Quaternion(d, rnd.uniform(0, math.tau)) @ perp
-    part.show(f0 - 1, False)
-    part.show(f0, True)
+    vis0 = f0 if show_from is None else max(f0, show_from)
+    part.show(vis0 - 1, False)
+    part.show(vis0, True)
+    NEAR, SPLIT = 0.028, 0.40
     for f in range(f0, f1 + 1):
         if f <= fl:
             s = (f - f0) / max(1, fl - f0)
-            a = approach(s, k)
-            off = d * (dist * a)
-            tw = math.radians(twist_deg) * a + math.tau * turns * a
+            if mode == 'screw':
+                if s < SPLIT:
+                    off = d * (NEAR + (dist - NEAR) * (1 - s / SPLIT) ** 2.2); tw = 0.0
+                else:
+                    u = (s - SPLIT) / (1 - SPLIT)
+                    off = d * (NEAR * (1 - u)); tw = -math.tau * turns * (1 - u)
+            else:
+                a = approach(s, k)
+                off = d * (dist * a)
+                tw = math.radians(twist_deg) * a
+            if side is not None:
+                off = off + Vector(side) * (1.0 - smooth((s - 0.78) / 0.22))
             part.pose(f, off, tw, d)
         else:
             tau = (f - fl) / FPS
             off = d * rebound(tau, bounce)
             part.pose(f, off, 0.0, d, (perp, math.radians(ring(tau, wobble_deg))))
     part.pose(f1 + 1, (0, 0, 0))
+    part.fly = (vis0, fl, d * dist + (Vector(side) if side is not None else Vector()))
     return fl
+
+
+def trapezoid(u, ta=0.25):
+    """0..1 position for a trapezoidal velocity profile (servo move): accelerate for ta, cruise, decelerate for ta."""
+    u = clamp01(u)
+    vmax = 1.0 / (1.0 - ta)
+    if u < ta:
+        return 0.5 * vmax * u * u / ta
+    if u > 1 - ta:
+        r = 1 - u
+        return 1.0 - 0.5 * vmax * r * r / ta
+    return 0.5 * vmax * ta + vmax * (u - ta)
+
+
+def cam_project(b, p, aspect=1.25, sensor=36.0):
+    """Project a world point with a baked camera sample (pos, quat, lens, ...): (x, y, depth), x/y in 0..1."""
+    pos, q, lens = b[0], b[1], b[2]
+    v = q.inverted() @ (Vector(p) - pos)
+    z = -v.z
+    if z <= 1e-6:
+        return 0.5, 0.5, z
+    return 0.5 + (v.x / z) * (lens / sensor), 0.5 + (v.y / z) * (lens / (sensor * aspect)), z
 
 
 # ------------------------------------------------------------------ camera
