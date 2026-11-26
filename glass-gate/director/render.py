@@ -35,6 +35,12 @@ if a.samples: sc.cycles.samples = a.samples
 if a.scale: sc.render.resolution_percentage = a.scale
 if a.threads: sc.render.threads = a.threads
 if a.seed >= 0: sc.cycles.seed = a.seed
+try:                                # look helper's cost settings: OIDN balanced + accurate prefilter, light tree off, CPU compositor
+    sys.path.insert(0, gg.path('look'))
+    import settings as look_settings
+    look_settings.recommended(sc); look_settings.final(sc)
+except Exception as e:
+    print('[warn] look settings not applied:', repr(e))
 sc.render.use_persistent_data = True
 sc.render.dither_intensity = 1.0
 sc.render.image_settings.color_mode = 'RGB'

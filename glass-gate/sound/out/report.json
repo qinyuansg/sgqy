@@ -8,10 +8,10 @@
   "expected_frames": 1248000
  },
  "loudness": {
-  "integrated_lufs_pyloudnorm": -16.0,
+  "integrated_lufs_pyloudnorm": -16.01,
   "ffmpeg_ebur128": {
    "integrated_lufs": -16.0,
-   "lra_lu": 6.6,
+   "lra_lu": 6.2,
    "true_peak_dbtp": -1.7
   },
   "target": -16.0
@@ -24,11 +24,11 @@
  },
  "stems": {
   "null_test_residual_db": -141.6,
-  "sfx_lufs": -18.4,
-  "music_lufs": -19.11,
+  "sfx_lufs": -18.45,
+  "music_lufs": -19.0,
   "dc_offset": [
-   -1.8e-05,
-   -1.4e-05
+   -1.9e-05,
+   -1.6e-05
   ]
  },
  "sync": {
@@ -39,9 +39,9 @@
    "over_limit": []
   },
   "stem": {
-   "events": 60,
+   "events": 61,
    "worst_abs_ms": 1.438,
-   "mean_ms": -0.224,
+   "mean_ms": -0.22,
    "over_limit": [],
    "masked_not_measurable": [
     {
@@ -66,19 +66,13 @@
      "t": 11.3667,
      "sfx": "glass_clink",
      "part": "GLS_panel_exit_L",
-     "clear_db": 3.6
+     "clear_db": 3.5
     },
     {
      "t": 16.0,
      "sfx": "impact_drop",
      "part": "drop",
      "clear_db": 0.9
-    },
-    {
-     "t": 18.25,
-     "sfx": "ui_boot",
-     "part": "screens_on",
-     "clear_db": 4.9
     }
    ]
   },
@@ -650,21 +644,21 @@
     "sfx": "thunk_metal",
     "part": "BASE_rail_L",
     "err_ms": -0.708,
-    "clear_db": 96.8
+    "clear_db": 96.6
    },
    {
     "t": 2.5,
     "sfx": "thunk_metal",
     "part": "BASE_rail_R",
     "err_ms": -0.417,
-    "clear_db": 101.6
+    "clear_db": 101.8
    },
    {
     "t": 3.0,
     "sfx": "screw",
     "part": "BASE_anchor_0_L",
     "err_ms": 0.021,
-    "clear_db": 9.9
+    "clear_db": 10.0
    },
    {
     "t": 3.1333,
@@ -692,7 +686,7 @@
     "sfx": "click",
     "part": "ELE_cable_0_L+ELE_cable_0_R",
     "err_ms": -0.438,
-    "clear_db": 41.2
+    "clear_db": 41.5
    },
    {
     "t": 4.0,
@@ -713,7 +707,7 @@
     "sfx": "thunk_metal",
     "part": "DRV_ring_L",
     "err_ms": -0.458,
-    "clear_db": 97.5
+    "clear_db": 97.6
    },
    {
     "t": 5.25,
@@ -755,14 +749,14 @@
     "sfx": "click",
     "part": "DRV_shaft_L+DRV_shaft_R",
     "err_ms": -0.5,
-    "clear_db": 40.5
+    "clear_db": 40.4
    },
    {
     "t": 6.5,
     "sfx": "spring",
     "part": "DRV_spring_L+DRV_spring_R",
     "err_ms": -0.5,
-    "clear_db": 40.5
+    "clear_db": 40.4
    },
    {
     "t": 6.75,
@@ -776,14 +770,14 @@
     "sfx": "glass_clink",
     "part": "GLS_column_L+GLS_column_R",
     "err_ms": -0.125,
-    "clear_db": 6.8
+    "clear_db": 6.7
    },
    {
     "t": 7.5,
     "sfx": "glass_clink",
     "part": "WING_sleeve_L+WING_sleeve_R",
     "err_ms": -0.083,
-    "clear_db": 10.1
+    "clear_db": 10.0
    },
    {
     "t": 8.0,
@@ -832,21 +826,21 @@
     "sfx": "glass_clink",
     "part": "GLS_post_entry_L",
     "err_ms": -0.417,
-    "clear_db": 104.6
+    "clear_db": 104.5
    },
    {
     "t": 10.25,
     "sfx": "glass_clink",
     "part": "GLS_post_entry_R",
     "err_ms": -0.25,
-    "clear_db": 21.6
+    "clear_db": 21.5
    },
    {
     "t": 10.5,
     "sfx": "glass_clink",
     "part": "GLS_post_exit_L",
     "err_ms": -0.208,
-    "clear_db": 23.4
+    "clear_db": 23.3
    },
    {
     "t": 10.75,
@@ -867,7 +861,7 @@
     "sfx": "glass_clink",
     "part": "GLS_panel_entry_L",
     "err_ms": 0.188,
-    "clear_db": 7.0
+    "clear_db": 6.9
    },
    {
     "t": 11.5,
@@ -937,14 +931,14 @@
     "sfx": "glass_clink",
     "part": "RAIL_lid_L",
     "err_ms": -0.396,
-    "clear_db": 31.2
+    "clear_db": 31.1
    },
    {
     "t": 13.1333,
     "sfx": "glass_clink",
     "part": "RAIL_lid_R",
     "err_ms": -0.188,
-    "clear_db": 9.2
+    "clear_db": 9.1
    },
    {
     "t": 13.25,
@@ -1000,28 +994,28 @@
     "sfx": "glass_clink",
     "part": "WING_leaf_L",
     "err_ms": -0.458,
-    "clear_db": 54.3
+    "clear_db": 54.2
    },
    {
     "t": 14.5,
     "sfx": "lock_clunk",
     "part": "WING_leaf_L",
     "err_ms": -0.458,
-    "clear_db": 54.3
+    "clear_db": 54.2
    },
    {
     "t": 14.75,
     "sfx": "glass_clink",
     "part": "WING_leaf_R",
     "err_ms": -0.292,
-    "clear_db": 19.9
+    "clear_db": 19.8
    },
    {
     "t": 14.75,
     "sfx": "lock_clunk",
     "part": "WING_leaf_R",
     "err_ms": -0.292,
-    "clear_db": 19.9
+    "clear_db": 19.8
    },
    {
     "t": 15.25,
@@ -1031,11 +1025,18 @@
     "clear_db": 35.8
    },
    {
+    "t": 18.25,
+    "sfx": "ui_boot",
+    "part": "screens_on",
+    "err_ms": 0.021,
+    "clear_db": 48.4
+   },
+   {
     "t": 20.25,
     "sfx": "card_tap",
     "part": "card",
     "err_ms": -0.375,
-    "clear_db": 131.2
+    "clear_db": 131.3
    },
    {
     "t": 20.36,
@@ -1063,7 +1064,7 @@
     "sfx": "final_hit",
     "part": "hero",
     "err_ms": 0.792,
-    "clear_db": 87.1
+    "clear_db": 87.0
    }
   ]
  },
@@ -1079,7 +1080,7 @@
     "t": 16.0,
     "what": "music cut",
     "music_click_ratio": 0.85,
-    "mix_click_ratio": 1.32
+    "mix_click_ratio": 1.33
    },
    {
     "t": 20.0,
@@ -1090,8 +1091,8 @@
    {
     "t": 24.0,
     "what": "final hit",
-    "music_click_ratio": 1.34,
-    "mix_click_ratio": 1.27
+    "music_click_ratio": 1.35,
+    "mix_click_ratio": 1.28
    }
   ],
   "music_entry_at_drop_ms": -0.52,
@@ -1100,13 +1101,13 @@
   "note": "ratio = largest second difference in the 14 ms around the point / 99.9th percentile of the surrounding 400 ms; a splice click would stand far above 1"
  },
  "ends": {
-  "first_frame_rms_db": -25.0,
-  "first_frame_music_rms_db": -25.3,
-  "first_100ms_rms_db": -27.3,
-  "first_sample_abs": 0.0009478330612182617,
+  "first_frame_rms_db": -24.9,
+  "first_frame_music_rms_db": -25.2,
+  "first_100ms_rms_db": -27.2,
+  "first_sample_abs": 0.0009595155715942383,
   "last_sample_abs": 0.0,
-  "last_100ms_rms_db": -76.1,
-  "last_500ms_rms_db": -55.4
+  "last_100ms_rms_db": -76.0,
+  "last_500ms_rms_db": -55.3
  },
  "sections": [
   {
@@ -1114,36 +1115,36 @@
    "t0": 0.0,
    "t1": 2.0,
    "busy": 0.3,
-   "mix_lufs": -22.2,
-   "sfx_lufs": -22.8,
-   "music_lufs": -27.8
+   "mix_lufs": -22.1,
+   "sfx_lufs": -22.7,
+   "music_lufs": -27.7
   },
   {
    "name": "w1_base",
    "t0": 2.0,
    "t1": 4.0,
    "busy": 0.6,
-   "mix_lufs": -19.0,
-   "sfx_lufs": -19.2,
-   "music_lufs": -30.5
+   "mix_lufs": -18.9,
+   "sfx_lufs": -19.1,
+   "music_lufs": -30.4
   },
   {
    "name": "w2_drive",
    "t0": 4.0,
    "t1": 8.0,
    "busy": 0.8,
-   "mix_lufs": -19.3,
+   "mix_lufs": -19.2,
    "sfx_lufs": -19.6,
-   "music_lufs": -28.8
+   "music_lufs": -28.7
   },
   {
    "name": "w3_electronics",
    "t0": 8.0,
    "t1": 10.0,
    "busy": 0.9,
-   "mix_lufs": -20.3,
-   "sfx_lufs": -20.7,
-   "music_lufs": -26.8
+   "mix_lufs": -20.2,
+   "sfx_lufs": -20.6,
+   "music_lufs": -26.7
   },
   {
    "name": "w4_glass_body",
@@ -1152,69 +1153,69 @@
    "busy": 0.9,
    "mix_lufs": -14.9,
    "sfx_lufs": -15.4,
-   "music_lufs": -25.2
+   "music_lufs": -25.1
   },
   {
    "name": "w5_top_rail",
    "t0": 12.0,
    "t1": 14.0,
    "busy": 1.0,
-   "mix_lufs": -15.9,
-   "sfx_lufs": -16.5,
-   "music_lufs": -23.9
+   "mix_lufs": -15.8,
+   "sfx_lufs": -16.4,
+   "music_lufs": -23.8
   },
   {
    "name": "w6_wings",
    "t0": 14.0,
    "t1": 16.0,
    "busy": 0.8,
-   "mix_lufs": -17.5,
+   "mix_lufs": -17.4,
    "sfx_lufs": -19.1,
-   "music_lufs": -23.6
+   "music_lufs": -23.5
   },
   {
    "name": "drop_alive",
    "t0": 16.0,
    "t1": 20.0,
    "busy": 0.2,
-   "mix_lufs": -12.9,
-   "sfx_lufs": -18.0,
-   "music_lufs": -14.0
+   "mix_lufs": -13.1,
+   "sfx_lufs": -18.9,
+   "music_lufs": -13.9
   },
   {
    "name": "in_use",
    "t0": 20.0,
    "t1": 24.0,
    "busy": 0.5,
-   "mix_lufs": -15.3,
-   "sfx_lufs": -19.4,
-   "music_lufs": -17.2
+   "mix_lufs": -15.2,
+   "sfx_lufs": -19.3,
+   "music_lufs": -17.1
   },
   {
    "name": "hero_orbit",
    "t0": 24.0,
    "t1": 26.0,
    "busy": 0.0,
-   "mix_lufs": -21.9,
-   "sfx_lufs": -23.3,
-   "music_lufs": -26.5
+   "mix_lufs": -21.8,
+   "sfx_lufs": -23.2,
+   "music_lufs": -26.4
   }
  ],
  "spectrum_octave_db_re_total": {
-  "63": -7.5,
-  "125": -5.9,
-  "250": -7.0,
-  "500": -9.0,
+  "63": -7.4,
+  "125": -5.8,
+  "250": -7.1,
+  "500": -9.1,
   "1000": -8.5,
-  "2000": -12.7,
+  "2000": -13.0,
   "4000": -18.2,
-  "8000": -18.2,
-  "16000": -26.7
+  "8000": -18.1,
+  "16000": -26.6
  },
  "energy_above_8k_db": -21.3,
  "stereo": {
-  "side_minus_mid_db": -8.3,
-  "correlation": 0.741
+  "side_minus_mid_db": -8.2,
+  "correlation": 0.735
  },
  "build": {
   "music": {
@@ -1316,76 +1317,76 @@
    "held_from": 15.25
   },
   "master": {
-   "pre_gain_db": 2.669482720713444,
-   "limiter_max_reduction_db": 3.343940975203033,
+   "pre_gain_db": 2.775719628550175,
+   "limiter_max_reduction_db": 3.4501778830418335,
    "limiter_deepest": [
     {
      "t": 14.5,
-     "db": 3.34
+     "db": 3.45
     },
     {
      "t": 14.5,
-     "db": 3.31
+     "db": 3.42
     },
     {
      "t": 14.753,
-     "db": 2.83
+     "db": 2.94
     },
     {
      "t": 16.038,
-     "db": 2.35
-    },
-    {
-     "t": 16.05,
-     "db": 2.18
+     "db": 2.29
     },
     {
      "t": 14.75,
-     "db": 2.16
-    },
-    {
-     "t": 14.55,
-     "db": 2.02
+     "db": 2.27
     },
     {
      "t": 10.249,
-     "db": 2.01
+     "db": 2.12
     },
     {
      "t": 10.25,
-     "db": 2.01
+     "db": 2.12
+    },
+    {
+     "t": 16.05,
+     "db": 2.11
+    },
+    {
+     "t": 14.55,
+     "db": 2.1
     },
     {
      "t": 13.149,
-     "db": 1.95
+     "db": 2.05
     },
     {
      "t": 13.15,
-     "db": 1.95
+     "db": 2.05
     },
     {
      "t": 12.999,
-     "db": 1.81
+     "db": 1.92
     },
     {
      "t": 13.0,
-     "db": 1.81
+     "db": 1.92
     },
     {
      "t": 14.8,
-     "db": 1.76
+     "db": 1.83
     },
     {
      "t": 6.499,
-     "db": 1.59
+     "db": 1.7
     },
     {
      "t": 6.5,
-     "db": 1.59
+     "db": 1.7
     }
    ],
-   "limiter_active_percent": 18.473958333333336,
-   "limiter_over_1db_percent": 2.7081730769230767
+   "limiter_active_percent": 21.148157051282052,
+   "limiter_over_1db_percent": 2.9103365384615385
   },
   "events_placed": {
    "shimmer": 2,
@@ -1412,76 +1413,76 @@
   },
   "impact_polarity": {
    "sign": -1.0,
-   "gain_db": 0.73
+   "gain_db": 0.74
   },
   "first_slam_t": 2.0,
   "held_from": 15.25,
-  "duck_db_max": 12.000000000003766,
-  "duck_db_mean_pre_drop": 9.78307197690499,
-  "render_seconds": 8.06,
+  "duck_db_max": 12.000000000003812,
+  "duck_db_mean_pre_drop": 9.783071984491162,
+  "render_seconds": 8.94,
   "overrides": {}
  },
  "effects_spectrum": {
   "third_octave_db_re_ref": {
-   "50": -2.9,
-   "62": -0.2,
-   "79": 4.6,
-   "99": 3.8,
-   "125": 1.6,
-   "157": -0.4,
-   "198": -1.0,
-   "250": -3.2,
-   "315": -1.9,
-   "397": -2.2,
-   "500": -2.7,
-   "630": -1.2,
-   "794": 4.2,
-   "1k": -1.2,
-   "1.26k": 2.3,
-   "1.59k": 1.1,
-   "2k": -2.5,
+   "50": -2.8,
+   "62": -0.0,
+   "79": 4.7,
+   "99": 3.9,
+   "125": 1.8,
+   "157": -0.3,
+   "198": -0.8,
+   "250": -3.5,
+   "315": -2.1,
+   "397": -2.1,
+   "500": -2.6,
+   "630": -1.0,
+   "794": 4.5,
+   "1k": -1.1,
+   "1.26k": 2.0,
+   "1.59k": 0.7,
+   "2k": -2.4,
    "2.52k": -5.9,
-   "3.17k": -7.1,
-   "4k": -8.0,
-   "5.04k": -6.8,
-   "6.35k": -5.8,
-   "8k": -7.1,
+   "3.17k": -7.2,
+   "4k": -8.1,
+   "5.04k": -6.7,
+   "6.35k": -5.7,
+   "8k": -7.0,
    "10.1k": -9.1,
-   "12.7k": -12.3,
-   "16k": -18.6,
-   "20.2k": -24.0
+   "12.7k": -12.1,
+   "16k": -18.4,
+   "20.2k": -23.8
   },
   "target": "-3 dB/octave of band level from 1 kHz, reference = mean of the 500 Hz - 2 kHz bands",
   "air_bands_vs_target_db": {
-   "5.04k": 0.2,
-   "6.35k": 2.2,
-   "8k": 1.9,
+   "5.04k": 0.3,
+   "6.35k": 2.3,
+   "8k": 2.0,
    "10.1k": 0.9,
-   "12.7k": -1.3
+   "12.7k": -1.1
   },
   "harsh_bands_vs_target_db": {
    "2.52k": -1.9,
-   "3.17k": -2.1,
-   "4k": -2.0
+   "3.17k": -2.2,
+   "4k": -2.1
   },
-  "top_16k_vs_target_db": -6.6,
+  "top_16k_vs_target_db": -6.4,
   "ok_air": true,
   "ok_harsh": true
  },
  "story": {
   "first_slam": {
    "t": 2.0,
-   "loud50_db": -6.8,
+   "loud50_db": -6.7,
    "next_loudest": [
     {
      "t": 2.5,
      "sfx": "thunk_metal",
-     "loud50_db": -8.9
+     "loud50_db": -8.8
     },
     {
      "t": 4.0,
      "sfx": "thunk_metal",
-     "loud50_db": -9.4
+     "loud50_db": -9.2
     },
     {
      "t": 7.25,
@@ -1490,8 +1491,8 @@
     }
    ],
    "margin_db": 2.1,
-   "peak_dbfs": -2.8,
-   "effects_before_it_db": -65.8,
+   "peak_dbfs": -2.1,
+   "effects_before_it_db": -65.7,
    "room_send_db": -28.0
   },
   "build": {
@@ -1499,37 +1500,37 @@
     {
      "name": "hook",
      "t0": 0.0,
-     "music_k_db": -26.9
+     "music_k_db": -26.8
     },
     {
      "name": "w1_base",
      "t0": 2.0,
-     "music_k_db": -29.6
+     "music_k_db": -29.5
     },
     {
      "name": "w2_drive",
      "t0": 4.0,
-     "music_k_db": -28.0
+     "music_k_db": -27.9
     },
     {
      "name": "w3_electronics",
      "t0": 8.0,
-     "music_k_db": -25.9
+     "music_k_db": -25.8
     },
     {
      "name": "w4_glass_body",
      "t0": 10.0,
-     "music_k_db": -24.5
+     "music_k_db": -24.4
     },
     {
      "name": "w5_top_rail",
      "t0": 12.0,
-     "music_k_db": -23.1
+     "music_k_db": -23.0
     },
     {
      "name": "w6_wings",
      "t0": 14.0,
-     "music_k_db": -21.2
+     "music_k_db": -21.1
     }
    ],
    "steps_db": [
@@ -1544,32 +1545,32 @@
   },
   "held_breath": {
    "t0": 15.25,
-   "music_before_db": -20.9,
-   "music_during_db": -32.4,
+   "music_before_db": -20.8,
+   "music_during_db": -32.3,
    "music_change_db": -11.5,
-   "music_last_30ms_db": -79.9,
-   "effects_during_db": -29.6,
-   "low_end_change_db": -33.8
+   "music_last_30ms_db": -79.8,
+   "effects_during_db": -29.5,
+   "low_end_change_db": -33.7
   },
   "drop_low_end": {
-   "mix_30_80_db": -18.7,
-   "mix_80_200_db": -16.8,
-   "sfx_80_200_db": -18.7,
-   "music_80_200_db": -22.1,
-   "mix_80_200_rest_of_bar_db": -21.1,
-   "mix_200_800_db": -19.1,
-   "sum_vs_parts_db": 0.3
+   "mix_30_80_db": -18.6,
+   "mix_80_200_db": -16.7,
+   "sfx_80_200_db": -18.5,
+   "music_80_200_db": -22.0,
+   "mix_80_200_rest_of_bar_db": -21.0,
+   "mix_200_800_db": -19.0,
+   "sum_vs_parts_db": 0.2
   },
   "power_up": [
    {
     "t": 16.0,
-    "resolves_at": 18.4,
-    "loudest_at": 18.388,
-    "error_s": -0.012,
+    "resolves_at": 17.5,
+    "loudest_at": 17.493,
+    "error_s": -0.007,
     "level_at_quarter_half_three_quarters_db": [
-     -15.9,
-     -12.7,
-     -7.4
+     -16.8,
+     -13.7,
+     -6.7
     ]
    }
   ]

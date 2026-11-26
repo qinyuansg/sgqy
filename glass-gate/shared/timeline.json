@@ -1,5 +1,5 @@
 {
- "version": 8,
+ "version": 9,
  "fps": 60,
  "bpm": 120,
  "duration_s": 26.0,
@@ -214,7 +214,7 @@
    "sfx": "thunk_metal",
    "part": "BASE_rail_L",
    "gain": 1.0,
-   "pan": -0.2,
+   "pan": -0.34,
    "var": 1
   },
   {
@@ -222,7 +222,7 @@
    "sfx": "thunk_metal",
    "part": "BASE_rail_R",
    "gain": 1.0,
-   "pan": 0.5,
+   "pan": 0.51,
    "var": 7
   },
   {
@@ -230,7 +230,7 @@
    "sfx": "screw",
    "part": "BASE_anchor_0_L",
    "gain": 0.55,
-   "pan": 0.22,
+   "pan": 0.12,
    "var": 7,
    "dur": 0.18
   },
@@ -239,7 +239,7 @@
    "sfx": "screw",
    "part": "BASE_anchor_1_L+BASE_anchor_1_R",
    "gain": 0.605,
-   "pan": 0.29,
+   "pan": 0.24,
    "var": 8,
    "dur": 0.18
   },
@@ -248,7 +248,7 @@
    "sfx": "screw",
    "part": "BASE_anchor_2_L+BASE_anchor_2_R",
    "gain": 0.605,
-   "pan": 0.04,
+   "pan": -0.04,
    "var": 9,
    "dur": 0.18
   },
@@ -257,7 +257,7 @@
    "sfx": "screw",
    "part": "BASE_anchor_3_L+BASE_anchor_3_R",
    "gain": 0.605,
-   "pan": -0.11,
+   "pan": -0.19,
    "var": 10,
    "dur": 0.18
   },
@@ -266,7 +266,7 @@
    "sfx": "click",
    "part": "ELE_cable_0_L+ELE_cable_0_R",
    "gain": 0.605,
-   "pan": 0.18,
+   "pan": 0.1,
    "var": 10
   },
   {
@@ -765,7 +765,7 @@
    "part": "light_wave",
    "gain": 0.8,
    "pan": 0.0,
-   "dur": 2.4,
+   "dur": 1.5,
    "var": 0
   },
   {

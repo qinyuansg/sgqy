@@ -247,6 +247,24 @@ print(f'[timeline] {len(events)} events -> {a.timeline}')
 flights = {n: dict(vis0=parts[n].fly[0], land=parts[n].fly[1]) for n in by_part if hasattr(parts[n], 'fly')}
 json.dump(dict(hook_end=HOOK_F, cuts=cuts, flights=flights), open(os.path.join(os.path.dirname(os.path.abspath(a.out)), 'flights.json'), 'w'), indent=1)
 
+# ---------------------------------------------------------------- studio rig follows the shots (look helper's API)
+for m in list(sc.timeline_markers):
+    sc.timeline_markers.remove(m)
+for s in shots:
+    sc.timeline_markers.new(s.name, frame=F(s.t0))
+if not a.no_alive:
+    try:
+        import studio, settings
+        info = studio.aim_for_director(sc)
+        if info['in_frame']:
+            print('[warn] studio cards in frame:', info['in_frame'])
+        if hasattr(C, 'after_aim'):
+            C.after_aim(sc)
+        settings.recommended(sc); settings.final(sc)
+    except Exception as e:
+        import traceback; traceback.print_exc()
+        print('[warn] studio rig not aimed:', repr(e))
+
 sc.frame_set(0)
 bpy.ops.wm.save_as_mainfile(filepath=os.path.abspath(a.out), compress=True)
 print('[saved]', a.out)

@@ -7,12 +7,12 @@ Everything sits on a 120 BPM grid at 60 fps: 1 beat = 0.5 s = 30 frames, 1 bar =
     bars 11-12 20-24 s  IN USE   card tap, beep, green, wings open, light passes, wings close
     bar 13     24-26 s  HERO     slow orbit, clean end
 """
-import math, re
+import math, os, re
 from mathutils import Vector
 import anim_lib as al
 from anim_lib import Shot, smooth, smoother, ease_in, ease_out, clamp01
 
-VERSION = 8
+VERSION = 9
 DURATION = 26.0
 HOOK_END = 1.6
 SCATTER_T0 = 1.12
@@ -283,7 +283,12 @@ def _key_light(ob, f, loc=None, aim=None, energy=None):
         ob.data.energy = energy; ob.data.keyframe_insert('energy', frame=f)
 
 
-SWEEP_W = 2600.0       # hook light streak
+SWEEP_W = 1500.0       # hook light streak
+SWEEP_X0, SWEEP_X1, SWEEP_Z = 0.3, 2.0, 1.3          # passes behind the hovering glass during the first second
+if os.environ.get('GG_SWEEP'):          # look experiments:  GG_SWEEP="x0,x1,z,watts"
+    SWEEP_X0, SWEEP_X1, SWEEP_Z, SWEEP_W = (float(v) for v in os.environ['GG_SWEEP'].split(','))
+SPARK_W = 3500.0       # the look helper's hard spot at 9000 W clips the steel base rails to white in every shot
+SWEEP_FLOOR = 0.25     # how much of it reaches the floor (the look helper's floor twin)
 PASS_W = 420.0         # the "someone walks through" light
 
 
@@ -294,11 +299,11 @@ def extras(sc, parts, man, baked):
     # 1. hook: a long thin light sweeps behind the exploded gate so every polished edge flashes in turn
     sw = _area(sc, 'DIR_sweep', 0.06, 3.2, (0.80, 0.88, 1.0), spread=math.radians(70))
     f_end = F(HOOK_END)
-    for f in range(0, f_end + 1):
-        u = f / f_end
-        x = -1.9 + 3.3 * smooth(u)
-        _key_light(sw, f, loc=(x, 1.15, 1.9), aim=(x * 0.35, 0.0, 0.9), energy=SWEEP_W * (0.55 + 0.45 * math.sin(math.pi * u)))
-    _key_light(sw, f_end + 1, energy=0.0)
+    for f in range(0, f_end):                       # off on the first frame of the next shot
+        u = f / (f_end - 1)
+        x = SWEEP_X0 + (SWEEP_X1 - SWEEP_X0) * smooth(u)
+        _key_light(sw, f, loc=(x, 1.15, SWEEP_Z), aim=(x * 0.35, 0.0, 0.9), energy=SWEEP_W * (0.55 + 0.45 * math.sin(math.pi * u)))
+    _key_light(sw, f_end, energy=0.0)
     al.set_linear(sw); al.set_linear(sw.data)
     # 2. in use: a tall warm light glides through the open lane (two faces, one toward each pedestal)
     f0, f1 = F(T_PASS0), F(T_PASS1)
@@ -315,6 +320,27 @@ def extras(sc, parts, man, baked):
     ev += studio_dim(sc)
     ev += access_card(sc, parts, man)
     return ev
+
+
+def after_aim(sc):
+    """Runs after the look helper's studio.aim_for_director: director's trims on its handles."""
+    import bpy
+    tw = bpy.data.objects.get('STUDIO_DIR_sweep_FLOOR')
+    if tw is not None:
+        tw['gg_floor_gain'] = SWEEP_FLOOR
+    sw = bpy.data.objects.get('DIR_sweep')          # the streak is for the glass: keep it off the floor AND off the steel rails
+    floor = bpy.data.objects.get('STUDIO_FLOOR')
+    if sw is not None and floor is not None:
+        coll = bpy.data.collections.get('DIR_LL_sweep') or bpy.data.collections.new('DIR_LL_sweep')
+        for o in [floor] + [o for o in sc.objects if o.name.startswith('BASE_rail')]:
+            if o.name not in coll.objects:
+                coll.objects.link(o)
+        for co in coll.collection_objects:
+            co.light_linking.link_state = 'EXCLUDE'
+        sw.light_linking.receiver_collection = coll
+    sp = bpy.data.objects.get('STUDIO_SPARK')
+    if sp is not None and 'gg_energy' in sp:
+        sp['gg_energy'] = SPARK_W
 
 
 def studio_dim(sc):
@@ -366,7 +392,7 @@ def fixed_events():
         dict(t=HOOK_END, sfx='whoosh', part='hook_lift_away', gain=0.75, pan=0.0, dur=0.55, var=0),
         dict(t=DROP_T, sfx='riser', part='pre_drop', gain=0.8, pan=0.0, dur=0.7, var=0),
         dict(t=DROP_T, sfx='impact_drop', part='drop', gain=1.0, pan=0.0, var=0),
-        dict(t=DROP_T, sfx='power_up', part='light_wave', gain=0.8, pan=0.0, dur=2.4, var=0),
+        dict(t=DROP_T, sfx='power_up', part='light_wave', gain=0.8, pan=0.0, dur=WAVE_DUR, var=0),
         dict(t=18.25, sfx='ui_boot', part='screens_on', gain=0.6, pan=0.0, var=0),
         dict(t=T_TAP, sfx='card_tap', part='card', gain=0.85, pan=-0.1, var=0),
         dict(t=T_BEEP, sfx='beep_ok', part='reader', gain=0.7, pan=-0.1, var=0),
@@ -384,12 +410,19 @@ def key_alive(sc, alive):
     """The alive moment and the house lights. See look/alive.py for what each value does."""
     K = alive.key_alive
     F = al.F
-    K(sc, 0, power=0.0, wave=-0.1, grant=0.0, screens=0.0, ir=0.0, house=1.0)
+    # hook: the hovering parts are already lit and a head of light runs through the LED lines; it dies as they scatter
+    K(sc, 0, power=1.0, wave=HOOK_WAVE0, grant=0.0, screens=0.0, ir=0.0, house=HOUSE_HOOK)
+    K(sc, F(0.8), wave=1.1)
+    K(sc, F(SCATTER_T0 - 0.07), power=1.0, house=HOUSE_HOOK)
+    K(sc, F(SCATTER_T0 + 0.10), power=0.0, wave=1.1)
+    K(sc, F(SCATTER_T0 + 0.10) + 1, wave=-0.1)
+    K(sc, F(HOOK_END), house=1.0)
     # the room holds its breath before the drop, then goes dark on it so the gate's own light carries the frame
     K(sc, F(15.3), house=1.0)
-    K(sc, F(DROP_T) - 1, power=0.0, wave=-0.1, house=0.5)
-    K(sc, F(DROP_T), power=1.0, wave=0.04, house=HOUSE_DROP)       # the entry end is already burning on the drop frame
-    K(sc, F(DROP_T + 2.4), wave=1.1)
+    K(sc, F(DROP_T) - 1, power=0.0, wave=-0.1, house=HOUSE_BREATH)
+    K(sc, F(DROP_T), power=1.0, wave=0.04, house=1.0)             # a flash of the whole room on the drop...
+    K(sc, F(DROP_T) + FLASH_FRAMES, house=HOUSE_DROP)             # ...that falls away and leaves the gate's own light
+    K(sc, F(DROP_T + WAVE_DUR), wave=1.1)
     K(sc, F(18.0), house=HOUSE_DROP)
     K(sc, F(18.0) + 1, house=HOUSE_ALIVE)
     K(sc, F(17.95), screens=0.0, ir=0.0)
@@ -401,11 +434,19 @@ def key_alive(sc, alive):
     # wings shut: back to idle
     K(sc, F(T_CLOSE1 - 0.1), grant=1.0)
     K(sc, F(T_CLOSE1 + 0.35), grant=0.0)
+    K(sc, F(CUT['drive']) - 1, house=HOUSE_ALIVE)
+    K(sc, F(CUT['drive']), house=HOUSE_DRIVE)
+    K(sc, F(CUT['lane']) - 1, house=HOUSE_DRIVE)
+    K(sc, F(CUT['lane']), house=HOUSE_ALIVE)
     K(sc, F(T_HERO) - 1, house=HOUSE_ALIVE)
     K(sc, F(T_HERO), house=HOUSE_HERO)
 
 
-HOUSE_DROP, HOUSE_ALIVE, HOUSE_HERO = 0.12, 0.30, 0.42
+HOUSE_DRIVE = 0.95
+HOUSE_HOOK, HOOK_WAVE0 = 0.9, 0.5
+HOUSE_BREATH, FLASH_FRAMES = 0.25, 14
+WAVE_DUR = 1.5          # the wave crosses the gate in three beats; the pull-back ends on the fully lit gate
+HOUSE_DROP, HOUSE_ALIVE, HOUSE_HERO = 0.30, 0.45, 0.80          # look helper's round-2 values, tested on these cameras
 
 
 # ---------------------------------------------------------------- shots
@@ -429,14 +470,14 @@ def shots(parts, man):
     S = []
     # 1 HOOK — the whole gate exploded and hovering, like a diagram; ends rushing down to where the base will land
     S.append(Shot('01_hook', 0.0, CUT['base'],
-                  pos=[(-2.02, -2.40, 1.50), (-1.86, -2.22, 1.46), (-1.02, -1.30, 0.46)],
-                  target=[(-0.02, 0.0, 1.06), (-0.04, 0.0, 1.03), (-0.32, -0.20, 0.02)],
+                  pos=[(-2.02, -2.40, 1.50), (-1.86, -2.22, 1.46), (-0.84, -1.16, 0.34)],
+                  target=[(-0.02, 0.0, 1.06), (-0.04, 0.0, 1.03), (-0.28, -0.26, 0.02)],
                   focus=[(0.0, (XL, 0.0, 0.9)), (1.1, (XL, 0.0, 0.9)), (1.6, (XL, -0.3, 0.03))],
                   lens=[(0.0, 50.0), (1.0, 50.0), (1.6, 40.0)], fstop=5.6, ramp=hook_ramp))
     # 2 BASE — low 3/4 down the rails: L rail slams in, R rail behind it, anchors spin in, cables drop into the channel
     S.append(Shot('02_base', CUT['base'], CUT['gears'],
-                  pos=[(-1.02, -1.30, 0.46), (-0.96, -1.20, 0.40), (-0.92, -1.12, 0.36)],
-                  target=[(-0.32, -0.20, 0.02), (-0.30, -0.16, 0.02)],
+                  pos=[(-0.84, -1.16, 0.34), (-0.78, -1.06, 0.28), (-0.74, -0.98, 0.25)],
+                  target=[(-0.28, -0.26, 0.02), (-0.26, -0.22, 0.02)],
                   focus=[(1.6, (XL, -0.45, 0.03)), (2.30, (XL, -0.45, 0.03)), (2.52, (0.38, -0.3, 0.03)), (2.85, (0.38, -0.3, 0.03)),
                          (3.0, (-0.35, -0.45, 0.03)), (3.375, (-0.35, 0.2, 0.03)), (3.5, (XL, -0.3, 0.03)), (3.8, (XL, -0.2, 0.03))],
                   lens=40, fstop=2.8, ramp=fast_then_slow))
@@ -491,14 +532,14 @@ def shots(parts, man):
                   lens=70, fstop=8.0, ramp=drift))
     # 11 WAVE — the drop: at the head of the LED line as the light races away down the rail, then pull back to see both
     S.append(Shot('11_wave', CUT['wave'], CUT['alive'],
-                  pos=[(-0.56, -1.02, 1.00), (-0.60, -1.10, 1.02), (-0.86, -1.42, 1.12), (-1.02, -1.66, 1.18)],
-                  target=[(-0.45, 0.30, 0.93), (-0.42, 0.25, 0.92), (-0.10, 0.10, 0.82), (0.0, 0.0, 0.74)],
+                  pos=[(-0.20, -1.16, 1.20), (-0.22, -1.22, 1.22), (-0.46, -1.52, 1.26), (-0.66, -1.82, 1.28)],
+                  target=[(-0.26, 0.20, 0.86), (-0.25, 0.18, 0.85), (-0.10, 0.06, 0.72), (0.0, 0.0, 0.62)],
                   focus=[(16.0, (-0.45, -0.60, 0.94)), (16.9, (-0.45, 0.0, 0.93)), (18.0, (XL, -0.2, 0.9))],
-                  lens=[(16.0, 34.0), (18.0, 38.0)], fstop=3.5, ramp=slow_then_fast))
+                  lens=[(16.0, 30.0), (18.0, 36.0)], fstop=3.5, ramp=slow_then_fast))
     # 12 ALIVE — front hero, the wing displays wake up
     S.append(Shot('12_alive', CUT['alive'], CUT['card'],
-                  pos=[(0.30, -2.05, 0.74), (0.12, -1.92, 0.70), (0.0, -1.84, 0.68)],
-                  target=[(0.0, 0.0, 0.58)],
+                  pos=[(0.30, -2.00, 1.16), (0.12, -1.80, 1.08), (0.0, -1.56, 0.98)],
+                  target=[(0.0, 0.0, 0.50), (0.0, 0.0, 0.54)],
                   focus=[(18.0, (0.0, 0.0, 0.58))],
                   lens=38, fstop=3.5, ramp=fast_then_slow))
     # 13 CARD — macro on the reader, a pass taps in
@@ -520,10 +561,10 @@ def shots(parts, man):
                   focus=[(22.0, (0.0, 0.0, 0.56))],
                   lens=35, fstop=3.5, ramp=drift))
     # 16 HERO — slow orbit, held about 2 s
-    a0, a1, r = math.radians(-131), math.radians(-121), 2.12
+    a0, a1, r = math.radians(-112), math.radians(-124), 2.28
     S.append(Shot('16_hero', CUT['hero'], DURATION,
-                  pos=[(r * math.cos(a0 + (a1 - a0) * k / 4), r * math.sin(a0 + (a1 - a0) * k / 4), 0.95) for k in range(5)],
-                  target=[(0.0, 0.0, 0.50)],
+                  pos=[(r * math.cos(a0 + (a1 - a0) * k / 4), r * math.sin(a0 + (a1 - a0) * k / 4), 1.22) for k in range(5)],
+                  target=[(0.0, 0.0, 0.46)],
                   focus=[(24.0, (XL, -0.3, 0.6))],
-                  lens=44, fstop=4.0, ramp=drift))
+                  lens=40, fstop=4.0, ramp=drift))
     return S

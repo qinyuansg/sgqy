@@ -218,16 +218,19 @@ def floor_material(name, color, rough, rough_var=0.03, spec=0.5, coat=0.0, coat_
         ins = {i.identifier: i for i in mx.inputs}
         nt.links.new(w0.outputs[0], ins['Factor_Float']); ins['A_Color'].default_value = (*color, 1); ins['B_Color'].default_value = (*p_col, 1)
         nt.links.new([o for o in mx.outputs if o.identifier == 'Result_Color'][0], p.inputs['Base Color'])
-    # micro-roughness: broad smears + fine grain, in object space (the floor does not move)
-    tc = _n(nt, 'ShaderNodeTexCoord')
-    n1 = _n(nt, 'ShaderNodeTexNoise'); n1.inputs['Scale'].default_value = 1.7; n1.inputs['Detail'].default_value = 5.0
-    n2 = _n(nt, 'ShaderNodeTexNoise'); n2.inputs['Scale'].default_value = 60.0; n2.inputs['Detail'].default_value = 2.0
-    nt.links.new(tc.outputs['Object'], n1.inputs['Vector']); nt.links.new(tc.outputs['Object'], n2.inputs['Vector'])
-    a = _n(nt, 'ShaderNodeMath', operation='MULTIPLY_ADD'); nt.links.new(n1.outputs['Fac'], a.inputs[0])
-    a.inputs[1].default_value = 2 * rough_var; a.inputs[2].default_value = rough - rough_var
-    b = _n(nt, 'ShaderNodeMath', operation='MULTIPLY_ADD'); nt.links.new(n2.outputs['Fac'], b.inputs[0])
-    b.inputs[1].default_value = rough_var * 0.5; nt.links.new(a.outputs[0], b.inputs[2])
-    nt.links.new(b.outputs[0], p.inputs['Roughness'])
+    # micro-roughness (optional: two noise look-ups on every floor hit cost 7 % of a floor-heavy frame, measured)
+    p.inputs['Roughness'].default_value = rough
+    if rough_var > 0:
+        tc = _n(nt, 'ShaderNodeTexCoord')
+        n1 = _n(nt, 'ShaderNodeTexNoise'); n1.inputs['Scale'].default_value = 1.7; n1.inputs['Detail'].default_value = 2.0
+        nt.links.new(tc.outputs['Object'], n1.inputs['Vector'])
+        a = _n(nt, 'ShaderNodeMath', operation='MULTIPLY_ADD'); nt.links.new(n1.outputs['Fac'], a.inputs[0])
+        if coat:        # what shows on a coated floor is the sharpness of its mirror
+            a.inputs[1].default_value = 2 * rough_var; a.inputs[2].default_value = max(0.0, coat_rough - rough_var)
+            nt.links.new(a.outputs[0], p.inputs['Coat Roughness'])
+        else:
+            a.inputs[1].default_value = 2 * rough_var; a.inputs[2].default_value = rough - rough_var
+            nt.links.new(a.outputs[0], p.inputs['Roughness'])
     shader = p.outputs[0]
     if glow is not None:
         c_lo, c_hi, strength, z_peak, z_top = glow
@@ -333,6 +336,9 @@ def floor_split(scene, light_ob, gain=1.0, floor=None, coll=None):
     coll = coll or bpy.data.collections.get(COLLECTION)
     if floor is None or coll is None or light_ob.type != 'LIGHT':
         return None
+    if gain <= 0:                                   # no pool wanted: just keep the lamp off the floor
+        light_ob.light_linking.receiver_collection = _link_coll('STUDIO_LL_nofloor', floor, 'EXCLUDE')
+        return None
     base = light_ob.name.replace('STUDIO_', '')
     name = f'STUDIO_{base}_FLOOR'
     tw = bpy.data.objects.get(name)
@@ -403,22 +409,30 @@ def _card(rig, name, rel, radius, z, aim, size, radiance, color=(1, 1, 1), soft=
     return ob
 
 
-RIM_REL = 116.0        # the rims stand this far round from the lens axis: outside any 24 mm+ frame, and away from the
-#                        direction a side panel mirrors in the usual 3/4 view (about 100 degrees)
+RIM_REL = 140.0        # the rims stand at least 40 degrees off the lens axis, 5 m behind the subject: outside the frame
+#                        (so never seen through a flat pane), far from what a side panel mirrors in a 3/4 view (80
+#                        degrees off axis), and just where flutes and tubes bend the view to: brilliant edges.
+#                        aim_rig_shots() opens them further for a shot whose frame is wider than that.
+RIM_RADIUS, RIM_Z, RIM_AIM, RIM_SIZE, RIM_SOFT = 5.0, 1.55, (0.0, 0.0, 0.95), (1.2, 3.2), 0.65
 
 
-def _cards(rig, key=7.0, front=1.3, rim=11.0, color=(0.88, 0.92, 1.0), warm=(1.0, 0.97, 0.93)):
+def _cards(rig, key=5.5, front=1.3, rim=11.0, back=0.30, color=(0.88, 0.92, 1.0), warm=(1.0, 0.97, 0.93)):
     """The card set of the dark / violet studios (positions relative to the lens axis, see aim_rig):
         KEY     big soft box overhead: lights the parts from above, top bevels, the rail lid
         FRONT   big soft wall behind and above the camera. A glass face turned to the lens (a wing) mirrors the wall's
                 soft lower edge: a sheen that is brightest at the top of the leaf and gone by its middle
         RIM_L/R tall soft strips left and right, behind the gate, out of frame: edge light in every bevel and flute
-        GEAR    soft card above and behind, linked to the drive parts only (see _finish_cards)"""
+        GEAR    soft card above and behind, linked to the drive parts only (see _finish_cards)
+        BACK    a wide, dim glow far behind the gate, all gradient and no edge. Lamps are invisible to the lens but
+                not through glass: every pane, tube and leaf shows a soft gradient of it and so separates from the
+                black around it; the flutes break it into stripes"""
     rig.out['key'] = _card(rig, 'KEY', -20.0, 0.5, 3.5, TARGET, (3.4, 3.4), key, color=warm, soft=0.5, floor_gain=0.35)
     _card(rig, 'FRONT', 6.0, 3.4, 2.05, (0.0, 0.0, 1.9), (3.8, 2.4), front, color=color, soft=0.6, floor_gain=0.25)
-    _card(rig, 'RIM_L', -RIM_REL, 3.2, 1.40, (0.0, 0.0, 0.95), (1.0, 2.8), rim, color=color, soft=0.6, floor_gain=0.25)
-    _card(rig, 'RIM_R', RIM_REL, 3.2, 1.40, (0.0, 0.0, 0.95), (1.0, 2.8), rim, color=color, soft=0.6, floor_gain=0.25)
-    _card(rig, 'GEAR', 172.0, 2.1, 1.75, (0.0, 0.0, 0.3), (2.6, 1.6), 9.0, color=warm, soft=0.55, floor_gain=0.0)
+    for name, sgn in (('RIM_L', -1.0), ('RIM_R', 1.0)):
+        ob = _card(rig, name, sgn * RIM_REL, RIM_RADIUS, RIM_Z, RIM_AIM, RIM_SIZE, rim, color=color, soft=RIM_SOFT, floor_gain=0.25)
+        ob['gg_rim_sign'] = sgn
+    _card(rig, 'GEAR', 172.0, 2.1, 1.75, (0.0, 0.0, 0.3), (2.6, 1.6), 6.0, color=warm, soft=0.55, floor_gain=0.0)
+    _card(rig, 'BACK', 180.0, 4.2, 0.95, (0.0, 0.0, 0.9), (5.0, 2.4), back, color=(0.70, 0.78, 1.0), soft=0.96, floor_gain=0.0)
 
 
 SPARK_POS = dict(rel=150.0, radius=4.2, z=2.35)      # low, behind the gate, a little to the right of the lens axis
@@ -430,7 +444,7 @@ def _spark(rig, energy, color=(1.0, 0.98, 0.95), cone=30.0):
     floor TOWARD the camera, and every glass edge is back-lit. A spot is a point: it glints, it never makes a slab."""
     loc = _rel(SPARK_POS['rel'], SPARK_POS['radius'], SPARK_POS['z'])
     sp = rig.spot('SPARK', loc, (0.0, 0.0, 0.30), energy, cone=math.radians(cone), blend=0.5, color=color)
-    sp['gg_floor_gain'] = 1.0
+    sp['gg_floor_gain'] = 0.6
     rig.out['spark'] = sp
     return sp
 
@@ -468,7 +482,7 @@ def studio_dark(rig):
     """Black studio: polished black floor running into darkness; soft cards only (overhead key, a wall behind the
     camera, two strips behind the gate), one hard spark light from behind. No lamp is ever mirrored by the floor."""
     world_gradient(rig, 'STUDIO_WORLD_dark', zenith=(0.002, 0.002, 0.005), horizon=(0.010, 0.009, 0.026), strength=1.0)
-    m = floor_material('STUDIO_FLOOR_dark', (0.012, 0.012, 0.016), rough=0.6, rough_var=0.05, spec=0.0, coat=1.0, coat_rough=0.045,
+    m = floor_material('STUDIO_FLOOR_dark', (0.012, 0.012, 0.016), rough=0.6, rough_var=0.0, spec=0.0, coat=1.0, coat_rough=0.045,
                        pool=((0.024, 0.024, 0.030), 0.9, 3.2), fade=((0.010, 0.009, 0.026), 9.0, 45.0))
     floor = rig.disc('STUDIO_FLOOR', 80.0, m)
     rig.out['floor'] = floor; rig.out['backdrop'] = None
@@ -481,7 +495,7 @@ def studio_violet(rig):
     """Deep blue-violet cyc: the round wall glows from a violet horizon into indigo black, polished violet-black floor,
     the same soft cards and spark as 'dark'. The glass picks the gradient up in every refraction."""
     world_gradient(rig, 'STUDIO_WORLD_violet', zenith=(0.002, 0.0015, 0.010), horizon=(0.008, 0.005, 0.03), strength=1.0)
-    m = floor_material('STUDIO_FLOOR_violet', (0.007, 0.005, 0.020), rough=0.6, rough_var=0.05, spec=0.0, coat=1.0, coat_rough=0.045,
+    m = floor_material('STUDIO_FLOOR_violet', (0.007, 0.005, 0.020), rough=0.6, rough_var=0.0, spec=0.0, coat=1.0, coat_rough=0.045,
                        pool=((0.018, 0.015, 0.040), 0.9, 3.2),
                        glow=((0.022, 0.008, 0.125), (0.001, 0.0007, 0.007), 1.0, 1.3, 7.0), fillet=2.6)
     floor = rig.cyc('STUDIO_FLOOR', 7.5, 2.6, 7.0, m)
@@ -648,6 +662,58 @@ def aim_rig(rig, camera, frame=None):
     return rz
 
 
+def _rim_local(sign, off_deg):
+    """Local (rig-space) location and rotation of a rim card standing `off_deg` off the lens axis."""
+    loc = Vector(_rel(sign * (180.0 - off_deg), RIM_RADIUS, RIM_Z))
+    rot = (Vector(RIM_AIM) - loc).to_track_quat('-Z', 'Y').to_euler()
+    return loc, rot
+
+
+def _in_frame(scene, camera, world_pts, margin):
+    from bpy_extras.object_utils import world_to_camera_view
+    for co in world_pts:
+        v = world_to_camera_view(scene, camera, co)
+        if v.z > 0 and -margin < v.x < 1 + margin and -margin < v.y < 1 + margin:
+            return True
+    return False
+
+
+def rim_spread_needed(scene, camera, pose, margin=0.06, lo=None, hi=80.0):
+    """Smallest off-axis angle (degrees, >= 180 - RIM_REL) at which neither rim card reaches into the frame of the
+    camera as it stands NOW, for the rig pose (x, y, rz). The bright core of the soft card is tested."""
+    x, y, rz = pose
+    lo = (180.0 - RIM_REL) if lo is None else lo
+    M = Matrix.Translation((x, y, 0.0)) @ Matrix.Rotation(rz, 4, 'Z')
+    hx = RIM_SIZE[0] / 2 * (1.0 - 0.5 * RIM_SOFT); hy = RIM_SIZE[1] / 2 * (1.0 - 0.5 * RIM_SOFT)
+    a = lo
+    while a < hi:
+        pts = []
+        for sgn in (-1.0, 1.0):
+            loc, rot = _rim_local(sgn, a)
+            L = M @ Matrix.Translation(loc) @ rot.to_matrix().to_4x4()
+            pts += [L @ Vector((ux * hx, uy * hy, 0.0)) for ux in (-1, 0, 1) for uy in (-1, 0, 1)]
+        if not _in_frame(scene, camera, pts, margin):
+            return a
+        a += 2.5
+    return hi
+
+
+def set_rim_spread(off_deg, frame=None):
+    """Stand both rim cards `off_deg` off the lens axis (rig space). Optionally keyframe (location + rotation)."""
+    for name in ('STUDIO_RIM_L', 'STUDIO_RIM_R'):
+        ob = bpy.data.objects.get(name)
+        if ob is None:
+            continue
+        loc, rot = _rim_local(ob.get('gg_rim_sign', -1.0 if name.endswith('_L') else 1.0), off_deg)
+        ob.location = loc; ob.rotation_euler = rot
+        if frame is not None:
+            ob.keyframe_insert('location', frame=frame); ob.keyframe_insert('rotation_euler', frame=frame)
+            for fc in _fcurves(ob):
+                for kp in fc.keyframe_points:
+                    kp.interpolation = 'CONSTANT'
+                fc.update()
+
+
 def _unwrap(a, ref):
     while a - ref > math.pi: a -= 2 * math.pi
     while a - ref < -math.pi: a += 2 * math.pi
@@ -659,11 +725,17 @@ def aim_rig_shots(scene, rig, camera, cut_frames, hold_deg=12.0, hold_m=0.6, sam
     A shot whose camera hardly turns gets ONE held pose (the light does not travel). A shot with a big move (the lens
     axis turns more than hold_deg, or the subject moves more than hold_m) is tracked: the rig follows the camera
     through `samples` keys, as if it rode on the crane. Cuts are hard (CONSTANT) so nothing bleeds across them.
-    Returns [(first_frame, last_frame, 'hold'|'track', rot_deg_first, rot_deg_last)]."""
+    Per shot the two rim cards are also opened just far enough to stay outside the frame for the whole shot
+    (rim_spread_needed: at least 40 degrees off the lens axis, more for a wide lens or a distant camera).
+    Returns [(first_frame, last_frame, 'hold'|'track', rot_deg_first, rot_deg_last, rim_off_axis_deg)]."""
     cur = scene.frame_current
     if rig.animation_data:
         rig.animation_data_clear()
-    report, keys = [], []
+    for name in ('STUDIO_RIM_L', 'STUDIO_RIM_R'):
+        ob = bpy.data.objects.get(name)
+        if ob is not None and ob.animation_data:
+            ob.animation_data_clear()
+    report, keys, spreads = [], [], []
     shots = list(zip(cut_frames[:-1], cut_frames[1:]))
     for i, (f0, f_next) in enumerate(shots):
         f1 = f_next - 1 if i < len(shots) - 1 else f_next
@@ -679,14 +751,31 @@ def aim_rig_shots(scene, rig, camera, cut_frames, hold_deg=12.0, hold_m=0.6, sam
         rzs = [p[3] for p in poses]
         spread = math.degrees(max(rzs) - min(rzs))
         move = max(math.hypot(p[1] - poses[0][1], p[2] - poses[0][2]) for p in poses)
-        if spread <= hold_deg and move <= hold_m:
-            mid = poses[len(poses) // 2]
+        hold = spread <= hold_deg and move <= hold_m
+        mid = poses[len(poses) // 2]
+        # how far the rims must open so that they stay out of frame through the whole shot
+        off = 180.0 - RIM_REL
+
+        def pose_at(f):
+            if hold:
+                return mid[1], mid[2], mid[3]
+            for (fa, xa, ya, ra), (fb, xb, yb, rb) in zip(poses[:-1], poses[1:]):
+                if fa <= f <= fb:
+                    t = (f - fa) / max(1, fb - fa)
+                    return xa + (xb - xa) * t, ya + (yb - ya) * t, ra + (rb - ra) * t
+            return poses[-1][1:]
+        step = max(1, (f1 - f0) // 16)
+        for f in sorted(set(range(f0, f1 + 1, step)) | {f1}):
+            scene.frame_set(f)
+            off = max(off, rim_spread_needed(scene, camera, pose_at(f), lo=off))
+        spreads.append((f0, off))
+        if hold:
             keys.append((f0, mid[1], mid[2], mid[3], 'CONSTANT'))
-            report.append((f0, f1, 'hold', round(math.degrees(mid[3]), 1), round(math.degrees(mid[3]), 1)))
+            report.append((f0, f1, 'hold', round(math.degrees(mid[3]), 1), round(math.degrees(mid[3]), 1), off))
         else:
             for k, (f, x, y, rz) in enumerate(poses):
                 keys.append((f, x, y, rz, 'CONSTANT' if k == len(poses) - 1 else 'LINEAR'))
-            report.append((f0, f1, 'track', round(math.degrees(poses[0][3]), 1), round(math.degrees(poses[-1][3]), 1)))
+            report.append((f0, f1, 'track', round(math.degrees(poses[0][3]), 1), round(math.degrees(poses[-1][3]), 1), off))
     for f, x, y, rz, interp in keys:
         rig.location.x, rig.location.y, rig.rotation_euler.z = x, y, rz
         rig.keyframe_insert('location', index=0, frame=f); rig.keyframe_insert('location', index=1, frame=f)
@@ -696,6 +785,8 @@ def aim_rig_shots(scene, rig, camera, cut_frames, hold_deg=12.0, hold_m=0.6, sam
         for kp in fc.keyframe_points:
             kp.interpolation = kmap.get(int(round(kp.co[0])), 'CONSTANT')
         fc.update()
+    for f0, off in spreads:
+        set_rim_spread(off, frame=f0)
     scene.frame_set(cur)
     return report
 
@@ -720,11 +811,12 @@ def cut_frames_from(scene, timeline=None):
 
 
 def cards(scene=None):
-    """The lamps that could show as a shape: every AREA lamp of the scene except the floor twins (diffuse only,
-    floor only) and GEAR (linked to the drive parts only: no glass and no floor ever sees it)."""
+    """The lamps that could show as a bright shape through a flat pane: every AREA lamp of the scene except the floor
+    twins (diffuse only, floor only), GEAR (linked to the drive parts only: no glass and no floor ever sees it) and BACK
+    (the dim edgeless glow that is MEANT to be seen through the glass: peak 0.3, where a card is 7-11)."""
     scene = scene or bpy.context.scene
     return [o for o in scene.objects if o.type == 'LIGHT' and o.data.type == 'AREA'
-            and not o.name.endswith('_FLOOR') and o.name != 'STUDIO_GEAR' and not o.name.startswith('GG_')]
+            and not o.name.endswith('_FLOOR') and o.name not in ('STUDIO_GEAR', 'STUDIO_BACK') and not o.name.startswith('GG_')]
 
 
 def check_cards(scene, frames, camera=None, margin=0.04, verbose=True):
@@ -780,11 +872,11 @@ def aim_for_director(scene=None, camera=None, timeline=None, others=True, verbos
                     soft_light(ob.data, 0.5)
                 floor_split(scene, ob, gain=0.6)
     link_gear(scene)
-    probe = sorted({f for (f0, f1, *_r) in shots for f in (f0, (f0 + f1) // 2, f1)})
+    probe = sorted({f for r in shots for f in (r[0], (r[0] + r[1]) // 2, r[1])})
     bad = check_cards(scene, probe, camera, verbose=False)
     if verbose:
         print(f'[studio] aim_for_director: {len(shots)} shots from {src}; '
-              + ', '.join(f'{f0}-{f1} {m}' for f0, f1, m, *_r in shots))
+              + ', '.join(f'{r[0]}-{r[1]} {r[2]} rims {r[5]:.0f}' for r in shots))
         print('[studio] cards in frame at first/mid/last of every shot: ' + ('none' if not bad else str(bad)))
     return {'cuts': cuts, 'source': src, 'shots': shots, 'in_frame': bad}
 

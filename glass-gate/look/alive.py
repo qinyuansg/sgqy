@@ -273,6 +273,7 @@ def fit_wave_axis(scene, samples=None):
     a = (sw * suy - sy * su) / den
     b = (su - a * sy) / sw
     scene['gg_wave_a'] = float(a); scene['gg_wave_b'] = float(b); scene['gg_led_z'] = float(sz / sw)
+    M.set_wave_axis(a, b, sz / sw)
     return a, b, sz / sw
 
 

@@ -21,6 +21,8 @@ def recommended(scene=None, quality='default', look='AgX - Punchy'):
     gt, gg_, mx, tr, gl, df, tp = QUALITY[quality]
     scene['gg_glass_depth'] = float(gt)
     scene['gg_glass_gloss'] = float(gl - 1) if gg_ >= gl else float(gg_)
+    import materials
+    materials.set_glass_guard(scene['gg_glass_depth'], scene['gg_glass_gloss'])
     c = scene.cycles
     c.max_bounces = mx
     c.transmission_bounces = tr
@@ -41,7 +43,7 @@ def recommended(scene=None, quality='default', look='AgX - Punchy'):
     return scene
 
 
-def final(scene=None, denoise_quality='BALANCED', prefilter='FAST', adaptive_threshold=None, adaptive_min=None):
+def final(scene=None, denoise_quality='BALANCED', prefilter='ACCURATE', adaptive_threshold=None, adaptive_min=None):
     """Cost settings for the final animation. Call AFTER gg_common.setup_cycles(scene, preset) and recommended():
 
         gg.setup_cycles(sc, 'final'); settings.recommended(sc); settings.final(sc)

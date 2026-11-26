@@ -4,11 +4,147 @@ Everything here was tested on the **real gate** (`hardware/gate.blend`, 762 k tr
 'test' preset. The proxy (`look/proxy_gate.py`) was only used until the real gate appeared; no delivered still shows it.
 `look/gate_look.blend` (dark studio) was made from that build: re-run `apply_look.py` after any hardware rebuild (5 s).
 
+## ROUND 2 (after the director's review) — read this first; it supersedes the rig, cost and alive-strength parts below
+
+Tested on the director's animation (his baked `DIRECTOR_CAM`, 16 shots, alive and house keys) applied to the new gate
+with `LED_DIFFUSER` bands and `PROP_card` (hardware/gate.blend of 19:31), with `look/director_frames.py`.
+The A/B sheet and the alive stills in `look/tests/` from round 1 show the OLD rig; round-2 evidence is `look/tests/r2_*`.
+
+### What the director calls, in order
+
+    # stage 2 (unchanged):  look/apply_look.py --gate hardware/gate.blend --studio dark --out look/gate_look.blend
+    # director/animate.py, after the camera bake and the alive keys:
+    import studio                                   # sys.path has look/
+    info = studio.aim_for_director(sc)              # keys STUDIO_RIG + the two rim cards per shot; softens DIR_* lamps;
+                                                    # prints the shots and any card that reaches into a frame
+    # director/render.py, after gg.setup_cycles(sc, preset):
+    import settings
+    settings.recommended(sc); settings.final(sc)    # bounces + glass guard; denoiser, light tree off, persistent data
+
+`aim_for_director` reads the cuts from the scene's timeline markers if there are two or more, else from `cuts` in
+shared/timeline.json (pass `timeline=<path>` for another file). Everything it writes is ordinary keys and drivers and
+is saved with the .blend. The light-path settings and the bloom are also stored in look/gate_look.blend, so render.py
+keeps them even without the two `settings` calls; the calls make it explicit.
+
+### 1. Cost
+
+Same frames, same machine, CPU seconds of the render (2 threads, 540×675, 16 spp), before = director/scene.blend as it was:
+
+| frame | before | after | |
+|---|---|---|---|
+| 330–332 gear macro | 25.9–26.4 | 17.9–18.3 | −31 % |
+| 650–651 glass body, wide | 24.9–26.5 | 18.6–20.1 | −25 % |
+| 1190–1191 alive, lane | 36.1–36.9 | 28.2–30.4 | −20 % |
+| 1285 alive drive macro | 48.2–51.4 (round-2 start) | 42.3–43.6 | |
+
+Final preset (1080×1350, 16 spp, 4 threads, persistent data, second and later frames), wall seconds while two other
+helpers were also using the box: **330–332: 18.5–20.0 · 650–651: 18.8–20.1 · 1190–1191: 29.0** (director's idle-box
+baseline 26 / 26 / 36). At `--scale 80`: **11.3–12.0 · 12.5–12.6 · 18.7–19.9**.
+Film average at 80 %, extrapolated from the relative cost of 48 frames (3 per shot): about 15–16 s.
+The dearest shots are the alive macros 13_card and 14_drive (2.3–2.5× the gear macro, about 27 s at 80 %), then
+08–10 and 12, 15, 16 (1.4–1.7×).
+
+What was measured (frame 331 / 651 / 1191, CPU-s at test size):
+
+| change | effect |
+|---|---|
+| light tree OFF | −19 % / −18 % / −10 %. Seed stability unchanged (RMS 0.0158→0.0162, 0.0295→0.0282, 0.0331→0.0311) |
+| OIDN quality BALANCED instead of HIGH | about −10 % (measured together with the prefilter: 26.6→21.5) |
+| OIDN prefilter FAST | another −1.4 s per final frame, but it leaves speckle in the fluted posts (noisy albedo/normal behind glass): NOT used. ACCURATE is the default of `settings.final()` |
+| denoise on RGB only (no albedo/normal) | as cheap as FAST, no speckle, but the PCB, the "G1" on the badge and the card print smear: NOT used |
+| glow lights 40 → 16 | −0.5 % (they were never the cost; hiding all of them saves 2 %) |
+| edge-lit glass glow, first version | +14 % on every frame. Now it hangs on a Mix Shader with factor gg_power, so it costs nothing while unlit and +5 % when alive |
+| view-layer attribute nodes in the glass (guard depth, wave axis) → Value nodes | part of the above |
+| two noise textures on the floor's base roughness (invisible under the coat) | −7 % on floor-heavy frames, removed |
+| bloom (compositor, CPU) | < 0.1 s per final frame (1 spp frame with and without: 1.61 vs 1.61 s) |
+| glass bounce guard 8/4 → 6/3 → 4/2 | nothing (27.5–29.0 in all three): paths are short, depth is not the cost |
+| adaptive sampling threshold 0.1–0.15, min 4 | 0–3 %: at 16 spp the glass never converges, the black already stops at 4 |
+| static BVH | +2 % (rebuild) |
+| glass casts no shadows | −4 %, and the gate floats: not used |
+| diffuse bounces 1 | nothing |
+| hiding ALL glass on the alive macros | nothing (46.4 → 43.5): there the cost is 16 full samples on every pixel of a dense, lit frame |
+
+So the remaining lever is samples × pixels. If the average is still too high: 12 spp on shots 13 and 14 (see boiling).
+
+### 2. The rig
+
+- Every lamp except the spark is now a **soft card**: an area lamp whose emission falls to zero over the outer 45–96 %
+  of each half side (`studio.soft_light`). What a pane mirrors of it is a gradient.
+- **No lamp can appear in the floor.** Each lamp is excluded from the floor by light linking and has a twin
+  `STUDIO_<name>_FLOOR` (same place, diffuse only, floor only, `["gg_floor_gain"]` × the parent's energy). The floor
+  still gets its pool and the glass shadows; it mirrors the gate and nothing else.
+- Cards (positions relative to the lens axis): `KEY` 3.4 m box overhead (peak radiance 5.5), `FRONT` wall behind and
+  above the camera (1.3), `RIM_L/R` 1.2 × 3.2 m strips 5 m behind the subject, 40° or more off the axis (11),
+  `GEAR` over the drive, linked to `DRV_*` objects only (6), `BACK` a 5 m dim glow far behind (0.30, all gradient),
+  `SPARK` the hard spot, low behind.
+- `BACK` is deliberate: lamps are invisible to the lens but not through glass, so every pane, tube and leaf shows a
+  faint gradient of it and separates from the black. It is why the wings and the side panels now read as slabs.
+  It is 1/20 to 1/35 of a card's brightness. To switch it off: `bpy.data.objects["STUDIO_BACK"]["gg_energy"] = 0`.
+- `aim_for_director`: the rig is put on the SUBJECT (lens axis at the focus distance, clamped to the gate's footprint)
+  and turned to the lens axis, so the cards keep their place in the frame whatever the camera looks at. A shot whose
+  axis turns less than 12° and whose subject moves less than 0.6 m gets one held pose; otherwise the rig is tracked
+  through the shot (linear keys): with the current camera, shots 07_glass and 11_wave. Per shot the two rims are
+  opened just far enough (40–52°) to stay out of frame from the first to the last frame.
+- Check (`studio.check_cards`): no STUDIO card reaches into the frame on first / middle / last frame of all 16 shots,
+  nor on every 6th frame of the film (260 frames). `DIR_sweep` (frames 42–96) and `DIR_pass_L/R` (1326–1350) are
+  in frame: they are the director's own lamps and meant to be. `aim_for_director` gives them soft edges and a floor
+  twin too (`others=False` leaves them alone).
+- The camera has sensor fit HORIZONTAL (wider than a 36 mm-high frame); the rim opening accounts for it.
+
+### 3. The alive moment
+
+- `LED_DIFFUSER` is shaded: frosted clear plastic when dark; lit, a solid saturated band (2.4, tone-maps to a
+  saturated blue-violet / green instead of white), white-blue head ×9 as the front passes. Same `wave_u` law as the
+  chips. The gate without the bands still works (the chips alone).
+- Edge-lit glass: `GLASS_BODY` glows in the LED colour near the height of the LED seam once the front has passed its
+  place along the lane (wave_u estimated from world Y; `alive.setup_alive` fits the axis to the rail LEDs), strongest
+  on rims, bevels and flutes. `GLASS_WING`: the edge band of the leaf glows when the wing's edge light is on.
+- Floor: 16 glow lights, 340 W together, under the spine on the lane side, diffuse only. A clear coloured pool.
+- Bloom is on by default (`alive.setup_glare`, fog glow, threshold 4, strength 0.30, highlights clamped at 14),
+  looked at on 1010, 1190, 1400, 1500. Cost < 0.1 s per frame.
+- **House values** (tested on the director's frames): before the drop 1.0, dipping to 0.5 on the last frame before it
+  (as keyed now); **the drop and the first wave 0.30**; **alive idle 0.45**; **granted 0.45**; **final hero 0.80**.
+  At 0.30 the posts and rails are still readable while the band carries the frame; below 0.2 the room is gone.
+- Shot 11 (960–1080): the band was looked at from the grazing start position (frames 960, 965, 1010, 1019) and after
+  the pull-back (1070, 1079): a continuous band with the hot head, no stepping.
+
+### 4. Wings
+
+Edge band of the leaf: a faint cool catch-light that is always there (× house), found from the object-space normal, so
+the outline is drawn whatever is behind it. Face: the soft lower edge of `FRONT` gives a sheen that is brightest at the
+top; `BACK` shows through as a gradient. Looked at on 863, 870, 895, 899 and on the leaves hovering in frame 0.
+
+### 5. Smaller things
+
+- Gear macro: `GEAR` card + the rims now behind: brass teeth, steel ring and carrier separate (250–377, 1285).
+  No bar behind.
+- `PROP_card`: reads on 1215–1230 (clear body, white print, gold pad); it uses contract names, nothing to do.
+- **Boiling.** Seed-to-seed RMS at 16 spp, before → after: frame 331 0.0205 → 0.0154, 651 0.0374 → 0.0235,
+  1191 0.0376 → 0.0239 (pixels differing by more than 0.1: 1.2 → 0.4 %, 3.9 → 1.2 %, 4.7 → 1.8 %).
+  In motion (mean |f − median of 3 frames|, 8 consecutive frames): 330–337 0.00069 → 0.00050
+  (worst 1 % of 8×8 blocks 0.0105 → 0.0056), 650–657 0.0053 → 0.0031 (0.039 → 0.018); map in `look/tests/r2_motion_crawl.png`.
+  Where it still crawls: inside the fluted posts, on brass gear teeth behind the column glass, and where the
+  floor mirrors the flutes. Flat panes, metal, PCB, floor pool, LEDs and screens are quiet.
+  12 spp instead of 16: seed RMS 0.0241 / 0.0250 / 0.0180 on 651 / 1191 / 1285 (16 spp: 0.0235 / 0.0239 / 0.0170),
+  for −18 / −23 / −19 % render time. So 12 spp with this look is still a third steadier than 16 spp was before, and
+  takes the cost to −38 % against the baseline. Recommended if the budget needs it, first on shots 13 and 14.
+  Set: `settings.final()` as it is (prefilter ACCURATE is the part that matters for the flutes); keep the seed fixed.
+
+### Still imperfect (round 2)
+
+- Cost is −19 to −31 % at equal settings, not a flat −30 %; the alive lane and macro shots are the weak end.
+- `BACK` is a cheat that only exists behind glass. It is dim, but it is not what a real room would do.
+- A tracked shot moves the light with the camera: floor shadows slide a little during 07_glass and 11_wave.
+- The glass glow is a shader estimate from height and world Y, not light transport: it does not know about parts in
+  the way, and it shows on glass that is not near an LED if that glass is at rail height.
+- Frame 0: the director's sweep lamp is still the brightest thing in frame (softened, not dimmed: his to key).
+- violet / highkey / hdri were not re-tuned with the new cards (highkey keeps only its key and spark).
+
 ## Files and how to run them
 
     look/apply_look.py        pipeline stage 2:  gate .blend -> look/gate_look.blend
     look/materials.py         apply_materials(): every contract material, fallback for unknown names
-    look/studio.py            build_studio(variant): 'dark' | 'violet' | 'highkey' | 'hdri';  aim_rig(), get_studio(), set_caustics()
+    look/studio.py            build_studio(variant): 'dark' | 'violet' | 'highkey' | 'hdri';  aim_for_director(), aim_rig(), get_studio()
     look/alive.py             key_alive(), set_alive(), key_first_wave(), key_grant_wave(), setup_alive(), setup_glare()
     look/settings.py          recommended(scene, quality): Cycles bounces + the glass bounce guard, kept in step
     look/make_textures.py     UI / badge / PCB art with pillow -> look/tex/*.png   (look at look/tex/_contact.png)
@@ -27,7 +163,7 @@ From the director's script (after opening `look/gate_look.blend`):
 
     import sys; sys.path.insert(0, 'look')          # materials.py, studio.py, alive.py, settings.py import each other by name
     import alive, studio, settings
-    st = studio.get_studio(scene)                   # {'rig','floor','world','lights':{KEY,RIM_L,RIM_R,FILL,SPARK,SPARK_FLOOR},'key','spark'}
+    st = studio.get_studio(scene)                   # {'rig','floor','world','lights':{KEY,FRONT,RIM_L,RIM_R,GEAR,BACK,SPARK,*_FLOOR},'key','spark'}
     gg.setup_cycles(scene, 'final'); settings.recommended(scene)     # ALWAYS call recommended() after setup_cycles()
 
 `apply_look.apply(scene, studio_variant)` does the same on an already open scene. Rebuilding a studio
@@ -61,21 +197,13 @@ when they refract only darkness — the rim strips and the floor pool are what k
 - D is the most "photographic" and costs about the same as A, but the matt floor (a glossy one would mirror the photographed
   room) and the missing rims make it the flattest of the dark options. The only variant that uses a download.
 
-### Rig rules (all variants)
+### Rig rules (all variants) — rewritten in round 2, see "Round 2" at the top
 
-- Every light is a child of the empty `STUDIO_RIG`. The rigs are lit for a camera at azimuth −53.5° (the hero camera):
-  rim strips behind the gate left and right, just outside a 35–85 mm frame, spark low behind, key over the lens.
-  **The rig must be turned for every shot** (director/animate.py does not do it yet):
-    - `studio.aim_rig_shots(scene, st['rig'], camera, cut_frames)` — one CONSTANT key per shot, sampled mid-shot (best);
-    - `studio.aim_rig(st['rig'], camera, frame=None)` — one position, optionally keyed;
-    - `studio.follow_camera(st['rig'], camera)` — a driver, the rig travels with the camera (floor shadows move in orbits).
-  If a shot is not aimed, the back light can become a front light (flat, grey glass) and a rim strip can sit behind
-  the glass in frame: it is invisible to the camera but visible through the glass, as a white bar.
+- Every lamp is a child of the empty `STUDIO_RIG`. `studio.aim_for_director(scene)` places and keys the rig for
+  every shot; `studio.aim_rig(rig, camera)` does it once for a still.
 - Light power: change `obj["gg_energy"]`, never `light.energy` (driven as gg_energy × scene["gg_house"]).
-- `SPARK` is the hard light, low and behind the gate, so the shadows and light streaks run toward the lens. It is
-  two lamps: `SPARK` lights everything but the floor, its child `SPARK_FLOOR` (diffuse only) lights only the floor
-  (light linking). Without the split the polished floor mirrors the bare lamp as a burnt-out spot. Move/aim `SPARK`.
-- In `hdri`, aim_rig turns the spark only; the HDRI turns with `world.node_tree.nodes["HDRI_Mapping"]`.
+- No lamp is mirrored by the floor: each has a diffuse-only twin `STUDIO_<name>_FLOOR` that lights only the floor.
+- In `hdri`, aiming turns the spark only; the HDRI turns with `world.node_tree.nodes["HDRI_Mapping"]`.
 - Grade: `settings.recommended()` sets AgX with the look "AgX - Punchy". All stills use it.
 
 ## Materials
@@ -85,7 +213,7 @@ when they refract only darkness — the rim strips and the floor pool are what k
   8 mm walls stay clear; light that runs inside a sheet or a tube wall goes blue-violet. Shadow rays and bounce
   rays see a tinted Transparent BSDF, so lamps reach the parts inside and the floor behind. `GLASS_LENS` is a
   coated Principled glass (thin-film sheen).
-- **No black faces**: past `gg_glass_depth` transmission bounces or `gg_glass_gloss` glossy bounces (internal
+- **No black faces**: past 8 transmission bounces or 4 glossy bounces (`materials.set_glass_guard`; internal
   reflection counts as glossy) a glass surface becomes plain Transparent; the path stops refracting instead of dying.
   `settings.recommended()` keeps the Cycles limits above the guard. shared `setup_cycles()` (16/16/6) is also above
   the default guard (8/4), so nothing goes black if recommended() is forgotten.
@@ -133,8 +261,8 @@ keyframes on them (LINEAR by default; `interp='BEZIER'` for eased ones). Nothing
 - The LEDs light the scene through **glow lights** (collection `GG_ALIVE_GLOW`, 40 small sphere lights on the real
   gate): LED_STRIP polygons are clustered, each cluster gets a light parented to its LED object (the wing ones follow
   the wing), driven by the same wave formula. They are diffuse-only; the LED meshes themselves are what the camera,
-  reflections and refractions see (no double counting). `alive.GLOW_GAIN` (10) scales them; `materials.LED_STRENGTH`
-  (90) is the visible chip brightness. After changing LED objects or constants call `alive.setup_alive(scene)` again.
+  reflections and refractions see (no double counting). `alive.GLOW_WATTS` (340 W in total, round 2) scales them; `materials.LED_STRENGTH`
+  (30) is the chip brightness, `materials.DIFFUSER_STRENGTH` (2.4) the band's. After changing LED objects or constants call `alive.setup_alive(scene)` again.
 - Optional bloom: `alive.setup_glare(scene)` (compositor, forced to CPU: the GPU compositor kills a headless bpy).
   Subtle at the default strength; not used in the stills.
 - Persistence: `look/tests/test_alive_persist.py` keys both waves, saves, re-opens the file in a second process with

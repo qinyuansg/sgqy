@@ -7,7 +7,7 @@ fallback (guessed from the name) and are printed. Safe to call again (idempotent
 
 Everything that lights up reads five scene custom properties through Attribute nodes of type 'View Layer':
     gg_power, gg_wave, gg_grant, gg_screens, gg_ir          (see look/alive.py — the director keys them)
-plus gg_glass_depth / gg_glass_gloss (bounce guard of the glass, see glass()).
+(gg_glass_depth / gg_glass_gloss are kept on the scene for reference; the guard itself lives in the glass materials).
 """
 import bpy, os, math
 
@@ -215,14 +215,14 @@ def glass(mat, ior=GLASS_IOR, tint=GLASS_TINT, tint_dist=GLASS_TINT_DIST, shadow
         glass and the floor behind it. For shadow rays the tint depends on how the surface faces the lamp
         (GLASS_SHADOW .. GLASS_SHADOW_EDGE): coloured transparent shadows with bright streaks = the floor caustics,
         free, noise-free and stable in animation.
-    bounce guard : past `gg_glass_depth` transmission bounces or `gg_glass_gloss` glossy bounces (total internal
-        reflection counts as glossy) the surface turns into plain Transparent, so a path never dies black inside a
-        stack of glass walls — it simply stops refracting. Keep Cycles transmission_bounces > gg_glass_depth,
-        glossy_bounces > gg_glass_gloss and max_bounces > their sum (settings.recommended() does all of it).
-    glow : a little emission on top of the glass (never sampled as a light, costs nothing to speak of)
-        'body' : edge-lit glass. Near the height of the LED seam (scene gg_led_z) the glass glows in the LED colour
-                 once the wave front has passed its place along the lane (wave_u estimated from world Y with scene
-                 gg_wave_a / gg_wave_b), strongest where the surface turns away from the lens (rims, bevels, flutes).
+    bounce guard : past GUARD[0] transmission bounces or GUARD[1] glossy bounces (total internal reflection counts
+        as glossy) the surface turns into plain Transparent, so a path never dies black inside a stack of glass
+        walls — it simply stops refracting. Keep Cycles transmission_bounces > GUARD[0], glossy_bounces > GUARD[1]
+        and max_bounces > their sum (settings.recommended() does all of it through set_glass_guard()).
+    glow : a little emission on top of the glass (never sampled as a light; skipped entirely while gg_power is 0)
+        'body' : edge-lit glass. Near the height of the LED seam the glass glows in the LED colour once the wave
+                 front has passed its place along the lane (wave_u estimated from world Y, see set_wave_axis),
+                 strongest where the surface turns away from the lens (rims, bevels, flutes).
         'wing' : the leaf. Its edge band (everything but the two big faces, found from the object-space normal and
                  `thin_axis`) always carries a faint cool catch-light (x house), so the 12 mm slab reads on black;
                  when the wing's edge light is on (wave past 0.92) the band glows in the LED colour.
@@ -244,9 +244,13 @@ def glass(mat, ior=GLASS_IOR, tint=GLASS_TINT, tint_dist=GLASS_TINT_DIST, shadow
     tcol = b.mix(lp.outputs['Is Shadow Ray'], GLASS_BOUNCE, tcol)
     t_sh = b.node('ShaderNodeBsdfTransparent', _in={'Color': tcol})
     # bounce guard
+    # (plain Value nodes, not scene attributes: an attribute lookup on every glass hit is measurable; set_glass_guard()
+    #  and settings.recommended() write them)
+    gd = b.node('ShaderNodeValue'); gd.name = gd.label = 'GG_GUARD_T'; gd.outputs[0].default_value = GUARD[0] - 0.5
+    gg_ = b.node('ShaderNodeValue'); gg_.name = gg_.label = 'GG_GUARD_G'; gg_.outputs[0].default_value = GUARD[1] - 0.5
     over = b.m('MAXIMUM',
-               b.m('GREATER_THAN', lp.outputs['Transmission Depth'], b.m('SUBTRACT', b.ctrl('gg_glass_depth'), 0.5)),
-               b.m('GREATER_THAN', lp.outputs['Glossy Depth'], b.m('SUBTRACT', b.ctrl('gg_glass_gloss'), 0.5)))
+               b.m('GREATER_THAN', lp.outputs['Transmission Depth'], gd.outputs[0]),
+               b.m('GREATER_THAN', lp.outputs['Glossy Depth'], gg_.outputs[0]))
     t_cl = b.node('ShaderNodeBsdfTransparent', _in={'Color': (1, 1, 1, 1)})
     s = b.mix_shader(over, g.outputs[0], t_cl.outputs[0])
     # "diffuse ray" must mean a real bounce ray (diffuse depth >= 1): Cycles' shadow-caustics solver (MNEE) evaluates
@@ -254,48 +258,79 @@ def glass(mat, ior=GLASS_IOR, tint=GLASS_TINT, tint_dist=GLASS_TINT_DIST, shadow
     bounce = b.m('MULTIPLY', lp.outputs['Is Diffuse Ray'], b.m('GREATER_THAN', lp.outputs['Diffuse Depth'], 0.5))
     soft = b.m('MAXIMUM', lp.outputs['Is Shadow Ray'], bounce)
     if glow:
-        s = b.add_shader(s, _glass_glow(b, glow, thin_axis))
+        s = _glass_glow(b, s, glow, thin_axis)
         mat.cycles.emission_sampling = 'NONE'
     b.surface(b.mix_shader(soft, s, t_sh.outputs[0]))
     mat.diffuse_color = (0.75, 0.86, 1.0, 0.25)
     return mat
 
 
-def _level(b, u, edge=0.03, tail=LED_TAIL, head_gain=LED_HEAD):
-    """(colour, level) of the LED light at wave_u = `u` (socket or number): the same law as the LED line (_wave)."""
-    d = b.m('SUBTRACT', b.ctrl('gg_wave'), u)
-    on = b.m('DIVIDE', d, edge, clamp=True)
-    head = b.m('MULTIPLY', on, b.m('POWER', b.m('SUBTRACT', 1.0, b.m('DIVIDE', d, tail, clamp=True)), 2.0))
+def _gate(b, factor, shader):
+    """A shader that is `factor` x `shader` and costs nothing while the factor is 0 (Cycles skips the branch)."""
+    n = b.node('ShaderNodeMixShader')
+    b.set(n, 0, factor)
+    b.link(shader, n.inputs[2])
+    return n.outputs[0]
+
+
+def _glass_glow(b, core, kind, thin_axis=1):
+    """core + glow. The LED part of the glow hangs on a Mix Shader whose factor is gg_power: during the whole unlit
+    build its nodes are skipped. Kept to a minimum of nodes: it runs on every glass hit of every path once alive."""
+    geo = b.geo
     g = b.ctrl('gg_grant')
-    col = b.mix(b.m('MULTIPLY', g, on), COL_IDLE, COL_GRANT)
-    col = b.mix(b.m('MULTIPLY', head, 0.6), col, (0.75, 0.85, 1.0, 1))
-    level = b.m('ADD', b.m('ADD', on, b.m('MULTIPLY', b.m('SUBTRACT', 1.0, on), g)), b.m('MULTIPLY', head, head_gain))
-    return col, b.m('MULTIPLY', level, b.ctrl('gg_power'))
-
-
-def _glass_glow(b, kind, thin_axis=1):
-    lp, geo = b.lp, b.geo
-    seen = b.m('SUBTRACT', 1.0, lp.outputs['Is Diffuse Ray'])            # for the eye, mirrors and refractions only
     if kind == 'wing':
         nrm = b.node('ShaderNodeTexCoord').outputs['Normal']                 # object-space normal
         comp = b.node('ShaderNodeSeparateXYZ', _in={0: nrm}).outputs[thin_axis]
         band = b.node('ShaderNodeMapRange', interpolation_type='SMOOTHSTEP',
                       _in={0: b.m('ABSOLUTE', comp), 1: 0.90, 2: 0.985, 3: 1.0, 4: 0.0}).outputs[0]
-        col, lvl = _level(b, 0.95, edge=0.04)
-        led = b.scale(col, b.m('MULTIPLY', lvl, b.m('MULTIPLY', b.m('ADD', band, 0.008), WING_GLOW)))
-        rgb = b.node('ShaderNodeRGB'); rgb.outputs[0].default_value = (*COL_CATCH, 1)
-        catch = b.scale(rgb.outputs[0], b.m('MULTIPLY', b.m('MULTIPLY', band, b.ctrl('gg_house')), WING_CATCH))
-        add = b.node('ShaderNodeVectorMath', operation='ADD'); b.link(led, add.inputs[0]); b.link(catch, add.inputs[1])
-        return b.node('ShaderNodeEmission', _in={'Color': add.outputs[0], 'Strength': seen}).outputs[0]
+        catch = b.node('ShaderNodeEmission', _in={'Color': (*COL_CATCH, 1),
+                                                  'Strength': b.m('MULTIPLY', b.m('MULTIPLY', band, b.ctrl('gg_house')), WING_CATCH)})
+        on = b.m('MULTIPLY_ADD', b.ctrl('gg_wave'), 1.0 / 0.04, -0.95 / 0.04, clamp=True)       # the edge light: wave_u 0.95
+        col = b.mix(b.m('MULTIPLY', g, on), COL_IDLE, COL_GRANT)
+        lvl = b.m('MAXIMUM', on, g)
+        led = b.node('ShaderNodeEmission', _in={'Color': col, 'Strength': b.m('MULTIPLY', b.m('MULTIPLY_ADD', band, WING_GLOW, 0.008 * WING_GLOW), lvl)})
+        return b.add_shader(b.add_shader(core, catch.outputs[0]), _gate(b, b.ctrl('gg_power'), led.outputs[0]))
     pos = b.node('ShaderNodeSeparateXYZ', _in={0: geo.outputs['Position']})
-    u = b.m('MULTIPLY_ADD', pos.outputs[1], b.ctrl('gg_wave_a'), b.ctrl('gg_wave_b'))
-    col, lvl = _level(b, u)
-    dz = b.m('ABSOLUTE', b.m('SUBTRACT', pos.outputs[2], b.ctrl('gg_led_z')))
-    fall = b.m('EXPONENT', b.m('DIVIDE', dz, -GLASS_GLOW_FALL))
+    wa = b.node('ShaderNodeValue'); wa.name = wa.label = 'GG_WAVE_A'; wa.outputs[0].default_value = WAVE_AXIS[0]
+    wb = b.node('ShaderNodeValue'); wb.name = wb.label = 'GG_WAVE_B'; wb.outputs[0].default_value = WAVE_AXIS[1]
+    wz = b.node('ShaderNodeValue'); wz.name = wz.label = 'GG_LED_Z'; wz.outputs[0].default_value = WAVE_AXIS[2]
+    d = b.m('SUBTRACT', b.ctrl('gg_wave'), b.m('MULTIPLY_ADD', pos.outputs[1], wa.outputs[0], wb.outputs[0]))
+    on = b.m('MULTIPLY', d, 1.0 / 0.03, clamp=True)
+    h = b.m('MULTIPLY_ADD', d, -1.0 / LED_TAIL, 1.0, clamp=True)                 # 1 at the front, 0 a tail-length behind
+    lvl = b.m('MULTIPLY_ADD', b.m('MULTIPLY', on, b.m('MULTIPLY', h, h)), LED_HEAD, b.m('MAXIMUM', on, g))
+    col = b.mix(b.m('MULTIPLY', g, on), COL_IDLE, COL_GRANT)
+    t = b.m('MULTIPLY_ADD', b.m('ABSOLUTE', b.m('SUBTRACT', pos.outputs[2], wz.outputs[0])), -1.0 / (2.2 * GLASS_GLOW_FALL), 1.0, clamp=True)
     lw = b.node('ShaderNodeLayerWeight', _in={'Blend': 0.5})
-    rim = b.m('ADD', b.m('POWER', lw.outputs['Facing'], 3.0), 0.012)
-    st = b.m('MULTIPLY', b.m('MULTIPLY', b.m('MULTIPLY', lvl, fall), rim), b.m('MULTIPLY', seen, GLASS_GLOW))
-    return b.node('ShaderNodeEmission', _in={'Color': col, 'Strength': st}).outputs[0]
+    f = lw.outputs['Facing']
+    rim = b.m('MULTIPLY_ADD', b.m('MULTIPLY', f, f), f, 0.012)                    # facing^3: rims, bevels, flutes
+    st = b.m('MULTIPLY', b.m('MULTIPLY', lvl, b.m('MULTIPLY', t, t)), b.m('MULTIPLY', rim, GLASS_GLOW))
+    em = b.node('ShaderNodeEmission', _in={'Color': col, 'Strength': st})
+    return b.add_shader(core, _gate(b, b.ctrl('gg_power'), em.outputs[0]))
+
+
+def set_glass_guard(depth, gloss):
+    """Bounce guard of every glass material (see glass()). settings.recommended() calls this."""
+    GUARD[0], GUARD[1] = float(depth), float(gloss)
+    for m in bpy.data.materials:
+        if m.node_tree is None:
+            continue
+        for name, v in (('GG_GUARD_T', depth), ('GG_GUARD_G', gloss)):
+            n = m.node_tree.nodes.get(name)
+            if n is not None:
+                n.outputs[0].default_value = float(v) - 0.5
+
+
+def set_wave_axis(a, b_, z):
+    """Where the wave is in space, for the edge-lit glass: wave_u = a * world_y + b along the rails, LED seam at
+    height z. alive.setup_alive() measures it on the LED runs and calls this."""
+    WAVE_AXIS[0], WAVE_AXIS[1], WAVE_AXIS[2] = float(a), float(b_), float(z)
+    for m in bpy.data.materials:
+        if m.node_tree is None:
+            continue
+        for name, v in (('GG_WAVE_A', a), ('GG_WAVE_B', b_), ('GG_LED_Z', z)):
+            n = m.node_tree.nodes.get(name)
+            if n is not None:
+                n.outputs[0].default_value = float(v)
 
 
 def glass_lens(mat):
@@ -576,6 +611,8 @@ def badge(mat):
 
 
 # ---------------------------------------------------------------------------------------------- the table
+GUARD = [8.0, 4.0]                  # glass bounce guard: transmission / glossy depth (set_glass_guard)
+WAVE_AXIS = [0.86 / 1.40, 0.45, 0.937]      # wave_u = a * y + b, LED seam height (set_wave_axis)
 WING_THIN_AXIS = [1]        # object-space axis across the 12 mm of a wing leaf (apply_materials measures it)
 
 BUILDERS = {
@@ -631,8 +668,7 @@ def ensure_ctrl(scene=None):
     """The scene properties the shaders read (alive.py owns the alive ones; this only makes sure they exist)."""
     scene = scene or bpy.context.scene
     for key, default in (('gg_power', 0.0), ('gg_wave', -0.1), ('gg_grant', 0.0), ('gg_screens', 0.0), ('gg_ir', 0.0),
-                         ('gg_house', 1.0), ('gg_glass_depth', 8.0), ('gg_glass_gloss', 4.0),
-                         ('gg_wave_a', 0.86 / 1.40), ('gg_wave_b', 0.45), ('gg_led_z', 0.937)):
+                         ('gg_house', 1.0), ('gg_glass_depth', 8.0), ('gg_glass_gloss', 4.0)):
         if key not in scene:
             scene[key] = default
 
