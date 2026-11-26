@@ -1,0 +1,726 @@
+{
+ "version": 1,
+ "fps": 60,
+ "bpm": 120,
+ "duration_s": 26.0,
+ "frames": 1560,
+ "drop_t": 16.0,
+ "sections": [
+  {
+   "name": "hook",
+   "t0": 0,
+   "t1": 2,
+   "busy": 0.3
+  },
+  {
+   "name": "w1_base",
+   "t0": 2,
+   "t1": 4,
+   "busy": 0.6
+  },
+  {
+   "name": "w2_drive",
+   "t0": 4,
+   "t1": 8,
+   "busy": 0.8
+  },
+  {
+   "name": "w3_electronics",
+   "t0": 8,
+   "t1": 10,
+   "busy": 0.9
+  },
+  {
+   "name": "w4_glass_body",
+   "t0": 10,
+   "t1": 12,
+   "busy": 0.9
+  },
+  {
+   "name": "w5_top_rail",
+   "t0": 12,
+   "t1": 14,
+   "busy": 1.0
+  },
+  {
+   "name": "w6_wings",
+   "t0": 14,
+   "t1": 16,
+   "busy": 0.8
+  },
+  {
+   "name": "drop_alive",
+   "t0": 16,
+   "t1": 20,
+   "busy": 0.2
+  },
+  {
+   "name": "in_use",
+   "t0": 20,
+   "t1": 24,
+   "busy": 0.5
+  },
+  {
+   "name": "hero_orbit",
+   "t0": 24,
+   "t1": 26,
+   "busy": 0.0
+  }
+ ],
+ "sfx_vocabulary": [
+  "beep_ok",
+  "card_tap",
+  "clack",
+  "click",
+  "final_hit",
+  "gear_tick",
+  "glass_clink",
+  "glass_slide",
+  "impact_drop",
+  "lock_clunk",
+  "power_up",
+  "riser",
+  "screw",
+  "servo",
+  "shimmer",
+  "snap",
+  "spring",
+  "tap",
+  "thunk_metal",
+  "ui_boot",
+  "whoosh"
+ ],
+ "events": [
+  {
+   "t": 0.0,
+   "sfx": "shimmer",
+   "part": "hook_light_streak",
+   "gain": 0.5,
+   "pan": 0,
+   "var": 0,
+   "dur": 1.6
+  },
+  {
+   "t": 2.0,
+   "sfx": "whoosh",
+   "part": "hook_scatter",
+   "gain": 0.7,
+   "pan": 0,
+   "var": 0,
+   "dur": 0.6
+  },
+  {
+   "t": 2.0,
+   "sfx": "thunk_metal",
+   "part": "base_L",
+   "gain": 1.0,
+   "pan": -0.4,
+   "var": 0
+  },
+  {
+   "t": 2.5,
+   "sfx": "thunk_metal",
+   "part": "base_R",
+   "gain": 0.9,
+   "pan": 0.4,
+   "var": 0
+  },
+  {
+   "t": 3.0,
+   "sfx": "screw",
+   "part": "anchor_L0",
+   "gain": 0.6,
+   "pan": -0.4,
+   "var": 0,
+   "dur": 0.11
+  },
+  {
+   "t": 3.125,
+   "sfx": "screw",
+   "part": "anchor_L1",
+   "gain": 0.6,
+   "pan": -0.4,
+   "var": 1,
+   "dur": 0.11
+  },
+  {
+   "t": 3.25,
+   "sfx": "screw",
+   "part": "anchor_L2",
+   "gain": 0.6,
+   "pan": -0.4,
+   "var": 2,
+   "dur": 0.11
+  },
+  {
+   "t": 3.375,
+   "sfx": "screw",
+   "part": "anchor_L3",
+   "gain": 0.6,
+   "pan": -0.4,
+   "var": 3,
+   "dur": 0.11
+  },
+  {
+   "t": 3.5,
+   "sfx": "screw",
+   "part": "anchor_R0",
+   "gain": 0.6,
+   "pan": 0.4,
+   "var": 4,
+   "dur": 0.11
+  },
+  {
+   "t": 3.625,
+   "sfx": "screw",
+   "part": "anchor_R1",
+   "gain": 0.6,
+   "pan": 0.4,
+   "var": 5,
+   "dur": 0.11
+  },
+  {
+   "t": 3.75,
+   "sfx": "screw",
+   "part": "anchor_R2",
+   "gain": 0.6,
+   "pan": 0.4,
+   "var": 6,
+   "dur": 0.11
+  },
+  {
+   "t": 3.875,
+   "sfx": "screw",
+   "part": "anchor_R3",
+   "gain": 0.6,
+   "pan": 0.4,
+   "var": 7,
+   "dur": 0.11
+  },
+  {
+   "t": 4.0,
+   "sfx": "thunk_metal",
+   "part": "motor",
+   "gain": 0.9,
+   "pan": -0.2,
+   "var": 0
+  },
+  {
+   "t": 4.5,
+   "sfx": "clack",
+   "part": "brake",
+   "gain": 0.7,
+   "pan": -0.2,
+   "var": 0
+  },
+  {
+   "t": 5.0,
+   "sfx": "thunk_metal",
+   "part": "ring_gear",
+   "gain": 0.8,
+   "pan": -0.2,
+   "var": 1
+  },
+  {
+   "t": 5.25,
+   "sfx": "gear_tick",
+   "part": "planet_0",
+   "gain": 0.7,
+   "pan": -0.3,
+   "var": 0
+  },
+  {
+   "t": 5.5,
+   "sfx": "gear_tick",
+   "part": "planet_1",
+   "gain": 0.7,
+   "pan": -0.19999999999999998,
+   "var": 1
+  },
+  {
+   "t": 5.75,
+   "sfx": "gear_tick",
+   "part": "planet_2",
+   "gain": 0.7,
+   "pan": -0.09999999999999998,
+   "var": 2
+  },
+  {
+   "t": 6.0,
+   "sfx": "gear_tick",
+   "part": "sun_gear",
+   "gain": 0.8,
+   "pan": -0.2,
+   "var": 5
+  },
+  {
+   "t": 6.25,
+   "sfx": "clack",
+   "part": "carrier",
+   "gain": 0.7,
+   "pan": -0.2,
+   "var": 1
+  },
+  {
+   "t": 6.5,
+   "sfx": "click",
+   "part": "output_shaft",
+   "gain": 0.7,
+   "pan": -0.2,
+   "var": 0
+  },
+  {
+   "t": 6.75,
+   "sfx": "spring",
+   "part": "return_spring",
+   "gain": 0.6,
+   "pan": -0.2,
+   "var": 0
+  },
+  {
+   "t": 7.0,
+   "sfx": "click",
+   "part": "encoder",
+   "gain": 0.6,
+   "pan": -0.2,
+   "var": 1
+  },
+  {
+   "t": 7.75,
+   "sfx": "glass_slide",
+   "part": "column_tube",
+   "gain": 0.8,
+   "pan": -0.2,
+   "var": 0,
+   "dur": 0.5
+  },
+  {
+   "t": 7.75,
+   "sfx": "glass_clink",
+   "part": "column_tube",
+   "gain": 0.9,
+   "pan": -0.2,
+   "var": 0
+  },
+  {
+   "t": 8.0,
+   "sfx": "thunk_metal",
+   "part": "psu_L",
+   "gain": 0.8,
+   "pan": -0.4,
+   "var": 2
+  },
+  {
+   "t": 8.25,
+   "sfx": "thunk_metal",
+   "part": "psu_R",
+   "gain": 0.7,
+   "pan": 0.4,
+   "var": 3
+  },
+  {
+   "t": 8.5,
+   "sfx": "click",
+   "part": "pcb_L",
+   "gain": 0.8,
+   "pan": -0.4,
+   "var": 2
+  },
+  {
+   "t": 8.75,
+   "sfx": "click",
+   "part": "pcb_R",
+   "gain": 0.7,
+   "pan": 0.4,
+   "var": 3
+  },
+  {
+   "t": 9.0,
+   "sfx": "snap",
+   "part": "sensor_0",
+   "gain": 0.7,
+   "pan": -0.4,
+   "var": 0
+  },
+  {
+   "t": 9.25,
+   "sfx": "snap",
+   "part": "sensor_1",
+   "gain": 0.7,
+   "pan": 0.4,
+   "var": 1
+  },
+  {
+   "t": 9.5,
+   "sfx": "snap",
+   "part": "sensor_2",
+   "gain": 0.7,
+   "pan": -0.4,
+   "var": 2
+  },
+  {
+   "t": 9.5625,
+   "sfx": "click",
+   "part": "cable_0",
+   "gain": 0.45,
+   "pan": -0.3,
+   "var": 4
+  },
+  {
+   "t": 9.6875,
+   "sfx": "click",
+   "part": "cable_1",
+   "gain": 0.45,
+   "pan": 0.3,
+   "var": 5
+  },
+  {
+   "t": 9.75,
+   "sfx": "snap",
+   "part": "sensor_3",
+   "gain": 0.7,
+   "pan": 0.4,
+   "var": 3
+  },
+  {
+   "t": 9.8125,
+   "sfx": "click",
+   "part": "cable_2",
+   "gain": 0.45,
+   "pan": -0.3,
+   "var": 6
+  },
+  {
+   "t": 9.9375,
+   "sfx": "click",
+   "part": "cable_3",
+   "gain": 0.45,
+   "pan": 0.3,
+   "var": 7
+  },
+  {
+   "t": 10.0,
+   "sfx": "glass_clink",
+   "part": "post_front_L",
+   "gain": 0.9,
+   "pan": -0.5,
+   "var": 0
+  },
+  {
+   "t": 10.25,
+   "sfx": "glass_clink",
+   "part": "post_front_R",
+   "gain": 0.9,
+   "pan": 0.5,
+   "var": 1
+  },
+  {
+   "t": 10.5,
+   "sfx": "glass_clink",
+   "part": "post_rear_L",
+   "gain": 0.9,
+   "pan": -0.3,
+   "var": 2
+  },
+  {
+   "t": 10.75,
+   "sfx": "glass_clink",
+   "part": "post_rear_R",
+   "gain": 0.9,
+   "pan": 0.3,
+   "var": 3
+  },
+  {
+   "t": 11.25,
+   "sfx": "glass_slide",
+   "part": "side_panel_L",
+   "gain": 0.6,
+   "pan": -0.4,
+   "var": 0,
+   "dur": 0.25
+  },
+  {
+   "t": 11.25,
+   "sfx": "glass_clink",
+   "part": "side_panel_L",
+   "gain": 0.8,
+   "pan": -0.4,
+   "var": 4
+  },
+  {
+   "t": 11.75,
+   "sfx": "glass_slide",
+   "part": "side_panel_R",
+   "gain": 0.6,
+   "pan": 0.4,
+   "var": 0,
+   "dur": 0.25
+  },
+  {
+   "t": 11.75,
+   "sfx": "glass_clink",
+   "part": "side_panel_R",
+   "gain": 0.8,
+   "pan": 0.4,
+   "var": 5
+  },
+  {
+   "t": 12.0,
+   "sfx": "snap",
+   "part": "led_strip",
+   "gain": 0.7,
+   "pan": 0,
+   "var": 6
+  },
+  {
+   "t": 12.25,
+   "sfx": "tap",
+   "part": "rfid_coil",
+   "gain": 0.6,
+   "pan": -0.3,
+   "var": 0
+  },
+  {
+   "t": 12.5,
+   "sfx": "click",
+   "part": "qr_module",
+   "gain": 0.7,
+   "pan": -0.3,
+   "var": 8
+  },
+  {
+   "t": 12.75,
+   "sfx": "clack",
+   "part": "lcd_module",
+   "gain": 0.7,
+   "pan": -0.3,
+   "var": 2
+  },
+  {
+   "t": 13.0,
+   "sfx": "click",
+   "part": "camera_pod",
+   "gain": 0.8,
+   "pan": -0.3,
+   "var": 9
+  },
+  {
+   "t": 13.25,
+   "sfx": "glass_clink",
+   "part": "rail_lid_L",
+   "gain": 1.0,
+   "pan": -0.4,
+   "var": 6
+  },
+  {
+   "t": 13.5,
+   "sfx": "glass_clink",
+   "part": "rail_lid_R",
+   "gain": 0.9,
+   "pan": 0.4,
+   "var": 7
+  },
+  {
+   "t": 13.5,
+   "sfx": "screw",
+   "part": "lid_screw_0",
+   "gain": 0.6,
+   "pan": -0.4,
+   "var": 8,
+   "dur": 0.1
+  },
+  {
+   "t": 13.625,
+   "sfx": "screw",
+   "part": "lid_screw_1",
+   "gain": 0.6,
+   "pan": 0.4,
+   "var": 9,
+   "dur": 0.1
+  },
+  {
+   "t": 13.75,
+   "sfx": "screw",
+   "part": "lid_screw_2",
+   "gain": 0.6,
+   "pan": -0.4,
+   "var": 10,
+   "dur": 0.1
+  },
+  {
+   "t": 13.875,
+   "sfx": "screw",
+   "part": "lid_screw_3",
+   "gain": 0.6,
+   "pan": 0.4,
+   "var": 11,
+   "dur": 0.1
+  },
+  {
+   "t": 14.0,
+   "sfx": "clack",
+   "part": "clamp_L",
+   "gain": 0.8,
+   "pan": -0.3,
+   "var": 3
+  },
+  {
+   "t": 14.25,
+   "sfx": "clack",
+   "part": "clamp_R",
+   "gain": 0.8,
+   "pan": 0.3,
+   "var": 4
+  },
+  {
+   "t": 14.5,
+   "sfx": "glass_clink",
+   "part": "wing_L",
+   "gain": 0.9,
+   "pan": -0.2,
+   "var": 8
+  },
+  {
+   "t": 14.5,
+   "sfx": "lock_clunk",
+   "part": "wing_L",
+   "gain": 0.9,
+   "pan": -0.2,
+   "var": 0
+  },
+  {
+   "t": 15.0,
+   "sfx": "glass_clink",
+   "part": "wing_R",
+   "gain": 0.9,
+   "pan": 0.2,
+   "var": 9
+  },
+  {
+   "t": 15.0,
+   "sfx": "lock_clunk",
+   "part": "wing_R",
+   "gain": 0.9,
+   "pan": 0.2,
+   "var": 1
+  },
+  {
+   "t": 15.25,
+   "sfx": "tap",
+   "part": "badge",
+   "gain": 0.8,
+   "pan": 0,
+   "var": 1
+  },
+  {
+   "t": 16.0,
+   "sfx": "riser",
+   "part": "pre_drop",
+   "gain": 0.8,
+   "pan": 0,
+   "var": 0,
+   "dur": 0.75
+  },
+  {
+   "t": 16.0,
+   "sfx": "impact_drop",
+   "part": "drop",
+   "gain": 1.0,
+   "pan": 0,
+   "var": 0
+  },
+  {
+   "t": 16.0,
+   "sfx": "power_up",
+   "part": "light_wave",
+   "gain": 0.8,
+   "pan": 0,
+   "var": 0,
+   "dur": 2.5
+  },
+  {
+   "t": 18.0,
+   "sfx": "ui_boot",
+   "part": "screens_on",
+   "gain": 0.6,
+   "pan": 0,
+   "var": 0
+  },
+  {
+   "t": 20.0,
+   "sfx": "card_tap",
+   "part": "card",
+   "gain": 0.8,
+   "pan": -0.3,
+   "var": 0
+  },
+  {
+   "t": 20.12,
+   "sfx": "beep_ok",
+   "part": "reader",
+   "gain": 0.7,
+   "pan": -0.3,
+   "var": 0
+  },
+  {
+   "t": 20.25,
+   "sfx": "shimmer",
+   "part": "led_green",
+   "gain": 0.5,
+   "pan": 0,
+   "var": 0,
+   "dur": 0.5
+  },
+  {
+   "t": 20.5,
+   "sfx": "servo",
+   "part": "wings_open",
+   "gain": 0.8,
+   "pan": 0,
+   "var": 0,
+   "dur": 0.9
+  },
+  {
+   "t": 21.4,
+   "sfx": "lock_clunk",
+   "part": "wings_open_stop",
+   "gain": 0.6,
+   "pan": 0,
+   "var": 2
+  },
+  {
+   "t": 22.0,
+   "sfx": "whoosh",
+   "part": "light_pass",
+   "gain": 0.6,
+   "pan": 0,
+   "var": 0,
+   "dur": 0.8
+  },
+  {
+   "t": 22.75,
+   "sfx": "servo",
+   "part": "wings_close",
+   "gain": 0.7,
+   "pan": 0,
+   "var": 0,
+   "dur": 0.75
+  },
+  {
+   "t": 23.5,
+   "sfx": "lock_clunk",
+   "part": "wings_closed",
+   "gain": 0.8,
+   "pan": 0,
+   "var": 3
+  },
+  {
+   "t": 24.0,
+   "sfx": "final_hit",
+   "part": "hero",
+   "gain": 0.7,
+   "pan": 0,
+   "var": 0
+  }
+ ]
+}
