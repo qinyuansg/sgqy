@@ -5,6 +5,12 @@ and the mix is checked by measurement on every build. Read the "Imperfect / not 
 
 State: **round 2**, built from `shared/timeline.json` **version 8** (80 events, picture-locked timing).
 
+> **Director's note (final build).** The delivered mix is built by the same `mix.py` from timeline **version 10**
+> (the hook now runs to 1.8 s, the light wave takes 1.5 s instead of 2.4 s; 80 events). I also raised the static
+> music duck under busy waves from 3 dB to 5 dB (`DUCK_STATIC_DB` in `mix.py`) so the small part sounds sit further
+> above the track. Every check still passes on that build; the numbers of the final build are in
+> `sound/out/report.json` and in `out/REPORT.md`, and supersede the v8 figures quoted below.
+
 ## Rebuild
 
     /opt/blender-env/venv/bin/python sound/mix.py
