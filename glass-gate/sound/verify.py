@@ -13,7 +13,14 @@ Checks (results in sound/out/report.json, picture in sound/out/spectrogram.png):
                 transient event, compared with t. Limit for both: +/- 5 ms.
   edits         at every music cut: no isolated sample step (second difference against its neighbourhood)
   ends          programme starts with signal in the first frame and ends on digital silence
-  balance       loudness of each stem per timeline section; spectrum in octave bands (harshness watch)
+  balance       loudness of each stem per timeline section; spectrum in octave bands
+  spectrum      long-term third-octave spectrum of the EFFECTS stem against a target tilt: -3 dB per octave
+                of band level from 1 kHz to 12.5 kHz (reference = mean of the 500 Hz - 2 kHz bands).
+                Air: no band from 5 to 12.5 kHz more than 3.5 dB under the line. Harshness: none of the
+                2.5 / 3.15 / 4 kHz bands more than 1 dB over it.
+  story         first slam is the loudest part hit of the next 6 s and the effects are silent just before it;
+                music loudness steps up at every wave and the hook sits under the reference wave;
+                the held breath before the drop; low end (80-200 Hz) on the drop; power_up peaks at t + dur
 """
 import json
 import os
@@ -90,8 +97,8 @@ def sync_solo(tl):
 def sync_stem(tl, sfx_stem):
     """Onset of each transient event as found in the finished effects stem, without using the generator code:
     the high-passed 0.5 ms energy envelope must climb from the level before the event (loudest value in
-    t-25..t-10 ms) at least half-way (in dB) to its peak inside t +/- 10 ms; the first such crossing is the
-    onset. Events that do not stand 6 dB clear of what is already sounding are reported as masked."""
+    t-25..t-10 ms) at least half-way (in dB) to its peak inside t +/- 10 ms, and to within 20 dB of that
+    peak; the first such crossing is the onset. Events that do not stand 6 dB clear of what is already sounding are reported as masked."""
     x = sfx_stem.mean(axis=1)
     x = signal.sosfiltfilt(signal.butter(2, 800.0, 'hp', fs=SR, output='sos'), x)
     e = 10.0 * np.log10(np.maximum(uniform_filter1d(x ** 2, size=24, mode='nearest'), 0.0) + 1e-14)
@@ -110,7 +117,7 @@ def sync_stem(tl, sfx_stem):
         if peak - pre < 6.0:
             masked.append(dict(t=ev['t'], sfx=ev['sfx'], part=ev['part'], clear_db=round(peak - pre, 1)))
             continue
-        thr = pre + max(3.0, 0.5 * (peak - pre))
+        thr = max(pre + max(3.0, 0.5 * (peak - pre)), peak - 20.0)     # never lower than 20 dB under the peak
         k = int(np.argmax(e[a:b] > thr))
         rows.append(dict(t=ev['t'], sfx=ev['sfx'], part=ev['part'], err_ms=round((a + k - c) / SR * 1000.0, 3),
                          clear_db=round(peak - pre, 1)))
@@ -150,6 +157,128 @@ def isolated_spikes(x):
     loc = uniform_filter1d(d2, size=int(0.004 * SR), mode='nearest') + 1e-7
     z = d2 / loc
     return int(np.sum((z > 40.0) & (d2 > 0.02)))
+
+
+# --------------------------------------------------------------------------------------- spectrum and story
+def third_octave(x):
+    f, P = signal.welch(x.mean(axis=1), SR, nperseg=16384)
+    cs = 1000.0 * 2.0 ** (np.arange(-13, 14) / 3.0)      # 50 Hz .. 20 kHz
+    lv = np.array([10.0 * np.log10(P[(f >= c * 2 ** (-1 / 6)) & (f < c * 2 ** (1 / 6))].sum() + 1e-20) for c in cs])
+    return cs, lv
+
+
+def spectrum_check(sfx):
+    cs, lv = third_octave(sfx)
+    ref = float(np.mean(lv[(cs >= 490) & (cs <= 2050)]))
+    target = ref - 3.0 * np.log2(cs / 1000.0)
+    dev = lv - target
+    name = lambda c: f'{c / 1000:.3g}k' if c >= 1000 else f'{c:.0f}'
+    air = {name(c): round(float(d), 1) for c, d in zip(cs, dev) if 4900 <= c <= 12800}
+    harsh = {name(c): round(float(d), 1) for c, d in zip(cs, dev) if 2400 <= c <= 4100}
+    return dict(third_octave_db_re_ref={name(c): round(float(v - ref), 1) for c, v in zip(cs, lv)},
+                target='-3 dB/octave of band level from 1 kHz, reference = mean of the 500 Hz - 2 kHz bands',
+                air_bands_vs_target_db=air, harsh_bands_vs_target_db=harsh,
+                top_16k_vs_target_db=round(float(dev[np.argmin(np.abs(cs - 16000))]), 1),
+                ok_air=bool(min(air.values()) >= -3.5 and max(air.values()) <= 4.5), ok_harsh=bool(max(harsh.values()) <= 1.0))
+
+
+def k_level(x):
+    k = sfxlib.k_weight(x)
+    return float(10.0 * np.log10(np.mean((k ** 2).sum(axis=1)) + 1e-20))
+
+
+def hit_loud50(stem_k_power, t):
+    """Loudest K-weighted 50 ms of the stem within 5 ms before to 150 ms after t."""
+    w = int(0.050 * SR)
+    a, b = max(0, int((t - 0.005) * SR)), min(len(stem_k_power) - 1, int((t + 0.150) * SR) + w)
+    c = np.cumsum(np.concatenate([[0.0], stem_k_power[a:b]]))
+    if len(c) <= w:
+        return -120.0
+    return float(10.0 * np.log10(np.max(c[w:] - c[:-w]) / w + 1e-20))
+
+
+def band_rms_db(x, lo, hi, t0, t1):
+    pad = SR // 4
+    a, b = max(0, int(t0 * SR) - pad), min(len(x), int(t1 * SR) + pad)
+    y = signal.sosfiltfilt(signal.butter(4, [lo, hi], 'bp', fs=SR, output='sos'), x[a:b].mean(axis=1))
+    y = y[int(t0 * SR) - a:int(t1 * SR) - a]
+    return float(10.0 * np.log10(np.mean(y ** 2) + 1e-20))
+
+
+def story_checks(tl, mix, sfx, music, info):
+    import mix as mixer
+    out, ok = {}, {}
+    dur, drop = tl['duration_s'], tl['drop_t']
+    kp = (sfxlib.k_weight(sfx) ** 2).sum(axis=1)
+    # ---- first slam
+    t1 = tl.get('first_slam_t')
+    if t1 is not None:
+        hits = [e for e in tl['events'] if e['gain'] > 0 and sfxlib.resolve(e['sfx'])[0] in sfxlib.DUCK_FULL and t1 < e['t'] <= t1 + 6.0]
+        rivals = sorted(((hit_loud50(kp, e['t']), e['t'], e['sfx']) for e in hits), reverse=True)
+        slam = hit_loud50(kp, t1)
+        a, b = int(max(0.0, t1 - 0.30) * SR), int(max(0.0, t1 - 0.02) * SR)
+        gap = float(10.0 * np.log10(np.mean(sfx[a:b] ** 2) * 2 + 1e-20)) if b > a else -120.0
+        pk = lambda t: float(db(np.max(np.abs(sfx[int(t * SR):int((t + 0.05) * SR)]))))
+        out['first_slam'] = dict(t=t1, loud50_db=round(slam, 1), next_loudest=[dict(t=r[1], sfx=r[2], loud50_db=round(r[0], 1)) for r in rivals[:3]],
+                                 margin_db=round(slam - rivals[0][0], 1) if rivals else None, peak_dbfs=round(pk(t1), 1),
+                                 effects_before_it_db=round(gap, 1),
+                                 room_send_db=sfxlib.ROOM_SEND_DB.get('thunk_metal', -14.0) + mixer.FIRST_SLAM_ROOM_DB)
+        ok['first_slam'] = bool(not rivals or slam - rivals[0][0] >= 0.5)      # the level before it is reported, not judged:
+        #                                                   a timeline may put a whoosh right up to the slam
+    # ---- the build: music loudness per section before the drop
+    held = info.get('held_from') if info else None
+    secs = [s for s in tl['sections'] if s['t0'] < drop - 1e-6]
+    rows = []
+    for s in secs:
+        b = min(s['t1'], drop, held if held is not None else drop)
+        if b - s['t0'] > 0.4:
+            rows.append(dict(name=s['name'], t0=s['t0'], music_k_db=round(k_level(music[int(s['t0'] * SR):int(b * SR)]), 1)))
+    hk = (info or {}).get('music', {}).get('hook')
+    waves = rows[1:] if hk else rows
+    if len(waves) >= 2:
+        steps = [round(waves[i + 1]['music_k_db'] - waves[i]['music_k_db'], 1) for i in range(len(waves) - 1)]
+        out['build'] = dict(sections=rows, steps_db=steps, rise_db=round(waves[-1]['music_k_db'] - waves[0]['music_k_db'], 1))
+        ok['build'] = bool(min(steps) >= 0.7)
+        if hk:
+            refrow = [r for r in rows if abs(r['t0'] - hk['ref_t0']) < 1e-6]
+            if refrow:
+                out['build']['hook_under_ref_wave_db'] = round(refrow[0]['music_k_db'] - rows[0]['music_k_db'], 1)
+                ok['hook'] = bool(0.2 <= out['build']['hook_under_ref_wave_db'] <= 2.5)
+    # ---- held breath
+    if held is not None and drop - held > 0.2 and held > 1.0:
+        lv = lambda x, a, b: float(10.0 * np.log10(np.mean(x[int(a * SR):int(b * SR)] ** 2) * 2 + 1e-20))
+        before, during = lv(music, held - 1.0, held), lv(music, held + 0.1, drop - 0.05)
+        out['held_breath'] = dict(t0=held, music_before_db=round(before, 1), music_during_db=round(during, 1),
+                                  music_change_db=round(during - before, 1),
+                                  music_last_30ms_db=round(lv(music, drop - 0.03, drop - 0.005), 1),
+                                  effects_during_db=round(lv(sfx, held + 0.1, drop - 0.05), 1),
+                                  low_end_change_db=round(band_rms_db(music, 40, 300, held + 0.1, drop - 0.05) - band_rms_db(music, 40, 300, held - 1.0, held), 1))
+        ok['held_breath'] = bool(during - before <= -6.0)
+    # ---- the drop: low end that a small speaker can play
+    if 0 < drop < dur - 0.5:
+        d = dict(mix_30_80_db=round(band_rms_db(mix, 30, 80, drop, drop + 0.3), 1), mix_80_200_db=round(band_rms_db(mix, 80, 200, drop, drop + 0.3), 1),
+                 sfx_80_200_db=round(band_rms_db(sfx, 80, 200, drop, drop + 0.3), 1), music_80_200_db=round(band_rms_db(music, 80, 200, drop, drop + 0.3), 1),
+                 mix_80_200_rest_of_bar_db=round(band_rms_db(mix, 80, 200, drop + 0.5, min(dur, drop + 2.0)), 1),
+                 mix_200_800_db=round(band_rms_db(mix, 200, 800, drop, drop + 0.3), 1))
+        d['sum_vs_parts_db'] = round(d['mix_80_200_db'] - 10 * np.log10(10 ** (d['sfx_80_200_db'] / 10) + 10 ** (d['music_80_200_db'] / 10)), 1)
+        out['drop_low_end'] = d
+        ok['drop_low_end'] = bool(d['mix_80_200_db'] >= d['mix_30_80_db'] - 3.0 and d['mix_80_200_db'] >= d['mix_80_200_rest_of_bar_db'] + 2.0)
+    # ---- power_up resolves at t + dur
+    pu = []
+    for e in tl['events']:
+        if e['gain'] > 0 and sfxlib.resolve(e['sfx'])[0] == 'power_up' and e['dur']:
+            y, i0, _, _ = mixer.render_event(e, dur, None)
+            w = int(0.10 * SR)
+            c = np.convolve((y ** 2).sum(axis=1), np.ones(w) / w, 'same')
+            tp = (i0 + int(np.argmax(c))) / SR
+            q = lambda u: float(10 * np.log10(c[min(len(c) - 1, int(u * e['dur'] * SR))] / c.max() + 1e-12))
+            pu.append(dict(t=e['t'], resolves_at=round(e['t'] + e['dur'], 3), loudest_at=round(tp, 3), error_s=round(tp - e['t'] - e['dur'], 3),
+                           level_at_quarter_half_three_quarters_db=[round(q(0.25), 1), round(q(0.5), 1), round(q(0.75), 1)]))
+    if pu:
+        out['power_up'] = pu
+        ok['power_up'] = bool(all(abs(r['error_s']) <= 0.1 and r['level_at_quarter_half_three_quarters_db'][0] < r['level_at_quarter_half_three_quarters_db'][1]
+                                  < r['level_at_quarter_half_three_quarters_db'][2] < 0 for r in pu))
+    return out, ok
 
 
 # --------------------------------------------------------------------------------------- picture
@@ -294,6 +423,11 @@ def run(tl, out_dir, info=None):
     if info:
         rep['build'] = info
 
+    # ---- spectrum of the effects stem, and the story beats
+    rep['effects_spectrum'] = spectrum_check(sfx)
+    story, ok_story = story_checks(tl, mix, sfx, music, info or {})
+    rep['story'] = story
+
     # ---- picture
     marks = [(e['t'], (0, 255, 0), False) for e in tl['events'] if e['gain'] > 0]
     marks += [(c, (0, 200, 255), False) for c in cuts]
@@ -303,7 +437,9 @@ def run(tl, out_dir, info=None):
     except Exception as ex:                              # the picture is a convenience, never a reason to fail
         log('[verify] spectrogram not written:', repr(ex))
 
-    rep['pass'] = dict(format=ok_format, loudness=ok_loud, true_peak=ok_peak, sync=ok_sync, edits=ok_edits, ends=ok_ends)
+    rep['pass'] = dict(format=ok_format, loudness=ok_loud, true_peak=ok_peak, sync=ok_sync, edits=ok_edits, ends=ok_ends,
+                       spectrum_air=rep['effects_spectrum']['ok_air'], spectrum_harsh=rep['effects_spectrum']['ok_harsh'])
+    rep['pass'].update({'story_' + k: v for k, v in ok_story.items()})
     ok = all(rep['pass'].values())
     json.dump(rep, open(os.path.join(out_dir, 'report.json'), 'w'), indent=1, default=float)
 
@@ -327,6 +463,33 @@ def run(tl, out_dir, info=None):
     for s in secs:
         log(f"[verify]   {s['name']:16s} {s['busy']:4.1f} {str(s['mix_lufs']):>6s} {str(s['sfx_lufs']):>6s} {str(s['music_lufs']):>6s}")
     log('[verify] octave bands dB re total: ' + '  '.join(f'{k}:{v}' for k, v in bands.items()) + f"   (>8 kHz {rep['energy_above_8k_db']} dB)")
+    es = rep['effects_spectrum']
+    log('[verify] effects stem, third-octave dB re its 0.5-2 kHz mean: ' + '  '.join(f'{k}:{v:+.0f}' for k, v in es['third_octave_db_re_ref'].items() if k in ('100', '250', '1k', '2k', '2.5k', '3.15k', '4k', '5k', '6.3k', '8k', '10k', '12.5k', '16k')))
+    log(f"[verify] spectrum  air 5-12.5 kHz vs target {es['air_bands_vs_target_db']} {'ok' if es['ok_air'] else 'FAIL'};  2.5-4 kHz vs target {es['harsh_bands_vs_target_db']} {'ok' if es['ok_harsh'] else 'FAIL'}")
+    st = rep['story']
+    if 'first_slam' in st:
+        fs = st['first_slam']
+        log(f"[verify] slam      first slam {fs['t']} s: loud50 {fs['loud50_db']} dB, {fs['margin_db']} dB over the next loudest part hit of the following 6 s "
+            f"({fs['next_loudest'][0]['sfx'] + ' at ' + str(fs['next_loudest'][0]['t']) if fs['next_loudest'] else '-'}); effects just before it {fs['effects_before_it_db']} dB  {'ok' if rep['pass'].get('story_first_slam') else 'FAIL'}")
+    if 'build' in st:
+        b = st['build']
+        log('[verify] build     music per section (K-weighted dB): ' + '  '.join(f"{r['name']} {r['music_k_db']}" for r in b['sections']))
+        log(f"[verify]           steps {b['steps_db']} dB, rise {b['rise_db']} dB, hook {b.get('hook_under_ref_wave_db')} dB under its reference wave  "
+            f"{'ok' if rep['pass'].get('story_build') and rep['pass'].get('story_hook', True) else 'FAIL'}")
+    if 'held_breath' in st:
+        h = st['held_breath']
+        log(f"[verify] breath    from {h['t0']} s: music {h['music_change_db']} dB (low end {h['low_end_change_db']} dB), effects under it {h['effects_during_db']} dB, "
+            f"last 30 ms {h['music_last_30ms_db']} dB  {'ok' if rep['pass'].get('story_held_breath') else 'FAIL'}")
+    if 'drop_low_end' in st:
+        d = st['drop_low_end']
+        log(f"[verify] drop low  first 0.3 s of the mix: 30-80 Hz {d['mix_30_80_db']} dB, 80-200 Hz {d['mix_80_200_db']} dB (effects {d['sfx_80_200_db']}, music {d['music_80_200_db']}, "
+            f"sum vs parts {d['sum_vs_parts_db']:+.1f}); rest of the bar 80-200 Hz {d['mix_80_200_rest_of_bar_db']} dB  {'ok' if rep['pass'].get('story_drop_low_end') else 'FAIL'}")
+    for r in st.get('power_up', []):
+        log(f"[verify] power_up  starts {r['t']} s, loudest at {r['loudest_at']} s (resolve point {r['resolves_at']} s, {r['error_s']:+.3f} s); "
+            f"level at 1/4, 1/2, 3/4 of the way {r['level_at_quarter_half_three_quarters_db']} dB  {'ok' if rep['pass'].get('story_power_up') else 'FAIL'}")
+    failed = [k for k, v in rep['pass'].items() if not v]
+    if failed:
+        log('[verify] failed:', ', '.join(failed))
     log(f"[verify] {'ALL CHECKS PASSED' if ok else 'SOME CHECKS FAILED'}  -> {os.path.join(out_dir, 'report.json')}")
     return ok
 

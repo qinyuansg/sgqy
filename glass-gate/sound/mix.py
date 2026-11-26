@@ -15,6 +15,9 @@ timeline; the music edit is planned from them (gg_music.plan) and every effect i
 
 Event fields used:  t, sfx, gain (0..1, <= 0 is skipped), pan (-1..1), var, dur, part,
                     anchor ("start" | "end", optional: force the sound to start or to end on t).
+Also read if present: shots (name, t0, t1) for a small change of room per picture shot.
+Derived from the events, not from fixed times: the first part sound of the programme is the "first slam"
+(louder and almost dry), and the held breath before the drop starts on the last part landing before it.
 Effects are synthesised (sfxlib.py). Drop-in recordings: put  sound/sfx_override/<name>.wav  or numbered
 variations  <name>_<n>.wav  and they are used instead (see NOTES.md). Unknown names: a warning and the
 nearest known sound.
@@ -39,19 +42,28 @@ import sfxlib    # noqa: E402
 
 SR = 48000
 TARGET_LUFS = -16.0
-CEILING_DBTP = -1.2             # limiter ceiling (the delivery limit is -1.0 dBTP)
+CEILING_DBTP = -1.7             # limiter ceiling (the delivery limit is -1.0 dBTP; the margin is for the AAC encode)
 
 MUSIC_FULL_LUFS = -15.5         # loudness of the un-ducked full section (after the drop) on the mix bus, before mastering
 SFX_BUS_DB = 0.0                # effects bus trim; effect-to-effect balance lives in sfxlib.LEVEL_DB
-DUCK_STATIC_DB = 4.5            # music attenuation at busy = 1.0 (scaled by each section's `busy`)
-DUCK_DYN_MAX_DB = 5.0           # extra, from the effects-bus sidechain: part sounds (sfxlib.DUCK_FULL) ...
+DUCK_STATIC_DB = 5.0            # music attenuation at busy = 1.0 (scaled by each section's `busy`)
+DUCK_DYN_MAX_DB = 7.0           # extra, from the effects-bus sidechain: part sounds (sfxlib.DUCK_FULL) ...
 DUCK_DYN_HALF_DB = 2.5          # ... and the softer in-use / UI sounds (sfxlib.DUCK_HALF)
 DUCK_THRESHOLD_DB = -40.0       # sidechain threshold (effects-bus RMS, dBFS) and slope (dB of ducking per dB above it)
-DUCK_SLOPE = 0.32
+DUCK_SLOPE = 0.45
 DUCK_LOW_FACTOR = 0.5           # below DUCK_XOVER_HZ the music is ducked only this much (keeps the floor steady)
 DUCK_XOVER_HZ = 200.0
+DUCK_TOP_FACTOR = 1.5           # above DUCK_TOP_HZ the sidechain part is this much deeper: room where small parts live
+DUCK_TOP_HZ = 1500.0
 DUCK_LOOKAHEAD_S = 0.010
 ROOM_RT60 = 0.32
+FIRST_SLAM_DB = 2.5             # the first part sound of the programme: this much louder than its reference ...
+FIRST_SLAM_ROOM_DB = -14.0      # ... and this much less of it into the room (the driest hit)
+SHOT_ROOM = [                   # tiny room change per picture shot, by words in the shot name: (words, send offset dB)
+    (('gear', 'drive', 'pcb', 'psu', 'stack', 'badge', 'card', 'macro', 'detail', 'close'), -3.0),   # close-ups: drier
+    (('lane', 'hero', 'wide', 'orbit', 'alive'), +2.0),                                             # wide shots: more room
+]
+IMPACT_BAND_HZ = (60.0, 220.0)  # polarity of the drop impact is chosen for the most energy here against the music
 
 
 def log(*a):
@@ -76,7 +88,9 @@ def load_timeline(path):
             ev['gain'] = float(e.get('gain', 0.8))
             ev['pan'] = float(np.clip(e.get('pan', 0.0), -1.0, 1.0))
             ev['var'] = int(e.get('var', 0) or 0)
-            ev['dur'] = float(e['dur']) if e.get('dur') else None
+            ev['dur'] = round(float(e['dur']), 4) if e.get('dur') else None     # 0.8999999999999986 -> 0.9
+            if ev['dur'] is not None and not (0.0 < ev['dur'] < 60.0):
+                ev['dur'] = None
             ev['part'] = str(e.get('part', ''))
             evs.append(ev)
         except (KeyError, TypeError, ValueError) as ex:
@@ -97,7 +111,54 @@ def load_timeline(path):
         except (KeyError, TypeError, ValueError):
             pass
     tl['sections'] = sorted(secs, key=lambda s: s['t0'])
+    shots = []
+    for s in tl.get('shots', []) or []:
+        try:
+            shots.append(dict(name=str(s.get('name', '')), t0=float(s['t0']), t1=float(s['t1'])))
+        except (KeyError, TypeError, ValueError):
+            pass
+    tl['shots'] = sorted(shots, key=lambda s: s['t0'])
+    annotate(tl)
     return tl
+
+
+def annotate(tl):
+    """Things the mix derives from the events (never from fixed times):
+    first slam  the first part sound of the programme, if it is a heavy hit (sfxlib.HEAVY), gets FIRST_SLAM_DB
+                and an almost dry room send
+    held_from   where the held breath before the drop starts: the last part landing before the drop, or the
+                riser start if that is earlier (never more than 0.25 s before the riser)
+    room        a small send offset per picture shot (SHOT_ROOM)"""
+    drop = tl['drop_t']
+    live = [e for e in tl['events'] if e['gain'] > 0]
+    for e in live:
+        e['_gain_db'], e['_room_db'], e['_first_slam'] = 0.0, 0.0, False
+        for sh in tl['shots']:
+            if sh['t0'] <= e['t'] < sh['t1']:
+                low = sh['name'].lower()
+                for words, off in SHOT_ROOM:
+                    if any(w in low for w in words):
+                        e['_room_db'] = off
+                        break
+                break
+    parts = [e for e in live if sfxlib.resolve(e['sfx'])[0] in sfxlib.DUCK_FULL]
+    tl['first_slam_t'] = None
+    if parts and sfxlib.resolve(parts[0]['sfx'])[0] in sfxlib.HEAVY:      # only a heavy hit can be a slam
+        first = parts[0]
+        first['_gain_db'], first['_room_db'], first['_first_slam'] = FIRST_SLAM_DB, FIRST_SLAM_ROOM_DB, True
+        tl['first_slam_t'] = first['t']
+    risers = [e['t'] - (e['dur'] or 0.75) for e in live if sfxlib.resolve(e['sfx'])[0] == 'riser' and abs(e['t'] - drop) < 0.1]
+    before = [e['t'] for e in parts if drop - 1.0 <= e['t'] < drop - 0.05]
+    if risers:
+        r0 = min(risers)
+        last = max([t for t in before if t >= r0 - 0.25], default=None) if before else None
+        tl['held_from'] = min(r0, last) if last is not None else r0
+    elif before:
+        tl['held_from'] = max(before)
+    else:
+        tl['held_from'] = None
+    if tl['held_from'] is not None:
+        tl['held_from'] = round(float(tl['held_from']), 4)
 
 
 # --------------------------------------------------------------------------------------- effects
@@ -162,18 +223,20 @@ def render_event(e, duration, overrides=None):
     else:
         y, anchor, gname = sfxlib.render(name, e['var'], e['dur'], e['part'], room_s=max(0.2, duration - e['t']))
     forced = e.get('anchor')
-    if forced == 'start':
-        anchor = 0
-    elif forced == 'end':
-        anchor = len(y)
-    g = float(np.clip(e['gain'], 0.0, 1.5)) * 10.0 ** (SFX_BUS_DB / 20.0)
+    if forced in ('start', 'end'):                       # by what is audible, not by the array edges
+        amp = np.abs(y) if y.ndim == 1 else np.abs(y).max(axis=1)
+        if forced == 'start':
+            anchor = int(np.argmax(amp > 1e-4 * amp.max()))
+        else:
+            anchor = int(np.nonzero(amp > 1e-3 * amp.max())[0][-1]) + 1
+    g = float(np.clip(e['gain'], 0.0, 1.5)) * 10.0 ** ((SFX_BUS_DB + e.get('_gain_db', 0.0)) / 20.0)
     pan = e['pan']
     if y.ndim == 1:
         st = sfxlib.pan_mono(y, pan)
     else:                                                # stereo effect: balance
         st = y * np.array([min(1.0, 1.0 - pan), min(1.0, 1.0 + pan)])[None, :]
     i0 = int(round(e['t'] * SR)) - anchor
-    send = 10.0 ** (sfxlib.ROOM_SEND_DB.get(gname, -15.0) / 20.0)
+    send = 10.0 ** ((sfxlib.ROOM_SEND_DB.get(gname, -15.0) + e.get('_room_db', 0.0)) / 20.0)
     return st * g, i0, gname, send
 
 
@@ -181,6 +244,8 @@ def build_sfx(tl, overrides):
     n = int(round(tl['duration_s'] * SR))
     dry = np.zeros((n, 2))
     send = np.zeros((n, 2))
+    dry_imp = np.zeros((n, 2))                           # the drop impact, kept apart until its polarity is chosen
+    send_imp = np.zeros((n, 2))
     key = np.zeros((n, 2))                               # what the music ducks under: part sounds
     key2 = np.zeros((n, 2))                              # ... and, half as deep, in-use / UI sounds
     warned = set()
@@ -200,17 +265,40 @@ def build_sfx(tl, overrides):
         if b <= a:
             continue
         seg = y[a - i0:b - i0]
-        dry[a:b] += seg
-        send[a:b] += seg * sg
+        if gname == 'impact_drop':
+            dry_imp[a:b] += seg
+            send_imp[a:b] += seg * sg
+        else:
+            dry[a:b] += seg
+            send[a:b] += seg * sg
         if gname in sfxlib.DUCK_FULL:
             key[a:b] += seg
         elif gname in sfxlib.DUCK_HALF:
             key2[a:b] += seg
         used[gname] = used.get(gname, 0) + 1
-    wet = room_send(send, sfxlib.room_ir(ROOM_RT60))
-    bus = dry + wet
-    bus = signal.sosfiltfilt(signal.butter(2, 25.0, 'hp', fs=SR, output='sos'), bus, axis=0)
-    return bus, (key, key2), used
+    ir = sfxlib.room_ir(ROOM_RT60)
+    hp = signal.butter(2, 25.0, 'hp', fs=SR, output='sos')
+    bus = signal.sosfiltfilt(hp, dry + room_send(send, ir), axis=0)
+    imp = signal.sosfiltfilt(hp, dry_imp + room_send(send_imp, ir), axis=0) if np.any(dry_imp) else None
+    return bus, imp, (key, key2), used
+
+
+def impact_polarity(rest, imp, tl):
+    """+1 or -1 for the drop impact: whichever gives more 60-220 Hz energy when it meets the music's kick and
+    bass in the 0.35 s after each impact (two low sounds on the same instant can cancel; this makes sure they add)."""
+    sos = signal.butter(4, list(IMPACT_BAND_HZ), 'bp', fs=SR, output='sos')
+    plus = minus = 0.0
+    for e in tl['events']:
+        if e['gain'] > 0 and sfxlib.resolve(e['sfx'])[0] == 'impact_drop':
+            a, b = max(0, int((e['t'] - 0.1) * SR)), min(len(rest), int((e['t'] + 0.45) * SR))
+            if b - a < SR // 10:
+                continue
+            k0 = int(round(e['t'] * SR)) - a
+            lr = signal.sosfiltfilt(sos, rest[a:b].mean(axis=1))[k0:k0 + int(0.35 * SR)]
+            li = signal.sosfiltfilt(sos, imp[a:b].mean(axis=1))[k0:k0 + int(0.35 * SR)]
+            plus += float(np.sum((lr + li) ** 2))
+            minus += float(np.sum((lr - li) ** 2))
+    return (1.0 if plus >= minus else -1.0), (10.0 * np.log10((plus + 1e-20) / (minus + 1e-20)))
 
 
 # --------------------------------------------------------------------------------------- ducking
@@ -230,7 +318,7 @@ def busy_curve(tl, n):
 
 
 def sidechain_db(sfx, n, max_db):
-    """Envelope follower on the effects bus -> dB of extra ducking (fast attack, 220 ms release, 10 ms look-ahead)."""
+    """Envelope follower on the effects bus -> dB of extra ducking (fast attack, 250 ms release, 10 ms look-ahead)."""
     p = np.maximum(uniform_filter1d((sfx ** 2).sum(axis=1), size=int(0.010 * SR), mode='nearest'), 0.0)
     step = 48                                            # 1 kHz control rate
     m = n // step
@@ -251,13 +339,18 @@ def sidechain_db(sfx, n, max_db):
 
 
 def duck_music(music, key, tl):
+    """Static (busy) + sidechain ducking in three bands: the low end moves half as much, the top (where clicks,
+    snaps and glass partials live) gets the sidechain part 1.5 times as deep, the middle exactly as computed."""
     n = len(music)
     static = busy_curve(tl, n) * DUCK_STATIC_DB
     dyn = np.maximum(sidechain_db(key[0], n, DUCK_DYN_MAX_DB), sidechain_db(key[1], n, DUCK_DYN_HALF_DB))
     total = static + dyn
     low = signal.sosfiltfilt(signal.butter(2, DUCK_XOVER_HZ, 'lp', fs=SR, output='sos'), music, axis=0)
-    high = music - low
-    out = high * (10.0 ** (-total / 20.0))[:, None] + low * (10.0 ** (-total * DUCK_LOW_FACTOR / 20.0))[:, None]
+    rest = music - low
+    mid = signal.sosfiltfilt(signal.butter(2, DUCK_TOP_HZ, 'lp', fs=SR, output='sos'), rest, axis=0)
+    top = rest - mid
+    g = lambda d: (10.0 ** (-d / 20.0))[:, None]
+    out = low * g(total * DUCK_LOW_FACTOR) + mid * g(total) + top * g(static + dyn * DUCK_TOP_FACTOR)
     return out, total
 
 
@@ -335,7 +428,7 @@ def build(tl, verbose=True):
     overrides = Overrides(os.path.join(HERE, 'sfx_override'))
     if overrides.files and verbose:
         log('[sfx] override files in use:', {k: len(v) for k, v in overrides.files.items()})
-    sfx, key, used = build_sfx(tl, overrides)
+    sfx, imp, key, used = build_sfx(tl, overrides)
     if verbose:
         log(f'[sfx] {sum(used.values())} events placed:', ', '.join(f'{k} x{v}' for k, v in sorted(used.items())))
     music, minfo = gg_music.render(tl, verbose=verbose)
@@ -349,6 +442,25 @@ def build(tl, verbose=True):
         ref_l = -20.0
     music = music * 10.0 ** ((MUSIC_FULL_LUFS - ref_l) / 20.0)
     music, duck_db = duck_music(music, key, tl)
+    # the hook sits just under the reference wave: measured on the ducked music, then trimmed
+    hk = minfo.get('hook')
+    if hk and hk['t1'] - hk['t0'] > 0.3 and hk['ref_t1'] - hk['ref_t0'] > 0.3:
+        def k_loud(a, b):
+            kw = sfxlib.k_weight(music[int(a * SR):int(b * SR)])
+            return 10.0 * np.log10(np.mean((kw ** 2).sum(axis=1)) + 1e-20)
+        corr = float(np.clip(k_loud(hk['ref_t0'], hk['ref_t1']) - hk['under_lu'] - k_loud(hk['t0'], hk['t1']), -12.0, 12.0))
+        h1 = int(round(hk['t1'] * SR))
+        r = int(0.03 * SR)
+        curve_db = np.full(h1 + r, corr)
+        curve_db[max(0, h1 - r):] = np.linspace(corr, 0.0, len(curve_db) - max(0, h1 - r))
+        music[:h1 + r] *= (10.0 ** (curve_db / 20.0))[:, None]
+        minfo['hook']['trim_applied_db'] = round(corr, 2)
+    # the drop impact joins with the polarity that adds to the music's low end
+    pol = dict(sign=1.0, gain_db=0.0)
+    if imp is not None:
+        sign, adv = impact_polarity(sfx + music, imp, tl)
+        sfx = sfx + sign * imp
+        pol = dict(sign=sign, gain_db=round(abs(float(adv)), 2))
     # programme end: everything is at zero on the last sample
     k = int(0.03 * SR)
     w = (0.5 + 0.5 * np.cos(np.pi * (np.arange(k) + 1) / k))[:, None]
@@ -360,7 +472,8 @@ def build(tl, verbose=True):
     sfx_m = sfx * curve[:, None]
     music_m = music * curve[:, None]
     mix = sfx_m + music_m
-    info = dict(music=minfo, master=mstats, events_placed=used, duck_db_max=float(duck_db.max()),
+    info = dict(music=minfo, master=mstats, events_placed=used, impact_polarity=pol, first_slam_t=tl.get('first_slam_t'),
+                held_from=tl.get('held_from'), duck_db_max=float(duck_db.max()),
                 duck_db_mean_pre_drop=float(duck_db[:max(1, d)].mean()), render_seconds=round(time.time() - t0, 2),
                 overrides={k_: [os.path.basename(p) for p in v.values()] for k_, v in overrides.files.items()})
     return dict(mix=mix, sfx=sfx_m, music=music_m, info=info, n=n)

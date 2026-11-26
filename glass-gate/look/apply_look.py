@@ -78,7 +78,7 @@ def fix_screen_uvs(scene, verbose=True):
     return fixed
 
 
-def apply(scene=None, studio_variant='dark', quality='default', led_mode=None, fix_uvs=False):
+def apply(scene=None, studio_variant='dark', quality='default', led_mode=None, fix_uvs=False, bloom=True):
     scene = scene or bpy.context.scene
     ensure_textures()
     if led_mode:
@@ -91,7 +91,14 @@ def apply(scene=None, studio_variant='dark', quality='default', led_mode=None, f
     if scene.render.engine != 'CYCLES':
         gg.setup_cycles(scene, 'test')
     settings.recommended(scene, quality)
-    return {'materials': report, 'studio': st, 'glow_lights': glow}
+    settings.final(scene)
+    if bloom:
+        alive.setup_glare(scene)
+    else:
+        alive.remove_glare(scene)
+    has_diffuser = any(materials.base_name(m.name) == 'LED_DIFFUSER' and m.users > 0 for m in bpy.data.materials)
+    print('[apply_look] LED_DIFFUSER bands: ' + ('found' if has_diffuser else 'NOT in this gate (the LED line is the bare chips)'))
+    return {'materials': report, 'studio': st, 'glow_lights': glow, 'led_diffuser': has_diffuser}
 
 
 def main():

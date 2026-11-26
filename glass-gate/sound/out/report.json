@@ -8,59 +8,77 @@
   "expected_frames": 1248000
  },
  "loudness": {
-  "integrated_lufs_pyloudnorm": -16.01,
+  "integrated_lufs_pyloudnorm": -16.0,
   "ffmpeg_ebur128": {
    "integrated_lufs": -16.0,
-   "lra_lu": 5.9,
-   "true_peak_dbtp": -1.2
+   "lra_lu": 6.6,
+   "true_peak_dbtp": -1.7
   },
   "target": -16.0
  },
  "true_peak": {
-  "dbtp_8x": -1.19,
-  "sample_peak_dbfs": -1.21,
+  "dbtp_8x": -1.66,
+  "sample_peak_dbfs": -1.71,
   "limit": -1.0,
   "samples_at_full_scale": 0
  },
  "stems": {
   "null_test_residual_db": -141.6,
-  "sfx_lufs": -19.09,
-  "music_lufs": -18.56,
+  "sfx_lufs": -18.4,
+  "music_lufs": -19.11,
   "dc_offset": [
    -1.8e-05,
-   -1.3e-05
+   -1.4e-05
   ]
  },
  "sync": {
   "limit_ms": 5.0,
   "solo": {
-   "events": 76,
-   "worst_abs_ms": 0.813,
+   "events": 80,
+   "worst_abs_ms": 1.104,
    "over_limit": []
   },
   "stem": {
-   "events": 62,
-   "worst_abs_ms": 1.917,
-   "mean_ms": -0.35,
+   "events": 60,
+   "worst_abs_ms": 1.438,
+   "mean_ms": -0.224,
    "over_limit": [],
    "masked_not_measurable": [
     {
-     "t": 2.0,
-     "sfx": "thunk_metal",
-     "part": "base_L",
-     "clear_db": -0.3
+     "t": 7.0,
+     "sfx": "clack",
+     "part": "DRV_cage_L+DRV_cage_R",
+     "clear_db": 6.0
+    },
+    {
+     "t": 7.3667,
+     "sfx": "clack",
+     "part": "WING_hub_L+WING_hub_R",
+     "clear_db": 4.7
+    },
+    {
+     "t": 11.25,
+     "sfx": "glass_clink",
+     "part": "GLS_panel_entry_R",
+     "clear_db": 2.8
+    },
+    {
+     "t": 11.3667,
+     "sfx": "glass_clink",
+     "part": "GLS_panel_exit_L",
+     "clear_db": 3.6
     },
     {
      "t": 16.0,
      "sfx": "impact_drop",
      "part": "drop",
-     "clear_db": -2.1
+     "clear_db": 0.9
     },
     {
-     "t": 18.0,
+     "t": 18.25,
      "sfx": "ui_boot",
      "part": "screens_on",
-     "clear_db": -1.6
+     "clear_db": 4.9
     }
    ]
   },
@@ -73,436 +91,464 @@
     "err_ms": 0.021
    },
    {
-    "t": 2.0,
+    "t": 1.6,
     "sfx": "whoosh",
-    "part": "hook_scatter",
+    "part": "hook_lift_away",
     "mode": "end",
-    "err_ms": -0.708
+    "err_ms": -0.667
    },
    {
     "t": 2.0,
     "sfx": "thunk_metal",
-    "part": "base_L",
+    "part": "BASE_rail_L",
     "mode": "start",
     "err_ms": 0.021
    },
    {
     "t": 2.5,
     "sfx": "thunk_metal",
-    "part": "base_R",
+    "part": "BASE_rail_R",
     "mode": "start",
     "err_ms": 0.021
    },
    {
     "t": 3.0,
     "sfx": "screw",
-    "part": "anchor_L0",
+    "part": "BASE_anchor_0_L",
     "mode": "lead",
-    "err_ms": 0.542
+    "err_ms": 0.021
    },
    {
-    "t": 3.125,
+    "t": 3.1333,
     "sfx": "screw",
-    "part": "anchor_L1",
+    "part": "BASE_anchor_1_L+BASE_anchor_1_R",
     "mode": "lead",
-    "err_ms": 0.771
+    "err_ms": 0.012
    },
    {
     "t": 3.25,
     "sfx": "screw",
-    "part": "anchor_L2",
+    "part": "BASE_anchor_2_L+BASE_anchor_2_R",
     "mode": "lead",
-    "err_ms": 0.542
+    "err_ms": 0.021
    },
    {
-    "t": 3.375,
+    "t": 3.3667,
     "sfx": "screw",
-    "part": "anchor_L3",
+    "part": "BASE_anchor_3_L+BASE_anchor_3_R",
     "mode": "lead",
-    "err_ms": 0.083
+    "err_ms": 0.592
    },
    {
     "t": 3.5,
-    "sfx": "screw",
-    "part": "anchor_R0",
-    "mode": "lead",
-    "err_ms": 0.563
-   },
-   {
-    "t": 3.625,
-    "sfx": "screw",
-    "part": "anchor_R1",
-    "mode": "lead",
-    "err_ms": 0.542
-   },
-   {
-    "t": 3.75,
-    "sfx": "screw",
-    "part": "anchor_R2",
-    "mode": "lead",
-    "err_ms": 0.042
-   },
-   {
-    "t": 3.875,
-    "sfx": "screw",
-    "part": "anchor_R3",
-    "mode": "lead",
-    "err_ms": 0.542
+    "sfx": "click",
+    "part": "ELE_cable_0_L+ELE_cable_0_R",
+    "mode": "start",
+    "err_ms": 0.021
    },
    {
     "t": 4.0,
     "sfx": "thunk_metal",
-    "part": "motor",
+    "part": "DRV_motor_L",
     "mode": "start",
     "err_ms": 0.021
    },
    {
     "t": 4.5,
     "sfx": "clack",
-    "part": "brake",
+    "part": "DRV_brake_L",
     "mode": "start",
     "err_ms": 0.021
    },
    {
     "t": 5.0,
     "sfx": "thunk_metal",
-    "part": "ring_gear",
+    "part": "DRV_ring_L",
     "mode": "start",
     "err_ms": 0.021
    },
    {
     "t": 5.25,
     "sfx": "gear_tick",
-    "part": "planet_0",
+    "part": "DRV_planet_0_L",
     "mode": "start",
     "err_ms": 0.021
    },
    {
     "t": 5.5,
     "sfx": "gear_tick",
-    "part": "planet_1",
+    "part": "DRV_planet_1_L",
     "mode": "start",
     "err_ms": 0.021
    },
    {
     "t": 5.75,
     "sfx": "gear_tick",
-    "part": "planet_2",
+    "part": "DRV_planet_2_L",
     "mode": "start",
     "err_ms": 0.021
    },
    {
     "t": 6.0,
     "sfx": "gear_tick",
-    "part": "sun_gear",
+    "part": "DRV_sun_L",
     "mode": "start",
     "err_ms": 0.021
    },
    {
-    "t": 6.25,
+    "t": 6.1333,
     "sfx": "clack",
-    "part": "carrier",
+    "part": "DRV_carrier_L",
+    "mode": "start",
+    "err_ms": 0.012
+   },
+   {
+    "t": 6.5,
+    "sfx": "click",
+    "part": "DRV_shaft_L+DRV_shaft_R",
     "mode": "start",
     "err_ms": 0.021
    },
    {
     "t": 6.5,
-    "sfx": "click",
-    "part": "output_shaft",
+    "sfx": "spring",
+    "part": "DRV_spring_L+DRV_spring_R",
     "mode": "start",
     "err_ms": 0.021
    },
    {
     "t": 6.75,
-    "sfx": "spring",
-    "part": "return_spring",
-    "mode": "start",
-    "err_ms": 0.0
-   },
-   {
-    "t": 7.0,
     "sfx": "click",
-    "part": "encoder",
+    "part": "DRV_encoder_L+DRV_encoder_R",
     "mode": "start",
     "err_ms": 0.021
    },
    {
-    "t": 7.75,
-    "sfx": "glass_slide",
-    "part": "column_tube",
-    "mode": "end",
-    "err_ms": -0.375
+    "t": 7.0,
+    "sfx": "clack",
+    "part": "DRV_cage_L+DRV_cage_R",
+    "mode": "start",
+    "err_ms": 0.021
    },
    {
-    "t": 7.75,
+    "t": 7.25,
+    "sfx": "glass_slide",
+    "part": "GLS_column_L+GLS_column_R",
+    "mode": "end",
+    "err_ms": -0.25
+   },
+   {
+    "t": 7.25,
     "sfx": "glass_clink",
-    "part": "column_tube",
+    "part": "GLS_column_L+GLS_column_R",
+    "mode": "start",
+    "err_ms": 0.021
+   },
+   {
+    "t": 7.3667,
+    "sfx": "clack",
+    "part": "WING_hub_L+WING_hub_R",
+    "mode": "start",
+    "err_ms": 0.029
+   },
+   {
+    "t": 7.5,
+    "sfx": "glass_slide",
+    "part": "WING_sleeve_L+WING_sleeve_R",
+    "mode": "end",
+    "err_ms": -0.417
+   },
+   {
+    "t": 7.5,
+    "sfx": "glass_clink",
+    "part": "WING_sleeve_L+WING_sleeve_R",
     "mode": "start",
     "err_ms": 0.021
    },
    {
     "t": 8.0,
-    "sfx": "thunk_metal",
-    "part": "psu_L",
-    "mode": "start",
-    "err_ms": 0.021
-   },
-   {
-    "t": 8.25,
-    "sfx": "thunk_metal",
-    "part": "psu_R",
+    "sfx": "click",
+    "part": "ELE_pcb_L",
     "mode": "start",
     "err_ms": 0.021
    },
    {
     "t": 8.5,
-    "sfx": "click",
-    "part": "pcb_L",
+    "sfx": "snap",
+    "part": "ELE_sensor_entry_L",
     "mode": "start",
     "err_ms": 0.021
    },
    {
-    "t": 8.75,
-    "sfx": "click",
-    "part": "pcb_R",
+    "t": 8.6333,
+    "sfx": "snap",
+    "part": "LED_accent_entry_L",
     "mode": "start",
-    "err_ms": 0.021
+    "err_ms": 0.013
    },
    {
     "t": 9.0,
-    "sfx": "snap",
-    "part": "sensor_0",
+    "sfx": "thunk_metal",
+    "part": "ELE_psu_L",
     "mode": "start",
     "err_ms": 0.021
    },
    {
     "t": 9.25,
     "sfx": "snap",
-    "part": "sensor_1",
+    "part": "ELE_sensor_exit_L",
     "mode": "start",
     "err_ms": 0.021
    },
    {
     "t": 9.5,
     "sfx": "snap",
-    "part": "sensor_2",
-    "mode": "start",
-    "err_ms": 0.021
-   },
-   {
-    "t": 9.5625,
-    "sfx": "click",
-    "part": "cable_0",
-    "mode": "start",
-    "err_ms": 0.021
-   },
-   {
-    "t": 9.6875,
-    "sfx": "click",
-    "part": "cable_1",
-    "mode": "start",
-    "err_ms": 0.021
-   },
-   {
-    "t": 9.75,
-    "sfx": "snap",
-    "part": "sensor_3",
-    "mode": "start",
-    "err_ms": 0.021
-   },
-   {
-    "t": 9.8125,
-    "sfx": "click",
-    "part": "cable_2",
-    "mode": "start",
-    "err_ms": 0.021
-   },
-   {
-    "t": 9.9375,
-    "sfx": "click",
-    "part": "cable_3",
+    "part": "LED_accent_exit_L",
     "mode": "start",
     "err_ms": 0.021
    },
    {
     "t": 10.0,
     "sfx": "glass_clink",
-    "part": "post_front_L",
+    "part": "GLS_post_entry_L",
     "mode": "start",
     "err_ms": 0.021
    },
    {
     "t": 10.25,
     "sfx": "glass_clink",
-    "part": "post_front_R",
+    "part": "GLS_post_entry_R",
     "mode": "start",
     "err_ms": 0.021
    },
    {
     "t": 10.5,
     "sfx": "glass_clink",
-    "part": "post_rear_L",
+    "part": "GLS_post_exit_L",
     "mode": "start",
     "err_ms": 0.021
    },
    {
     "t": 10.75,
     "sfx": "glass_clink",
-    "part": "post_rear_R",
+    "part": "GLS_post_exit_R",
     "mode": "start",
     "err_ms": 0.021
    },
    {
+    "t": 10.8667,
+    "sfx": "clack",
+    "part": "GLS_clips_entry_L+GLS_clips_entry_R+GLS_clips_exit_L+GLS_clips_exit_R",
+    "mode": "start",
+    "err_ms": 0.029
+   },
+   {
+    "t": 11.1333,
+    "sfx": "glass_slide",
+    "part": "GLS_panel_entry_L",
+    "mode": "end",
+    "err_ms": -0.362
+   },
+   {
+    "t": 11.1333,
+    "sfx": "glass_clink",
+    "part": "GLS_panel_entry_L",
+    "mode": "start",
+    "err_ms": 0.013
+   },
+   {
     "t": 11.25,
     "sfx": "glass_slide",
-    "part": "side_panel_L",
+    "part": "GLS_panel_entry_R",
     "mode": "end",
-    "err_ms": -0.583
+    "err_ms": -0.292
    },
    {
     "t": 11.25,
     "sfx": "glass_clink",
-    "part": "side_panel_L",
+    "part": "GLS_panel_entry_R",
     "mode": "start",
     "err_ms": 0.021
    },
    {
-    "t": 11.75,
+    "t": 11.3667,
     "sfx": "glass_slide",
-    "part": "side_panel_R",
+    "part": "GLS_panel_exit_L",
     "mode": "end",
-    "err_ms": -0.583
+    "err_ms": -0.346
    },
    {
-    "t": 11.75,
+    "t": 11.3667,
     "sfx": "glass_clink",
-    "part": "side_panel_R",
+    "part": "GLS_panel_exit_L",
+    "mode": "start",
+    "err_ms": 0.029
+   },
+   {
+    "t": 11.5,
+    "sfx": "glass_slide",
+    "part": "GLS_panel_exit_R",
+    "mode": "end",
+    "err_ms": -0.292
+   },
+   {
+    "t": 11.5,
+    "sfx": "glass_clink",
+    "part": "GLS_panel_exit_R",
     "mode": "start",
     "err_ms": 0.021
    },
    {
     "t": 12.0,
-    "sfx": "snap",
-    "part": "led_strip",
+    "sfx": "thunk_metal",
+    "part": "RAIL_spine_L",
     "mode": "start",
     "err_ms": 0.021
+   },
+   {
+    "t": 12.1333,
+    "sfx": "thunk_metal",
+    "part": "RAIL_spine_R",
+    "mode": "start",
+    "err_ms": 0.013
    },
    {
     "t": 12.25,
-    "sfx": "tap",
-    "part": "rfid_coil",
+    "sfx": "snap",
+    "part": "RAIL_led_L+RAIL_led_R",
     "mode": "start",
     "err_ms": 0.021
    },
    {
-    "t": 12.5,
+    "t": 12.3667,
     "sfx": "click",
-    "part": "qr_module",
+    "part": "RAIL_harness_L",
+    "mode": "start",
+    "err_ms": 0.029
+   },
+   {
+    "t": 12.5,
+    "sfx": "tap",
+    "part": "RAIL_rfid_L",
     "mode": "start",
     "err_ms": 0.021
+   },
+   {
+    "t": 12.6333,
+    "sfx": "snap",
+    "part": "RAIL_qr_L",
+    "mode": "start",
+    "err_ms": 0.013
    },
    {
     "t": 12.75,
     "sfx": "clack",
-    "part": "lcd_module",
+    "part": "RAIL_lcd_L",
     "mode": "start",
     "err_ms": 0.021
+   },
+   {
+    "t": 12.8667,
+    "sfx": "click",
+    "part": "RAIL_speaker_L+RAIL_speaker_R",
+    "mode": "start",
+    "err_ms": 0.029
    },
    {
     "t": 13.0,
-    "sfx": "click",
-    "part": "camera_pod",
+    "sfx": "glass_clink",
+    "part": "RAIL_lid_L",
     "mode": "start",
     "err_ms": 0.021
+   },
+   {
+    "t": 13.1333,
+    "sfx": "glass_clink",
+    "part": "RAIL_lid_R",
+    "mode": "start",
+    "err_ms": 0.013
    },
    {
     "t": 13.25,
-    "sfx": "glass_clink",
-    "part": "rail_lid_L",
+    "sfx": "click",
+    "part": "RAIL_campod_L",
     "mode": "start",
     "err_ms": 0.021
    },
    {
+    "t": 13.3667,
+    "sfx": "screw",
+    "part": "RAIL_screw_0_L+RAIL_screw_1_L",
+    "mode": "lead",
+    "err_ms": 0.029
+   },
+   {
     "t": 13.5,
-    "sfx": "glass_clink",
-    "part": "rail_lid_R",
-    "mode": "start",
+    "sfx": "screw",
+    "part": "RAIL_screw_2_L+RAIL_screw_3_L+RAIL_screw_2_R+RAIL_screw_3_R",
+    "mode": "lead",
     "err_ms": 0.021
    },
    {
-    "t": 13.5,
+    "t": 13.6333,
     "sfx": "screw",
-    "part": "lid_screw_0",
+    "part": "RAIL_screw_4_R",
     "mode": "lead",
-    "err_ms": 0.5
-   },
-   {
-    "t": 13.625,
-    "sfx": "screw",
-    "part": "lid_screw_1",
-    "mode": "lead",
-    "err_ms": 0.542
-   },
-   {
-    "t": 13.75,
-    "sfx": "screw",
-    "part": "lid_screw_2",
-    "mode": "lead",
-    "err_ms": 0.813
-   },
-   {
-    "t": 13.875,
-    "sfx": "screw",
-    "part": "lid_screw_3",
-    "mode": "lead",
-    "err_ms": 0.063
+    "err_ms": 0.367
    },
    {
     "t": 14.0,
     "sfx": "clack",
-    "part": "clamp_L",
+    "part": "WING_clamp_a_L+WING_clamp_a_R",
     "mode": "start",
     "err_ms": 0.021
+   },
+   {
+    "t": 14.1333,
+    "sfx": "clack",
+    "part": "WING_clamp_b_L+WING_clamp_b_R",
+    "mode": "start",
+    "err_ms": 0.013
    },
    {
     "t": 14.25,
-    "sfx": "clack",
-    "part": "clamp_R",
+    "sfx": "snap",
+    "part": "WING_edgeled_L+WING_edgeled_R",
     "mode": "start",
     "err_ms": 0.021
    },
    {
     "t": 14.5,
     "sfx": "glass_clink",
-    "part": "wing_L",
+    "part": "WING_leaf_L",
     "mode": "start",
     "err_ms": 0.021
    },
    {
     "t": 14.5,
     "sfx": "lock_clunk",
-    "part": "wing_L",
+    "part": "WING_leaf_L",
     "mode": "start",
     "err_ms": 0.021
    },
    {
-    "t": 15.0,
+    "t": 14.75,
     "sfx": "glass_clink",
-    "part": "wing_R",
+    "part": "WING_leaf_R",
     "mode": "start",
     "err_ms": 0.021
    },
    {
-    "t": 15.0,
+    "t": 14.75,
     "sfx": "lock_clunk",
-    "part": "wing_R",
+    "part": "WING_leaf_R",
     "mode": "start",
     "err_ms": 0.021
    },
    {
     "t": 15.25,
     "sfx": "tap",
-    "part": "badge",
+    "part": "RAIL_badge_L",
     "mode": "start",
     "err_ms": 0.021
    },
@@ -511,7 +557,7 @@
     "sfx": "riser",
     "part": "pre_drop",
     "mode": "end",
-    "err_ms": -0.167
+    "err_ms": -0.292
    },
    {
     "t": 16.0,
@@ -528,60 +574,60 @@
     "err_ms": 0.021
    },
    {
-    "t": 18.0,
+    "t": 18.25,
     "sfx": "ui_boot",
     "part": "screens_on",
     "mode": "start",
     "err_ms": 0.021
    },
    {
-    "t": 20.0,
+    "t": 20.25,
     "sfx": "card_tap",
     "part": "card",
     "mode": "start",
     "err_ms": 0.021
    },
    {
-    "t": 20.12,
+    "t": 20.36,
     "sfx": "beep_ok",
     "part": "reader",
     "mode": "start",
-    "err_ms": 0.062
+    "err_ms": 0.063
    },
    {
-    "t": 20.25,
+    "t": 20.5,
     "sfx": "shimmer",
     "part": "led_green",
     "mode": "start",
     "err_ms": 0.021
    },
    {
-    "t": 20.5,
+    "t": 21.0,
     "sfx": "servo",
     "part": "wings_open",
     "mode": "start",
-    "err_ms": 0.271
+    "err_ms": 0.167
    },
    {
-    "t": 21.4,
+    "t": 21.9,
     "sfx": "lock_clunk",
     "part": "wings_open_stop",
     "mode": "start",
     "err_ms": 0.021
    },
    {
-    "t": 22.0,
+    "t": 22.8,
     "sfx": "whoosh",
     "part": "light_pass",
     "mode": "end",
-    "err_ms": -0.688
+    "err_ms": -1.104
    },
    {
-    "t": 22.75,
+    "t": 22.9,
     "sfx": "servo",
     "part": "wings_close",
     "mode": "start",
-    "err_ms": 0.292
+    "err_ms": 0.167
    },
    {
     "t": 23.5,
@@ -600,438 +646,424 @@
   ],
   "per_event_stem": [
    {
+    "t": 2.0,
+    "sfx": "thunk_metal",
+    "part": "BASE_rail_L",
+    "err_ms": -0.708,
+    "clear_db": 96.8
+   },
+   {
     "t": 2.5,
     "sfx": "thunk_metal",
-    "part": "base_R",
-    "err_ms": -1.646,
-    "clear_db": 93.8
+    "part": "BASE_rail_R",
+    "err_ms": -0.417,
+    "clear_db": 101.6
    },
    {
     "t": 3.0,
     "sfx": "screw",
-    "part": "anchor_L0",
-    "err_ms": -0.125,
-    "clear_db": 9.5
+    "part": "BASE_anchor_0_L",
+    "err_ms": 0.021,
+    "clear_db": 9.9
    },
    {
-    "t": 3.125,
+    "t": 3.1333,
     "sfx": "screw",
-    "part": "anchor_L1",
-    "err_ms": -0.021,
-    "clear_db": 10.6
+    "part": "BASE_anchor_1_L+BASE_anchor_1_R",
+    "err_ms": 0.104,
+    "clear_db": 10.4
    },
    {
     "t": 3.25,
     "sfx": "screw",
-    "part": "anchor_L2",
-    "err_ms": -0.062,
-    "clear_db": 10.1
+    "part": "BASE_anchor_2_L+BASE_anchor_2_R",
+    "err_ms": -0.021,
+    "clear_db": 12.2
    },
    {
-    "t": 3.375,
+    "t": 3.3667,
     "sfx": "screw",
-    "part": "anchor_L3",
-    "err_ms": -0.083,
-    "clear_db": 10.2
-   },
-   {
-    "t": 3.5,
-    "sfx": "screw",
-    "part": "anchor_R0",
-    "err_ms": -0.104,
-    "clear_db": 11.1
-   },
-   {
-    "t": 3.625,
-    "sfx": "screw",
-    "part": "anchor_R1",
-    "err_ms": 0.062,
-    "clear_db": 8.5
-   },
-   {
-    "t": 3.75,
-    "sfx": "screw",
-    "part": "anchor_R2",
-    "err_ms": 0.0,
-    "clear_db": 11.9
-   },
-   {
-    "t": 3.875,
-    "sfx": "screw",
-    "part": "anchor_R3",
-    "err_ms": 0.0,
-    "clear_db": 10.1
-   },
-   {
-    "t": 4.0,
-    "sfx": "thunk_metal",
-    "part": "motor",
-    "err_ms": -0.375,
-    "clear_db": 27.5
-   },
-   {
-    "t": 4.5,
-    "sfx": "clack",
-    "part": "brake",
-    "err_ms": -1.208,
-    "clear_db": 86.0
-   },
-   {
-    "t": 5.0,
-    "sfx": "thunk_metal",
-    "part": "ring_gear",
-    "err_ms": -1.292,
-    "clear_db": 93.7
-   },
-   {
-    "t": 5.25,
-    "sfx": "gear_tick",
-    "part": "planet_0",
-    "err_ms": -0.521,
-    "clear_db": 47.5
-   },
-   {
-    "t": 5.5,
-    "sfx": "gear_tick",
-    "part": "planet_1",
-    "err_ms": -0.375,
-    "clear_db": 31.0
-   },
-   {
-    "t": 5.75,
-    "sfx": "gear_tick",
-    "part": "planet_2",
-    "err_ms": -0.271,
-    "clear_db": 22.0
-   },
-   {
-    "t": 6.0,
-    "sfx": "gear_tick",
-    "part": "sun_gear",
-    "err_ms": -0.354,
-    "clear_db": 26.3
-   },
-   {
-    "t": 6.25,
-    "sfx": "clack",
-    "part": "carrier",
-    "err_ms": -0.229,
-    "clear_db": 16.3
-   },
-   {
-    "t": 6.5,
-    "sfx": "click",
-    "part": "output_shaft",
-    "err_ms": -0.354,
-    "clear_db": 31.6
-   },
-   {
-    "t": 6.75,
-    "sfx": "spring",
-    "part": "return_spring",
-    "err_ms": -0.583,
-    "clear_db": 55.6
-   },
-   {
-    "t": 7.0,
-    "sfx": "click",
-    "part": "encoder",
-    "err_ms": -0.375,
-    "clear_db": 33.0
-   },
-   {
-    "t": 7.75,
-    "sfx": "glass_clink",
-    "part": "column_tube",
-    "err_ms": 0.0,
-    "clear_db": 13.0
-   },
-   {
-    "t": 8.0,
-    "sfx": "thunk_metal",
-    "part": "psu_L",
-    "err_ms": 0.0,
-    "clear_db": 8.9
-   },
-   {
-    "t": 8.25,
-    "sfx": "thunk_metal",
-    "part": "psu_R",
-    "err_ms": -0.354,
-    "clear_db": 26.5
-   },
-   {
-    "t": 8.5,
-    "sfx": "click",
-    "part": "pcb_L",
-    "err_ms": -0.604,
-    "clear_db": 60.2
-   },
-   {
-    "t": 8.75,
-    "sfx": "click",
-    "part": "pcb_R",
-    "err_ms": -0.583,
-    "clear_db": 58.7
-   },
-   {
-    "t": 9.0,
-    "sfx": "snap",
-    "part": "sensor_0",
-    "err_ms": -0.542,
-    "clear_db": 57.4
-   },
-   {
-    "t": 9.25,
-    "sfx": "snap",
-    "part": "sensor_1",
-    "err_ms": -0.583,
-    "clear_db": 60.9
-   },
-   {
-    "t": 9.5,
-    "sfx": "snap",
-    "part": "sensor_2",
-    "err_ms": -0.562,
-    "clear_db": 55.9
-   },
-   {
-    "t": 9.5625,
-    "sfx": "click",
-    "part": "cable_0",
-    "err_ms": -0.083,
-    "clear_db": 13.5
-   },
-   {
-    "t": 9.6875,
-    "sfx": "click",
-    "part": "cable_1",
-    "err_ms": -0.354,
-    "clear_db": 32.1
-   },
-   {
-    "t": 9.75,
-    "sfx": "snap",
-    "part": "sensor_3",
-    "err_ms": -0.25,
-    "clear_db": 25.3
-   },
-   {
-    "t": 9.8125,
-    "sfx": "click",
-    "part": "cable_2",
-    "err_ms": -0.167,
-    "clear_db": 17.8
-   },
-   {
-    "t": 9.9375,
-    "sfx": "click",
-    "part": "cable_3",
-    "err_ms": -0.333,
-    "clear_db": 32.0
-   },
-   {
-    "t": 10.0,
-    "sfx": "glass_clink",
-    "part": "post_front_L",
-    "err_ms": -0.292,
-    "clear_db": 26.6
-   },
-   {
-    "t": 10.25,
-    "sfx": "glass_clink",
-    "part": "post_front_R",
-    "err_ms": -0.271,
-    "clear_db": 25.9
-   },
-   {
-    "t": 10.5,
-    "sfx": "glass_clink",
-    "part": "post_rear_L",
-    "err_ms": -0.271,
-    "clear_db": 30.0
-   },
-   {
-    "t": 10.75,
-    "sfx": "glass_clink",
-    "part": "post_rear_R",
-    "err_ms": -0.188,
-    "clear_db": 23.5
-   },
-   {
-    "t": 11.25,
-    "sfx": "glass_clink",
-    "part": "side_panel_L",
-    "err_ms": -0.104,
-    "clear_db": 13.6
-   },
-   {
-    "t": 11.75,
-    "sfx": "glass_clink",
-    "part": "side_panel_R",
-    "err_ms": -0.125,
-    "clear_db": 15.7
-   },
-   {
-    "t": 12.0,
-    "sfx": "snap",
-    "part": "led_strip",
-    "err_ms": -0.167,
-    "clear_db": 23.6
-   },
-   {
-    "t": 12.25,
-    "sfx": "tap",
-    "part": "rfid_coil",
-    "err_ms": 0.0,
-    "clear_db": 33.0
-   },
-   {
-    "t": 12.5,
-    "sfx": "click",
-    "part": "qr_module",
-    "err_ms": -0.562,
-    "clear_db": 55.9
-   },
-   {
-    "t": 12.75,
-    "sfx": "clack",
-    "part": "lcd_module",
-    "err_ms": -0.896,
-    "clear_db": 57.6
-   },
-   {
-    "t": 13.0,
-    "sfx": "click",
-    "part": "camera_pod",
-    "err_ms": -0.562,
-    "clear_db": 60.3
-   },
-   {
-    "t": 13.25,
-    "sfx": "glass_clink",
-    "part": "rail_lid_L",
-    "err_ms": -0.896,
-    "clear_db": 56.6
-   },
-   {
-    "t": 13.5,
-    "sfx": "glass_clink",
-    "part": "rail_lid_R",
-    "err_ms": -0.062,
-    "clear_db": 12.5
-   },
-   {
-    "t": 13.5,
-    "sfx": "screw",
-    "part": "lid_screw_0",
-    "err_ms": -0.062,
-    "clear_db": 12.5
-   },
-   {
-    "t": 13.625,
-    "sfx": "screw",
-    "part": "lid_screw_1",
-    "err_ms": 0.104,
-    "clear_db": 7.1
-   },
-   {
-    "t": 13.75,
-    "sfx": "screw",
-    "part": "lid_screw_2",
-    "err_ms": 0.021,
-    "clear_db": 9.5
-   },
-   {
-    "t": 13.875,
-    "sfx": "screw",
-    "part": "lid_screw_3",
+    "part": "BASE_anchor_3_L+BASE_anchor_3_R",
     "err_ms": -0.021,
     "clear_db": 10.9
    },
    {
+    "t": 3.5,
+    "sfx": "click",
+    "part": "ELE_cable_0_L+ELE_cable_0_R",
+    "err_ms": -0.438,
+    "clear_db": 41.2
+   },
+   {
+    "t": 4.0,
+    "sfx": "thunk_metal",
+    "part": "DRV_motor_L",
+    "err_ms": -0.458,
+    "clear_db": 97.7
+   },
+   {
+    "t": 4.5,
+    "sfx": "clack",
+    "part": "DRV_brake_L",
+    "err_ms": -0.458,
+    "clear_db": 81.7
+   },
+   {
+    "t": 5.0,
+    "sfx": "thunk_metal",
+    "part": "DRV_ring_L",
+    "err_ms": -0.458,
+    "clear_db": 97.5
+   },
+   {
+    "t": 5.25,
+    "sfx": "gear_tick",
+    "part": "DRV_planet_0_L",
+    "err_ms": -0.458,
+    "clear_db": 53.2
+   },
+   {
+    "t": 5.5,
+    "sfx": "gear_tick",
+    "part": "DRV_planet_1_L",
+    "err_ms": -0.292,
+    "clear_db": 24.6
+   },
+   {
+    "t": 5.75,
+    "sfx": "gear_tick",
+    "part": "DRV_planet_2_L",
+    "err_ms": -0.312,
+    "clear_db": 28.8
+   },
+   {
+    "t": 6.0,
+    "sfx": "gear_tick",
+    "part": "DRV_sun_L",
+    "err_ms": -0.458,
+    "clear_db": 36.6
+   },
+   {
+    "t": 6.1333,
+    "sfx": "clack",
+    "part": "DRV_carrier_L",
+    "err_ms": 0.104,
+    "clear_db": 13.1
+   },
+   {
+    "t": 6.5,
+    "sfx": "click",
+    "part": "DRV_shaft_L+DRV_shaft_R",
+    "err_ms": -0.5,
+    "clear_db": 40.5
+   },
+   {
+    "t": 6.5,
+    "sfx": "spring",
+    "part": "DRV_spring_L+DRV_spring_R",
+    "err_ms": -0.5,
+    "clear_db": 40.5
+   },
+   {
+    "t": 6.75,
+    "sfx": "click",
+    "part": "DRV_encoder_L+DRV_encoder_R",
+    "err_ms": -0.458,
+    "clear_db": 49.2
+   },
+   {
+    "t": 7.25,
+    "sfx": "glass_clink",
+    "part": "GLS_column_L+GLS_column_R",
+    "err_ms": -0.125,
+    "clear_db": 6.8
+   },
+   {
+    "t": 7.5,
+    "sfx": "glass_clink",
+    "part": "WING_sleeve_L+WING_sleeve_R",
+    "err_ms": -0.083,
+    "clear_db": 10.1
+   },
+   {
+    "t": 8.0,
+    "sfx": "click",
+    "part": "ELE_pcb_L",
+    "err_ms": -0.458,
+    "clear_db": 42.1
+   },
+   {
+    "t": 8.5,
+    "sfx": "snap",
+    "part": "ELE_sensor_entry_L",
+    "err_ms": -0.438,
+    "clear_db": 103.9
+   },
+   {
+    "t": 8.6333,
+    "sfx": "snap",
+    "part": "LED_accent_entry_L",
+    "err_ms": -0.354,
+    "clear_db": 36.8
+   },
+   {
+    "t": 9.0,
+    "sfx": "thunk_metal",
+    "part": "ELE_psu_L",
+    "err_ms": -0.812,
+    "clear_db": 69.9
+   },
+   {
+    "t": 9.25,
+    "sfx": "snap",
+    "part": "ELE_sensor_exit_L",
+    "err_ms": -0.438,
+    "clear_db": 71.2
+   },
+   {
+    "t": 9.5,
+    "sfx": "snap",
+    "part": "LED_accent_exit_L",
+    "err_ms": -0.417,
+    "clear_db": 60.9
+   },
+   {
+    "t": 10.0,
+    "sfx": "glass_clink",
+    "part": "GLS_post_entry_L",
+    "err_ms": -0.417,
+    "clear_db": 104.6
+   },
+   {
+    "t": 10.25,
+    "sfx": "glass_clink",
+    "part": "GLS_post_entry_R",
+    "err_ms": -0.25,
+    "clear_db": 21.6
+   },
+   {
+    "t": 10.5,
+    "sfx": "glass_clink",
+    "part": "GLS_post_exit_L",
+    "err_ms": -0.208,
+    "clear_db": 23.4
+   },
+   {
+    "t": 10.75,
+    "sfx": "glass_clink",
+    "part": "GLS_post_exit_R",
+    "err_ms": -0.312,
+    "clear_db": 26.8
+   },
+   {
+    "t": 10.8667,
+    "sfx": "clack",
+    "part": "GLS_clips_entry_L+GLS_clips_entry_R+GLS_clips_exit_L+GLS_clips_exit_R",
+    "err_ms": -0.021,
+    "clear_db": 10.9
+   },
+   {
+    "t": 11.1333,
+    "sfx": "glass_clink",
+    "part": "GLS_panel_entry_L",
+    "err_ms": 0.188,
+    "clear_db": 7.0
+   },
+   {
+    "t": 11.5,
+    "sfx": "glass_clink",
+    "part": "GLS_panel_exit_R",
+    "err_ms": -0.083,
+    "clear_db": 7.9
+   },
+   {
+    "t": 12.0,
+    "sfx": "thunk_metal",
+    "part": "RAIL_spine_L",
+    "err_ms": -0.333,
+    "clear_db": 21.8
+   },
+   {
+    "t": 12.1333,
+    "sfx": "thunk_metal",
+    "part": "RAIL_spine_R",
+    "err_ms": -0.292,
+    "clear_db": 27.8
+   },
+   {
+    "t": 12.25,
+    "sfx": "snap",
+    "part": "RAIL_led_L+RAIL_led_R",
+    "err_ms": -0.396,
+    "clear_db": 35.7
+   },
+   {
+    "t": 12.3667,
+    "sfx": "click",
+    "part": "RAIL_harness_L",
+    "err_ms": -0.333,
+    "clear_db": 28.0
+   },
+   {
+    "t": 12.5,
+    "sfx": "tap",
+    "part": "RAIL_rfid_L",
+    "err_ms": -0.125,
+    "clear_db": 36.7
+   },
+   {
+    "t": 12.6333,
+    "sfx": "snap",
+    "part": "RAIL_qr_L",
+    "err_ms": -0.271,
+    "clear_db": 29.2
+   },
+   {
+    "t": 12.75,
+    "sfx": "clack",
+    "part": "RAIL_lcd_L",
+    "err_ms": -0.333,
+    "clear_db": 24.6
+   },
+   {
+    "t": 12.8667,
+    "sfx": "click",
+    "part": "RAIL_speaker_L+RAIL_speaker_R",
+    "err_ms": -0.396,
+    "clear_db": 33.3
+   },
+   {
+    "t": 13.0,
+    "sfx": "glass_clink",
+    "part": "RAIL_lid_L",
+    "err_ms": -0.396,
+    "clear_db": 31.2
+   },
+   {
+    "t": 13.1333,
+    "sfx": "glass_clink",
+    "part": "RAIL_lid_R",
+    "err_ms": -0.188,
+    "clear_db": 9.2
+   },
+   {
+    "t": 13.25,
+    "sfx": "click",
+    "part": "RAIL_campod_L",
+    "err_ms": 0.521,
+    "clear_db": 7.3
+   },
+   {
+    "t": 13.3667,
+    "sfx": "screw",
+    "part": "RAIL_screw_0_L+RAIL_screw_1_L",
+    "err_ms": 0.146,
+    "clear_db": 9.2
+   },
+   {
+    "t": 13.5,
+    "sfx": "screw",
+    "part": "RAIL_screw_2_L+RAIL_screw_3_L+RAIL_screw_2_R+RAIL_screw_3_R",
+    "err_ms": -0.042,
+    "clear_db": 14.9
+   },
+   {
+    "t": 13.6333,
+    "sfx": "screw",
+    "part": "RAIL_screw_4_R",
+    "err_ms": 0.083,
+    "clear_db": 13.0
+   },
+   {
     "t": 14.0,
     "sfx": "clack",
-    "part": "clamp_L",
-    "err_ms": -0.417,
-    "clear_db": 35.5
+    "part": "WING_clamp_a_L+WING_clamp_a_R",
+    "err_ms": -0.438,
+    "clear_db": 50.3
+   },
+   {
+    "t": 14.1333,
+    "sfx": "clack",
+    "part": "WING_clamp_b_L+WING_clamp_b_R",
+    "err_ms": -0.396,
+    "clear_db": 33.3
    },
    {
     "t": 14.25,
-    "sfx": "clack",
-    "part": "clamp_R",
-    "err_ms": -0.479,
-    "clear_db": 50.2
+    "sfx": "snap",
+    "part": "WING_edgeled_L+WING_edgeled_R",
+    "err_ms": -0.312,
+    "clear_db": 30.9
    },
    {
     "t": 14.5,
     "sfx": "glass_clink",
-    "part": "wing_L",
-    "err_ms": -0.896,
-    "clear_db": 52.6
+    "part": "WING_leaf_L",
+    "err_ms": -0.458,
+    "clear_db": 54.3
    },
    {
     "t": 14.5,
     "sfx": "lock_clunk",
-    "part": "wing_L",
-    "err_ms": -0.896,
-    "clear_db": 52.6
+    "part": "WING_leaf_L",
+    "err_ms": -0.458,
+    "clear_db": 54.3
    },
    {
-    "t": 15.0,
+    "t": 14.75,
     "sfx": "glass_clink",
-    "part": "wing_R",
-    "err_ms": -0.521,
-    "clear_db": 45.7
+    "part": "WING_leaf_R",
+    "err_ms": -0.292,
+    "clear_db": 19.9
    },
    {
-    "t": 15.0,
+    "t": 14.75,
     "sfx": "lock_clunk",
-    "part": "wing_R",
-    "err_ms": -0.521,
-    "clear_db": 45.7
+    "part": "WING_leaf_R",
+    "err_ms": -0.292,
+    "clear_db": 19.9
    },
    {
     "t": 15.25,
     "sfx": "tap",
-    "part": "badge",
-    "err_ms": 0.292,
-    "clear_db": 16.8
+    "part": "RAIL_badge_L",
+    "err_ms": -0.208,
+    "clear_db": 35.8
    },
    {
-    "t": 20.0,
+    "t": 20.25,
     "sfx": "card_tap",
     "part": "card",
-    "err_ms": -1.917,
-    "clear_db": 130.1
+    "err_ms": -0.375,
+    "clear_db": 131.2
    },
    {
-    "t": 20.12,
+    "t": 20.36,
     "sfx": "beep_ok",
     "part": "reader",
-    "err_ms": 1.458,
-    "clear_db": 18.2
+    "err_ms": 1.438,
+    "clear_db": 18.5
    },
    {
-    "t": 21.4,
+    "t": 21.9,
     "sfx": "lock_clunk",
     "part": "wings_open_stop",
-    "err_ms": -0.125,
-    "clear_db": 23.1
+    "err_ms": 0.146,
+    "clear_db": 12.9
    },
    {
     "t": 23.5,
     "sfx": "lock_clunk",
     "part": "wings_closed",
-    "err_ms": -0.292,
-    "clear_db": 22.1
+    "err_ms": -0.271,
+    "clear_db": 16.0
    },
    {
     "t": 24.0,
     "sfx": "final_hit",
     "part": "hero",
-    "err_ms": -0.688,
-    "clear_db": 86.3
+    "err_ms": 0.792,
+    "clear_db": 87.1
    }
   ]
  },
@@ -1040,41 +1072,41 @@
    {
     "t": 8.0,
     "what": "music cut",
-    "music_click_ratio": 0.51,
-    "mix_click_ratio": 2.43
+    "music_click_ratio": 0.33,
+    "mix_click_ratio": 2.92
    },
    {
     "t": 16.0,
     "what": "music cut",
-    "music_click_ratio": 0.79,
-    "mix_click_ratio": 1.2
+    "music_click_ratio": 0.85,
+    "mix_click_ratio": 1.32
    },
    {
     "t": 20.0,
     "what": "music cut",
-    "music_click_ratio": 2.3,
-    "mix_click_ratio": 1.8
+    "music_click_ratio": 2.44,
+    "mix_click_ratio": 2.44
    },
    {
     "t": 24.0,
     "what": "final hit",
-    "music_click_ratio": 1.4,
-    "mix_click_ratio": 1.41
+    "music_click_ratio": 1.34,
+    "mix_click_ratio": 1.27
    }
   ],
-  "music_entry_at_drop_ms": -0.4,
+  "music_entry_at_drop_ms": -0.52,
   "isolated_spikes_mix": 0,
   "isolated_spikes_music": 0,
   "note": "ratio = largest second difference in the 14 ms around the point / 99.9th percentile of the surrounding 400 ms; a splice click would stand far above 1"
  },
  "ends": {
-  "first_frame_rms_db": -16.6,
-  "first_frame_music_rms_db": -16.7,
-  "first_100ms_rms_db": -19.1,
-  "first_sample_abs": 0.0006070137023925781,
+  "first_frame_rms_db": -25.0,
+  "first_frame_music_rms_db": -25.3,
+  "first_100ms_rms_db": -27.3,
+  "first_sample_abs": 0.0009478330612182617,
   "last_sample_abs": 0.0,
-  "last_100ms_rms_db": -76.5,
-  "last_500ms_rms_db": -55.7
+  "last_100ms_rms_db": -76.1,
+  "last_500ms_rms_db": -55.4
  },
  "sections": [
   {
@@ -1082,63 +1114,63 @@
    "t0": 0.0,
    "t1": 2.0,
    "busy": 0.3,
-   "mix_lufs": -17.8,
-   "sfx_lufs": -23.4,
-   "music_lufs": -19.0
+   "mix_lufs": -22.2,
+   "sfx_lufs": -22.8,
+   "music_lufs": -27.8
   },
   {
    "name": "w1_base",
    "t0": 2.0,
    "t1": 4.0,
    "busy": 0.6,
-   "mix_lufs": -18.4,
-   "sfx_lufs": -19.9,
-   "music_lufs": -23.4
+   "mix_lufs": -19.0,
+   "sfx_lufs": -19.2,
+   "music_lufs": -30.5
   },
   {
    "name": "w2_drive",
    "t0": 4.0,
    "t1": 8.0,
    "busy": 0.8,
-   "mix_lufs": -19.1,
-   "sfx_lufs": -21.3,
-   "music_lufs": -22.9
+   "mix_lufs": -19.3,
+   "sfx_lufs": -19.6,
+   "music_lufs": -28.8
   },
   {
    "name": "w3_electronics",
    "t0": 8.0,
    "t1": 10.0,
    "busy": 0.9,
-   "mix_lufs": -19.0,
-   "sfx_lufs": -21.5,
-   "music_lufs": -22.7
+   "mix_lufs": -20.3,
+   "sfx_lufs": -20.7,
+   "music_lufs": -26.8
   },
   {
    "name": "w4_glass_body",
    "t0": 10.0,
    "t1": 12.0,
    "busy": 0.9,
-   "mix_lufs": -16.8,
-   "sfx_lufs": -18.4,
-   "music_lufs": -21.9
+   "mix_lufs": -14.9,
+   "sfx_lufs": -15.4,
+   "music_lufs": -25.2
   },
   {
    "name": "w5_top_rail",
    "t0": 12.0,
    "t1": 14.0,
    "busy": 1.0,
-   "mix_lufs": -17.3,
-   "sfx_lufs": -19.0,
-   "music_lufs": -21.9
+   "mix_lufs": -15.9,
+   "sfx_lufs": -16.5,
+   "music_lufs": -23.9
   },
   {
    "name": "w6_wings",
    "t0": 14.0,
    "t1": 16.0,
    "busy": 0.8,
-   "mix_lufs": -16.7,
-   "sfx_lufs": -18.6,
-   "music_lufs": -21.0
+   "mix_lufs": -17.5,
+   "sfx_lufs": -19.1,
+   "music_lufs": -23.6
   },
   {
    "name": "drop_alive",
@@ -1146,43 +1178,43 @@
    "t1": 20.0,
    "busy": 0.2,
    "mix_lufs": -12.9,
-   "sfx_lufs": -16.9,
-   "music_lufs": -14.2
+   "sfx_lufs": -18.0,
+   "music_lufs": -14.0
   },
   {
    "name": "in_use",
    "t0": 20.0,
    "t1": 24.0,
    "busy": 0.5,
-   "mix_lufs": -15.0,
-   "sfx_lufs": -18.8,
-   "music_lufs": -16.9
+   "mix_lufs": -15.3,
+   "sfx_lufs": -19.4,
+   "music_lufs": -17.2
   },
   {
    "name": "hero_orbit",
    "t0": 24.0,
    "t1": 26.0,
    "busy": 0.0,
-   "mix_lufs": -22.0,
-   "sfx_lufs": -23.6,
-   "music_lufs": -25.7
+   "mix_lufs": -21.9,
+   "sfx_lufs": -23.3,
+   "music_lufs": -26.5
   }
  ],
  "spectrum_octave_db_re_total": {
-  "63": -7.7,
-  "125": -6.0,
-  "250": -6.5,
-  "500": -8.1,
-  "1000": -10.4,
-  "2000": -12.3,
-  "4000": -15.0,
-  "8000": -23.4,
-  "16000": -32.8
+  "63": -7.5,
+  "125": -5.9,
+  "250": -7.0,
+  "500": -9.0,
+  "1000": -8.5,
+  "2000": -12.7,
+  "4000": -18.2,
+  "8000": -18.2,
+  "16000": -26.7
  },
- "energy_above_8k_db": -27.4,
+ "energy_above_8k_db": -21.3,
  "stereo": {
-  "side_minus_mid_db": -7.6,
-  "correlation": 0.704
+  "side_minus_mid_db": -8.3,
+  "correlation": 0.741
  },
  "build": {
   "music": {
@@ -1228,131 +1260,145 @@
    "source_bpm": 120.0,
    "tempo_ratio": 1.0,
    "stretch_percent": 0.0,
+   "hook": {
+    "t0": 0.0,
+    "t1": 2.0,
+    "ref_t0": 8.0,
+    "ref_t1": 10.0,
+    "ref_name": "w3_electronics",
+    "under_lu": 1.0,
+    "trim_applied_db": -8.73
+   },
    "build_steps": [
     {
      "section": "hook",
      "t0": 0.0,
-     "lowpass_hz": 2500,
-     "trim_db": -4.0
+     "lowpass_hz": 1112,
+     "trim_db": -3.8
     },
     {
      "section": "w1_base",
      "t0": 2.0,
-     "lowpass_hz": 550,
-     "trim_db": -2.0
+     "lowpass_hz": 400,
+     "trim_db": -7.0
     },
     {
      "section": "w2_drive",
      "t0": 4.0,
-     "lowpass_hz": 940,
-     "trim_db": -1.6
+     "lowpass_hz": 746,
+     "trim_db": -5.4
     },
     {
      "section": "w3_electronics",
      "t0": 8.0,
-     "lowpass_hz": 1605,
-     "trim_db": -1.2
+     "lowpass_hz": 1390,
+     "trim_db": -3.8
     },
     {
      "section": "w4_glass_body",
      "t0": 10.0,
-     "lowpass_hz": 2742,
-     "trim_db": -0.8
+     "lowpass_hz": 2590,
+     "trim_db": -2.2
     },
     {
      "section": "w5_top_rail",
      "t0": 12.0,
-     "lowpass_hz": 4683,
-     "trim_db": -0.4
+     "lowpass_hz": 4828,
+     "trim_db": -0.6
     },
     {
      "section": "w6_wings",
      "t0": 14.0,
-     "lowpass_hz": 8000,
-     "trim_db": -0.0
+     "lowpass_hz": 9000,
+     "trim_db": 1.0
     }
-   ]
+   ],
+   "held_from": 15.25
   },
   "master": {
-   "pre_gain_db": 2.3912388852769335,
-   "limiter_max_reduction_db": 2.0845079979391317,
+   "pre_gain_db": 2.669482720713444,
+   "limiter_max_reduction_db": 3.343940975203033,
    "limiter_deepest": [
     {
-     "t": 16.008,
-     "db": 2.08
-    },
-    {
-     "t": 14.499,
-     "db": 1.89
+     "t": 14.5,
+     "db": 3.34
     },
     {
      "t": 14.5,
-     "db": 1.89
+     "db": 3.31
+    },
+    {
+     "t": 14.753,
+     "db": 2.83
+    },
+    {
+     "t": 16.038,
+     "db": 2.35
     },
     {
      "t": 16.05,
-     "db": 1.38
+     "db": 2.18
+    },
+    {
+     "t": 14.75,
+     "db": 2.16
     },
     {
      "t": 14.55,
-     "db": 1.13
+     "db": 2.02
     },
     {
-     "t": 13.503,
-     "db": 1.07
+     "t": 10.249,
+     "db": 2.01
     },
     {
-     "t": 13.254,
-     "db": 1.01
+     "t": 10.25,
+     "db": 2.01
     },
     {
-     "t": 10.003,
-     "db": 0.95
+     "t": 13.149,
+     "db": 1.95
     },
     {
-     "t": 14.999,
-     "db": 0.81
+     "t": 13.15,
+     "db": 1.95
     },
     {
-     "t": 15.0,
-     "db": 0.81
+     "t": 12.999,
+     "db": 1.81
     },
     {
-     "t": 16.1,
-     "db": 0.79
+     "t": 13.0,
+     "db": 1.81
     },
     {
-     "t": 13.55,
-     "db": 0.67
+     "t": 14.8,
+     "db": 1.76
     },
     {
-     "t": 14.6,
-     "db": 0.65
+     "t": 6.499,
+     "db": 1.59
     },
     {
-     "t": 13.3,
-     "db": 0.64
-    },
-    {
-     "t": 10.05,
-     "db": 0.59
+     "t": 6.5,
+     "db": 1.59
     }
    ],
-   "limiter_active_percent": 9.763301282051282,
-   "limiter_over_1db_percent": 0.585176282051282
+   "limiter_active_percent": 18.473958333333336,
+   "limiter_over_1db_percent": 2.7081730769230767
   },
   "events_placed": {
    "shimmer": 2,
    "whoosh": 2,
-   "thunk_metal": 6,
-   "screw": 12,
-   "clack": 5,
+   "thunk_metal": 7,
+   "screw": 7,
+   "click": 7,
+   "clack": 8,
    "gear_tick": 4,
-   "click": 10,
    "spring": 1,
-   "glass_slide": 3,
-   "glass_clink": 11,
-   "snap": 5,
+   "glass_slide": 6,
+   "glass_clink": 14,
+   "snap": 7,
    "tap": 2,
    "lock_clunk": 4,
    "riser": 1,
@@ -1364,10 +1410,169 @@
    "servo": 2,
    "final_hit": 1
   },
-  "duck_db_max": 9.50000000000341,
-  "duck_db_mean_pre_drop": 7.691095187091098,
-  "render_seconds": 7.36,
+  "impact_polarity": {
+   "sign": -1.0,
+   "gain_db": 0.73
+  },
+  "first_slam_t": 2.0,
+  "held_from": 15.25,
+  "duck_db_max": 12.000000000003766,
+  "duck_db_mean_pre_drop": 9.78307197690499,
+  "render_seconds": 8.06,
   "overrides": {}
+ },
+ "effects_spectrum": {
+  "third_octave_db_re_ref": {
+   "50": -2.9,
+   "62": -0.2,
+   "79": 4.6,
+   "99": 3.8,
+   "125": 1.6,
+   "157": -0.4,
+   "198": -1.0,
+   "250": -3.2,
+   "315": -1.9,
+   "397": -2.2,
+   "500": -2.7,
+   "630": -1.2,
+   "794": 4.2,
+   "1k": -1.2,
+   "1.26k": 2.3,
+   "1.59k": 1.1,
+   "2k": -2.5,
+   "2.52k": -5.9,
+   "3.17k": -7.1,
+   "4k": -8.0,
+   "5.04k": -6.8,
+   "6.35k": -5.8,
+   "8k": -7.1,
+   "10.1k": -9.1,
+   "12.7k": -12.3,
+   "16k": -18.6,
+   "20.2k": -24.0
+  },
+  "target": "-3 dB/octave of band level from 1 kHz, reference = mean of the 500 Hz - 2 kHz bands",
+  "air_bands_vs_target_db": {
+   "5.04k": 0.2,
+   "6.35k": 2.2,
+   "8k": 1.9,
+   "10.1k": 0.9,
+   "12.7k": -1.3
+  },
+  "harsh_bands_vs_target_db": {
+   "2.52k": -1.9,
+   "3.17k": -2.1,
+   "4k": -2.0
+  },
+  "top_16k_vs_target_db": -6.6,
+  "ok_air": true,
+  "ok_harsh": true
+ },
+ "story": {
+  "first_slam": {
+   "t": 2.0,
+   "loud50_db": -6.8,
+   "next_loudest": [
+    {
+     "t": 2.5,
+     "sfx": "thunk_metal",
+     "loud50_db": -8.9
+    },
+    {
+     "t": 4.0,
+     "sfx": "thunk_metal",
+     "loud50_db": -9.4
+    },
+    {
+     "t": 7.25,
+     "sfx": "glass_clink",
+     "loud50_db": -10.2
+    }
+   ],
+   "margin_db": 2.1,
+   "peak_dbfs": -2.8,
+   "effects_before_it_db": -65.8,
+   "room_send_db": -28.0
+  },
+  "build": {
+   "sections": [
+    {
+     "name": "hook",
+     "t0": 0.0,
+     "music_k_db": -26.9
+    },
+    {
+     "name": "w1_base",
+     "t0": 2.0,
+     "music_k_db": -29.6
+    },
+    {
+     "name": "w2_drive",
+     "t0": 4.0,
+     "music_k_db": -28.0
+    },
+    {
+     "name": "w3_electronics",
+     "t0": 8.0,
+     "music_k_db": -25.9
+    },
+    {
+     "name": "w4_glass_body",
+     "t0": 10.0,
+     "music_k_db": -24.5
+    },
+    {
+     "name": "w5_top_rail",
+     "t0": 12.0,
+     "music_k_db": -23.1
+    },
+    {
+     "name": "w6_wings",
+     "t0": 14.0,
+     "music_k_db": -21.2
+    }
+   ],
+   "steps_db": [
+    1.6,
+    2.1,
+    1.4,
+    1.4,
+    1.9
+   ],
+   "rise_db": 8.4,
+   "hook_under_ref_wave_db": 1.0
+  },
+  "held_breath": {
+   "t0": 15.25,
+   "music_before_db": -20.9,
+   "music_during_db": -32.4,
+   "music_change_db": -11.5,
+   "music_last_30ms_db": -79.9,
+   "effects_during_db": -29.6,
+   "low_end_change_db": -33.8
+  },
+  "drop_low_end": {
+   "mix_30_80_db": -18.7,
+   "mix_80_200_db": -16.8,
+   "sfx_80_200_db": -18.7,
+   "music_80_200_db": -22.1,
+   "mix_80_200_rest_of_bar_db": -21.1,
+   "mix_200_800_db": -19.1,
+   "sum_vs_parts_db": 0.3
+  },
+  "power_up": [
+   {
+    "t": 16.0,
+    "resolves_at": 18.4,
+    "loudest_at": 18.388,
+    "error_s": -0.012,
+    "level_at_quarter_half_three_quarters_db": [
+     -15.9,
+     -12.7,
+     -7.4
+    ]
+   }
+  ]
  },
  "pass": {
   "format": true,
@@ -1375,6 +1580,14 @@
   "true_peak": true,
   "sync": true,
   "edits": true,
-  "ends": true
+  "ends": true,
+  "spectrum_air": true,
+  "spectrum_harsh": true,
+  "story_first_slam": true,
+  "story_build": true,
+  "story_hook": true,
+  "story_held_breath": true,
+  "story_drop_low_end": true,
+  "story_power_up": true
  }
 }

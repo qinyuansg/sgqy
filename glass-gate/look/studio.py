@@ -403,18 +403,19 @@ def _card(rig, name, rel, radius, z, aim, size, radiance, color=(1, 1, 1), soft=
     return ob
 
 
-RIM_REL = 125.0        # the rims stand this far round from the lens axis: outside any 24 mm+ frame, and away from the
+RIM_REL = 116.0        # the rims stand this far round from the lens axis: outside any 24 mm+ frame, and away from the
 #                        direction a side panel mirrors in the usual 3/4 view (about 100 degrees)
 
 
-def _cards(rig, key=7.0, front=2.6, rim=11.0, color=(0.88, 0.92, 1.0), warm=(1.0, 0.97, 0.93)):
+def _cards(rig, key=7.0, front=1.3, rim=11.0, color=(0.88, 0.92, 1.0), warm=(1.0, 0.97, 0.93)):
     """The card set of the dark / violet studios (positions relative to the lens axis, see aim_rig):
         KEY     big soft box overhead: lights the parts from above, top bevels, the rail lid
-        FRONT   big soft wall behind the camera: the sheen across glass faces turned to the lens (the wings!)
+        FRONT   big soft wall behind and above the camera. A glass face turned to the lens (a wing) mirrors the wall's
+                soft lower edge: a sheen that is brightest at the top of the leaf and gone by its middle
         RIM_L/R tall soft strips left and right, behind the gate, out of frame: edge light in every bevel and flute
         GEAR    soft card above and behind, linked to the drive parts only (see _finish_cards)"""
     rig.out['key'] = _card(rig, 'KEY', -20.0, 0.5, 3.5, TARGET, (3.4, 3.4), key, color=warm, soft=0.5, floor_gain=0.35)
-    _card(rig, 'FRONT', 6.0, 3.4, 1.45, (0.0, 0.0, 1.2), (3.8, 2.3), front, color=color, soft=0.55, floor_gain=0.25)
+    _card(rig, 'FRONT', 6.0, 3.4, 2.05, (0.0, 0.0, 1.9), (3.8, 2.4), front, color=color, soft=0.6, floor_gain=0.25)
     _card(rig, 'RIM_L', -RIM_REL, 3.2, 1.40, (0.0, 0.0, 0.95), (1.0, 2.8), rim, color=color, soft=0.6, floor_gain=0.25)
     _card(rig, 'RIM_R', RIM_REL, 3.2, 1.40, (0.0, 0.0, 0.95), (1.0, 2.8), rim, color=color, soft=0.6, floor_gain=0.25)
     _card(rig, 'GEAR', 172.0, 2.1, 1.75, (0.0, 0.0, 0.3), (2.6, 1.6), 9.0, color=warm, soft=0.55, floor_gain=0.0)
@@ -653,7 +654,7 @@ def _unwrap(a, ref):
     return a
 
 
-def aim_rig_shots(scene, rig, camera, cut_frames, hold_deg=12.0, hold_m=0.35, samples=5):
+def aim_rig_shots(scene, rig, camera, cut_frames, hold_deg=12.0, hold_m=0.6, samples=5):
     """Key the rig for every shot. cut_frames = first frame of each shot + the last frame of the film.
     A shot whose camera hardly turns gets ONE held pose (the light does not travel). A shot with a big move (the lens
     axis turns more than hold_deg, or the subject moves more than hold_m) is tracked: the rig follows the camera

@@ -39,7 +39,8 @@ G1, G2, C3, G3, C4, G4, A4 = hz(31), hz(43), hz(48), hz(55), hz(60), hz(67), hz(
 C5, D5, G5, A5 = hz(72), hz(74), hz(79), hz(81)
 C6, D6, G6, A6 = hz(84), hz(86), hz(91), hz(93)
 C7, D7, G7, A7 = hz(96), hz(98), hz(103), hz(105)
-C8, D8, G8 = hz(108), hz(110), hz(115)
+C8, D8, G8, A8, C9, D9 = hz(108), hz(110), hz(115), hz(117), hz(120), hz(122)
+C2, D3 = hz(36), hz(50)
 
 
 def make_rng(name, var):
@@ -154,6 +155,36 @@ def shaped_noise(rng, n, fc_fn, bw_oct=1.4, stereo=True, common=0.5):
     return out / (np.sqrt(np.mean(out ** 2)) + 1e-12)
 
 
+def voice(f):
+    """Weighting applied to the amplitudes of the PARTIALS of contact sounds (this is how the top is opened:
+    real modes get more level up there, it is not an EQ on noise): a 4 dB dip, a good octave wide, around
+    2.9 kHz, where the ear finds hits harsh, and a lift of up to 5.5 dB from 5 kHz to 11 kHz ('air')."""
+    f = np.maximum(np.asarray(f, dtype=np.float64), 1.0)
+    dip = 1.0 - 0.37 * np.exp(-0.5 * (np.log2(f / 2900.0) / 0.55) ** 2)
+    air = 1.0 + 0.9 * smoothstep(np.log2(f / 5000.0) / 1.2)
+    return dip * air
+
+
+def air_partials(rng, n, f_lo, f_hi, count, tau_lo, tau_hi, tilt=0.5):
+    """The high modes of a stiff plate or a small metal part: `count` real decaying partials between f_lo and
+    f_hi (log-random spacing, detuned twins); tau_lo at f_lo, tau_hi at f_hi, so the highest die first."""
+    fr = np.sort(f_lo * (f_hi / f_lo) ** rng.uniform(0.0, 1.0, count))
+    rel = np.log(fr / f_lo) / np.log(f_hi / f_lo)
+    taus = tau_lo * (tau_hi / tau_lo) ** rel * rng.uniform(0.8, 1.25, count)
+    amps = (fr / f_lo) ** -tilt * rng.uniform(0.5, 1.0, count)
+    y = modal(n, fr, taus, amps, rng, twin=0.004)
+    return y / (np.max(np.abs(y)) + 1e-12)
+
+
+_DIP_BA = signal.iirpeak(2900.0, 1.0, fs=SR)
+
+
+def presence_dip(x, depth=0.37):
+    """-4 dB, a good octave wide, centred on 2.9 kHz, for the noise part of a contact (causal, no delay
+    at the centre frequency). Keeps ticks from being harsh when the top is opened."""
+    return x - depth * signal.lfilter(_DIP_BA[0], _DIP_BA[1], x, axis=0)
+
+
 def pan_mono(y, pan):
     """Constant-power pan of a mono signal to stereo, pan -1..1."""
     th = (np.clip(pan, -1.0, 1.0) + 1.0) * np.pi / 4.0
@@ -215,7 +246,7 @@ def gen_thunk_metal(rng, var, dur, ctx):
     taus = p['tau0'] * ratio ** (-0.6) * rng.uniform(0.8, 1.2, len(fr))
     ring = modal(n, fr, taus, amps, rng, twin=0.006)
     ring /= np.max(np.abs(ring)) + 1e-12
-    click = nburst(rng, n, 1200, 7000, 0.0018)
+    click = presence_dip(nburst(rng, n, 1200, 10000, 0.0018)) + 0.35 * air_partials(rng, n, 5000, 12000, 5, 0.012, 0.005)
     clank = nburst(rng, n, 380, 2600, 0.008)
     y = 1.0 * body + 0.55 * ring + 0.30 * click + 0.30 * clank
     d = rng.uniform(0.030, 0.048)                       # the part settles: one small rebound
@@ -236,7 +267,7 @@ def gen_lock_clunk(rng, var, dur, ctx):
     ring = modal(n, fr, 0.040 * ratio ** -0.6, ratio ** -1.2 * rng.uniform(0.6, 1.0, 6), rng, twin=0.005)
     ring /= np.max(np.abs(ring)) + 1e-12
     dull = nburst(rng, n, 150, 1400, 0.018)
-    click = nburst(rng, n, 1500, 6000, 0.002)
+    click = presence_dip(nburst(rng, n, 1500, 9000, 0.002)) + 0.3 * air_partials(rng, n, 5000, 11000, 4, 0.010, 0.005)
     y = 1.0 * body + 0.5 * ring + 0.5 * dull + 0.28 * click
     d = rng.uniform(0.042, 0.058)                       # the latch drops in just after the stop
     latch = 0.6 * modal(n, np.array([900, 1500, 2600]) * s, [0.010, 0.008, 0.005], [1, 0.7, 0.4]) \
@@ -249,42 +280,48 @@ def gen_lock_clunk(rng, var, dur, ctx):
 def gen_clack(rng, var, dur, ctx):
     s = rng.uniform(0.90, 1.12)
     n = int(0.25 * SR)
-    fr = np.array([540, 910, 1380, 2140, 3050, 4200]) * s * rng.uniform(0.98, 1.02, 6)
+    fr = np.array([540, 910, 1380, 2140, 3050, 4200, 6100, 8600, 11900]) * s * rng.uniform(0.98, 1.02, 9)
     ratio = fr / fr[0]
-    ring = modal(n, fr, 0.020 * ratio ** -0.5 * rng.uniform(0.8, 1.2, 6), ratio ** -0.8 * rng.uniform(0.6, 1.0, 6), rng, twin=0.006)
+    ring = modal(n, fr, 0.020 * ratio ** -0.5 * rng.uniform(0.8, 1.2, 9), ratio ** -0.8 * rng.uniform(0.6, 1.0, 9) * voice(fr), rng, twin=0.006)
     ring /= np.max(np.abs(ring)) + 1e-12
     knock = thump(n, 300 * s, 185 * s, 0.004, 0.018)
-    snapn = nburst(rng, n, 900, 6500, 0.0035)
-    y = 0.8 * ring + 0.55 * knock + 0.5 * snapn
+    snapn = presence_dip(nburst(rng, n, 900, 10000, 0.0035))
+    y = 0.8 * ring + 0.55 * knock + 0.45 * snapn
     d = rng.uniform(0.013, 0.021)                       # two-stage seat: "cl-ack"
-    y += delayed(0.33 * (0.7 * modal(n, fr * 1.07, 0.012 * ratio ** -0.5, ratio ** -0.8) / 2.0 + 0.6 * nburst(rng, n, 1200, 6000, 0.002)), d)
+    y += delayed(0.33 * (0.7 * modal(n, fr * 1.07, 0.012 * ratio ** -0.5, ratio ** -0.8 * voice(fr)) / 2.0
+                         + 0.6 * presence_dip(nburst(rng, n, 1200, 9000, 0.002))), d)
     return fade_edges(y, 0, 0.01), 0
 
 
 def gen_click(rng, var, dur, ctx):
+    """Small precise click: a tight cluster of real modes from 1.5 to 13 kHz (thin on purpose around 3 kHz)."""
     s = rng.uniform(0.85, 1.20)
     n = int(0.09 * SR)
-    fr = np.array([1750, 2900, 4300, 5900]) * s * rng.uniform(0.97, 1.03, 4)
-    ring = modal(n, fr, [0.006, 0.005, 0.004, 0.003], [1.0, 0.8, 0.55, 0.35], rng, twin=0.01)
+    fr = np.array([1450, 1950, 5200, 7400, 10300, 13200]) * s * rng.uniform(0.97, 1.03, 6)
+    fr = fr[fr < 16000]
+    k = len(fr)
+    ring = modal(n, fr, np.array([0.006, 0.005, 0.0045, 0.004, 0.0035, 0.003])[:k],
+                 np.array([1.0, 0.85, 0.7, 0.55, 0.36, 0.22])[:k] * voice(fr), rng, twin=0.01)
     ring /= np.max(np.abs(ring)) + 1e-12
-    tick = nburst(rng, n, 1800, 9000, 0.0009)
+    tick = presence_dip(nburst(rng, n, 1800, 10000, 0.0009))
     tk = modal(n, [700 * s, 1050 * s], [0.005, 0.004], [1.0, 0.5])
-    y = 0.7 * ring + 0.6 * tick + 0.4 * tk
+    y = 0.75 * ring + 0.45 * tick + 0.45 * tk
     if rng.random() < 0.5:                              # connector-style double click on some variations
-        y += delayed(0.25 * nburst(rng, n, 2200, 8000, 0.0008) + 0.12 * ring, rng.uniform(0.007, 0.012))
+        y += delayed(0.22 * presence_dip(nburst(rng, n, 2200, 11000, 0.0008)) + 0.14 * ring, rng.uniform(0.007, 0.012))
     return fade_edges(y, 0, 0.004), 0
 
 
 def gen_snap(rng, var, dur, ctx):
+    """Plastic snap-fit: a short low 'pop' and a bright, very short crack above it."""
     s = rng.uniform(0.88, 1.15)
     n = int(0.11 * SR)
     pop = thump(n, 1500 * s, 820 * s, 0.003, 0.006, attack=0.0003)
-    fr = np.array([880, 1320, 2050]) * s * rng.uniform(0.97, 1.03, 3)
-    ring = modal(n, fr, [0.009, 0.007, 0.005], [1.0, 0.7, 0.5], rng, twin=0.012)
+    fr = np.array([880, 1320, 2050, 5600, 8300, 11800]) * s * rng.uniform(0.97, 1.03, 6)
+    ring = modal(n, fr, [0.009, 0.007, 0.005, 0.004, 0.003, 0.0025], np.array([1.0, 0.7, 0.45, 0.5, 0.42, 0.3]) * voice(fr), rng, twin=0.012)
     ring /= np.max(np.abs(ring)) + 1e-12
-    sn = nburst(rng, n, 2200, 7000, 0.0016)
-    y = 0.55 * pop + 0.6 * ring + 0.7 * sn
-    y += delayed(0.38 * nburst(rng, n, 2800, 7500, 0.001) + 0.15 * ring, rng.uniform(0.005, 0.009))   # clip seats
+    sn = presence_dip(nburst(rng, n, 2200, 11000, 0.0016))
+    y = 0.55 * pop + 0.65 * ring + 0.6 * sn
+    y += delayed(0.34 * presence_dip(nburst(rng, n, 2800, 11000, 0.001)) + 0.15 * ring, rng.uniform(0.005, 0.009))   # clip seats
     return fade_edges(y, 0, 0.004), 0
 
 
@@ -304,77 +341,107 @@ def gen_tap(rng, var, dur, ctx):
 GEAR_NOTES = [C7, D7, G7, A7, D7 * 2 ** (1 / 1200 * 14), G6]
 
 
+def _index_in(part):
+    """First number in a part name ('DRV_planet_2_L' -> 2), or None."""
+    digits = ''
+    for ch in part:
+        if ch.isdigit():
+            digits += ch
+        elif digits:
+            break
+    return int(digits) if digits else None
+
+
 def gen_gear_tick(rng, var, dur, ctx):
-    """Small brass gear dropping onto its pin: a tick and a short bright ring."""
+    """Small brass gear dropping onto its pin: a tick and a short bright ring with real partials up to 15 kHz.
+    Planets numbered in the part name ring C7, D7, G7 in turn; a sun gear or carrier rings lower (G6)."""
     part = ctx.get('part', '').lower()
-    f0 = GEAR_NOTES[var % len(GEAR_NOTES)]
+    idx = _index_in(part)
+    f0 = GEAR_NOTES[var % len(GEAR_NOTES)] if idx is None else GEAR_NOTES[idx % 4]
     if 'sun' in part or 'carrier' in part:
         f0 = G6
     f0 *= 1.0 + rng.uniform(-0.004, 0.004)
     n = int(0.6 * SR)
-    ratio = np.array([1.0, 1.58, 2.41, 3.27, 4.12, 5.40]) * rng.uniform(0.985, 1.015, 6)
+    ratio = np.array([1.0, 1.58, 2.41, 3.27, 4.12, 5.40, 6.90, 8.70]) * rng.uniform(0.985, 1.015, 8)
     fr = f0 * ratio
-    keep = fr < 10500
+    keep = fr < 15500
     tau0 = 0.11 * (C7 / f0) ** 0.5
-    ring = modal(n, fr[keep], (tau0 * ratio ** -0.8 * rng.uniform(0.8, 1.2, 6))[keep],
-                 (ratio ** -1.25 * rng.uniform(0.6, 1.0, 6))[keep], rng, twin=0.004)
+    ring = modal(n, fr[keep], (tau0 * ratio ** -0.8 * rng.uniform(0.8, 1.2, 8))[keep],
+                 (ratio ** -1.05 * rng.uniform(0.6, 1.0, 8) * voice(fr))[keep], rng, twin=0.004)
     ring /= np.max(np.abs(ring)) + 1e-12
-    tick = nburst(rng, n, 2500, 8000, 0.0012)
+    air = air_partials(rng, n, 7000, 15000, 6, 0.030, 0.010)
+    tick = presence_dip(nburst(rng, n, 2500, 12000, 0.0012))
     pin = modal(n, [820 * rng.uniform(0.9, 1.1), 1340], [0.006, 0.004], [1.0, 0.5])
-    y = 0.7 * ring + 0.5 * tick + 0.4 * pin
+    y = 0.7 * ring + 0.20 * air + 0.42 * tick + 0.4 * pin
     d = rng.uniform(0.018, 0.030)
-    y += delayed(0.22 * tick + 0.18 * ring, d)
+    y += delayed(0.20 * tick + 0.18 * ring + 0.06 * air, d)
     return fade_edges(y, 0, 0.02), 0
 
 
 def gen_spring(rng, var, dur, ctx):
-    """Small steel coil spring dropping into its seat: a bright metallic 'tsing' with a faint coil flutter
-    (kept subtle on purpose: a deep flutter reads as a cartoon boing)."""
-    s = rng.uniform(0.92, 1.1)
-    n = int(0.40 * SR)
-    t = _t(n)
-    flut = rng.uniform(34, 42)
-    y = np.zeros(n)
-    for f, tau, a in zip(np.array([1180, 1930, 2760, 3690, 4850]) * s * rng.uniform(0.98, 1.02, 5),
-                         [0.090, 0.080, 0.060, 0.050, 0.035], [1.0, 0.85, 0.6, 0.4, 0.25]):
-        beta = 0.35 * np.exp(-t / 0.08) * (f / 1000.0)
-        y += a * np.exp(-t / tau) * np.sin(2 * np.pi * f * t + beta * np.sin(2 * np.pi * flut * t))
-        y += 0.4 * a * np.exp(-t / (tau * 0.8)) * np.sin(2 * np.pi * f * 1.006 * t)
-    y *= 1.0 + 0.20 * np.exp(-t / 0.10) * np.sin(2 * np.pi * flut * t)
+    """Small steel torsion spring seating on its shaft: a short metallic SHIVER. The wire's stiff, inharmonic
+    modes (1.2-15 kHz, 15-55 ms) are struck once and then re-struck by the coil turns chattering against each
+    other at shrinking intervals (8.5, 6.3, 4.7 ... ms). No pitch bend and no flutter LFO: nothing that boings."""
+    s = rng.uniform(0.93, 1.08)
+    n = int(0.26 * SR)
+    k = np.arange(1, 12)
+    fr = 1180.0 * s * k * np.sqrt(1.0 + 0.012 * k ** 2) * rng.uniform(0.99, 1.01, len(k))
+    keep = fr < 15500
+    taus = 0.055 * k ** -0.55 * rng.uniform(0.8, 1.2, len(k))
+    amps = k ** -0.95 * rng.uniform(0.6, 1.0, len(k)) * voice(fr)
+    bank = modal(n, fr[keep], taus[keep], amps[keep], rng, twin=0.006)
+    bank /= np.max(np.abs(bank)) + 1e-12
+    tick = presence_dip(nburst(rng, n, 2500, 10000, 0.0010))
+    y = bank.copy()
+    ticks = tick.copy()
+    gaps = 0.0085 * rng.uniform(0.9, 1.1) * 0.74 ** np.arange(6)
+    when = np.cumsum(gaps)
+    for i, d in enumerate(when):
+        g = 0.62 ** (i + 1) * rng.uniform(0.85, 1.1)
+        y += delayed(g * bank, d)
+        ticks += delayed(0.6 * g * tick, d)
     y /= np.max(np.abs(y)) + 1e-12
-    chirp_f = 1200 + 2600 * np.exp(-t / 0.015)          # a trace of the coil's dispersive ring
-    chirp = np.sin(2 * np.pi * np.cumsum(chirp_f) / SR) * np.exp(-t / 0.025)
-    tick = nburst(rng, n, 2000, 7000, 0.0015)
-    seat = modal(n, [640 * s, 980 * s], [0.008, 0.006], [1.0, 0.6])
-    out = 0.7 * y + 0.12 * chirp + 0.45 * tick + 0.3 * seat
+    seat = modal(n, [700 * s, 1100 * s], [0.006, 0.005], [1.0, 0.6])
+    out = 0.75 * y + 0.38 * ticks + 0.22 * seat
     return fade_edges(out, 0, 0.02), 0
 
 
 def gen_screw(rng, var, dur, ctx):
-    """Driver whirr of length `dur` leading INTO the event time, then the seat tick on the event time."""
-    L = float(np.clip(dur if dur else 0.11, 0.04, 0.8))
+    """Electric screwdriver burst of length `dur` leading INTO the event time, then the seating tick on it.
+    The burst is a jittered pulse train (motor commutation / gear teeth, about 170 per second at speed) ringing
+    the driver's housing resonances, plus tooth rattle; it spins up in 35 ms and bogs down by a third in the
+    last 28 ms as the screw seats. That is what stops it from being a steady synthetic tone."""
+    L = float(np.clip(dur if dur else 0.18, 0.05, 0.8))
     n_pre = int(round(L * SR))
     s = rng.uniform(0.94, 1.06)
     t = _t(n_pre)
-    u = t / L
-    f = 205.0 * s * (0.55 + 0.45 * smoothstep(u / 0.35))
-    ph = 2 * np.pi * np.cumsum(f) / SR
-    k = np.arange(1, 25)
-    fk = k * 205.0 * s
-    form = 0.3 + np.exp(-0.5 * (np.log2(fk / 1600.0) / 0.55) ** 2)
-    motor = harmonic_tone(ph, form / k ** 0.6, rng)
-    motor /= np.max(np.abs(motor)) + 1e-12
-    hiss = signal.sosfilt(signal.butter(2, [1500, 5500], 'bp', fs=SR, output='sos'), rng.standard_normal(n_pre))
-    hiss *= 0.6 + 0.4 * np.sin(4 * ph)
-    hiss /= np.max(np.abs(hiss)) + 1e-12
-    whirr = (0.75 * motor + 0.35 * hiss) * (0.7 + 0.3 * u)
-    whirr = fade_edges(whirr, min(0.008, L / 4), 0.003)
+    up = smoothstep(t / min(0.035, L * 0.3))
+    bog = 1.0 - 0.32 * smoothstep((t - (L - min(0.028, L * 0.25))) / min(0.028, L * 0.25))
+    jit = signal.sosfilt(signal.butter(2, 40, 'lp', fs=SR, output='sos'), rng.standard_normal(n_pre))
+    jit = 0.03 * jit / (np.max(np.abs(jit)) + 1e-12)
+    rate = 172.0 * s * (0.45 + 0.55 * up) * bog * (1.0 + jit)
+    cyc = np.cumsum(rate) / SR
+    frac = cyc % 1.0
+    pulse = np.exp(-0.5 * ((frac - 0.5) / 0.07) ** 2)
+    per_tooth = 1.0 + 0.3 * rng.standard_normal(int(cyc[-1]) + 2)
+    pulse *= np.clip(per_tooth[np.floor(cyc).astype(int)], 0.3, 1.8)
+    drive = pulse - np.mean(pulse)
+    buzz = np.zeros(n_pre)
+    for f, q, w in ((1050.0 * s, 5.0, 1.0), (1900.0 * s, 6.0, 0.8), (5200.0 * s, 5.0, 0.55), (8300.0 * s, 6.0, 0.25)):
+        b, a = signal.iirpeak(f, q, fs=SR)
+        buzz += w * signal.lfilter(b, a, drive)
+    buzz /= np.max(np.abs(buzz)) + 1e-12
+    rattle = presence_dip(signal.sosfilt(signal.butter(2, [1800, 7000], 'bp', fs=SR, output='sos'), rng.standard_normal(n_pre)))
+    rattle *= 0.3 + 0.7 * pulse / (np.max(pulse) + 1e-12)
+    rattle /= np.max(np.abs(rattle)) + 1e-12
+    whirr = (0.8 * buzz + 0.30 * rattle) * (0.55 + 0.45 * up)
+    whirr = fade_edges(whirr, min(0.004, L / 6), 0.003)
     n_post = int(0.08 * SR)
-    fr = np.array([2650, 4100, 5800]) * s * rng.uniform(0.96, 1.04, 3)
-    tick = 0.6 * modal(n_post, fr, [0.006, 0.005, 0.004], [1.0, 0.7, 0.4], rng, twin=0.01) / 1.6 \
-        + 0.6 * nburst(rng, n_post, 2500, 9000, 0.0008) + 0.5 * thump(n_post, 420 * s, 260 * s, 0.004, 0.009)
+    fr = np.array([1900, 5400, 7600, 10400, 13100]) * s * rng.uniform(0.96, 1.04, 5)
+    tick = 0.6 * modal(n_post, fr, [0.006, 0.005, 0.0045, 0.004, 0.003], np.array([1.0, 0.8, 0.65, 0.5, 0.35]) * voice(fr), rng, twin=0.01) / 1.6 \
+        + 0.5 * presence_dip(nburst(rng, n_post, 2500, 12000, 0.0008)) + 0.5 * thump(n_post, 420 * s, 260 * s, 0.004, 0.009)
     tick = fade_edges(tick, 0, 0.004)
-    whirr *= 10.0 ** ((loud50(tick) - 5.0 - loud50(whirr)) / 20.0)     # the whirr sits 5 dB under the tick
+    whirr *= 10.0 ** ((loud50(tick) - 4.0 - loud50(whirr)) / 20.0)     # the burst sits 4 dB under the tick
     y = np.concatenate([whirr, tick])
     return y, n_pre
 
@@ -392,6 +459,8 @@ CLINK_BY_VAR = ['post', 'post', 'post', 'post', 'panel', 'panel', 'lid', 'lid', 
 
 def clink_class(part, var):
     p = part.lower()
+    if 'sleeve' in p or 'tube' in p or 'column' in p or 'col_' in p:
+        return 'tube'
     if 'wing' in p or 'leaf' in p:
         return 'wing'
     if 'lid' in p or 'tray' in p or 'rail' in p or 'top' in p:
@@ -406,39 +475,45 @@ def clink_class(part, var):
 
 
 def gen_glass_clink(rng, var, dur, ctx):
-    """Thick crystal block seating on metal: weighty knock, dense inharmonic partials with beating
-    twins, damped ring (tau 0.1-0.2 s), low fundamental (392-1175 Hz). Deliberately not a wine glass."""
+    """Thick crystal block seating on metal: weighty knock, dense inharmonic partials with beating twins,
+    damped ring (tau 0.1-0.2 s), low fundamental (392-1175 Hz) - deliberately not a wine glass - and the
+    plate's high modes (6-15.5 kHz, 10-40 ms) as real partials: that is the 'air' of glass."""
     c = CLINK_CLASSES[clink_class(ctx.get('part', ''), var)]
     f0 = c['notes'][var % len(c['notes'])] * (1.0 + rng.uniform(-0.003, 0.003))
     n = int(min(1.6, 7.0 * c['tau0']) * SR)
-    ratio = np.array([1.0, 1.47, 2.09, 2.76, 3.41, 4.33, 5.40, 6.62, 8.05]) * rng.uniform(0.975, 1.025, 9)
+    base = np.array([1.0, 1.47, 2.09, 2.76, 3.41, 4.33, 5.40, 6.62, 8.05, 9.70, 11.60, 13.80])
+    ratio = base * rng.uniform(0.975, 1.025, len(base))
     ratio[0] = 1.0
     fr = f0 * ratio
-    keep = fr < 10500
-    amps = ratio ** -0.85 * rng.uniform(0.55, 1.0, 9)
-    amps[1:4] *= 1.2
-    taus = c['tau0'] * ratio ** -0.7 * rng.uniform(0.8, 1.2, 9)
+    keep = fr < 15500
+    amps = ratio ** -0.80 * rng.uniform(0.55, 1.0, len(base)) * voice(fr)
+    amps[0] *= 0.85
+    taus = c['tau0'] * ratio ** -0.7 * rng.uniform(0.8, 1.2, len(base))
     ring = modal(n, fr[keep], taus[keep], amps[keep], rng, twin=0.0035)
-    ring = lowpass(ring, 9500)
     ring /= np.max(np.abs(ring)) + 1e-12
-    tick = nburst(rng, n, 3000, 10000, 0.0007)
+    air = air_partials(rng, n, 6000, 15500, 12, 0.040, 0.010)
+    tick = presence_dip(nburst(rng, n, 3000, 13000, 0.0007))
     tok = nburst(rng, n, 350, 1600, 0.006)
     thud = thump(n, 190 * rng.uniform(0.9, 1.1), 120, 0.008, 0.030)
-    y = 0.75 * c['bright'] * ring + 0.42 * tick + 0.5 * c['low'] * tok + 0.5 * c['low'] * thud
+    y = 0.72 * c['bright'] * ring + 0.30 * c['bright'] * air + 0.36 * tick + 0.5 * c['low'] * tok + 0.5 * c['low'] * thud
     d = rng.uniform(0.022, 0.034)                       # settle chatter: two tiny rebounds
-    y += delayed(0.20 * tick + 0.10 * ring + 0.10 * tok, d)
-    y += delayed(0.09 * tick + 0.04 * ring, d * 1.62)
+    y += delayed(0.18 * tick + 0.10 * ring + 0.08 * air + 0.10 * tok, d)
+    y += delayed(0.08 * tick + 0.04 * ring + 0.03 * air, d * 1.62)
     return fade_edges(y, 0, 0.03), 0
 
 
 def gen_glass_slide(rng, var, dur, ctx):
-    """Glass sliding home on its gasket: friction noise that ENDS on the event time."""
+    """Glass sliding home on its gasket: friction noise that ENDS on the event time. Two layers that leave
+    2.5-4 kHz thin: the rub itself (around 1.1-1.5 kHz) and the hiss of the edge (around 6.5 kHz), plus three
+    faint 'singing' resonances of the pane."""
     L = float(np.clip(dur if dur else 0.3, 0.08, 1.5))
     n = int(round(L * SR))
     u = _t(n) / L
-    noise = shaped_noise(rng, n, lambda v: 1800.0 * 2.0 ** (0.9 * v), 1.6, stereo=False)
+    rub = shaped_noise(rng, n, lambda v: 1100.0 * 2.0 ** (0.45 * v), 1.4, stereo=False)
+    hiss = shaped_noise(rng, n, lambda v: 6500.0 * 2.0 ** (0.25 * v), 1.2, stereo=False)
+    noise = presence_dip(rub + 0.3 * hiss)
     sing = np.zeros(n)
-    for f in (D7 * rng.uniform(0.98, 1.02), A7 * rng.uniform(0.98, 1.02), 5270.0):
+    for f in (G6 * rng.uniform(0.98, 1.02), D8 * rng.uniform(0.98, 1.02), G8 * rng.uniform(0.98, 1.02)):
         b, a = signal.iirpeak(f, 40.0, fs=SR)
         sing += signal.lfilter(b, a, noise)
     sing /= np.sqrt(np.mean(sing ** 2)) + 1e-12
@@ -451,26 +526,42 @@ def gen_glass_slide(rng, var, dur, ctx):
 
 # --------------------------------------------------------------------------------------- motion
 def gen_servo(rng, var, dur, ctx):
-    """Two small servo motors (one per wing, slightly detuned) with a planetary-gear mesh tone:
-    a smooth whine that follows a trapezoidal speed profile. Starts on the event time, lasts `dur`."""
-    L = float(np.clip(dur if dur else 0.8, 0.15, 4.0))
-    n = int(round(L * SR))
+    """Two small brushless gearmotors (one per wing, 0.6 % apart) driving planetary gearboxes.
+    Speed: up in 85 ms, steady, down in 110 ms to a soft stop - the pitch is steady for most of the move, so
+    it reads as a motor, not as a sweep. Layers, all locked to the rotor angle:
+      commutation whine (12 per rev) with a little rotor-rate ripple,
+      first-stage gear mesh (8 per rev, a fifth below the whine) with sidebands from the planet carrier,
+      tooth chatter: band noise pulsed at the second-stage tooth rate (about 180 Hz) and at planet pass,
+      a faint rotor hum, and a tiny backlash settle as it stops.
+    The running speed is chosen so the two tones sit in the music's key instead of fighting it:
+    even `var` whine D6 / mesh G5 (97.9 rev/s), odd `var` whine C6 / mesh F5 (87.2 rev/s).
+    Starts on the event time, lasts `dur`."""
+    L = float(np.clip(round(dur, 4) if dur else 0.8, 0.15, 4.0))
+    tail = int(0.06 * SR)
+    n = int(round(L * SR)) + tail
     t = _t(n)
-    u = t / L
-    sp = smoothstep(u / 0.22) * smoothstep((1.0 - u) / 0.30)
-    base = rng.uniform(0.95, 1.05) * (0.94 if var % 2 else 1.0)
+    t_up, t_dn = min(0.085, L * 0.25), min(0.110, L * 0.30)
+    sp = smoothstep(t / t_up) * (1.0 - smoothstep((t - (L - t_dn)) / t_dn))
+    f_run = (C6 if var % 2 else D6) / 12.0 * rng.uniform(0.998, 1.002)
     out = np.zeros((n, 2))
-    for det, pan in ((0.985, -0.35), (1.015, 0.35)):
-        fm = (210.0 + 560.0 * sp) * base * det
-        ph = 2 * np.pi * np.cumsum(fm) / SR
-        tone = harmonic_tone(ph, [1.0, 0.45, 0.30, 0.16, 0.10, 0.07])
-        mesh = np.sin(4.37 * ph + 0.3 * np.sin(ph / 3.0)) * (0.5 + 0.5 * sp) * (1.0 + 0.35 * np.sin(ph / 3.0))
-        fric = signal.sosfilt(signal.butter(2, [1200, 4500], 'bp', fs=SR, output='sos'), rng.standard_normal(n))
-        fric = fric / (np.sqrt(np.mean(fric ** 2)) + 1e-12) * sp * (1.0 + 0.5 * np.sin(ph))
-        y = (0.55 * tone + 0.40 * mesh + 0.10 * fric) * (0.12 + 0.88 * sp ** 0.8)
+    for det, pan in ((0.997, -0.30), (1.003, 0.30)):
+        wob = signal.sosfilt(signal.butter(2, 12, 'lp', fs=SR, output='sos'), rng.standard_normal(n))
+        wob = 1.0 + 0.004 * wob / (np.max(np.abs(wob)) + 1e-12)
+        f_rot = f_run * det * (0.45 + 0.55 * sp) * wob                  # rotor revolutions per second
+        ph = 2 * np.pi * np.cumsum(f_rot) / SR
+        car = ph / 4.6                                                   # planet carrier angle
+        whine = (np.sin(12 * ph) + 0.18 * np.sin(24 * ph + 0.7) + 0.06 * np.sin(36 * ph + 1.9)) * (1.0 + 0.12 * np.sin(ph))
+        mesh = np.sin(8.0 * ph + 0.6 * np.sin(car) + 0.35 * np.sin(3 * car)) * (1.0 + 0.30 * np.sin(3 * car))
+        teeth = np.exp(2.5 * (np.sin(1.87 * ph) - 1.0))                  # second-stage teeth engaging
+        grit = presence_dip(signal.sosfilt(signal.butter(2, [1600, 8000], 'bp', fs=SR, output='sos'), rng.standard_normal(n)))
+        grit = grit / (np.sqrt(np.mean(grit ** 2)) + 1e-12) * (0.3 + 0.7 * teeth) * (1.0 + 0.3 * np.sin(3 * car))
+        hum = np.sin(ph) + 0.5 * np.sin(2 * ph)
+        y = (0.42 * whine + 0.40 * mesh + 0.20 * grit + 0.05 * hum) * (0.10 + 0.90 * sp ** 0.6) * (sp > 0)
         out += pan_mono(y, pan)
-    out = lowpass(out, 6500)
-    return fade_edges(out, 0.012, 0.012), 0
+    out = lowpass(out, 9000)
+    settle = 0.5 * thump(n, 190, 125, 0.006, 0.012) + 0.3 * presence_dip(nburst(rng, n, 900, 5000, 0.003))
+    out += pan_mono(delayed(0.05 * settle, max(0.0, L - 0.004)), 0.0) * np.sqrt(2.0)
+    return fade_edges(out, 0.005, 0.02), 0
 
 
 def gen_whoosh(rng, var, dur, ctx):
@@ -492,80 +583,100 @@ def gen_whoosh(rng, var, dur, ctx):
 
 
 def gen_riser(rng, var, dur, ctx):
-    """Pre-drop riser: noise sweep + rising tone with an accelerating tremolo. ENDS on the event time."""
+    """Pre-drop riser, kept low and dark so that it sits UNDER the thinned-out music: a swell of low noise
+    that slowly opens, a tone climbing an octave (G3 -> G4) with a quickening tremolo, and a rising sub.
+    ENDS on the event time."""
     L = float(np.clip(dur if dur else 0.75, 0.2, 4.0))
     n = int(round(L * SR))
     t = _t(n)
     u = t / L
-    noise = shaped_noise(rng, n, lambda v: 600.0 * 2.0 ** (2.9 * v), 1.2, stereo=True, common=0.3)
-    noise = lowpass(noise, 8000) * (u ** 1.7)[:, None]
-    f = G4 * 2.0 ** u
+    noise = shaped_noise(rng, n, lambda v: 350.0 * 2.0 ** (3.0 * v), 1.3, stereo=True, common=0.3)
+    noise = lowpass(noise, 6000) * (u ** 1.7)[:, None]
+    f = G3 * 2.0 ** u
     ph = 2 * np.pi * np.cumsum(f) / SR
     tone = harmonic_tone(ph, [1.0, 0.5, 0.33, 0.25, 0.2, 0.16, 0.14, 0.12]) + 0.4 * harmonic_tone(1.5 * ph, [1.0, 0.4, 0.2])
-    tone = lowpass(tone, 5000)
+    tone = lowpass(tone, 3500)
     tone /= np.max(np.abs(tone)) + 1e-12
     rate = 8.0 + 22.0 * u ** 2
     trem = 1.0 - 0.5 * (0.5 + 0.5 * np.sin(2 * np.pi * np.cumsum(rate) / SR))
     tone *= u ** 1.3 * trem
-    sub = np.sin(2 * np.pi * np.cumsum(55.0 + 43.0 * u) / SR) * u ** 2
+    sub = np.sin(2 * np.pi * np.cumsum(49.0 + 49.0 * u) / SR) * u ** 1.6
     sub = fade_edges(sub, 0.0, min(0.045, L / 4))
-    y = 0.9 * noise + (0.55 * tone + 0.26 * sub)[:, None]
+    y = 0.8 * noise + (0.55 * tone + 0.40 * sub)[:, None]
     return fade_edges(y, 0.0, 0.006), n
 
 
 def gen_impact_drop(rng, var, dur, ctx):
-    """The drop: sub boom with a pitch fall, mid punch, a short crack, an airy down-sweep tail and a faint glass ting."""
+    """The drop. The boom falls to C2 (65 Hz, the chord root under it) and carries its 2nd and 3rd harmonics
+    (131 and 196 Hz) plus an 80-260 Hz knock: that part, not the sub, is what a small speaker reproduces.
+    Above it a mid punch, a short crack, an airy down-sweep tail and a faint glass ting."""
     n = int(2.4 * SR)
     t = _t(n)
-    sub = thump(n, 120, 49, 0.05, 0.22, attack=0.002)
-    punch = thump(n, 260, 95, 0.02, 0.07, attack=0.001)
-    crack = nburst(rng, n, 700, 5500, 0.030)
-    top = nburst(rng, n, 3000, 9000, 0.004)
-    core = 1.0 * sub + 0.6 * punch + 0.45 * crack + 0.18 * top
+    f = C2 + (150.0 - C2) * np.exp(-t / 0.045)
+    ph = 2 * np.pi * np.cumsum(f) / SR
+    att = 1.0 - np.exp(-t / 0.002)
+    sub = np.sin(ph) * np.exp(-t / 0.24) * att
+    body = (0.80 * np.sin(2 * ph + 0.4) * np.exp(-t / 0.21) + 0.55 * np.sin(3 * ph + 1.1) * np.exp(-t / 0.17)) * att
+    knock = nburst(rng, n, 80, 260, 0.085, attack=0.002)
+    punch = thump(n, 320, 110, 0.018, 0.06, attack=0.001)
+    crack = presence_dip(nburst(rng, n, 700, 6500, 0.030))
+    top = nburst(rng, n, 4500, 12000, 0.004)
+    core = 0.85 * sub + 0.85 * body + 0.45 * knock + 0.5 * punch + 0.40 * crack + 0.14 * top
     core = np.tanh(1.1 * core) / np.tanh(1.1)
     air = shaped_noise(rng, n, lambda v: 2600.0 * 2.0 ** (-2.2 * v), 2.0, stereo=True, common=0.3)
     air *= (np.exp(-t / 0.42) * (1.0 - np.exp(-t / 0.004)))[:, None]
-    ting = modal(n, [C7, G7, C8], [0.5, 0.4, 0.3], [1.0, 0.7, 0.4], rng, twin=0.003, attack=0.002)
+    ting = modal(n, [C7, G7, C8, G8], [0.5, 0.4, 0.3, 0.2], [1.0, 0.6, 0.5, 0.4], rng, twin=0.003, attack=0.002)
     y = pan_mono(core, 0.0) * np.sqrt(2.0) + 0.16 * air + (0.035 * ting)[:, None]
     return fade_edges(y, 0, 0.05), 0
 
 
 def gen_power_up(rng, var, dur, ctx):
-    """The light wave travelling through the gate: a rising, opening hum with energy noise and sparkle.
-    Starts on the event time and has faded out by `dur`."""
-    L = float(np.clip(dur if dur else 2.5, 0.5, 8.0))
-    n = int(round((L + 0.25) * SR))
+    """The light wave running through the gate. Starts on the event time with a small spark, then RISES for
+    the whole of `dur` - pitch (G2 climbing two octaves, easing into G4), brightness, level and sparkle density
+    all grow with the wave - and RESOLVES at t + dur: the glide lands on its note and a soft G/D bell marks
+    the arrival, then it rings out in under half a second."""
+    L = float(np.clip(round(dur, 4) if dur else 2.4, 0.5, 8.0))
+    n = int(round((L + 0.55) * SR))
+    nL = int(round(L * SR))
     t = _t(n)
-    u = np.clip(t / L, 0.0, 1.25)
-    bell = smoothstep(u / 0.55) * smoothstep((1.0 - u) / 0.45)
-    bell *= 1.0 - np.exp(-t / 0.004)
-    gl = np.minimum(u / 0.6, 1.0)
-    f = C3 * 2.0 ** (2.0 * gl)                          # C3 -> C5 glide, then held
+    u = np.clip(t / L, 0.0, 1.0)
+    g = 1.0 - (1.0 - u) ** 1.35                         # steady climb that eases into the target
+    f = G2 * 2.0 ** (2.0 * g)
     out = np.zeros((n, 2))
+    base_ph = 2 * np.pi * np.cumsum(f) / SR
     for det, pan in ((0.997, -0.5), (1.003, 0.5)):
-        ph = 2 * np.pi * np.cumsum(f * det) / SR
+        ph = det * base_ph
+        ph = ph - (ph[min(nL, n - 1)] - base_ph[min(nL, n - 1)])   # the two voices beat on the way up and meet in phase on arrival
         k = np.arange(1, 11)
-        tone = harmonic_tone(ph, 1.0 / k ** 1.2) + 0.4 * harmonic_tone(1.5 * ph, 1.0 / np.arange(1, 7) ** 1.3)
+        tone = harmonic_tone(ph, 1.0 / k ** 1.1) + 0.4 * harmonic_tone(1.5 * ph, 1.0 / np.arange(1, 7) ** 1.3)
         out += pan_mono(tone, pan)
-    # the tone "opens": blend from a dark to a brighter copy while it rises
-    dark = lowpass(out, 700)
-    bright = lowpass(out, 5000)
-    mix = smoothstep(u / 0.7)[:, None]
+    dark = lowpass(out, 500)                            # the tone opens as it climbs
+    bright = lowpass(out, 6000)
+    mix = (u ** 1.3)[:, None]
     tone = dark * (1.0 - mix) + bright * mix
     tone /= np.max(np.abs(tone)) + 1e-12
-    energy = shaped_noise(rng, n, lambda v: 500.0 * 2.0 ** (3.3 * np.minimum(v * 1.25, 1.0)), 1.3, stereo=True, common=0.3)
-    m = int(26 * L)
-    times = np.sort(rng.beta(2.0, 2.2, m)) * L * 0.95
-    notes = rng.choice([C7, D7, G7, A7, C8], m, p=[0.28, 0.24, 0.24, 0.14, 0.10])
-    sp = grains(rng, n, times, notes, rng.uniform(0.04, 0.12, m), rng.uniform(0.3, 1.0, m), rng.uniform(-0.8, 0.8, m))
+    env = (0.10 + 0.90 * u ** 1.6) * (1.0 - np.exp(-t / 0.004))
+    env[nL:] *= np.exp(-(t[nL:] - L) / 0.14)            # after the arrival the hum lets go
+    energy = shaped_noise(rng, n, lambda v: 400.0 * 2.0 ** (3.6 * np.minimum(v * n / nL, 1.0)), 1.2, stereo=True, common=0.3)
+    e_env = u ** 2.0
+    e_env[nL:] *= np.exp(-(t[nL:] - L) / 0.05)
+    m = int(30 * L)
+    times = np.sort(rng.beta(2.6, 1.0, m)) * L * 0.98   # sparkle gets denser towards the arrival
+    notes = rng.choice([G6, D7, D8, G8, A8, D9], m, p=[0.26, 0.12, 0.20, 0.20, 0.10, 0.12])
+    amps = rng.uniform(0.4, 0.9, m) * (0.25 + 0.75 * times / L) * voice(notes)
+    sp = grains(rng, n, times, notes, rng.uniform(0.04, 0.12, m), amps, rng.uniform(-0.8, 0.8, m))
     sp /= np.max(np.abs(sp)) + 1e-12
-    ignite = nburst(rng, n, 1500, 6000, 0.015)           # the spark as the light switches on: defines the onset
-    y = (0.75 * tone + 0.10 * energy) * bell[:, None] + 0.22 * sp + (0.10 * ignite)[:, None]
+    bell = modal(n - nL, [G5, D6, G6, D7, G7], [0.30, 0.26, 0.20, 0.14, 0.10], [0.7, 1.0, 0.8, 0.45, 0.3], rng, twin=0.003, attack=0.003)
+    bell /= np.max(np.abs(bell)) + 1e-12
+    arrive = np.zeros(n)
+    arrive[nL:] = bell
+    ignite = presence_dip(nburst(rng, n, 1500, 8000, 0.015))     # the spark as the light switches on: defines the onset
+    y = 0.75 * tone * env[:, None] + 0.10 * energy * e_env[:, None] + 0.13 * sp + (0.10 * ignite + 0.50 * arrive)[:, None]
     return fade_edges(y, 0.0, 0.05), 0
 
 
-SHIMMER_NOTES = [C7, D7, G7, A7, C8, D8, G8]
-SHIMMER_P = [0.22, 0.20, 0.20, 0.14, 0.12, 0.08, 0.04]
+SHIMMER_NOTES = [C7, D7, G7, C8, D8, G8, A8, C9, D9]
+SHIMMER_P = [0.26, 0.12, 0.09, 0.09, 0.16, 0.13, 0.07, 0.05, 0.03]
 
 
 def gen_shimmer(rng, var, dur, ctx):
@@ -578,7 +689,7 @@ def gen_shimmer(rng, var, dur, ctx):
     notes = rng.choice(SHIMMER_NOTES, m, p=SHIMMER_P) * rng.uniform(0.997, 1.003, m)
     bell = np.sin(np.pi * np.clip(times / L, 0, 1)) ** 0.6 * 0.8 + 0.2
     bell[0] = 0.8
-    y = grains(rng, n, times, notes, rng.uniform(0.035, 0.14, m), rng.uniform(0.3, 1.0, m) * bell, rng.uniform(-0.8, 0.8, m))
+    y = grains(rng, n, times, notes, rng.uniform(0.035, 0.14, m), rng.uniform(0.3, 1.0, m) * bell * voice(notes), rng.uniform(-0.8, 0.8, m))
     y /= np.max(np.abs(y)) + 1e-12
     air = shaped_noise(rng, n, lambda v: 6000.0 + 0 * v, 1.0, stereo=True, common=0.2)
     u = np.clip(_t(n) / L, 0, 1)
@@ -618,8 +729,8 @@ def gen_card_tap(rng, var, dur, ctx):
 
 
 def gen_beep_ok(rng, var, dur, ctx):
-    """Reader confirmation: two short rising tones (G6 -> D7), small-speaker character."""
-    segs = ((G6, 0.0, 0.075), (D7, 0.105, 0.130))
+    """Reader confirmation: two short rising tones (G6 -> C7, both below the 2.5 kHz band), small-speaker character."""
+    segs = ((G6, 0.0, 0.075), (C7, 0.105, 0.130))
     n = int(0.26 * SR)
     y = np.zeros(n)
     for f, t0, L in segs:
@@ -681,6 +792,7 @@ TRANSIENT = {'thunk_metal', 'lock_clunk', 'clack', 'click', 'snap', 'tap', 'gear
 # meant to sit WITH the music (riser, impact, power-up, shimmer, whoosh, final hit) do not duck it at all.
 DUCK_FULL = {'thunk_metal', 'lock_clunk', 'clack', 'click', 'snap', 'tap', 'gear_tick', 'spring', 'screw', 'glass_clink'}
 DUCK_HALF = {'glass_slide', 'servo', 'card_tap', 'beep_ok', 'ui_boot'}
+HEAVY = {'thunk_metal', 'lock_clunk', 'glass_clink'}        # hits big enough to be a 'slam'
 
 # Loudness targets: K-weighted RMS of the loudest 50 ms of each effect at gain 1.0, in dB re full scale
 # before the bus gain. This is the balance between effect types (the event `gain` then scales linearly).
@@ -689,7 +801,7 @@ LEVEL_DB = {
     'thunk_metal': -12.0, 'lock_clunk': -13.0, 'glass_clink': -12.0,
     'clack': -14.0, 'gear_tick': -15.0, 'snap': -15.0, 'click': -15.5, 'tap': -16.0, 'spring': -16.0,
     'screw': -15.0, 'card_tap': -13.5, 'beep_ok': -14.0, 'ui_boot': -12.0,
-    'servo': -15.0, 'whoosh': -15.0, 'riser': -14.0, 'glass_slide': -21.0, 'power_up': -13.0, 'shimmer': -14.0,
+    'servo': -16.0, 'whoosh': -15.0, 'riser': -19.5, 'glass_slide': -21.0, 'power_up': -13.0, 'shimmer': -14.0,
 }
 
 # Send level (dB) of each effect into the shared room.

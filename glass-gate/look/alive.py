@@ -41,8 +41,9 @@ PROPS = {   # name: (scene property, default, min, max)
     'house': ('gg_house', 1.0, 0.0, 1.0),
 }
 GLOW_COLLECTION = 'GG_ALIVE_GLOW'
-GLOW_GAIN = 10.0         # artistic multiplier on the physically matched glow-light power (pi^2 x LED_STRENGTH x area)
-GLOW_EDGE = 0.10         # how soft a glow light switches on, in wave_u (lights are sparse, so softer than the strip)
+GLOW_WATTS = 340.0       # total steady power of the glow lights (shared between them by emitting area)
+GLOW_HEAD = 2.5          # extra gain while the wave head is at a light (x steady)
+GLOW_EDGE = 0.20         # how soft a glow light switches on, in wave_u (lights are sparse, so softer than the strip)
 
 
 # ----------------------------------------------------------------------------------------------- properties
@@ -167,7 +168,7 @@ def ensure_wave_u(scene=None, verbose=True):
     scene = scene or bpy.context.scene
     fixed = []
     for ob in scene.objects:
-        if not _uses(ob, 'LED_STRIP'):
+        if not (_uses(ob, 'LED_STRIP') or _uses(ob, 'LED_DIFFUSER')):
             continue
         me = ob.data
         at = me.attributes.get('wave_u')
@@ -182,22 +183,27 @@ def ensure_wave_u(scene=None, verbose=True):
             at.data[i].value = min(1.0, max(0.0, 0.05 + 0.75 * (y + 0.70) / 1.40))
         fixed.append(ob.name)
     if fixed and verbose:
-        print(f'[alive] WARNING: {len(fixed)} LED_STRIP meshes had no wave_u; derived from world Y: {fixed[:8]}{"..." if len(fixed) > 8 else ""}')
+        print(f'[alive] WARNING: {len(fixed)} LED meshes had no wave_u; derived from world Y: {fixed[:8]}{"..." if len(fixed) > 8 else ""}')
     return fixed
 
 
 # ----------------------------------------------------------------------------------------------- glow lights
+LED_MATS = ('LED_STRIP', 'LED_DIFFUSER')
+
+
 def _led_samples(scene):
-    """(world centre, area, wave_u, object) for every LED_STRIP polygon."""
+    """(world centre, area, wave_u, object) for every polygon of an LED run (chips and light-guide bands)."""
     out = []
     for ob in scene.objects:
-        if not _uses(ob, 'LED_STRIP'):
+        if ob.type != 'MESH':
+            continue
+        led_slots = {i for i, s in enumerate(ob.material_slots) if s.material and M.base_name(s.material.name) in LED_MATS}
+        if not led_slots:
             continue
         me = ob.data
         at = me.attributes.get('wave_u')
         mw = ob.matrix_world
         sc = abs(mw.to_scale().x * mw.to_scale().y * mw.to_scale().z) ** (2.0 / 3.0)
-        led_slots = {i for i, s in enumerate(ob.material_slots) if s.material and M.base_name(s.material.name) == 'LED_STRIP'}
         for p in me.polygons:
             if p.material_index not in led_slots:
                 continue
@@ -207,13 +213,15 @@ def _led_samples(scene):
 
 
 def _cluster(samples, cell):
+    """Coarse clusters: one per stretch of rail (both sides and the column ring together), one per accent bar, one
+    per wing edge. Kept apart by the root object, by `cell` metres along the lane and by height."""
     bins = {}
     for co, area, u, ob in samples:
         root = ob
         while root.parent is not None:
             root = root.parent
-        # fine across the lane (so the two sides of a rail get their own lights), coarse along it
-        key = (root.name, round(co.x / (cell * 0.2)), round(co.y / cell), round(co.z / (cell * 0.8)))
+        side = 0 if abs(co.x) < 1e-6 else (1 if co.x > 0 else -1)
+        key = (root.name, side, round(co.y / cell), round(co.z / 0.45))
         b = bins.setdefault(key, {'co': Vector(), 'area': 0.0, 'u': 0.0, 'obs': {}})
         b['co'] += co * area; b['area'] += area; b['u'] += u * area
         b['obs'][ob.name] = b['obs'].get(ob.name, 0.0) + area
@@ -243,68 +251,105 @@ def remove_glow(scene=None):
     bpy.data.collections.remove(coll)
 
 
-def setup_alive(scene=None, max_lights=44, radius=0.012, verbose=True):
-    """Make the scene alive-ready: properties, wave_u safety net, and (LED_MODE 'hybrid') the glow lights.
+def fit_wave_axis(scene, samples=None):
+    """Tell the glass shader where the wave is in space: wave_u ~ a * world_y + b along the rails (scene gg_wave_a,
+    gg_wave_b) and the height of the LED seam (gg_led_z). Fitted to the long LED runs (the rails)."""
+    samples = samples if samples is not None else _led_samples(scene)
+    by = {}
+    for co, area, u, ob in samples:
+        by.setdefault(ob.name, []).append((co.y, co.z, u, area))
+    sy = syy = su = suy = sw = sz = 0.0
+    for name, rows in by.items():
+        ys = [r[0] for r in rows]
+        if max(ys) - min(ys) < 0.8:                 # not a rail
+            continue
+        for y, z, u, w in rows:
+            sy += w * y; syy += w * y * y; su += w * u; suy += w * u * y; sw += w; sz += w * z
+    if sw <= 0:
+        return None
+    den = sw * syy - sy * sy
+    if abs(den) < 1e-12:
+        return None
+    a = (sw * suy - sy * su) / den
+    b = (su - a * sy) / sw
+    scene['gg_wave_a'] = float(a); scene['gg_wave_b'] = float(b); scene['gg_led_z'] = float(sz / sw)
+    return a, b, sz / sw
 
-    Glow lights: the LED_STRIP polygons are clustered; each cluster gets one small sphere light at its centre,
-    parented to the LED object it stands for (so it follows the part), with the power the mesh itself would emit
-    (pi^2 x strength x area) and drivers that replay the shader's wave formula for its mean wave_u.
+
+def setup_alive(scene=None, max_lights=14, radius=0.035, verbose=True):
+    """Make the scene alive-ready: properties, wave_u safety net, the wave axis for the glass, the glow lights.
+
+    Glow lights (LED_MODE 'hybrid'): the LED runs are grouped into a few clusters (a stretch of rail, an accent bar, a
+    wing edge); each gets ONE sphere light, parented to the LED object it stands for (so it follows the part), a few
+    centimetres below and on the lane side of the run (under the rail spine, where it can see the floor on both sides).
+    Together they carry GLOW_WATTS, shared by emitting area, and replay the shader's wave law for their mean wave_u.
+    They are diffuse-only: the LED meshes themselves are what the eye, mirrors and refractions see.
     Idempotent: call it again after the LED objects changed.
     """
     scene = ensure_props(scene)
     ensure_wave_u(scene, verbose)
     remove_glow(scene)
+    bpy.context.view_layer.update()
+    samples = _led_samples(scene)
+    axis = fit_wave_axis(scene, samples)
     led_mat = [m for m in bpy.data.materials if M.base_name(m.name) == 'LED_STRIP']
     mode = led_mat[0].get('gg_led_mode', M.LED_MODE) if led_mat else M.LED_MODE
     if mode != 'hybrid':
         if verbose:
             print('[alive] LED_MODE is "mesh": no glow lights, the LED meshes light the scene themselves')
         return []
-    bpy.context.view_layer.update()
-    samples = _led_samples(scene)
     if not samples:
         if verbose:
-            print('[alive] no LED_STRIP geometry found: no glow lights')
+            print('[alive] no LED geometry found: no glow lights')
         return []
-    cell = 0.28
+    cell = 0.50
     clusters = _cluster(samples, cell)
     while len(clusters) > max_lights and cell < 3.0:
-        cell *= 1.25
+        cell *= 1.2
         clusters = _cluster(samples, cell)
     coll = bpy.data.collections.new(GLOW_COLLECTION)
     scene.collection.children.link(coll)
+    # share of the power: by emitting area, but no cluster below 40 % of an even share (small accent bars still count)
+    tot_area = sum(c['area'] for c in clusters)
+    share = [max(c['area'] / tot_area, 0.4 / len(clusters)) for c in clusters]
+    norm = sum(share)
     lights = []
-    for i, c in enumerate(sorted(clusters, key=lambda c: c['u'])):
-        ld = bpy.data.lights.new(f'GG_GLOW_{i:02d}', 'POINT')
+    order = sorted(range(len(clusters)), key=lambda i: clusters[i]['u'])
+    for n_, i in enumerate(order):
+        c = clusters[i]
+        ld = bpy.data.lights.new(f'GG_GLOW_{n_:02d}', 'POINT')
         ld.shadow_soft_size = radius
         ld.use_shadow = True
-        base = math.pi ** 2 * M.LED_STRENGTH * c['area'] * GLOW_GAIN
+        base = GLOW_WATTS * share[i] / norm
         ob = bpy.data.objects.new(ld.name, ld)
         coll.objects.link(ob)
         owner = bpy.data.objects.get(c['owner'])
-        ob.matrix_world.translation = c['co']
+        co = c['co'].copy()
+        co.x -= 0.02 * (1 if co.x > 0 else -1)          # toward the lane
+        co.z = max(0.08, co.z - 0.06)                   # under the seam / spine
+        ob.matrix_world.translation = co
         if owner is not None:
             ob.parent = owner
             ob.matrix_parent_inverse = owner.matrix_world.inverted()
         ob['gg_wave_u'] = c['u']; ob['gg_energy'] = base
-        # diffuse light only: the LED mesh itself is what the camera, reflections and refractions see
         ob.visible_camera = False; ob.visible_glossy = False; ob.visible_transmission = False
         u = round(c['u'], 4)
         on = f'clamp((w-{u})/{GLOW_EDGE}+0.5)'
-        head = f'{on}*(1-clamp((w-{u})/{M.LED_TAIL}))**2'
+        head = f'{on}*(1-clamp((w-{u})/{M.LED_TAIL * 1.5:.3f}))**2'
         fc = ld.driver_add('energy'); d = fc.driver; d.type = 'SCRIPTED'
         for n, k in (('p', 'gg_power'), ('w', 'gg_wave'), ('g', 'gg_grant')):
             _driver_var(d, n, scene, k)
-        d.expression = f'{base:.5f}*p*({on}+(1-{on})*g+{M.LED_HEAD * 0.6:.2f}*{head})'
+        d.expression = f'{base:.5f}*p*({on}+(1-{on})*g+{GLOW_HEAD:.2f}*{head})'
         for ch in range(3):
             fc = ld.driver_add('color', ch); d = fc.driver; d.type = 'SCRIPTED'
             for n, k in (('w', 'gg_wave'), ('g', 'gg_grant')):
                 _driver_var(d, n, scene, k)
-            d.expression = f'lerp(lerp({M.COL_IDLE[ch]:.3f},{M.COL_GRANT[ch]:.3f},g*{on}),1.0,0.6*{head})'
+            d.expression = f'lerp(lerp({M.COL_IDLE[ch]:.3f},{M.COL_GRANT[ch]:.3f},g*{on}),1.0,0.5*{head})'
         lights.append(ob)
     if verbose:
         tot = sum(o['gg_energy'] for o in lights)
-        print(f'[alive] {len(lights)} glow lights for {len(samples)} LED polygons, {tot:.1f} W in total (steady)')
+        ax = f', wave axis u = {axis[0]:.3f}*y + {axis[1]:.3f}, seam z = {axis[2]:.3f}' if axis else ''
+        print(f'[alive] {len(lights)} glow lights for {len(samples)} LED polygons, {tot:.0f} W in total (steady){ax}')
     return lights
 
 
@@ -312,7 +357,7 @@ def setup_alive(scene=None, max_lights=44, radius=0.012, verbose=True):
 GLARE_GROUP = 'GG_GLARE'
 
 
-def setup_glare(scene=None, strength=0.35, threshold=3.0, size=0.45, saturation=1.25):
+def setup_glare(scene=None, strength=0.30, threshold=4.0, size=0.42, saturation=1.3, clamp=14.0):
     """OPTIONAL bloom, in Blender's compositor (applied to every render of this scene, saved with the .blend).
 
     The LED chips are a couple of millimetres tall: in a wide shot they are thinner than a pixel and tone-map to a
@@ -337,6 +382,7 @@ def setup_glare(scene=None, strength=0.35, threshold=3.0, size=0.45, saturation=
         return False
     put('Type', 'Bloom'); put('Quality', 'High')
     put('Highlights Threshold', threshold); put('Highlights Smoothness', 0.5)
+    put('Clamp Highlights', True); put('Maximum Highlights', clamp)       # a glint on metal must not throw a fog bank
     put('Strength', strength); put('Saturation', saturation); put('Size', size)
     ng.links.new(rl.outputs['Image'], gl.inputs['Image'])
     ng.links.new(gl.outputs['Image'], out.inputs[0])

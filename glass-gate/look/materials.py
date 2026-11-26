@@ -18,7 +18,7 @@ TEX = os.path.join(HERE, 'tex')
 COL_IDLE = (0.14, 0.11, 1.00)       # idle LED: blue-violet (scene linear)
 COL_GRANT = (0.00, 1.00, 0.20)      # access granted: green
 COL_IR = (1.00, 0.04, 0.22)         # face-camera IR dots: pink-red
-LED_STRENGTH = 90.0                 # steady emission of the LED line  [W/m2/sr]
+LED_STRENGTH = 30.0                 # steady emission of the LED line  [W/m2/sr]
 LED_HEAD = 4.0                      # extra gain of the hot wave head (x steady)
 LED_EDGE = 0.012                    # width of the switching-on front, in wave_u
 LED_TAIL = 0.09                     # length of the hot tail behind the front, in wave_u
@@ -39,10 +39,20 @@ GLASS_BOUNCE = (0.90, 0.92, 0.97)   # per surface for bounce (diffuse) rays: pla
 # 'hybrid' : LED meshes are visible to camera / reflections / refractions only; alive.setup_alive() adds real lights
 LED_MODE = 'hybrid'
 
+# the light-guide band over every LED run (LED_DIFFUSER): what the camera reads as "the LED line"
+DIFFUSER_STRENGTH = 2.4             # steady: low enough to stay a SATURATED band under AgX (the chips below burn white)
+DIFFUSER_HEAD = 9.0                 # hot head, x steady, and it turns white-blue
+# edge-lit glass: glass near a lit LED run glows in its colour (strongest on rims and bevels turned away from the lens)
+GLASS_GLOW = 0.7                    # GLASS_BODY, at the height of the LED seam
+GLASS_GLOW_FALL = 0.12              # metres: the glow has dropped to 1/e this far above / below the seam
+WING_GLOW = 1.6                     # GLASS_WING edge band when its edge light is on
+WING_CATCH = 0.80                   # GLASS_WING edge band, always (x house): the polished edge catching the room
+COL_CATCH = (0.72, 0.80, 1.00)
+
 CONTRACT = ['GLASS_BODY', 'GLASS_WING', 'GLASS_LENS', 'METAL_STEEL', 'METAL_ALU', 'METAL_DARK', 'BRASS', 'COPPER',
             'SPRING_STEEL', 'PCB_GREEN', 'PCB_GOLD', 'CHIP_BLACK', 'CAP_ALU', 'PLASTIC_WHITE', 'PLASTIC_BLACK', 'RUBBER',
             'CABLE_RED', 'CABLE_BLUE', 'CABLE_YELLOW', 'CABLE_WHITE', 'LED_STRIP', 'LED_IR', 'LED_STATUS', 'SCREEN_LCD',
-            'SCREEN_WING', 'BADGE', 'PRINT_WHITE']
+            'SCREEN_WING', 'BADGE', 'PRINT_WHITE', 'LED_DIFFUSER']
 
 
 # ---------------------------------------------------------------------------------------------- node builder
@@ -194,7 +204,8 @@ def _rough(b, base, var, size=60.0, scale=(1, 1, 1)):
 
 
 # ---------------------------------------------------------------------------------------------- glass
-def glass(mat, ior=GLASS_IOR, tint=GLASS_TINT, tint_dist=GLASS_TINT_DIST, shadow=GLASS_SHADOW, shadow_edge=GLASS_SHADOW_EDGE):
+def glass(mat, ior=GLASS_IOR, tint=GLASS_TINT, tint_dist=GLASS_TINT_DIST, shadow=GLASS_SHADOW, shadow_edge=GLASS_SHADOW_EDGE,
+          glow='body', thin_axis=1):
     """Clear crystal.
 
     camera / glossy / transmission rays : real Glass BSDF (IOR 1.52, roughness 0). Absorption is done with the
@@ -208,6 +219,13 @@ def glass(mat, ior=GLASS_IOR, tint=GLASS_TINT, tint_dist=GLASS_TINT_DIST, shadow
         reflection counts as glossy) the surface turns into plain Transparent, so a path never dies black inside a
         stack of glass walls — it simply stops refracting. Keep Cycles transmission_bounces > gg_glass_depth,
         glossy_bounces > gg_glass_gloss and max_bounces > their sum (settings.recommended() does all of it).
+    glow : a little emission on top of the glass (never sampled as a light, costs nothing to speak of)
+        'body' : edge-lit glass. Near the height of the LED seam (scene gg_led_z) the glass glows in the LED colour
+                 once the wave front has passed its place along the lane (wave_u estimated from world Y with scene
+                 gg_wave_a / gg_wave_b), strongest where the surface turns away from the lens (rims, bevels, flutes).
+        'wing' : the leaf. Its edge band (everything but the two big faces, found from the object-space normal and
+                 `thin_axis`) always carries a faint cool catch-light (x house), so the 12 mm slab reads on black;
+                 when the wing's edge light is on (wave past 0.92) the band glows in the LED colour.
     """
     b = B(mat)
     lp, geo = b.lp, b.geo
@@ -235,9 +253,49 @@ def glass(mat, ior=GLASS_IOR, tint=GLASS_TINT, tint_dist=GLASS_TINT_DIST, shadow
     # the caster with the diffuse flag at diffuse depth 0 and needs to find the true refractive BSDF there.
     bounce = b.m('MULTIPLY', lp.outputs['Is Diffuse Ray'], b.m('GREATER_THAN', lp.outputs['Diffuse Depth'], 0.5))
     soft = b.m('MAXIMUM', lp.outputs['Is Shadow Ray'], bounce)
+    if glow:
+        s = b.add_shader(s, _glass_glow(b, glow, thin_axis))
+        mat.cycles.emission_sampling = 'NONE'
     b.surface(b.mix_shader(soft, s, t_sh.outputs[0]))
     mat.diffuse_color = (0.75, 0.86, 1.0, 0.25)
     return mat
+
+
+def _level(b, u, edge=0.03, tail=LED_TAIL, head_gain=LED_HEAD):
+    """(colour, level) of the LED light at wave_u = `u` (socket or number): the same law as the LED line (_wave)."""
+    d = b.m('SUBTRACT', b.ctrl('gg_wave'), u)
+    on = b.m('DIVIDE', d, edge, clamp=True)
+    head = b.m('MULTIPLY', on, b.m('POWER', b.m('SUBTRACT', 1.0, b.m('DIVIDE', d, tail, clamp=True)), 2.0))
+    g = b.ctrl('gg_grant')
+    col = b.mix(b.m('MULTIPLY', g, on), COL_IDLE, COL_GRANT)
+    col = b.mix(b.m('MULTIPLY', head, 0.6), col, (0.75, 0.85, 1.0, 1))
+    level = b.m('ADD', b.m('ADD', on, b.m('MULTIPLY', b.m('SUBTRACT', 1.0, on), g)), b.m('MULTIPLY', head, head_gain))
+    return col, b.m('MULTIPLY', level, b.ctrl('gg_power'))
+
+
+def _glass_glow(b, kind, thin_axis=1):
+    lp, geo = b.lp, b.geo
+    seen = b.m('SUBTRACT', 1.0, lp.outputs['Is Diffuse Ray'])            # for the eye, mirrors and refractions only
+    if kind == 'wing':
+        nrm = b.node('ShaderNodeTexCoord').outputs['Normal']                 # object-space normal
+        comp = b.node('ShaderNodeSeparateXYZ', _in={0: nrm}).outputs[thin_axis]
+        band = b.node('ShaderNodeMapRange', interpolation_type='SMOOTHSTEP',
+                      _in={0: b.m('ABSOLUTE', comp), 1: 0.90, 2: 0.985, 3: 1.0, 4: 0.0}).outputs[0]
+        col, lvl = _level(b, 0.95, edge=0.04)
+        led = b.scale(col, b.m('MULTIPLY', lvl, b.m('MULTIPLY', b.m('ADD', band, 0.008), WING_GLOW)))
+        rgb = b.node('ShaderNodeRGB'); rgb.outputs[0].default_value = (*COL_CATCH, 1)
+        catch = b.scale(rgb.outputs[0], b.m('MULTIPLY', b.m('MULTIPLY', band, b.ctrl('gg_house')), WING_CATCH))
+        add = b.node('ShaderNodeVectorMath', operation='ADD'); b.link(led, add.inputs[0]); b.link(catch, add.inputs[1])
+        return b.node('ShaderNodeEmission', _in={'Color': add.outputs[0], 'Strength': seen}).outputs[0]
+    pos = b.node('ShaderNodeSeparateXYZ', _in={0: geo.outputs['Position']})
+    u = b.m('MULTIPLY_ADD', pos.outputs[1], b.ctrl('gg_wave_a'), b.ctrl('gg_wave_b'))
+    col, lvl = _level(b, u)
+    dz = b.m('ABSOLUTE', b.m('SUBTRACT', pos.outputs[2], b.ctrl('gg_led_z')))
+    fall = b.m('EXPONENT', b.m('DIVIDE', dz, -GLASS_GLOW_FALL))
+    lw = b.node('ShaderNodeLayerWeight', _in={'Blend': 0.5})
+    rim = b.m('ADD', b.m('POWER', lw.outputs['Facing'], 3.0), 0.012)
+    st = b.m('MULTIPLY', b.m('MULTIPLY', b.m('MULTIPLY', lvl, fall), rim), b.m('MULTIPLY', seen, GLASS_GLOW))
+    return b.node('ShaderNodeEmission', _in={'Color': col, 'Strength': st}).outputs[0]
 
 
 def glass_lens(mat):
@@ -339,7 +397,7 @@ def pcb(mat, mask=(0.008, 0.085, 0.040), mask_cu=(0.020, 0.21, 0.085), tile=0.08
 
 
 # ---------------------------------------------------------------------------------------------- emissives
-def _wave(b, edge=LED_EDGE, tail=LED_TAIL):
+def _wave(b, edge=LED_EDGE, tail=LED_TAIL, head_gain=LED_HEAD, head_col=(1, 1, 1, 1), head_mix=0.75):
     """Returns (colour socket, strength socket) of the LED line at this point of the mesh.
 
         d      = gg_wave - wave_u            (>0 once the front has passed)
@@ -358,8 +416,8 @@ def _wave(b, edge=LED_EDGE, tail=LED_TAIL):
     head = b.m('MULTIPLY', on, b.m('POWER', b.m('SUBTRACT', 1.0, b.m('DIVIDE', d, tail, clamp=True)), 2.0))
     g = b.ctrl('gg_grant')
     col = b.mix(b.m('MULTIPLY', g, on), COL_IDLE, COL_GRANT)
-    col = b.mix(b.m('MULTIPLY', head, 0.75), col, (1, 1, 1, 1))            # the head burns white
-    level = b.m('ADD', b.m('ADD', on, b.m('MULTIPLY', b.m('SUBTRACT', 1.0, on), g)), b.m('MULTIPLY', head, LED_HEAD))
+    col = b.mix(b.m('MULTIPLY', head, head_mix), col, head_col)            # the head burns white
+    level = b.m('ADD', b.m('ADD', on, b.m('MULTIPLY', b.m('SUBTRACT', 1.0, on), g)), b.m('MULTIPLY', head, head_gain))
     return col, level
 
 
@@ -377,6 +435,28 @@ def led_strip(mat, mode=None):
     b.surface(b.add_shader(p.outputs[0], em.outputs[0]))
     mat.cycles.emission_sampling = 'NONE' if mode == 'hybrid' else 'FRONT_BACK'
     mat['gg_led_mode'] = mode
+    return mat
+
+
+def led_diffuser(mat):
+    """The light-guide band over an LED run. Dark: frosted clear plastic. Lit: a solid, saturated glowing band, with a
+    hot white-blue head as the wave front passes (needs the same `wave_u` point attribute as LED_STRIP).
+    Like the chips it is seen by the eye, by mirrors and through glass; the scene itself is lit by the glow lights."""
+    b = B(mat)
+    lp = b.lp
+    col, level = _wave(b, edge=LED_EDGE * 1.5, head_gain=DIFFUSER_HEAD, head_col=(0.72, 0.84, 1.0, 1), head_mix=0.8)
+    st = b.m('MULTIPLY', b.m('MULTIPLY', level, b.ctrl('gg_power')), DIFFUSER_STRENGTH)
+    st = b.m('MULTIPLY', st, b.m('SUBTRACT', 1.0, lp.outputs['Is Diffuse Ray']))
+    em = b.node('ShaderNodeEmission', _in={'Color': col, 'Strength': st})
+    p = b.principled()
+    b.set(p, 'Base Color', (0.80, 0.83, 0.90)); b.set(p, 'Roughness', 0.42); b.set(p, 'IOR', 1.49)
+    b.set(p, 'Transmission Weight', 0.55); b.set(p, 'Specular IOR Level', 0.5)
+    lit = b.add_shader(p.outputs[0], em.outputs[0])
+    t = b.node('ShaderNodeBsdfTransparent', _in={'Color': (0.80, 0.84, 0.92, 1)})
+    soft = b.m('MAXIMUM', lp.outputs['Is Shadow Ray'], lp.outputs['Is Diffuse Ray'])
+    b.surface(b.mix_shader(soft, lit, t.outputs[0]))
+    mat.cycles.emission_sampling = 'NONE'
+    mat.diffuse_color = (0.6, 0.65, 1.0, 0.6)
     return mat
 
 
@@ -496,9 +576,11 @@ def badge(mat):
 
 
 # ---------------------------------------------------------------------------------------------- the table
+WING_THIN_AXIS = [1]        # object-space axis across the 12 mm of a wing leaf (apply_materials measures it)
+
 BUILDERS = {
     'GLASS_BODY': lambda m: glass(m),
-    'GLASS_WING': lambda m: glass(m, tint=(0.64, 0.72, 0.98), tint_dist=0.08),
+    'GLASS_WING': lambda m: glass(m, tint=(0.64, 0.72, 0.98), tint_dist=0.08, glow='wing', thin_axis=WING_THIN_AXIS[0]),
     'GLASS_LENS': glass_lens,
     'METAL_STEEL': lambda m: metal(m, (0.76, 0.77, 0.79), rough=0.10, rough_var=0.04, grain=220.0),
     'METAL_ALU': lambda m: metal(m, (0.80, 0.81, 0.83), rough=0.27, rough_var=0.05, aniso=0.7, streak=True),
@@ -518,6 +600,7 @@ BUILDERS = {
     'CABLE_YELLOW': lambda m: dielectric(m, (0.80, 0.55, 0.02), rough=0.38, rough_var=0.05),
     'CABLE_WHITE': lambda m: dielectric(m, (0.78, 0.78, 0.76), rough=0.38, rough_var=0.05),
     'LED_STRIP': led_strip,
+    'LED_DIFFUSER': led_diffuser,
     'LED_IR': lambda m: led_dot(m, COL_IR, 'gg_ir', 22.0),
     'LED_STATUS': led_status,
     'SCREEN_LCD': screen_lcd,
@@ -548,7 +631,8 @@ def ensure_ctrl(scene=None):
     """The scene properties the shaders read (alive.py owns the alive ones; this only makes sure they exist)."""
     scene = scene or bpy.context.scene
     for key, default in (('gg_power', 0.0), ('gg_wave', -0.1), ('gg_grant', 0.0), ('gg_screens', 0.0), ('gg_ir', 0.0),
-                         ('gg_house', 1.0), ('gg_glass_depth', 8.0), ('gg_glass_gloss', 4.0)):
+                         ('gg_house', 1.0), ('gg_glass_depth', 8.0), ('gg_glass_gloss', 4.0),
+                         ('gg_wave_a', 0.86 / 1.40), ('gg_wave_b', 0.45), ('gg_led_z', 0.937)):
         if key not in scene:
             scene[key] = default
 
@@ -558,6 +642,12 @@ def apply_materials(scene=None, verbose=True, create_missing=True):
     scene = scene or bpy.context.scene
     ensure_ctrl(scene)
     report = {'filled': [], 'fallback': {}, 'created': []}
+    for ob in scene.objects:            # which object axis runs across the thickness of a wing leaf
+        if ob.type == 'MESH' and ob.material_slots and all(s.material and base_name(s.material.name) == 'GLASS_WING' for s in ob.material_slots):
+            d = ob.dimensions if min(ob.scale) > 0.999 and max(ob.scale) < 1.001 else None
+            ext = [max(v[i] for v in ob.bound_box) - min(v[i] for v in ob.bound_box) for i in range(3)]
+            WING_THIN_AXIS[0] = ext.index(min(ext))
+            break
     if create_missing:
         for name in CONTRACT:
             if name not in bpy.data.materials:

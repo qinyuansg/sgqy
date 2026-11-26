@@ -24,9 +24,10 @@ MUSIC (one track)
     http://creativecommons.org/licenses/by/4.0/
 
   Changes made (CC BY asks that changes are indicated): the track was shortened and re-arranged on its own
-  bar lines (bars 1-4, 37-40, 9-10, 63-64 and the final chord), filtered and level-automated before the drop,
-  ducked under the sound effects and mastered together with them. It was not time-stretched or re-pitched
-  (the recording is at exactly 120 BPM, the tempo of the video).
+  bar lines (bars 1-4, 37-40, 9-10, 63-64 and the final chord; bar 4 once more, band-passed, in the last
+  three quarters of a second before the drop), filtered and level-automated before the drop, ducked under
+  the sound effects and mastered together with them. It was not time-stretched or re-pitched (the recording
+  is at exactly 120 BPM, the tempo of the video).
 
 
 SOUND EFFECTS

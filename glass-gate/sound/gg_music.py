@@ -24,10 +24,15 @@ How it is cut (every cut is on a bar line of the grid that is anchored on `drop_
                                of 4 bars, so the chord loop stays intact), which run on, uncut, into
         the final hit       <- source 65      the track's own final chord, tail shaped to end with the video
 
-On top of the cut, before the drop: a low-pass that opens one step per timeline section (wave) through the
-range where the arpeggios live (550 Hz -> 8 kHz), a level step per section, the lowest octave held back
-(high-pass) until the drop, and a short dip right before it. A first section called hook/intro is kept
-fairly open (the teaser); the filter shuts as the build starts and then opens wave by wave.
+On top of the cut, before the drop:
+  * a staircase: at every wave start the low-pass opens a step (400 Hz -> 9 kHz) and the level steps up
+    (-7 dB -> +1 dB); the steps are quick (60 ms) so each one is heard on its downbeat;
+  * a first section called hook/intro sits just under the third wave: its low-pass is 0.8 x that wave's and
+    the mixer trims its loudness to 1 LU below what that wave measures after ducking (mix.py);
+  * the lowest octave is held back (high-pass) until the drop;
+  * the held breath: from tl['held_from'] (the last part landing before the drop, or the riser start) the
+    music is swapped for the bare arpeggio bar, band-passed 500 Hz - 4 kHz (about 12 dB thinner), sinking a
+    further 6 dB; it is gone 30 ms before the drop, and the full band returns on the downbeat.
 """
 import os
 import re
@@ -61,14 +66,19 @@ TRACK = dict(
 )
 
 XFADE_S = 0.010                 # equal-power crossfade, placed just BEFORE each cut so downbeats stay intact
-LP_START_HZ = 550.0             # low-pass in the first build section ...
-LP_END_HZ = 8000.0              # ... and in the last section before the drop (fully open from the drop)
-TRIM_START_DB = -2.0            # level in the first build section relative to the last one before the drop
-HOOK_LP_HZ = 2500.0             # a leading section named hook/intro: fairly open, slightly under full level
-HOOK_TRIM_DB = -4.0
+LP_START_HZ = 400.0             # low-pass in the first build section (wave 1) ...
+LP_END_HZ = 9000.0              # ... and in the last section before the drop (fully open from the drop)
+TRIM_START_DB = -7.0            # level in the first build section (wave 1) ...
+TRIM_END_DB = 1.0               # ... and in the last one before the drop, relative to the full level after the drop
+STEP_S = 0.06                   # how quickly each step happens at a wave start
+HOOK_REF_WAVE = 3               # a leading hook/intro section is kept just under this wave ...
+HOOK_LP_FACTOR = 0.8            # ... low-pass = this x the wave's low-pass
+HOOK_UNDER_LU = 1.0             # ... loudness = the wave's measured loudness minus this (applied in mix.py)
 HP_PRE_DROP_HZ = 85.0           # the lowest octave is held back until the drop
-DIP_S = 0.19                    # pre-drop dip: starts this long before the drop
-DIP_DB = -20.0
+HELD_DEFAULT_S = 0.75           # held breath before the drop when the timeline gives no cue for it
+HELD_BAND_HZ = (500.0, 4000.0)  # the thinned-out music is only this band of the bare arpeggios ...
+HELD_DB = (3.0, -3.0)           # ... at this gain (start, end); the band-pass itself already takes about 12 dB off
+HELD_GAP_S = 0.03               # nothing at all for this long right before the drop
 
 
 # --------------------------------------------------------------------------------------- source
@@ -188,7 +198,7 @@ def render(tl, verbose=True):
     info = dict(P)
     info.update(track=TRACK['title'], source_bpm=TRACK['bpm'], tempo_ratio=ratio, stretch_percent=(ratio - 1.0) * 100.0)
 
-    # ---- build automation before the drop: low-pass opening + level step per section (wave)
+    # ---- build automation before the drop: a step in low-pass and level at every wave start
     if drop_i > 0:
         secs = sorted([s for s in tl.get('sections', []) if s.get('t0', 0) < P['drop_t'] - 1e-6], key=lambda s: s['t0'])
         if len(secs) < 2:                                # no section list: a plain 2-second staircase
@@ -197,25 +207,30 @@ def render(tl, verbose=True):
         hook = None
         if len(secs) >= 3 and re.search(r'hook|intro|open|tease', str(secs[0].get('name', '')), re.I):
             hook, secs = secs[0], secs[1:]
-        fc = np.full(drop_i, HOOK_LP_HZ if hook else LP_START_HZ)
-        trim = np.full(drop_i, HOOK_TRIM_DB if hook else TRIM_START_DB)
-        steps = []
-        if hook:
-            steps.append(dict(section=hook.get('name', 'hook'), t0=hook['t0'], lowpass_hz=round(HOOK_LP_HZ), trim_db=HOOK_TRIM_DB))
+        table = []
         for i, s in enumerate(secs):
             a = i / max(1, len(secs) - 1)
-            f_i = LP_START_HZ * (LP_END_HZ / LP_START_HZ) ** a
-            g_i = TRIM_START_DB * (1.0 - a)
+            table.append((LP_START_HZ * (LP_END_HZ / LP_START_HZ) ** a, TRIM_START_DB + (TRIM_END_DB - TRIM_START_DB) * a))
+        ref = min(HOOK_REF_WAVE, len(secs)) - 1
+        hook_set = (HOOK_LP_FACTOR * table[ref][0], table[ref][1]) if hook else table[0]
+        fc = np.full(drop_i, hook_set[0])
+        trim = np.full(drop_i, hook_set[1])
+        steps = []
+        if hook:
+            steps.append(dict(section=hook.get('name', 'hook'), t0=hook['t0'], lowpass_hz=round(hook_set[0]), trim_db=round(hook_set[1], 2)))
+            info['hook'] = dict(t0=float(hook['t0']), t1=float(min(hook.get('t1', secs[0]['t0']), secs[0]['t0'])),
+                                ref_t0=float(secs[ref]['t0']), ref_t1=float(min(secs[ref].get('t1', P['drop_t']), P['drop_t'])),
+                                ref_name=str(secs[ref].get('name', '')), under_lu=HOOK_UNDER_LU)
+        for (f_i, g_i), s in zip(table, secs):
             j0 = int(round(max(s['t0'], 0.0) * SR))
             fc[j0:] = f_i
             trim[j0:] = g_i
-            steps.append(dict(section=s.get('name', f'section{i}'), t0=s['t0'], lowpass_hz=round(f_i), trim_db=round(g_i, 2)))
+            steps.append(dict(section=s.get('name', ''), t0=s['t0'], lowpass_hz=round(f_i), trim_db=round(g_i, 2)))
         info['build_steps'] = steps
-        logf = _smooth(np.log2(fc), 0.15)
-        trim = _smooth(trim, 0.15)
-        pre = out[:drop_i + SR // 2].copy()              # filter a little past the drop, then cut: no edge effects
+        logf = _smooth(np.log2(fc), STEP_S)
+        trim = _smooth(trim, STEP_S)
         hp = signal.butter(2, HP_PRE_DROP_HZ, 'hp', fs=SR, output='sos')
-        pre = signal.sosfiltfilt(hp, pre, axis=0)
+        pre = signal.sosfiltfilt(hp, out[:drop_i + SR // 2], axis=0)   # filtered a little past the drop, then cut
         cuts_hz = 250.0 * 2.0 ** (np.arange(0, 13) / 2.0)   # 250 Hz .. 16 kHz in half octaves
         bank = [signal.sosfiltfilt(signal.butter(2, f, 'lp', fs=SR, output='sos'), pre, axis=0)[:drop_i] for f in cuts_hz]
         pos = np.clip((logf - np.log2(cuts_hz[0])) * 2.0, 0.0, len(cuts_hz) - 1.000001)
@@ -226,19 +241,36 @@ def render(tl, verbose=True):
             wsel = np.where(lo == b, 1.0 - fr[:, 0], 0.0) + np.where(lo + 1 == b, fr[:, 0], 0.0)
             if wsel.any():
                 acc += bank[b] * wsel[:, None]
-        g = 10.0 ** (trim / 20.0)
-        # the dip: the last moments before the drop almost empty, so the drop lands on a clean slate
-        dip = np.ones(drop_i)
-        d0 = max(0, drop_i - int(DIP_S * SR))
-        d1 = max(d0 + 1, drop_i - int(0.03 * SR))
-        ramp = 0.5 + 0.5 * np.cos(np.pi * np.arange(d1 - d0) / (d1 - d0))
-        floor = 10.0 ** (DIP_DB / 20.0)
-        dip[d0:d1] = floor + (1.0 - floor) * ramp
-        dip[d1:] = floor
-        rel = min(int(0.004 * SR), drop_i - d1)          # 4 ms back up, complete exactly on the drop
-        if rel > 0:
-            dip[drop_i - rel:] = floor + (1.0 - floor) * (0.5 - 0.5 * np.cos(np.pi * (np.arange(rel) + 1) / rel))
-        out[:drop_i] = acc * (g * dip)[:, None]
+        acc *= (10.0 ** (trim / 20.0))[:, None]
+        rel = min(int(0.004 * SR), drop_i)               # the 4 ms just before the drop, as cut (pre-roll of the entry)
+        lead_in = out[drop_i - rel:drop_i].copy()
+
+        # the held breath: bare arpeggios, thinned right out, sinking; then nothing; then the drop
+        held = tl.get('held_from')
+        held = P['drop_t'] - HELD_DEFAULT_S if held is None else float(held)
+        held = float(np.clip(held, max(0.0, P['drop_t'] - P['bar']), max(0.0, P['drop_t'] - 0.25)))
+        h0 = int(round(held * SR))
+        info['held_from'] = held
+        m = drop_i - h0
+        if m > int(0.1 * SR):
+            pad = SR // 4
+            bare0 = int(round(((TRACK['intro'][1] - 1) * P['bar'] + (held - (P['drop_t'] - P['bar']))) * SR))   # same place in the bare bar
+            thin = src_slice(bare0 - pad, m + 2 * pad)
+            bp = signal.butter(2, list(HELD_BAND_HZ), 'bp', fs=SR, output='sos')
+            thin = signal.sosfiltfilt(bp, thin, axis=0)[pad:pad + m]
+            gap = int(HELD_GAP_S * SR)
+            fall = np.linspace(HELD_DB[0], HELD_DB[1], m)
+            env = 10.0 ** (fall / 20.0)
+            tailf = min(int(0.10 * SR), m - gap)             # the last 100 ms sink to nothing, then the gap
+            env[m - gap - tailf:m - gap] *= 0.5 + 0.5 * np.cos(np.pi * (np.arange(tailf) + 1) / tailf)
+            env[m - gap:] = 0.0
+            xin = min(int(0.05 * SR), m // 4)                # 50 ms equal-power swap into the thin layer
+            w = np.ones(m)
+            w[:xin] = np.sin(0.5 * np.pi * (np.arange(xin) + 0.5) / xin)
+            acc[h0:] = acc[h0:] * np.sqrt(1.0 - w ** 2)[:, None] + thin * (w * env)[:, None]
+            if rel > 0:                                  # full band fades in over the last 4 ms: no step on the downbeat
+                acc[drop_i - rel:] += lead_in * (0.5 - 0.5 * np.cos(np.pi * (np.arange(rel) + 1) / rel))[:, None]
+        out[:drop_i] = acc
 
     # ---- the ending: the track's own final chord, tail shaped so that it has rung out by the last frame
     if P['final_t'] is not None:

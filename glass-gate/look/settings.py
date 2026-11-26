@@ -33,10 +33,32 @@ def recommended(scene=None, quality='default', look='AgX - Punchy'):
     c.blur_glossy = 2.0                 # with clamp 3: 18 % less seed-to-seed difference at 16 spp, same render time
     c.sample_clamp_indirect = 3.0
     c.sample_clamp_direct = 0.0
-    c.use_light_tree = True
     scene.view_settings.view_transform = 'AgX'
     try:
         scene.view_settings.look = look
     except TypeError:
         pass
+    return scene
+
+
+def final(scene=None, denoise_quality='BALANCED', prefilter='FAST', adaptive_threshold=None, adaptive_min=None):
+    """Cost settings for the final animation. Call AFTER gg_common.setup_cycles(scene, preset) and recommended():
+
+        gg.setup_cycles(sc, 'final'); settings.recommended(sc); settings.final(sc)
+
+    Measured on director/scene.blend (see NOTES.md, round 2). Leaves samples, resolution and threads alone."""
+    scene = scene or bpy.context.scene
+    c = scene.cycles
+    if hasattr(c, 'denoising_quality'):
+        c.denoising_quality = denoise_quality
+    c.denoising_prefilter = prefilter
+    c.use_adaptive_sampling = True
+    if adaptive_threshold is not None:
+        c.adaptive_threshold = adaptive_threshold
+    if adaptive_min is not None:
+        c.adaptive_min_samples = adaptive_min
+    c.use_light_tree = False            # measured: 18-22 % of the frame, and no gain in seed stability with this rig
+    scene.render.use_persistent_data = True
+    if scene.compositing_node_group is not None:
+        scene.render.compositor_device = 'CPU'      # the GPU compositor needs a display and kills a headless bpy
     return scene
