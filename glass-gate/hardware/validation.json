@@ -211,7 +211,7 @@
    }
   },
   "WING_leaf_L": {
-   "neighbours": 5,
+   "neighbours": 4,
    "intersections": {},
    "min_gap_mm": 0.4,
    "closest": "WING_display_L",
@@ -219,7 +219,7 @@
    "boundary": 0,
    "shells": 1,
    "inverted": 0,
-   "volume_cm3": 2485.1290274976013,
+   "volume_cm3": 2475.0598136887015,
    "wall_mm": {
     "min": 11.99,
     "p05": 12.21,
@@ -227,7 +227,7 @@
    }
   },
   "WING_leaf_R": {
-   "neighbours": 5,
+   "neighbours": 4,
    "intersections": {},
    "min_gap_mm": 0.4,
    "closest": "WING_display_R",
@@ -235,7 +235,7 @@
    "boundary": 0,
    "shells": 1,
    "inverted": 0,
-   "volume_cm3": 2485.1290274976013,
+   "volume_cm3": 2475.0598136887024,
    "wall_mm": {
     "min": 11.99,
     "p05": 12.21,
@@ -243,7 +243,7 @@
    }
   },
   "WING_sleeve_L": {
-   "neighbours": 10,
+   "neighbours": 9,
    "intersections": {},
    "min_gap_mm": 0.4,
    "closest": "WING_clamp_a_L",
@@ -251,7 +251,7 @@
    "boundary": 0,
    "shells": 1,
    "inverted": 0,
-   "volume_cm3": 1453.0537134747672,
+   "volume_cm3": 1419.288803569172,
    "wall_mm": {
     "min": 7.99,
     "p05": 7.99,
@@ -259,7 +259,7 @@
    }
   },
   "WING_sleeve_R": {
-   "neighbours": 10,
+   "neighbours": 9,
    "intersections": {},
    "min_gap_mm": 0.4,
    "closest": "WING_clamp_a_R",
@@ -267,7 +267,7 @@
    "boundary": 0,
    "shells": 1,
    "inverted": 0,
-   "volume_cm3": 1453.053713474767,
+   "volume_cm3": 1419.2888035691733,
    "wall_mm": {
     "min": 7.99,
     "p05": 7.99,

@@ -12,7 +12,8 @@ LID_SCREWS = [(52.0, -560.0), (-52.0, -560.0), (52.0, 0.0), (-52.0, 0.0), (52.0,
 PANEL_X0, PANEL_X1 = -60.0, -50.0
 PANEL_Z0, PANEL_Z1 = 36.0, 932.5
 PANEL_Y0, PANEL_Y1 = 40.0, 539.5
-LEAF_X0, LEAF_X1, LEAF_Z0, LEAF_Z1, LEAF_T = 70.0, 368.0, 220.0, 920.0, 12.0
+LEAF_X0, LEAF_X1, LEAF_Z0, LEAF_Z1, LEAF_T = 71.2, 368.0, 220.0, 920.0, 12.0   # hinge edge 1.2 mm outside the rail face: a vertical drop clears the lid
+SLEEVE_Z1 = 908.0      # top of the rotating upper sleeve; the fixed glow ring unit sits above it
 
 
 def post_outline_outer(flutes=18, pts_per=16, depth=1.7, R=70.0):
@@ -51,8 +52,8 @@ def column():
 
 
 def sleeve():
-    mb = lathe(ring_profile(52.0, 60.0, 403.0, 920.0, 2.0, 2), 128, 'GLASS_BODY')
-    return P('WING_sleeve', 2, 12, 'glass', mb, (0, 0, 661.5), parent='WING')
+    mb = lathe(ring_profile(52.0, 60.0, 403.0, SLEEVE_Z1, 2.0, 2), 128, 'GLASS_BODY')
+    return P('WING_sleeve', 2, 12, 'glass', mb, (0, 0, (403.0 + SLEEVE_Z1) / 2), parent='WING')
 
 
 def panel(name, ysign):

@@ -86,22 +86,22 @@ def led_strip():
 
 def colring():
     mb = MB('METAL_ALU')
-    mb.add(lathe(ring_profile(47.0, 54.8, 921.6, 932.4, 0.8, 2), 96, 'METAL_ALU'))
+    mb.add(lathe(ring_profile(47.0, 54.8, 909.6, 932.4, 0.8, 2), 96, 'METAL_ALU'))
     holes = [circle(13.2, 32)] + [circle(10.5, 24, 30.0 * cos(TAU * k / 6), 30.0 * sin(TAU * k / 6)) for k in range(6)]
     mb.add(prism(circle(47.6, 64), 924.0, 928.0, bevel=0.4, holes=holes, hole_bevel=0.3, mat='METAL_ALU'))
     _ball_bearing(mb, 7.06, 13.4, 922.2, 930.2, 9, n=40)
-    mb.add(ring(54.85, 55.1, 922.6, 931.4, 96, mat='PLASTIC_WHITE'))
+    mb.add(ring(54.85, 55.1, 912.1, 920.9, 96, mat='PLASTIC_WHITE'))
     chip = led_chip()
     n = 62
     for k in range(n):
         a = TAU * (k + 0.5) / n
-        M = FRAME((55.1 * cos(a), 55.1 * sin(a), 927.0), (-sin(a), cos(a), 0), (0, 0, 1), (cos(a), sin(a), 0))
+        M = FRAME((55.1 * cos(a), 55.1 * sin(a), 916.5), (-sin(a), cos(a), 0), (0, 0, 1), (cos(a), sin(a), 0))
         mb.add(chip, M)
     wf = lambda v: 0.47 + 0.0 * v[:, 1]
     part = P('LED_colring', 5, 1, 'led', mb, (0, 0, 927))
     part['wave_fn'] = wf
-    # the glow ring: 8.4 mm tall frosted band, 1 mm proud of the column
-    d = lathe(ring_profile(56.3, 61.0, 923.0, 931.4, 0.6, 2), 128, 'LED_DIFFUSER')
+    # the glow ring: 10 mm tall frosted band, 1 mm proud of the column, 12 mm below the rail so the overhang does not hide it
+    d = lathe(ring_profile(56.3, 61.0, 911.5, 921.5, 0.6, 2), 128, 'LED_DIFFUSER')
     dp = P('LED_colring_diffuser', 5, 1, 'led', d, (0, 0, 927), parent='LED_colring', is_child=True)
     dp['wave_fn'] = wf
     return [part, dp]

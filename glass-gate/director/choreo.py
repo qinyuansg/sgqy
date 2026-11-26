@@ -388,7 +388,7 @@ def key_alive(sc, alive):
     # the room holds its breath before the drop, then goes dark on it so the gate's own light carries the frame
     K(sc, F(15.3), house=1.0)
     K(sc, F(DROP_T) - 1, power=0.0, wave=-0.1, house=0.5)
-    K(sc, F(DROP_T), power=1.0, wave=-0.06, house=HOUSE_DROP)
+    K(sc, F(DROP_T), power=1.0, wave=0.04, house=HOUSE_DROP)       # the entry end is already burning on the drop frame
     K(sc, F(DROP_T + 2.4), wave=1.1)
     K(sc, F(18.0), house=HOUSE_DROP)
     K(sc, F(18.0) + 1, house=HOUSE_ALIVE)

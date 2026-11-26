@@ -3,9 +3,8 @@
     import studio
     st = studio.build_studio('dark')        # 'dark' | 'violet' | 'highkey' | 'hdri'
     st['rig'].rotation_euler.z = ...        # every light hangs on one empty: turn the whole rig
-    studio.aim_rig(st['rig'], camera)       # ...or turn it so the rim lights sit behind the gate for this camera
-    studio.aim_rig_shots(scene, st['rig'], camera, cut_frames)     # one held key per shot (recommended)
-    studio.follow_camera(st['rig'], camera)                        # or a driver: the rig travels with the camera
+    studio.aim_for_director(scene)          # ONE call after the camera bake: keys the rig for every shot and checks it
+    studio.aim_rig(st['rig'], camera)       # ...or place it once for one camera (stills)
 
 Every variant builds floor, backdrop, world and lights into the collection STUDIO and returns a dict:
     {'variant', 'collection', 'rig', 'floor', 'backdrop', 'world', 'lights': {name: object}, 'key', 'spark'}
@@ -16,8 +15,10 @@ Light energies: each light object carries a custom property `gg_energy` (watts);
 gg_energy x scene["gg_house"] (the optional studio dimmer in alive.key_alive). To change a light's power, change
 obj["gg_energy"] — not light.energy.
 
-`spark` is the one small hard light: it draws the crisp coloured glass shadows on the floor, the sparkle on the
-bevels, and it is the light the optional MNEE caustics hang on (studio.set_caustics).
+`spark` is the one small hard light: it draws the crisp coloured glass shadows on the floor and the sparkle on the
+bevels. Every other lamp is a soft-edged CARD (soft_light): what glass mirrors of it is a gradient, not a slab.
+No lamp is mirrored by the polished floor: each one has a diffuse-only twin `STUDIO_<name>_FLOOR` that lights only
+the floor (floor_split, light linking); obj["gg_floor_gain"] on the twin scales it.
 """
 import bpy, bmesh, math, os
 from mathutils import Vector, Matrix
@@ -289,6 +290,99 @@ def world_gradient(rig, name, zenith, horizon, strength, lighting=None):
     return w
 
 
+# ----------------------------------------------------------------------------------------------- cards
+def soft_light(ld, edge=0.45):
+    """Give an AREA lamp soft edges: its emission falls smoothly to zero over the outer `edge` of each half side
+    (light node tree on the lamp's parametric coordinates). A soft card mirrors as a gradient, never as a hard slab."""
+    ld.use_nodes = True
+    nt = ld.node_tree
+    nt.nodes.clear()
+    out = _n(nt, 'ShaderNodeOutputLight'); em = _n(nt, 'ShaderNodeEmission')
+    geo = _n(nt, 'ShaderNodeNewGeometry'); sep = _n(nt, 'ShaderNodeSeparateXYZ')
+    nt.links.new(geo.outputs['Parametric'], sep.inputs[0])
+
+    def side(sock):
+        a = _n(nt, 'ShaderNodeMath', operation='SUBTRACT'); nt.links.new(sock, a.inputs[0]); a.inputs[1].default_value = 0.5
+        b = _n(nt, 'ShaderNodeMath', operation='ABSOLUTE'); nt.links.new(a.outputs[0], b.inputs[0])
+        m = _n(nt, 'ShaderNodeMapRange', interpolation_type='SMOOTHERSTEP'); nt.links.new(b.outputs[0], m.inputs[0])
+        m.inputs[1].default_value = 0.5 * (1.0 - edge); m.inputs[2].default_value = 0.5
+        m.inputs[3].default_value = 1.0; m.inputs[4].default_value = 0.0
+        return m.outputs[0]
+    mu = _n(nt, 'ShaderNodeMath', operation='MULTIPLY')
+    nt.links.new(side(sep.outputs[0]), mu.inputs[0]); nt.links.new(side(sep.outputs[1]), mu.inputs[1])
+    nt.links.new(mu.outputs[0], em.inputs['Strength']); nt.links.new(em.outputs[0], out.inputs[0])
+    ld['gg_soft'] = edge
+    return ld
+
+
+def _link_coll(name, floor, state):
+    coll = bpy.data.collections.get(name) or bpy.data.collections.new(name)
+    if floor.name not in coll.objects:
+        coll.objects.link(floor)
+    for co in coll.collection_objects:
+        co.light_linking.link_state = state
+    return coll
+
+
+def floor_split(scene, light_ob, gain=1.0, floor=None, coll=None):
+    """The polished floor must never mirror a lamp. `light_ob` stops lighting the floor (light linking) and gets a twin
+    `STUDIO_<name>_FLOOR`: same lamp, a child in the same place, diffuse only, lighting ONLY the floor with
+    gain x the parent's energy. So every lamp still makes its pool and shadows on the floor, but no lamp shows up in it.
+    Works for any lamp (the director's too). Idempotent."""
+    floor = floor or bpy.data.objects.get('STUDIO_FLOOR')
+    coll = coll or bpy.data.collections.get(COLLECTION)
+    if floor is None or coll is None or light_ob.type != 'LIGHT':
+        return None
+    base = light_ob.name.replace('STUDIO_', '')
+    name = f'STUDIO_{base}_FLOOR'
+    tw = bpy.data.objects.get(name)
+    if tw is None:
+        ld = light_ob.data.copy(); ld.name = name
+        if ld.animation_data:
+            ld.animation_data_clear()
+        tw = bpy.data.objects.new(name, ld)
+        coll.objects.link(tw)
+        tw.parent = light_ob                       # identity child: same place, same aim
+        tw.visible_camera = False; tw.visible_glossy = False     # transmission stays on (MNEE needs it)
+        fc = ld.driver_add('energy'); d = fc.driver; d.type = 'SCRIPTED'
+        if 'gg_energy' in light_ob:
+            v = d.variables.new(); v.name = 'e'; v.type = 'SINGLE_PROP'
+            v.targets[0].id_type = 'OBJECT'; v.targets[0].id = light_ob; v.targets[0].data_path = '["gg_energy"]'
+            v = d.variables.new(); v.name = 'h'; v.type = 'SINGLE_PROP'
+            v.targets[0].id_type = 'SCENE'; v.targets[0].id = scene; v.targets[0].data_path = '["gg_house"]'
+            v = d.variables.new(); v.name = 'g'; v.type = 'SINGLE_PROP'
+            v.targets[0].id_type = 'OBJECT'; v.targets[0].id = tw; v.targets[0].data_path = '["gg_floor_gain"]'
+            d.expression = 'e*h*g'
+        else:                                       # a foreign lamp: follow whatever its energy does
+            v = d.variables.new(); v.name = 'e'; v.type = 'SINGLE_PROP'
+            v.targets[0].id_type = 'LIGHT'; v.targets[0].id = light_ob.data; v.targets[0].data_path = 'energy'
+            v = d.variables.new(); v.name = 'g'; v.type = 'SINGLE_PROP'
+            v.targets[0].id_type = 'OBJECT'; v.targets[0].id = tw; v.targets[0].data_path = '["gg_floor_gain"]'
+            d.expression = 'e*g'
+        if light_ob.data.type == 'SPOT':
+            for src in ('spot_size', 'spot_blend'):
+                fc = ld.driver_add(src); d = fc.driver; d.type = 'AVERAGE'
+                v = d.variables.new(); v.name = 'v'; v.type = 'SINGLE_PROP'
+                v.targets[0].id_type = 'LIGHT'; v.targets[0].id = light_ob.data; v.targets[0].data_path = src
+    tw['gg_floor_gain'] = float(gain)
+    light_ob.light_linking.receiver_collection = _link_coll('STUDIO_LL_nofloor', floor, 'EXCLUDE')
+    tw.light_linking.receiver_collection = _link_coll('STUDIO_LL_floor', floor, 'INCLUDE')
+    return tw
+
+
+def link_only(light_ob, objects, name):
+    """Light linking: `light_ob` lights (and is mirrored by) these objects only."""
+    coll = bpy.data.collections.get(name) or bpy.data.collections.new(name)
+    for o in list(coll.objects):
+        coll.objects.unlink(o)
+    for o in objects:
+        coll.objects.link(o)
+    for co in coll.collection_objects:
+        co.light_linking.link_state = 'INCLUDE'
+    light_ob.light_linking.receiver_collection = coll if objects else None
+    return coll
+
+
 # ----------------------------------------------------------------------------------------------- the variants
 TARGET = (0.0, 0.0, 0.52)
 
@@ -299,87 +393,100 @@ def _rel(rel_deg, radius, z):
     return (radius * math.cos(a), radius * math.sin(a), z)
 
 
-def _rims(rig, energy, fill=0.3, radius=3.0, size=(0.40, 2.6), z=1.32, color=(0.86, 0.90, 1.0), rel=118.0):
-    """Two tall strip lights behind the gate, left and right, just outside the frame: they are refracted and reflected
-    in every glass edge (dark-field lighting). Plus a dimmer strip beside the camera for the faces turned to the lens."""
-    for name, r in (('RIM_L', -rel), ('RIM_R', rel)):
-        rig.area(name, _rel(r, radius, z), (0, 0, z * 0.7), size, energy, color=color, spread=math.radians(100))
-    if fill > 0:
-        rig.area('FILL', _rel(32.0, radius, z + 0.2), (0, 0, 0.6), (0.5, 2.2), energy * fill, color=color, spread=math.radians(120))
+def _card(rig, name, rel, radius, z, aim, size, radiance, color=(1, 1, 1), soft=0.45, floor_gain=0.3):
+    """A soft-edged light card. `radiance` is its peak brightness as a mirror would show it (W/m2/sr): what a flat
+    glass face reflects is about 4-8 % of that, a bevel or a brass tooth up to all of it."""
+    energy = radiance * math.pi * size[0] * size[1]
+    ob = rig.area(name, _rel(rel, radius, z), aim, size, energy, color=color)
+    soft_light(ob.data, soft)
+    ob['gg_floor_gain'] = float(floor_gain)
+    return ob
+
+
+RIM_REL = 125.0        # the rims stand this far round from the lens axis: outside any 24 mm+ frame, and away from the
+#                        direction a side panel mirrors in the usual 3/4 view (about 100 degrees)
+
+
+def _cards(rig, key=7.0, front=2.6, rim=11.0, color=(0.88, 0.92, 1.0), warm=(1.0, 0.97, 0.93)):
+    """The card set of the dark / violet studios (positions relative to the lens axis, see aim_rig):
+        KEY     big soft box overhead: lights the parts from above, top bevels, the rail lid
+        FRONT   big soft wall behind the camera: the sheen across glass faces turned to the lens (the wings!)
+        RIM_L/R tall soft strips left and right, behind the gate, out of frame: edge light in every bevel and flute
+        GEAR    soft card above and behind, linked to the drive parts only (see _finish_cards)"""
+    rig.out['key'] = _card(rig, 'KEY', -20.0, 0.5, 3.5, TARGET, (3.4, 3.4), key, color=warm, soft=0.5, floor_gain=0.35)
+    _card(rig, 'FRONT', 6.0, 3.4, 1.45, (0.0, 0.0, 1.2), (3.8, 2.3), front, color=color, soft=0.55, floor_gain=0.25)
+    _card(rig, 'RIM_L', -RIM_REL, 3.2, 1.40, (0.0, 0.0, 0.95), (1.0, 2.8), rim, color=color, soft=0.6, floor_gain=0.25)
+    _card(rig, 'RIM_R', RIM_REL, 3.2, 1.40, (0.0, 0.0, 0.95), (1.0, 2.8), rim, color=color, soft=0.6, floor_gain=0.25)
+    _card(rig, 'GEAR', 172.0, 2.1, 1.75, (0.0, 0.0, 0.3), (2.6, 1.6), 9.0, color=warm, soft=0.55, floor_gain=0.0)
 
 
 SPARK_POS = dict(rel=150.0, radius=4.2, z=2.35)      # low, behind the gate, a little to the right of the lens axis
+GEAR_PREFIX = ('DRV_',)                             # objects the GEAR card lights
 
 
 def _spark(rig, energy, color=(1.0, 0.98, 0.95), cone=30.0):
-    """The hard light: from behind and fairly low, so the coloured glass shadows and the caustic streaks run across the
-    floor TOWARD the camera, and every glass edge is back-lit.
-
-    It is two lamps in one place: SPARK lights everything except the floor (light linking), SPARK_FLOOR (a child of
-    SPARK, diffuse only) lights only the floor. Without the split the polished floor mirrors the bare lamp as a
-    burnt-out hot spot. Move / re-aim SPARK; change SPARK["gg_energy"]; the child follows both."""
+    """The hard light: from behind and fairly low, so the coloured glass shadows and the light streaks run across the
+    floor TOWARD the camera, and every glass edge is back-lit. A spot is a point: it glints, it never makes a slab."""
     loc = _rel(SPARK_POS['rel'], SPARK_POS['radius'], SPARK_POS['z'])
     sp = rig.spot('SPARK', loc, (0.0, 0.0, 0.30), energy, cone=math.radians(cone), blend=0.5, color=color)
+    sp['gg_floor_gain'] = 1.0
     rig.out['spark'] = sp
-    rig._spark_color = color
     return sp
 
 
-def _finish_spark(rig):
-    """Called once the floor exists: adds SPARK_FLOOR and the light-linking collections."""
-    sp, floor = rig.out.get('spark'), rig.out.get('floor')
-    if sp is None or floor is None:
+def _finish_cards(rig):
+    """Once the floor exists: every studio lamp gets its floor twin (floor_split), GEAR is linked to the drive."""
+    floor = rig.out.get('floor')
+    if floor is None:
         return
-    ld = sp.data.copy(); ld.name = 'STUDIO_SPARK_FLOOR'
-    if ld.animation_data:
-        ld.animation_data_clear()
-    ob = bpy.data.objects.new('STUDIO_SPARK_FLOOR', ld)
-    rig.coll.objects.link(ob)
-    ob.parent = sp                                   # identity child: same place, same aim
-    ob.visible_camera = False; ob.visible_glossy = False      # transmission stays on: MNEE caustics need it
-    _house_driver(ld, 'energy', rig.scene, base_expr_var=(sp, 'gg_energy'))
-    for i, (src, tgt) in enumerate((('spot_size', 'spot_size'), ('spot_blend', 'spot_blend'))):
-        fc = ld.driver_add(tgt); d = fc.driver; d.type = 'AVERAGE'
-        v = d.variables.new(); v.name = 'v'; v.type = 'SINGLE_PROP'
-        v.targets[0].id_type = 'LIGHT'; v.targets[0].id = sp.data; v.targets[0].data_path = src
-    for name, light, state in (('STUDIO_LL_spark', sp, 'EXCLUDE'), ('STUDIO_LL_spark_floor', ob, 'INCLUDE')):
-        coll = bpy.data.collections.get(name) or bpy.data.collections.new(name)
-        for o in list(coll.objects):
-            coll.objects.unlink(o)
-        coll.objects.link(floor)
-        coll.collection_objects[0].light_linking.link_state = state
-        light.light_linking.receiver_collection = coll
-    rig.lights['SPARK_FLOOR'] = ob
-    rig.out['spark_floor'] = ob
+    for key, ob in list(rig.lights.items()):
+        if key.endswith('_FLOOR') or ob.name.endswith('_FLOOR'):
+            continue
+        if key == 'GEAR':
+            link_gear(rig.scene)
+            continue
+        tw = floor_split(rig.scene, ob, gain=ob.get('gg_floor_gain', 0.3), floor=floor, coll=rig.coll)
+        if tw is not None:
+            rig.lights[tw.name.replace('STUDIO_', '')] = tw
+    rig.out['spark_floor'] = rig.lights.get('SPARK_FLOOR')
+
+
+def link_gear(scene=None):
+    """(Re)link the GEAR card to the drive parts (objects named DRV_*). Call again after the gate objects changed."""
+    scene = scene or bpy.context.scene
+    g = bpy.data.objects.get('STUDIO_GEAR')
+    if g is None:
+        return 0
+    objs = [o for o in scene.objects if o.type == 'MESH' and o.name.startswith(GEAR_PREFIX)]
+    link_only(g, objs, 'STUDIO_LL_gear')
+    g.hide_render = not objs
+    return len(objs)
 
 
 def studio_dark(rig):
-    """Black studio: polished black floor running into darkness, soft top key, two cool strip lights behind the gate
-    (rim on every glass edge), a dim strip beside the camera, one hard spark light from behind."""
-    sc = rig.scene
+    """Black studio: polished black floor running into darkness; soft cards only (overhead key, a wall behind the
+    camera, two strips behind the gate), one hard spark light from behind. No lamp is ever mirrored by the floor."""
     world_gradient(rig, 'STUDIO_WORLD_dark', zenith=(0.002, 0.002, 0.005), horizon=(0.010, 0.009, 0.026), strength=1.0)
     m = floor_material('STUDIO_FLOOR_dark', (0.012, 0.012, 0.016), rough=0.6, rough_var=0.05, spec=0.0, coat=1.0, coat_rough=0.045,
                        pool=((0.024, 0.024, 0.030), 0.9, 3.2), fade=((0.010, 0.009, 0.026), 9.0, 45.0))
     floor = rig.disc('STUDIO_FLOOR', 80.0, m)
     rig.out['floor'] = floor; rig.out['backdrop'] = None
-    rig.out['key'] = rig.area('KEY', _rel(-25.0, 1.7, 3.3), TARGET, (2.4, 2.4), 180.0, color=(1.0, 0.97, 0.93), spread=math.radians(100))
-    _rims(rig, 420.0, fill=0.2)
-    _spark(rig, 12000.0)
+    _cards(rig)
+    _spark(rig, 9000.0)
     return rig.out
 
 
 def studio_violet(rig):
     """Deep blue-violet cyc: the round wall glows from a violet horizon into indigo black, polished violet-black floor,
-    soft key, cool rims, hard spark. The glass picks the gradient up in every refraction."""
+    the same soft cards and spark as 'dark'. The glass picks the gradient up in every refraction."""
     world_gradient(rig, 'STUDIO_WORLD_violet', zenith=(0.002, 0.0015, 0.010), horizon=(0.008, 0.005, 0.03), strength=1.0)
     m = floor_material('STUDIO_FLOOR_violet', (0.007, 0.005, 0.020), rough=0.6, rough_var=0.05, spec=0.0, coat=1.0, coat_rough=0.045,
                        pool=((0.018, 0.015, 0.040), 0.9, 3.2),
                        glow=((0.022, 0.008, 0.125), (0.001, 0.0007, 0.007), 1.0, 1.3, 7.0), fillet=2.6)
     floor = rig.cyc('STUDIO_FLOOR', 7.5, 2.6, 7.0, m)
     rig.out['floor'] = floor; rig.out['backdrop'] = floor
-    rig.out['key'] = rig.area('KEY', _rel(-25.0, 1.7, 3.3), TARGET, (2.4, 2.4), 180.0, color=(1.0, 0.96, 0.95), spread=math.radians(100))
-    _rims(rig, 400.0, fill=0.2, color=(0.80, 0.84, 1.0))
-    _spark(rig, 11000.0, color=(1.0, 0.97, 0.95))
+    _cards(rig, color=(0.80, 0.84, 1.0), warm=(1.0, 0.96, 0.95))
+    _spark(rig, 8500.0, color=(1.0, 0.97, 0.95))
     return rig.out
 
 
@@ -391,7 +498,7 @@ def studio_highkey(rig):
                        glow=((0.88, 0.89, 0.92), (0.70, 0.72, 0.78), 1.7, 1.2, 7.0), fillet=2.6)
     floor = rig.cyc('STUDIO_FLOOR', 7.5, 2.6, 7.0, m)
     rig.out['floor'] = floor; rig.out['backdrop'] = floor
-    rig.out['key'] = rig.area('KEY', _rel(-25.0, 1.2, 3.6), TARGET, (3.6, 3.6), 1100.0, color=(1.0, 0.99, 0.97), spread=math.radians(140))
+    rig.out['key'] = _card(rig, 'KEY', -25.0, 1.2, 3.6, TARGET, (3.6, 3.6), 27.0, color=(1.0, 0.99, 0.97), soft=0.4, floor_gain=1.0)
     _spark(rig, 20000.0, color=(1.0, 0.98, 0.96))
     # black cards: seen by reflections only, they draw dark lines into every glass face and bevel
     bm_ = bpy.data.materials.get('STUDIO_BLACKCARD') or bpy.data.materials.new('STUDIO_BLACKCARD')
@@ -462,7 +569,7 @@ def build_studio(variant='dark', scene=None):
         raise ValueError(f'unknown studio variant {variant!r}; choose from {VARIANTS}')
     rig = Rig(scene, variant)
     out = _BUILD[variant](rig)
-    _finish_spark(rig)
+    _finish_cards(rig)
     scene['gg_studio'] = variant
     bpy.context.view_layer.update()
     return out
@@ -480,67 +587,212 @@ def get_studio(scene=None):
             'world': scene.world, 'lights': lights, 'key': lights.get('KEY') or lights.get('SPARK'), 'spark': lights.get('SPARK')}
 
 
-def aim_rig(rig, camera, frame=None):
-    """Turn the whole light rig about Z so it is lit for this camera position the way the tests were
-    (key over the camera's left shoulder, spark behind the gate). Optionally keyframe it."""
-    bpy.context.view_layer.update()            # a freshly made / moved camera has a stale matrix_world
-    loc = camera.matrix_world.translation
-    rig.rotation_euler.z = math.atan2(loc.y, loc.x) - DESIGN_AZIMUTH
-    if frame is not None:
-        rig.keyframe_insert('rotation_euler', index=2, frame=frame)
-    return rig.rotation_euler.z
+# ----------------------------------------------------------------------------------------------- aiming the rig
+GATE_HALF = (0.50, 0.75)         # the subject point is kept inside this footprint (metres)
 
 
-def aim_rig_shots(scene, rig, camera, cut_frames, sample='mid'):
-    """Aim the rig once per shot and hold it (CONSTANT keys), so the light does not travel during a shot.
-    cut_frames = first frame of every shot, plus the last frame of the film, e.g. [0, 120, 300, ..., 1559].
-    The camera azimuth is sampled at the middle of each shot (sample='mid') or at its first frame ('start')."""
-    out = []
-    cur = scene.frame_current
-    for f0, f1 in zip(cut_frames[:-1], cut_frames[1:]):
-        fs = (f0 + f1) // 2 if sample == 'mid' else f0
-        scene.frame_set(fs)
-        rz = aim_rig(rig, camera)
-        rig.keyframe_insert('rotation_euler', index=2, frame=f0)
-        out.append((f0, rz))
-    ad = rig.animation_data
-    if ad and ad.action:
-        act = ad.action
-        fcs = []
-        if hasattr(act, 'layers'):
-            for layer in act.layers:
-                for strip in layer.strips:
-                    for cb in getattr(strip, 'channelbags', []):
-                        fcs.extend(cb.fcurves)
-        elif hasattr(act, 'fcurves'):
-            fcs.extend(act.fcurves)
-        for fc in fcs:
-            if fc.data_path == 'rotation_euler' and fc.array_index == 2:
-                for kp in fc.keyframe_points:
-                    kp.interpolation = 'CONSTANT'
-    scene.frame_set(cur)
+def _fcurves(idblock):
+    ad = idblock.animation_data
+    if ad is None or ad.action is None:
+        return []
+    act, out = ad.action, []
+    if hasattr(act, 'layers'):
+        for layer in act.layers:
+            for strip in layer.strips:
+                for cb in getattr(strip, 'channelbags', []):
+                    out.extend(cb.fcurves)
+    elif hasattr(act, 'fcurves'):
+        out.extend(act.fcurves)
     return out
 
 
-def follow_camera(rig, camera):
-    """Alternative to keys: a driver turns the rig with the camera's azimuth all the time (the rig behaves as if it
-    were mounted on the camera crane; shadows on the floor then travel during an orbit)."""
-    rig.animation_data_clear()
-    fc = rig.driver_add('rotation_euler', 2)
-    d = fc.driver; d.type = 'SCRIPTED'
-    for name, tt in (('x', 'LOC_X'), ('y', 'LOC_Y')):
-        v = d.variables.new(); v.name = name; v.type = 'TRANSFORMS'
-        v.targets[0].id = camera; v.targets[0].transform_type = tt; v.targets[0].transform_space = 'WORLD_SPACE'
-    d.expression = f'atan2(y, x) - ({DESIGN_AZIMUTH:.6f})'
-    return fc
+def rig_pose(camera):
+    """(x, y, rot_z) of the rig for the camera as it stands NOW.
+
+    The rig is placed on the SUBJECT (where the lens axis meets the gate: the focus point if depth of field is on,
+    else where the axis crosses z = 0.5), and turned so that the design camera direction lies along the real lens
+    axis. So the cards keep their place relative to the frame whatever the camera looks at or from how close."""
+    bpy.context.view_layer.update()            # a freshly made / moved camera has a stale matrix_world
+    mw = camera.matrix_world
+    p = mw.translation
+    fw = -(mw.to_3x3() @ Vector((0.0, 0.0, 1.0))).normalized()
+    dof = camera.data.dof
+    if dof.use_dof and dof.focus_object is not None:
+        s = dof.focus_object.matrix_world.translation.copy()
+    elif dof.use_dof and dof.focus_distance > 0.05:
+        s = p + fw * dof.focus_distance
+    elif fw.z < -0.05:
+        s = p + fw * ((0.5 - p.z) / fw.z)
+    else:
+        s = p + fw * max(0.3, Vector((p.x, p.y)).length)
+    sx = max(-GATE_HALF[0], min(GATE_HALF[0], s.x)); sy = max(-GATE_HALF[1], min(GATE_HALF[1], s.y))
+    h = Vector((fw.x, fw.y))
+    if h.length < 0.15:                         # looking almost straight down: fall back to where the camera stands
+        h = Vector((sx - p.x, sy - p.y))
+    if h.length < 1e-4:
+        h = Vector((0.0, 1.0))
+    rz = math.atan2(-h.y, -h.x) - DESIGN_AZIMUTH
+    return sx, sy, rz
+
+
+def aim_rig(rig, camera, frame=None):
+    """Put the light rig where this camera needs it (see rig_pose): key above, soft wall behind the lens, the two rim
+    strips behind the gate just outside the frame, spark low behind. Optionally keyframe it."""
+    x, y, rz = rig_pose(camera)
+    rig.location.x, rig.location.y = x, y
+    rig.rotation_euler.z = rz
+    if frame is not None:
+        rig.keyframe_insert('location', index=0, frame=frame); rig.keyframe_insert('location', index=1, frame=frame)
+        rig.keyframe_insert('rotation_euler', index=2, frame=frame)
+    return rz
+
+
+def _unwrap(a, ref):
+    while a - ref > math.pi: a -= 2 * math.pi
+    while a - ref < -math.pi: a += 2 * math.pi
+    return a
+
+
+def aim_rig_shots(scene, rig, camera, cut_frames, hold_deg=12.0, hold_m=0.35, samples=5):
+    """Key the rig for every shot. cut_frames = first frame of each shot + the last frame of the film.
+    A shot whose camera hardly turns gets ONE held pose (the light does not travel). A shot with a big move (the lens
+    axis turns more than hold_deg, or the subject moves more than hold_m) is tracked: the rig follows the camera
+    through `samples` keys, as if it rode on the crane. Cuts are hard (CONSTANT) so nothing bleeds across them.
+    Returns [(first_frame, last_frame, 'hold'|'track', rot_deg_first, rot_deg_last)]."""
+    cur = scene.frame_current
+    if rig.animation_data:
+        rig.animation_data_clear()
+    report, keys = [], []
+    shots = list(zip(cut_frames[:-1], cut_frames[1:]))
+    for i, (f0, f_next) in enumerate(shots):
+        f1 = f_next - 1 if i < len(shots) - 1 else f_next
+        f1 = max(f1, f0)
+        fs = sorted({int(round(f0 + (f1 - f0) * k / (samples - 1))) for k in range(samples)})
+        poses = []
+        for f in fs:
+            scene.frame_set(f)
+            x, y, rz = rig_pose(camera)
+            if poses:
+                rz = _unwrap(rz, poses[-1][3])
+            poses.append((f, x, y, rz))
+        rzs = [p[3] for p in poses]
+        spread = math.degrees(max(rzs) - min(rzs))
+        move = max(math.hypot(p[1] - poses[0][1], p[2] - poses[0][2]) for p in poses)
+        if spread <= hold_deg and move <= hold_m:
+            mid = poses[len(poses) // 2]
+            keys.append((f0, mid[1], mid[2], mid[3], 'CONSTANT'))
+            report.append((f0, f1, 'hold', round(math.degrees(mid[3]), 1), round(math.degrees(mid[3]), 1)))
+        else:
+            for k, (f, x, y, rz) in enumerate(poses):
+                keys.append((f, x, y, rz, 'CONSTANT' if k == len(poses) - 1 else 'LINEAR'))
+            report.append((f0, f1, 'track', round(math.degrees(poses[0][3]), 1), round(math.degrees(poses[-1][3]), 1)))
+    for f, x, y, rz, interp in keys:
+        rig.location.x, rig.location.y, rig.rotation_euler.z = x, y, rz
+        rig.keyframe_insert('location', index=0, frame=f); rig.keyframe_insert('location', index=1, frame=f)
+        rig.keyframe_insert('rotation_euler', index=2, frame=f)
+    kmap = {k[0]: k[4] for k in keys}
+    for fc in _fcurves(rig):
+        for kp in fc.keyframe_points:
+            kp.interpolation = kmap.get(int(round(kp.co[0])), 'CONSTANT')
+        fc.update()
+    scene.frame_set(cur)
+    return report
+
+
+def cut_frames_from(scene, timeline=None):
+    """First frame of every shot + the last frame. Source: the scene's timeline markers if there are at least two,
+    else `cuts` (seconds) in shared/timeline.json."""
+    ms = sorted({m.frame for m in scene.timeline_markers})
+    if len(ms) >= 2:
+        cuts = [f for f in ms if scene.frame_start <= f <= scene.frame_end]
+        src = 'markers'
+    else:
+        import json
+        path = timeline or os.path.join(os.path.dirname(HERE), 'shared', 'timeline.json')
+        tl = json.load(open(path))
+        fps = tl.get('fps', scene.render.fps)
+        cuts = [int(round(t * fps)) for t in tl['cuts']]
+        src = os.path.relpath(path, os.path.dirname(HERE))
+    cuts = sorted(set(cuts) | {scene.frame_start})
+    cuts = [f for f in cuts if f < scene.frame_end] + [scene.frame_end]
+    return cuts, src
+
+
+def cards(scene=None):
+    """The lamps that could show as a shape: every AREA lamp of the scene except the floor twins (diffuse only,
+    floor only) and GEAR (linked to the drive parts only: no glass and no floor ever sees it)."""
+    scene = scene or bpy.context.scene
+    return [o for o in scene.objects if o.type == 'LIGHT' and o.data.type == 'AREA'
+            and not o.name.endswith('_FLOOR') and o.name != 'STUDIO_GEAR' and not o.name.startswith('GG_')]
+
+
+def check_cards(scene, frames, camera=None, margin=0.04, verbose=True):
+    """For each frame: is any part of any card inside the camera frame (it would then show through the glass in front
+    of it)? Lamps that are off at that frame are skipped. Returns [(frame, lamp name, covered fraction of its 9 probes)]."""
+    from bpy_extras.object_utils import world_to_camera_view
+    camera = camera or scene.camera
+    cur = scene.frame_current
+    bad = []
+    for f in frames:
+        scene.frame_set(f)
+        dg = bpy.context.evaluated_depsgraph_get()
+        for ob in cards(scene):
+            ev = ob.evaluated_get(dg)
+            if ev.data.energy <= 1e-4 or ob.hide_render:
+                continue
+            hx = ev.data.size / 2
+            hy = (ev.data.size_y if ev.data.shape in ('RECTANGLE', 'ELLIPSE') else ev.data.size) / 2
+            soft = ob.data.get('gg_soft', 0.0)
+            hx *= (1.0 - 0.5 * soft); hy *= (1.0 - 0.5 * soft)         # the outer part of a soft card is nearly dark
+            n = 0
+            for ux in (-1, 0, 1):
+                for uy in (-1, 0, 1):
+                    co = ev.matrix_world @ Vector((ux * hx, uy * hy, 0.0))
+                    v = world_to_camera_view(scene, camera, co)
+                    if v.z > 0 and -margin < v.x < 1 + margin and -margin < v.y < 1 + margin:
+                        n += 1
+            if n:
+                bad.append((f, ob.name, round(n / 9, 2)))
+    scene.frame_set(cur)
+    if verbose:
+        print(f'[studio] card check on {len(frames)} frames: ' + ('no card in frame' if not bad else f'{len(bad)} hits: {bad[:12]}'))
+    return bad
+
+
+def aim_for_director(scene=None, camera=None, timeline=None, others=True, verbose=True):
+    """ONE call after the camera bake. Finds STUDIO_RIG and the camera (DIRECTOR_CAM, else scene.camera), reads the cuts
+    (timeline markers, else shared/timeline.json), keys the rig per shot (aim_rig_shots), gives every other AREA lamp in
+    the scene soft edges and a floor twin (others=True: the director's sweep / pass lights then cannot print a hard
+    slab either), re-links the GEAR card, and checks first / middle / last frame of every shot for a card in frame.
+    Returns {'cuts', 'source', 'shots', 'in_frame'}."""
+    scene = scene or bpy.context.scene
+    rig = bpy.data.objects.get('STUDIO_RIG')
+    camera = camera or bpy.data.objects.get('DIRECTOR_CAM') or scene.camera
+    if rig is None or camera is None:
+        raise RuntimeError('aim_for_director: needs a built studio (STUDIO_RIG) and a camera')
+    cuts, src = cut_frames_from(scene, timeline)
+    shots = aim_rig_shots(scene, rig, camera, cuts)
+    if others:
+        for ob in list(scene.objects):
+            if ob.type == 'LIGHT' and ob.data.type == 'AREA' and not ob.name.startswith(('STUDIO_', 'GG_')):
+                if 'gg_soft' not in ob.data:
+                    soft_light(ob.data, 0.5)
+                floor_split(scene, ob, gain=0.6)
+    link_gear(scene)
+    probe = sorted({f for (f0, f1, *_r) in shots for f in (f0, (f0 + f1) // 2, f1)})
+    bad = check_cards(scene, probe, camera, verbose=False)
+    if verbose:
+        print(f'[studio] aim_for_director: {len(shots)} shots from {src}; '
+              + ', '.join(f'{f0}-{f1} {m}' for f0, f1, m, *_r in shots))
+        print('[studio] cards in frame at first/mid/last of every shot: ' + ('none' if not bad else str(bad)))
+    return {'cuts': cuts, 'source': src, 'shots': shots, 'in_frame': bad}
 
 
 def set_caustics(scene=None, mode='mnee', verbose=True):
     """Floor caustics. mode 'off' : coloured transparent glass shadows only (free).
                        mode 'mnee': Cycles shadow caustics (manifold next-event estimation) from the SPARK light through
-                                    every GLASS_BODY / GLASS_WING object onto the floor. Deterministic (no fireflies),
-                                    follows the animation. Costs render time on floor pixels (see NOTES.md).
-    Call again after objects were added."""
+                                    every GLASS_BODY / GLASS_WING object onto the floor. Measured: no visible gain on the
+                                    real gate for +9 % render time (see NOTES.md). Off by default."""
     scene = scene or bpy.context.scene
     on = mode == 'mnee'
     spark = bpy.data.objects.get('STUDIO_SPARK_FLOOR') or bpy.data.objects.get('STUDIO_SPARK')
@@ -560,4 +812,3 @@ def set_caustics(scene=None, mode='mnee', verbose=True):
     if verbose:
         print(f'[studio] caustics {mode}: {n} glass casters, light {spark.name if spark else None}, receiver {floor.name if floor else None}')
     return n
-

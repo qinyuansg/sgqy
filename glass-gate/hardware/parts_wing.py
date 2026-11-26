@@ -73,7 +73,7 @@ def display():
 
 def hubs():
     mb = MB('METAL_ALU')
-    for (z0, z1) in ((406.0, 416.0), (900.0, 910.0)):
+    for (z0, z1) in ((406.0, 416.0), (884.0, 894.0)):
         holes = [circle(9.15, 32)] + [circle(10.5, 24, 31.0 * cos(TAU * k / 6), 31.0 * sin(TAU * k / 6)) for k in range(6)]
         mb.add(prism(circle(51.4, 96), z0, z1, bevel=0.8, segs=2, holes=holes, hole_bevel=0.4, mat='METAL_ALU'))
         mb.add(ring(9.15, 15.5, z0 - 2.0, z1 + 4.0, 40, ch=0.6, mat='METAL_ALU'))

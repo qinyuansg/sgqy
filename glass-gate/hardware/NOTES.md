@@ -55,9 +55,9 @@ the R pedestal is the mirror image (mesh data mirrored, normals recalculated; ob
 
 ## Numbers (current build)
 
-- 126 mesh objects + 4 pivot Empties, collections `GATE_L` / `GATE_R`, 27 materials (contract names only, none added).
+- 138 mesh objects + 4 pivot Empties, collections `GATE_L` / `GATE_R` / `PROPS`, 28 materials (contract names + `LED_DIFFUSER`).
 - 124 manifest parts (62 per side; `WING_display_<s>` is listed as a child of `WING_leaf_<s>`).
-- **844,296 triangles** (budget 1.5 M). Biggest: motor 2 x 58 k, PCB 2 x 60 k, rail LED strip 2 x 50 k.
+- **868,196 triangles** (budget 1.5 M). Biggest: motor 2 x 58 k, PCB 2 x 60 k, rail LED strip 2 x 50 k.
 - Bounding box X +-0.45, Y +-0.70, Z 0...1.028.
 - Build time about 4 s; validate 4 s; motion check 20 s.
 
@@ -96,3 +96,20 @@ the R pedestal is the mirror image (mesh data mirrored, normals recalculated; ob
 - PCB_GREEN boards other than the controller, RFID, QR and LCD driver have no UV map.
 - No bevel on the tiniest SMD parts (0603 passives, IC pins, LED pads): they are plain boxes.
 - Feet are assembled first (wave 1, order 0) and the base is lowered onto their studs; anchors follow.
+
+## Round 2 (director review)
+
+- **Light guides** (`LED_DIFFUSER`, new material): every LED part has a child `<name>_diffuser_<s>` with the same `wave_u` as its chips.
+  Rail: closed band 4 mm deep x 6.2 mm tall round the whole perimeter, flush with the glass faces (local |x| 66..70, z 933.7..939.9), filling the seam
+  between post tops and lid, so it is the outermost thing at that height from outside and from the lane. To make room the spine and the LED flex were
+  narrowed by 3.2 mm per side. Column: glow ring r 56.3..61 (1 mm proud of the column), z 911.5..921.5 - moved 12 mm below the rail because the rail
+  overhang hid it; the rotating sleeve now ends at z 908 and the fixed ring unit is taller. Post accent bars: real chips + a frosted capsule bar.
+  Wing edge strips: a U-channel light guide over the chips, facing the leaf's hinge edge.
+- **`PROP_card`** (collection `PROPS`, not in `parts`, listed under manifest `props`): 85.6 x 54 x 1.2 mm clear card (GLASS_WING, r 3.2, 0.2 mm bevel) with child
+  `PROP_card_inlay`: 4-turn copper antenna, chip module with 6 gold pads, printed ring + dot + bar. Rest pose over the L card-tap icon, 1.5 mm above the lid.
+- **Cable ends reshaped** so the wave-1 landing works: the PCB's two bottom-edge headers are now right-angle, bottom-entry; plugs and risers stand
+  straight up under them and stop 0.3 mm short of the pins, and the PSU cable tips stop 0.3 mm under the terminal block. Nothing is crossed by a vertical drop.
+- Leaf hinge edge moved from local x 70 to 71.2 (leaf 1.2 mm narrower) so a vertical drop clears the rail face; clamp jaw slot widened (rubber liners 0.85 mm off the glass).
+- `check_motion.py [gears] [posts] [cables] [leaf]` now also runs the director's three checks (results in the hand-back; all clear).
+- Proof stills: `preview/led_entry.png`, `preview/led_close.png`, `preview/led_column.png` (plain emission on LED_DIFFUSER), `preview/card.png`.
+- Landing-order note: cables must land in the order 0, 1, 2 (or together); cable 0 dropped onto an already seated cable 1 would cross it at the lane changes.

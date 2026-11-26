@@ -1,5 +1,5 @@
 {
- "version": 7,
+ "version": 8,
  "fps": 60,
  "bpm": 120,
  "duration_s": 26.0,
@@ -265,17 +265,9 @@
    "t": 3.5,
    "sfx": "click",
    "part": "ELE_cable_0_L+ELE_cable_0_R",
-   "gain": 0.55,
+   "gain": 0.605,
    "pan": 0.18,
    "var": 10
-  },
-  {
-   "t": 3.6333,
-   "sfx": "click",
-   "part": "ELE_cable_1_L+ELE_cable_1_R",
-   "gain": 0.55,
-   "pan": 0.17,
-   "var": 11
   },
   {
    "t": 4.0,
@@ -350,35 +342,27 @@
    "var": 4
   },
   {
-   "t": 6.75,
+   "t": 6.5,
    "sfx": "spring",
    "part": "DRV_spring_L+DRV_spring_R",
-   "gain": 0.66,
+   "gain": 0.55,
    "pan": 0.34,
    "var": 9
   },
   {
-   "t": 6.8667,
-   "sfx": "click",
-   "part": "DRV_encdisc_L+DRV_encdisc_R",
-   "gain": 0.77,
-   "pan": 0.35,
-   "var": 1
-  },
-  {
-   "t": 7.0,
+   "t": 6.75,
    "sfx": "click",
    "part": "DRV_encoder_L+DRV_encoder_R",
    "gain": 0.66,
-   "pan": 0.38,
+   "pan": 0.39,
    "var": 2
   },
   {
-   "t": 7.1333,
+   "t": 7.0,
    "sfx": "clack",
    "part": "DRV_cage_L+DRV_cage_R",
    "gain": 0.77,
-   "pan": 0.34,
+   "pan": 0.35,
    "var": 2
   },
   {
@@ -444,7 +428,7 @@
    "sfx": "snap",
    "part": "LED_accent_entry_L",
    "gain": 0.6,
-   "pan": 0.22,
+   "pan": 0.21,
    "var": 6
   },
   {
@@ -504,7 +488,7 @@
    "var": 5
   },
   {
-   "t": 11.0,
+   "t": 10.8667,
    "sfx": "clack",
    "part": "GLS_clips_entry_L+GLS_clips_entry_R+GLS_clips_exit_L+GLS_clips_exit_R",
    "gain": 0.932,
