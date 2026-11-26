@@ -106,8 +106,6 @@ def lcd_idle():
     c.line([(cx - 150, cy - 20), (cx + 150, cy - 20)], (90, 80, 220), 2)
     for i in range(-3, 4):
         c.line([(cx + i * 40, cy - 26), (cx + i * 40, cy - 14)], (90, 80, 220), 2)
-    for dx in (-42, 42):
-        c.ellipse((cx + dx - 5, cy - 55, cx + dx + 5, cy - 45), fill=IDLE)
     c.text((cx, 742), 'LOOK HERE', 'bold', 58, WHITE, spacing=0.06)
     c.text((cx, 806), 'or tap your card below', 'med', 24, (150, 150, 200))
     # footer: three mode chips
@@ -180,12 +178,12 @@ def badge():
     c = Canvas(W, H)
     c.rrect((10, 10, W - 10, H - 10), 28, outline=(110, 110, 110), width=3)
     # ring mark
-    cx, cy, R = 150, H / 2, 70
-    c.arc((cx - R, cy - R, cx + R, cy + R), -60, 240, (255, 255, 255), 16)
-    c.ellipse((cx - 14, cy - R - 22, cx + 14, cy - R + 6), fill=(255, 255, 255))
-    c.text((505, H / 2 - 2), 'HYALO', 'bold', 150, (255, 255, 255), spacing=0.10)
-    c.rrect((800, 96, 920, 192), 18, outline=(255, 255, 255), width=5)
-    c.text((860, 144), 'G1', 'bold', 64, (255, 255, 255))
+    cx, cy, R = 118, H / 2 + 8, 56
+    c.arc((cx - R, cy - R, cx + R, cy + R), -60, 240, (255, 255, 255), 14)
+    c.ellipse((cx - 12, cy - R - 22, cx + 12, cy - R + 2), fill=(255, 255, 255))
+    c.text((478, H / 2 - 2), 'HYALO', 'bold', 112, (255, 255, 255), spacing=0.12)
+    c.rrect((792, 100, 912, 188), 16, outline=(255, 255, 255), width=5)
+    c.text((852, 144), 'G1', 'bold', 58, (255, 255, 255))
     return c.done()
 
 
