@@ -3,6 +3,7 @@
   /opt/blender-env/venv/bin/python director/render.py --blend director/scene.blend --out renders/final \
         --start 0 --end 1559 [--preset final] [--samples 16] [--scale 100] [--frames 0,60,120] [--force]
         [--no-shadow RAIL_spine_R]     patch renders: the named objects (and their children) cast no shadow
+        [--patch director/patches/x.py] patch renders: run apply(scene) from that file before rendering
 """
 import bpy, sys, os, time, argparse
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'shared'))
@@ -23,10 +24,14 @@ ap.add_argument('--seed', type=int, default=-1)
 ap.add_argument('--force', action='store_true')
 ap.add_argument('--prefix', default='f_')
 ap.add_argument('--no-shadow', default='')
+ap.add_argument('--patch', default='')
 a = ap.parse_args()
 
 bpy.ops.wm.open_mainfile(filepath=os.path.abspath(a.blend))
 sc = bpy.context.scene
+missing = [im.name for im in bpy.data.images if im.source == 'FILE' and im.size[0] == 0]
+if missing:                         # a missing texture renders as flat magenta without any error: refuse to start
+    raise SystemExit(f'[render] textures missing in {a.blend}: {missing}. Use director/freeze_scene.py, not a file copy.')
 keep = {k: getattr(sc.cycles, k) for k in ('max_bounces', 'transmission_bounces', 'glossy_bounces', 'diffuse_bounces',
                                            'transparent_max_bounces', 'caustics_reflective', 'caustics_refractive',
                                            'sample_clamp_indirect', 'sample_clamp_direct')}
@@ -48,6 +53,12 @@ for name in [n for n in a.no_shadow.split(',') if n]:
     for o in [root] + list(root.children_recursive):
         o.visible_shadow = False
         print('[no-shadow]', o.name)
+if a.patch:
+    import importlib.util
+    spec = importlib.util.spec_from_file_location('gg_patch', os.path.abspath(a.patch))
+    mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+    mod.apply(sc)
+    print('[patch]', a.patch)
 sc.render.use_persistent_data = True
 sc.render.dither_intensity = 1.0
 sc.render.image_settings.color_mode = 'RGB'
