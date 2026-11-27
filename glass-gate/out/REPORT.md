@@ -11,7 +11,18 @@ A crystal-glass speed gate ("HYALO G1", a made-up product) builds itself piece b
 | this report | `out/REPORT.md` |
 | build scripts | `shared/`, `hardware/`, `look/`, `sound/`, `director/` (pipeline at the end of this file) |
 
-@@STATUS@@
+## Status
+
+Finished and verified. `out/clear_passage.mp4` is 26.000 s, 1,560 frames, 1080×1350 at 60 fps, H.264 High@4.2
+(yuv420p, BT.709, 11.6 Mbit/s, 38.6 MB) with AAC-LC stereo at 263 kbit/s. Audio and video both start at 0.
+
+**This is the second full render.** The first one (6.6 hours) was made from a copy of the scene file whose texture
+paths no longer resolved; Blender renders a missing texture as flat magenta without any error. The wing and lid
+displays were plain pink, the circuit boards white, the badge blank. I found it while checking why the badge had
+no lettering, after that film had already been encoded. That encode was set aside and is not part of the delivery; the cause
+was fixed in the scripts (`director/freeze_scene.py` packs the textures into the frozen scene; `director/render.py`
+refuses to start when a texture is missing), and 1,267 frames were rendered again (6.05 hours). Shots 2 and 3
+(frames 108–377) show no textured part and were bit-identical in test frames, so they were kept.
 
 ## Background chosen, and why
 
@@ -77,9 +88,61 @@ motion, collision checking, the resumable render, the glitch scanner, the edit a
 | 20.0–24.0 s | in use: a card taps the reader (20.25 s), it beeps and turns green (20.5 s), the gears turn and the wings swing open (21.0–21.9 s), a light passes through the lane, the wings close (22.9–23.5 s) |
 | 24.0–26.0 s | slow hero orbit, held 2 s, ends with the last chord |
 
-@@GLITCH@@
+## Glitch scan
 
-@@IMPERFECT@@
+Every one of the 1,560 final frames went through two scanners; every flagged run was then looked at as a strip of
+consecutive frames. After the encode, the mp4 itself was decoded and scanned again.
+
+| check | result |
+|---|---|
+| missing / black / blown-out frames | 0 / 0 / 0 |
+| `glitch_scan.py`: flicker / global pop / block pop / camera hitch / denoiser boil | 29 / 51 / 155 / 10 / 0 flags on 172 distinct frames. All are intended events (below) |
+| `shadow_flick_scan.py` (1–3 frame shadow dips) | 38 frames in 19 runs. All are dark parts passing in front of bright ones; the two real flicks (below) are gone |
+| the encoded mp4, frame by frame | no flag further than 2 frames from a flag in the source frames; 0 missing, black or blown-out |
+| parts passing through each other (`check_collisions.py`) | 0 part pairs intersect in flight |
+| audio | −16.0 LUFS integrated, true peak −1.7 dBFS, loudness range 6.3 LU; worst landing-to-sound offset 1.1 ms |
+
+What the flags are: the hook scatter and camera dive (frames 86–106, deliberate), the first slam with its camera
+kick (110–121), part landings all through the build, the badge (913–914), the card flying in, the switch to green
+and the card leaving (1210–1246), and the wing swinging behind the gear column (1272–1301).
+
+**Found and fixed**
+
+1. **Missing textures in the whole first render** (see Status). 1,267 frames rendered again.
+2. **Shadow flick, frames 142–144.** The second base rail, in flight, threw the hard spot's shadow across the first
+   rail for three frames. Fixed with a light-linking patch (`director/patches/base_rail_shadow.py`); 3 frames.
+3. **Shadow flick, frames 722–724, and a thin shadow line at 727–729.** The right-hand top rail and its LED parts,
+   in flight, darkened the left rail that had just landed. Frames 721–734 were rendered again with those flying
+   parts casting no shadow; 14 frames. The frames just outside the patch differ from the unpatched render by under
+   0.4 % of full scale on average, so the seams do not show.
+4. **Temporal filter across cuts.** The post filter averages neighbouring frames, so it could have blended the last
+   frame of a shot into the next. `director/finish.sh` now filters every shot separately; with the filters off the
+   chain was checked to be frame-exact on both sides of all 15 cuts.
+
+Not found: popping geometry, parts through each other, camera hitches other than the deliberate impact kicks, or
+denoiser boiling above the scanner's threshold. Fine crawl below that threshold remains (next section).
+
+## What is imperfect
+
+- **Resolution.** Rendered at 864×1080 and enlarged to 1080×1350 with Lanczos and a light sharpen. A native render
+  has 1.56 times the pixels and would have taken roughly that much longer on this machine (4 CPU cores, no GPU; the frames in the film took 6.9
+  hours at a mean of 15.9 s each).
+- **16 samples per pixel.** The denoiser leaves a fine crawl in the fluted glass and on the gears behind glass. The
+  post filter lowers the frame-to-frame residual by 36–44 % in the four shots I measured (a figure that still
+  includes real motion and the added grain). It is reduced, not removed.
+- **No Pixabay sounds.** Pixabay answered every request with a Cloudflare challenge, which I did not try to get
+  around. All 21 part sounds are synthesised from scratch instead. The music is the only downloaded audio.
+- **Nobody listened to the mix.** It is verified by measurement only (loudness, peaks, sync, spectrum), not by ear.
+- **"In use" has no person.** A card taps the reader and a light passes through the lane.
+- **No motion blur.** Fast parts are sharp in every frame.
+- **Floor caustics are an approximation**: a shader effect, not path-traced light (`look/NOTES.md`, "Floor caustics").
+- **Lighting cheats.** A glow card behind the gate (`STUDIO_BACK`) lifts the glass edges; the light rig follows the
+  camera in shots 7 and 11; the shadow patches make a few flying parts shadowless for 3 to 14 frames.
+- **The green light follows the beep by 4 frames.** The displays switch to "WELCOME" on the beep (frame 1230); the
+  LED band turns green at frame 1234 (67 ms later).
+- **Frame 150 (2.5 s) is sparse**: two rails on a dark floor, before the build fills the frame.
+- **Process:** one `pkill` of mine during look development may have cut short a helper's test render. The first
+  full render was lost to the texture fault described under Status.
 
 ## Pipeline (how to rebuild)
 
