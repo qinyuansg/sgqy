@@ -2,6 +2,7 @@
 
   /opt/blender-env/venv/bin/python director/render.py --blend director/scene.blend --out renders/final \
         --start 0 --end 1559 [--preset final] [--samples 16] [--scale 100] [--frames 0,60,120] [--force]
+        [--no-shadow RAIL_spine_R]     patch renders: the named objects (and their children) cast no shadow
 """
 import bpy, sys, os, time, argparse
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'shared'))
@@ -21,6 +22,7 @@ ap.add_argument('--threads', type=int, default=0)
 ap.add_argument('--seed', type=int, default=-1)
 ap.add_argument('--force', action='store_true')
 ap.add_argument('--prefix', default='f_')
+ap.add_argument('--no-shadow', default='')
 a = ap.parse_args()
 
 bpy.ops.wm.open_mainfile(filepath=os.path.abspath(a.blend))
@@ -41,6 +43,11 @@ try:                                # look helper's cost settings: OIDN balanced
     look_settings.recommended(sc); look_settings.final(sc)
 except Exception as e:
     print('[warn] look settings not applied:', repr(e))
+for name in [n for n in a.no_shadow.split(',') if n]:
+    root = bpy.data.objects[name]
+    for o in [root] + list(root.children_recursive):
+        o.visible_shadow = False
+        print('[no-shadow]', o.name)
 sc.render.use_persistent_data = True
 sc.render.dither_intensity = 1.0
 sc.render.image_settings.color_mode = 'RGB'
