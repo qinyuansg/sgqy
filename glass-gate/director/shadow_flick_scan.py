@@ -21,7 +21,8 @@ for i, f in enumerate(fr):
     im = Image.open(os.path.join(a.src, f'{a.prefix}{f:04d}.png')).convert('L').resize((SW, SH), Image.BOX)
     lum[i] = np.asarray(im, np.float32).reshape(SH // B, B, SW // B, B).mean(axis=(1, 3)) / 255.0
 def same_shot(i, j):
-    return not any(fr[min(i, j)] < c <= fr[max(i, j)] for c in cuts)
+    i, j = max(min(i, j), 0), min(max(i, j), N - 1)
+    return not any(fr[i] < c <= fr[j] for c in cuts)
 hits = {}
 for i in range(4, N - 4):
     for w in (1, 2, 3):                        # dip of w frames starting at i

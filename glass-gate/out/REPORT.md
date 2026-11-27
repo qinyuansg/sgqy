@@ -84,13 +84,22 @@ motion, collision checking, the resumable render, the glitch scanner, the edit a
 ## Pipeline (how to rebuild)
 
     PY=/opt/blender-env/venv/bin/python        # Blender 5.3 as a Python module (bpy), no GPU needed
+    CUTS=108,228,378,468,528,588,708,828,900,960,1080,1200,1254,1317,1440
+    R="--blend renders/final/scene_final.blend --preset final --samples 16 --scale 80"
     $PY hardware/build_gate.py                                                   # -> hardware/gate.blend + manifest.json
     $PY look/apply_look.py --gate hardware/gate.blend --studio dark --out look/gate_look.blend
     $PY director/animate.py --gate look/gate_look.blend --out director/scene.blend   # also writes shared/timeline.json
     $PY director/check_collisions.py --blend director/scene.blend                # parts must not pass through each other
     $PY sound/mix.py                                                             # -> sound/out/mix.wav from the timeline
-    $PY director/render.py --blend director/scene.blend --out renders/final --preset final --samples 16 --scale 80
-    $PY director/glitch_scan.py renders/final renders/final_scan --cuts 108,228,378,468,528,588,708,828,900,960,1080,1200,1254,1317,1440
-    director/finish.sh renders/final sound/out/mix.wav out/clear_passage.mp4     # post, encode, contact sheet
+    $PY director/freeze_scene.py                                                 # -> renders/final/scene_final.blend, textures packed inside
+    $PY director/render.py $R --out renders/final                                # resumable; refuses to start if a texture is missing
+    # shadow patches: rendered to their own folders, checked against the neighbours, then copied over renders/final
+    $PY director/render.py $R --out renders/patch_base --start 142 --end 144 --patch director/patches/base_rail_shadow.py
+    $PY director/render.py $R --out renders/patch_rail --start 721 --end 727 \
+        --no-shadow RAIL_spine_R,LED_colring_R,LED_colring_diffuser_R,RAIL_led_R,RAIL_led_diffuser_R
+    $PY director/render.py $R --out renders/patch_rail --start 728 --end 734 --no-shadow RAIL_led_R,RAIL_led_diffuser_R
+    $PY director/glitch_scan.py renders/final renders/final_scan --cuts $CUTS    # every frame: flicker, pops, hitches, boiling
+    $PY director/shadow_flick_scan.py renders/final --cuts $CUTS                 # every frame: 1-3 frame shadow flicks
+    director/finish.sh renders/final sound/out/mix.wav out/clear_passage.mp4     # per-shot temporal filter, encode, contact sheet
 
 `shared/SPEC.md` is the contract between the four of us; each helper folder has its `BRIEF.md` and `NOTES.md`.
