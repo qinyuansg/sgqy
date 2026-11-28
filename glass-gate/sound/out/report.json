@@ -24,7 +24,7 @@
  },
  "stems": {
   "null_test_residual_db": -141.6,
-  "sfx_lufs": -18.47,
+  "sfx_lufs": -18.46,
   "music_lufs": -18.99,
   "dc_offset": [
    -1.9e-05,
@@ -34,14 +34,14 @@
  "sync": {
   "limit_ms": 5.0,
   "solo": {
-   "events": 80,
+   "events": 81,
    "worst_abs_ms": 1.104,
    "over_limit": []
   },
   "stem": {
-   "events": 61,
+   "events": 62,
    "worst_abs_ms": 1.438,
-   "mean_ms": -0.218,
+   "mean_ms": -0.22,
    "over_limit": [],
    "masked_not_measurable": [
     {
@@ -468,6 +468,13 @@
     "part": "RAIL_campod_L",
     "mode": "start",
     "err_ms": 0.021
+   },
+   {
+    "t": 13.3667,
+    "sfx": "click",
+    "part": "RAIL_campod_R",
+    "mode": "start",
+    "err_ms": 0.029
    },
    {
     "t": 13.3667,
@@ -945,21 +952,28 @@
     "sfx": "click",
     "part": "RAIL_campod_L",
     "err_ms": 0.521,
-    "clear_db": 7.3
+    "clear_db": 6.7
+   },
+   {
+    "t": 13.3667,
+    "sfx": "click",
+    "part": "RAIL_campod_R",
+    "err_ms": -0.104,
+    "clear_db": 10.5
    },
    {
     "t": 13.3667,
     "sfx": "screw",
     "part": "RAIL_screw_0_L+RAIL_screw_1_L",
-    "err_ms": 0.146,
-    "clear_db": 9.2
+    "err_ms": -0.104,
+    "clear_db": 10.5
    },
    {
     "t": 13.5,
     "sfx": "screw",
     "part": "RAIL_screw_2_L+RAIL_screw_3_L+RAIL_screw_2_R+RAIL_screw_3_R",
     "err_ms": -0.042,
-    "clear_db": 14.9
+    "clear_db": 14.8
    },
    {
     "t": 13.6333,
@@ -1036,7 +1050,7 @@
     "sfx": "card_tap",
     "part": "card",
     "err_ms": -0.375,
-    "clear_db": 131.2
+    "clear_db": 131.1
    },
    {
     "t": 20.36,
@@ -1064,7 +1078,7 @@
     "sfx": "final_hit",
     "part": "hero",
     "err_ms": 0.792,
-    "clear_db": 87.0
+    "clear_db": 87.1
    }
   ]
  },
@@ -1104,7 +1118,7 @@
   "first_frame_rms_db": -24.0,
   "first_frame_music_rms_db": -25.2,
   "first_100ms_rms_db": -25.4,
-  "first_sample_abs": 0.0028318166732788086,
+  "first_sample_abs": 0.0028303861618041992,
   "last_sample_abs": 0.0,
   "last_100ms_rms_db": -76.0,
   "last_500ms_rms_db": -55.3
@@ -1152,7 +1166,7 @@
    "t1": 12.0,
    "busy": 0.9,
    "mix_lufs": -14.9,
-   "sfx_lufs": -15.3,
+   "sfx_lufs": -15.4,
    "music_lufs": -25.1
   },
   {
@@ -1161,7 +1175,7 @@
    "t1": 14.0,
    "busy": 1.0,
    "mix_lufs": -15.8,
-   "sfx_lufs": -16.4,
+   "sfx_lufs": -16.3,
    "music_lufs": -23.8
   },
   {
@@ -1188,7 +1202,7 @@
    "t1": 24.0,
    "busy": 0.5,
    "mix_lufs": -15.2,
-   "sfx_lufs": -19.2,
+   "sfx_lufs": -19.3,
    "music_lufs": -17.1
   },
   {
@@ -1207,10 +1221,10 @@
   "250": -7.1,
   "500": -9.2,
   "1000": -8.5,
-  "2000": -13.0,
+  "2000": -12.9,
   "4000": -18.3,
   "8000": -17.9,
-  "16000": -26.7
+  "16000": -26.6
  },
  "energy_above_8k_db": -21.1,
  "stereo": {
@@ -1317,8 +1331,8 @@
    "held_from": 15.25
   },
   "master": {
-   "pre_gain_db": 2.7892549414763232,
-   "limiter_max_reduction_db": 3.463713195970092,
+   "pre_gain_db": 2.784967756770145,
+   "limiter_max_reduction_db": 3.4594260112610065,
    "limiter_deepest": [
     {
      "t": 14.5,
@@ -1350,19 +1364,19 @@
     },
     {
      "t": 16.05,
-     "db": 2.13
+     "db": 2.12
     },
     {
      "t": 14.55,
-     "db": 2.11
+     "db": 2.1
     },
     {
      "t": 13.149,
-     "db": 2.07
+     "db": 2.06
     },
     {
      "t": 13.15,
-     "db": 2.07
+     "db": 2.06
     },
     {
      "t": 12.999,
@@ -1385,15 +1399,15 @@
      "db": 1.71
     }
    ],
-   "limiter_active_percent": 21.24198717948718,
-   "limiter_over_1db_percent": 2.940544871794872
+   "limiter_active_percent": 21.541346153846153,
+   "limiter_over_1db_percent": 2.9310096153846157
   },
   "events_placed": {
    "shimmer": 2,
    "whoosh": 2,
    "thunk_metal": 7,
    "screw": 7,
-   "click": 7,
+   "click": 8,
    "clack": 8,
    "gear_tick": 4,
    "spring": 1,
@@ -1418,8 +1432,8 @@
   "first_slam_t": 2.0,
   "held_from": 15.25,
   "duck_db_max": 12.00000000000373,
-  "duck_db_mean_pre_drop": 9.783047817827343,
-  "render_seconds": 7.95,
+  "duck_db_mean_pre_drop": 9.783222515036833,
+  "render_seconds": 10.82,
   "overrides": {}
  },
  "effects_spectrum": {
@@ -1449,7 +1463,7 @@
    "8k": -6.6,
    "10.1k": -9.1,
    "12.7k": -12.1,
-   "16k": -18.5,
+   "16k": -18.3,
    "20.2k": -23.9
   },
   "target": "-3 dB/octave of band level from 1 kHz, reference = mean of the 500 Hz - 2 kHz bands",
@@ -1465,7 +1479,7 @@
    "3.17k": -2.0,
    "4k": -2.4
   },
-  "top_16k_vs_target_db": -6.5,
+  "top_16k_vs_target_db": -6.3,
   "ok_air": true,
   "ok_harsh": true
  },
@@ -1525,7 +1539,7 @@
     {
      "name": "w5_top_rail",
      "t0": 12.0,
-     "music_k_db": -22.9
+     "music_k_db": -23.0
     },
     {
      "name": "w6_wings",
@@ -1537,8 +1551,8 @@
     1.6,
     2.1,
     1.4,
-    1.5,
-    1.8
+    1.4,
+    1.9
    ],
    "rise_db": 8.4,
    "hook_under_ref_wave_db": 1.0

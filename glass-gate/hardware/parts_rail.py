@@ -330,32 +330,53 @@ def harness():
 
 
 def campod():
-    t = 25.0
-    c, s_ = cos(rad(t)), sin(rad(t))
-    oz = LID_Z1 + 0.35 + (12.0 * c + 15.0 * s_)
-    M = FRAME((0.0, POD_Y, oz), (1, 0, 0), (0, s_, c), (0, -c, s_))        # (u, v, w): w = out of the front face
-    b = MB('PLASTIC_BLACK')
-    b.add(prism(rrect(118.0, 24.0, 12.0, 12), -15.0, 0.0, bevel=0.9, segs=2, mat='PLASTIC_BLACK',
-                pockets=[(rrect(114.4, 20.4, 10.2, 12), 4.6, 0.0)]))
-    b.add(prism(rrect(113.8, 19.8, 9.9, 12), -1.25, -0.1, bevel=0.25, segs=2, mat='GLASS_LENS'))
-    for sx in (-1, 1):
-        u = sx * 15.0
-        b.add(lathe([(2.5, -4.7), (5.3, -4.7), (5.3, -3.9), (4.7, -3.6), (4.7, -2.2), (4.2, -1.9), (3.6, -1.9), (3.6, -2.4), (3.1, -2.4),
-                     (3.1, -2.9), (2.5, -2.9)], 28, 'METAL_DARK'), T(u, 0, 0))
-        b.add(cyl(2.6, -4.7, -3.5, 20, mat='CHIP_BLACK'), T(u, 0, 0))
-        b.add(lathe([(0, -3.7), (2.45, -3.7), (2.45, -3.1), (1.9, -2.6), (1.0, -2.3), (0, -2.2)], 24, 'GLASS_LENS'), T(u, 0, 0))
-        for vv in (-5.6, 0.0, 5.6):
-            b.add(cbox(sx * 43.0 - 1.6, sx * 43.0 + 1.6, vv - 1.6, vv + 1.6, -4.7, -3.8, bevel=0.15, mat='CHIP_BLACK'))
-            b.add(dome(1.15, 0.45, 12, 4, 'LED_IR', z0=-3.9), T(sx * 43.0, vv, 0))
-    b.add(cyl(0.7, -4.7, -4.2, 10, mat='LED_STATUS'), T(0, 0, 0))
-    mb = MB('PLASTIC_BLACK').add(b, M)
-    # wedge foot between the tilted body and the lid
-    y_f = POD_Y - 12.0 * s_          # front-bottom edge
-    z_f = oz - 12.0 * c
-    y_b = POD_Y - 12.0 * s_ + 15.0 * c
-    tri = [(y_f + 1.6, LID_Z1 + 0.35), (y_b - 0.6, LID_Z1 + 0.35), (y_f + 1.6, z_f - 0.2)]
-    mb.add(prism(tri, -50.0, 50.0, bevel=0.5, mat='PLASTIC_BLACK'), MX)
-    return P('RAIL_campod', 5, 11, 'plastic', mb, (0.0, POD_Y + 5.0, oz - 3.0))
+    """Camera head: a round cap standing on the rail above the wing column, with a flat face sloping back towards the
+    entry (-Y), a pill-shaped window and two lenses, the right-hand one in a bright oval."""
+    R, H, FIL = 44.0, 58.0, 7.0                 # R stays clear of the lid screws at x = +-52
+    z0 = LID_Z1 + 0.35
+    tl = rad(24.0)
+    yf0 = -30.0                                 # the face plane at the foot of the cap
+    NA, NC = 44, 14
+    mb = MB('GLASS_BODY')                       # crystal like the rest of the gate; the camera module shows inside
+
+    def ring_at(z, r):
+        yf = yf0 + z * math.tan(tl)
+        xe = sqrt(max(r * r - yf * yf, 1e-6))
+        a0 = math.atan2(yf, xe)
+        a1 = PI - a0
+        pts = [(r * cos(a0 + (a1 - a0) * k / NA), r * sin(a0 + (a1 - a0) * k / NA), z0 + z) for k in range(NA + 1)]
+        pts += [(-xe + 2 * xe * k / NC, yf, z0 + z) for k in range(1, NC)]
+        return mb.loop(pts)
+
+    lv = [(0.0, R - 1.3), (1.6, R - 1.3), (1.6, R - 0.3), (1.9, R)]               # shadow gap at the foot
+    lv += [(H - FIL + FIL * sin(rad(a)), R - FIL + FIL * cos(rad(a))) for a in (0, 15, 30, 45, 60, 75, 90)]
+    loops = [ring_at(z, r) for z, r in lv]
+    for a, b in zip(loops, loops[1:]):
+        mb.bridge(a, b)
+    mb.face(loops[-1])
+    mb.face(loops[0][::-1])
+    # the face: frame (u, v, w) with w out of the sloping face
+    zc = 27.0
+    c, s_ = cos(tl), sin(tl)
+    M = FRAME((0.0, yf0 + zc * math.tan(tl), z0 + zc), (1, 0, 0), (0, s_, c), (0, -c, s_))
+    b = MB('METAL_DARK')
+    b.add(prism(rrect(50.0, 18.0, 9.0, 12), -0.4, 2.0, bevel=0.35, holes=[rrect(46.0, 14.0, 7.0, 12)], hole_bevel=0.2,
+                mat='METAL_DARK'))
+    b.add(prism(rrect(46.6, 14.6, 7.3, 12), -0.4, 0.2, mat='PLASTIC_BLACK'))
+    b.add(prism(rrect(22.0, 11.6, 5.8, 10, 8.5, 0.0), 0.2, 0.5, bevel=0.1, mat='METAL_ALU'))
+    for u in (-13.5, 6.0):
+        b.add(lathe([(2.7, 0.2), (5.0, 0.2), (5.0, 0.95), (4.5, 1.25), (3.5, 1.25), (3.5, 0.85), (2.7, 0.85)], 28, 'METAL_DARK'),
+              T(u, 0, 0))
+        b.add(cyl(2.75, 0.2, 0.55, 20, mat='CHIP_BLACK'), T(u, 0, 0))
+        b.add(lathe([(0, 0.5), (2.7, 0.5), (2.7, 0.75), (2.0, 1.0), (1.0, 1.13), (0, 1.17)], 24, 'GLASS_LENS'), T(u, 0, 0))
+    b.add(cyl(0.8, 0.2, 0.6, 12, mat='LED_STATUS'), T(-20.0, 0, 0))
+    # camera board behind the window, seen through the glass
+    b.add(prism(rrect(42.0, 20.0, 2.0, 4), -5.2, -4.0, bevel=0.15, mat='PCB_GREEN'))
+    for u in (-13.5, 6.0):
+        b.add(cbox(u - 5.0, u + 5.0, -5.0, 5.0, -4.0, -0.6, bevel=0.4, mat='CHIP_BLACK'))
+    b.add(prism(rrect(46.0, 14.0, 7.0, 12), 1.35, 1.85, bevel=0.15, mat='GLASS_LENS'))
+    mb.add(b, M)
+    return P('RAIL_campod', 5, 11, 'plastic', mb, (0.0, 0.0, z0 + 28.0))
 
 
 def lid_screws():

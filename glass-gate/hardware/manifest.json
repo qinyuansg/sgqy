@@ -117,7 +117,6 @@
   "GLASS_LENS",
   "GLASS_WING",
   "LED_DIFFUSER",
-  "LED_IR",
   "LED_STATUS",
   "LED_STRIP",
   "METAL_ALU",
@@ -217,7 +216,7 @@
   "BADGE": "RAIL_badge_<s>: 0..1 over the front face, v up, u to the right when seen from the lane",
   "PCB_GREEN": "ELE_pcb_<s> (and the small rail PCBs): 0..1 over the board"
  },
- "triangles": 868196,
+ "triangles": 868532,
  "props": [
   {
    "name": "PROP_card",
@@ -3644,21 +3643,21 @@
    "screw": false,
    "children": [],
    "bbox_min": [
-    -0.439,
-    -0.28972,
+    -0.424,
+    -0.03,
     1.00035
    ],
    "bbox_max": [
-    -0.321,
-    -0.26668,
-    1.02809
+    -0.336,
+    0.044,
+    1.05835
    ],
    "origin": [
     -0.38,
-    -0.28,
-    1.01456
+    0.0,
+    1.02835
    ],
-   "triangles": 4416
+   "triangles": 4584
   },
   {
    "name": "RAIL_campod_R",
@@ -3674,21 +3673,21 @@
    "screw": false,
    "children": [],
    "bbox_min": [
-    0.321,
-    -0.28972,
+    0.336,
+    -0.03,
     1.00035
    ],
    "bbox_max": [
-    0.439,
-    -0.26668,
-    1.02809
+    0.424,
+    0.044,
+    1.05835
    ],
    "origin": [
     0.38,
-    -0.28,
-    1.01456
+    0.0,
+    1.02835
    ],
-   "triangles": 4416
+   "triangles": 4584
   },
   {
    "name": "RAIL_badge_L",

@@ -648,8 +648,16 @@
    "sfx": "click",
    "part": "RAIL_campod_L",
    "gain": 0.65,
-   "pan": -0.25,
+   "pan": -0.58,
    "var": 2
+  },
+  {
+   "t": 13.3667,
+   "sfx": "click",
+   "part": "RAIL_campod_R",
+   "gain": 0.65,
+   "pan": 0.57,
+   "var": 8
   },
   {
    "t": 13.3667,
