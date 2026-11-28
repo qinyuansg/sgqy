@@ -1,0 +1,519 @@
+{
+ "hook_end": 108,
+ "cuts": [
+  0,
+  108,
+  228,
+  378,
+  468,
+  528,
+  588,
+  708,
+  828,
+  900,
+  960,
+  1080,
+  1200,
+  1254,
+  1317,
+  1440
+ ],
+ "flights": {
+  "BASE_rail_L": {
+   "vis0": 108,
+   "land": 120
+  },
+  "BASE_rail_R": {
+   "vis0": 125,
+   "land": 150
+  },
+  "BASE_foot_0_L": {
+   "vis0": 108,
+   "land": 120
+  },
+  "BASE_foot_1_L": {
+   "vis0": 108,
+   "land": 120
+  },
+  "BASE_foot_2_L": {
+   "vis0": 108,
+   "land": 120
+  },
+  "BASE_foot_3_L": {
+   "vis0": 108,
+   "land": 120
+  },
+  "BASE_foot_0_R": {
+   "vis0": 125,
+   "land": 150
+  },
+  "BASE_foot_1_R": {
+   "vis0": 125,
+   "land": 150
+  },
+  "BASE_foot_2_R": {
+   "vis0": 125,
+   "land": 150
+  },
+  "BASE_foot_3_R": {
+   "vis0": 125,
+   "land": 150
+  },
+  "BASE_anchor_0_L": {
+   "vis0": 162,
+   "land": 180
+  },
+  "BASE_anchor_1_L": {
+   "vis0": 170,
+   "land": 188
+  },
+  "BASE_anchor_2_L": {
+   "vis0": 177,
+   "land": 195
+  },
+  "BASE_anchor_3_L": {
+   "vis0": 184,
+   "land": 202
+  },
+  "BASE_anchor_0_R": {
+   "vis0": 162,
+   "land": 180
+  },
+  "BASE_anchor_1_R": {
+   "vis0": 170,
+   "land": 188
+  },
+  "BASE_anchor_2_R": {
+   "vis0": 177,
+   "land": 195
+  },
+  "BASE_anchor_3_R": {
+   "vis0": 184,
+   "land": 202
+  },
+  "ELE_cable_0_L": {
+   "vis0": 193,
+   "land": 210
+  },
+  "ELE_cable_0_R": {
+   "vis0": 193,
+   "land": 210
+  },
+  "ELE_cable_1_L": {
+   "vis0": 193,
+   "land": 210
+  },
+  "ELE_cable_1_R": {
+   "vis0": 193,
+   "land": 210
+  },
+  "ELE_cable_2_L": {
+   "vis0": 193,
+   "land": 210
+  },
+  "ELE_cable_2_R": {
+   "vis0": 193,
+   "land": 210
+  },
+  "DRV_motor_L": {
+   "vis0": 228,
+   "land": 240
+  },
+  "DRV_motor_R": {
+   "vis0": 228,
+   "land": 240
+  },
+  "DRV_brake_L": {
+   "vis0": 251,
+   "land": 270
+  },
+  "DRV_brake_R": {
+   "vis0": 251,
+   "land": 270
+  },
+  "DRV_ring_L": {
+   "vis0": 280,
+   "land": 300
+  },
+  "DRV_ring_R": {
+   "vis0": 280,
+   "land": 300
+  },
+  "DRV_planet_0_L": {
+   "vis0": 298,
+   "land": 315
+  },
+  "DRV_planet_1_L": {
+   "vis0": 313,
+   "land": 330
+  },
+  "DRV_planet_2_L": {
+   "vis0": 328,
+   "land": 345
+  },
+  "DRV_planet_0_R": {
+   "vis0": 298,
+   "land": 315
+  },
+  "DRV_planet_1_R": {
+   "vis0": 313,
+   "land": 330
+  },
+  "DRV_planet_2_R": {
+   "vis0": 328,
+   "land": 345
+  },
+  "DRV_sun_L": {
+   "vis0": 343,
+   "land": 360
+  },
+  "DRV_sun_R": {
+   "vis0": 343,
+   "land": 360
+  },
+  "DRV_carrier_L": {
+   "vis0": 352,
+   "land": 368
+  },
+  "DRV_carrier_R": {
+   "vis0": 352,
+   "land": 368
+  },
+  "DRV_shaft_L": {
+   "vis0": 378,
+   "land": 390
+  },
+  "DRV_shaft_R": {
+   "vis0": 378,
+   "land": 390
+  },
+  "DRV_encdisc_L": {
+   "vis0": 378,
+   "land": 390
+  },
+  "DRV_encdisc_R": {
+   "vis0": 378,
+   "land": 390
+  },
+  "DRV_spring_L": {
+   "vis0": 378,
+   "land": 390
+  },
+  "DRV_spring_R": {
+   "vis0": 378,
+   "land": 390
+  },
+  "DRV_encoder_L": {
+   "vis0": 391,
+   "land": 405
+  },
+  "DRV_encoder_R": {
+   "vis0": 391,
+   "land": 405
+  },
+  "DRV_cage_L": {
+   "vis0": 403,
+   "land": 420
+  },
+  "DRV_cage_R": {
+   "vis0": 403,
+   "land": 420
+  },
+  "GLS_column_L": {
+   "vis0": 407,
+   "land": 435
+  },
+  "GLS_column_R": {
+   "vis0": 407,
+   "land": 435
+  },
+  "WING_hub_L": {
+   "vis0": 426,
+   "land": 442
+  },
+  "WING_hub_R": {
+   "vis0": 426,
+   "land": 442
+  },
+  "WING_sleeve_L": {
+   "vis0": 424,
+   "land": 450
+  },
+  "WING_sleeve_R": {
+   "vis0": 424,
+   "land": 450
+  },
+  "ELE_pcb_L": {
+   "vis0": 468,
+   "land": 480
+  },
+  "ELE_pcb_R": {
+   "vis0": 473,
+   "land": 495
+  },
+  "ELE_sensor_entry_L": {
+   "vis0": 493,
+   "land": 510
+  },
+  "ELE_sensor_entry_R": {
+   "vis0": 493,
+   "land": 510
+  },
+  "LED_accent_entry_L": {
+   "vis0": 502,
+   "land": 518
+  },
+  "LED_accent_entry_R": {
+   "vis0": 502,
+   "land": 518
+  },
+  "ELE_cable_3_L": {
+   "vis0": 502,
+   "land": 518
+  },
+  "ELE_cable_3_R": {
+   "vis0": 502,
+   "land": 518
+  },
+  "ELE_psu_L": {
+   "vis0": 528,
+   "land": 540
+  },
+  "ELE_psu_R": {
+   "vis0": 528,
+   "land": 548
+  },
+  "ELE_sensor_exit_L": {
+   "vis0": 538,
+   "land": 555
+  },
+  "ELE_sensor_exit_R": {
+   "vis0": 546,
+   "land": 562
+  },
+  "LED_accent_exit_L": {
+   "vis0": 554,
+   "land": 570
+  },
+  "LED_accent_exit_R": {
+   "vis0": 554,
+   "land": 570
+  },
+  "GLS_post_entry_L": {
+   "vis0": 588,
+   "land": 600
+  },
+  "GLS_post_entry_R": {
+   "vis0": 588,
+   "land": 615
+  },
+  "GLS_post_exit_L": {
+   "vis0": 600,
+   "land": 630
+  },
+  "GLS_post_exit_R": {
+   "vis0": 615,
+   "land": 645
+  },
+  "GLS_clips_entry_L": {
+   "vis0": 640,
+   "land": 652
+  },
+  "GLS_clips_entry_R": {
+   "vis0": 640,
+   "land": 652
+  },
+  "GLS_clips_exit_L": {
+   "vis0": 640,
+   "land": 652
+  },
+  "GLS_clips_exit_R": {
+   "vis0": 640,
+   "land": 652
+  },
+  "GLS_panel_entry_L": {
+   "vis0": 642,
+   "land": 668
+  },
+  "GLS_panel_entry_R": {
+   "vis0": 650,
+   "land": 675
+  },
+  "GLS_panel_exit_L": {
+   "vis0": 657,
+   "land": 682
+  },
+  "GLS_panel_exit_R": {
+   "vis0": 665,
+   "land": 690
+  },
+  "LED_colring_L": {
+   "vis0": 708,
+   "land": 720
+  },
+  "LED_colring_R": {
+   "vis0": 708,
+   "land": 728
+  },
+  "RAIL_spine_L": {
+   "vis0": 708,
+   "land": 720
+  },
+  "RAIL_spine_R": {
+   "vis0": 708,
+   "land": 728
+  },
+  "RAIL_led_L": {
+   "vis0": 719,
+   "land": 735
+  },
+  "RAIL_led_R": {
+   "vis0": 719,
+   "land": 735
+  },
+  "RAIL_harness_L": {
+   "vis0": 728,
+   "land": 742
+  },
+  "RAIL_harness_R": {
+   "vis0": 728,
+   "land": 742
+  },
+  "RAIL_rfid_L": {
+   "vis0": 736,
+   "land": 750
+  },
+  "RAIL_rfid_R": {
+   "vis0": 736,
+   "land": 750
+  },
+  "RAIL_qr_L": {
+   "vis0": 743,
+   "land": 758
+  },
+  "RAIL_qr_R": {
+   "vis0": 743,
+   "land": 758
+  },
+  "RAIL_lcd_L": {
+   "vis0": 749,
+   "land": 765
+  },
+  "RAIL_lcd_R": {
+   "vis0": 749,
+   "land": 765
+  },
+  "RAIL_speaker_L": {
+   "vis0": 759,
+   "land": 772
+  },
+  "RAIL_speaker_R": {
+   "vis0": 759,
+   "land": 772
+  },
+  "RAIL_lid_L": {
+   "vis0": 755,
+   "land": 780
+  },
+  "RAIL_lid_R": {
+   "vis0": 762,
+   "land": 788
+  },
+  "RAIL_campod_L": {
+   "vis0": 779,
+   "land": 795
+  },
+  "RAIL_campod_R": {
+   "vis0": 787,
+   "land": 802
+  },
+  "RAIL_screw_0_L": {
+   "vis0": 784,
+   "land": 802
+  },
+  "RAIL_screw_1_L": {
+   "vis0": 784,
+   "land": 802
+  },
+  "RAIL_screw_2_L": {
+   "vis0": 792,
+   "land": 810
+  },
+  "RAIL_screw_3_L": {
+   "vis0": 792,
+   "land": 810
+  },
+  "RAIL_screw_4_L": {
+   "vis0": 800,
+   "land": 818
+  },
+  "RAIL_screw_5_L": {
+   "vis0": 800,
+   "land": 818
+  },
+  "RAIL_screw_0_R": {
+   "vis0": 784,
+   "land": 802
+  },
+  "RAIL_screw_1_R": {
+   "vis0": 784,
+   "land": 802
+  },
+  "RAIL_screw_2_R": {
+   "vis0": 792,
+   "land": 810
+  },
+  "RAIL_screw_3_R": {
+   "vis0": 792,
+   "land": 810
+  },
+  "RAIL_screw_4_R": {
+   "vis0": 800,
+   "land": 818
+  },
+  "RAIL_screw_5_R": {
+   "vis0": 800,
+   "land": 818
+  },
+  "WING_clamp_a_L": {
+   "vis0": 828,
+   "land": 840
+  },
+  "WING_clamp_a_R": {
+   "vis0": 828,
+   "land": 840
+  },
+  "WING_clamp_b_L": {
+   "vis0": 833,
+   "land": 848
+  },
+  "WING_clamp_b_R": {
+   "vis0": 833,
+   "land": 848
+  },
+  "WING_edgeled_L": {
+   "vis0": 842,
+   "land": 855
+  },
+  "WING_edgeled_R": {
+   "vis0": 842,
+   "land": 855
+  },
+  "WING_leaf_L": {
+   "vis0": 840,
+   "land": 870
+  },
+  "WING_leaf_R": {
+   "vis0": 855,
+   "land": 885
+  },
+  "RAIL_badge_L": {
+   "vis0": 900,
+   "land": 915
+  },
+  "RAIL_badge_R": {
+   "vis0": 900,
+   "land": 915
+  }
+ }
+}

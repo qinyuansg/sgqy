@@ -1,0 +1,15 @@
+Helper B (look) — third-party assets
+
+Only one downloaded file is used. Everything else in look/ (materials, studios, UI / badge / PCB textures in
+look/tex/, the proxy gate) is made from scratch by the scripts in this folder.
+
+1. HDRI "Studio Small 09" by Sergej Majboroda — Poly Haven, CC0 1.0 (public domain)
+   asset page : https://polyhaven.com/a/studio_small_09
+   file used  : https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/studio_small_09_2k.hdr   (2k .hdr, 6.3 MB)
+   API calls  : https://api.polyhaven.com/assets?t=hdris&c=studio
+                https://api.polyhaven.com/files/studio_small_09
+   stored as  : look/hdri/studio_small_09_2k.hdr
+   used by    : studio variant 'hdri' only (look/studio.py). The other three variants use no downloaded asset.
+
+Fonts for the UI textures are the system's Inter (SIL OFL 1.1) and JetBrains Mono (SIL OFL 1.1), read from
+/usr/share/fonts at texture-build time by look/make_textures.py; only the rendered PNGs are stored in the repo.

@@ -1,0 +1,20 @@
+{
+ "rest_pairs": 10,
+ "hook": [
+  {
+   "frame": 0,
+   "a": "ELE_cable_3_L",
+   "b": "ELE_pcb_L",
+   "tri_pairs": 12,
+   "also_at_rest": true
+  },
+  {
+   "frame": 0,
+   "a": "ELE_cable_3_R",
+   "b": "ELE_pcb_R",
+   "tri_pairs": 12,
+   "also_at_rest": true
+  }
+ ],
+ "build": []
+}
